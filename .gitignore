@@ -1,8 +1,29 @@
 # Compiled class file
 *.class
 
-# Log file
+# Log files and core dumps
 *.log
+
+# Maven files
+target/
+*.ser
+*.ec
+
+# IntelliJ Idea files
+.idea/
+out/
+*.ipr
+*.iws
+*.iml
+
+# Eclipse files
+.classpath
+.project
+.settings/
+.metadata/
+
+# OS X files
+.DS_Store
 
 # BlueJ files
 *.ctxt
