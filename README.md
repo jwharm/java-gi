@@ -17,39 +17,24 @@ Run the `java-gi.sh` script to generate the bindings. By default it generates bi
 
 ## What the bindings look like
 
-A Hello-world example:
+A "Hello world" example:
 
 ```java
-package util;
-
 import org.gtk.gtk.*;
 import org.gtk.gio.ApplicationFlags;
 
 public class HelloWorld {
 
-    public void printSomething(Button source) {
-        System.out.println("Hello world!");
-    }
-
     public void activate(org.gtk.gio.Application g_application) {
         var window = new ApplicationWindow(Application.castFrom(g_application));
         window.setTitle("Window");
         window.setDefaultSize(300, 200);
-
-        var box = new Box(Orientation.VERTICAL, 0);      // These flags are Java enums
+        var box = new Box(Orientation.VERTICAL, 0);
         box.setHalign(Align.CENTER);
         box.setValign(Align.CENTER);
-
-        // A GTK Button has multiple constructors with a String argument.
-        // This isn't possible in Java, so java-gi generated static factory methods here.
-        var button = Button.newWithLabel("Click me!");
-        
-        // Signal handlers are fully type-safe
-        button.onClicked(this::printSomething);          // method reference
-        button.onClicked((btn) -> window.destroy());     // lambda function
-        
+        var button = Button.newWithLabel("Hello world!");
+        button.onClicked((btn) -> window.close());
         box.append(button);
-        
         window.setChild(box);
         window.show();
     }
@@ -58,7 +43,6 @@ public class HelloWorld {
         var app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
         app.onActivate(this::activate);
         app.run(args.length, args);
-        app.unref();
     }
 
     public static void main(String[] args) {
