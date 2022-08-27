@@ -1,0 +1,36 @@
+package girparser.model;
+
+import java.io.IOException;
+import java.io.Writer;
+
+public class ReturnValue extends Parameter {
+
+    public ReturnValue(GirElement parent, String transferOwnership) {
+        super(parent, null, transferOwnership, null, null, null);
+    }
+
+    public void generateReturnStatement(Writer writer, int indent) throws IOException {
+        if (type.isVoid()) {
+            return;
+        }
+
+        writer.write(" ".repeat(indent * 4));
+
+        if (type.isAlias()
+                || type.isClass()
+                || type.isInterface()) {
+            writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
+        } else if (type.isBitfield()) {
+            writer.write("return RESULT;\n");
+        } else if (type.isEnum()) {
+            writer.write("return " + type.qualifiedJavaType + ".fromValue(RESULT);\n");
+        } else if (type.name.equals("gboolean") && (! type.cType.equals("_Bool"))) {
+            // A gboolean corresponds to an int where value 0 is FALSE, and everything else is TRUE.
+            writer.write("return (RESULT != 0);\n");
+        } else if (type.qualifiedJavaType.equals("java.lang.String")) {
+            writer.write("return RESULT.getUtf8String(0);\n");
+        } else {
+            writer.write("return RESULT;\n");
+        }
+    }
+}
