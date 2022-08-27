@@ -9,7 +9,7 @@ import girparser.generator.GirParser;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Main {
+public class JavaGI {
 
     public static void main(String[] args) throws Exception {
         long starttime = System.currentTimeMillis();
@@ -40,7 +40,7 @@ public class Main {
         Map<String, Repository> repositories = new HashMap<>();
 
         for (String filename : girFiles) {
-            String girfile = "gir-files/" + filename;
+            String girfile = "/usr/share/gir-1.0/" + filename;
             System.out.println("PARSE " + girfile);
             Repository r = parser.parse(girfile);
             repositories.put(r.namespace.name, r);
