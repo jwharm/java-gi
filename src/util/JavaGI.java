@@ -1,7 +1,7 @@
 package util;
 
 import girparser.generator.BindingsGenerator;
-import girparser.generator.BlacklistProcessor;
+import girparser.generator.RepositoryEditor;
 import girparser.generator.CrossReference;
 import girparser.model.*;
 import girparser.generator.GirParser;
@@ -28,12 +28,6 @@ public class JavaGI {
                 "Gtk-4.0.gir"
         };
 
-        // These types are defined in the GIR, but unavailable by default
-        String[] blacklist = new String[] {
-                "Gsk.BroadwayRenderer",
-                "Gsk.BroadwayRendererClass"
-        };
-
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
 
@@ -49,10 +43,8 @@ public class JavaGI {
         System.out.println("LINK " + repositories.size() + " REPOSITORIES");
         CrossReference.link(repositories);
 
-        System.out.println("REMOVE " + blacklist.length + " BLACKLISTED TYPES");
-        for (Repository repository : repositories.values()) {
-            BlacklistProcessor.filterBlacklistedTypes(repository, blacklist);
-        }
+        System.out.println("APPLY PATCHES");
+        RepositoryEditor.applyPatches(repositories);
 
         for (Repository repository : repositories.values()) {
             System.out.println("GENERATE " + repository.namespace.packageName);

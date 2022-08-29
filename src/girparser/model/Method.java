@@ -16,7 +16,7 @@ public class Method extends GirElement implements CallableType {
         this.deprecated = deprecated;
         this.throws_ = throws_;
 
-        // Deal with empty names. (For example, GLib.g_iconv is named "".)
+        // Handle empty names. (For example, GLib.g_iconv is named "".)
         if ("".equals(name)) {
             this.name = cIdentifier;
         }

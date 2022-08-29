@@ -22,14 +22,17 @@ public class Parameter extends GirElement {
     public void generateTypeAndName(Writer writer) throws IOException {
         if (array != null) {
             writer.write(array.type.qualifiedJavaType + "[] " + name);
-        }
-        else if (type.isBitfield()) {
-            writer.write("int " + name);
-        } else {
-            if (type.namespacePath != null) {
-                writer.write(type.qualifiedJavaType + " " + name);
+        } else if (type != null) {
+            if (type.cType != null && type.cType.endsWith("**")) {
+                writer.write(type.qualifiedJavaType + "[] " + name);
+            } else if (type.isBitfield()) {
+                writer.write("int " + name);
             } else {
-                writer.write(type.simpleJavaType + " " + name);
+                if (type.namespacePath != null) {
+                    writer.write(type.qualifiedJavaType + " " + name);
+                } else {
+                    writer.write(type.simpleJavaType + " " + name);
+                }
             }
         }
     }
@@ -39,6 +42,9 @@ public class Parameter extends GirElement {
             generateArrayInterop(writer);
         } else if (type == null) {
             writer.write(name);
+        } else if (type.cType.endsWith("**")) {
+            //System.out.println("Generate array interop for parameter " + name + " with type: " + type.cType);
+            generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write("Interop.getAllocator().allocateUtf8String(" + name + ")");
         } else if (type.isBitfield()) {
@@ -63,15 +69,19 @@ public class Parameter extends GirElement {
     }
 
     private void generateArrayInterop(Writer writer) throws IOException {
-        if (array.type == null) {
-            writer.write("MemoryAddress.NULL");
-        } else if (array.type.simpleJavaType.equals("boolean")) {
+        if (array == null && type != null && type.cType.endsWith("**")) {
             writer.write("Interop.allocateNativeArray(" + name + ")");
-        } else if (array.type.isPrimitive) {
-            String typeconst = "JAVA_" + array.type.simpleJavaType.toUpperCase();
-            writer.write("Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")");
-        } else {
-            writer.write("Interop.allocateNativeArray(" + name + ")");
+        } else if (array != null) {
+            if (array.type == null) {
+                writer.write("MemoryAddress.NULL");
+            } else if (array.type.simpleJavaType.equals("boolean")) {
+                writer.write("Interop.allocateNativeArray(" + name + ")");
+            } else if (array.type.isPrimitive) {
+                String typeconst = "JAVA_" + array.type.simpleJavaType.toUpperCase();
+                writer.write("Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")");
+            } else {
+                writer.write("Interop.allocateNativeArray(" + name + ")");
+            }
         }
     }
 

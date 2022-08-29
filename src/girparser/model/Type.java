@@ -27,6 +27,11 @@ public class Type extends GirElement {
 
     public Type(GirElement parent, String name, String cType) {
         super(parent);
+        init(name);
+        this.cType = cType;
+    }
+
+    public void init(String name) {
         if (name != null) {
             if (name.contains(".")) {
                 this.girNamespace = name.substring(0, name.lastIndexOf('.'));
@@ -36,11 +41,9 @@ public class Type extends GirElement {
                 this.name = name;
             }
         }
-        this.cType = cType;
         this.simpleJavaType = Conversions.convertToJavaType(name, false);
         this.qualifiedJavaType = Conversions.convertToJavaType(name, true);
         this.namespacePath = Conversions.getJavaPackageName(name);
-
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
     }
 

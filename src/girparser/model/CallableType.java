@@ -7,11 +7,11 @@ import java.io.Writer;
 
 public interface CallableType {
 
-    public Parameters getParameters();
-    public void setParameters(Parameters ps);
+    Parameters getParameters();
+    void setParameters(Parameters ps);
 
-    public ReturnValue getReturnValue();
-    public void setReturnValue(ReturnValue rv);
+    ReturnValue getReturnValue();
+    void setReturnValue(ReturnValue rv);
 
     default void writeMethodDeclaration(Writer writer, Doc doc, String name, String throws_) throws IOException {
         // Documentation
@@ -58,8 +58,13 @@ public interface CallableType {
                        (p.array == null && p.type == null)
                        // We don't support pointers to primitive types yet
                     || (p.array == null && p.type.isPrimitive && p.type.cType.endsWith("*"))
+                       // GType is just a long, so we don't support pointers to GType either
+                    || (p.array == null && p.type.cType != null && p.type.cType.equals("GType*"))
                        // We don't support callback functions yet
                     || (p.array == null && p.type.isCallback())
+                       // We don't support out parameters of type enum yet
+                    || (p.direction != null && p.direction.contains("out")
+                               && p.type != null && "Enumeration".equals(p.type.girElementType))
             )) {
                 return false;
             }
