@@ -1,9 +1,6 @@
 package org.gtk.gobject;
 
-import org.gtk.gobject.*;
-import org.gtk.interop.*;
 import jdk.incubator.foreign.*;
-import java.lang.invoke.*;
 
 /**
  * An opaque structure used as the base of all type instances.

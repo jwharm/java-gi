@@ -7,7 +7,7 @@ import java.io.Writer;
 
 public class Parameter extends GirElement {
 
-    public String transferOwnership, nullable, allowNone, direction;
+    public final String transferOwnership, nullable, allowNone, direction;
     public boolean varargs = false;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String direction) {

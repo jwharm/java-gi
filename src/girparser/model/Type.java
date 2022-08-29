@@ -11,7 +11,7 @@ public class Type extends GirElement {
     public String girElementType;
 
     /** Example: gboolean, const char*, GdkRectangle* */
-    public String cType;
+    public final String cType;
 
     /** This type is used on the Java side. Example: boolean, java.lang.String, Rectangle */
     public String simpleJavaType;

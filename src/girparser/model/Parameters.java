@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Parameters extends GirElement {
 
-    public List<Parameter> parameterList = new ArrayList<>();
+    public final List<Parameter> parameterList = new ArrayList<>();
 
     public Parameters(GirElement parent) {
         super(parent);

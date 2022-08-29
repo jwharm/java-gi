@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Class extends RegisteredType {
-    public String parentClass;
+    public final String parentClass;
 
     public Class(GirElement parent, String name, String parentClass) {
         super(parent, name);
@@ -21,15 +22,11 @@ public class Class extends RegisteredType {
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
-        generateJavadoc(writer, 0);
+        generateJavadoc(writer);
 
         writer.write("public class " + javaName);
         writer.write(" extends ");
-        if (parentClass == null) {
-            writer.write("org.gtk.gobject.Object");
-        } else {
-            writer.write(parentClass);
-        }
+        writer.write(Objects.requireNonNullElse(parentClass, "org.gtk.gobject.Object"));
         writer.write(" {\n");
         writer.write("\n");
 
@@ -57,7 +54,7 @@ public class Class extends RegisteredType {
     // methods.
     protected void generateConstructors(Writer writer) throws IOException {
         // Generate type signatures for all constructors.
-        List<String> signatures = new ArrayList<String>();
+        List<String> signatures = new ArrayList<>();
         for (Constructor c : constructorList) {
             signatures.add(signature(c));
         }

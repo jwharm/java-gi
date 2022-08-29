@@ -1,7 +1,7 @@
 package girparser.model;
 
 public class Attribute extends GirElement {
-    public String type;
+    public final String type;
 
     public Attribute(GirElement parent, String name, String type) {
         super(parent);

@@ -7,7 +7,7 @@ import java.io.Writer;
 
 public class Record extends Class {
 
-    public String cType, isGTypeStructFor;
+    public final String cType, isGTypeStructFor;
 
     public Record(GirElement parent, String name, String cType, String isGTypeStructFor) {
         super(parent, name, null);
@@ -18,7 +18,7 @@ public class Record extends Class {
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
-        generateJavadoc(writer, 0);
+        generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends org.gtk.interop.ResourceProxy {\n");
         writer.write("\n");

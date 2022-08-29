@@ -7,7 +7,7 @@ import java.io.Writer;
 
 public abstract class RegisteredType extends GirElement {
 
-    public String javaName;
+    public final String javaName;
 
     public boolean used = false;
 
@@ -32,7 +32,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
     }
 
-    protected void generateJavadoc(Writer writer, int indent) throws IOException {
+    protected void generateJavadoc(Writer writer) throws IOException {
         if (doc != null) {
             doc.generate(writer, 0);
         }

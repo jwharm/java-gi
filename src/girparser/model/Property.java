@@ -2,7 +2,7 @@ package girparser.model;
 
 public class Property extends GirElement {
 
-    public String transferOwnership, getter;
+    public final String transferOwnership, getter;
 
     public Property(GirElement parent, String name, String transferOwnership, String getter) {
         super(parent);

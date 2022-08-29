@@ -1,7 +1,6 @@
 package org.gtk.gobject;
 
 import jdk.incubator.foreign.MemoryAddress;
-import jdk.incubator.foreign.MemorySegment;
 import org.gtk.interop.Interop;
 import org.gtk.interop.ResourceProxy;
 

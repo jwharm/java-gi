@@ -2,7 +2,7 @@ package girparser.model;
 
 public class Field extends GirElement {
 
-    public String readable, isPrivate;
+    public final String readable, isPrivate;
     public Callback callback;
 
     public Field(GirElement parent, String name, String readable, String isPrivate) {

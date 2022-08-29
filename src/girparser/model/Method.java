@@ -5,7 +5,7 @@ import java.io.Writer;
 
 public class Method extends GirElement implements CallableType {
 
-    public String cIdentifier, deprecated, throws_;
+    public final String cIdentifier, deprecated, throws_;
     public ReturnValue returnValue;
     public Parameters parameters;
 

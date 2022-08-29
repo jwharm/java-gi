@@ -12,7 +12,7 @@ public class Bitfield extends RegisteredType {
 
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
-        generateJavadoc(writer, 0);
+        generateJavadoc(writer);
 
         writer.write("public class " + javaName + " {\n");
         writer.write("\n");

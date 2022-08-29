@@ -13,7 +13,7 @@ public class Alias extends RegisteredType {
         generatePackageDeclaration(writer);
         writer.write("import jdk.incubator.foreign.*;\n");
 
-        generateJavadoc(writer, 0);
+        generateJavadoc(writer);
 
         writer.write("public class " + javaName);
 

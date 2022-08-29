@@ -3,7 +3,7 @@ package girparser.model;
 // Not implemented
 public class FunctionMacro extends Method {
 
-    public String introspectable;
+    public final String introspectable;
 
     public FunctionMacro(GirElement parent, String name, String cIdentifier, String introspectable,
                          String deprecated, String throws_) {

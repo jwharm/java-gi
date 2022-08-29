@@ -16,7 +16,7 @@ public class Union extends RegisteredType {
         writer.write("import jdk.incubator.foreign.MemoryAddress;\n");
         writer.write("\n");
 
-        generateJavadoc(writer, 0);
+        generateJavadoc(writer);
 
         writer.write("public class " + javaName + " implements NativeAddress {\n");
 

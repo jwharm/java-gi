@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class Doc extends GirElement {
-    public String space, contents;
+    public final String space;
+    public String contents;
 
     public Doc(GirElement parent, String space) {
         super(parent);

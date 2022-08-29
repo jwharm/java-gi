@@ -18,8 +18,6 @@ public class Callback extends RegisteredType implements CallableType {
         // TODO: Can we support arrays, varargs and out parameters?
         if (parameters != null && parameters.parameterList.stream().anyMatch(p -> p.type == null)) return;
         if (returnValue.type == null) return;
-        // Generate standard (non-functioning) code for out parameters, because otherwise this won't compile
-        // if (parameters != null && parameters.parameterList.stream().anyMatch(p -> "out".equals(p.direction))) return;
         /////////////////////////////////////////////
 
         generatePackageDeclaration(writer);

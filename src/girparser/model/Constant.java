@@ -2,7 +2,7 @@ package girparser.model;
 
 public class Constant extends GirElement {
 
-    public String value, cType;
+    public final String value, cType;
 
     public Constant(GirElement parent, String name, String value, String cType) {
         super(parent);

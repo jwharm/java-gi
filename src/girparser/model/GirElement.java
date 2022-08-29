@@ -7,34 +7,35 @@ public class GirElement {
 
     private static GirElement previouslyCreated = null;
 
-    public GirElement parent, next;
+    public final GirElement parent;
+    public GirElement next;
     public Array array;
     public Type type = null;
     public String name = null;
     public Doc doc = null;
     public DocDeprecated docDeprecated = null;
     public DocVersion docVersion = null;
-    public List<Member> memberList = new ArrayList<>();
-    public List<Attribute> attributeList = new ArrayList<>();
-    public List<Field> fieldList = new ArrayList<>();
-    public List<Function> functionList = new ArrayList<>();
-    public List<Implements> implementsList = new ArrayList<>();
-    public List<Method> methodList = new ArrayList<>();
-    public List<Property> propertyList = new ArrayList<>();
-    public List<Signal> signalList = new ArrayList<>();
-    public List<VirtualMethod> virtualMethodList = new ArrayList<>();
-    public List<Constructor> constructorList = new ArrayList<>();
-    public List<Alias> aliasList = new ArrayList<>();
-    public List<Callback> callbackList = new ArrayList<>();
-    public List<Bitfield> bitfieldList = new ArrayList<>();
-    public List<Class> classList = new ArrayList<>();
-    public List<Constant> constantList = new ArrayList<>();
-    public List<Docsection> docsectionList = new ArrayList<>();
-    public List<Enumeration> enumerationList = new ArrayList<>();
-    public List<FunctionMacro> functionMacroList = new ArrayList<>();
-    public List<Interface> interfaceList = new ArrayList<>();
-    public List<Record> recordList = new ArrayList<>();
-    public List<Union> unionList = new ArrayList<>();
+    public final List<Member> memberList = new ArrayList<>();
+    public final List<Attribute> attributeList = new ArrayList<>();
+    public final List<Field> fieldList = new ArrayList<>();
+    public final List<Function> functionList = new ArrayList<>();
+    public final List<Implements> implementsList = new ArrayList<>();
+    public final List<Method> methodList = new ArrayList<>();
+    public final List<Property> propertyList = new ArrayList<>();
+    public final List<Signal> signalList = new ArrayList<>();
+    public final List<VirtualMethod> virtualMethodList = new ArrayList<>();
+    public final List<Constructor> constructorList = new ArrayList<>();
+    public final List<Alias> aliasList = new ArrayList<>();
+    public final List<Callback> callbackList = new ArrayList<>();
+    public final List<Bitfield> bitfieldList = new ArrayList<>();
+    public final List<Class> classList = new ArrayList<>();
+    public final List<Constant> constantList = new ArrayList<>();
+    public final List<Docsection> docsectionList = new ArrayList<>();
+    public final List<Enumeration> enumerationList = new ArrayList<>();
+    public final List<FunctionMacro> functionMacroList = new ArrayList<>();
+    public final List<Interface> interfaceList = new ArrayList<>();
+    public final List<Record> recordList = new ArrayList<>();
+    public final List<Union> unionList = new ArrayList<>();
 
 
     public GirElement(GirElement parent) {

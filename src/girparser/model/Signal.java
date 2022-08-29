@@ -9,7 +9,7 @@ import java.io.Writer;
 
 public class Signal extends Method {
 
-    public String when;
+    public final String when;
 
     public Signal(GirElement parent, String name, String when, String deprecated, String throws_) {
         super(parent, name, null, deprecated, throws_);
