@@ -1,6 +1,6 @@
 # java-gi
 
-**java-gi** is a very experimental, **work-in-progress** tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) and the `jextract` tool for accessing native resources, and add wrapper classes that offer an easy-to-use API to use with Java.
+**java-gi** is a very experimental, **work-in-progress** tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) and `jextract` for accessing native resources, and add wrapper classes based on GObject-Introspection to offer an easy API to use with Java. The included build script generates bindings for GTK4.
 
 ## Prerequisites
 
