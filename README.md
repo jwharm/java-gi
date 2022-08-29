@@ -1,19 +1,21 @@
 # java-gi
 
-**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) and the `jextract` tool for accessing native resources, and add wrapper classes that offer an easy-to-use API to use with Java.
+**java-gi** is a very experimental, **work-in-progress** tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) and the `jextract` tool for accessing native resources, and add wrapper classes that offer an easy-to-use API to use with Java.
 
 ## Prerequisites
 
-- Download an Early Access build of Java 19 and set JAVA_HOME to its path
-- Install GTK-development header files
-- Ensure that GObject-introspection (gir) files are in `/usr/share/gir-1.0`
+- Download and extract an [Early Access build of Java 19](https://jdk.java.net/panama/)
+- Set JAVA_HOME path to point to your Java 19 folder, for example: `JAVA_HOME=/opt/jdk-19`
+- Install GTK-development header files and GObject-introspection (gir) files.
+  - Fedora: `sudo dnf install gtk4-devel glib-devel gobject-introspection-devel`
 
 ## How to create bindings
 
-Run the `java-gi.sh` script to generate the bindings. By default it generates bindings for GTK4 and its dependencies. It performs the following steps:
-- First, it runs jextract to generate a jar file that contains "raw" bindings based on the C header files. It uses `pkg-config` to set the correct include and library paths, and a file `gtk.h` where the necessary includes (besides `<gtk.gtk.h>` obviously) are listed.
-- Next, it execute a Java program that parses gir files (from `/usr/share/gir-1.0`) and generates bindings (java source files).
-- Finally, the bindings are compiled and compressed into a JAR file.
+Use the included shell scripts to create bindings for GTK4:
+- First run `java-gi.sh` to generate a jar with jextract classes for GTK4. The script uses `pkg-config` to set the correct include and library paths, and a file `gtk.h` which contains the necessary includes (`<gtk/gtk.h>` on its own is not sufficient).
+- Next, run `java-gi-gtk4.sh` to parse gir files (from `/usr/share/gir-1.0`) and generate the bindings (java source files) for GTK4 and its dependencies.
+- At the moment, you still need to compile the generated sources and create a jar file by yourself.
+- The script `clean.sh` removes the generated bindings from `java-gi-gtk4.sh`.
 
 ## What the bindings look like
 
