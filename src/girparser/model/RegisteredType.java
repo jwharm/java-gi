@@ -21,15 +21,6 @@ public abstract class RegisteredType extends GirElement {
         this.parentClass = Conversions.toQualifiedJavaType(parentClass);
         this.name = name;
         this.javaName = Conversions.toSimpleJavaType(name);
-
-//        // Do not map "GType" to "Type" even though the gir file specifies this.
-//        if ("Type".equals(name) && "GObject".equals(getNamespace().name)) {
-//            this.name = "GType";
-//            this.javaName = "GType";
-//        } else {
-//            this.name = name;
-//            this.javaName = Conversions.toSimpleJavaType(name);
-//        }
     }
 
     public abstract void generate(Writer writer) throws IOException;
