@@ -13,17 +13,31 @@ public interface CallableType {
     ReturnValue getReturnValue();
     void setReturnValue(ReturnValue rv);
 
-    default void writeMethodDeclaration(Writer writer, Doc doc, String name, String throws_, boolean isDefault) throws IOException {
+    default void writeMethodDeclaration(Writer writer,
+                                        Doc doc,
+                                        String name,
+                                        String throws_,
+                                        boolean isDefault,
+                                        boolean isStatic) throws IOException {
         // Documentation
         if (doc != null) {
             doc.generate(writer, 1);
         }
 
-        // Visibility and returntype
+        // Visibility
         writer.write("    public ");
+
+        // Default interface methods
         if (isDefault) {
             writer.write("default ");
         }
+
+        // Static methods
+        if (isStatic) {
+            writer.write("static ");
+        }
+
+        // Return type
         if (getReturnValue().type.isBitfield()) {
             writer.write("int");
         } else {

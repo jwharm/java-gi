@@ -22,13 +22,13 @@ public class Interface extends RegisteredType {
 
         for (Method m : methodList) {
             if (m.isSafeToBind()) {
-                m.generate(writer, true);
+                m.generate(writer, true, false);
             }
         }
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer, true);
+                s.generate(writer, true, false);
             }
         }
 

@@ -42,7 +42,7 @@ public class Parameter extends GirElement {
             generateArrayInterop(writer);
         } else if (type == null) {
             writer.write(name);
-        } else if (type.cType.endsWith("**")) {
+        } else if (type.cType != null && type.cType.endsWith("**")) {
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write("Interop.getAllocator().allocateUtf8String(" + name + ")");
@@ -60,7 +60,7 @@ public class Parameter extends GirElement {
                 || type.isUnion()
                 || type.qualifiedJavaType.startsWith("org.gtk.gobject.")) {
             writer.write(name + ".HANDLE()");
-        } else if (type.name.equals("gboolean") && (! type.cType.equals("_Bool"))) {
+        } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
             writer.write(name + " ? 1 : 0");
         } else {
             writer.write(name);
@@ -99,8 +99,8 @@ public class Parameter extends GirElement {
             writer.write(type.qualifiedJavaType + ".fromValue(" + name + ")");
         } else if (type.isCallback()) {
             writer.write("null"); // I don't think this situation exists
-        } else if (type.name.equals("gboolean") && (! type.cType.equals("_Bool"))) {
-            writer.write(name); // Seems Panama already maps this as a boolean, even though I expected an int
+        } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
+            writer.write(name); // Seems jextract already maps this to a boolean, even though I expected an int
         } else if (type.isPrimitive) {
             writer.write(name);
         } else if (type.isInterface()) {

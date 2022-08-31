@@ -15,6 +15,17 @@ public class Record extends Class {
         this.isGTypeStructFor = isGTypeStructFor;
     }
 
+    /**
+     * A record in GI is a struct in C. Java doesn't have a struct type, and the java 'record'
+     * functionality has a different purpose. So the generated API just creates a class that
+     * extends ResourceProxy (instead of GObject).
+     * Structs are often initialized implicitly, which means they don't always have constructors.
+     * In those cases, we generate a default constructor that just allocates a memory segment.
+     * The API from jextract is used for this; it offers an allocate() method for structs.
+     * Sometimes, the struct layout is not exposed in the C header file, and jextract is unable
+     * to generate an allocate() method in that case. For those types, we expect the GI API to
+     * offer a constructor.
+     */
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
@@ -33,13 +44,13 @@ public class Record extends Class {
 
         for (Method m : methodList) {
             if (m.isSafeToBind()) {
-                m.generate(writer, false);
+                m.generate(writer, false, false);
             }
         }
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer, false);
+                s.generate(writer, false, false);
             }
         }
 

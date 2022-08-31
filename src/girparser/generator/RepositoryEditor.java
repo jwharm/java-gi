@@ -1,8 +1,6 @@
 package girparser.generator;
 
-import girparser.model.Method;
-import girparser.model.RegisteredType;
-import girparser.model.Repository;
+import girparser.model.*;
 
 import java.util.Map;
 
@@ -10,9 +8,24 @@ public class RepositoryEditor {
 
     public static void applyPatches(Map<String, Repository> repositories) {
         removeBlacklistedTypes(repositories);
+        remove_g_networking_init(repositories);
         update_BufferedInputStream_ReadByte(repositories);
         update_MenuButton_GetDirection(repositories);
         update_PrintUnixDialog_getSettings(repositories);
+    }
+
+    private static void remove_g_networking_init(Map<String, Repository> repositories) {
+        try {
+            Namespace ns = repositories.get("Gio").namespace;
+            for (int a = 0; a < ns.functionList.size(); a++) {
+                if (ns.functionList.get(a).name.equals("networking_init")) {
+                    ns.functionList.remove(a);
+                    return;
+                }
+            }
+        } catch (NullPointerException npe) {
+            // ignore
+        }
     }
 
     private static void update_BufferedInputStream_ReadByte(Map<String, Repository> repositories) {

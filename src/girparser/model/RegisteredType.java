@@ -30,7 +30,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
     }
 
-    protected void generateImportStatements(Writer writer) throws IOException {
+    public static void generateImportStatements(Writer writer) throws IOException {
         writer.write("import org.gtk.gobject.*;\n");
         writer.write("import org.gtk.interop.*;\n");
         writer.write("import jdk.incubator.foreign.*;\n");

@@ -27,7 +27,12 @@ public class Type extends GirElement {
 
     public Type(GirElement parent, String name, String cType) {
         super(parent);
-        init(name);
+        // Sometimes the name of a type is not specified, for example in Harfbuzz ft_face_create_cached(ft_face).
+        if (name == null || "".equals(name)) {
+            init (cType);
+        } else {
+            init(name);
+        }
         this.cType = cType;
     }
 

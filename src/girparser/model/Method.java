@@ -22,14 +22,14 @@ public class Method extends GirElement implements CallableType {
         }
     }
 
-    public void generate(Writer writer, boolean isDefault) throws IOException {
+    public void generate(Writer writer, boolean isDefault, boolean isStatic) throws IOException {
 
         // Do not generate deprecated methods.
         if ("1".equals(deprecated)) {
             return;
         }
 
-        writeMethodDeclaration(writer, doc, name, throws_, isDefault);
+        writeMethodDeclaration(writer, doc, name, throws_, isDefault, isStatic);
         writer.write(" {\n");
 
         if (throws_ != null) {

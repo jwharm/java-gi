@@ -16,43 +16,35 @@ public class HelloWorld {
 //
 //        var notebook = new Notebook();
 //        notebook.setTabPos(PositionType.TOP);
-//
-//        var box = new Box(Orientation.VERTICAL, 0);
-//        box.setHalign(Align.CENTER);
-//        box.setValign(Align.CENTER);
-//
-//        var button = Button.newWithLabel("Exit");
-//        button.onClicked(this::printSomething);
-//        button.onClicked((btn) -> window.destroy());
-//        box.append(button);
-//        notebook.appendPage(box, new Label("Tab with button"));
-//
-//        var box2 = new Box(Orientation.VERTICAL, 0);
-//        box2.setHalign(Align.CENTER);
-//        box2.setValign(Align.CENTER);
-//
-//        var entry = new Entry();
-//        entry.setPlaceholderText("Type something here");
-//        entry.onActivate(this::printSomething);
-//        box2.append(entry);
-//        notebook.appendPage(box2, new Label("Tab with text entry"));
-//
-//        var box3 = new Box(Orientation.VERTICAL, 0);
-//        box3.setHalign(Align.CENTER);
-//        box3.setValign(Align.CENTER);
-//
-//        String[] strings = new String[] {"Item1", "Item2", "Item3"};
-//        DropDown dd = new DropDown(strings);
-//        box3.append(dd);
-//        notebook.appendPage(box3, new Label("Tab with dropdown"));
-//
 //        notebook.onSwitchPage((source, page, pageNum) ->
 //                System.out.println("Switched to page " + pageNum)
 //        );
 //
-//        var box4 = new Box(Orientation.VERTICAL, 0);
-//        box4.setHalign(Align.CENTER);
-//        box4.setValign(Align.CENTER);
+//        notebook.appendPage(boxWithButton(window), new Label("Tab with button"));
+//        notebook.appendPage(boxWithTextEntry(), new Label("Tab with text entry"));
+//        notebook.appendPage(boxWithDropdown(), new Label("Tab with dropdown"));
+//        notebook.appendPage(boxWithList(), new Label("Tab with list"));
+//        notebook.appendPage(boxWithCombobox(), new Label("Tab with combobox"));
+//
+//        window.setChild(notebook);
+//        window.show();
+//    }
+//
+//    private Box boxWithCombobox() {
+//        var box = new Box(Orientation.VERTICAL, 0);
+//        box.setHalign(Align.CENTER);
+//        box.setValign(Align.CENTER);
+//
+//        ComboBox cb = ComboBox.newWithEntry();
+//
+//        box.append(cb);
+//        return box;
+//    }
+//
+//    private Box boxWithList() {
+//        var box = new Box(Orientation.VERTICAL, 0);
+//        box.setHalign(Align.CENTER);
+//        box.setValign(Align.CENTER);
 //
 //        SignalListItemFactory factory = new SignalListItemFactory();
 //        factory.onSetup(this::setup_listitem_cb);
@@ -62,11 +54,43 @@ public class HelloWorld {
 //        SelectionModel model = new SingleSelection(new StringList(strings2));
 //        ListView lv = new ListView(model, factory);
 //        lv.onActivate((source, position) -> System.out.println("Position " + position + " activated!"));
-//        box4.append(lv);
-//        notebook.appendPage(box4, new Label("Tab with list"));
+//        box.append(lv);
+//        return box;
+//    }
 //
-//        window.setChild(notebook);
-//        window.show();
+//    private Box boxWithDropdown() {
+//        var box = new Box(Orientation.VERTICAL, 0);
+//        box.setHalign(Align.CENTER);
+//        box.setValign(Align.CENTER);
+//
+//        String[] strings = new String[] {"Item1", "Item2", "Item3"};
+//        DropDown dd = new DropDown(strings);
+//        box.append(dd);
+//        return box;
+//    }
+//
+//    private Box boxWithTextEntry() {
+//        var box = new Box(Orientation.VERTICAL, 0);
+//        box.setHalign(Align.CENTER);
+//        box.setValign(Align.CENTER);
+//
+//        var entry = new Entry();
+//        entry.setPlaceholderText("Type something here");
+//        entry.onActivate(this::printSomething);
+//        box.append(entry);
+//        return box;
+//    }
+//
+//    private Box boxWithButton(ApplicationWindow window) {
+//        var box = new Box(Orientation.VERTICAL, 0);
+//        box.setHalign(Align.CENTER);
+//        box.setValign(Align.CENTER);
+//
+//        var button = Button.newWithLabel("Exit");
+//        button.onClicked(this::printSomething);
+//        button.onClicked((btn) -> window.destroy());
+//        box.append(button);
+//        return box;
 //    }
 //
 //    private void setup_listitem_cb(SignalListItemFactory signalListItemFactory, ListItem listItem) {

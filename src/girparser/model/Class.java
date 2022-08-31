@@ -36,13 +36,13 @@ public class Class extends RegisteredType {
 
         for (Method m : methodList) {
             if (m.isSafeToBind()) {
-                m.generate(writer, false);
+                m.generate(writer, false, false);
             }
         }
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer, false);
+                s.generate(writer, false, false);
             }
         }
 

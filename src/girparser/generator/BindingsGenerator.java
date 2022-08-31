@@ -1,5 +1,6 @@
 package girparser.generator;
 
+import girparser.model.Function;
 import girparser.model.RegisteredType;
 import girparser.model.Repository;
 
@@ -26,6 +27,7 @@ public class BindingsGenerator {
             }
         }
         generateSignalCallbacks(gir, basePath);
+        generateGlobals(gir, basePath);
     }
 
     public void generateSignalCallbacks(Repository gir, String basePath) throws IOException {
@@ -41,6 +43,25 @@ public class BindingsGenerator {
             writer.write("    public static final HashMap<Integer, Object> signalRegistry = new HashMap<>();\n");
             writer.write("    \n");
             writer.write(signalCallbackFunctions.toString());
+            writer.write("}\n");
+        }
+    }
+
+    public void generateGlobals(Repository gir, String basePath) throws IOException {
+        String className = Conversions.toSimpleJavaType(gir.namespace.name);
+        try (FileWriter writer = new FileWriter(basePath + className + ".java")) {
+            writer.write("package " + gir.namespace.packageName + ";\n");
+            writer.write("\n");
+            RegisteredType.generateImportStatements(writer);
+            writer.write("public final class " + className + " {\n");
+            writer.write("    \n");
+
+            for (Function function : gir.namespace.functionList) {
+                if (function.isSafeToBind()) {
+                    function.generate(writer, false, true);
+                }
+            }
+
             writer.write("}\n");
         }
     }
