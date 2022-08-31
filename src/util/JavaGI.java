@@ -15,7 +15,7 @@ public class JavaGI {
         long starttime = System.currentTimeMillis();
 
         String[] girFiles = new String[] {
-                // "GObject-2.0.gir"
+                "GObject-2.0.gir",
                 "GLib-2.0.gir",
                 "Gio-2.0.gir",
                 "Gdk-4.0.gir",

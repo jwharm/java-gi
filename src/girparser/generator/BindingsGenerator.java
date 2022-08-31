@@ -27,7 +27,10 @@ public class BindingsGenerator {
             }
         }
         generateSignalCallbacks(gir, basePath);
-        generateGlobals(gir, basePath);
+
+        if (gir.namespace.name.equals("Gtk")) {
+            generateGlobals(gir, basePath);
+        }
     }
 
     public void generateSignalCallbacks(Repository gir, String basePath) throws IOException {
@@ -40,7 +43,7 @@ public class BindingsGenerator {
             writer.write("\n");
             writer.write("public final class JVMCallbacks {\n");
             writer.write("    \n");
-            writer.write("    public static final HashMap<Integer, Object> signalRegistry = new HashMap<>();\n");
+            writer.write("    public static final HashMap<java.lang.Integer, java.lang.Object> signalRegistry = new HashMap<>();\n");
             writer.write("    \n");
             writer.write(signalCallbackFunctions.toString());
             writer.write("}\n");

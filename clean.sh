@@ -10,3 +10,4 @@ rm -rf src/org/pango
 rm -rf src/org/gtk/graphene
 rm -rf src/org/gtk/gsk
 rm -rf src/org/gtk/gtk
+rm -rf src/org/gtk/gobject

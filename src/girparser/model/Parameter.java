@@ -49,7 +49,7 @@ public class Parameter extends GirElement {
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()
-                || type.simpleJavaType.equals("GType")
+                || type.simpleJavaType.equals("Type")
                 || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
             writer.write(name + ".getValue()");
         } else if (type.isCallback()) {
@@ -57,8 +57,7 @@ public class Parameter extends GirElement {
         } else if (type.isClass()
                 || type.isInterface()
                 || type.isAlias()
-                || type.isUnion()
-                || type.qualifiedJavaType.startsWith("org.gtk.gobject.")) {
+                || type.isUnion()) {
             writer.write(name + ".HANDLE()");
         } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
             writer.write(name + " ? 1 : 0");
@@ -94,7 +93,7 @@ public class Parameter extends GirElement {
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()
-                || type.simpleJavaType.equals("GType")
+                || type.simpleJavaType.equals("Type")
                 || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
             writer.write(type.qualifiedJavaType + ".fromValue(" + name + ")");
         } else if (type.isCallback()) {
@@ -107,8 +106,7 @@ public class Parameter extends GirElement {
             writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "ProxyInstance(" + name + ")");
         } else if (type.isClass()
                 || type.isAlias()
-                || type.isUnion()
-                || type.qualifiedJavaType.startsWith("org.gtk.gobject.")) {
+                || type.isUnion()) {
             writer.write("new " + type.qualifiedJavaType + "(" + name + ")");
         } else {
             writer.write(name);

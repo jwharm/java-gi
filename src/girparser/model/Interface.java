@@ -2,7 +2,6 @@ package girparser.model;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Objects;
 
 public class Interface extends RegisteredType {
 
@@ -28,7 +27,7 @@ public class Interface extends RegisteredType {
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer, true, false);
+                s.generate(writer, true);
             }
         }
 

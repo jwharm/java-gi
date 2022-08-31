@@ -86,6 +86,8 @@ public interface CallableType {
                        // We don't support out parameters of type enum yet
                     || (p.direction != null && p.direction.contains("out")
                                && p.type != null && "Enumeration".equals(p.type.girElementType))
+                       // Check for types without a name
+                    || (p.type != null && p.type.name == null)
             )) {
                 return false;
             }
@@ -93,6 +95,8 @@ public interface CallableType {
         if (
             // Check for return value without type (probably arrays)
                (rv.type == null)
+            // Check for type without name
+            || (rv.type.name == null)
             // Check for return value that is a pointer to a primitive type
             || (rv.type.isPrimitive && rv.type.cType.endsWith("*"))
             // We don't support unions and callbacks yet

@@ -50,7 +50,7 @@ public class Record extends Class {
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer, false, false);
+                s.generate(writer, false);
             }
         }
 

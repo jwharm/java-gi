@@ -1,8 +1,6 @@
 package org.gtk.interop;
 
 import jdk.incubator.foreign.*;
-import org.gtk.gobject.GType;
-import org.gtk.gobject.Value;
 
 public class Interop {
 
@@ -63,36 +61,36 @@ public class Interop {
         return allocator.allocateArray(ValueLayout.JAVA_INT, intArray);
     }
 
-    public static Addressable allocateNativeArray(GType[] array) {
-        if (!initialized) {
-            initialize();
-        }
-        if (array == null || array.length == 0) {
-            return MemoryAddress.NULL;
-        }
-        long[] longArray = new long[array.length];
-        for (int i = 0; i < array.length; i++) {
-            longArray[i] = array[i].getValue();
-        }
-        return allocator.allocateArray(ValueLayout.JAVA_LONG, longArray);
-    }
-
-    public static Addressable allocateNativeArray(Value[] array) {
-        if (!initialized) {
-            initialize();
-        }
-        if (array == null || array.length == 0) {
-            return MemoryAddress.NULL;
-        }
-        MemorySegment mem = org.gtk.interop.jextract.GValue.allocateArray(array.length, allocator);
-        long size = org.gtk.interop.jextract.GValue.sizeof();
-        for (int i = 0; i < array.length; i++) {
-            MemorySegment source = MemorySegment.ofAddress(array[i].HANDLE(), size, scope);
-            MemorySegment target = mem.asSlice(i * size, size);
-            target.copyFrom(source);
-        }
-        return mem.address();
-    }
+//    public static Addressable allocateNativeArray(org.gtk.gobject.Type[] array) {
+//        if (!initialized) {
+//            initialize();
+//        }
+//        if (array == null || array.length == 0) {
+//            return MemoryAddress.NULL;
+//        }
+//        long[] longArray = new long[array.length];
+//        for (int i = 0; i < array.length; i++) {
+//            longArray[i] = array[i].getValue();
+//        }
+//        return allocator.allocateArray(ValueLayout.JAVA_LONG, longArray);
+//    }
+//
+//    public static Addressable allocateNativeArray(org.gtk.gobject.Value[] array) {
+//        if (!initialized) {
+//            initialize();
+//        }
+//        if (array == null || array.length == 0) {
+//            return MemoryAddress.NULL;
+//        }
+//        MemorySegment mem = org.gtk.interop.jextract.GValue.allocateArray(array.length, allocator);
+//        long size = org.gtk.interop.jextract.GValue.sizeof();
+//        for (int i = 0; i < array.length; i++) {
+//            MemorySegment source = MemorySegment.ofAddress(array[i].HANDLE(), size, scope);
+//            MemorySegment target = mem.asSlice(i * size, size);
+//            target.copyFrom(source);
+//        }
+//        return mem.address();
+//    }
 
     /**
      * Allocates and initializes a NULL-terminated array of pointers (from NativeAddress instances).
