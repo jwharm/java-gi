@@ -18,19 +18,9 @@ public class Union extends RegisteredType {
 
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " implements NativeAddress {\n");
-
-        writer.write("    private MemoryAddress __HANDLE__;\n");
-        writer.write("\n");
-        writer.write("    @Override\n");
-        writer.write("    public void setHANDLE(MemoryAddress handle) {\n");
-        writer.write("        this.__HANDLE__ = handle;\n");
-        writer.write("    }\n");
-        writer.write("\n");
-        writer.write("    @Override\n");
-        writer.write("    public MemoryAddress HANDLE() {\n");
-        writer.write("        return __HANDLE__;\n");
-        writer.write("    }\n");
+        writer.write("public class " + javaName + " extends org.gtk.interop.ResourceProxy {\n");
+        writer.write("    \n");
+        generateMemoryAddressConstructor(writer);
         writer.write("}\n");
         writer.write("\n");
     }
