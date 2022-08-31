@@ -6,7 +6,7 @@ import java.io.Writer;
 public class Alias extends RegisteredType {
 
     public Alias(GirElement parent, String name) {
-        super(parent, name);
+        super(parent, name, null);
     }
 
     public void generate(Writer writer) throws IOException {

@@ -104,8 +104,9 @@ public class Parameter extends GirElement {
             writer.write(name); // Seems Panama already maps this as a boolean, even though I expected an int
         } else if (type.isPrimitive) {
             writer.write(name);
+        } else if (type.isInterface()) {
+            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "ProxyInstance(" + name + ")");
         } else if (type.isClass()
-                || type.isInterface()
                 || type.isAlias()
                 || type.isUnion()
                 || type.qualifiedJavaType.startsWith("org.gtk.gobject.")) {

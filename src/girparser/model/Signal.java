@@ -16,15 +16,15 @@ public class Signal extends Method {
         this.when = when;
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(Writer writer, boolean isDefault) throws IOException {
         final String signalName = Conversions.toSimpleJavaType(name);
         final String className = ((RegisteredType) parent).javaName;
         final String callbackName = "signal" + className + signalName;
         final boolean returnsBool = returnValue != null && returnValue.type.simpleJavaType.equals("boolean");
 
         generateFunctionalInterface(writer, signalName, className, returnsBool);
-        generateSignalDeclaration(writer, signalName, callbackName, returnsBool);
-        generateStaticCallback(signalName, className, callbackName, returnsBool);
+        generateSignalDeclaration(writer, signalName, callbackName, returnsBool, isDefault);
+        generateStaticCallback(signalName, className, callbackName, returnsBool, isDefault);
     }
 
     // Generate the functional interface
@@ -44,8 +44,14 @@ public class Signal extends Method {
     }
 
     // Generate the static callback method, that will run the handler method.
-    private void generateStaticCallback(String signalName, String className, String callbackName, boolean returnsBool) throws IOException {
+    private void generateStaticCallback(String signalName, String className, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
         StringWriter sw = new StringWriter();
+
+        String implClassName = className;
+        if (isDefault) {
+            implClassName = className + "." + className + "ProxyInstance";
+        }
+
         sw.write("    public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
 
         if (parameters != null) {
@@ -58,7 +64,7 @@ public class Signal extends Method {
 
         sw.write("        int hash = data.get(C_INT, 0);\n");
         sw.write("        var handler = (" + className + "." + signalName + "Handler) signalRegistry.get(hash);\n");
-        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + className + "(source)");
+        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(source)");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
@@ -74,11 +80,11 @@ public class Signal extends Method {
     }
 
     // Generate the method that connects the signal to the handler (defined by the functional interface above)
-    private void generateSignalDeclaration(Writer writer, String signalName, String callbackName, boolean returnsBool) throws IOException {
+    private void generateSignalDeclaration(Writer writer, String signalName, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
         if (doc != null) {
             doc.generate(writer, 1);
         }
-        writer.write("    public void on" + signalName + "(" + signalName + "Handler handler) {\n");
+        writer.write("    public " + (isDefault ? "default " : "") + "void on" + signalName + "(" + signalName + "Handler handler) {\n");
         writer.write("        try {\n");
         writer.write("            int hash = handler.hashCode();\n");
         writer.write("            JVMCallbacks.signalRegistry.put(hash, handler);\n");

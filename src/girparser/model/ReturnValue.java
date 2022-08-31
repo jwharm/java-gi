@@ -16,10 +16,10 @@ public class ReturnValue extends Parameter {
 
         writer.write(" ".repeat(indent * 4));
 
-        if (type.isAlias()
-                || type.isClass()
-                || type.isInterface()) {
+        if (type.isAlias() || type.isClass()) {
             writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
+        } else if (type.isInterface()) {
+            writer.write("return new " + type.qualifiedJavaType + "." + type.simpleJavaType + "ProxyInstance(RESULT);\n");
         } else if (type.isBitfield()) {
             writer.write("return RESULT;\n");
         } else if (type.isEnum()) {

@@ -33,13 +33,13 @@ public class Record extends Class {
 
         for (Method m : methodList) {
             if (m.isSafeToBind()) {
-                m.generate(writer);
+                m.generate(writer, false);
             }
         }
 
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
-                s.generate(writer);
+                s.generate(writer, false);
             }
         }
 

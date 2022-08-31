@@ -105,6 +105,15 @@ public class Conversions {
         return (Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name))) ? name + "_" : name;
     }
 
+    public static String replaceJavaObjectMethodNames(String name) {
+        for (java.lang.reflect.Method m : Object.class.getMethods()) {
+            if (m.getName().equals(name)) {
+                return name + "_";
+            }
+        }
+        return name;
+    }
+
     /** Convert C type declaration into Java type declaration */
     public static String convertToJavaType(String name, boolean qualified) {
         return name == null ? null : switch (name.toLowerCase()) {

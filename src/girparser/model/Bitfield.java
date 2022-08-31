@@ -7,7 +7,7 @@ import java.io.Writer;
 public class Bitfield extends RegisteredType {
 
     public Bitfield(GirElement parent, String name) {
-        super(parent, name);
+        super(parent, name, null);
     }
 
     public void generate(Writer writer) throws IOException {

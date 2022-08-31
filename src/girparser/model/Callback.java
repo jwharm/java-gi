@@ -9,7 +9,7 @@ public class Callback extends RegisteredType implements CallableType {
     public Parameters parameters;
 
     public Callback(GirElement parent, String name) {
-        super(parent, name);
+        super(parent, name, null);
     }
 
     public void generate(Writer writer) throws IOException {
@@ -26,7 +26,7 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("public interface " + javaName + " {\n");
         writer.write("\n");
 
-        writeMethodDeclaration(writer, doc, "on" + javaName, null);
+        writeMethodDeclaration(writer, doc, "on" + javaName, null, false);
         writer.write(";\n");
         writer.write("}\n");
     }

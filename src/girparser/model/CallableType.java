@@ -13,7 +13,7 @@ public interface CallableType {
     ReturnValue getReturnValue();
     void setReturnValue(ReturnValue rv);
 
-    default void writeMethodDeclaration(Writer writer, Doc doc, String name, String throws_) throws IOException {
+    default void writeMethodDeclaration(Writer writer, Doc doc, String name, String throws_, boolean isDefault) throws IOException {
         // Documentation
         if (doc != null) {
             doc.generate(writer, 1);
@@ -21,6 +21,9 @@ public interface CallableType {
 
         // Visibility and returntype
         writer.write("    public ");
+        if (isDefault) {
+            writer.write("default ");
+        }
         if (getReturnValue().type.isBitfield()) {
             writer.write("int");
         } else {
@@ -28,8 +31,12 @@ public interface CallableType {
         }
 
         // Method name
+        String methodName = Conversions.toLowerCaseJavaName(name);
+        if (isDefault) { // Overriding toString() in a default method is not allowed.
+            methodName = Conversions.replaceJavaObjectMethodNames(methodName);
+        }
         writer.write(" ");
-        writer.write(Conversions.toLowerCaseJavaName(name));
+        writer.write(methodName);
 
         // Parameters
         if (getParameters() != null) {
