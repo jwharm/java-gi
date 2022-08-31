@@ -43,7 +43,6 @@ public class Parameter extends GirElement {
         } else if (type == null) {
             writer.write(name);
         } else if (type.cType.endsWith("**")) {
-            //System.out.println("Generate array interop for parameter " + name + " with type: " + type.cType);
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write("Interop.getAllocator().allocateUtf8String(" + name + ")");
