@@ -13,6 +13,14 @@ public class RepositoryEditor {
         update_BufferedInputStream_ReadByte(repositories);
         update_MenuButton_GetDirection(repositories);
         update_PrintUnixDialog_getSettings(repositories);
+        update_TypeModule_use(repositories);
+    }
+
+    private static void update_TypeModule_use(Map<String, Repository> repositories) {
+        Method method = findMethod(repositories, "GObject", "TypeModule", "use");
+        if (method != null) {
+            method.name = "use_type_module";
+        }
     }
 
     private static void update_BufferedInputStream_ReadByte(Map<String, Repository> repositories) {
@@ -37,10 +45,13 @@ public class RepositoryEditor {
     }
 
     private static void removeBlacklistedTypes(Map<String, Repository> repositories) {
-        // These types are defined in the GIR, but unavailable by default
         String[] blacklist = new String[] {
+                // These types are defined in the GIR, but unavailable by default
                 "Gsk.BroadwayRenderer",
-                "Gsk.BroadwayRendererClass"
+                "Gsk.BroadwayRendererClass",
+                // These types require mapping va_list (varargs) types
+                "GObject.VaClosureMarshal",
+                "GObject.SignalCVaMarshaller"
         };
 
         for (String qualifiedType : blacklist) {

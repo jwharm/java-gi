@@ -104,7 +104,7 @@ public class TestNotebook {
 //        Label.castFrom(label).setLabel("myobject getstring");
 //    }
 //
-//    public HelloWorld(String[] args) {
+//    public TestNotebook(String[] args) {
 //        var app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
 //        app.onActivate(this::activate);
 //        app.run(args.length, args);
@@ -112,6 +112,6 @@ public class TestNotebook {
 //    }
 //
 //    public static void main(String[] args) {
-//        new HelloWorld(args);
+//        new TestNotebook(args);
 //    }
 }

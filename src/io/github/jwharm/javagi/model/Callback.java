@@ -14,11 +14,7 @@ public class Callback extends RegisteredType implements CallableType {
 
     public void generate(Writer writer) throws IOException {
 
-        /////////////////////////////////////////////
-        // TODO: Can we support arrays, varargs and out parameters?
-        if (parameters != null && parameters.parameterList.stream().anyMatch(p -> p.type == null)) return;
         if (returnValue.type == null) return;
-        /////////////////////////////////////////////
 
         generatePackageDeclaration(writer);
 
