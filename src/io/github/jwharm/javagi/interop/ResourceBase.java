@@ -14,10 +14,12 @@ public class ResourceBase implements NativeAddress {
         Proxy proxy;
 
         State(Proxy proxy) {
+            System.out.println("register " + proxy.HANDLE());
             this.proxy = proxy;
         }
 
         public void run() {
+            System.out.println("unref " + proxy.HANDLE());
             io.github.jwharm.javagi.interop.jextract.gtk_h.g_object_unref(proxy.HANDLE());
         }
     }

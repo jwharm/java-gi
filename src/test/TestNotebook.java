@@ -113,5 +113,14 @@ public class TestNotebook {
 //
 //    public static void main(String[] args) {
 //        new TestNotebook(args);
+//
+//        for (int i = 0; i < 1000; i++) {
+//            int[] arr = new int[1000];
+//            for (int j = 0; j < 1000; j++) {
+//                arr[j] = j;
+//            }
+//            if (arr[0] == 1) System.out.print(arr[999]);
+//        }
+//        System.gc();
 //    }
 }
