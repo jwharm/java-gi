@@ -38,8 +38,8 @@ public class Interface extends RegisteredType {
 
     public void generateProxyInstance(Writer writer) throws IOException {
         writer.write("    class " + javaName + "ProxyInstance extends org.gtk.gobject.Object implements " + javaName + " {\n");
-        writer.write("        public " + javaName + "ProxyInstance(MemoryAddress handle) {\n");
-        writer.write("            super(handle);\n");
+        writer.write("        public " + javaName + "ProxyInstance(io.github.jwharm.javagi.interop.Proxy proxy) {\n");
+        writer.write("            super(proxy);\n");
         writer.write("        }\n");
         writer.write("    }\n");
     }

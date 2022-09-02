@@ -31,7 +31,7 @@ public class Record extends Class {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.interop.ResourceProxy {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.interop.ResourceBase {\n");
         writer.write("\n");
 
         generateMemoryAddressConstructor(writer);
@@ -70,7 +70,7 @@ public class Record extends Class {
             return;
         }
         writer.write("    public " + javaName + "() {\n");
-        writer.write("        super(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address());\n");
+        writer.write("        super(ProxyFactory.getProxy(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()));\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

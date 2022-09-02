@@ -59,10 +59,6 @@ public class Enumeration extends RegisteredType {
 
         writer.write("    private MemoryAddress __HANDLE__;\n");
         writer.write("\n");
-        writer.write("    @Override\n");
-        writer.write("    public void setHANDLE(MemoryAddress handle) {\n");
-        writer.write("        this.__HANDLE__ = handle;\n");
-        writer.write("}\n");
         writer.write("\n");
         writer.write("    @Override\n");
         writer.write("    public MemoryAddress HANDLE() {\n");
