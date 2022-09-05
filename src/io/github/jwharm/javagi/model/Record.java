@@ -70,7 +70,7 @@ public class Record extends Class {
             return;
         }
         writer.write("    public " + javaName + "() {\n");
-        writer.write("        super(ProxyFactory.getProxy(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()), false);\n");
+        writer.write("        super(ProxyFactory.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()), false);\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

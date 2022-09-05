@@ -109,11 +109,11 @@ public class Parameter extends GirElement {
         } else if (type.isPrimitive) {
             writer.write(name);
         } else if (type.isInterface()) {
-            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(ProxyFactory.getProxy(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(ProxyFactory.get(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
         } else if (type.isClass()
                 || type.isAlias()
                 || type.isUnion()) {
-            writer.write("new " + type.qualifiedJavaType + "(ProxyFactory.getProxy(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "(ProxyFactory.get(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
         } else {
             writer.write(name);
         }

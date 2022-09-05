@@ -31,7 +31,7 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(" {\n");
-        writer.write("        super(ProxyFactory.getProxy(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
+        writer.write("        super(ProxyFactory.get(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -60,7 +60,7 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(" {\n");
-        writer.write("        return new " + clazz.javaName + "(ProxyFactory.getProxy(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
+        writer.write("        return new " + clazz.javaName + "(ProxyFactory.get(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
