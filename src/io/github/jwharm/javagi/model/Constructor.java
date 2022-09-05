@@ -39,6 +39,7 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
+        writer.write(returnValue.ownedByCaller() ? ", true" : ", false");
         writer.write("));\n");
         writer.write("    }\n");
         writer.write("    \n");
@@ -67,6 +68,7 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
+        writer.write(returnValue.ownedByCaller() ? ", true" : ", false");
         writer.write("));\n");
         writer.write("    }\n");
         writer.write("    \n");

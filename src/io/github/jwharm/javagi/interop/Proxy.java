@@ -7,8 +7,8 @@ import java.lang.ref.Cleaner;
 public class Proxy implements NativeAddress {
 
     private final static Cleaner cleaner = Cleaner.create();
-    private final Proxy.State state;
-    private final Cleaner.Cleanable cleanable;
+    private Proxy.State state;
+    private Cleaner.Cleanable cleanable;
 
     private static class State implements Runnable {
         MemoryAddress address;
@@ -24,9 +24,11 @@ public class Proxy implements NativeAddress {
         }
     }
 
-    public Proxy(MemoryAddress handle) {
+    public Proxy(MemoryAddress handle, boolean ownedByCaller) {
         state = new Proxy.State(handle);
-        cleanable = cleaner.register(this, state);
+        if (ownedByCaller) {
+            cleanable = cleaner.register(this, state);
+        }
     }
 
     @Override

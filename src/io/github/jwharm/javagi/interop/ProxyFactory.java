@@ -8,7 +8,7 @@ import java.util.WeakHashMap;
 
 public class ProxyFactory {
 
-    private static final Set<Proxy> cache = Collections.newSetFromMap(
+    public static final Set<Proxy> cache = Collections.newSetFromMap(
             new WeakHashMap<Proxy, Boolean>()
     );
 
@@ -19,13 +19,13 @@ public class ProxyFactory {
         return null;
     }
 
-    public static Proxy getProxy(MemoryAddress address) {
+    public static Proxy getProxy(MemoryAddress address, boolean ownedByCaller) {
         for (Proxy p : cache) {
             if (p.HANDLE().equals(address)) {
                 return p;
             }
         }
-        Proxy proxy = new Proxy(address);
+        Proxy proxy = new Proxy(address, ownedByCaller);
         cache.add(proxy);
         return proxy;
     }
