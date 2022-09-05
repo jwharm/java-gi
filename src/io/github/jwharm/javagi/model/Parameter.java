@@ -49,7 +49,7 @@ public class Parameter extends GirElement {
         } else if (type.cType != null && type.cType.endsWith("**")) {
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("Interop.getAllocator().allocateUtf8String(" + name + ")");
+            writer.write("Interop.allocateNativeString(" + name + ").HANDLE()");
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()

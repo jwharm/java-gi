@@ -119,7 +119,7 @@ public class Signal extends Method {
         writer.write(", ValueLayout.ADDRESS);\n");
 
         writer.write("            NativeSymbol nativeSymbol = CLinker.systemCLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
-        writer.write("            io.github.jwharm.javagi.interop.jextract.gtk_h.g_signal_connect_data(this.HANDLE(), Interop.getAllocator().allocateUtf8String(\"" + name + "\"), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
+        writer.write("            io.github.jwharm.javagi.interop.jextract.gtk_h.g_signal_connect_data(this.HANDLE(), Interop.allocateNativeString(\"" + name + "\").HANDLE(), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
 
         // NoSuchMethodException, IllegalAccessException from findStatic()
         // When the static callback methods have been successfully generated, these exceptions should never happen.
