@@ -12,14 +12,9 @@ public class Enumeration extends RegisteredType {
 
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
-
-        writer.write("import io.github.jwharm.javagi.interop.NativeAddress;\n");
-        writer.write("import jdk.incubator.foreign.MemoryAddress;\n");
-        writer.write("\n");
-
         generateJavadoc(writer);
 
-        writer.write("public enum " + javaName + " implements NativeAddress {\n");
+        writer.write("public enum " + javaName + " {\n");
         writer.write("\n");
 
         int remaining = memberList.size();
@@ -56,14 +51,6 @@ public class Enumeration extends RegisteredType {
         writer.write("        };\n");
         writer.write("    }\n");
         writer.write("\n");
-
-        writer.write("    private MemoryAddress __HANDLE__;\n");
-        writer.write("\n");
-        writer.write("\n");
-        writer.write("    @Override\n");
-        writer.write("    public MemoryAddress HANDLE() {\n");
-        writer.write("        return __HANDLE__;\n");
-        writer.write("    }\n");
         writer.write("}\n");
     }
 }

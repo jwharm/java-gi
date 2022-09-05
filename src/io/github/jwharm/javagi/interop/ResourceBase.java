@@ -13,4 +13,8 @@ public class ResourceBase implements NativeAddress {
     public MemoryAddress HANDLE() {
         return proxy.HANDLE();
     }
+
+    public Proxy getProxy() {
+        return this.proxy;
+    }
 }

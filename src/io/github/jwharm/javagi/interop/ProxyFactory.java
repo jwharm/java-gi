@@ -19,13 +19,27 @@ public class ProxyFactory {
         return null;
     }
 
-    public static Proxy getProxy(MemoryAddress address, boolean ownedByCaller) {
+    public static Proxy getCachedProxy(MemoryAddress address) {
         for (Proxy p : cache) {
             if (p.HANDLE().equals(address)) {
                 return p;
             }
         }
-        Proxy proxy = new Proxy(address, ownedByCaller);
+        // Fallback
+        System.out.println("Generating proxy for unknown memory address: " + address);
+        Proxy proxy = new Proxy(address, false);
+        cache.add(proxy);
+        return proxy;
+    }
+
+    public static Proxy getProxy(MemoryAddress address, boolean owned) {
+        for (Proxy p : cache) {
+            if (p.HANDLE().equals(address)) {
+                p.setOwnership(owned);
+                return p;
+            }
+        }
+        Proxy proxy = new Proxy(address, owned);
         cache.add(proxy);
         return proxy;
     }

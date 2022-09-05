@@ -4,7 +4,7 @@ import jdk.incubator.foreign.MemoryAddress;
 
 import java.lang.ref.Cleaner;
 
-public class Proxy implements NativeAddress {
+public class Proxy {
 
     private final static Cleaner cleaner = Cleaner.create();
     private Proxy.State state;
@@ -12,25 +12,40 @@ public class Proxy implements NativeAddress {
 
     private static class State implements Runnable {
         MemoryAddress address;
+        boolean owned;
 
-        State(MemoryAddress address) {
+        State(MemoryAddress address, boolean owned) {
             this.address = address;
+            this.owned = owned;
         }
 
         public void run() {
-            io.github.jwharm.javagi.interop.jextract.gtk_h.g_object_unref(address);
+            if (owned) {
+                io.github.jwharm.javagi.interop.jextract.gtk_h.g_object_unref(address);
+            }
         }
     }
 
-    public Proxy(MemoryAddress handle, boolean ownedByCaller) {
-        state = new Proxy.State(handle);
-        if (ownedByCaller) {
-            cleanable = cleaner.register(this, state);
-        }
+    public Proxy(MemoryAddress handle, boolean owned) {
+        state = new Proxy.State(handle, owned);
+        cleanable = cleaner.register(this, state);
     }
 
-    @Override
     public final MemoryAddress HANDLE() {
         return state.address;
+    }
+
+    public void setOwnership(boolean owned) {
+        state.owned = owned;
+    }
+
+    public Proxy unowned() {
+        setOwnership(false);
+        return this;
+    }
+
+    public Proxy owned() {
+        setOwnership(true);
+        return this;
     }
 }

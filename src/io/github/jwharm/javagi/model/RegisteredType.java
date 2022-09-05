@@ -50,7 +50,7 @@ public abstract class RegisteredType extends GirElement {
     protected void generateCastFromGObject(Writer writer) throws IOException {
         writer.write("    /** Cast object to " + javaName + " */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        return new " + javaName + "(ProxyFactory.getProxy(gobject.HANDLE(), false));\n");
+        writer.write("        return new " + javaName + "(gobject.getProxy());\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

@@ -86,6 +86,8 @@ public interface CallableType {
                        // We don't support out parameters of type enum yet
                     || (p.direction != null && p.direction.contains("out")
                                && p.type != null && "Enumeration".equals(p.type.girElementType))
+                       // We don't support arrays of enum types yet
+                    || (p.array != null && p.array.type != null && "Enumeration".equals(p.array.type.girElementType))
                        // Check for types without a name
                     || (p.type != null && p.type.name == null)
             )) {

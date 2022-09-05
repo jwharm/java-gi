@@ -49,7 +49,7 @@ public class Signal extends Method {
 
         String implClassName = className;
         if (isDefault) {
-            implClassName = className + "." + className + "ProxyInstance";
+            implClassName = className + "." + className + "Impl";
         }
 
         sw.write("    public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
@@ -64,7 +64,7 @@ public class Signal extends Method {
 
         sw.write("        int hash = data.get(C_INT, 0);\n");
         sw.write("        var handler = (" + className + "." + signalName + "Handler) signalRegistry.get(hash);\n");
-        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(ProxyFactory.getProxy(source, false))");
+        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(ProxyFactory.getCachedProxy(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {

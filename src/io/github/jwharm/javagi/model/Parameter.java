@@ -19,7 +19,7 @@ public class Parameter extends GirElement {
         this.direction = direction;
     }
 
-    public boolean ownedByCaller() {
+    public boolean transferOwnership() {
         return "full".equals(transferOwnership);
     }
 
@@ -58,11 +58,13 @@ public class Parameter extends GirElement {
             writer.write(name + ".getValue()");
         } else if (type.isCallback()) {
             ((Callback) type.girElementInstance).generateInterop(writer, name);
+        } else if (type.isRecord()) {
+            writer.write(name + ".HANDLE()");
         } else if (type.isClass()
                 || type.isInterface()
                 || type.isAlias()
                 || type.isUnion()) {
-            writer.write(name + ".HANDLE()");
+            writer.write(name + (transferOwnership() ? ".getProxy().unowned().HANDLE()" : ".HANDLE()"));
         } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
             writer.write(name + " ? 1 : 0");
         } else {
@@ -107,11 +109,11 @@ public class Parameter extends GirElement {
         } else if (type.isPrimitive) {
             writer.write(name);
         } else if (type.isInterface()) {
-            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "ProxyInstance(ProxyFactory.getProxy(" + name + ", " + (ownedByCaller() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(ProxyFactory.getProxy(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
         } else if (type.isClass()
                 || type.isAlias()
                 || type.isUnion()) {
-            writer.write("new " + type.qualifiedJavaType + "(ProxyFactory.getProxy(" + name + ", " + (ownedByCaller() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "(ProxyFactory.getProxy(" + name + ", " + (transferOwnership() ? "true" : "false") + "))");
         } else {
             writer.write(name);
         }
