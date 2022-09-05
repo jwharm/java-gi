@@ -31,14 +31,14 @@ public class Interface extends RegisteredType {
             }
         }
 
-        generateProxyInstance(writer);
+        generateImplClass(writer);
 
         writer.write("}\n");
     }
 
-    public void generateProxyInstance(Writer writer) throws IOException {
-        writer.write("    class " + javaName + "ProxyInstance extends org.gtk.gobject.Object implements " + javaName + " {\n");
-        writer.write("        public " + javaName + "ProxyInstance(io.github.jwharm.javagi.interop.Proxy proxy) {\n");
+    public void generateImplClass(Writer writer) throws IOException {
+        writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
+        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.interop.Proxy proxy) {\n");
         writer.write("            super(proxy);\n");
         writer.write("        }\n");
         writer.write("    }\n");
