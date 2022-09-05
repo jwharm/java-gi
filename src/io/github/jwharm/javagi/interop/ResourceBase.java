@@ -8,7 +8,6 @@ public class ResourceBase implements NativeAddress {
 
     public ResourceBase(Proxy proxy) {
         this.proxy = proxy;
-        System.out.println(getClass().getSimpleName() + " -> " + proxy.HANDLE());
     }
 
     public MemoryAddress HANDLE() {

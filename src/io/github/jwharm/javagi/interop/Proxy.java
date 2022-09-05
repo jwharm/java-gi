@@ -14,12 +14,10 @@ public class Proxy implements NativeAddress {
         MemoryAddress address;
 
         State(MemoryAddress address) {
-            System.out.println("register " + address);
             this.address = address;
         }
 
         public void run() {
-            System.out.println("unref " + address);
             io.github.jwharm.javagi.interop.jextract.gtk_h.g_object_unref(address);
         }
     }
