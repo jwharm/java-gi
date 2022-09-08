@@ -38,8 +38,8 @@ public class Interface extends RegisteredType {
 
     public void generateImplClass(Writer writer) throws IOException {
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
-        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.interop.Proxy proxy) {\n");
-        writer.write("            super(proxy);\n");
+        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.interop.Reference reference) {\n");
+        writer.write("            super(reference);\n");
         writer.write("        }\n");
         writer.write("    }\n");
     }

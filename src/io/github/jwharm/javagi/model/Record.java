@@ -18,7 +18,7 @@ public class Record extends Class {
     /**
      * A record in GI is a struct in C. Java doesn't have a struct type, and the java 'record'
      * functionality has a different purpose. So the generated API just creates a class that
-     * extends ResourceProxy (instead of GObject).
+     * extends ResourceBase (instead of GObject).
      * Structs are often initialized implicitly, which means they don't always have constructors.
      * In those cases, we generate a default constructor that just allocates a memory segment.
      * The API from jextract is used for this; it offers an allocate() method for structs.
@@ -70,7 +70,7 @@ public class Record extends Class {
             return;
         }
         writer.write("    public " + javaName + "() {\n");
-        writer.write("        super(ProxyFactory.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()), false);\n");
+        writer.write("        super(References.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()), false);\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

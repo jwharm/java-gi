@@ -64,7 +64,7 @@ public class Signal extends Method {
 
         sw.write("        int hash = data.get(C_INT, 0);\n");
         sw.write("        var handler = (" + className + "." + signalName + "Handler) signalRegistry.get(hash);\n");
-        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(ProxyFactory.get(source))");
+        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {

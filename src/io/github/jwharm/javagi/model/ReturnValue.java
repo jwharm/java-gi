@@ -19,9 +19,9 @@ public class ReturnValue extends Parameter {
         if (type.simpleJavaType.equals("Type") || type.isAlias() && (!((Alias) type.girElementInstance).inherits())) {
             writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
         } else if (type.isAlias() || type.isClass()) {
-            writer.write("return new " + type.qualifiedJavaType + "(ProxyFactory.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
+            writer.write("return new " + type.qualifiedJavaType + "(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
         } else if (type.isInterface()) {
-            writer.write("return new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(ProxyFactory.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
+            writer.write("return new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
         } else if (type.isEnum()) {
             writer.write("return " + type.qualifiedJavaType + ".fromValue(RESULT);\n");
         } else if (type.name.equals("gboolean") && (! type.cType.equals("_Bool"))) {
