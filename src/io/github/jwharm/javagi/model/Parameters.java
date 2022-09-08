@@ -32,7 +32,7 @@ public class Parameters extends GirElement {
                 writer.write(", ");
             }
             if (p instanceof InstanceParameter) {
-                writer.write("HANDLE()");
+                writer.write("handle()");
             } else {
                 p.generateInterop(writer);
             }

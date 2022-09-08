@@ -31,7 +31,7 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(" {\n");
-        writer.write("        super(References.get(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
+        writer.write("        super(References.get(gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -60,7 +60,7 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(" {\n");
-        writer.write("        return new " + clazz.javaName + "(References.get(io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
+        writer.write("        return new " + clazz.javaName + "(References.get(gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);

@@ -39,7 +39,7 @@ public class Method extends GirElement implements CallableType {
         if (! returnValue.type.isVoid()) {
             writer.write("var RESULT = ");
         }
-        writer.write("io.github.jwharm.javagi.interop.jextract.gtk_h." + cIdentifier);
+        writer.write("gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);

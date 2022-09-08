@@ -49,7 +49,7 @@ public class Parameter extends GirElement {
         } else if (type.cType != null && type.cType.endsWith("**")) {
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("Interop.allocateNativeString(" + name + ").HANDLE()");
+            writer.write("Interop.allocateNativeString(" + name + ").handle()");
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()
@@ -59,12 +59,12 @@ public class Parameter extends GirElement {
         } else if (type.isCallback()) {
             ((Callback) type.girElementInstance).generateInterop(writer, name);
         } else if (type.isRecord()) {
-            writer.write(name + ".HANDLE()");
+            writer.write(name + ".handle()");
         } else if (type.isClass()
                 || type.isInterface()
                 || type.isAlias()
                 || type.isUnion()) {
-            writer.write(name + (transferOwnership() ? ".getReference().unowned().HANDLE()" : ".HANDLE()"));
+            writer.write(name + (transferOwnership() ? ".getReference().unowned().handle()" : ".handle()"));
         } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
             writer.write(name + " ? 1 : 0");
         } else {
