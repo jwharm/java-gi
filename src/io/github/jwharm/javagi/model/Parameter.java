@@ -74,17 +74,17 @@ public class Parameter extends GirElement {
 
     private void generateArrayInterop(Writer writer) throws IOException {
         if (array == null && type != null && type.cType.endsWith("**")) {
-            writer.write("Interop.allocateNativeArray(" + name + ")");
+            writer.write("Interop.allocateNativeArray(" + name + ").handle()");
         } else if (array != null) {
             if (array.type == null) {
                 writer.write("MemoryAddress.NULL");
             } else if (array.type.simpleJavaType.equals("boolean")) {
-                writer.write("Interop.allocateNativeArray(" + name + ")");
+                writer.write("Interop.allocateNativeArray(" + name + ").handle()");
             } else if (array.type.isPrimitive) {
                 String typeconst = "JAVA_" + array.type.simpleJavaType.toUpperCase();
-                writer.write("Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")");
+                writer.write("new MemorySegmentReference(Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")).handle()");
             } else {
-                writer.write("Interop.allocateNativeArray(" + name + ")");
+                writer.write("Interop.allocateNativeArray(" + name + ").handle()");
             }
         }
     }
