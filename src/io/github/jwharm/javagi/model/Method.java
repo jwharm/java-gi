@@ -33,7 +33,7 @@ public class Method extends GirElement implements CallableType {
         writer.write(" {\n");
 
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = io.github.jwharm.javagi.interop.jextract.GError.allocate(Interop.getScope());\n");
+            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         writer.write("        ");
         if (! returnValue.type.isVoid()) {
@@ -50,8 +50,8 @@ public class Method extends GirElement implements CallableType {
         writer.write(";\n");
 
         if (throws_ != null) {
-            writer.write("        if (! java.util.Objects.equals(MemoryAddress.NULL, GERROR)) {\n");
-            writer.write("            throw new io.github.jwharm.javagi.interop.GErrorException(GERROR);\n");
+            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("            throw new GErrorException(GERROR);\n");
             writer.write("        }\n");
         }
         returnValue.generateReturnStatement(writer, 2);

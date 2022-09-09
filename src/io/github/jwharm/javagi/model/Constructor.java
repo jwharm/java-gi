@@ -130,7 +130,7 @@ public class Constructor extends Method {
         }
         writer.write(" throws GErrorException");
         writer.write(" {\n");
-        writer.write("        MemorySegment GERROR = io.github.jwharm.javagi.interop.jextract.GError.allocate(Interop.getScope());\n");
+        writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         writer.write("        Reference RESULT = References.get(gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
@@ -141,7 +141,7 @@ public class Constructor extends Method {
         }
         writer.write(returnValue.transferOwnership() ? ", true" : ", false");
         writer.write(");\n");
-        writer.write("        if (! java.util.Objects.equals(MemoryAddress.NULL, GERROR)) {\n");
+        writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
         writer.write("            throw new GErrorException(GERROR);\n");
         writer.write("        }\n");
         writer.write("        return RESULT;\n");
