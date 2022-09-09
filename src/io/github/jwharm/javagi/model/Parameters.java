@@ -25,6 +25,18 @@ public class Parameters extends GirElement {
         }
     }
 
+    public void generateJavaParameterNames(Writer writer) throws IOException {
+        int counter = 0;
+        for (Parameter p : parameterList) {
+            if (! (p instanceof InstanceParameter)) {
+                if (counter++ > 0) {
+                    writer.write(", ");
+                }
+                writer.write(p.name);
+            }
+        }
+    }
+
     public void generateCParameters(Writer writer, String throws_) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {

@@ -14,6 +14,23 @@ public class RepositoryEditor {
         update_MenuButton_GetDirection(repositories);
         update_PrintUnixDialog_getSettings(repositories);
         update_TypeModule_use(repositories);
+        remove_AsyncInitable_newFinish(repositories);
+    }
+
+    /**
+     * g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
+     * It is meant to be implemented as a constructor (actually, a static factory method).
+     * However, Java does not allow a (non-static) method to be implemented/overridden by a
+     * static method.
+     * The solution is to remove the method from the interface. It is still available in the
+     * implementing classes.
+     */
+    private static void remove_AsyncInitable_newFinish(Map<String, Repository> repositories) {
+        Method method = findMethod(repositories, "Gio", "AsyncInitable", "new_finish");
+        if (method != null) {
+            var parent = method.parent;
+            parent.methodList.remove(method);
+        }
     }
 
     private static void update_TypeModule_use(Map<String, Repository> repositories) {

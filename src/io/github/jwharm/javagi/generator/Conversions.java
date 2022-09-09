@@ -70,7 +70,7 @@ public class Conversions {
         return null;
     }
 
-    private static String toCamelCase(String typeName, boolean startUpperCase) {
+    public static String toCamelCase(String typeName, boolean startUpperCase) {
         if (typeName == null) {
             return null;
         }

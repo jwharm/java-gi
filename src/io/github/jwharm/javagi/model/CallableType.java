@@ -108,7 +108,6 @@ public interface CallableType {
             return false;
         }
 
-        // We don't support constructors with exceptions (GError) yet
-        return (! (this instanceof Constructor ctr && ctr.throws_ != null));
+        return true;
     }
 }
