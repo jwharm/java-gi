@@ -45,6 +45,12 @@ public class Class extends RegisteredType {
             }
         }
 
+        for (Function function : functionList) {
+            if (function.isSafeToBind()) {
+                function.generate(writer, false, true);
+            }
+        }
+
         for (Signal s : signalList) {
             if (s.isSafeToBind()) {
                 s.generate(writer, false);
