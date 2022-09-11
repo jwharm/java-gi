@@ -81,8 +81,6 @@ public interface CallableType {
                     || (p.array == null && p.type.isPrimitive && p.type.cType.endsWith("*"))
                        // GType is just a long, so we don't support pointers to GType either
                     || (p.array == null && p.type.cType != null && p.type.cType.equals("GType*"))
-                       // We don't support callback functions yet
-                    || (p.array == null && p.type.isCallback())
                        // We don't support out parameters of type enum yet
                     || (p.direction != null && p.direction.contains("out")
                                && p.type != null && "Enumeration".equals(p.type.girElementType))
@@ -93,7 +91,16 @@ public interface CallableType {
             )) {
                 return false;
             }
+
+            // Check for callback parameters where the last parameter name does not end with "data"
+            if (ps.parameterList.stream().anyMatch(p -> p.array == null && p.type.isCallback())) {
+                if (! ps.parameterList.get(ps.parameterList.size() - 1).name.endsWith("data")) {
+                    System.out.println("Not safe to bind with callback parameter: " + this + " in " + ((GirElement) this).parent);
+                    return false;
+                }
+            }
         }
+
         if (
             // Check for return value without type (probably arrays)
                (rv.type == null)

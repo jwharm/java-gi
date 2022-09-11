@@ -9,8 +9,6 @@ public abstract class RegisteredType extends GirElement {
 
     public final String javaName, parentClass;
 
-    public boolean used = false;
-
     public RegisteredType(GirElement parent, String name, String parentClass) {
         super(parent);
         this.parentClass = Conversions.toQualifiedJavaType(parentClass);
@@ -60,9 +58,8 @@ public abstract class RegisteredType extends GirElement {
     }
 
     /**
-     * GObject constructors are named, and this allows multiple constructors with the same parameter types.
-     * This method detects the problem, and generates a regular constructor when possible, or else static factory
-     * methods.
+     * Generates all constructors listed for this type. When the constructor is not named "new", a static
+     * factory method is generated with the provided name.
      */
     protected void generateConstructors(Writer writer) throws IOException {
         for (Constructor c : constructorList) {

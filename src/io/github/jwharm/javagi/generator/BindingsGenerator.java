@@ -40,7 +40,6 @@ public class BindingsGenerator {
             writer.write("import jdk.incubator.foreign.*;\n");
             writer.write("import java.util.HashMap;\n");
             writer.write("import io.github.jwharm.javagi.interop.*;\n");
-            writer.write("import io.github.jwharm.javagi.interop.jextract.gtk_h;");
             writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
             writer.write("\n");
             writer.write("public final class JVMCallbacks {\n");

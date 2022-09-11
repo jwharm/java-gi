@@ -56,8 +56,6 @@ public class Parameter extends GirElement {
                 || type.simpleJavaType.equals("Type")
                 || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
             writer.write(name + ".getValue()");
-        } else if (type.isCallback()) {
-            ((Callback) type.girElementInstance).generateInterop(writer, name);
         } else if (type.isRecord()) {
             writer.write(name + ".handle()");
         } else if (type.isClass()
