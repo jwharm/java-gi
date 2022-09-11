@@ -16,9 +16,13 @@ public class Callback extends RegisteredType implements CallableType {
         super(parent, name, null);
     }
 
-    public void generate(Writer writer) throws IOException {
+    public boolean isSafeToBind() {
+        return ((parameters != null)
+                && parameters.parameterList.stream().anyMatch(Parameter::isUserDataParameter)
+        );
+    }
 
-        if (returnValue.type == null) return;
+    public void generate(Writer writer) throws IOException {
 
         generateFunctionalInterface(writer);
         generateStaticCallback();
@@ -26,19 +30,27 @@ public class Callback extends RegisteredType implements CallableType {
 
     private void generateFunctionalInterface(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
-
+        generateJavadoc(writer);
         writer.write("@FunctionalInterface\n");
         writer.write("public interface " + javaName + " {\n");
-        writer.write("\n");
-        writer.write("        void on" + javaName + "(");
-
+        writer.write("        ");
+        if (returnValue.type == null) {
+            writer.write("void");
+        } else if (returnValue.type.isBitfield()) {
+            writer.write("int");
+        } else {
+            writer.write(returnValue.type.qualifiedJavaType);
+        }
+        writer.write(" on" + javaName + "(");
         if (parameters != null) {
-            // Write all parameters except the final userdata pointer
-            for (int p = 0; p < parameters.parameterList.size() - 1; p++) {
-                Parameter parameter = parameters.parameterList.get(p);
-                parameter.generateTypeAndName(writer);
-                if (p < parameters.parameterList.size() - 2) {
-                    writer.write(", ");
+            int counter = 0;
+            for (Parameter p : parameters.parameterList) {
+                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
+                    if (counter > 0) {
+                        writer.write(", ");
+                    }
+                    p.generateTypeAndName(writer);
+                    counter++;
                 }
             }
         }
@@ -46,37 +58,56 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("}\n");
     }
 
-
     // Generate the static callback method, that will run the handler method.
     private void generateStaticCallback() throws IOException {
         StringWriter sw = new StringWriter();
 
-        sw.write("    public static void " + "cb" + javaName + "(");
+        sw.write("    public static ");
+        if (returnValue.type == null) {
+            sw.write("void");
+        } else if (returnValue.type.isBitfield()) {
+            sw.write("int");
+        } else {
+            sw.write(returnValue.type.qualifiedJavaType);
+        }
+        sw.write(" cb" + javaName + "(");
 
         String dataParamName = "";
         if (parameters != null) {
-            for (int p = 0; p < parameters.parameterList.size(); p++) {
-                if (p > 0) {
+            int counter = 0;
+            for (Parameter p : parameters.parameterList) {
+                if (counter > 0) {
                     sw.write(", ");
                 }
-                Parameter parameter = parameters.parameterList.get(p);
-                sw.write (Conversions.toPanamaJavaType(parameter.type) + " ");
-                dataParamName = Conversions.toLowerCaseJavaName(parameter.name);
-                sw.write(dataParamName);
+                sw.write (Conversions.toPanamaJavaType(p.type) + " ");
+                sw.write(Conversions.toLowerCaseJavaName(p.name));
+                if (p.isUserDataParameter()) {
+                    dataParamName = Conversions.toLowerCaseJavaName(p.name);
+                }
+                counter++;
             }
         }
         sw.write(") {\n");
 
         sw.write("        int hash = " + dataParamName + ".get(C_INT, 0);\n");
-        sw.write("        var handler = (" + javaName + ") signalRegistry.get(hash);\n");
-        sw.write("        handler.on" + javaName + "(");
+        sw.write("        var handler = (" + javaName + ") Interop.signalRegistry.get(hash);\n");
+        sw.write("        ");
+        if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
+            sw.write("return ");
+        }
+        sw.write("handler.on" + javaName + "(");
 
         if (parameters != null) {
-            for (int p = 0; p < parameters.parameterList.size() - 1; p++) {
-                if (p != 0) {
+            int counter = 0;
+            for (Parameter p : parameters.parameterList) {
+                if (p.isUserDataParameter() || p.isDestroyNotify()) {
+                    continue;
+                }
+                if (counter > 0) {
                     sw.write(", ");
                 }
-                parameters.parameterList.get(p).generateCallbackInterop(sw);
+                p.generateCallbackInterop(sw);
+                counter++;
             }
         }
         sw.write(");\n");

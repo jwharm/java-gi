@@ -92,12 +92,11 @@ public interface CallableType {
                 return false;
             }
 
-            // Check for callback parameters where the last parameter name does not end with "data"
-            if (ps.parameterList.stream().anyMatch(p -> p.array == null && p.type.isCallback())) {
-                if (! ps.parameterList.get(ps.parameterList.size() - 1).name.endsWith("data")) {
-                    System.out.println("Not safe to bind with callback parameter: " + this + " in " + ((GirElement) this).parent);
-                    return false;
-                }
+            // Check for methods with a callback parameter but no user_data parameter
+            if (ps.parameterList.stream().anyMatch(Parameter::isCallbackParameter)
+                    && ps.parameterList.stream().noneMatch(Parameter::isUserDataParameter)
+            ) {
+                return false;
             }
         }
 

@@ -33,7 +33,7 @@ public class Method extends GirElement implements CallableType {
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-                if (p.type != null && p.type.isCallback()) {
+                if (p.isCallbackParameter()) {
                     generateCallbackMethod(writer, (Callback) p.type.girElementInstance, p.type.simpleJavaType, p.name, isDefault, isStatic);
                     return;
                 }
@@ -76,32 +76,42 @@ public class Method extends GirElement implements CallableType {
             doc.generate(writer, 1);
         }
 
+        if (! callback.isSafeToBind()) {
+            return;
+        }
+
         String methodName = Conversions.toLowerCaseJavaName(name);
         if (isDefault) { // Overriding toString() in a default method is not allowed.
             methodName = Conversions.replaceJavaObjectMethodNames(methodName);
         }
 
-        writer.write("    public " + (isDefault ? "default " : "") + "void " + methodName + "(");
+        writer.write("    public " + (isDefault ? "default " : ""));
+        if (getReturnValue().type.isBitfield()) {
+            writer.write("int");
+        } else {
+            writer.write(getReturnValue().type.qualifiedJavaType);
+        }
+        writer.write(" " + methodName + "(");
 
         // Loop through all parameters except the last (the userdata pointer).
-        for (int p = 0; p < parameters.parameterList.size() - 1; p++) {
-            Parameter parameter = parameters.parameterList.get(p);
-            if (parameter instanceof InstanceParameter) {
-                continue;
-            }
-            parameter.generateTypeAndName(writer);
-            if (p < parameters.parameterList.size() - 2) {
-                writer.write(", ");
+        int counter = 0;
+        for (Parameter p : parameters.parameterList) {
+            if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
+                if (counter > 0) {
+                    writer.write(", ");
+                }
+                p.generateTypeAndName(writer);
+                counter++;
             }
         }
         writer.write(") {\n");
         writer.write("        try {\n");
         writer.write("            int hash = " + callbackParameterName + ".hashCode();\n");
-        writer.write("            JVMCallbacks.signalRegistry.put(hash, " + callbackParameterName + ");\n");
+        writer.write("            Interop.signalRegistry.put(hash, " + callbackParameterName + ");\n");
         writer.write("            MemorySegment intSegment = Interop.getAllocator().allocate(C_INT, hash);\n");
         writer.write("            MethodType methodType = MethodType.methodType(");
 
-        writer.write("void.class");
+        writer.write(Conversions.toPanamaJavaType(callback.returnValue.type) + ".class");
         if (callback.parameters != null) {
             for (Parameter p : callback.parameters.parameterList) {
                 writer.write(", " + Conversions.toPanamaJavaType(p.type) + ".class");
@@ -112,7 +122,15 @@ public class Method extends GirElement implements CallableType {
         writer.write("            MethodHandle methodHandle = MethodHandles.lookup().findStatic(JVMCallbacks.class, \"cb" + callbackType + "\", methodType);\n");
         writer.write("            FunctionDescriptor descriptor = FunctionDescriptor.");
 
-        writer.write("ofVoid(");
+        if (callback.returnValue.type == null
+                || "void".equals(callback.returnValue.type.simpleJavaType)) {
+            writer.write("ofVoid(");
+        } else {
+            writer.write("of(" + Conversions.toPanamaMemoryLayout(callback.returnValue.type));
+            if (callback.parameters != null) {
+                writer.write(", ");
+            }
+        }
         if (callback.parameters != null) {
             for (int p = 0; p < callback.parameters.parameterList.size(); p++) {
                 if (p > 0) {
@@ -125,20 +143,23 @@ public class Method extends GirElement implements CallableType {
 
         writer.write("            NativeSymbol nativeSymbol = CLinker.systemCLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
         writer.write("            gtk_h." + cIdentifier + "(");
-        for (int p = 0; p < parameters.parameterList.size(); p++) {
-            if (p > 0) {
+        counter = 0;
+        for (Parameter p : parameters.parameterList) {
+            if (counter > 0) {
                 writer.write(", ");
             }
-            Parameter parameter = parameters.parameterList.get(p);
-            if (parameter instanceof InstanceParameter) {
+            if (p.isInstanceParameter()) {
                 writer.write("handle()");
-            } else if (parameter.type != null && parameter.type.isCallback()) {
+            } else if (p.isDestroyNotify()) {
+                writer.write("Interop.cbDestroyNotifySymbol()");
+            } else if (p.isCallbackParameter()) {
                 writer.write("nativeSymbol");
-            } else if (p == parameters.parameterList.size() - 1) {
+            } else if (p.isUserDataParameter()) {
                 writer.write("intSegment");
             } else {
-                parameter.generateInterop(writer);
+                p.generateInterop(writer);
             }
+            counter++;
         }
         writer.write(");\n");
 

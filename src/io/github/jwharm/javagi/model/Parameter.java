@@ -23,6 +23,23 @@ public class Parameter extends GirElement {
         return "full".equals(transferOwnership);
     }
 
+    public boolean isInstanceParameter() {
+        return (this instanceof InstanceParameter);
+    }
+
+    public boolean isCallbackParameter() {
+        return (type != null) && type.isCallback();
+    }
+
+    public boolean isUserDataParameter() {
+        return (type != null) && name.toLowerCase().endsWith("data")
+                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
+    }
+
+    public boolean isDestroyNotify() {
+        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
+    }
+
     public void generateTypeAndName(Writer writer) throws IOException {
         if (array != null) {
             writer.write(array.type.qualifiedJavaType + "[] " + name);

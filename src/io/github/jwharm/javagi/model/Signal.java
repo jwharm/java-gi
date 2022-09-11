@@ -63,7 +63,7 @@ public class Signal extends Method {
         sw.write(", MemoryAddress data) {\n");
 
         sw.write("        int hash = data.get(C_INT, 0);\n");
-        sw.write("        var handler = (" + className + "." + signalName + "Handler) signalRegistry.get(hash);\n");
+        sw.write("        var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
         sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
 
         if (parameters != null) {
@@ -87,7 +87,7 @@ public class Signal extends Method {
         writer.write("    public " + (isDefault ? "default " : "") + "void on" + signalName + "(" + signalName + "Handler handler) {\n");
         writer.write("        try {\n");
         writer.write("            int hash = handler.hashCode();\n");
-        writer.write("            JVMCallbacks.signalRegistry.put(hash, handler);\n");
+        writer.write("            Interop.signalRegistry.put(hash, handler);\n");
         writer.write("            MemorySegment intSegment = Interop.getAllocator().allocate(C_INT, hash);\n");
         writer.write("            MethodType methodType = MethodType.methodType(");
 

@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
+import io.github.jwharm.javagi.model.Callback;
 import io.github.jwharm.javagi.model.Function;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Repository;
@@ -22,6 +23,11 @@ public class BindingsGenerator {
         new File(basePath).mkdirs();
 
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
+
+            if (rt instanceof Callback cb && (! cb.isSafeToBind())) {
+                continue;
+            }
+
             try (FileWriter writer = new FileWriter(basePath + rt.javaName + ".java")) {
                 rt.generate(writer);
             }
@@ -38,13 +44,10 @@ public class BindingsGenerator {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             writer.write("import jdk.incubator.foreign.*;\n");
-            writer.write("import java.util.HashMap;\n");
             writer.write("import io.github.jwharm.javagi.interop.*;\n");
             writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
             writer.write("\n");
             writer.write("public final class JVMCallbacks {\n");
-            writer.write("    \n");
-            writer.write("    public static final HashMap<java.lang.Integer, java.lang.Object> signalRegistry = new HashMap<>();\n");
             writer.write("    \n");
             writer.write(signalCallbackFunctions.toString());
             writer.write("}\n");
