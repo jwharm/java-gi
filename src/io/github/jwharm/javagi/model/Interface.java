@@ -16,7 +16,7 @@ public class Interface extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.interop.NativeAddress {\n");
+        writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.NativeAddress {\n");
         writer.write("\n");
 
         for (Method m : methodList) {
@@ -44,7 +44,7 @@ public class Interface extends RegisteredType {
 
     public void generateImplClass(Writer writer) throws IOException {
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
-        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.interop.Reference reference) {\n");
+        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Reference reference) {\n");
         writer.write("            super(reference);\n");
         writer.write("        }\n");
         writer.write("    }\n");

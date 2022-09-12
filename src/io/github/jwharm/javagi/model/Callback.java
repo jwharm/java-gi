@@ -16,12 +16,6 @@ public class Callback extends RegisteredType implements CallableType {
         super(parent, name, null);
     }
 
-    public boolean isSafeToBind() {
-        return ((parameters != null)
-                && parameters.parameterList.stream().anyMatch(Parameter::isUserDataParameter)
-        );
-    }
-
     public void generate(Writer writer) throws IOException {
 
         generateFunctionalInterface(writer);
@@ -45,7 +39,8 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
-                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
+                // Exclude GError** parameters for now
+                if (! (p.isUserDataParameter() || p.isDestroyNotify() || p.isErrorParameter())) {
                     if (counter > 0) {
                         writer.write(", ");
                     }
@@ -89,6 +84,11 @@ public class Callback extends RegisteredType implements CallableType {
         }
         sw.write(") {\n");
 
+        // Cannot handle callback without user_data parameter.
+        if (dataParamName.equals("")) {
+            return;
+        }
+
         sw.write("        int hash = " + dataParamName + ".get(C_INT, 0);\n");
         sw.write("        var handler = (" + javaName + ") Interop.signalRegistry.get(hash);\n");
         sw.write("        ");
@@ -100,7 +100,8 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
-                if (p.isUserDataParameter() || p.isDestroyNotify()) {
+                // Exclude GError** parameters for now
+                if (p.isUserDataParameter() || p.isDestroyNotify() || p.isErrorParameter()) {
                     continue;
                 }
                 if (counter > 0) {

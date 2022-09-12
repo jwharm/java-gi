@@ -63,7 +63,7 @@ public interface CallableType {
 
         // Exceptions
         if (throws_ != null) {
-            writer.write( " throws io.github.jwharm.javagi.interop.GErrorException");
+            writer.write( " throws io.github.jwharm.javagi.GErrorException");
         }
     }
 

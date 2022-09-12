@@ -31,7 +31,7 @@ public class Record extends Class {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.interop.ResourceBase {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
         writer.write("\n");
 
         generateMemoryAddressConstructor(writer);

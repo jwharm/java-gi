@@ -84,10 +84,9 @@ public class Signal extends Method {
         if (doc != null) {
             doc.generate(writer, 1);
         }
-        writer.write("    public " + (isDefault ? "default " : "") + "void on" + signalName + "(" + signalName + "Handler handler) {\n");
+        writer.write("    public " + (isDefault ? "default " : "") + "SignalHandle on" + signalName + "(" + signalName + "Handler handler) {\n");
         writer.write("        try {\n");
-        writer.write("            int hash = handler.hashCode();\n");
-        writer.write("            Interop.signalRegistry.put(hash, handler);\n");
+        writer.write("            int hash = Interop.registerCallback(handler.hashCode(), handler);\n");
         writer.write("            MemorySegment intSegment = Interop.getAllocator().allocate(C_INT, hash);\n");
         writer.write("            MethodType methodType = MethodType.methodType(");
 
@@ -119,7 +118,8 @@ public class Signal extends Method {
         writer.write(", ValueLayout.ADDRESS);\n");
 
         writer.write("            NativeSymbol nativeSymbol = CLinker.systemCLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
-        writer.write("            gtk_h.g_signal_connect_data(handle(), Interop.allocateNativeString(\"" + name + "\").handle(), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
+        writer.write("            long handlerId = gtk_h.g_signal_connect_data(handle(), Interop.allocateNativeString(\"" + name + "\").handle(), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
+        writer.write("            return new SignalHandle(handle(), handlerId);\n");
 
         // NoSuchMethodException, IllegalAccessException from findStatic()
         // When the static callback methods have been successfully generated, these exceptions should never happen.

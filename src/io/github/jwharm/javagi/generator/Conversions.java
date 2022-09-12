@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
+import io.github.jwharm.javagi.model.Alias;
 import io.github.jwharm.javagi.model.Type;
 
 import java.util.Arrays;
@@ -137,8 +138,13 @@ public class Conversions {
             return "MemoryAddress";
         } else if (t.isEnum() || t.isBitfield()) {
             return "int";
-        } else if (t.isPrimitive) {
+        } else if (t.isPrimitive
+                || "void".equals(t.simpleJavaType)) {
             return t.simpleJavaType;
+        } else if (t.simpleJavaType.equals("Type")) {
+            return "long";
+        } else if ((t.isAlias() && (! ((Alias) t.girElementInstance).inherits()))) {
+            return t.girElementInstance.type.simpleJavaType;
         } else {
             return "MemoryAddress";
         }

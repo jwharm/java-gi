@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.Callback;
 import io.github.jwharm.javagi.model.Function;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Repository;
@@ -24,10 +23,6 @@ public class BindingsGenerator {
 
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
 
-            if (rt instanceof Callback cb && (! cb.isSafeToBind())) {
-                continue;
-            }
-
             try (FileWriter writer = new FileWriter(basePath + rt.javaName + ".java")) {
                 rt.generate(writer);
             }
@@ -44,7 +39,7 @@ public class BindingsGenerator {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             writer.write("import jdk.incubator.foreign.*;\n");
-            writer.write("import io.github.jwharm.javagi.interop.*;\n");
+            writer.write("import io.github.jwharm.javagi.*;\n");
             writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
             writer.write("\n");
             writer.write("public final class JVMCallbacks {\n");

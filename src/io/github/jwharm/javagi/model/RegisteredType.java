@@ -27,7 +27,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("import org.gtk.gobject.*;\n");
         writer.write("import io.github.jwharm.javagi.interop.jextract.gtk_h;\n");
         writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
-        writer.write("import io.github.jwharm.javagi.interop.*;\n");
+        writer.write("import io.github.jwharm.javagi.*;\n");
         writer.write("import jdk.incubator.foreign.*;\n");
         writer.write("import java.lang.invoke.*;\n");
         writer.write("\n");
@@ -51,7 +51,7 @@ public abstract class RegisteredType extends GirElement {
     }
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
-        writer.write("    public " + javaName + "(io.github.jwharm.javagi.interop.Reference reference) {\n");
+        writer.write("    public " + javaName + "(io.github.jwharm.javagi.Reference reference) {\n");
         writer.write("        super(reference);\n");
         writer.write("    }\n");
         writer.write("    \n");

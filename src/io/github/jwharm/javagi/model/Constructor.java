@@ -17,10 +17,7 @@ public class Constructor extends Method {
             return;
         }
 
-        String privateMethodName = null;
-        if (throws_ != null) {
-            privateMethodName = generateConstructorHelper(writer);
-        }
+        String privateMethodName = generateConstructorHelper(writer);
 
         if (doc != null) {
             doc.generate(writer, 1);
@@ -38,28 +35,15 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        if (throws_ != null) {
-            writer.write("        super(" + privateMethodName);
-            if (parameters != null) {
-                writer.write("(");
-                parameters.generateJavaParameterNames(writer);
-                writer.write(")");
-            } else {
-                writer.write("()");
-            }
-            writer.write(");\n");
+        writer.write("        super(" + privateMethodName);
+        if (parameters != null) {
+            writer.write("(");
+            parameters.generateJavaParameterNames(writer);
+            writer.write(")");
         } else {
-            writer.write("        super(References.get(gtk_h." + cIdentifier);
-            if (parameters != null) {
-                writer.write("(");
-                parameters.generateCParameters(writer, throws_);
-                writer.write(")");
-            } else {
-                writer.write("()");
-            }
-            writer.write(returnValue.transferOwnership() ? ", true" : ", false");
-            writer.write("));\n");
+            writer.write("()");
         }
+        writer.write(");\n");
         writer.write("    }\n");
         writer.write("    \n");
     }
@@ -67,10 +51,7 @@ public class Constructor extends Method {
     public void generateNamed(Writer writer) throws IOException {
         RegisteredType clazz = (RegisteredType) parent;
 
-        String privateMethodName = null;
-        if (throws_ != null) {
-            privateMethodName = generateConstructorHelper(writer);
-        }
+        String privateMethodName = generateConstructorHelper(writer);
 
         if (doc != null) {
             doc.generate(writer, 1);
@@ -87,39 +68,27 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        if (throws_ != null) {
-            writer.write("        return new " + clazz.javaName + "(" + privateMethodName);
-            if (parameters != null) {
-                writer.write("(");
-                parameters.generateJavaParameterNames(writer);
-                writer.write(")");
-            } else {
-                writer.write("()");
-            }
-            writer.write(");\n");
+        writer.write("        return new " + clazz.javaName + "(" + privateMethodName);
+        if (parameters != null) {
+            writer.write("(");
+            parameters.generateJavaParameterNames(writer);
+            writer.write(")");
         } else {
-            writer.write("        return new " + clazz.javaName + "(References.get(gtk_h." + cIdentifier);
-            if (parameters != null) {
-                writer.write("(");
-                parameters.generateCParameters(writer, throws_);
-                writer.write(")");
-            } else {
-                writer.write("()");
-            }
-            writer.write(returnValue.transferOwnership() ? ", true" : ", false");
-            writer.write("));\n");
+            writer.write("()");
         }
+        writer.write(");\n");
         writer.write("    }\n");
         writer.write("    \n");
     }
 
-    // For constructors that throw exceptions, we cannot call super(gtk_h.ns_obj_new(..., GERROR))
-    // because the GError needs to be allocated first, which is not allowed - the super() call must
-    // be the first statement in the constructor. So in this case, we generate a private method that
-    // prepares a GError memorysegment, calls the C API and throws the exception (if necessary). The
-    // "real" constructor then just calls super(private_method());
+    // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
+    // calling "super(gtk_h.ns_obj_new(..., GERROR))", which is not allowed - the super() call must
+    // be the first statement in the constructor. Therefore, we always generate a private method that
+    // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
+    // (if necessary). The "real" constructor just calls super(private_method());
     private String generateConstructorHelper(Writer writer) throws IOException {
-        String methodName = "construct" + Conversions.toCamelCase(name, true) + "OrThrow";
+        boolean tryCatch = false;
+        String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("    private static Reference " + methodName);
         if (parameters != null) {
             writer.write("(");
@@ -128,10 +97,19 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(" throws GErrorException");
+        if (throws_ != null) {
+            writer.write(" throws GErrorException");
+        }
         writer.write(" {\n");
-        writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
-        writer.write("        Reference RESULT = References.get(gtk_h." + cIdentifier);
+        if (throws_ != null) {
+            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
+        }
+        if (parameters != null && parameters.hasCallbackParameter()) {
+            tryCatch = true;
+            writer.write("        try {\n");
+        }
+        writer.write(" ".repeat(tryCatch ? 12 : 8));
+        writer.write("Reference RESULT = References.get(gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -141,10 +119,17 @@ public class Constructor extends Method {
         }
         writer.write(returnValue.transferOwnership() ? ", true" : ", false");
         writer.write(");\n");
-        writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
-        writer.write("            throw new GErrorException(GERROR);\n");
-        writer.write("        }\n");
-        writer.write("        return RESULT;\n");
+        if (throws_ != null) {
+            writer.write(" ".repeat(tryCatch ? 12 : 8) + "if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write(" ".repeat(tryCatch ? 12 : 8) + "    throw new GErrorException(GERROR);\n");
+            writer.write(" ".repeat(tryCatch ? 12 : 8) + "}\n");
+        }
+        writer.write(" ".repeat(tryCatch ? 12 : 8) + "return RESULT;\n");
+        if (parameters != null && parameters.hasCallbackParameter()) {
+            writer.write("        } catch (Exception e) {\n");
+            writer.write("            throw new RuntimeException(e);\n");
+            writer.write("        }\n");
+        }
         writer.write("    }\n");
         writer.write("    \n");
         return methodName;

@@ -12,13 +12,13 @@ public class Union extends RegisteredType {
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
 
-        writer.write("import io.github.jwharm.javagi.interop.NativeAddress;\n");
+        writer.write("import io.github.jwharm.javagi.NativeAddress;\n");
         writer.write("import jdk.incubator.foreign.MemoryAddress;\n");
         writer.write("\n");
 
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.interop.ResourceBase {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
         writer.write("    \n");
         generateMemoryAddressConstructor(writer);
         writer.write("}\n");

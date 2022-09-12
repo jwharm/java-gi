@@ -40,6 +40,10 @@ public class Parameter extends GirElement {
         return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
     }
 
+    public boolean isErrorParameter() {
+        return (type != null) && "GError**".equals(type.cType);
+    }
+
     public void generateTypeAndName(Writer writer) throws IOException {
         if (array != null) {
             writer.write(array.type.qualifiedJavaType + "[] " + name);
@@ -113,10 +117,11 @@ public class Parameter extends GirElement {
             writer.write(name + ".getUtf8String(0)");
         } else if (type.isBitfield()) {
             writer.write(name);
-        } else if (type.isEnum()
-                || type.simpleJavaType.equals("Type")
-                || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
+        } else if (type.isEnum()) {
             writer.write(type.qualifiedJavaType + ".fromValue(" + name + ")");
+        } else if (type.simpleJavaType.equals("Type")
+                || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
+            writer.write("new " + type.qualifiedJavaType + "(" + name + ")");
         } else if (type.isCallback()) {
             writer.write("null"); // I don't think this situation exists
         } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
