@@ -20,7 +20,7 @@ public class RepositoryEditor {
         renameMethod(repositories, "Gtk", "PrintUnixDialog", "get_settings", "get_print_settings");
         renameMethod(repositories, "Gio", "BufferedInputStream", "read_byte", "read_int");
         renameMethod(repositories, "Gtk", "MenuButton", "get_direction", "get_arrow_direction");
-        renameMethod(repositories, "Gobject", "TypeModule", "use", "use_type_module");
+        renameMethod(repositories, "GObject", "TypeModule", "use", "use_type_module");
 
         // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
         // It is meant to be implemented as a constructor (actually, a static factory method).
