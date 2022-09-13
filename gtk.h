@@ -11,6 +11,7 @@
 #include <gio/gunixmounts.h>
 #include <gio/gunixoutputstream.h>
 #include <gio/gunixsocketaddress.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkunixprint.h>
 #include <gsk/gl/gskglrenderer.h>

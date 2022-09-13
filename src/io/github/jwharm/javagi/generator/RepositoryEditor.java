@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
+import io.github.jwharm.javagi.model.Function;
 import io.github.jwharm.javagi.model.Method;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Repository;
@@ -15,6 +16,10 @@ public class RepositoryEditor {
         // These types require mapping va_list (varargs) types
         removeType(repositories, "GObject", "VaClosureMarshal");
         removeType(repositories, "GObject", "SignalCVaMarshaller");
+        removeFunction(repositories, "GObject", "signal_set_va_marshaller");
+
+        // This method has parameters that jextract does not support
+        removeFunction(repositories, "GLib", "assertion_message_cmpnum");
 
         // These methods override (or are overridden by) another method, but with a different return type
         renameMethod(repositories, "Gtk", "PrintUnixDialog", "get_settings", "get_print_settings");
@@ -29,6 +34,27 @@ public class RepositoryEditor {
         // The solution is to remove the method from the interface. It is still available in the
         // implementing classes.
         removeMethod(repositories, "Gio", "AsyncInitable", "new_finish");
+
+        // These functions have two Callback parameters, this isn't supported yet
+        removeFunction(repositories, "GObject", "signal_new_valist");
+        removeFunction(repositories, "GObject", "signal_newv");
+
+        // This function has no parameters in the gir file
+        removeFunction(repositories, "Cairo", "image_surface_create");
+    }
+
+    private static void removeFunction(Map<String, Repository> repositories,
+                                       String ns,
+                                       String function) {
+        Repository gir = repositories.get(ns);
+        if (gir != null) {
+            for (Function f : gir.namespace.functionList) {
+                if (function.equals(f.name)) {
+                    gir.namespace.functionList.remove(f);
+                    return;
+                }
+            }
+        }
     }
 
     private static void removeMethod(Map<String, Repository> repositories,

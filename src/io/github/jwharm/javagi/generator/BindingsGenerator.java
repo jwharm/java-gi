@@ -29,9 +29,7 @@ public class BindingsGenerator {
         }
         generateSignalCallbacks(gir, basePath);
 
-        if (gir.namespace.name.equals("Gtk")) {
-            generateGlobals(gir, basePath);
-        }
+        generateGlobals(gir, basePath);
     }
 
     public void generateSignalCallbacks(Repository gir, String basePath) throws IOException {
