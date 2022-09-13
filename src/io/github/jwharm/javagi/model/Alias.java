@@ -14,7 +14,11 @@ public class Alias extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName);
+        if (type.isCallback()) {
+            writer.write("public interface " + javaName);
+        } else {
+            writer.write("public class " + javaName);
+        }
 
         // Handle alias for type "none"
         if (type.qualifiedJavaType.equals("void")) {
@@ -33,7 +37,9 @@ public class Alias extends RegisteredType {
                     && (! type.girElementInstance.type.isRecord())) {
                 generateCastFromGObject(writer);
             }
-            generateMemoryAddressConstructor(writer);
+            if (! type.isCallback()) {
+                generateMemoryAddressConstructor(writer);
+            }
         } else {
             writer.write("    private final " + type.simpleJavaType + " value;\n");
             writer.write("    \n");
@@ -53,7 +59,6 @@ public class Alias extends RegisteredType {
     // For primitives and Strings, we wrap the value.
     public boolean inherits() {
         return (! (type.isPrimitive
-                || type.isCallback()
                 || type.qualifiedJavaType.equals("java.lang.String")));
     }
 }
