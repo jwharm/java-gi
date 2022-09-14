@@ -51,6 +51,14 @@ public class Alias extends RegisteredType {
             writer.write("        return this.value;\n");
             writer.write("    }\n");
             writer.write("    \n");
+            writer.write("    public static " + type.simpleJavaType + "[] getValues(" + javaName + "[] array) {\n");
+            writer.write("        " + type.simpleJavaType + "[] values = new " + type.simpleJavaType + "[array.length];\n");
+            writer.write("        for (int i = 0; i < array.length; i++) {\n");
+            writer.write("            values[i] = array[i].getValue();\n");
+            writer.write("        }\n");
+            writer.write("        return values;\n");
+            writer.write("    }\n");
+            writer.write("    \n");
         }
         writer.write("}\n");
     }

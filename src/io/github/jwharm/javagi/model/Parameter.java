@@ -102,6 +102,8 @@ public class Parameter extends GirElement {
             } else if (array.type.isPrimitive) {
                 String typeconst = "JAVA_" + array.type.simpleJavaType.toUpperCase();
                 writer.write("new MemorySegmentReference(Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")).handle()");
+            } else if (array.type.isAlias() && (!((Alias) array.type.girElementInstance).inherits())) {
+                writer.write("Interop.allocateNativeArray(" + array.type.qualifiedJavaType + ".getValues(" + name + ")).handle()");
             } else {
                 writer.write("Interop.allocateNativeArray(" + name + ").handle()");
             }

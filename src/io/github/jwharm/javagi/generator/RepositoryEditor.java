@@ -39,8 +39,9 @@ public class RepositoryEditor {
         removeFunction(repositories, "GObject", "signal_new_valist");
         removeFunction(repositories, "GObject", "signal_newv");
 
-        // This function has no parameters in the gir file
-        removeFunction(repositories, "Cairo", "image_surface_create");
+        // These function are incompletely defined in the gir file
+        removeFunction(repositories, "cairo", "image_surface_create");
+        removeFunction(repositories, "GLib", "clear_error");
     }
 
     private static void removeFunction(Map<String, Repository> repositories,

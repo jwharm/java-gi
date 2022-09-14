@@ -81,9 +81,16 @@ public interface CallableType {
                     || (p.array == null && p.type.isPrimitive && p.type.cType.endsWith("*"))
                        // GType is just a long, so we don't support pointers to GType either
                     || (p.array == null && p.type.cType != null && p.type.cType.equals("GType*"))
+                       // We don't support pointers to aliases to primitive types either
+                    || (p.array == null && p.type.isAlias() && p.type.cType.endsWith("*"))
+                               && (! ((Alias) p.type.girElementInstance).inherits())
                        // We don't support out parameters of type enum yet
                     || (p.direction != null && p.direction.contains("out")
                                && p.type != null && "Enumeration".equals(p.type.girElementType))
+                       // We don't support out parameters of type primitive-type-aliases yet
+                    || (p.direction != null && p.direction.contains("out")
+                               && p.type != null && "Alias".equals(p.type.girElementType))
+                               && (! ((Alias) p.type.girElementInstance).inherits())
                        // We don't support arrays of enum types yet
                     || (p.array != null && p.array.type != null && "Enumeration".equals(p.array.type.girElementType))
                        // Check for types without a name
