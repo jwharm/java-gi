@@ -16,7 +16,7 @@ public class ReturnValue extends Parameter {
 
         writer.write(" ".repeat(indent * 4));
 
-        if (type.simpleJavaType.equals("Type") || type.isAlias() && (!((Alias) type.girElementInstance).inherits())) {
+        if (type.simpleJavaType.equals("Type") || type.isAliasForPrimitive()) {
             writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
         } else if (type.isAlias() || type.isClass()) {
             writer.write("return new " + type.qualifiedJavaType + "(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");

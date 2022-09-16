@@ -1,5 +1,8 @@
 package io.github.jwharm.javagi.model;
 
+import java.io.IOException;
+import java.io.Writer;
+
 public class Constant extends GirElement {
 
     public final String value, cType;
@@ -9,5 +12,43 @@ public class Constant extends GirElement {
         this.name = name;
         this.value = value;
         this.cType = cType;
+    }
+
+    public void generate(Writer writer) throws IOException {
+        try {
+            writer.write("    public static final " + type.qualifiedJavaType
+                    + " " + name + " = " + formatValue() + ";\n");
+            writer.write("\n");
+        } catch (NumberFormatException nfe) {
+            // Do not write anything
+        }
+    }
+
+    private String formatValue() throws NumberFormatException {
+        if (type.isAliasForPrimitive()) {
+            String aliasedType = ((Alias) type.girElementInstance).type.simpleJavaType;
+            return "new " + type.qualifiedJavaType + "("
+                    + primitiveRepresentation(aliasedType, value) + ")";
+        }
+        if (type.isEnum()) {
+            return type.qualifiedJavaType + ".fromValue("
+                    + primitiveRepresentation("int", value) + ")";
+        }
+        return primitiveRepresentation(type.qualifiedJavaType, value);
+    }
+
+    private String primitiveRepresentation(String type, String value) throws NumberFormatException {
+        return switch (type) {
+            case "boolean" -> Boolean.valueOf(value).toString();
+            case "byte" -> Byte.valueOf(value).toString();
+            case "char" -> "'" + value + "'";
+            case "double" -> Double.valueOf(value) + "d";
+            case "float" -> Float.valueOf(value) + "f";
+            case "int" -> Integer.valueOf(value).toString();
+            case "long" -> Long.valueOf(value) + "L";
+            case "short" -> Short.valueOf(value).toString();
+            case "java.lang.String" -> '"' + value + '"';
+            default -> value;
+        };
     }
 }

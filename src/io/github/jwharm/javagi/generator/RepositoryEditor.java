@@ -1,9 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.Function;
-import io.github.jwharm.javagi.model.Method;
-import io.github.jwharm.javagi.model.RegisteredType;
-import io.github.jwharm.javagi.model.Repository;
+import io.github.jwharm.javagi.model.*;
 
 import java.util.Map;
 
@@ -13,6 +10,7 @@ public class RepositoryEditor {
         // These types are defined in the GIR, but unavailable by default
         removeType(repositories, "Gsk", "BroadwayRenderer");
         removeType(repositories, "Gsk", "BroadwayRendererClass");
+
         // These types require mapping va_list (varargs) types
         removeType(repositories, "GObject", "VaClosureMarshal");
         removeType(repositories, "GObject", "SignalCVaMarshaller");
@@ -31,8 +29,8 @@ public class RepositoryEditor {
         // It is meant to be implemented as a constructor (actually, a static factory method).
         // However, Java does not allow a (non-static) method to be implemented/overridden by a
         // static method.
-        // The solution is to remove the method from the interface. It is still available in the
-        // implementing classes.
+        // The current solution is to remove the method from the interface. It is still
+        // available in the implementing classes.
         removeMethod(repositories, "Gio", "AsyncInitable", "new_finish");
 
         // These functions have two Callback parameters, this isn't supported yet
@@ -42,6 +40,23 @@ public class RepositoryEditor {
         // These function are incompletely defined in the gir file
         removeFunction(repositories, "cairo", "image_surface_create");
         removeFunction(repositories, "GLib", "clear_error");
+
+        // This constant has type "language_t" which cannot be instantiated
+        removeConstant(repositories, "HarfBuzz", "LANGUAGE_INVALID");
+    }
+
+    private static void removeConstant(Map<String, Repository> repositories,
+                                       String ns,
+                                       String constant) {
+        Repository gir = repositories.get(ns);
+        if (gir != null) {
+            for (Constant c : gir.namespace.constantList) {
+                if (constant.equals(c.name)) {
+                    gir.namespace.constantList.remove(c);
+                    return;
+                }
+            }
+        }
     }
 
     private static void removeFunction(Map<String, Repository> repositories,

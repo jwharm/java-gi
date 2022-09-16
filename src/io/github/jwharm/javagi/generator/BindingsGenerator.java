@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
+import io.github.jwharm.javagi.model.Constant;
 import io.github.jwharm.javagi.model.Function;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Repository;
@@ -55,6 +56,10 @@ public class BindingsGenerator {
             RegisteredType.generateImportStatements(writer);
             writer.write("public final class " + className + " {\n");
             writer.write("    \n");
+
+            for (Constant constant : gir.namespace.constantList) {
+                constant.generate(writer);
+            }
 
             for (Function function : gir.namespace.functionList) {
                 if (function.isSafeToBind()) {
