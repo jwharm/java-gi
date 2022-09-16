@@ -16,28 +16,23 @@ public class Constant extends GirElement {
 
     public void generate(Writer writer) throws IOException {
         try {
-            writer.write("    public static final " + type.qualifiedJavaType
-                    + " " + name + " = " + formatValue() + ";\n");
+            String printValue;
+            if (type.isAliasForPrimitive()) {
+                String aliasedType = ((Alias) type.girElementInstance).type.simpleJavaType;
+                printValue = "new " + type.qualifiedJavaType + "(" + literal(aliasedType, value) + ")";
+            } else if (type.isEnum()) {
+                printValue = type.qualifiedJavaType + ".fromValue(" + literal("int", value) + ")";
+            } else {
+                printValue = literal(type.qualifiedJavaType, value);
+            }
+            writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
             writer.write("\n");
         } catch (NumberFormatException nfe) {
             // Do not write anything
         }
     }
 
-    private String formatValue() throws NumberFormatException {
-        if (type.isAliasForPrimitive()) {
-            String aliasedType = ((Alias) type.girElementInstance).type.simpleJavaType;
-            return "new " + type.qualifiedJavaType + "("
-                    + primitiveRepresentation(aliasedType, value) + ")";
-        }
-        if (type.isEnum()) {
-            return type.qualifiedJavaType + ".fromValue("
-                    + primitiveRepresentation("int", value) + ")";
-        }
-        return primitiveRepresentation(type.qualifiedJavaType, value);
-    }
-
-    private String primitiveRepresentation(String type, String value) throws NumberFormatException {
+    private String literal(String type, String value) throws NumberFormatException {
         return switch (type) {
             case "boolean" -> Boolean.valueOf(value).toString();
             case "byte" -> Byte.valueOf(value).toString();
