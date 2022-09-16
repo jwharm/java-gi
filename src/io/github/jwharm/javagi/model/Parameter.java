@@ -75,7 +75,7 @@ public class Parameter extends GirElement {
             writer.write(name);
         } else if (type.isEnum()
                 || type.simpleJavaType.equals("Type")
-                || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
+                || (type.isAliasForPrimitive())) {
             writer.write(name + ".getValue()");
         } else if (type.isRecord()) {
             writer.write(name + ".handle()");
@@ -102,7 +102,7 @@ public class Parameter extends GirElement {
             } else if (array.type.isPrimitive) {
                 String typeconst = "JAVA_" + array.type.simpleJavaType.toUpperCase();
                 writer.write("new MemorySegmentReference(Interop.getAllocator().allocateArray(ValueLayout." + typeconst + ", " + name + ")).handle()");
-            } else if (array.type.isAlias() && (!((Alias) array.type.girElementInstance).inherits())) {
+            } else if (array.type.isAliasForPrimitive()) {
                 writer.write("Interop.allocateNativeArray(" + array.type.qualifiedJavaType + ".getValues(" + name + ")).handle()");
             } else {
                 writer.write("Interop.allocateNativeArray(" + name + ").handle()");
@@ -122,7 +122,7 @@ public class Parameter extends GirElement {
         } else if (type.isEnum()) {
             writer.write(type.qualifiedJavaType + ".fromValue(" + name + ")");
         } else if (type.simpleJavaType.equals("Type")
-                || (type.isAlias() && (! ((Alias) type.girElementInstance).inherits()))) {
+                || (type.isAliasForPrimitive())) {
             writer.write("new " + type.qualifiedJavaType + "(" + name + ")");
         } else if (type.isCallback()) {
             writer.write("null"); // I don't think this situation exists

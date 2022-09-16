@@ -143,7 +143,7 @@ public class Conversions {
             return t.simpleJavaType;
         } else if (t.simpleJavaType.equals("Type")) {
             return "long";
-        } else if ((t.isAlias() && (! ((Alias) t.girElementInstance).inherits()))) {
+        } else if (t.isAliasForPrimitive()) {
             return t.girElementInstance.type.simpleJavaType;
         } else {
             return "MemoryAddress";
