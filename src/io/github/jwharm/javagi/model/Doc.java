@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Javadoc;
+
 import java.io.IOException;
 import java.io.Writer;
 
@@ -16,8 +18,9 @@ public class Doc extends GirElement {
         if (contents == null || contents.length() == 0) {
             return;
         }
+        String javadoc = Javadoc.convert(contents);
         writer.write(" ".repeat(indent * 4) + "/**\n");
-        for (String line : contents.trim().lines().toList()) {
+        for (String line : javadoc.trim().lines().toList()) {
             String escapedLine = line.replace("\\", "\\\\");
             writer.write(" ".repeat(indent * 4) + " * " + escapedLine + "\n");
         }
