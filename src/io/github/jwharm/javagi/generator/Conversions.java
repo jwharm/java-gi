@@ -1,11 +1,15 @@
 package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.Alias;
+import io.github.jwharm.javagi.model.GirElement;
 import io.github.jwharm.javagi.model.Type;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public class Conversions {
+
+    public static Map<String, GirElement> cIdentifierLookupTable;
 
     /** Convert "Gdk" to "org.gtk.gdk" */
     public static String namespaceToJavaPackage(String ns) {

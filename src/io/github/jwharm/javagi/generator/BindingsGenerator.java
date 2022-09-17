@@ -1,13 +1,11 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.Constant;
-import io.github.jwharm.javagi.model.Function;
-import io.github.jwharm.javagi.model.RegisteredType;
-import io.github.jwharm.javagi.model.Repository;
+import io.github.jwharm.javagi.model.*;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 
 public class BindingsGenerator {
 
@@ -29,7 +27,6 @@ public class BindingsGenerator {
             }
         }
         generateSignalCallbacks(gir, basePath);
-
         generateGlobals(gir, basePath);
     }
 

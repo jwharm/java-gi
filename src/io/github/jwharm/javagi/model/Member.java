@@ -4,11 +4,12 @@ import io.github.jwharm.javagi.generator.Conversions;
 
 public class Member extends GirElement {
 
-    String name;
+    public String cIdentifier;
     int value;
 
-    public Member(GirElement parent, String name, String value) {
+    public Member(GirElement parent, String name, String cIdentifier, String value) {
         super(parent);
+        this.cIdentifier = cIdentifier;
         if (name != null) {
             this.name = Conversions.prefixDigits(name);
         }

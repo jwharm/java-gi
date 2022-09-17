@@ -155,7 +155,8 @@ public class GirParser extends DefaultHandler {
                 current = newInterface;
             }
             case "member" -> {
-                Member newMember = new Member(current, attr.getValue("name"), attr.getValue("value"));
+                Member newMember = new Member(current, attr.getValue("name"),
+                        attr.getValue("c:identifier"), attr.getValue("value"));
                 current.memberList.add(newMember);
                 current = newMember;
             }

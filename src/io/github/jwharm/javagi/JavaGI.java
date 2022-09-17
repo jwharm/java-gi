@@ -1,9 +1,6 @@
 package io.github.jwharm.javagi;
 
-import io.github.jwharm.javagi.generator.BindingsGenerator;
-import io.github.jwharm.javagi.generator.RepositoryEditor;
-import io.github.jwharm.javagi.generator.CrossReference;
-import io.github.jwharm.javagi.generator.GirParser;
+import io.github.jwharm.javagi.generator.*;
 import io.github.jwharm.javagi.model.Repository;
 
 import java.util.HashMap;
@@ -42,6 +39,7 @@ public class JavaGI {
 
         System.out.println("LINK " + repositories.size() + " REPOSITORIES");
         CrossReference.link(repositories);
+        Conversions.cIdentifierLookupTable = CrossReference.createIdLookupTable(repositories);
 
         System.out.println("APPLY PATCHES");
         RepositoryEditor.applyPatches(repositories);

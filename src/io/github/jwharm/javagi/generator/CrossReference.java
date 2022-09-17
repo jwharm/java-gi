@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -48,5 +49,21 @@ public class CrossReference {
                 element = element.next;
             }
         }
+    }
+
+    public static Map<String, GirElement> createIdLookupTable(Map<String, Repository> repositories) {
+        Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
+        for (Repository repository : repositories.values()) {
+            GirElement element = repository;
+            while (element != null) {
+                if (element instanceof Method m) {
+                    cIdentifierLookupTable.put(m.cIdentifier, m);
+                } else if (element instanceof Member m) {
+                    cIdentifierLookupTable.put(m.cIdentifier, m);
+                }
+                element = element.next;
+            }
+        }
+        return cIdentifierLookupTable;
     }
 }
