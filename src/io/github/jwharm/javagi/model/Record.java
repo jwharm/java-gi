@@ -7,11 +7,10 @@ import java.io.Writer;
 
 public class Record extends Class {
 
-    public final String cType, isGTypeStructFor;
+    public final String isGTypeStructFor;
 
     public Record(GirElement parent, String name, String cType, String isGTypeStructFor) {
-        super(parent, name, null);
-        this.cType = cType;
+        super(parent, name, null, cType);
         this.isGTypeStructFor = isGTypeStructFor;
     }
 

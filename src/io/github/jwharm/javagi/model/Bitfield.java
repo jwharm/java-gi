@@ -6,8 +6,8 @@ import java.io.Writer;
 // Not implemented
 public class Bitfield extends RegisteredType {
 
-    public Bitfield(GirElement parent, String name) {
-        super(parent, name, null);
+    public Bitfield(GirElement parent, String name, String cType) {
+        super(parent, name, null, cType);
     }
 
     public void generate(Writer writer) throws IOException {

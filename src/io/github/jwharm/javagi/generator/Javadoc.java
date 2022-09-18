@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.GirElement;
+import io.github.jwharm.javagi.model.RegisteredType;
 
 import java.util.stream.Collectors;
 
@@ -12,6 +13,7 @@ public class Javadoc {
         javadoc = convertCodeblocks(javadoc, false);
         javadoc = convertReferences(javadoc);
         javadoc = convertConstantReferences(javadoc);
+        javadoc = convertCTypeReferences(javadoc);
         return javadoc;
     }
 
@@ -40,12 +42,12 @@ public class Javadoc {
     }
 
     private static String convertHeader(String line) {
-        if (line.startsWith("###")) {
+        if (line.startsWith("### ")) {
             return "<h3>" + line.substring(3).trim() + "</h3>";
-        } else if (line.startsWith("##")) {
-            return "<h2>" + line.substring(3).trim() + "</h2>";
-        } else if (line.startsWith("#")) {
-            return "<h1>" + line.substring(3).trim() + "</h1>";
+        } else if (line.startsWith("## ")) {
+            return "<h2>" + line.substring(2).trim() + "</h2>";
+        } else if (line.startsWith("# ")) {
+            return "<h1>" + line.substring(1).trim() + "</h1>";
         } else {
             return line;
         }
@@ -156,7 +158,7 @@ public class Javadoc {
         while ((pos = gtkdoc.indexOf('%', prev)) != -1) {
             javadoc.append(gtkdoc.substring(prev, pos));
 
-            int end = gtkdoc.indexOf(' ', pos); // FIXME: check for "," and other characters
+            int end = endOfWord(gtkdoc, pos + 1);
             if (end == -1) {
                 break;
             }
@@ -194,6 +196,39 @@ public class Javadoc {
         }
     }
 
+    private static String convertCTypeReferences(String gtkdoc) {
+        int prev = 0, pos = 0;
+        StringBuilder javadoc = new StringBuilder();
+        while ((pos = gtkdoc.indexOf('#', prev)) != -1) {
+            javadoc.append(gtkdoc.substring(prev, pos));
+
+            int end = endOfWord(gtkdoc, pos + 1);
+            if (end == -1) {
+                break;
+            }
+            String link = convertCTypeReference(gtkdoc.substring(pos, end));
+            javadoc.append(link).append(" ");
+
+            prev = end + 1;
+        }
+        if (javadoc.length() == 0) {
+            return gtkdoc;
+        } else {
+            javadoc.append(gtkdoc.substring(prev));
+            return javadoc.toString();
+        }
+    }
+
+    private static String convertCTypeReference(String reference) {
+        RegisteredType rt = Conversions.cTypeLookupTable.get(reference.substring(1));
+        if (rt == null) {
+            return "<code>" + reference + "</code>";
+        } else {
+            String name = Conversions.namespaceToJavaPackage(rt.getNamespace().name) + "." + rt.name;
+            return "{@link " + name + "}";
+        }
+    }
+
     private static String girElementToString(GirElement girElement, boolean uppercase) {
         if (girElement == null) {
             return null;
@@ -212,5 +247,15 @@ public class Javadoc {
             name += "#" + (uppercase ? call.toUpperCase() : Conversions.toLowerCaseJavaName(call));
         }
         return name;
+    }
+
+    private static int endOfWord(String str, int from) {
+        for (int i = from; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (! (Character.isLetterOrDigit(c) || c == '_')) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

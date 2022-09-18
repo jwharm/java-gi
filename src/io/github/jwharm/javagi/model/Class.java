@@ -7,8 +7,8 @@ import java.io.Writer;
 
 public class Class extends RegisteredType {
 
-    public Class(GirElement parent, String name, String parentClass) {
-        super(parent, name, parentClass);
+    public Class(GirElement parent, String name, String parentClass, String cType) {
+        super(parent, name, parentClass, cType);
     }
 
     public void generate(Writer writer) throws IOException {

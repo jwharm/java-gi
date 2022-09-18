@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 public class Enumeration extends RegisteredType {
 
-    public Enumeration(GirElement parent, String name) {
-        super(parent, name, null);
+    public Enumeration(GirElement parent, String name, String cType) {
+        super(parent, name, null, cType);
     }
 
     public void generate(Writer writer) throws IOException {

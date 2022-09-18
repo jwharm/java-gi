@@ -40,6 +40,7 @@ public class JavaGI {
         System.out.println("LINK " + repositories.size() + " REPOSITORIES");
         CrossReference.link(repositories);
         Conversions.cIdentifierLookupTable = CrossReference.createIdLookupTable(repositories);
+        Conversions.cTypeLookupTable = CrossReference.createCTypeLookupTable(repositories);
 
         System.out.println("APPLY PATCHES");
         RepositoryEditor.applyPatches(repositories);

@@ -7,12 +7,13 @@ import java.io.Writer;
 
 public abstract class RegisteredType extends GirElement {
 
-    public final String javaName, parentClass;
+    public final String javaName, parentClass, cType;
 
-    public RegisteredType(GirElement parent, String name, String parentClass) {
+    public RegisteredType(GirElement parent, String name, String parentClass, String cType) {
         super(parent);
         this.parentClass = Conversions.toQualifiedJavaType(parentClass);
         this.name = name;
+        this.cType = cType;
         this.javaName = Conversions.toSimpleJavaType(name);
     }
 

@@ -5,8 +5,8 @@ import java.io.Writer;
 
 public class Union extends RegisteredType {
 
-    public Union(GirElement parent, String name) {
-        super(parent, name, null);
+    public Union(GirElement parent, String name, String cType) {
+        super(parent, name, null, cType);
     }
 
     public void generate(Writer writer) throws IOException {

@@ -66,4 +66,14 @@ public class CrossReference {
         }
         return cIdentifierLookupTable;
     }
+
+    public static Map<String, RegisteredType> createCTypeLookupTable(Map<String, Repository> repositories) {
+        Map<String, RegisteredType> cIdentifierLookupTable = new HashMap<>();
+        for (Repository gir : repositories.values()) {
+            for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
+                cIdentifierLookupTable.put(rt.cType, rt);
+            }
+        }
+        return cIdentifierLookupTable;
+    }
 }
