@@ -75,7 +75,7 @@ public class Record extends Class {
             return;
         }
         writer.write("    public " + javaName + "() {\n");
-        writer.write("        super(References.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()), false);\n");
+        writer.write("        super(References.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()));\n");
         writer.write("    }\n");
         writer.write("    \n");
     }
