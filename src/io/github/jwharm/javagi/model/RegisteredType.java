@@ -29,7 +29,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("import io.github.jwharm.javagi.interop.jextract.gtk_h;\n");
         writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
         writer.write("import io.github.jwharm.javagi.*;\n");
-        writer.write("import jdk.incubator.foreign.*;\n");
+        writer.write("import java.lang.foreign.*;\n");
         writer.write("import java.lang.invoke.*;\n");
         writer.write("\n");
     }

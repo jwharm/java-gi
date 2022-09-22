@@ -13,7 +13,7 @@ public class Union extends RegisteredType {
         generatePackageDeclaration(writer);
 
         writer.write("import io.github.jwharm.javagi.NativeAddress;\n");
-        writer.write("import jdk.incubator.foreign.MemoryAddress;\n");
+        writer.write("import java.lang.foreign.MemoryAddress;\n");
         writer.write("\n");
 
         generateJavadoc(writer);

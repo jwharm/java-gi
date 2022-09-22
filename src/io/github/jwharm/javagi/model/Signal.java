@@ -117,7 +117,7 @@ public class Signal extends Method {
         }
         writer.write(", ValueLayout.ADDRESS);\n");
 
-        writer.write("            NativeSymbol nativeSymbol = CLinker.systemCLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
+        writer.write("            MemorySegment nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
         writer.write("            long handlerId = gtk_h.g_signal_connect_data(handle(), Interop.allocateNativeString(\"" + name + "\").handle(), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
         writer.write("            return new SignalHandle(handle(), handlerId);\n");
 

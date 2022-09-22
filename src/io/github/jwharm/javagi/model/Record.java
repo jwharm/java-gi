@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.model;
 
-import jdk.incubator.foreign.SegmentAllocator;
+import java.lang.foreign.SegmentAllocator;
 
 import java.io.IOException;
 import java.io.Writer;

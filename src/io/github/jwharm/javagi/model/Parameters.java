@@ -81,7 +81,7 @@ public class Parameters extends GirElement {
                 writer.write("                    Interop.cbDestroyNotifySymbol()");
             } else if (p.isCallbackParameter()) {
                 writer.write("\n");
-                writer.write("                    CLinker.systemCLinker().upcallStub(\n");
+                writer.write("                    Linker.nativeLinker().upcallStub(\n");
                 writer.write("                        MethodHandles.lookup().findStatic(JVMCallbacks.class, \"cb" + p.type.simpleJavaType + "\",\n");
                 writer.write("                            MethodType.methodType(");
                 writer.write(Conversions.toPanamaJavaType(callback.returnValue.type) + ".class");
