@@ -11,7 +11,8 @@ import java.util.regex.Pattern;
 public class GtkDoc {
 
     private static final String REGEX =
-              "(?<codeblock>```(?<content>(?s)[[^`][^`][^`]]+)```)"
+              "(?<codeblock>```(?<content>(?s).+?)```)"
+            + "|(?<codeblock2>\\|\\[(?<content2>(?s).+?)\\]\\|)"
             + "|(?<code>`[^`]+`)"
             + "|(?<link>\\[(?<type>.+)@(?<path>(?<part1>[^\\.\\]]+)?\\.?(?<part2>[^\\.\\]\\:]+)?[\\.\\:]?(?<part3>.+)?)\\])"
             + "|(?<macroref>\\%\\w+)"
@@ -27,6 +28,7 @@ public class GtkDoc {
 
     private static final String[] NAMED_GROUPS = new String[] {
             "codeblock",
+            "codeblock2",
             "code",
             "link",
             "macroref",
@@ -79,6 +81,7 @@ public class GtkDoc {
 
         return switch(groupName) {
             case "codeblock" -> convertCodeblock(matcher.group(), matcher.group("content"));
+            case "codeblock2" -> convertCodeblock(matcher.group(), matcher.group("content2"));
             case "code" -> convertCode(matcher.group());
             case "link" -> convertLink(matcher.group(),
                     matcher.group("type"), matcher.group("path"),
@@ -136,9 +139,9 @@ public class GtkDoc {
 
     private String convertMacroref(String ref) {
         switch (ref) {
-            case "%NULL":   return "<code>null</code>";
-            case "%TRUE":   return "<code>true</code>";
-            case "%FALSE":  return "<code>false</code>";
+            case "%NULL":   return "{@code null}";
+            case "%TRUE":   return "{@code true}";
+            case "%FALSE":  return "{@code false}";
         }
         GirElement girElement = Conversions.cIdentifierLookupTable.get(ref.substring(1));
         String name = girElementToString(girElement, true);
