@@ -22,7 +22,8 @@ public class JavaGI {
                 "cairo-1.0.gir",
                 "Pango-1.0.gir",
                 "Graphene-1.0.gir",
-                "Gtk-4.0.gir"
+                "Gtk-4.0.gir",
+                "Adw-1.gir"
         };
 
         GirParser parser = new GirParser();

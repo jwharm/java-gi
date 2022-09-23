@@ -6,8 +6,8 @@ PACKAGE_NAME=io.github.jwharm.javagi.interop.jextract
 rm -rf generated
 mkdir generated generated/bin generated/src generated/lib
 
-PKG_LIBS=`pkg-config --libs gdk-pixbuf-2.0 gtk4-unix-print gtk4`
-PKG_INCLUDES=`pkg-config --cflags-only-I gdk-pixbuf-2.0 gio-unix-2.0 gtk4-unix-print gtk4`
+PKG_LIBS=`pkg-config --libs gdk-pixbuf-2.0 gtk4-unix-print gtk4 libadwaita-1`
+PKG_INCLUDES=`pkg-config --cflags-only-I gdk-pixbuf-2.0 gio-unix-2.0 gtk4-unix-print gtk4 libadwaita-1`
 
 # Generate java classes
 jextract --output generated/bin -t $PACKAGE_NAME $PKG_LIBS $PKG_INCLUDES gtk.h

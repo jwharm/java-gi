@@ -21,3 +21,4 @@
 #include <harfbuzz/hb-aat.h>
 #include <harfbuzz/hb-ft.h>
 #include <harfbuzz/hb-glib.h>
+#include <adwaita.h>

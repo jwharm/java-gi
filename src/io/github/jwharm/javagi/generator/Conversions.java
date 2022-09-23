@@ -15,22 +15,13 @@ public class Conversions {
 
     /** Convert "Gdk" to "org.gtk.gdk" */
     public static String namespaceToJavaPackage(String ns) {
-        String packageName;
-        switch (ns.toLowerCase()) {
-            case "gobject", "glib", "gio", "atk", "gdk", "gsk", "gdkpixbuf", "graphene", "gtk" -> {
-                packageName = "org.gtk." + ns;
-            }
-            case "cairo" -> {
-                packageName = "org.cairographics";
-            }
-            case "pango", "pangocairo", "harfbuzz" -> {
-                packageName = "org." + ns;
-            }
-            default -> {
-                packageName = ns;
-            }
-        }
-        return packageName.toLowerCase();
+        return (switch (ns.toLowerCase()) {
+            case "gobject", "glib", "gio", "atk", "gdk", "gsk", "gdkpixbuf", "graphene", "gtk" -> "org.gtk." + ns;
+            case "cairo" -> "org.cairographics";
+            case "pango", "pangocairo", "harfbuzz" -> "org." + ns;
+            case "adw" -> "org.gnome." + ns;
+            default -> ns;
+        }).toLowerCase();
     }
 
     /** Convert "identifier_name" to "identifierName" */
