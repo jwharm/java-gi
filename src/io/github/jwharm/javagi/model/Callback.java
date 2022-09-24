@@ -55,47 +55,47 @@ public class Callback extends RegisteredType implements CallableType {
 
     // Generate the static callback method, that will run the handler method.
     private void generateStaticCallback() throws IOException {
-        StringWriter sw = new StringWriter();
+        StringWriter writer = new StringWriter();
 
-        sw.write("    public static ");
+        writer.write("    public static ");
         if (returnValue.type == null) {
-            sw.write("void");
+            writer.write("void");
         } else if (returnValue.type.isBitfield()) {
-            sw.write("int");
+            writer.write("int");
         } else {
-            sw.write(returnValue.type.qualifiedJavaType);
+            writer.write(returnValue.type.qualifiedJavaType);
         }
-        sw.write(" cb" + javaName + "(");
+        writer.write(" __cb" + javaName + "(");
 
         String dataParamName = "";
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
                 if (counter > 0) {
-                    sw.write(", ");
+                    writer.write(", ");
                 }
-                sw.write (Conversions.toPanamaJavaType(p.type) + " ");
-                sw.write(Conversions.toLowerCaseJavaName(p.name));
+                writer.write (Conversions.toPanamaJavaType(p.type) + " ");
+                writer.write(Conversions.toLowerCaseJavaName(p.name));
                 if (p.isUserDataParameter()) {
                     dataParamName = Conversions.toLowerCaseJavaName(p.name);
                 }
                 counter++;
             }
         }
-        sw.write(") {\n");
+        writer.write(") {\n");
 
         // Cannot handle callback without user_data parameter.
         if (dataParamName.equals("")) {
             return;
         }
 
-        sw.write("        int hash = " + dataParamName + ".get(C_INT, 0);\n");
-        sw.write("        var handler = (" + javaName + ") Interop.signalRegistry.get(hash);\n");
-        sw.write("        ");
+        writer.write("        int hash = " + dataParamName + ".get(C_INT, 0);\n");
+        writer.write("        var handler = (" + javaName + ") Interop.signalRegistry.get(hash);\n");
+        writer.write("        ");
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
-            sw.write("return ");
+            writer.write("return ");
         }
-        sw.write("handler.on" + javaName + "(");
+        writer.write("handler.on" + javaName + "(");
 
         if (parameters != null) {
             int counter = 0;
@@ -105,17 +105,17 @@ public class Callback extends RegisteredType implements CallableType {
                     continue;
                 }
                 if (counter > 0) {
-                    sw.write(", ");
+                    writer.write(", ");
                 }
-                p.generateCallbackInterop(sw);
+                p.generateCallbackInterop(writer);
                 counter++;
             }
         }
-        sw.write(");\n");
+        writer.write(");\n");
 
-        sw.write("    }\n");
-        sw.write("    \n");
-        BindingsGenerator.signalCallbackFunctions.append(sw);
+        writer.write("    }\n");
+        writer.write("    \n");
+        BindingsGenerator.signalCallbackFunctions.append(writer);
     }
 
     @Override

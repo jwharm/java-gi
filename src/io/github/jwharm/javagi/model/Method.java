@@ -64,7 +64,7 @@ public class Method extends GirElement implements CallableType {
             // When the static callback methods have been successfully generated, these exceptions should never happen.
             // We can try to suppress them, but I think it's better to be upfront when they occur, and just crash
             // immediately so the stack trace will be helpful to solve the issue.
-            writer.write("        } catch (Exception e) {\n");
+            writer.write("        } catch (IllegalAccessException | NoSuchMethodException e) {\n");
             writer.write("            throw new RuntimeException(e);\n");
             writer.write("        }\n");
         }

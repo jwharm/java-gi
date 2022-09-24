@@ -5,7 +5,6 @@ import io.github.jwharm.javagi.model.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
 
 public class BindingsGenerator {
 
@@ -26,23 +25,7 @@ public class BindingsGenerator {
                 rt.generate(writer);
             }
         }
-        generateSignalCallbacks(gir, basePath);
         generateGlobals(gir, basePath);
-    }
-
-    public void generateSignalCallbacks(Repository gir, String basePath) throws IOException {
-        try (FileWriter writer = new FileWriter(basePath + "JVMCallbacks.java")) {
-            writer.write("package " + gir.namespace.packageName + ";\n");
-            writer.write("\n");
-            writer.write("import java.lang.foreign.*;\n");
-            writer.write("import io.github.jwharm.javagi.*;\n");
-            writer.write("import static io.github.jwharm.javagi.interop.jextract.gtk_h.C_INT;\n");
-            writer.write("\n");
-            writer.write("public final class JVMCallbacks {\n");
-            writer.write("    \n");
-            writer.write(signalCallbackFunctions.toString());
-            writer.write("}\n");
-        }
     }
 
     public void generateGlobals(Repository gir, String basePath) throws IOException {
@@ -63,6 +46,8 @@ public class BindingsGenerator {
                     function.generate(writer, false, true);
                 }
             }
+            
+            writer.write(signalCallbackFunctions.toString());
 
             writer.write("}\n");
         }

@@ -1,10 +1,8 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.BindingsGenerator;
 import io.github.jwharm.javagi.generator.Conversions;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 
 public class Signal extends Method {
@@ -19,12 +17,12 @@ public class Signal extends Method {
     public void generate(Writer writer, boolean isDefault) throws IOException {
         final String signalName = Conversions.toSimpleJavaType(name);
         final String className = ((RegisteredType) parent).javaName;
-        final String callbackName = "signal" + className + signalName;
+        final String callbackName = "__signal" + className + signalName;
         final boolean returnsBool = returnValue != null && returnValue.type.simpleJavaType.equals("boolean");
 
         generateFunctionalInterface(writer, signalName, className, returnsBool);
-        generateSignalDeclaration(writer, signalName, callbackName, returnsBool, isDefault);
-        generateStaticCallback(signalName, className, callbackName, returnsBool, isDefault);
+        generateSignalDeclaration(writer, signalName, className, callbackName, returnsBool, isDefault);
+        generateStaticCallback(writer, signalName, className, callbackName, returnsBool, isDefault);
     }
 
     // Generate the functional interface
@@ -44,52 +42,51 @@ public class Signal extends Method {
     }
 
     // Generate the static callback method, that will run the handler method.
-    private void generateStaticCallback(String signalName, String className, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
-        StringWriter sw = new StringWriter();
-
+    private void generateStaticCallback(Writer writer, String signalName, String className, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
         String implClassName = className;
         if (isDefault) {
             implClassName = className + "." + className + "Impl";
         }
 
-        sw.write("    public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
+        writer.write("    public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-                sw.write (", " + Conversions.toPanamaJavaType(p.type));
-                sw.write(" " + Conversions.toLowerCaseJavaName(p.name));
+                writer.write (", " + Conversions.toPanamaJavaType(p.type));
+                writer.write(" " + Conversions.toLowerCaseJavaName(p.name));
             }
         }
-        sw.write(", MemoryAddress data) {\n");
+        writer.write(", MemoryAddress data) {\n");
 
-        sw.write("        int hash = data.get(C_INT, 0);\n");
-        sw.write("        var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
-        sw.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
+        writer.write("        int hash = data.get(C_INT, 0);\n");
+        writer.write("        var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
+        writer.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-                sw.write(", ");
-                p.generateCallbackInterop(sw);
+                writer.write(", ");
+                p.generateCallbackInterop(writer);
             }
         }
-        sw.write(");\n");
+        writer.write(");\n");
 
-        sw.write("    }\n");
-        sw.write("    \n");
-        BindingsGenerator.signalCallbackFunctions.append(sw);
+        writer.write("    }\n");
+        writer.write("    \n");
     }
 
     // Generate the method that connects the signal to the handler (defined by the functional interface above)
-    private void generateSignalDeclaration(Writer writer, String signalName, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
+    private void generateSignalDeclaration(Writer writer, String signalName, String className, String callbackName, boolean returnsBool, boolean isDefault) throws IOException {
         if (doc != null) {
             doc.generate(writer, 1);
         }
         writer.write("    public " + (isDefault ? "default " : "") + "SignalHandle on" + signalName + "(" + signalName + "Handler handler) {\n");
         writer.write("        try {\n");
-        writer.write("            int hash = Interop.registerCallback(handler.hashCode(), handler);\n");
-        writer.write("            MemorySegment intSegment = Interop.getAllocator().allocate(C_INT, hash);\n");
-        writer.write("            MethodType methodType = MethodType.methodType(");
-
+        writer.write("            var RESULT = gtk_h.g_signal_connect_data(\n");
+        writer.write("                handle(),\n");
+        writer.write("                Interop.allocateNativeString(\"" + name + "\").handle(),\n");
+        writer.write("                Linker.nativeLinker().upcallStub(\n");
+        writer.write("                    MethodHandles.lookup().findStatic(" + className + ".class, \"" + callbackName + "\",\n");
+        writer.write("                        MethodType.methodType(");
         if (returnsBool) {
             writer.write("boolean.class, MemoryAddress.class");
         } else {
@@ -100,11 +97,8 @@ public class Signal extends Method {
                 writer.write(", " + Conversions.toPanamaJavaType(p.type) + ".class");
             }
         }
-        writer.write(", MemoryAddress.class);\n");
-
-        writer.write("            MethodHandle methodHandle = MethodHandles.lookup().findStatic(JVMCallbacks.class, \"" + callbackName + "\", methodType);\n");
-        writer.write("            FunctionDescriptor descriptor = FunctionDescriptor.");
-
+        writer.write(", MemoryAddress.class)),\n");
+        writer.write("                    FunctionDescriptor.");
         if (returnsBool) {
             writer.write("of(ValueLayout.JAVA_BOOLEAN, ValueLayout.ADDRESS");
         } else {
@@ -115,17 +109,17 @@ public class Signal extends Method {
                 writer.write(", " + Conversions.toPanamaMemoryLayout(p.type));
             }
         }
-        writer.write(", ValueLayout.ADDRESS);\n");
-
-        writer.write("            MemorySegment nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, Interop.getScope());\n");
-        writer.write("            long handlerId = gtk_h.g_signal_connect_data(handle(), Interop.allocateNativeString(\"" + name + "\").handle(), nativeSymbol, intSegment, MemoryAddress.NULL, 0);\n");
-        writer.write("            return new SignalHandle(handle(), handlerId);\n");
+        writer.write(", ValueLayout.ADDRESS),\n");
+        writer.write("                    Interop.getScope()),\n");
+        writer.write("                Interop.getAllocator().allocate(C_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
+        writer.write("                MemoryAddress.NULL, 0);\n");
+        writer.write("            return new SignalHandle(handle(), RESULT);\n");
 
         // NoSuchMethodException, IllegalAccessException from findStatic()
         // When the static callback methods have been successfully generated, these exceptions should never happen.
         // We can try to suppress them, but I think it's better to be upfront when they occur, and just crash
         // immediately so the stack trace will be helpful to solve the issue.
-        writer.write("        } catch (Exception e) {\n");
+        writer.write("        } catch (IllegalAccessException | NoSuchMethodException e) {\n");
         writer.write("            throw new RuntimeException(e);\n");
         writer.write("        }\n");
         writer.write("    }\n");
