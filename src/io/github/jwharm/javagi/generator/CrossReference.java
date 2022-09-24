@@ -45,6 +45,8 @@ public class CrossReference {
                             t.girElementType = t.girElementInstance.getClass().getSimpleName();
                         }
                     }
+                    // Redo the initialization, now that all repositories have loaded.
+                    t.init(t.qualifiedName);
                 }
                 element = element.next;
             }

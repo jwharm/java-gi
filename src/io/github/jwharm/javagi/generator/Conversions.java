@@ -1,27 +1,22 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.Alias;
 import io.github.jwharm.javagi.model.GirElement;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Type;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Conversions {
 
+    public static Map<String, String> nsLookupTable = new HashMap<>();
     public static Map<String, GirElement> cIdentifierLookupTable;
     public static Map<String, RegisteredType> cTypeLookupTable;
 
     /** Convert "Gdk" to "org.gtk.gdk" */
     public static String namespaceToJavaPackage(String ns) {
-        return (switch (ns.toLowerCase()) {
-            case "gobject", "glib", "gio", "atk", "gdk", "gsk", "gdkpixbuf", "graphene", "gtk" -> "org.gtk." + ns;
-            case "cairo" -> "org.cairographics";
-            case "pango", "pangocairo", "harfbuzz" -> "org." + ns;
-            case "adw" -> "org.gnome." + ns;
-            default -> ns;
-        }).toLowerCase();
+        return nsLookupTable.get(ns.toLowerCase());
     }
 
     /** Convert "identifier_name" to "identifierName" */

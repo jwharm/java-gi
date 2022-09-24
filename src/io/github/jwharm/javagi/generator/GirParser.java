@@ -17,6 +17,7 @@ import java.io.IOException;
 public class GirParser extends DefaultHandler {
 
     private final SAXParser parser;
+    private String pkg;
     private StringBuilder chars;
     private GirElement current;
     private String skip;
@@ -171,7 +172,7 @@ public class GirParser extends DefaultHandler {
                 current = newMethod;
             }
             case "namespace" -> {
-                Namespace newNamespace = new Namespace(current, attr.getValue("name"));
+                Namespace newNamespace = new Namespace(current, attr.getValue("name"), pkg);
                 ((Repository) current).namespace = newNamespace;
                 current = newNamespace;
             }
@@ -279,10 +280,11 @@ public class GirParser extends DefaultHandler {
         parser = SAXParserFactory.newInstance().newSAXParser();
     }
 
-    public Repository parse(String uri) throws IOException, SAXException {
+    public Repository parse(String uri, String pkg) throws IOException, SAXException {
         if (! new File(uri).exists()) {
             throw new IOException("Specified GIR file does not exist: " + uri);
         }
+        this.pkg = pkg;
         parser.parse(uri, this);
         return (Repository) current;
     }

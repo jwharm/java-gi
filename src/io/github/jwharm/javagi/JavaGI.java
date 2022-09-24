@@ -10,31 +10,22 @@ public class JavaGI {
 
     public static void main(String[] args) throws Exception {
         long starttime = System.currentTimeMillis();
-
-        String[] girFiles = new String[] {
-                "GObject-2.0.gir",
-                "GLib-2.0.gir",
-                "Gio-2.0.gir",
-                "Gdk-4.0.gir",
-                "GdkPixbuf-2.0.gir",
-                "Gsk-4.0.gir",
-                "HarfBuzz-0.0.gir",
-                "cairo-1.0.gir",
-                "Pango-1.0.gir",
-                "Graphene-1.0.gir",
-                "Gtk-4.0.gir",
-                "Adw-1.gir"
-        };
-
+        
+        if (args.length == 0) {
+            System.err.println("ERROR: No input file provided.");
+            return;
+        }
+        
+        InputFile inputFile = new InputFile(args[0]);
+        
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
 
         Map<String, Repository> repositories = new HashMap<>();
 
-        for (String filename : girFiles) {
-            String girfile = "/usr/share/gir-1.0/" + filename;
-            System.out.println("PARSE " + girfile);
-            Repository r = parser.parse(girfile);
+        for (InputFile.Line inputLine : inputFile.lines) {
+            System.out.println("PARSE " + inputLine.path());
+            Repository r = parser.parse(inputLine.path(), inputLine.pkg());
             repositories.put(r.namespace.name, r);
         }
 

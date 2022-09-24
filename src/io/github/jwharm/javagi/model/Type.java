@@ -13,6 +13,8 @@ public class Type extends GirElement {
     /** Example: gboolean, const char*, GdkRectangle* */
     public final String cType;
 
+    /** This is the type name from the gir file. For example: Gdk.Rectangle */
+    public String qualifiedName;
     /** This type is used on the Java side. Example: boolean, java.lang.String, Rectangle */
     public String simpleJavaType;
     /** This type is used on the Java side. Example: boolean, java.lang.String, org.gdk.gtk.Rectangle */
@@ -41,6 +43,7 @@ public class Type extends GirElement {
                 this.name = name;
             }
         }
+        this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false);
         this.qualifiedJavaType = Conversions.convertToJavaType(name, true);
         this.namespacePath = Conversions.getJavaPackageName(name);

@@ -10,10 +10,11 @@ public class Namespace extends GirElement {
     public final String packageName, pathName;
     public final Map<String, RegisteredType> registeredTypeMap = new HashMap<>();
 
-    public Namespace(GirElement parent, String name) {
+    public Namespace(GirElement parent, String name, String pkg) {
         super(parent);
         this.name = name;
-        packageName = Conversions.namespaceToJavaPackage(name);
+        packageName = pkg;
+        Conversions.nsLookupTable.put(name.toLowerCase(), pkg);
         pathName = packageName.replace('.', '/') + '/';
     }
 }
