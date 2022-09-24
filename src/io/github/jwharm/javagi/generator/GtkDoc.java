@@ -120,7 +120,11 @@ public class GtkDoc {
                 }
             case "method":
             case "vfunc":
-                return "{@link " + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                if (part3 == null) {
+                    return "{@link " + part1 + formatMethod(part2) + "}";
+                } else {
+                    return "{@link " + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                }
             case "property":
                 return "{@code " + path + "}";
             case "func":

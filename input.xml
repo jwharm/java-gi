@@ -9,7 +9,7 @@
     <repository path="/usr/share/gir-1.0/HarfBuzz-0.0.gir" package="org.harfbuzz"/>
     <repository path="/usr/share/gir-1.0/cairo-1.0.gir" package="org.cairographics"/>
     <repository path="/usr/share/gir-1.0/Pango-1.0.gir" package="org.pango"/>
-    <repository path="/usr/share/gir-1.0/Graphene-1.0.gir" package="org.graphene"/>
+    <repository path="/usr/share/gir-1.0/Graphene-1.0.gir" package="org.gtk.graphene"/>
     <repository path="/usr/share/gir-1.0/Gtk-4.0.gir" package="org.gtk.gtk"/>
     <repository path="/usr/share/gir-1.0/Adw-1.gir" package="org.gnome.adw"/>
 </repositories>
