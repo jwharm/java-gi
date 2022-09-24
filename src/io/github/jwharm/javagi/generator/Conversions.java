@@ -128,6 +128,8 @@ public class Conversions {
     public static String toPanamaJavaType(Type t) {
         if (t == null) {
             return "MemoryAddress";
+        } else if (t.cType != null && t.cType.endsWith("*")) {
+            return "MemoryAddress";
         } else if (t.isEnum() || t.isBitfield()) {
             return "int";
         } else if (t.isPrimitive
@@ -158,6 +160,14 @@ public class Conversions {
         return javaType != null && switch (javaType) {
             case "boolean", "long", "byte", "short", "int", "double", "float" -> true;
             default -> false;
+        };
+    }
+    
+    public static String primitiveClassName(String primitive) {
+        return switch(primitive) {
+            case "char" -> "Character";
+            case "int" -> "Integer";
+            default -> toCamelCase(primitive, true);
         };
     }
 }

@@ -26,7 +26,7 @@ public class Parameters extends GirElement {
     public boolean hasCallbackParameter() {
         return getCallbackParameter() != null;
     }
-
+    
     public void generateJavaParameters(Writer writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {

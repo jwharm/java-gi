@@ -42,6 +42,10 @@ public class Type extends GirElement {
                 this.girNamespace = getNamespace().name;
                 this.name = name;
             }
+            if (name.equals("GType")) {
+                this.girNamespace = "GObject";
+                this.name = "Type";
+            }
         }
         this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false);
@@ -90,5 +94,9 @@ public class Type extends GirElement {
 
     public boolean isVoid() {
         return name.equals("none");
+    }
+    
+    public boolean isPointer() {
+        return cType != null && cType.endsWith("*");
     }
 }

@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -25,6 +26,10 @@ public class Alias extends RegisteredType {
             writer.write(" extends org.gtk.gobject.Object");
         } else if (inherits()) {
             writer.write(" extends " + type.qualifiedJavaType);
+        } else if (type.qualifiedJavaType.equals("java.lang.String")) {
+            writer.write(" extends Alias<" + type.simpleJavaType + ">");
+        } else if (type.isPrimitive) {
+            writer.write(" extends Alias<" + Conversions.primitiveClassName(type.simpleJavaType) + ">");
         }
         writer.write(" {\n");
         writer.write("\n");
@@ -41,16 +46,16 @@ public class Alias extends RegisteredType {
                 generateMemoryAddressConstructor(writer);
             }
         } else {
-            writer.write("    private final " + type.simpleJavaType + " value;\n");
-            writer.write("    \n");
+//            writer.write("    private final " + type.simpleJavaType + " value;\n");
+//            writer.write("    \n");
             writer.write("    public " + javaName + "(" + type.simpleJavaType + " value) {\n");
             writer.write("        this.value = value;\n");
             writer.write("    }\n");
             writer.write("    \n");
-            writer.write("    public " + type.simpleJavaType + " getValue() {\n");
-            writer.write("        return this.value;\n");
-            writer.write("    }\n");
-            writer.write("    \n");
+//            writer.write("    public " + type.simpleJavaType + " getValue() {\n");
+//            writer.write("        return this.value;\n");
+//            writer.write("    }\n");
+//            writer.write("    \n");
             writer.write("    public static " + type.simpleJavaType + "[] getValues(" + javaName + "[] array) {\n");
             writer.write("        " + type.simpleJavaType + "[] values = new " + type.simpleJavaType + "[array.length];\n");
             writer.write("        for (int i = 0; i < array.length; i++) {\n");

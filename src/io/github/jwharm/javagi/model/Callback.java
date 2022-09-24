@@ -24,6 +24,8 @@ public class Callback extends RegisteredType implements CallableType {
 
     private void generateFunctionalInterface(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
+        writer.write("import io.github.jwharm.javagi.*;\n");
+        writer.write("\n");
         generateJavadoc(writer);
         writer.write("@FunctionalInterface\n");
         writer.write("public interface " + javaName + " {\n");

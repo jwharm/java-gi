@@ -50,6 +50,10 @@ public class Parameter extends GirElement {
         } else if (type != null) {
             if (type.cType != null && type.cType.endsWith("**")) {
                 writer.write(type.qualifiedJavaType + "[] " + name);
+            } else if (type.isPrimitive && type.cType != null && type.cType.endsWith("*")) {
+                writer.write("Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + " " + name);
+            } else if (type.isBitfield() && type.cType != null && type.cType.endsWith("*")) {
+                writer.write("PointerInteger " + name);
             } else if (type.isBitfield()) {
                 writer.write("int " + name);
             } else {
@@ -71,6 +75,12 @@ public class Parameter extends GirElement {
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write("Interop.allocateNativeString(" + name + ").handle()");
+        } else if (type != null && type.isPrimitive && type.cType != null && type.cType.endsWith("*")) {
+            writer.write(name + ".handle()");
+        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            writer.write(name + "POINTER.handle()");
+        } else if (type.isBitfield() && type.cType != null && type.cType.endsWith("*")) {
+            writer.write(name + ".handle()");
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()
@@ -117,6 +127,8 @@ public class Parameter extends GirElement {
             writer.write(name);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write(name + ".getUtf8String(0)");
+        } else if (type.isPrimitive && type.cType != null & type.cType.endsWith("*")) {
+            writer.write("new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + name + ")");
         } else if (type.isBitfield()) {
             writer.write(name);
         } else if (type.isEnum()) {
