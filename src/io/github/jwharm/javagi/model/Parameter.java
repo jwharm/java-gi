@@ -83,6 +83,8 @@ public class Parameter extends GirElement {
             writer.write(name + ".handle()");
         } else if (type.isBitfield()) {
             writer.write(name);
+        } else if (type.isEnum() && type.isPointer()) {
+            writer.write("new PointerInteger(" + name + ".getValue()).handle()");
         } else if (type.isEnum()
                 || type.simpleJavaType.equals("Type")
                 || (type.isAliasForPrimitive())) {

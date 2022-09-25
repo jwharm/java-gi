@@ -38,7 +38,11 @@ public interface CallableType {
         }
 
         // Return type
-        if (getReturnValue().type.isBitfield()) {
+        if (getReturnValue().type.isPrimitive && getReturnValue().type.isPointer()) {
+            writer.write("Pointer" + Conversions.primitiveClassName(getReturnValue().type.simpleJavaType));
+        } else if (getReturnValue().type.cType != null && getReturnValue().type.cType.endsWith("**")) {
+            writer.write("PointerResource<" + getReturnValue().type.qualifiedJavaType + ">");
+        } else if (getReturnValue().type.isBitfield()) {
             writer.write("int");
         } else {
             writer.write(getReturnValue().type.qualifiedJavaType);
@@ -78,18 +82,18 @@ public interface CallableType {
 
                        // We don't support parameters without type
                        (p.array == null && p.type == null)
+                       // We don't support types without a name
+                    || (p.type != null && p.type.name == null)
                        // We don't support out parameters of type enum yet
                     || (p.direction != null && p.direction.contains("out")
                                && p.type != null && "Enumeration".equals(p.type.girElementType))
                        // We don't support arrays of enum types yet
                     || (p.array != null && p.array.type != null && "Enumeration".equals(p.array.type.girElementType))
-                       // Check for types without a name
-                    || (p.type != null && p.type.name == null)
             )) {
                 return false;
             }
 
-            // Check for methods with a callback parameter but no user_data parameter
+            // We don't support methods with a callback parameter but no user_data parameter
             if (ps.parameterList.stream().anyMatch(Parameter::isCallbackParameter)
                     && ps.parameterList.stream().noneMatch(Parameter::isUserDataParameter)
             ) {
@@ -102,8 +106,6 @@ public interface CallableType {
                (rv.type == null)
             // Check for type without name
             || (rv.type.name == null)
-            // Check for return value that is a pointer to a primitive type
-            || (rv.type.isPrimitive && rv.type.cType.endsWith("*"))
             // We don't support unions and callbacks yet
             || rv.type.isUnion()
             || rv.type.isCallback()

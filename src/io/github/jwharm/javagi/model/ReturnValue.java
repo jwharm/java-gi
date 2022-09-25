@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -13,10 +14,18 @@ public class ReturnValue extends Parameter {
         if (type.isVoid()) {
             return;
         }
+        
+        if (type.cType != null && type.cType.endsWith("**")) {
+            System.out.println("Array return: " + parent.parent.name + " -> " + parent.name);
+        }
 
         writer.write(" ".repeat(indent * 4));
 
-        if (type.simpleJavaType.equals("Type") || type.isAliasForPrimitive()) {
+        if (type.isPrimitive && type.isPointer()) {
+            writer.write("return new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(RESULT);\n");
+        } else if (type.cType != null && type.cType.endsWith("**")) {
+            writer.write("return new PointerResource<" + type.qualifiedJavaType + ">(RESULT, " + type.qualifiedJavaType + ".class);\n");
+        } else if (type.simpleJavaType.equals("Type") || type.isAliasForPrimitive()) {
             writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
         } else if (type.isAlias() || type.isClass()) {
             writer.write("return new " + type.qualifiedJavaType + "(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
