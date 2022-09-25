@@ -15,7 +15,7 @@ jextract --output generated/bin -t $PACKAGE_NAME $PKG_LIBS $PKG_INCLUDES gtk.h
 # $JAVA_HOME/bin/jextract --output generated/src -t $PACKAGE_NAME $PKG_LIBS $PKG_INCLUDES gtk.h --source
 
 # Create jar file
-jar cvf generated/lib/gtk-4.0.jar -C generated/bin .
+jar cvf generated/lib/gtk4-jextract.jar -C generated/bin .
 # Create sources zip file
 # $JAVA_HOME/bin/jar cvf generated/lib/gtk-4.0-src.zip -C generated/src .
 

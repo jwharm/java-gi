@@ -20,7 +20,7 @@ public class Alias extends RegisteredType {
         } else {
             writer.write("public class " + javaName);
         }
-
+        
         // Handle alias for type "none"
         if (type.qualifiedJavaType.equals("void")) {
             writer.write(" extends org.gtk.gobject.Object");
@@ -46,16 +46,10 @@ public class Alias extends RegisteredType {
                 generateMemoryAddressConstructor(writer);
             }
         } else {
-//            writer.write("    private final " + type.simpleJavaType + " value;\n");
-//            writer.write("    \n");
             writer.write("    public " + javaName + "(" + type.simpleJavaType + " value) {\n");
             writer.write("        this.value = value;\n");
             writer.write("    }\n");
             writer.write("    \n");
-//            writer.write("    public " + type.simpleJavaType + " getValue() {\n");
-//            writer.write("        return this.value;\n");
-//            writer.write("    }\n");
-//            writer.write("    \n");
             writer.write("    public static " + type.simpleJavaType + "[] getValues(" + javaName + "[] array) {\n");
             writer.write("        " + type.simpleJavaType + "[] values = new " + type.simpleJavaType + "[array.length];\n");
             writer.write("        for (int i = 0; i < array.length; i++) {\n");
