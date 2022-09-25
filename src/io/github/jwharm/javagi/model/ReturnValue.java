@@ -15,10 +15,6 @@ public class ReturnValue extends Parameter {
             return;
         }
         
-        if (type.cType != null && type.cType.endsWith("**")) {
-            System.out.println("Array return: " + parent.parent.name + " -> " + parent.name);
-        }
-
         writer.write(" ".repeat(indent * 4));
 
         if (type.isPrimitive && type.isPointer()) {
