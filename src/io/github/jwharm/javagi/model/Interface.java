@@ -37,6 +37,18 @@ public class Interface extends RegisteredType {
             }
         }
 
+        if (! signalList.isEmpty()) {
+            writer.write("    public static class Callbacks {\n");
+            writer.write("    \n");
+            for (Signal s : signalList) {
+                if (s.isSafeToBind()) {
+                    s.generateStaticCallback(writer, true);
+                }
+            }
+            writer.write("    }\n");
+            writer.write("    \n");
+        }
+        
         generateImplClass(writer);
 
         writer.write("}\n");

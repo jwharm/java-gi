@@ -56,7 +56,17 @@ public class Class extends RegisteredType {
                 s.generate(writer, false);
             }
         }
-
+        
+        if (! signalList.isEmpty()) {
+            writer.write("    public static class Callbacks {\n");
+            writer.write("    \n");
+            for (Signal s : signalList) {
+                if (s.isSafeToBind()) {
+                    s.generateStaticCallback(writer, false);
+                }
+            }
+            writer.write("    }\n");
+        }
         writer.write("}\n");
     }
 
