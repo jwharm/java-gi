@@ -46,24 +46,15 @@ public class Parameter extends GirElement {
 
     public void generateTypeAndName(Writer writer) throws IOException {
         if (array != null) {
-            writer.write(array.type.qualifiedJavaType + "[] " + name);
-        } else if (type != null) {
-            if (type.cType != null && type.cType.endsWith("**")) {
-                writer.write(type.qualifiedJavaType + "[] " + name);
-            } else if (type.isPrimitive && type.cType != null && type.cType.endsWith("*")) {
-                writer.write("Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + " " + name);
-            } else if (type.isBitfield() && type.cType != null && type.cType.endsWith("*")) {
-                writer.write("PointerInteger " + name);
-            } else if (type.isBitfield()) {
-                writer.write("int " + name);
-            } else {
-                if (type.namespacePath != null) {
-                    writer.write(type.qualifiedJavaType + " " + name);
-                } else {
-                    writer.write(type.simpleJavaType + " " + name);
-                }
-            }
+            writer.write(array.type.qualifiedJavaType + "[]");
+        } else if (type.cType != null && type.cType.endsWith("**")) {
+            writer.write(type.qualifiedJavaType + "[]");
+        } else if (type.isPrimitive && type.isPointer()) {
+            writer.write("Pointer" + Conversions.primitiveClassName(type.simpleJavaType));
+        } else {
+            writer.write(type.qualifiedJavaType);
         }
+        writer.write(" " + name);
     }
 
     public void generateInterop(Writer writer) throws IOException {
@@ -75,29 +66,12 @@ public class Parameter extends GirElement {
             generateArrayInterop(writer);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write("Interop.allocateNativeString(" + name + ").handle()");
-        } else if (type != null && type.isPrimitive && type.cType != null && type.cType.endsWith("*")) {
+        } else if (type.isPrimitive && type.isPointer()) {
             writer.write(name + ".handle()");
-        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
-            writer.write(name + "POINTER.handle()");
-        } else if (type.isBitfield() && type.cType != null && type.cType.endsWith("*")) {
-            writer.write(name + ".handle()");
-        } else if (type.isBitfield()) {
-            writer.write(name);
-        } else if (type.isEnum() && type.isPointer()) {
-            writer.write("new PointerInteger(" + name + ".getValue()).handle()");
-        } else if (type.isEnum()
-                || type.simpleJavaType.equals("Type")
-                || (type.isAliasForPrimitive())) {
-            writer.write(name + ".getValue()");
-        } else if (type.isRecord()) {
-            writer.write(name + ".handle()");
-        } else if (type.isClass()
-                || type.isInterface()
-                || type.isAlias()
-                || type.isUnion()) {
-            writer.write(name + (transferOwnership() ? ".getReference().unowned().handle()" : ".handle()"));
         } else if (type.name.equals("gboolean") && type.cType != null && (! type.cType.equals("_Bool"))) {
             writer.write(name + " ? 1 : 0");
+        } else if (type.girElementInstance instanceof RegisteredType rt) {
+            writer.write(rt.getInteropString(name, type.isPointer(), transferOwnership()));
         } else {
             writer.write(name);
         }
@@ -129,14 +103,9 @@ public class Parameter extends GirElement {
             writer.write(name);
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
             writer.write(name + ".getUtf8String(0)");
-        } else if (type.isPrimitive && type.cType != null & type.cType.endsWith("*")) {
+        } else if (type.isPrimitive && type.isPointer()) {
             writer.write("new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + name + ")");
-        } else if (type.isBitfield()) {
-            writer.write(name);
-        } else if (type.isEnum()) {
-            writer.write(type.qualifiedJavaType + ".fromValue(" + name + ")");
-        } else if (type.simpleJavaType.equals("Type")
-                || (type.isAliasForPrimitive())) {
+        } else if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
             writer.write("new " + type.qualifiedJavaType + "(" + name + ")");
         } else if (type.isCallback()) {
             writer.write("null"); // I don't think this situation exists

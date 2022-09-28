@@ -73,4 +73,6 @@ public abstract class RegisteredType extends GirElement {
             }
         }
     }
+    
+    public abstract String getInteropString(String paramName, boolean isPointer, boolean transferOwnership);
 }

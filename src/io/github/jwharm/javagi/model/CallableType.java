@@ -42,8 +42,6 @@ public interface CallableType {
             writer.write("Pointer" + Conversions.primitiveClassName(getReturnValue().type.simpleJavaType));
         } else if (getReturnValue().type.cType != null && getReturnValue().type.cType.endsWith("**")) {
             writer.write("PointerResource<" + getReturnValue().type.qualifiedJavaType + ">");
-        } else if (getReturnValue().type.isBitfield()) {
-            writer.write("int");
         } else {
             writer.write(getReturnValue().type.qualifiedJavaType);
         }

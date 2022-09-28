@@ -21,14 +21,12 @@ public class ReturnValue extends Parameter {
             writer.write("return new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(RESULT);\n");
         } else if (type.cType != null && type.cType.endsWith("**")) {
             writer.write("return new PointerResource<" + type.qualifiedJavaType + ">(RESULT, " + type.qualifiedJavaType + ".class);\n");
-        } else if (type.simpleJavaType.equals("Type") || type.isAliasForPrimitive()) {
+        } else if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive()) {
             writer.write("return new " + type.qualifiedJavaType + "(RESULT);\n");
         } else if (type.isAlias() || type.isClass()) {
             writer.write("return new " + type.qualifiedJavaType + "(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
         } else if (type.isInterface()) {
             writer.write("return new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(References.get(RESULT, " + (transferOwnership() ? "true" : "false") + "));\n");
-        } else if (type.isEnum()) {
-            writer.write("return " + type.qualifiedJavaType + ".fromValue(RESULT);\n");
         } else if (type.name.equals("gboolean") && (! type.cType.equals("_Bool"))) {
             // A gboolean corresponds to an int where value 0 is FALSE, and everything else is TRUE.
             writer.write("return (RESULT != 0);\n");

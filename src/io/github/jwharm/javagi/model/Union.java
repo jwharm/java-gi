@@ -24,4 +24,12 @@ public class Union extends RegisteredType {
         writer.write("}\n");
         writer.write("\n");
     }
+
+    public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
+        if (transferOwnership) {
+            return paramName + ".getReference().unowned().handle()";
+        } else {
+            return paramName + ".handle()";
+        }
+    }
 }
