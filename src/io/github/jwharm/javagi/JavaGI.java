@@ -15,8 +15,16 @@ public class JavaGI {
             System.err.println("ERROR: No input file provided.");
             return;
         }
-        
         InputFile inputFile = new InputFile(args[0]);
+        
+        if (args.length == 1) {
+            System.err.println("ERROR: No output directory provided.");
+            return;
+        }
+        String outputDir = args[1];
+        if (! (outputDir.endsWith("/") || outputDir.endsWith("\\"))) {
+            outputDir = outputDir + "/";
+        }
         
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
@@ -38,8 +46,9 @@ public class JavaGI {
         RepositoryEditor.applyPatches(repositories);
 
         for (Repository repository : repositories.values()) {
-            System.out.println("GENERATE " + repository.namespace.packageName);
-            generator.generate(repository);
+            System.out.println("GENERATE " + repository.namespace.name 
+                    + " to " + outputDir + repository.namespace.pathName);
+            generator.generate(repository, outputDir);
         }
 
         System.out.println("COMPLETED in " + (System.currentTimeMillis() - starttime) + " ms");

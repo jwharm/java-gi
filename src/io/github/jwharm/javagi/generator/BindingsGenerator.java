@@ -13,9 +13,9 @@ public class BindingsGenerator {
     public BindingsGenerator() {
     }
 
-    public void generate(Repository gir) throws IOException {
+    public void generate(Repository gir, String outputDir) throws IOException {
         signalCallbackFunctions = new StringBuilder();
-        String basePath = "../java-gtk4/src/" + gir.namespace.pathName;
+        String basePath = outputDir + gir.namespace.pathName;
 
         new File(basePath).mkdirs();
 

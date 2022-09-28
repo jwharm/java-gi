@@ -16,7 +16,10 @@ public class Member extends GirElement {
         try {
             this.value = Integer.parseInt(value);
         } catch (NumberFormatException nfe) {
-            System.err.println("Error in <member name=\"" + name + "\": Not an integer: " + value);
+            System.out.println("Skipping <member name=\"" + name + "\"" 
+                    + " c:identifier=\"" + cIdentifier + "\"" 
+                    + " value=\"" + value + "\"" 
+                    + ">: Not an integer");
         }
     }
 }
