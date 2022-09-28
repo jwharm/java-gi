@@ -20,6 +20,11 @@ public class BindingsGenerator {
         new File(basePath).mkdirs();
 
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
+            
+            if (rt instanceof io.github.jwharm.javagi.model.Record rec
+                    && rec.isEmpty()) {
+                continue;
+            }
 
             try (FileWriter writer = new FileWriter(basePath + rt.javaName + ".java")) {
                 rt.generate(writer);
