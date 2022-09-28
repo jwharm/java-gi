@@ -17,7 +17,6 @@ public class Callback extends RegisteredType implements CallableType {
     }
 
     public void generate(Writer writer) throws IOException {
-
         generateFunctionalInterface(writer);
         generateStaticCallback();
     }
@@ -46,7 +45,7 @@ public class Callback extends RegisteredType implements CallableType {
                     if (counter > 0) {
                         writer.write(", ");
                     }
-                    p.generateTypeAndName(writer);
+                    p.generateTypeAndName(writer, true);
                     counter++;
                 }
             }
@@ -91,7 +90,7 @@ public class Callback extends RegisteredType implements CallableType {
             return;
         }
 
-        writer.write("        int hash = " + dataParamName + ".get(C_INT, 0);\n");
+        writer.write("        int hash = " + dataParamName + ".get(ValueLayout.JAVA_INT, 0);\n");
         writer.write("        var handler = (" + javaName + ") Interop.signalRegistry.get(hash);\n");
         writer.write("        ");
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
@@ -109,7 +108,7 @@ public class Callback extends RegisteredType implements CallableType {
                 if (counter > 0) {
                     writer.write(", ");
                 }
-                p.generateCallbackInterop(writer);
+                p.generateReverseInterop(writer, p.name);
                 counter++;
             }
         }

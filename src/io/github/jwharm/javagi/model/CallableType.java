@@ -38,13 +38,7 @@ public interface CallableType {
         }
 
         // Return type
-        if (getReturnValue().type.isPrimitive && getReturnValue().type.isPointer()) {
-            writer.write("Pointer" + Conversions.primitiveClassName(getReturnValue().type.simpleJavaType));
-        } else if (getReturnValue().type.cType != null && getReturnValue().type.cType.endsWith("**")) {
-            writer.write("PointerResource<" + getReturnValue().type.qualifiedJavaType + ">");
-        } else {
-            writer.write(getReturnValue().type.qualifiedJavaType);
-        }
+        writer.write(getReturnValue().getReturnType());
 
         // Method name
         String methodName = Conversions.toLowerCaseJavaName(name);
@@ -57,7 +51,7 @@ public interface CallableType {
         // Parameters
         if (getParameters() != null) {
             writer.write("(");
-            getParameters().generateJavaParameters(writer);
+            getParameters().generateJavaParameters(writer, false);
             writer.write(")");
         } else {
             writer.write("()");
@@ -82,11 +76,6 @@ public interface CallableType {
                        (p.array == null && p.type == null)
                        // We don't support types without a name
                     || (p.type != null && p.type.name == null)
-                       // We don't support out parameters of type enum yet
-                    || (p.direction != null && p.direction.contains("out")
-                               && p.type != null && "Enumeration".equals(p.type.girElementType))
-                       // We don't support arrays of enum types yet
-                    || (p.array != null && p.array.type != null && "Enumeration".equals(p.array.type.girElementType))
             )) {
                 return false;
             }
@@ -100,13 +89,11 @@ public interface CallableType {
         }
 
         if (
-            // Check for return value without type (probably arrays)
-               (rv.type == null)
             // Check for type without name
-            || (rv.type.name == null)
+              (rv.type != null && rv.type.name == null)
             // We don't support unions and callbacks yet
-            || rv.type.isUnion()
-            || rv.type.isCallback()
+            || (rv.type != null && rv.type.isUnion())
+            || (rv.type != null && rv.type.isCallback())
         ) {
             return false;
         }

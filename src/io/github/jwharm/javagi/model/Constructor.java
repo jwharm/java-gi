@@ -26,7 +26,7 @@ public class Constructor extends Method {
         writer.write(((RegisteredType) parent).javaName);
         if (parameters != null) {
             writer.write("(");
-            parameters.generateJavaParameters(writer);
+            parameters.generateJavaParameters(writer, false);
             writer.write(")");
         } else {
             writer.write("()");
@@ -59,7 +59,7 @@ public class Constructor extends Method {
         writer.write("    public static " + clazz.javaName + " " + Conversions.toLowerCaseJavaName(name));
         if (parameters != null) {
             writer.write("(");
-            parameters.generateJavaParameters(writer);
+            parameters.generateJavaParameters(writer, false);
             writer.write(")");
         } else {
             writer.write("()");
@@ -92,7 +92,7 @@ public class Constructor extends Method {
         writer.write("    private static Reference " + methodName);
         if (parameters != null) {
             writer.write("(");
-            parameters.generateJavaParameters(writer);
+            parameters.generateJavaParameters(writer, false);
             writer.write(")");
         } else {
             writer.write("()");

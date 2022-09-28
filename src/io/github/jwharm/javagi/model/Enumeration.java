@@ -14,7 +14,7 @@ public class Enumeration extends ValueWrapper {
         generatePackageDeclaration(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Enumeration {\n");
         writer.write("\n");
 
         ArrayList<Integer> values = new ArrayList<>();
@@ -29,7 +29,7 @@ public class Enumeration extends ValueWrapper {
             }
         }
         
-        generateAccessors(writer, "int");
+        generateValueConstructor(writer, "int");
         writer.write("}\n");
     }
     

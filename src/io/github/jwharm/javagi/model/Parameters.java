@@ -27,7 +27,7 @@ public class Parameters extends GirElement {
         return getCallbackParameter() != null;
     }
     
-    public void generateJavaParameters(Writer writer) throws IOException {
+    public void generateJavaParameters(Writer writer, boolean pointerForArray) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
             if (p.isInstanceParameter()) {
@@ -39,7 +39,7 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.generateTypeAndName(writer);
+            p.generateTypeAndName(writer, pointerForArray);
         }
     }
 
@@ -113,7 +113,7 @@ public class Parameters extends GirElement {
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
                 writer.write("\n");
-                writer.write("                    Interop.getAllocator().allocate(C_INT, Interop.registerCallback("
+                writer.write("                    Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback("
                         + callbackParamName + ".hashCode(), " + callbackParamName + "))");
             } else {
                 p.generateInterop(writer);

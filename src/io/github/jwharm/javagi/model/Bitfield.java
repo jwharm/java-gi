@@ -14,7 +14,7 @@ public class Bitfield extends ValueWrapper {
         generatePackageDeclaration(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Bitfield {\n");
         writer.write("\n");
         
         for (Member m : memberList) {
@@ -25,20 +25,7 @@ public class Bitfield extends ValueWrapper {
             writer.write("    \n");
         }
         
-        generateAccessors(writer, "int");
-        
-        writer.write("    public " + javaName + " combined(" + javaName + " mask) {\n");
-        writer.write("        return new " + javaName + "(this.getValue() | mask.getValue());\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    public static " + javaName + " combined(" + javaName + " mask, " + javaName + "... masks) {\n");
-        writer.write("        int value = mask.getValue();\n");
-        writer.write("        for (" + javaName + " arg : masks) {\n");
-        writer.write("            value |= arg.getValue();\n");
-        writer.write("        }\n");
-        writer.write("        return new " + javaName + "(value);\n");
-        writer.write("    }\n");
-        writer.write("    \n");
+        generateValueConstructor(writer, "int");
         writer.write("}\n");
     }
     

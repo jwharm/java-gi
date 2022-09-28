@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -43,7 +44,7 @@ public class Alias extends ValueWrapper {
                 if (type.qualifiedJavaType.equals("void")) {
                     writer.write(" extends org.gtk.gobject.Object {\n");
                 } else {
-                    writer.write(" extends " + type.qualifiedJavaType + "{\n");
+                    writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
                 writer.write("\n");
                 generateMemoryAddressConstructor(writer);
@@ -59,9 +60,12 @@ public class Alias extends ValueWrapper {
                 writer.write("}\n");
                 break;
             case VALUE_ALIAS:
-                writer.write("public class " + javaName + " {");
+                writer.write("public class " + javaName + 
+                        " extends io.github.jwharm.javagi.Alias<" 
+                        + Conversions.primitiveClassName(type.qualifiedJavaType) 
+                        + "> {");
                 writer.write("\n");
-                generateAccessors(writer, type.qualifiedJavaType);
+                generateValueConstructor(writer, type.qualifiedJavaType);
                 writer.write("}\n");
         }
     }

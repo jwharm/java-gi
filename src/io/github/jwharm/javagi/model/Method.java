@@ -54,7 +54,7 @@ public class Method extends GirElement implements CallableType {
         }
         
         writer.write(" ".repeat(tryCatch ? 12 : 8));
-        if (! returnValue.type.isVoid()) {
+        if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("var RESULT = ");
         }
         writer.write("gtk_h." + cIdentifier);

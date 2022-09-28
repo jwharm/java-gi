@@ -12,7 +12,7 @@ public class Union extends RegisteredType {
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
 
-        writer.write("import io.github.jwharm.javagi.NativeAddress;\n");
+        writer.write("import io.github.jwharm.javagi.Proxy;\n");
         writer.write("import java.lang.foreign.MemoryAddress;\n");
         writer.write("\n");
 

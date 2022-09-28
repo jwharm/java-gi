@@ -65,6 +65,10 @@ public class Type extends GirElement {
     public boolean isBitfield() {
         return "Bitfield".equals(girElementType);
     }
+    
+    public boolean isBoolean() {
+        return isPrimitive && name.equals("gboolean") && (! cType.equals("_Bool"));
+    }
 
     public boolean isCallback() {
         return "Callback".equals(girElementType);

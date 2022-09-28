@@ -33,7 +33,7 @@ public class Signal extends Method {
 
         if (parameters != null) {
             writer.write(", ");
-            parameters.generateJavaParameters(writer);
+            parameters.generateJavaParameters(writer, true);
         }
         writer.write(");\n");
 
@@ -58,14 +58,14 @@ public class Signal extends Method {
         }
         writer.write(", MemoryAddress data) {\n");
 
-        writer.write("        int hash = data.get(C_INT, 0);\n");
+        writer.write("        int hash = data.get(ValueLayout.JAVA_INT, 0);\n");
         writer.write("        var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
         writer.write("        " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
                 writer.write(", ");
-                p.generateCallbackInterop(writer);
+                p.generateReverseInterop(writer, p.name);
             }
         }
         writer.write(");\n");
@@ -111,7 +111,7 @@ public class Signal extends Method {
         }
         writer.write(", ValueLayout.ADDRESS),\n");
         writer.write("                    Interop.getScope()),\n");
-        writer.write("                Interop.getAllocator().allocate(C_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
+        writer.write("                Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
         writer.write("                MemoryAddress.NULL, 0);\n");
         writer.write("            return new SignalHandle(handle(), RESULT);\n");
 

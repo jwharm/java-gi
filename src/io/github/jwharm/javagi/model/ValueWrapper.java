@@ -10,27 +10,9 @@ public abstract class ValueWrapper extends RegisteredType {
         super(parent, name, parentClass, cType);
     }
     
-    public void generateAccessors(Writer writer, String typeStr) throws IOException {
-        writer.write("    private " + typeStr + " value;\n");
-        writer.write("    \n");
+    public void generateValueConstructor(Writer writer, String typeStr) throws IOException {
         writer.write("    public " + javaName + "(" + typeStr + " value) {\n");
-        writer.write("        this.value = value;\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    public " + typeStr + " getValue() {\n");
-        writer.write("        return this.value;\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    public void setValue(" + typeStr + " value) {\n");
-        writer.write("        this.value = value;\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    public static " + typeStr + "[] getValues(" + javaName + "[] array) {\n");
-        writer.write("        " + typeStr + "[] values = new " + typeStr + "[array.length];\n");
-        writer.write("        for (int i = 0; i < array.length; i++) {\n");
-        writer.write("            values[i] = array[i].getValue();\n");
-        writer.write("        }\n");
-        writer.write("        return values;\n");
+        writer.write("        super(value);\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

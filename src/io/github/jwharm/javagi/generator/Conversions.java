@@ -130,13 +130,10 @@ public class Conversions {
             return "MemoryAddress";
         } else if (t.cType != null && t.cType.endsWith("*")) {
             return "MemoryAddress";
-        } else if (t.isEnum() || t.isBitfield()) {
+        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "int";
-        } else if (t.isPrimitive
-                || "void".equals(t.simpleJavaType)) {
+        } else if (t.isPrimitive || "void".equals(t.simpleJavaType)) {
             return t.simpleJavaType;
-        } else if (t.simpleJavaType.equals("Type")) {
-            return "long";
         } else if (t.isAliasForPrimitive()) {
             return t.girElementInstance.type.simpleJavaType;
         } else {
@@ -147,10 +144,12 @@ public class Conversions {
     public static String toPanamaMemoryLayout(Type t) {
         if (t == null) {
             return "ValueLayout.ADDRESS";
-        } else if (t.isEnum() || t.isBitfield()) {
+        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "ValueLayout.JAVA_INT";
         } else if (t.isPrimitive) {
             return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+        } else if (t.isAliasForPrimitive()) {
+            return "ValueLayout.JAVA_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
         } else {
             return "ValueLayout.ADDRESS";
         }
