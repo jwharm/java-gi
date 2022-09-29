@@ -13,7 +13,7 @@ public class Alias extends ValueWrapper {
     public static final int VALUE_ALIAS = 4;
     
     public int aliasFor() {
-        if (type.isPrimitive) {
+        if (type.isPrimitive || "utf8".equals(type.name)) {
             return VALUE_ALIAS;
         } else if (type.girElementInstance == null) {
             return UNKNOWN_ALIAS;
@@ -60,12 +60,17 @@ public class Alias extends ValueWrapper {
                 writer.write("}\n");
                 break;
             case VALUE_ALIAS:
-                writer.write("public class " + javaName + 
-                        " extends io.github.jwharm.javagi.Alias<" 
-                        + Conversions.primitiveClassName(type.qualifiedJavaType) 
-                        + "> {");
+                String genericType = Conversions.primitiveClassName(type.qualifiedJavaType);
+                if ("utf8".equals(type.name)) {
+                    genericType = "java.lang.String";
+                }
+                writer.write("public class " + javaName +  " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
                 writer.write("\n");
                 generateValueConstructor(writer, type.qualifiedJavaType);
+                writer.write("}\n");
+                break;
+            case UNKNOWN_ALIAS:
+                writer.write("public class " + javaName + " {\n");
                 writer.write("}\n");
         }
     }
