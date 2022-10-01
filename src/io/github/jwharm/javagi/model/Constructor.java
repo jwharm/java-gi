@@ -89,7 +89,7 @@ public class Constructor extends Method {
     private String generateConstructorHelper(Writer writer) throws IOException {
         boolean tryCatch = false;
         String methodName = "construct" + Conversions.toCamelCase(name, true);
-        writer.write("    private static Reference " + methodName);
+        writer.write("    private static Refcounted " + methodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameters(writer, false);
@@ -109,7 +109,7 @@ public class Constructor extends Method {
             writer.write("        try {\n");
         }
         writer.write(" ".repeat(tryCatch ? 12 : 8));
-        writer.write("Reference RESULT = References.get(gtk_h." + cIdentifier);
+        writer.write("Refcounted RESULT = Refcounted.get(gtk_h." + cIdentifier);
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);

@@ -171,11 +171,11 @@ public class Parameter extends GirElement {
         
         // Create an Impl object when we only know the interface but not the class
         } else if (type.isInterface()) {
-            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(References.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
         
         // Objects
         } else if (type.isClass() || type.isAlias() || type.isUnion()) {
-            writer.write("new " + type.qualifiedJavaType + "(References.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
+            writer.write("new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
         
         // Anything else
         } else {

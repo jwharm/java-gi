@@ -27,7 +27,7 @@ public class Union extends RegisteredType {
 
     public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
         if (transferOwnership) {
-            return paramName + ".getReference().unowned().handle()";
+            return paramName + ".refcounted().unowned().handle()";
         } else {
             return paramName + ".handle()";
         }

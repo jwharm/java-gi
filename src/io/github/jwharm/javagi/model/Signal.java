@@ -62,7 +62,7 @@ public class Signal extends Method {
 
         writer.write("            int hash = data.get(ValueLayout.JAVA_INT, 0);\n");
         writer.write("            var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
-        writer.write("            " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(References.get(source))");
+        writer.write("            " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(Refcounted.get(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {

@@ -56,15 +56,15 @@ public class Interface extends RegisteredType {
 
     public void generateImplClass(Writer writer) throws IOException {
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
-        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Reference reference) {\n");
-        writer.write("            super(reference);\n");
+        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Refcounted ref) {\n");
+        writer.write("            super(ref);\n");
         writer.write("        }\n");
         writer.write("    }\n");
     }
 
     public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
         if (transferOwnership) {
-            return paramName + ".getReference().unowned().handle()";
+            return paramName + ".refcounted().unowned().handle()";
         } else {
             return paramName + ".handle()";
         }

@@ -44,14 +44,14 @@ public abstract class RegisteredType extends GirElement {
     protected void generateCastFromGObject(Writer writer) throws IOException {
         writer.write("    /** Cast object to " + javaName + " */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        return new " + javaName + "(gobject.getReference());\n");
+        writer.write("        return new " + javaName + "(gobject.refcounted());\n");
         writer.write("    }\n");
         writer.write("    \n");
     }
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
-        writer.write("    public " + javaName + "(io.github.jwharm.javagi.Reference reference) {\n");
-        writer.write("        super(reference);\n");
+        writer.write("    public " + javaName + "(io.github.jwharm.javagi.Refcounted ref) {\n");
+        writer.write("        super(ref);\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

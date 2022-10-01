@@ -141,7 +141,7 @@ public class Callback extends RegisteredType implements CallableType {
 
     public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
         if (transferOwnership) {
-            return paramName + ".getReference().unowned().handle()";
+            return paramName + ".refcounted().unowned().handle()";
         } else {
             return paramName + ".handle()";
         }
