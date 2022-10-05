@@ -83,10 +83,10 @@ public class Signal extends Method {
         }
         writer.write("    public " + (isDefault ? "default " : "") + "SignalHandle on" + signalName + "(" + signalName + "Handler handler) {\n");
         writer.write("        try {\n");
-        writer.write("            var RESULT = gtk_h.g_signal_connect_data(\n");
+        writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(),\n");
         writer.write("                Interop.allocateNativeString(\"" + name + "\").handle(),\n");
-        writer.write("                Linker.nativeLinker().upcallStub(\n");
+        writer.write("                (Addressable) Linker.nativeLinker().upcallStub(\n");
         writer.write("                    MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"" + callbackName + "\",\n");
         writer.write("                        MethodType.methodType(");
         if (returnsBool) {
@@ -113,16 +113,11 @@ public class Signal extends Method {
         }
         writer.write(", ValueLayout.ADDRESS),\n");
         writer.write("                    Interop.getScope()),\n");
-        writer.write("                Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
-        writer.write("                MemoryAddress.NULL, 0);\n");
+        writer.write("                (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
+        writer.write("                (Addressable) MemoryAddress.NULL, 0);\n");
         writer.write("            return new SignalHandle(handle(), RESULT);\n");
-
-        // NoSuchMethodException, IllegalAccessException from findStatic()
-        // When the static callback methods have been successfully generated, these exceptions should never happen.
-        // We can try to suppress them, but I think it's better to be upfront when they occur, and just crash
-        // immediately so the stack trace will be helpful to solve the issue.
-        writer.write("        } catch (IllegalAccessException | NoSuchMethodException e) {\n");
-        writer.write("            throw new RuntimeException(e);\n");
+        writer.write("        } catch (Throwable ERR) {\n");
+        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
         writer.write("    }\n");
         writer.write("    \n");

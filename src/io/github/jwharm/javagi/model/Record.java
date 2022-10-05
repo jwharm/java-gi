@@ -49,7 +49,7 @@ public class Record extends Class {
         generateMemoryAddressConstructor(writer);
 
         if (constructorList.isEmpty()) {
-            generateRecordConstructor(writer);
+            //generateRecordConstructor(writer);
         } else {
             generateConstructors(writer);
         }
@@ -86,21 +86,21 @@ public class Record extends Class {
         writer.write("}\n");
     }
 
-    public void generateRecordConstructor(Writer writer) throws IOException {
-
-        // Use reflection to check whether the struct was declared in the header file.
-        // In that case, jextract generated an "allocate" method.
-        try {
-            java.lang.Class.forName("io.github.jwharm.javagi.interop.jextract." + cType,
-                            false,
-                            this.getClass().getClassLoader())
-                    .getMethod("allocate", SegmentAllocator.class);
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
-            return;
-        }
-        writer.write("    public " + javaName + "() {\n");
-        writer.write("        super(Refcounted.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()));\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-    }
+//    public void generateRecordConstructor(Writer writer) throws IOException {
+//
+//        // Use reflection to check whether the struct was declared in the header file.
+//        // In that case, jextract generated an "allocate" method.
+//        try {
+//            java.lang.Class.forName("io.github.jwharm.javagi.interop.jextract." + cType,
+//                            false,
+//                            this.getClass().getClassLoader())
+//                    .getMethod("allocate", SegmentAllocator.class);
+//        } catch (ClassNotFoundException | NoSuchMethodException e) {
+//            return;
+//        }
+//        writer.write("    public " + javaName + "() {\n");
+//        writer.write("        super(Refcounted.get(io.github.jwharm.javagi.interop.jextract." + cType + ".allocate(Interop.getAllocator()).address()));\n");
+//        writer.write("    }\n");
+//        writer.write("    \n");
+//    }
 }

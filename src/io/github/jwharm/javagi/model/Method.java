@@ -22,14 +22,40 @@ public class Method extends GirElement implements CallableType {
             this.name = cIdentifier;
         }
     }
+    
+    protected void generateMethodHandle(Writer writer) throws IOException {
+        writer.write("    static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
+        writer.write("        \"" + cIdentifier + "\",\n");
+        writer.write("        FunctionDescriptor.");
+        if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
+            writer.write("ofVoid(");
+        } else {
+            writer.write("of(" + Conversions.toPanamaMemoryLayout(returnValue.type));
+            if (parameters != null) {
+                writer.write(", ");
+            }
+        }
+        if (parameters != null) {
+            for (int i = 0; i < parameters.parameterList.size(); i++) {
+                if (i > 0) {
+                    writer.write(", ");
+                }
+                writer.write(Conversions.toPanamaMemoryLayout(parameters.parameterList.get(i).type));
+            }
+        }
+        writer.write(")\n");
+        writer.write("    );\n");
+        writer.write("    \n");
+    }
 
     public void generate(Writer writer, boolean isDefault, boolean isStatic) throws IOException {
-        boolean tryCatch = false;
         
         // Do not generate deprecated methods.
         if ("1".equals(deprecated)) {
             return;
         }
+        
+        generateMethodHandle(writer);
 
         writeMethodDeclaration(writer, doc, name, throws_, isDefault, isStatic);
         writer.write(" {\n");
@@ -48,16 +74,16 @@ public class Method extends GirElement implements CallableType {
             }
         }
         
-        if (parameters != null && parameters.hasCallbackParameter()) {
-            tryCatch = true;
-            writer.write("        try {\n");
+        writer.write("        try {\n");
+        writer.write("            ");
+        if (! (returnValue.type != null && returnValue.type.isVoid())) {
+            writer.write("var RESULT = (");
+            writer.write(Conversions.toPanamaJavaType(getReturnValue().type));
+            writer.write(") ");
         }
         
-        writer.write(" ".repeat(tryCatch ? 12 : 8));
-        if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write("var RESULT = ");
-        }
-        writer.write("gtk_h." + cIdentifier);
+        writer.write(cIdentifier + ".invokeExact");
+        
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -67,32 +93,26 @@ public class Method extends GirElement implements CallableType {
         }
         writer.write(";\n");
         
-        if (throws_ != null) {
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "    throw new GErrorException(GERROR);\n");
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "}\n");
-        }
-        
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
                 if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                     String typeStr = ((Alias) p.type.girElementInstance).type.simpleJavaType;
-                    writer.write(" ".repeat(tryCatch ? 12 : 8) + p.name + ".setValue(" + p.name + "POINTER.get());\n");
+                    writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
         }
         
-        returnValue.generateReturnStatement(writer, tryCatch ? 3 : 2);
-        
-        if (parameters != null && parameters.hasCallbackParameter()) {
-            // NoSuchMethodException, IllegalAccessException from findStatic()
-            // When the static callback methods have been successfully generated, these exceptions should never happen.
-            // We can try to suppress them, but I think it's better to be upfront when they occur, and just crash
-            // immediately so the stack trace will be helpful to solve the issue.
-            writer.write("        } catch (IllegalAccessException | NoSuchMethodException e) {\n");
-            writer.write("            throw new RuntimeException(e);\n");
-            writer.write("        }\n");
+        if (throws_ != null) {
+            writer.write("            if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("                throw new GErrorException(GERROR);\n");
+            writer.write("            }\n");
         }
+        
+        returnValue.generateReturnStatement(writer, 3);
+        
+        writer.write("        } catch (Throwable ERR) {\n");
+        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("        }\n");
         writer.write("    }\n");
         writer.write("    \n");
     }

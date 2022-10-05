@@ -17,6 +17,8 @@ public class Constructor extends Method {
             return;
         }
 
+        generateMethodHandle(writer);
+
         String privateMethodName = generateConstructorHelper(writer);
 
         if (doc != null) {
@@ -50,6 +52,8 @@ public class Constructor extends Method {
 
     public void generateNamed(Writer writer) throws IOException {
         RegisteredType clazz = (RegisteredType) parent;
+
+        generateMethodHandle(writer);
 
         String privateMethodName = generateConstructorHelper(writer);
 
@@ -87,7 +91,6 @@ public class Constructor extends Method {
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
     private String generateConstructorHelper(Writer writer) throws IOException {
-        boolean tryCatch = false;
         String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("    private static Refcounted " + methodName);
         if (parameters != null) {
@@ -104,12 +107,8 @@ public class Constructor extends Method {
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
-        if (parameters != null && parameters.hasCallbackParameter()) {
-            tryCatch = true;
-            writer.write("        try {\n");
-        }
-        writer.write(" ".repeat(tryCatch ? 12 : 8));
-        writer.write("Refcounted RESULT = Refcounted.get(gtk_h." + cIdentifier);
+        writer.write("        try {\n");
+        writer.write("            Refcounted RESULT = Refcounted.get((MemoryAddress) " + cIdentifier + ".invokeExact");
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -120,16 +119,14 @@ public class Constructor extends Method {
         writer.write(returnValue.transferOwnership() ? ", true" : ", false");
         writer.write(");\n");
         if (throws_ != null) {
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "    throw new GErrorException(GERROR);\n");
-            writer.write(" ".repeat(tryCatch ? 12 : 8) + "}\n");
+            writer.write("            if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("                throw new GErrorException(GERROR);\n");
+            writer.write("            }\n");
         }
-        writer.write(" ".repeat(tryCatch ? 12 : 8) + "return RESULT;\n");
-        if (parameters != null && parameters.hasCallbackParameter()) {
-            writer.write("        } catch (Exception e) {\n");
-            writer.write("            throw new RuntimeException(e);\n");
-            writer.write("        }\n");
-        }
+        writer.write("            return RESULT;\n");
+        writer.write("        } catch (Throwable ERR) {\n");
+        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("        }\n");
         writer.write("    }\n");
         writer.write("    \n");
         return methodName;

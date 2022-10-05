@@ -82,7 +82,7 @@ public class Parameters extends GirElement {
             } else if (p.isCallbackParameter()) {
                 String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
                 writer.write("\n");
-                writer.write("                    Linker.nativeLinker().upcallStub(\n");
+                writer.write("                    (Addressable) Linker.nativeLinker().upcallStub(\n");
                 writer.write("                        MethodHandles.lookup().findStatic(" + className + ".class, \"__cb" + p.type.simpleJavaType + "\",\n");
                 writer.write("                            MethodType.methodType(");
                 writer.write(Conversions.toPanamaJavaType(callback.returnValue.type) + ".class");
@@ -113,7 +113,7 @@ public class Parameters extends GirElement {
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
                 writer.write("\n");
-                writer.write("                    Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback("
+                writer.write("                    (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback("
                         + callbackParamName + ".hashCode(), " + callbackParamName + "))");
             } else {
                 p.generateInterop(writer);

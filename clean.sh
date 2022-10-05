@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-rm -rf ../java-gtk4/src/org
+rm -rf ../java-gtk4/src/main/java/org

@@ -146,6 +146,8 @@ public class Conversions {
             return "ValueLayout.ADDRESS";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "ValueLayout.JAVA_INT";
+        } else if (t.isPointer()) {
+            return "ValueLayout.ADDRESS";
         } else if (t.isPrimitive) {
             return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
