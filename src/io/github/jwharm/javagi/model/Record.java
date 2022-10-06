@@ -1,16 +1,15 @@
 package io.github.jwharm.javagi.model;
 
-import java.lang.foreign.SegmentAllocator;
-
 import java.io.IOException;
 import java.io.Writer;
 
 public class Record extends Class {
 
-    public final String isGTypeStructFor;
+    public final String disguised, isGTypeStructFor;
 
-    public Record(GirElement parent, String name, String cType, String isGTypeStructFor) {
+    public Record(GirElement parent, String name, String cType, String disguised, String isGTypeStructFor) {
         super(parent, name, null, cType);
+        this.disguised = disguised;
         this.isGTypeStructFor = isGTypeStructFor;
     }
     

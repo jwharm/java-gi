@@ -39,7 +39,7 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.generateTypeAndName(writer, pointerForArray);
+            p.generateTypeAndName(writer, p.isOutParameter() ? true : pointerForArray);
         }
     }
 

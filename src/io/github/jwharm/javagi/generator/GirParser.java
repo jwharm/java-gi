@@ -206,7 +206,7 @@ public class GirParser extends DefaultHandler {
             }
             case "record" -> {
                 Record newRecord = new Record(current, attr.getValue("name"),
-                        attr.getValue("c:type"), attr.getValue("glib:is-gtype-struct-for"));
+                        attr.getValue("c:type"), attr.getValue("disguised"), attr.getValue("glib:is-gtype-struct-for"));
                 current.recordList.add(newRecord);
                 current = newRecord;
             }
