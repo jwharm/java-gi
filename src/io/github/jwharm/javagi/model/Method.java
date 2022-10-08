@@ -43,6 +43,9 @@ public class Method extends GirElement implements CallableType {
                 writer.write(Conversions.toPanamaMemoryLayout(parameters.parameterList.get(i).type));
             }
         }
+        if (throws_ != null) {
+        	writer.write(", ValueLayout.ADDRESS");
+        }
         writer.write(")\n");
         writer.write("    );\n");
         writer.write("    \n");

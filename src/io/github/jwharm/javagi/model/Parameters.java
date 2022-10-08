@@ -120,7 +120,7 @@ public class Parameters extends GirElement {
             }
         }
         if (throws_ != null) {
-            writer.write(", GERROR");
+            writer.write(", (Addressable) GERROR");
         }
     }
 }
