@@ -9,29 +9,34 @@ import java.util.Map;
 public class JavaGI {
 
     public static void main(String[] args) throws Exception {
-        long starttime = System.currentTimeMillis();
-        
         if (args.length == 0) {
             System.err.println("ERROR: No input file provided.");
             return;
         }
-        InputFile inputFile = new InputFile(args[0]);
+        String inputFile = args[0];
         
         if (args.length == 1) {
             System.err.println("ERROR: No output directory provided.");
             return;
         }
         String outputDir = args[1];
-        if (! (outputDir.endsWith("/") || outputDir.endsWith("\\"))) {
+
+        run(inputFile, outputDir);
+    }
+
+    public static void run(String inputFile, String outputDir) throws Exception {
+        long starttime = System.currentTimeMillis();
+        InputFile input = new InputFile(inputFile);
+        if (!(outputDir.endsWith("/") || outputDir.endsWith("\\"))) {
             outputDir = outputDir + "/";
         }
-        
+
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
 
         Map<String, Repository> repositories = new HashMap<>();
 
-        for (InputFile.Line inputLine : inputFile.lines) {
+        for (InputFile.Line inputLine : input.lines) {
             System.out.println("PARSE " + inputLine.path());
             Repository r = parser.parse(inputLine.path(), inputLine.pkg());
             repositories.put(r.namespace.name, r);
@@ -46,7 +51,7 @@ public class JavaGI {
         RepositoryEditor.applyPatches(repositories);
 
         for (Repository repository : repositories.values()) {
-            System.out.println("GENERATE " + repository.namespace.name 
+            System.out.println("GENERATE " + repository.namespace.name
                     + " to " + outputDir + repository.namespace.pathName);
             generator.generate(repository, outputDir);
         }

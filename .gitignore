@@ -56,3 +56,6 @@ src/org/gtk/graphene/
 src/org/gtk/gsk/
 src/org/gtk/gtk/
 
+.gradle
+**/build/
+!src/**/build/
