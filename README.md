@@ -1,17 +1,18 @@
 # java-gi
 
-**java-gi** is a very experimental, **work-in-progress** tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) and `jextract` for accessing native resources, and add wrapper classes based on GObject-Introspection to offer an easy API to use with Java. The included build scripts generate bindings for GTK4 and LibAdwaita.
+**java-gi** is a very experimental, **work-in-progress** tool for generating GObject-Introspection bindings for Java. The generated bindings use the Panama foreign function & memory access API (JEP 424) for accessing native resources, and add wrapper classes based on GObject-Introspection to offer an easy API to use with Java. The included build scripts generate bindings for GTK4 and LibAdwaita.
 
 Java-gi bindings are automatically generated from GI data (gir files).
 Panama allows for relatively easy interoperability with native code, but jextract-generated binding classes are very difficult to use directly.
 C functions like `gtk_button_set_icon_name(GtkButton* button, const char* icon_name)` are mapped to a static Java method `gtk_button_set_icon_name(MemoryAddress button, MemoryAddress icon_name)`.
-Using GObject-Introspection, it is possible to generate a wrapper API that includes "proxy" classes that call the jextract-generated functions with automatically marshalled parameters and return values, for example `button.setIconName(iconName)`.
+Using GObject-Introspection, it is possible to generate a wrapper API that includes "proxy" classes that native functions with automatically marshalled parameters and return values, for example `button.setIconName(iconName)`.
 Java-gi tries to achieve this.
 
 ## Prerequisites
 
 - First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/). There are no dependencies on any other Java libraries.
-- Make sure that `javac` and `java` from JDK 19 and `gradle` are in your `PATH`; this is expected by the build script.
+- Gradle doesn't support JDK 19 yet, so you will also need to install a supported JDK, for example [JDK 18](https://jdk.java.net/18/), and configure Gradle to use it, until a version is released that supports JDK 19.
+- Make sure that `javac` and `java` from JDK 19 and `gradle` are in your `PATH`.
 - Install development header files and GObject-introspection (gir) files of the library you want to generate bindings for. 
   For example, in Fedora, to generate bindings for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
 
