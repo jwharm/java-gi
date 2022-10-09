@@ -108,8 +108,8 @@ public class Parameter extends GirElement {
             writer.write(name + " ? 1 : 0");
         
         // Objects and ValueWrappers
-        } else if (type.girElementInstance instanceof RegisteredType rt) {
-            writer.write(rt.getInteropString(name, type.isPointer(), transferOwnership()));
+        } else if (type.girElementInstance != null) {
+            writer.write(type.girElementInstance.getInteropString(name, type.isPointer(), transferOwnership()));
         
         // Primitive types
         } else {

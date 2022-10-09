@@ -44,8 +44,9 @@ public class Conversions {
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {
-            return Conversions.namespaceToJavaPackage(typeName.substring(0, idx))
-                    + "." + toCamelCase(typeName.substring(idx + 1), true);
+            String namespace = Conversions.namespaceToJavaPackage(typeName.substring(0, idx));
+            if (namespace == null) throw new RuntimeException("Could not get namespace for " + typeName);
+            return namespace + "." + toCamelCase(typeName.substring(idx + 1), true);
         } else {
             return toCamelCase(typeName, true);
         }
