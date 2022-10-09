@@ -45,16 +45,7 @@ hs_err_pid*
 
 # Generated code
 generated/
-src/org/gtk/gdk/
-src/org/gtk/gdkpixbuf/
-src/org/gtk/gio/
-src/org/gtk/glib/
-src/org/cairographics/
-src/org/harfbuzz/
-src/org/pango/
-src/org/gtk/graphene/
-src/org/gtk/gsk/
-src/org/gtk/gtk/
+**/bin/
 
 .gradle
 **/build/
