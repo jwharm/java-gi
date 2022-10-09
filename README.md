@@ -22,39 +22,6 @@ The included shell scripts generate bindings for GTK4 and LibAdwaita:
 
 ## What the bindings look like
 
-A "Hello world" example:
-
-```java
-import org.gtk.gtk.*;
-import org.gtk.gio.ApplicationFlags;
-
-public class HelloWorld {
-
-    public void activate(org.gtk.gio.Application g_application) {
-        var window = new ApplicationWindow(Application.castFrom(g_application));
-        window.setTitle("Window");
-        window.setDefaultSize(300, 200);
-        var box = new Box(Orientation.VERTICAL, 0);
-        box.setHalign(Align.CENTER);
-        box.setValign(Align.CENTER);
-        var button = Button.newWithLabel("Hello world!");
-        button.onClicked((btn) -> window.close());
-        box.append(button);
-        window.setChild(box);
-        window.show();
-    }
-
-    public HelloWorld(String[] args) {
-        var app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
-        app.onActivate(this::activate);
-        app.run(args.length, args);
-    }
-
-    public static void main(String[] args) {
-        new HelloWorld(args);
-    }
-}
-
-```
+A "Hello world" example can be found in [`example`](https://github.com/jwharm/java-gi/blob/main/example/src/main/java/io/github/jwharm/javagi/example/HelloWorld.java)
 
 Because the Panama foreign function API is still in preview status, to run the above application, be sure to add the `--enable-preview` command-line parameter when running `javac` and `java`.
