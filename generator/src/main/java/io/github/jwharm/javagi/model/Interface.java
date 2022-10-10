@@ -27,7 +27,7 @@ public class Interface extends RegisteredType {
 
         for (Function function : functionList) {
             if (function.isSafeToBind()) {
-                function.generate(writer, false, true);
+                function.generate(writer, true, true);
             }
         }
 

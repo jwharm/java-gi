@@ -23,8 +23,10 @@ public class Method extends GirElement implements CallableType {
         }
     }
     
-    protected void generateMethodHandle(Writer writer) throws IOException {
-        writer.write("    static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
+    protected void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
+        if (isInterface) writer.write("    @ApiStatus.Internal static final ");
+        else writer.write("    private static final ");
+        writer.write("MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
         writer.write("        \"" + cIdentifier + "\",\n");
         writer.write("        FunctionDescriptor.");
         if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
@@ -51,16 +53,16 @@ public class Method extends GirElement implements CallableType {
         writer.write("    \n");
     }
 
-    public void generate(Writer writer, boolean isDefault, boolean isStatic) throws IOException {
+    public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
         
         // Do not generate deprecated methods.
         if ("1".equals(deprecated)) {
             return;
         }
         
-        generateMethodHandle(writer);
+        generateMethodHandle(writer, isInterface);
 
-        writeMethodDeclaration(writer, doc, name, throws_, isDefault, isStatic);
+        writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
         writer.write(" {\n");
 
         if (throws_ != null) {

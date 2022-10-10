@@ -11,13 +11,13 @@ public class Constructor extends Method {
         super(parent, name, cIdentifier, deprecated, throws_);
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(Writer writer, boolean isInterface) throws IOException {
         // Do not generate deprecated constructors.
         if ("1".equals(deprecated)) {
             return;
         }
 
-        generateMethodHandle(writer);
+        generateMethodHandle(writer, isInterface);
 
         String privateMethodName = generateConstructorHelper(writer);
 
@@ -50,10 +50,10 @@ public class Constructor extends Method {
         writer.write("    \n");
     }
 
-    public void generateNamed(Writer writer) throws IOException {
+    public void generateNamed(Writer writer, boolean isInterface) throws IOException {
         RegisteredType clazz = (RegisteredType) parent;
 
-        generateMethodHandle(writer);
+        generateMethodHandle(writer, isInterface);
 
         String privateMethodName = generateConstructorHelper(writer);
 

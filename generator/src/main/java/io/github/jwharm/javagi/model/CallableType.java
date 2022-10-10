@@ -17,19 +17,19 @@ public interface CallableType {
                                         Doc doc,
                                         String name,
                                         String throws_,
-                                        boolean isDefault,
+                                        boolean isInterface,
                                         boolean isStatic) throws IOException {
         // Documentation
         if (doc != null) {
             doc.generate(writer, 1);
         }
 
-        // Visibility
-        writer.write("    public ");
-
-        // Default interface methods
-        if (isDefault) {
-            writer.write("default ");
+        if (isInterface && !isStatic) {
+            // Default interface methods
+            writer.write("    default ");
+        } else {
+            // Visibility
+            writer.write("    public ");
         }
 
         // Static methods
@@ -37,12 +37,17 @@ public interface CallableType {
             writer.write("static ");
         }
 
+        // Annotations
+        if (getReturnValue().type != null && !getReturnValue().type.isPrimitive) {
+            writer.write(getReturnValue().nullable ? "@Nullable " : "@NotNull ");
+        }
+
         // Return type
         writer.write(getReturnValue().getReturnType());
 
         // Method name
         String methodName = Conversions.toLowerCaseJavaName(name);
-        if (isDefault) { // Overriding toString() in a default method is not allowed.
+        if (isInterface) { // Overriding toString() in a default method is not allowed.
             methodName = Conversions.replaceJavaObjectMethodNames(methodName);
         }
         writer.write(" ");
@@ -88,15 +93,13 @@ public interface CallableType {
             }
         }
 
-        if (
-            // Check for type without name
-              (rv.type != null && rv.type.name == null)
-            // We don't support unions and callbacks yet
-            || (rv.type != null && rv.type.isUnion())
-            || (rv.type != null && rv.type.isCallback())
-        ) {
-            return false;
-        }
+        if (rv.type == null) return true;
+
+        // Check for type without name
+        if (rv.type.name == null) return false;
+
+        // We don't support unions and callbacks yet
+        if (rv.type.isUnion() || rv.type.isCallback()) return false;
 
         return true;
     }

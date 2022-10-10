@@ -28,6 +28,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("import io.github.jwharm.javagi.*;\n");
         writer.write("import java.lang.foreign.*;\n");
         writer.write("import java.lang.invoke.*;\n");
+        writer.write("import org.jetbrains.annotations.*;\n");
         writer.write("\n");
     }
 
@@ -62,10 +63,11 @@ public abstract class RegisteredType extends GirElement {
     protected void generateConstructors(Writer writer) throws IOException {
         for (Constructor c : constructorList) {
             if (c.isSafeToBind()) {
+                boolean isInterface = this instanceof Interface;
                 if (c.name.equals("new")) {
-                    c.generate(writer);
+                    c.generate(writer, isInterface);
                 } else {
-                    c.generateNamed(writer);
+                    c.generateNamed(writer, isInterface);
                 }
             }
         }

@@ -7,14 +7,16 @@ import java.io.Writer;
 
 public class Parameter extends GirElement {
 
-    public final String transferOwnership, nullable, allowNone, direction;
+    public final String transferOwnership, allowNone, direction;
+    public final boolean nullable;
+
     public boolean varargs = false;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String direction) {
         super(parent);
         this.name = Conversions.toLowerCaseJavaName(name);
         this.transferOwnership = transferOwnership;
-        this.nullable = nullable;
+        this.nullable = "1".equals(nullable);
         this.allowNone = allowNone;
         this.direction = direction;
     }
@@ -49,6 +51,8 @@ public class Parameter extends GirElement {
     }
 
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
+        // Annotations
+        writer.write(nullable ? "@Nullable " : "@NotNull ");
         // Arrays
         if (array != null) {
             generateArrayTypeAndName(writer, array.type, pointerForArray);
@@ -231,25 +235,14 @@ public class Parameter extends GirElement {
     
     public String getReturnType() {
         // Arrays
-        if (array != null) {
-            return getArrayReturnType(array.type);
-        
+        if (array != null) return getArrayReturnType(array.type);
         // Also arrays, but in this case it's always a pointer to an object
-        } else if (type.cType != null && type.cType.endsWith("**")) {
-            return "PointerProxy<" + type.qualifiedJavaType + ">";
-        
-        // This should not happen
-        } else if (type == null) {
-            return "";
-        
+        if (type.cType != null && type.cType.endsWith("**")) return "PointerProxy<" + type.qualifiedJavaType + ">";
         // Create Pointer object
-        } else if (type.isPrimitive && type.isPointer()) {
+        if (type.isPrimitive && type.isPointer())
             return "Pointer" + Conversions.primitiveClassName(type.simpleJavaType);
-        
         // Anything else
-        } else {
-            return type.qualifiedJavaType;
-        }
+        return type.qualifiedJavaType;
     }
     
     public String getArrayReturnType(Type type) {

@@ -48,7 +48,7 @@ public class BindingsGenerator {
 
             for (Function function : gir.namespace.functionList) {
                 if (function.isSafeToBind()) {
-                    function.generate(writer, false, true);
+                    function.generate(writer, function.parent instanceof Interface, true);
                 }
             }
             
