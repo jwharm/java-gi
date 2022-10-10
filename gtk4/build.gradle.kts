@@ -17,6 +17,7 @@ java {
     }
     // Temporarily disabled since the generated docs were apparently invalid
 //    withJavadocJar()
+    withSourcesJar()
 }
 
 group = "io.github.jwharm.javagi"
