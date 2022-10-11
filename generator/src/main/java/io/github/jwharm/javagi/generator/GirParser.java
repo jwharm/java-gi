@@ -148,7 +148,8 @@ public class GirParser extends DefaultHandler {
             }
             case "instance-parameter" -> {
                 InstanceParameter newInstanceParameter = new InstanceParameter(current, attr.getValue("name"),
-                        attr.getValue("transfer-ownership"));
+                        attr.getValue("transfer-ownership"), attr.getValue("nullable"),
+                        attr.getValue("allow-none"));
                 ((Parameters) current).parameterList.add(newInstanceParameter);
                 current = newInstanceParameter;
             }
@@ -214,7 +215,8 @@ public class GirParser extends DefaultHandler {
                 current = new Repository();
             }
             case "return-value" -> {
-                ReturnValue newReturnValue = new ReturnValue(current, attr.getValue("transfer-ownership"));
+                ReturnValue newReturnValue = new ReturnValue(current, attr.getValue("transfer-ownership"),
+                        attr.getValue("nullable"));
                 ((CallableType) current).setReturnValue(newReturnValue);
                 current = newReturnValue;
             }

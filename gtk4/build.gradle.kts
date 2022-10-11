@@ -17,6 +17,7 @@ java {
     }
     // Temporarily disabled since the generated docs were apparently invalid
 //    withJavadocJar()
+    withSourcesJar()
 }
 
 group = "io.github.jwharm.javagi"
@@ -27,6 +28,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("org.jetbrains:annotations:23.0.0")
 }
 
 val generatedPath = buildDir.resolve("generated/sources/javagi/java/main")

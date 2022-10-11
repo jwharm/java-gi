@@ -17,7 +17,7 @@ public class PointerBitfield<T extends Bitfield> extends Pointer<T> {
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
      */
     public void set(T value) {
         address.set(ValueLayout.JAVA_INT, 0, value.getValue());
