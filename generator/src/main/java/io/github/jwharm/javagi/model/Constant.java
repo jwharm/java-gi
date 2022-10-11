@@ -15,6 +15,11 @@ public class Constant extends GirElement {
     }
 
     public void generate(Writer writer) throws IOException {
+        // Documentation
+        if (doc != null) {
+            doc.generate(writer, 1);
+        }
+    	
         try {
             String printValue;
             if (type.isAliasForPrimitive()) {
