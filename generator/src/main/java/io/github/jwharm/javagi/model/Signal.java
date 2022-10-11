@@ -85,7 +85,7 @@ public class Signal extends Method {
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(),\n");
-        writer.write("                Interop.allocateNativeString(\"" + name + "\").handle(),\n");
+        writer.write("                Interop.allocateNativeString(\"" + name + "\"),\n");
         writer.write("                (Addressable) Linker.nativeLinker().upcallStub(\n");
         writer.write("                    MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"" + callbackName + "\",\n");
         writer.write("                        MethodType.methodType(");

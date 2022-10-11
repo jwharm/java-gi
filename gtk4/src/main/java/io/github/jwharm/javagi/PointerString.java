@@ -28,7 +28,7 @@ public class PointerString extends Pointer<String> {
      * Use this mehod to set the value that the pointer points to.
      */
     public void set(String value) {
-        address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value).handle());
+        address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value));
     }
 
     /**

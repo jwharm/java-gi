@@ -11,14 +11,12 @@ import java.lang.foreign.*;
 public abstract class Pointer<T> implements Iterable<T> {
 
     protected final MemoryAddress address;
-    private MemorySegmentReference reference;
 
     /**
      * Allocate a new memory segment with the provided memory layout.
      */
     protected Pointer(ValueLayout layout) {
         MemorySegment segment = Interop.getAllocator().allocate(layout);
-        reference = new MemorySegmentReference(segment);
         this.address = segment.address();
     }
 

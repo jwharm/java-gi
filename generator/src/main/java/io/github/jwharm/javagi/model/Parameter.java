@@ -126,7 +126,7 @@ public class Parameter extends GirElement {
         
         // Strings: allocate utf8 string
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("Interop.allocateNativeString(" + name + ").handle()");
+            writer.write("Interop.allocateNativeString(" + name + ")");
         
         // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
@@ -160,11 +160,11 @@ public class Parameter extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typename = Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
             }
-            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + name + ")).handle()");
+            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + name + "))");
 
         // Automatically use the right allocateNativeArray() method for this type
         } else {
-            writer.write("Interop.allocateNativeArray(" + name + ").handle()");
+            writer.write("Interop.allocateNativeArray(" + name + ")");
         }
     }
 
@@ -260,12 +260,17 @@ public class Parameter extends GirElement {
     
     public String getReturnType() {
         // Arrays
-        if (array != null) return getArrayReturnType(array.type);
+        if (array != null) {
+        	return getArrayReturnType(array.type);
+        }
         // Also arrays, but in this case it's always a pointer to an object
-        if (type.cType != null && type.cType.endsWith("**")) return "PointerProxy<" + type.qualifiedJavaType + ">";
+        if (type.cType != null && type.cType.endsWith("**")) {
+        	return "PointerProxy<" + type.qualifiedJavaType + ">";
+        }
         // Create Pointer object
-        if (type.isPrimitive && type.isPointer())
+        if (type.isPrimitive && type.isPointer()) {
             return "Pointer" + Conversions.primitiveClassName(type.simpleJavaType);
+        }
         // Anything else
         return type.qualifiedJavaType;
     }
@@ -274,34 +279,32 @@ public class Parameter extends GirElement {
         // This should not happen
         if (type == null) {
             return "void";
-        
-        // Pointer to enumeration
-        } else if (type.isEnum()) {
-            return "PointerEnumeration";
-        
-        // Pointer to bitfield
-        } else if (type.isEnum()) {
-            return "PointerBitfield";
-        
-        // Pointer to wrapped primitive value
-        } else if (type.isAliasForPrimitive()) {
-            return "Pointer" + Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
-            
-        // Pointer to primitive value
-        } else if (type.isPrimitive) {
-            return "Pointer" + Conversions.primitiveClassName(type.qualifiedJavaType);
-        
-        // Pointer to UTF8 memorysegment
-        } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            return "PointerString";
-        
-        // Pointer to pointer
-        } else if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress")) {
-            return "PointerAddress";
-            
-        // Pointer to object
-        } else {
-            return "PointerProxy<" + type.qualifiedJavaType + ">";
         }
+        // Pointer to enumeration
+        if (type.isEnum()) {
+            return "PointerEnumeration";
+        }
+        // Pointer to bitfield
+        if (type.isEnum()) {
+            return "PointerBitfield";
+        }
+        // Pointer to wrapped primitive value
+        if (type.isAliasForPrimitive()) {
+            return "Pointer" + Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
+        }    
+        // Pointer to primitive value
+        if (type.isPrimitive) {
+            return "Pointer" + Conversions.primitiveClassName(type.qualifiedJavaType);
+        }
+        // Pointer to UTF8 memorysegment
+        if (type.qualifiedJavaType.equals("java.lang.String")) {
+            return "PointerString";
+        }
+        // Pointer to pointer
+        if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress")) {
+            return "PointerAddress";
+        }    
+        // Pointer to object
+        return "PointerProxy<" + type.qualifiedJavaType + ">";
     }
 }
