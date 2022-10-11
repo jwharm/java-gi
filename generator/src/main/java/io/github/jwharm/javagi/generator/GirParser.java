@@ -47,7 +47,7 @@ public class GirParser extends DefaultHandler {
             }
             case "array" -> {
                 Array newArray = new Array(current, attr.getValue("name"), attr.getValue("c:type"),
-                        attr.getValue("zero-terminated"), attr.getValue("fixed-size"));
+                        attr.getValue("length"), attr.getValue("zero-terminated"), attr.getValue("fixed-size"));
                 current.array = newArray;
                 current = newArray;
             }

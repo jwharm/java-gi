@@ -21,6 +21,30 @@ public class Parameter extends GirElement {
         this.direction = direction;
     }
 
+    /**
+     * Return the parameter that is referred to by index in a GIR attribute.
+     * For example: array length="2" refers to the second parameter for the 
+     * length of that particular array.
+     * The index counts from zero and ignores the instance-parameter.
+     */
+    public Parameter getParameter(String indexAttr) {
+    	if (indexAttr == null) {
+    		return null;
+    	}
+    	int index;
+    	try {
+        	index = Integer.valueOf(indexAttr);
+    	} catch (NumberFormatException nfe) {
+    		return null;
+    	}
+    	var parameterList = ((Parameters) parent).parameterList;
+    	if (parameterList.get(0) instanceof InstanceParameter) {
+    		return parameterList.get(index + 1);
+    	} else {
+    		return parameterList.get(index);
+    	}
+    }
+    
     public boolean transferOwnership() {
         return "full".equals(transferOwnership);
     }
@@ -53,13 +77,14 @@ public class Parameter extends GirElement {
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
         // Annotations
         writer.write(nullable ? "@Nullable " : "@NotNull ");
+        
         // Arrays
         if (array != null) {
-            generateArrayTypeAndName(writer, array.type, pointerForArray);
+            generateArrayType(writer, array.type, pointerForArray);
         
         // Also arrays
         } else if (type.cType != null && type.cType.endsWith("**")) {
-            generateArrayTypeAndName(writer, type, pointerForArray);
+            generateArrayType(writer, type, pointerForArray);
         
         // Pointer to primitive type
         } else if (type.isPrimitive && type.isPointer()) {
@@ -72,7 +97,7 @@ public class Parameter extends GirElement {
         writer.write(" " + name);
     }
     
-    private void generateArrayTypeAndName(Writer writer, Type type, boolean pointerForArray) throws IOException {
+    private void generateArrayType(Writer writer, Type type, boolean pointerForArray) throws IOException {
         if (pointerForArray) {
             String typename = type.qualifiedJavaType;
             if (type.isAliasForPrimitive()) {
