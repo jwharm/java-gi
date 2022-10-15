@@ -171,7 +171,7 @@ public class Parameter extends GirElement {
             writer.write("MemoryAddress.NULL");
         
         } else if (isOutParameter()) {
-            writer.write(name + "POINTER.address()");
+            writer.write("(Addressable) " + name + "POINTER.address()");
 
         // Convert array of ValueWrapper types to an array of the wrapped values
         } else if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive()) {
