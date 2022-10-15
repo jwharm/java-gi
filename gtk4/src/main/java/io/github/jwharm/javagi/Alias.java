@@ -4,7 +4,7 @@ public abstract class Alias<T> {
 
     private T value;
 
-    public Alias(T initialValue) {
+    public Alias(T value) {
         this.value = value;
     }
 
@@ -14,6 +14,10 @@ public abstract class Alias<T> {
 
     public T getValue() {
         return this.value;
+    }
+    
+    public boolean equals(Alias<T> other) {
+    	return this.value.equals(other.value);
     }
 
     public static boolean[] getBooleanValues(Alias<Boolean>[] array) {

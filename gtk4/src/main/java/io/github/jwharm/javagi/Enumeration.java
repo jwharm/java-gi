@@ -16,6 +16,14 @@ public abstract class Enumeration {
         return this.value;
     }
 
+    public boolean equals(int enumeration) {
+    	return this.value == enumeration;
+    }
+    
+    public boolean equals(Enumeration enumeration) {
+    	return this.value == enumeration.value;
+    }
+
     public static int[] getValues(Enumeration[] array) {
         int[] values = new int[array.length];
         for (int i = 0; i < array.length; i++) {

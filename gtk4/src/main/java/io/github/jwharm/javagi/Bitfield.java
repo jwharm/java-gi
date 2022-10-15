@@ -16,6 +16,14 @@ public abstract class Bitfield {
         return this.value;
     }
 
+    public boolean equals(int bitfield) {
+    	return this.value == bitfield;
+    }
+    
+    public boolean equals(Bitfield mask) {
+    	return this.value == mask.value;
+    }
+
     public Bitfield combined(Bitfield mask) {
         this.setValue(this.getValue() | mask.getValue());
         return this;
