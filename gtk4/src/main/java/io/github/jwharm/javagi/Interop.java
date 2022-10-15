@@ -39,7 +39,7 @@ public class Interop {
 
     private static void initialize() {
         session = MemorySession.openConfined();
-        allocator = SegmentAllocator.newNativeArena(session);
+        allocator = SegmentAllocator.implicitAllocator();
         initialized = true;
 
         // Initialize upcall stub for DestroyNotify callback
@@ -73,9 +73,14 @@ public class Interop {
                 orElse(null);
     }
 
-    public static int registerCallback(int hash, Object callback) {
+    public static int registerCallback(Object callback) {
+    	int hash = callback.hashCode();
         signalRegistry.put(hash, callback);
         return hash;
+    }
+    
+    public static MemoryAddress dereference(MemorySegment pointer) {
+    	return pointer.get(ValueLayout.ADDRESS, 0);
     }
 
     public static void cbDestroyNotify(MemoryAddress data) {

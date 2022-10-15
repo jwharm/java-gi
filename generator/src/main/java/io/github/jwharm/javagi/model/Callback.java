@@ -32,8 +32,6 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("        ");
         if (returnValue.type == null) {
             writer.write("void");
-        } else if (returnValue.type.isBitfield()) {
-            writer.write("int");
         } else {
             writer.write(returnValue.type.qualifiedJavaType);
         }
@@ -62,8 +60,6 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("    public static ");
         if (returnValue.type == null) {
             writer.write("void");
-        } else if (returnValue.type.isBitfield()) {
-            writer.write("int");
         } else {
             writer.write(returnValue.type.qualifiedJavaType);
         }

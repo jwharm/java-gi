@@ -81,6 +81,8 @@ public interface CallableType {
                        (p.array == null && p.type == null)
                        // We don't support types without a name
                     || (p.type != null && p.type.name == null)
+                       // We don't support out parameter arrays with unknown length
+                    || (p.isOutParameter() && p.array != null && p.array.size() == null)
             )) {
                 return false;
             }
@@ -91,6 +93,16 @@ public interface CallableType {
             ) {
                 return false;
             }
+        }
+        
+        // Check for signals with out parameters or arrays
+        if (this instanceof Signal && ps != null) {
+        	if (ps.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
+        		return false;
+        	}
+        	if (ps.parameterList.stream().anyMatch(p -> p.array != null)) {
+        		return false;
+        	}
         }
 
         if (rv.type == null) return true;

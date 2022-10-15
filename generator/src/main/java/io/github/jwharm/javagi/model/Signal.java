@@ -35,7 +35,7 @@ public class Signal extends Method {
 
         if (parameters != null) {
             writer.write(", ");
-            parameters.generateJavaParameters(writer, true);
+            parameters.generateJavaParameters(writer, false);
         }
         writer.write(");\n");
 
@@ -113,7 +113,7 @@ public class Signal extends Method {
         }
         writer.write(", ValueLayout.ADDRESS),\n");
         writer.write("                    Interop.getScope()),\n");
-        writer.write("                (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler.hashCode(), handler)),\n");
+        writer.write("                (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler)),\n");
         writer.write("                (Addressable) MemoryAddress.NULL, 0);\n");
         writer.write("            return new SignalHandle(handle(), RESULT);\n");
         writer.write("        } catch (Throwable ERR) {\n");

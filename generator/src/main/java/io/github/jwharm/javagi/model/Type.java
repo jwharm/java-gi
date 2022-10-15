@@ -67,7 +67,7 @@ public class Type extends GirElement {
     }
     
     public boolean isBoolean() {
-        return isPrimitive && name.equals("gboolean") && (! cType.equals("_Bool"));
+        return isPrimitive && "gboolean".equals(name) && (! "_Bool".equals(cType));
     }
 
     public boolean isCallback() {

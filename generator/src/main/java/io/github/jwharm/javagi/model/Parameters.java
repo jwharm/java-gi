@@ -39,7 +39,7 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.generateTypeAndName(writer, p.isOutParameter() || pointerForArray);
+            p.generateTypeAndName(writer, pointerForArray);
         }
     }
 
@@ -113,8 +113,7 @@ public class Parameters extends GirElement {
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
                 writer.write("\n");
-                writer.write("                    (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback("
-                        + callbackParamName + ".hashCode(), " + callbackParamName + "))");
+                writer.write("                    (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(" + callbackParamName + "))");
             } else {
                 p.generateInterop(writer);
             }

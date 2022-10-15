@@ -1,12 +1,13 @@
 package io.github.jwharm.javagi.generator;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.github.jwharm.javagi.model.GirElement;
 import io.github.jwharm.javagi.model.RegisteredType;
 import io.github.jwharm.javagi.model.Type;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Conversions {
 
@@ -157,11 +158,23 @@ public class Conversions {
         }
     }
 
+    public static String getValueLayout(Type t) {
+        if (t == null) {
+            return "ValueLayout.ADDRESS";
+        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
+            return "ValueLayout.JAVA_INT";
+        } else if (t.isPrimitive) {
+            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+        } else if (t.isAliasForPrimitive()) {
+            return "ValueLayout.JAVA_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
+        } else {
+            return "ValueLayout.ADDRESS";
+        }
+    }
+
     public static boolean isPrimitive(String javaType) {
-        return javaType != null && switch (javaType) {
-            case "boolean", "long", "byte", "short", "int", "double", "float" -> true;
-            default -> false;
-        };
+    	return javaType != null
+    			&& List.of("boolean", "byte", "char", "double", "float", "int", "long", "short").contains(javaType);
     }
     
     public static String primitiveClassName(String primitive) {
