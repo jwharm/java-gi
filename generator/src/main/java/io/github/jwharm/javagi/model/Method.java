@@ -114,7 +114,13 @@ public class Method extends GirElement implements CallableType {
             		if (p.array == null) {
                 		writer.write("        " + p.name + ".set(");
                 		String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
-                		writer.write(p.getNewInstanceString(p.type, identifier) + ");\n");
+                		if (p.type.isPrimitive && p.type.isPointer()) {
+                    		writer.write(identifier);
+                    		if (p.type.isBoolean()) writer.write(" != 0");
+                    		writer.write(");\n");
+                		} else {
+                    		writer.write(p.getNewInstanceString(p.type, identifier) + ");\n");
+                		}
             		}
             	} else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                     writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
