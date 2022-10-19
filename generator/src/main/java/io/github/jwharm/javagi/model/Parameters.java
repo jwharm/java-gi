@@ -80,6 +80,7 @@ public class Parameters extends GirElement {
                 writer.write("\n");
                 writer.write("                    Interop.cbDestroyNotifySymbol()");
             } else if (p.isCallbackParameter()) {
+                //TODO how should nullability be handled here?
                 String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
                 writer.write("\n");
                 writer.write("                    (Addressable) Linker.nativeLinker().upcallStub(\n");
@@ -112,8 +113,9 @@ public class Parameters extends GirElement {
                 writer.write("),\n");
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
-                writer.write("\n");
-                writer.write("                    (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(" + callbackParamName + "))");
+                writer.write("\n                    ");
+                if (callbackParameter.nullable) writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
+                writer.write("(Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(" + callbackParamName + "))");
             } else {
                 p.generateInterop(writer);
             }

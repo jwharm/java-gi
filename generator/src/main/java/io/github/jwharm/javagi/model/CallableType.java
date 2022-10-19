@@ -38,7 +38,7 @@ public interface CallableType {
         }
 
         // Annotations
-        if (getReturnValue().type != null && !getReturnValue().type.isPrimitive) {
+        if ((getReturnValue().type != null && !getReturnValue().type.isPrimitive && !getReturnValue().type.isVoid()) || getReturnValue().array != null) {
             writer.write(getReturnValue().nullable ? "@Nullable " : "@NotNull ");
         }
 
