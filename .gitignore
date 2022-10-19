@@ -50,3 +50,6 @@ generated/
 .gradle
 **/build/
 !src/**/build/
+
+# Local configurations
+gradle.properties

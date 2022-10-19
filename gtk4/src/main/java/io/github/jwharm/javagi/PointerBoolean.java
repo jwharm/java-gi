@@ -6,7 +6,7 @@ import java.lang.foreign.ValueLayout;
 /**
  * A pointer to a boolean value.
  * Use {@code new PointerBoolean()} to create an instance, and
- * use {@link #get()} afterwards to retreive the results.
+ * use {@link #get()} afterwards to retrieve the results.
  */
 public class PointerBoolean extends Pointer<Boolean> {
 
