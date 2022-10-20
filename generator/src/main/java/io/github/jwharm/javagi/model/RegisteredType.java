@@ -56,6 +56,13 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    \n");
     }
 
+    protected void generateEnsureInitialized(Writer writer) throws IOException {
+        writer.write("    static {\n");
+        writer.write("        " + Conversions.toSimpleJavaType(getNamespace().name) + ".javagi$ensureInitialized();\n");
+        writer.write("    }\n");
+        writer.write("    \n");
+    }
+
     /**
      * Generates all constructors listed for this type. When the constructor is not named "new", a static
      * factory method is generated with the provided name.

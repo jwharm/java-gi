@@ -43,8 +43,8 @@ public class Record extends Class {
         generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
-        writer.write("\n");
 
+        generateEnsureInitialized(writer);
         generateMemoryAddressConstructor(writer);
 
         if (constructorList.isEmpty()) {

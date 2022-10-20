@@ -2,9 +2,10 @@ package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
 
 public class BindingsGenerator {
 
@@ -13,11 +14,10 @@ public class BindingsGenerator {
     public BindingsGenerator() {
     }
 
-    public void generate(Repository gir, String outputDir) throws IOException {
+    public void generate(Repository gir, Set<String> natives, Path basePath) throws IOException {
         signalCallbackFunctions = new StringBuilder();
-        String basePath = outputDir + gir.namespace.pathName;
 
-        new File(basePath).mkdirs();
+        Files.createDirectories(basePath);
 
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
             
@@ -37,20 +37,30 @@ public class BindingsGenerator {
                 continue;
             }
 
-            try (FileWriter writer = new FileWriter(basePath + rt.javaName + ".java")) {
+            try (Writer writer = Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java"))) {
                 rt.generate(writer);
             }
         }
-        generateGlobals(gir, basePath);
+        generateGlobals(gir, natives, basePath);
     }
 
-    public void generateGlobals(Repository gir, String basePath) throws IOException {
+    public void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
         String className = Conversions.toSimpleJavaType(gir.namespace.name);
-        try (FileWriter writer = new FileWriter(basePath + className + ".java")) {
+        try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             RegisteredType.generateImportStatements(writer);
             writer.write("public final class " + className + " {\n");
+            writer.write("    \n");
+            if (!natives.isEmpty()) {
+                writer.write("    static {\n");
+                for (String libraryName : natives) {
+                    writer.write("        System.loadLibrary(\"" + libraryName + "\");\n");
+                }
+                writer.write("    }\n");
+                writer.write("    \n");
+            }
+            writer.write("    @ApiStatus.Internal static void javagi$ensureInitialized() {}\n");
             writer.write("    \n");
 
             for (Constant constant : gir.namespace.constantList) {

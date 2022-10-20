@@ -34,12 +34,11 @@ public class Alias extends ValueWrapper {
     // Aliases (typedefs) don't exist in Java. We can emulate this using inheritance.
     // For primitives and Strings, we wrap the value.
     public void generate(Writer writer) throws IOException {
-        
         generatePackageDeclaration(writer);
         generateJavadoc(writer);
-        
+
         switch (aliasFor()) {
-            case CLASS_ALIAS:
+            case CLASS_ALIAS -> {
                 writer.write("public class " + javaName);
                 if (type.qualifiedJavaType.equals("void")) {
                     writer.write(" extends org.gtk.gobject.Object {\n");
@@ -50,28 +49,29 @@ public class Alias extends ValueWrapper {
                 generateMemoryAddressConstructor(writer);
                 generateCastFromGObject(writer);
                 writer.write("}\n");
-                break;
-            case INTERFACE_ALIAS:
+            }
+            case INTERFACE_ALIAS -> {
                 writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
                 writer.write("}\n");
-                break;
-            case CALLBACK_ALIAS:
+            }
+            case CALLBACK_ALIAS -> {
                 writer.write("public interface " + javaName + " {\n");
                 writer.write("}\n");
-                break;
-            case VALUE_ALIAS:
+            }
+            case VALUE_ALIAS -> {
                 String genericType = Conversions.primitiveClassName(type.qualifiedJavaType);
                 if ("utf8".equals(type.name)) {
                     genericType = "java.lang.String";
                 }
-                writer.write("public class " + javaName +  " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
+                writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
                 writer.write("\n");
                 generateValueConstructor(writer, type.qualifiedJavaType);
                 writer.write("}\n");
-                break;
-            case UNKNOWN_ALIAS:
+            }
+            case UNKNOWN_ALIAS -> {
                 writer.write("public class " + javaName + " {\n");
                 writer.write("}\n");
+            }
         }
     }
 

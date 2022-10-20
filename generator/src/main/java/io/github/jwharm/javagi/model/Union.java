@@ -19,7 +19,7 @@ public class Union extends RegisteredType {
         generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
-        writer.write("    \n");
+        generateEnsureInitialized(writer);
         generateMemoryAddressConstructor(writer);
         writer.write("}\n");
         writer.write("\n");

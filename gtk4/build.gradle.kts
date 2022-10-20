@@ -46,9 +46,9 @@ sourceSets {
 val genSources by tasks.registering {
     doLast {
         val sourcePath = if (project.hasProperty("girSources")) project.property("girSources").toString() else "/usr/share/gir-1.0"
-        fun source(name: String, pkg: String, patches: PatchSet?) = JavaGI.Source("$sourcePath/$name.gir", pkg, generatedPath.absolutePath, patches ?: PatchSet.EMPTY)
+        fun source(name: String, pkg: String, vararg natives: String, patches: PatchSet? = null) = JavaGI.Source("$sourcePath/$name.gir", pkg, setOf(*natives), generatedPath.toPath(), patches ?: PatchSet.EMPTY)
         JavaGI.generate(
-            source("GObject-2.0", "org.gtk.gobject", object: PatchSet() {
+            source("GObject-2.0", "org.gtk.gobject", "gobject-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // These types require mapping va_list (varargs) types
                     removeType(repo, "VaClosureMarshal")
@@ -61,7 +61,7 @@ val genSources by tasks.registering {
                     removeFunction(repo, "signal_newv")
                 }
             }),
-            source("GLib-2.0", "org.gtk.glib", object: PatchSet() {
+            source("GLib-2.0", "org.gtk.glib", "glib-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This method has parameters that jextract does not support
                     removeFunction(repo, "assertion_message_cmpnum");
@@ -69,7 +69,7 @@ val genSources by tasks.registering {
                     removeFunction(repo, "clear_error");
                 }
             }),
-            source("Gio-2.0", "org.gtk.gio", object: PatchSet() {
+            source("Gio-2.0", "org.gtk.gio", "gio-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
                     renameMethod(repo, "BufferedInputStream", "read_byte", "read_int");
@@ -80,38 +80,39 @@ val genSources by tasks.registering {
                     removeMethod(repo, "AsyncInitable", "new_finish");
                 }
             }),
-            source("cairo-1.0", "org.cairographics", object: PatchSet() {
+            source("cairo-1.0", "org.cairographics", "cairo", "cairo-gobject", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Incompletely defined
                     removeFunction(repo, "image_surface_create");
                 }
             }),
-            source("HarfBuzz-0.0", "org.harfbuzz", object: PatchSet() {
+            source("HarfBuzz-0.0", "org.harfbuzz", "harfbuzz", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This constant has type "language_t" which cannot be instantiated
                     removeConstant(repo, "LANGUAGE_INVALID");
                 }
             }),
-            source("Pango-1.0", "org.pango", null),
-            source("GModule-2.0", "org.gtk.gmodule", null),
-            source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", null),
-            source("Gdk-4.0", "org.gtk.gdk", null),
-            source("Graphene-1.0", "org.gtk.graphene", null),
-            source("Gsk-4.0", "org.gtk.gsk", object: PatchSet() {
+            source("Pango-1.0", "org.pango", "pango-1.0"),
+            source("PangoCairo-1.0", "org.pango.cairo", "pangocairo-1.0"),
+            source("GModule-2.0", "org.gtk.gmodule"),
+            source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", "gdk_pixbuf-2.0"),
+            source("Gdk-4.0", "org.gtk.gdk"),
+            source("Graphene-1.0", "org.gtk.graphene", "graphene-1.0"),
+            source("Gsk-4.0", "org.gtk.gsk", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // These types are defined in the GIR, but unavailable by default
                     removeType(repo, "BroadwayRenderer");
                     removeType(repo, "BroadwayRendererClass");
                 }
             }),
-            source("Gtk-4.0", "org.gtk.gtk", object: PatchSet() {
+            source("Gtk-4.0", "org.gtk.gtk", "gtk-4", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
                     renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction");
                     renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
                 }
             }),
-            source("Adw-1", "org.gnome.adw", object: PatchSet() {
+            source("Adw-1", "org.gnome.adw", "adwaita-1", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
                     renameMethod(repo, "ActionRow", "activate", "activate_row");
