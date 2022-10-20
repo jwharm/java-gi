@@ -108,16 +108,25 @@ public class Method extends GirElement implements CallableType {
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
 
+        // Non-array out parameters
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter()) {
-            		if (p.array == null) {
-                        // Non-array out parameters
-                		writer.write("        " + p.name + ".set(");
-                		String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
-                		writer.write(p.getNewInstanceString(p.type, identifier) + ");\n");
-            		} else {
-                        // Array out parameters
+                if (p.isOutParameter()) {
+                    if (p.array == null) {
+                        writer.write("        " + p.name + ".set(");
+                        String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
+                        writer.write(p.getNewInstanceString(p.type, identifier) + ");\n");
+                    }
+                } else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                    writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
+                }
+            }
+        }
+        // Array out parameters
+        if (parameters != null) {
+            for (Parameter p : parameters.parameterList) {
+                if (p.isOutParameter()) {
+                    if (p.array != null) {
                         String len = p.array.size();
                         String valuelayout = Conversions.getValueLayout(p.array.type);
                         if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
@@ -135,9 +144,6 @@ public class Method extends GirElement implements CallableType {
                             writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
                         }
                     }
-            	} else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
-                    // Primitive out parameter
-                    writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
         }
