@@ -19,7 +19,7 @@ public class Constant extends GirElement {
         if (doc != null) {
             doc.generate(writer, 1);
         }
-    	
+        
         try {
             String printValue;
             if (type.isAliasForPrimitive()) {

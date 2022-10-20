@@ -97,12 +97,12 @@ public interface CallableType {
         
         // Check for signals with out parameters or arrays
         if (this instanceof Signal && ps != null) {
-        	if (ps.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
-        		return false;
-        	}
-        	if (ps.parameterList.stream().anyMatch(p -> p.array != null)) {
-        		return false;
-        	}
+            if (ps.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
+                return false;
+            }
+            if (ps.parameterList.stream().anyMatch(p -> p.array != null)) {
+                return false;
+            }
         }
 
         if (rv.type == null) return true;

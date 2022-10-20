@@ -28,30 +28,30 @@ public class Parameter extends GirElement {
      * The index counts from zero and ignores the instance-parameter.
      */
     public Parameter getParameter(String indexAttr) {
-    	if (indexAttr == null) {
-    		return null;
-    	}
-    	// Parse the value of the 'length' attribute
-    	int index;
-    	try {
-        	index = Integer.parseInt(indexAttr);
-    	} catch (NumberFormatException nfe) {
-    		return null;
-    	}
-    	// Get the <parameters> node
-    	Parameters params;
-    	if (this instanceof ReturnValue) {
-    		params = ((CallableType) parent).getParameters();
-    	} else {
-    		params = (Parameters) parent;
-    	}
-    	// Find the parameter that was specified in the value of the 'length' attribute.
-    	// Ignore the instance parameter.
-    	if (params.parameterList.get(0) instanceof InstanceParameter) {
-    		return params.parameterList.get(index + 1);
-    	} else {
-    		return params.parameterList.get(index);
-    	}
+        if (indexAttr == null) {
+            return null;
+        }
+        // Parse the value of the 'length' attribute
+        int index;
+        try {
+            index = Integer.parseInt(indexAttr);
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
+        // Get the <parameters> node
+        Parameters params;
+        if (this instanceof ReturnValue) {
+            params = ((CallableType) parent).getParameters();
+        } else {
+            params = (Parameters) parent;
+        }
+        // Find the parameter that was specified in the value of the 'length' attribute.
+        // Ignore the instance parameter.
+        if (params.parameterList.get(0) instanceof InstanceParameter) {
+            return params.parameterList.get(index + 1);
+        } else {
+            return params.parameterList.get(index);
+        }
     }
     
     public boolean transferOwnership() {
@@ -59,7 +59,7 @@ public class Parameter extends GirElement {
     }
     
     public boolean isOutParameter() {
-    	return direction != null && direction.contains("out");
+        return direction != null && direction.contains("out");
     }
 
     public boolean isInstanceParameter() {
@@ -93,11 +93,11 @@ public class Parameter extends GirElement {
 
         } else if (isOutParameter()) {
             // Out parameters
-        	String typeStr = type.qualifiedJavaType;
-        	if (type.isPrimitive) {
-        		typeStr = Conversions.primitiveClassName(type.simpleJavaType);
-        	}
-    		writer.write("Out<" + typeStr + ">");
+            String typeStr = type.qualifiedJavaType;
+            if (type.isPrimitive) {
+                typeStr = Conversions.primitiveClassName(type.simpleJavaType);
+            }
+            writer.write("Out<" + typeStr + ">");
 
         } else if (type.cType != null && type.cType.endsWith("**")) {
             // Also arrays
@@ -117,7 +117,7 @@ public class Parameter extends GirElement {
     private void generateArrayType(Writer writer, Type type, boolean pointerForArray) throws IOException {
         // Out parameters
         if (isOutParameter()) {
-        	writer.write("Out<" + type.qualifiedJavaType + "[]>");
+            writer.write("Out<" + type.qualifiedJavaType + "[]>");
         } else if (pointerForArray) {
             writer.write(getPointerReturnType(type, null));
         } else {
@@ -137,7 +137,7 @@ public class Parameter extends GirElement {
         } else if (isOutParameter()) {
             // Out parameters
             if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-        	writer.write("(Addressable) " + name + "POINTER.address()");
+            writer.write("(Addressable) " + name + "POINTER.address()");
 
         } else if (type.cType != null && type.cType.endsWith("**")) {
             // Pointers
@@ -193,31 +193,31 @@ public class Parameter extends GirElement {
     }
     
     public String getNewInstanceString(Type type, String identifier) {
-    	if (type == null) {
-    		return identifier;
-    	}
-    	if (array == null && type.cType != null && type.cType.endsWith("**") && (! isOutParameter())) {
-    		return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
-    	}
-    	if (type.qualifiedJavaType.equals("java.lang.String")) {
-    		return identifier + ".getUtf8String(0)";
-    	}
-    	if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
-    		return "new " + type.qualifiedJavaType + "(" + identifier + ")";
-    	}
-    	if (type.isCallback()) {
-    		return "null /* Unsupported parameter type */";
-    	}
-    	if (type.isBoolean()) {
-    		return identifier + " != 0";
-    	}
-    	if (type.isInterface()) {
-    		return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
-    	}
-    	if (type.isClass() || type.isAlias() || type.isUnion()) {
-    		return "new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
-    	}
-    	return identifier;
+        if (type == null) {
+            return identifier;
+        }
+        if (array == null && type.cType != null && type.cType.endsWith("**") && (! isOutParameter())) {
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
+        }
+        if (type.qualifiedJavaType.equals("java.lang.String")) {
+            return identifier + ".getUtf8String(0)";
+        }
+        if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
+            return "new " + type.qualifiedJavaType + "(" + identifier + ")";
+        }
+        if (type.isCallback()) {
+            return "null /* Unsupported parameter type */";
+        }
+        if (type.isBoolean()) {
+            return identifier + " != 0";
+        }
+        if (type.isInterface()) {
+            return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
+        }
+        if (type.isClass() || type.isAlias() || type.isUnion()) {
+            return "new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
+        }
+        return identifier;
     }
 
     public void generateReverseInterop(Writer writer, String identifier) throws IOException {
@@ -273,10 +273,10 @@ public class Parameter extends GirElement {
         if (nullable) writer.write(identifier + " == null ? null : ");
 
         Type type = array != null ? array.type : this.type;
-    	String len = null;
-    	if (array != null) {
-    		len = array.size();
-    	}
+        String len = null;
+        if (array != null) {
+            len = array.size();
+        }
 
         if (array != null && array.array != null) {
             // Array of arrays - this is not supported yet
@@ -287,8 +287,8 @@ public class Parameter extends GirElement {
             writer.write("null");
         
         } else if (len != null) {
-			String valuelayout = Conversions.getValueLayout(type);
-			writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
+            String valuelayout = Conversions.getValueLayout(type);
+            writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
 
         } else if (type.isEnum()) {
             // Pointer to enumeration
@@ -323,11 +323,11 @@ public class Parameter extends GirElement {
     public String getReturnType() {
         // Arrays
         if (array != null) {
-        	return getPointerReturnType(array.type, array.size());
+            return getPointerReturnType(array.type, array.size());
         }
         // Also arrays, but in this case it's always a pointer to an object
         if (type.cType != null && type.cType.endsWith("**")) {
-        	return "PointerProxy<" + type.qualifiedJavaType + ">";
+            return "PointerProxy<" + type.qualifiedJavaType + ">";
         }
         // Create Pointer object
         if (type.isPrimitive && type.isPointer()) {
@@ -344,7 +344,7 @@ public class Parameter extends GirElement {
         }
         // Size is known?
         if (size != null) {
-        	return type.qualifiedJavaType + "[]";
+            return type.qualifiedJavaType + "[]";
         }
         // Pointer to enumeration
         if (type.isEnum()) {

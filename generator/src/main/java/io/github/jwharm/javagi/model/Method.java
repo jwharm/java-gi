@@ -47,7 +47,7 @@ public class Method extends GirElement implements CallableType {
             }
         }
         if (throws_ != null) {
-        	writer.write(", ValueLayout.ADDRESS");
+            writer.write(", ValueLayout.ADDRESS");
         }
         writer.write(")\n");
         writer.write("    );\n");
@@ -72,9 +72,9 @@ public class Method extends GirElement implements CallableType {
         
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter()) {
-            		writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
-            	} else  if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                if (p.isOutParameter()) {
+                    writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
+                } else  if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                     String typeStr = p.type.girElementInstance.type.simpleJavaType;
                     typeStr = Conversions.primitiveClassName(typeStr);
                     writer.write("        Pointer" + typeStr + " " + p.name + "POINTER = new Pointer" + typeStr + "(" + p.name + ".getValue());\n");
@@ -84,7 +84,7 @@ public class Method extends GirElement implements CallableType {
 
         String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-        	writer.write("        " + panamaReturnType + " RESULT;\n");
+            writer.write("        " + panamaReturnType + " RESULT;\n");
         }
         writer.write("        try {\n");
         writer.write("            ");
@@ -155,8 +155,8 @@ public class Method extends GirElement implements CallableType {
         }
         
         if (returnValue.array != null) {
-        	String len = returnValue.array.size();
-        	if (len != null) {
+            String len = returnValue.array.size();
+            if (len != null) {
                 if (getReturnValue().nullable) {
                     switch (panamaReturnType) {
                         case "MemoryAddress" -> writer.write("        if (RESULT.equals(MemoryAddress.NULL)) return null;\n");
@@ -164,22 +164,22 @@ public class Method extends GirElement implements CallableType {
                         default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
                     }
                 }
-    			String valuelayout = Conversions.getValueLayout(returnValue.array.type);
-    			if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
-    				// Array of primitive values
-            		writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
-    			} else {
-    				// Array of proxy objects
-    				writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
-    				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-    				writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-    				writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ") + ";\n");
-    				writer.write("        }\n");
-    				writer.write("        return resultARRAY;\n");
-    			}
-        	} else {
+                String valuelayout = Conversions.getValueLayout(returnValue.array.type);
+                if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
+                    // Array of primitive values
+                    writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
+                } else {
+                    // Array of proxy objects
+                    writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
+                    writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
+                    writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ") + ";\n");
+                    writer.write("        }\n");
+                    writer.write("        return resultARRAY;\n");
+                }
+            } else {
                 returnValue.generateReturnStatement(writer, 2);
-        	}
+            }
         } else {
             returnValue.generateReturnStatement(writer, 2);
         }

@@ -17,24 +17,24 @@ public class Array extends GirElement {
      * Returns a String that will contain or retrieve the array size.
      */
     public String size() {
-    	// fixed-size attribute: Return the value of the attribute
-    	if (fixedSize != null) {
-    		return fixedSize;
-    	}
-    	// the "length" attribute refers to another parameter, which contains the length
-    	if (length != null) {
-    		Parameter lp = ((Parameter) parent).getParameter(length);
-    		if (lp != null) {
-    			if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
-    				return lp.name + ".get().intValue()";
-    			}
-    			if (lp.type != null && lp.type.isAliasForPrimitive()) {
-    				return lp.name + ".getValue()";
-    			}
-    			return lp.name;
-    		}
-    	}
-    	// Size is unknown
-    	return null;
+        // fixed-size attribute: Return the value of the attribute
+        if (fixedSize != null) {
+            return fixedSize;
+        }
+        // the "length" attribute refers to another parameter, which contains the length
+        if (length != null) {
+            Parameter lp = ((Parameter) parent).getParameter(length);
+            if (lp != null) {
+                if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
+                    return lp.name + ".get().intValue()";
+                }
+                if (lp.type != null && lp.type.isAliasForPrimitive()) {
+                    return lp.name + ".getValue()";
+                }
+                return lp.name;
+            }
+        }
+        // Size is unknown
+        return null;
     }
 }

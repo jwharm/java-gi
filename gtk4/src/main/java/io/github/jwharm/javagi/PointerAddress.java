@@ -8,10 +8,10 @@ public class PointerAddress extends Pointer<MemoryAddress> {
     /**
      * Create the pointer. It does not point to a specific address.
      */
-	public PointerAddress() {
-		super(ValueLayout.ADDRESS);
-	}
-	
+    public PointerAddress() {
+        super(ValueLayout.ADDRESS);
+    }
+    
     /**
      * Create a pointer to an existing memory address.
      */
