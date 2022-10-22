@@ -48,6 +48,14 @@ val genSources by tasks.registering {
         val sourcePath = if (project.hasProperty("girSources")) project.property("girSources").toString() else "/usr/share/gir-1.0"
         fun source(name: String, pkg: String, vararg natives: String, patches: PatchSet? = null) = JavaGI.Source("$sourcePath/$name.gir", pkg, setOf(*natives), generatedPath.toPath(), patches ?: PatchSet.EMPTY)
         JavaGI.generate(
+            source("GLib-2.0", "org.gtk.glib", "glib-2.0", patches = object: PatchSet() {
+                override fun patch(repo: Repository?) {
+                    // This method has parameters that jextract does not support
+                    removeFunction(repo, "assertion_message_cmpnum");
+                    // Incompletely defined
+                    removeFunction(repo, "clear_error");
+                }
+            }),
             source("GObject-2.0", "org.gtk.gobject", "gobject-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // These types require mapping va_list (varargs) types
@@ -59,14 +67,6 @@ val genSources by tasks.registering {
                     // These functions have two Callback parameters, this isn't supported yet
                     removeFunction(repo, "signal_new_valist")
                     removeFunction(repo, "signal_newv")
-                }
-            }),
-            source("GLib-2.0", "org.gtk.glib", "glib-2.0", patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // This method has parameters that jextract does not support
-                    removeFunction(repo, "assertion_message_cmpnum");
-                    // Incompletely defined
-                    removeFunction(repo, "clear_error");
                 }
             }),
             source("Gio-2.0", "org.gtk.gio", "gio-2.0", patches = object: PatchSet() {

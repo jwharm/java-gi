@@ -122,7 +122,7 @@ public class Conversions {
             case "none" -> "void";
             case "utf8", "filename" -> "java.lang.String";
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
-            case "gtype" -> qualified ? toQualifiedJavaType("GObject.Type") : toSimpleJavaType("GObject.Type");
+            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type") : toSimpleJavaType("GLib.Type");
             default -> qualified ? toQualifiedJavaType(name) : toSimpleJavaType(name);
         };
     }

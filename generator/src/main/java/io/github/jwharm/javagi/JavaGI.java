@@ -43,8 +43,6 @@ public class JavaGI {
     }
 
     public static void generate(Source... sources) throws Exception {
-        long starttime = System.currentTimeMillis();
-
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
 
@@ -73,8 +71,6 @@ public class JavaGI {
             System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
             generator.generate(p.repository, p.natives, basePath);
         }
-
-        System.out.println("COMPLETED in " + (System.currentTimeMillis() - starttime) + " ms");
     }
 
     public record Source(String path, String pkg, Set<String> natives, Path outputDir, PatchSet patches) {}

@@ -25,17 +25,6 @@ public class BindingsGenerator {
                     && rec.isEmpty()) {
                 continue;
             }
-            // No support for callbacks with out parameters or arrays for now
-            if (rt instanceof io.github.jwharm.javagi.model.Callback cb
-                    && cb.parameters != null
-                    && cb.parameters.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
-                continue;
-            }
-            if (rt instanceof io.github.jwharm.javagi.model.Callback cb
-                    && cb.parameters != null
-                    && cb.parameters.parameterList.stream().anyMatch(p -> p.array != null)) {
-                continue;
-            }
 
             try (Writer writer = Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java"))) {
                 rt.generate(writer);
