@@ -23,7 +23,7 @@ public class Array extends GirElement {
     	}
     	// the "length" attribute refers to another parameter, which contains the length
     	if (length != null) {
-    		Parameter lp = ((Parameter) parent).getParameter(length);
+    		Parameter lp = ((Parameter) parent).getParameterAt(length);
     		if (lp != null) {
     			if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
     				return lp.name + ".get().intValue()";

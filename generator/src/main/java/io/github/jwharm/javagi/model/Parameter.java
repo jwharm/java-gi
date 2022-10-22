@@ -27,7 +27,7 @@ public class Parameter extends GirElement {
      * length of that particular array.
      * The index counts from zero and ignores the instance-parameter.
      */
-    public Parameter getParameter(String indexAttr) {
+    public Parameter getParameterAt(String indexAttr) {
     	if (indexAttr == null) {
     		return null;
     	}
@@ -100,7 +100,7 @@ public class Parameter extends GirElement {
         
         // Out parameters
         } else if (isOutParameter()) {
-        	String typeStr = type.qualifiedJavaType;
+        	String typeStr = pointerForArray ? getReturnType() : type.qualifiedJavaType;
         	if (type.isPrimitive) {
         		typeStr = Conversions.primitiveClassName(type.simpleJavaType);
         	}
@@ -121,52 +121,52 @@ public class Parameter extends GirElement {
         writer.write(" " + name);
     }
 
-    public void generateInterop(Writer writer) throws IOException {
+    public void generateInterop(Writer writer, String identifier, boolean checkForOutParameter) throws IOException {
         // Arrays
         if (array != null) {
-            generateArrayInterop(writer, array.type);
+            generateArrayInterop(writer, identifier, array.type);
         
         // This should not happen
         } else if (type == null) {
-            writer.write(name);
+            writer.write(identifier);
         
         // Out parameters
-        } else if (isOutParameter()) {
-        	writer.write("(Addressable) " + name + "POINTER.address()");
+        } else if (checkForOutParameter && isOutParameter()) {
+        	writer.write("(Addressable) " + identifier + "POINTER.address()");
         
         // Pointers
         } else if (type.cType != null && type.cType.endsWith("**")) {
-            writer.write(name + ".handle()");
+            writer.write(identifier + ".handle()");
         
         // Strings: allocate utf8 string
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("Interop.allocateNativeString(" + name + ")");
+            writer.write("Interop.allocateNativeString(" + identifier + ")");
         
         // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
-            writer.write(name + ".handle()");
+            writer.write(identifier + ".handle()");
         
         // Convert boolean to int
         } else if (type.isBoolean()) {
-            writer.write(name + " ? 1 : 0");
+            writer.write(identifier + " ? 1 : 0");
         
         // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
-            writer.write(type.girElementInstance.getInteropString(name, type.isPointer(), transferOwnership()));
+            writer.write(type.girElementInstance.getInteropString(identifier, type.isPointer(), transferOwnership()));
         
         // Primitive types
         } else {
-            writer.write(name);
+            writer.write(identifier);
         }
     }
     
-    private void generateArrayInterop(Writer writer, Type type) throws IOException {
+    private void generateArrayInterop(Writer writer, String identifier, Type type) throws IOException {
         // This should not happen
         if (type == null) {
             writer.write("MemoryAddress.NULL");
         
         } else if (isOutParameter()) {
-            writer.write("(Addressable) " + name + "POINTER.address()");
+            writer.write("(Addressable) " + identifier + "POINTER.address()");
 
         // Convert array of ValueWrapper types to an array of the wrapped values
         } else if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive()) {
@@ -174,21 +174,21 @@ public class Parameter extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typename = Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
             }
-            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + name + "))");
+            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "))");
 
         // Automatically use the right allocateNativeArray() method for this type
         } else {
-            writer.write("Interop.allocateNativeArray(" + name + ")");
+            writer.write("Interop.allocateNativeArray(" + identifier + ")");
         }
     }
     
-    public String getNewInstanceString(Type type, String identifier) {
+    public String getNewInstanceString(Type type, String identifier, boolean generatePointerProxy) {
         // This should not happen
     	if (type == null) {
     		return identifier;
     	}
     	// Create Pointer to an object
-    	if (array == null && type.cType != null && type.cType.endsWith("**") && (! isOutParameter())) {
+    	if (array == null && type.cType != null && type.cType.endsWith("**") && generatePointerProxy) {
     		return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
     	}
         // Create Pointer to primitive value
@@ -223,15 +223,15 @@ public class Parameter extends GirElement {
     	return identifier;
     }
 
-    public void generateReverseInterop(Writer writer, String identifier) throws IOException {
+    public void generateReverseInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
         if (array != null) {
-            generateReverseArrayInterop(writer, identifier);
+            generateReverseArrayInterop(writer, identifier, pointerForArrays);
         } else {
-        	writer.write(getNewInstanceString(type, identifier));
+        	writer.write(getNewInstanceString(type, identifier, true));
         }
     }
     
-    public void generateReverseArrayInterop(Writer writer, String identifier) throws IOException {
+    public void generateReverseArrayInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
     	Type type = array != null ? array.type : this.type;
     	String len = null;
     	if (array != null) {
@@ -246,7 +246,7 @@ public class Parameter extends GirElement {
         } else if (type == null) {
             writer.write("null");
         
-        } else if (len != null) {
+        } else if ((! pointerForArrays) && len != null) {
 			String valuelayout = Conversions.getValueLayout(type);
 			writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
         

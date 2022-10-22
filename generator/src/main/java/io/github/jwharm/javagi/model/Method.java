@@ -119,7 +119,7 @@ public class Method extends GirElement implements CallableType {
                     		if (p.type.isBoolean()) writer.write(" != 0");
                     		writer.write(");\n");
                 		} else {
-                    		writer.write(p.getNewInstanceString(p.type, identifier) + ");\n");
+                    		writer.write(p.getNewInstanceString(p.type, identifier, false) + ");\n");
                 		}
             		}
             	} else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
@@ -144,7 +144,7 @@ public class Method extends GirElement implements CallableType {
             				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
             				writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
             				writer.write("            " + p.name + "ARRAY[I] = ");
-            	            writer.write(p.getNewInstanceString(p.array.type, "OBJ") + ";\n");
+            	            writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
             				writer.write("        }\n");
             				writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
             			}
@@ -171,7 +171,7 @@ public class Method extends GirElement implements CallableType {
     				writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
     				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
     				writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-    				writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ") + ";\n");
+    				writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ", false) + ";\n");
     				writer.write("        }\n");
     				writer.write("        return resultARRAY;\n");
     			}
