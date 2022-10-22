@@ -174,8 +174,8 @@ public class Conversions {
     }
 
     public static boolean isPrimitive(String javaType) {
-    	return javaType != null
-    			&& List.of("boolean", "byte", "char", "double", "float", "int", "long", "short").contains(javaType);
+        return javaType != null
+                && List.of("boolean", "byte", "char", "double", "float", "int", "long", "short").contains(javaType);
     }
     
     public static String primitiveClassName(String primitive) {

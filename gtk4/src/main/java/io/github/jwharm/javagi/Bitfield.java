@@ -17,11 +17,11 @@ public abstract class Bitfield {
     }
 
     public boolean equals(int bitfield) {
-    	return this.value == bitfield;
+        return this.value == bitfield;
     }
     
     public boolean equals(Bitfield mask) {
-    	return this.value == mask.value;
+        return this.value == mask.value;
     }
 
     public Bitfield combined(Bitfield mask) {

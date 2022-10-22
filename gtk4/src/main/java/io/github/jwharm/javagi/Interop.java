@@ -74,13 +74,13 @@ public class Interop {
     }
 
     public static int registerCallback(Object callback) {
-    	int hash = callback.hashCode();
+        int hash = callback.hashCode();
         signalRegistry.put(hash, callback);
         return hash;
     }
     
     public static MemoryAddress dereference(MemorySegment pointer) {
-    	return pointer.get(ValueLayout.ADDRESS, 0);
+        return pointer.get(ValueLayout.ADDRESS, 0);
     }
 
     public static void cbDestroyNotify(MemoryAddress data) {

@@ -47,7 +47,7 @@ public class Method extends GirElement implements CallableType {
             }
         }
         if (throws_ != null) {
-        	writer.write(", ValueLayout.ADDRESS");
+            writer.write(", ValueLayout.ADDRESS");
         }
         writer.write(")\n");
         writer.write("    );\n");
@@ -72,24 +72,25 @@ public class Method extends GirElement implements CallableType {
         
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter()) {
-            		writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
-            	} else  if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
-                    String typeStr = ((Alias) p.type.girElementInstance).type.simpleJavaType;
+                if (p.isOutParameter()) {
+                    writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
+                } else  if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                    String typeStr = p.type.girElementInstance.type.simpleJavaType;
                     typeStr = Conversions.primitiveClassName(typeStr);
                     writer.write("        Pointer" + typeStr + " " + p.name + "POINTER = new Pointer" + typeStr + "(" + p.name + ".getValue());\n");
                 }
             }
         }
-        
+
+        String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-        	writer.write("        " + Conversions.toPanamaJavaType(getReturnValue().type) + " RESULT;\n");
+            writer.write("        " + panamaReturnType + " RESULT;\n");
         }
         writer.write("        try {\n");
         writer.write("            ");
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("RESULT = (");
-            writer.write(Conversions.toPanamaJavaType(getReturnValue().type));
+            writer.write(panamaReturnType);
             writer.write(") ");
         }
         
@@ -106,7 +107,7 @@ public class Method extends GirElement implements CallableType {
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
-        
+
         // Non-array out parameters
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
@@ -162,7 +163,14 @@ public class Method extends GirElement implements CallableType {
         if (returnValue.array != null) {
         	String len = returnValue.array.size();
         	if (len != null) {
-    			String valuelayout = Conversions.getValueLayout(returnValue.array.type);
+                if (getReturnValue().nullable) {
+                    switch (panamaReturnType) {
+                        case "MemoryAddress" -> writer.write("        if (RESULT.equals(MemoryAddress.NULL)) return null;\n");
+                        case "MemorySegment" -> writer.write("        if (RESULT.address().equals(MemoryAddress.NULL)) return null;\n");
+                        default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
+                    }
+                }
+                String valuelayout = Conversions.getValueLayout(returnValue.array.type);
     			if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
     				// Array of primitive values
             		writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
@@ -177,7 +185,7 @@ public class Method extends GirElement implements CallableType {
     			}
         	} else {
                 returnValue.generateReturnStatement(writer, 2);
-        	}
+            }
         } else {
             returnValue.generateReturnStatement(writer, 2);
         }

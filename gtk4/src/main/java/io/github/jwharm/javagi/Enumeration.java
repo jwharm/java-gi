@@ -17,11 +17,11 @@ public abstract class Enumeration {
     }
 
     public boolean equals(int enumeration) {
-    	return this.value == enumeration;
+        return this.value == enumeration;
     }
     
     public boolean equals(Enumeration enumeration) {
-    	return this.value == enumeration.value;
+        return this.value == enumeration.value;
     }
 
     public static int[] getValues(Enumeration[] array) {

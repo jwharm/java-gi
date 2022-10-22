@@ -17,7 +17,7 @@ public abstract class Alias<T> {
     }
     
     public boolean equals(Alias<T> other) {
-    	return this.value.equals(other.value);
+        return this.value.equals(other.value);
     }
 
     public static boolean[] getBooleanValues(Alias<Boolean>[] array) {

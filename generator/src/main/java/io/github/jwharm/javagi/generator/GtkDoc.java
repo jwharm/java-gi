@@ -10,13 +10,13 @@ import java.util.regex.Pattern;
 
 public class GtkDoc {
 
-	// This is one huge regular expression that basically matches a series of separate 
-	// regex patters, each with a named group, separated by an "or" ("|") operand.
-	// Most of the individual patterns should be relatively self-explanatory.
+    // This is one huge regular expression that basically matches a series of separate 
+    // regex patters, each with a named group, separated by an "or" ("|") operand.
+    // Most of the individual patterns should be relatively self-explanatory.
     private static final String REGEX =
-    		// ``` multiline code block ```
+            // ``` multiline code block ```
               "(?<codeblock>```(?<content>(?s).+?)```)"
-    		// |[ multiline code block ]|
+            // |[ multiline code block ]|
             + "|(?<codeblock2>\\|\\[(?<content2>(?s).+?)\\]\\|)"
             // `code`
             + "|(?<code>`[^`]+`)"
