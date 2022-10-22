@@ -124,7 +124,7 @@ public class Parameter extends GirElement {
     public void generateInterop(Writer writer, String identifier, boolean checkForOutParameter) throws IOException {
         // Arrays
         if (array != null) {
-            generateArrayInterop(writer, identifier, array.type);
+            generateArrayInterop(writer, identifier, array.type, array.zeroTerminated);
         
         // This should not happen
         } else if (type == null) {
@@ -160,7 +160,9 @@ public class Parameter extends GirElement {
         }
     }
     
-    private void generateArrayInterop(Writer writer, String identifier, Type type) throws IOException {
+    private void generateArrayInterop(Writer writer, String identifier, Type type, String zeroTerminated) throws IOException {
+    	String zeroTerminatedBool = "1".equals(zeroTerminated) ? "true" : "false";
+    	
         // This should not happen
         if (type == null) {
             // This should not happen
@@ -175,10 +177,10 @@ public class Parameter extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typename = Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
             }
-            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "))");
+            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "), " + zeroTerminatedBool + ")");
 
         } else {
-            writer.write("Interop.allocateNativeArray(" + identifier + ")");
+            writer.write("Interop.allocateNativeArray(" + identifier + ", " + zeroTerminatedBool + ")");
         }
     }
     
