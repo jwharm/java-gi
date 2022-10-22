@@ -35,6 +35,7 @@ public class Class extends RegisteredType {
         writer.write(" {\n");
         writer.write("\n");
 
+        generateEnsureInitialized(writer);
         generateMemoryAddressConstructor(writer);
         generateCastFromGObject(writer);
         generateConstructors(writer);

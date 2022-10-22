@@ -56,6 +56,7 @@ public class Interface extends RegisteredType {
 
     public void generateImplClass(Writer writer) throws IOException {
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
+        generateEnsureInitialized(writer, "        ");
         writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Refcounted ref) {\n");
         writer.write("            super(ref);\n");
         writer.write("        }\n");

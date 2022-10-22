@@ -24,18 +24,6 @@ public class Interop {
     
     // This should be more dynamic
     static {
-        System.loadLibrary("adwaita-1");
-        System.loadLibrary("gtk-4");
-        System.loadLibrary("pangocairo-1.0");
-        System.loadLibrary("pango-1.0");
-        System.loadLibrary("harfbuzz");
-        System.loadLibrary("gdk_pixbuf-2.0");
-        System.loadLibrary("cairo-gobject");
-        System.loadLibrary("cairo");
-        System.loadLibrary("graphene-1.0");
-        System.loadLibrary("gio-2.0");
-        System.loadLibrary("gobject-2.0");
-        System.loadLibrary("glib-2.0");
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
         

@@ -7,8 +7,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class JavaGI {
 
@@ -35,7 +35,7 @@ public class JavaGI {
             @Override
             public void startElement(String uri, String lName, String qName, Attributes attr) {
                 if ("repository".equals(qName)) {
-                    toGenerate.add(new Source(attr.getValue("path"), attr.getValue("package"), outputDir, PatchSet.EMPTY));
+                    toGenerate.add(new Source(attr.getValue("path"), attr.getValue("package"), Set.of(), Path.of(outputDir), PatchSet.EMPTY));
                 }
             }
         });
@@ -53,7 +53,7 @@ public class JavaGI {
             System.out.println("PARSE " + source.path());
             Repository r = parser.parse(source.path(), source.pkg());
             repositories.put(r.namespace.name, r);
-            parsed.put(r.namespace.name, new Parsed(r, source.outputDir, source.patches));
+            parsed.put(r.namespace.name, new Parsed(r, source.natives, source.outputDir, source.patches));
         }
 
         System.out.println("LINK " + parsed.size() + " REPOSITORIES");
@@ -67,15 +67,12 @@ public class JavaGI {
         }
 
         for (Parsed p : parsed.values()) {
-            String outputDir = p.outputDir;
-            if (!(outputDir.endsWith("/") || outputDir.endsWith("\\"))) {
-                outputDir = outputDir + "/";
-            }
-            System.out.println("GENERATE " + p.repository.namespace.name + " to " + outputDir + p.repository.namespace.pathName);
-            generator.generate(p.repository, outputDir);
+            Path basePath = p.outputDir.resolve(p.repository.namespace.pathName);
+            System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
+            generator.generate(p.repository, p.natives, basePath);
         }
     }
 
-    public record Source(String path, String pkg, String outputDir, PatchSet patches) {}
-    private record Parsed(Repository repository, String outputDir, PatchSet patches) {}
+    public record Source(String path, String pkg, Set<String> natives, Path outputDir, PatchSet patches) {}
+    private record Parsed(Repository repository, Set<String> natives, Path outputDir, PatchSet patches) {}
 }
