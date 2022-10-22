@@ -14,7 +14,7 @@ public class ReturnValue extends Parameter {
             return;
         }
         writer.write(" ".repeat(indent * 4) + "return ");
-        generateReverseInterop(writer, "RESULT");
+        generateReverseInterop(writer, "RESULT", false);
         writer.write(";\n");
     }
 }

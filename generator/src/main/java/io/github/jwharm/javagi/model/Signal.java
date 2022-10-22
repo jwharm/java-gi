@@ -60,14 +60,14 @@ public class Signal extends Method {
         }
         writer.write(", MemoryAddress data) {\n");
 
-        writer.write("            int hash = data.get(ValueLayout.JAVA_INT, 0);\n");
-        writer.write("            var handler = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(hash);\n");
-        writer.write("            " + (returnsBool ? "return " : "") + "handler.signalReceived(new " + implClassName + "(Refcounted.get(source))");
+        writer.write("            int HASH = data.get(ValueLayout.JAVA_INT, 0);\n");
+        writer.write("            var HANDLER = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(HASH);\n");
+        writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(Refcounted.get(source))");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
                 writer.write(", ");
-                p.generateReverseInterop(writer, p.name);
+                p.generateReverseInterop(writer, p.name, true);
             }
         }
         writer.write(");\n");

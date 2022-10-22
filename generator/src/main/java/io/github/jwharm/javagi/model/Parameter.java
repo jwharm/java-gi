@@ -27,31 +27,31 @@ public class Parameter extends GirElement {
      * length of that particular array.
      * The index counts from zero and ignores the instance-parameter.
      */
-    public Parameter getParameter(String indexAttr) {
-        if (indexAttr == null) {
-            return null;
-        }
-        // Parse the value of the 'length' attribute
-        int index;
-        try {
+    public Parameter getParameterAt(String indexAttr) {
+    	if (indexAttr == null) {
+    		return null;
+    	}
+    	// Parse the value of the 'length' attribute
+    	int index;
+    	try {
             index = Integer.parseInt(indexAttr);
-        } catch (NumberFormatException nfe) {
-            return null;
-        }
-        // Get the <parameters> node
-        Parameters params;
-        if (this instanceof ReturnValue) {
-            params = ((CallableType) parent).getParameters();
-        } else {
-            params = (Parameters) parent;
-        }
-        // Find the parameter that was specified in the value of the 'length' attribute.
-        // Ignore the instance parameter.
-        if (params.parameterList.get(0) instanceof InstanceParameter) {
-            return params.parameterList.get(index + 1);
-        } else {
-            return params.parameterList.get(index);
-        }
+    	} catch (NumberFormatException nfe) {
+    		return null;
+    	}
+    	// Get the <parameters> node
+    	Parameters params;
+    	if (this instanceof ReturnValue) {
+    		params = ((CallableType) parent).getParameters();
+    	} else {
+    		params = (Parameters) parent;
+    	}
+    	// Find the parameter that was specified in the value of the 'length' attribute.
+    	// Ignore the instance parameter.
+    	if (params.parameterList.get(0) instanceof InstanceParameter) {
+    		return params.parameterList.get(index + 1);
+    	} else {
+    		return params.parameterList.get(index);
+    	}
     }
     
     public boolean transferOwnership() {
@@ -88,17 +88,24 @@ public class Parameter extends GirElement {
         if (type != null && !type.isPrimitive) writer.write(nullable ? "@Nullable " : "@NotNull ");
 
         if (array != null) {
-            // Arrays
-            generateArrayType(writer, array.type, pointerForArray);
-
-        } else if (isOutParameter()) {
             // Out parameters
-            String typeStr = type.qualifiedJavaType;
-            if (type.isPrimitive) {
-                typeStr = Conversions.primitiveClassName(type.simpleJavaType);
+            if (isOutParameter()) {
+            	writer.write("Out<" + array.type.qualifiedJavaType + "[]>");
+            } else if (pointerForArray) {
+                writer.write(getPointerReturnType(array.type, null));
+            } else {
+                writer.write(array.type.qualifiedJavaType + "[]");
             }
-            writer.write("Out<" + typeStr + ">");
-
+        
+        // Out parameters
+        } else if (isOutParameter()) {
+        	String typeStr = pointerForArray ? getReturnType() : type.qualifiedJavaType;
+        	if (type.isPrimitive) {
+        		typeStr = Conversions.primitiveClassName(type.simpleJavaType);
+        	}
+    		writer.write("Out<" + typeStr + ">");
+        
+        // Also arrays
         } else if (type.cType != null && type.cType.endsWith("**")) {
             // Also arrays
             writer.write(getPointerReturnType(type, null));
@@ -113,70 +120,54 @@ public class Parameter extends GirElement {
         }
         writer.write(" " + name);
     }
-    
-    private void generateArrayType(Writer writer, Type type, boolean pointerForArray) throws IOException {
-        // Out parameters
-        if (isOutParameter()) {
-            writer.write("Out<" + type.qualifiedJavaType + "[]>");
-        } else if (pointerForArray) {
-            writer.write(getPointerReturnType(type, null));
-        } else {
-            writer.write(type.qualifiedJavaType + "[]");
-        }
-    }
 
-    public void generateInterop(Writer writer) throws IOException {
+    public void generateInterop(Writer writer, String identifier, boolean checkForOutParameter) throws IOException {
+        // Arrays
         if (array != null) {
-            // Arrays
-            generateArrayInterop(writer, array.type);
-
+            generateArrayInterop(writer, identifier, array.type);
+        
+        // This should not happen
         } else if (type == null) {
-            // This should not happen
-            writer.write(name);
-
-        } else if (isOutParameter()) {
-            // Out parameters
-            if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-            writer.write("(Addressable) " + name + "POINTER.address()");
-
+            writer.write(identifier);
+        
+        // Out parameters
+        } else if (checkForOutParameter && isOutParameter()) {
+        	writer.write("(Addressable) " + identifier + "POINTER.address()");
+        
+        // Pointers
         } else if (type.cType != null && type.cType.endsWith("**")) {
-            // Pointers
-            if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-            writer.write(name + ".handle()");
-
+            writer.write(identifier + ".handle()");
+        
+        // Strings: allocate utf8 string
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            // Strings: allocate utf8 string
-            if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-            writer.write("Interop.allocateNativeString(" + name + ")");
-
+            writer.write("Interop.allocateNativeString(" + identifier + ")");
+        
+        // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
-            // Pointer to primitive type: get memory address
-            if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-            writer.write(name + ".handle()");
-
+            writer.write(identifier + ".handle()");
+        
+        // Convert boolean to int
         } else if (type.isBoolean()) {
-            // Convert boolean to int
-            writer.write(name + " ? 1 : 0");
-
+            writer.write(identifier + " ? 1 : 0");
+        
+        // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
-            // Objects and ValueWrappers
-            if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
-            writer.write(type.girElementInstance.getInteropString(name, type.isPointer(), transferOwnership()));
-
+            writer.write(type.girElementInstance.getInteropString(identifier, type.isPointer(), transferOwnership()));
+        
+        // Primitive types
         } else {
-            // Primitive types
-            writer.write(name);
+            writer.write(identifier);
         }
     }
     
-    private void generateArrayInterop(Writer writer, Type type) throws IOException {
-        if (nullable) writer.write(name + " == null ? MemoryAddress.NULL : ");
+    private void generateArrayInterop(Writer writer, String identifier, Type type) throws IOException {
+        // This should not happen
         if (type == null) {
             // This should not happen
             writer.write("MemoryAddress.NULL");
         
         } else if (isOutParameter()) {
-            writer.write("(Addressable) " + name + "POINTER.address()");
+            writer.write("(Addressable) " + identifier + "POINTER.address()");
 
         } else if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive()) {
             // Convert array of ValueWrapper types to an array of the wrapped values
@@ -184,100 +175,70 @@ public class Parameter extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typename = Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
             }
-            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + name + "))");
+            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "))");
 
         } else {
-            // Automatically use the right allocateNativeArray() method for this type
-            writer.write("Interop.allocateNativeArray(" + name + ")");
+            writer.write("Interop.allocateNativeArray(" + identifier + ")");
         }
     }
     
-    public String getNewInstanceString(Type type, String identifier) {
-        if (type == null) {
-            return identifier;
-        }
-        if (array == null && type.cType != null && type.cType.endsWith("**") && (! isOutParameter())) {
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
-        }
-        if (type.qualifiedJavaType.equals("java.lang.String")) {
-            return identifier + ".getUtf8String(0)";
-        }
-        if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
-            return "new " + type.qualifiedJavaType + "(" + identifier + ")";
-        }
-        if (type.isCallback()) {
-            return "null /* Unsupported parameter type */";
-        }
-        if (type.isBoolean()) {
-            return identifier + " != 0";
-        }
-        if (type.isInterface()) {
-            return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
-        }
-        if (type.isClass() || type.isAlias() || type.isUnion()) {
-            return "new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
-        }
-        return identifier;
+    public String getNewInstanceString(Type type, String identifier, boolean generatePointerProxy) {
+        // This should not happen
+    	if (type == null) {
+    		return identifier;
+    	}
+    	// Create Pointer to an object
+    	if (array == null && type.cType != null && type.cType.endsWith("**") && generatePointerProxy) {
+    		return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
+    	}
+        // Create Pointer to primitive value
+    	if (type.isPrimitive && type.isPointer()) {
+        	return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";
+    	}
+        // Create Java String from UTF8 memorysegment
+    	if (type.qualifiedJavaType.equals("java.lang.String")) {
+    		return identifier + ".getUtf8String(0)";
+    	}
+        // Create ValueWrapper object
+    	if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
+    		return "new " + type.qualifiedJavaType + "(" + identifier + ")";
+    	}
+        // I don't think this situation exists
+    	if (type.isCallback()) {
+    		return "null /* Unsupported parameter type */";
+    	}
+        // Convert int back to boolean
+    	if (type.isBoolean()) {
+    		return identifier + " != 0";
+    	}
+        // Create an Impl object when we only know the interface but not the class
+    	if (type.isInterface()) {
+    		return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
+    	}
+        // Objects
+    	if (type.isClass() || type.isAlias() || type.isUnion()) {
+    		return "new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))";
+    	}
+        // Primitive values remain as-is
+    	return identifier;
     }
 
-    public void generateReverseInterop(Writer writer, String identifier) throws IOException {
-        if (nullable) writer.write(identifier + " == null ? null : ");
-
+    public void generateReverseInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
         if (array != null) {
-            // Arrays
-            generateReverseArrayInterop(writer, identifier);
-
-        } else if (type.cType != null && type.cType.endsWith("**")) {
-            // Also arrays, but in this case it's always a pointer to an object
-            writer.write("new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
-
-        } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            // Create Java String from UTF8 memorysegment
-            writer.write(identifier + ".getUtf8String(0)");
-
-        } else if (type.isPrimitive && type.isPointer()) {
-            // Create Pointer object
-            writer.write("new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")");
-
-        } else if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
-            // Create ValueWrapper object
-            writer.write("new " + type.qualifiedJavaType + "(" + identifier + ")");
-
-        } else if (type.isCallback()) {
-            // I don't think this situation exists
-            writer.write("null /* Unsupported parameter type */");
-
-        } else if (type.isBoolean()) {
-            // Convert int back to boolean
-            writer.write(identifier + " != 0");
-
-        } else if (type.isPrimitive) {
-            // Primitive values remain as-is
-            writer.write(identifier);
-
-        } else if (type.isInterface()) {
-            // Create an Impl object when we only know the interface but not the class
-            writer.write("new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
-
-        } else if (type.isClass() || type.isAlias() || type.isUnion()) {
-            // Objects
-            writer.write("new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership() ? "true" : "false") + "))");
-
+            generateReverseArrayInterop(writer, identifier, pointerForArrays);
         } else {
-            // Anything else
-            writer.write(identifier);
+        	writer.write(getNewInstanceString(type, identifier, true));
         }
     }
     
-    public void generateReverseArrayInterop(Writer writer, String identifier) throws IOException {
-        if (nullable) writer.write(identifier + " == null ? null : ");
-
-        Type type = array != null ? array.type : this.type;
-        String len = null;
-        if (array != null) {
-            len = array.size();
-        }
-
+    public void generateReverseArrayInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
+    	Type type = array != null ? array.type : this.type;
+    	String len = null;
+    	if (array != null) {
+    		len = array.size();
+    	}
+    	
+        // Array of arrays - this is not supported yet
         if (array != null && array.array != null) {
             // Array of arrays - this is not supported yet
             writer.write("");
@@ -286,10 +247,10 @@ public class Parameter extends GirElement {
             // This should not happen
             writer.write("null");
         
-        } else if (len != null) {
-            String valuelayout = Conversions.getValueLayout(type);
-            writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
-
+        } else if ((! pointerForArrays) && len != null) {
+			String valuelayout = Conversions.getValueLayout(type);
+			writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
+        
         } else if (type.isEnum()) {
             // Pointer to enumeration
             writer.write("new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
@@ -325,9 +286,9 @@ public class Parameter extends GirElement {
         if (array != null) {
             return getPointerReturnType(array.type, array.size());
         }
-        // Also arrays, but in this case it's always a pointer to an object
+        // Pointers
         if (type.cType != null && type.cType.endsWith("**")) {
-            return "PointerProxy<" + type.qualifiedJavaType + ">";
+        	return getPointerReturnType(type, null);
         }
         // Create Pointer object
         if (type.isPrimitive && type.isPointer()) {
