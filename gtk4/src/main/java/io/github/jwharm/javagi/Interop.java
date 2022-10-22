@@ -22,7 +22,6 @@ public class Interop {
      */
     public final static HashMap<Integer, Object> signalRegistry = new HashMap<>();
     
-    // This should be more dynamic
     static {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
