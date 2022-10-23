@@ -17,10 +17,9 @@ public class Constructor extends Method {
             return;
         }
 
-        generateMethodHandle(writer, isInterface);
-
         String privateMethodName = generateConstructorHelper(writer);
 
+        writer.write("    \n");
         if (doc != null) {
             doc.generate(writer, 1);
         }
@@ -47,16 +46,14 @@ public class Constructor extends Method {
         }
         writer.write(");\n");
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     public void generateNamed(Writer writer, boolean isInterface) throws IOException {
         RegisteredType clazz = (RegisteredType) parent;
 
-        generateMethodHandle(writer, isInterface);
-
         String privateMethodName = generateConstructorHelper(writer);
 
+        writer.write("    \n");
         if (doc != null) {
             doc.generate(writer, 1);
         }
@@ -82,7 +79,6 @@ public class Constructor extends Method {
         }
         writer.write(");\n");
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
@@ -92,6 +88,7 @@ public class Constructor extends Method {
     // (if necessary). The "real" constructor just calls super(private_method());
     private String generateConstructorHelper(Writer writer) throws IOException {
         String methodName = "construct" + Conversions.toCamelCase(name, true);
+        writer.write("    \n");
         writer.write("    private static Refcounted " + methodName);
         if (parameters != null) {
             writer.write("(");
@@ -108,7 +105,7 @@ public class Constructor extends Method {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         writer.write("        try {\n");
-        writer.write("            Refcounted RESULT = Refcounted.get((MemoryAddress) " + cIdentifier + ".invokeExact");
+        writer.write("            Refcounted RESULT = Refcounted.get((MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -128,7 +125,6 @@ public class Constructor extends Method {
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
         writer.write("    }\n");
-        writer.write("    \n");
         return methodName;
     }
 }

@@ -15,6 +15,8 @@ public class Constant extends GirElement {
     }
 
     public void generate(Writer writer) throws IOException {
+        writer.write("    \n");
+        
         // Documentation
         if (doc != null) {
             doc.generate(writer, 1);
@@ -31,7 +33,6 @@ public class Constant extends GirElement {
                 printValue = literal(type.qualifiedJavaType, value);
             }
             writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
-            writer.write("\n");
         } catch (NumberFormatException nfe) {
             // Do not write anything
         }

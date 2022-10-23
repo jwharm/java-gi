@@ -84,7 +84,7 @@ public class Parameters extends GirElement {
                 String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
                 writer.write("\n");
                 writer.write("                    (Addressable) Linker.nativeLinker().upcallStub(\n");
-                writer.write("                        MethodHandles.lookup().findStatic(" + className + ".class, \"__cb" + p.type.simpleJavaType + "\",\n");
+                writer.write("                        MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"cb" + p.type.simpleJavaType + "\",\n");
                 writer.write("                            MethodType.methodType(");
                 writer.write(Conversions.toPanamaJavaType(callback.returnValue.type) + ".class");
                 if (callback.parameters != null) {

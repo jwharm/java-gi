@@ -33,7 +33,6 @@ public class Class extends RegisteredType {
             }
         }
         writer.write(" {\n");
-        writer.write("\n");
 
         generateEnsureInitialized(writer);
         generateMemoryAddressConstructor(writer);
@@ -58,9 +57,25 @@ public class Class extends RegisteredType {
             }
         }
         
+        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
+        	writer.write("    \n");
+            writer.write("    private static class DowncallHandles {\n");
+            for (Constructor c : constructorList) {
+                c.generateMethodHandle(writer, false);
+            }
+            for (Method m : methodList) {
+                m.generateMethodHandle(writer, false);
+            }
+            for (Function f : functionList) {
+                f.generateMethodHandle(writer, false);
+            }
+            writer.write("    }\n");
+        }
+        
         if (! signalList.isEmpty()) {
+        	writer.write("    \n");
+        	writer.write("    @ApiStatus.Internal\n");
             writer.write("    public static class Callbacks {\n");
-            writer.write("    \n");
             for (Signal s : signalList) {
                 if (s.isSafeToBind()) {
                     s.generateStaticCallback(writer, false);

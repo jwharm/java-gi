@@ -56,13 +56,14 @@ public class Callback extends RegisteredType implements CallableType {
     private void generateStaticCallback() throws IOException {
         StringWriter writer = new StringWriter();
 
-        writer.write("    public static ");
+        writer.write("        \n");
+        writer.write("        public static ");
         if (returnValue.type == null) {
             writer.write("void");
         } else {
             writer.write(returnValue.type.qualifiedJavaType);
         }
-        writer.write(" __cb" + javaName + "(");
+        writer.write(" cb" + javaName + "(");
 
         String dataParamName = "";
         if (parameters != null) {
@@ -86,8 +87,8 @@ public class Callback extends RegisteredType implements CallableType {
             return;
         }
 
-        writer.write("        int HASH = " + dataParamName + ".get(ValueLayout.JAVA_INT, 0);\n");
-        writer.write("        var HANDLER = (" + javaName + ") Interop.signalRegistry.get(HASH);\n");
+        writer.write("            int HASH = " + dataParamName + ".get(ValueLayout.JAVA_INT, 0);\n");
+        writer.write("            var HANDLER = (" + javaName + ") Interop.signalRegistry.get(HASH);\n");
         
         // For out-parameters, create a local Out<> object and pass that to the callback.
         if (parameters != null) {
@@ -100,7 +101,7 @@ public class Callback extends RegisteredType implements CallableType {
         	}
         }
         
-        writer.write("        ");
+        writer.write("            ");
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
             writer.write("var RESULT = ");
         }
@@ -129,7 +130,7 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
         	for (Parameter p : parameters.parameterList) {
         		if (p.isOutParameter()) {
-        			writer.write("        " + p.name + ".set(" + Conversions.getValueLayout(p.type) + ", 0, ");
+        			writer.write("            " + p.name + ".set(" + Conversions.getValueLayout(p.type) + ", 0, ");
         			p.generateInterop(writer, p.name + "OUT.get()", false);
         			writer.write(");\n");
         		}
@@ -137,10 +138,9 @@ public class Callback extends RegisteredType implements CallableType {
         }
 
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
-            writer.write("        return RESULT;\n");
+            writer.write("            return RESULT;\n");
         }
-        writer.write("    }\n");
-        writer.write("    \n");
+        writer.write("        }\n");
         BindingsGenerator.signalCallbackFunctions.append(writer);
     }
 

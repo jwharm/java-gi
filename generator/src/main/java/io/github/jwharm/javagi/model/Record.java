@@ -48,7 +48,7 @@ public class Record extends Class {
         generateMemoryAddressConstructor(writer);
 
         if (constructorList.isEmpty()) {
-            //generateRecordConstructor(writer);
+            //generateRecordConstructor(writer); // Currently broken, this was based on jextract memorylayout declarations
         } else {
             generateConstructors(writer);
         }
@@ -71,16 +71,31 @@ public class Record extends Class {
             }
         }
 
+        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
+        	writer.write("    \n");
+            writer.write("    private static class DowncallHandles {\n");
+            for (Constructor c : constructorList) {
+                c.generateMethodHandle(writer, false);
+            }
+            for (Method m : methodList) {
+                m.generateMethodHandle(writer, false);
+            }
+            for (Function f : functionList) {
+                f.generateMethodHandle(writer, false);
+            }
+            writer.write("    }\n");
+        }
+        
         if (! signalList.isEmpty()) {
+        	writer.write("    \n");
+        	writer.write("    @ApiStatus.Internal\n");
             writer.write("    public static class Callbacks {\n");
-            writer.write("    \n");
             for (Signal s : signalList) {
                 if (s.isSafeToBind()) {
                     s.generateStaticCallback(writer, false);
                 }
             }
             writer.write("    }\n");
-            writer.write("    \n");
         }
         writer.write("}\n");
     }

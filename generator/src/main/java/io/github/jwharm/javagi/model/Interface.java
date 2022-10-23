@@ -17,7 +17,6 @@ public class Interface extends RegisteredType {
         generateJavadoc(writer);
 
         writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.Proxy {\n");
-        writer.write("\n");
 
         for (Method m : methodList) {
             if (m.isSafeToBind()) {
@@ -37,9 +36,26 @@ public class Interface extends RegisteredType {
             }
         }
 
+        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
+        	writer.write("    \n");
+        	writer.write("    @ApiStatus.Internal\n");
+            writer.write("    static class DowncallHandles {\n");
+            for (Constructor c : constructorList) {
+                c.generateMethodHandle(writer, true);
+            }
+            for (Method m : methodList) {
+                m.generateMethodHandle(writer, true);
+            }
+            for (Function f : functionList) {
+                f.generateMethodHandle(writer, true);
+            }
+            writer.write("    }\n");
+        }
+        
         if (! signalList.isEmpty()) {
-            writer.write("    public static class Callbacks {\n");
-            writer.write("    \n");
+        	writer.write("    \n");
+        	writer.write("    @ApiStatus.Internal\n");
+            writer.write("    static class Callbacks {\n");
             for (Signal s : signalList) {
                 if (s.isSafeToBind()) {
                     s.generateStaticCallback(writer, true);
@@ -55,8 +71,10 @@ public class Interface extends RegisteredType {
     }
 
     public void generateImplClass(Writer writer) throws IOException {
+    	writer.write("    \n");
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
         generateEnsureInitialized(writer, "        ");
+    	writer.write("        \n");
         writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Refcounted ref) {\n");
         writer.write("            super(ref);\n");
         writer.write("        }\n");

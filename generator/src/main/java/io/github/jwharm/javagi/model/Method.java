@@ -24,12 +24,12 @@ public class Method extends GirElement implements CallableType {
         }
     }
     
-    protected void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
-        if (isInterface) writer.write("    @ApiStatus.Internal static final ");
-        else writer.write("    private static final ");
-        writer.write("MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
-        writer.write("        \"" + cIdentifier + "\",\n");
-        writer.write("        FunctionDescriptor.");
+    public void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
+        writer.write("        \n");
+    	writer.write(isInterface ? "        @ApiStatus.Internal\n        " : "        private ");
+        writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
+        writer.write("            \"" + cIdentifier + "\",\n");
+        writer.write("            FunctionDescriptor.");
         if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
             writer.write("ofVoid(");
         } else {
@@ -50,8 +50,7 @@ public class Method extends GirElement implements CallableType {
             writer.write(", ValueLayout.ADDRESS");
         }
         writer.write(")\n");
-        writer.write("    );\n");
-        writer.write("    \n");
+        writer.write("        );\n");
     }
 
     public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
@@ -61,8 +60,7 @@ public class Method extends GirElement implements CallableType {
             return;
         }
         
-        generateMethodHandle(writer, isInterface);
-
+        writer.write("    \n");
         writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
         writer.write(" {\n");
 
@@ -94,7 +92,7 @@ public class Method extends GirElement implements CallableType {
             writer.write(") ");
         }
         
-        writer.write(cIdentifier + ".invokeExact");
+        writer.write("DowncallHandles." + cIdentifier + ".invokeExact");
         
         if (parameters != null) {
             writer.write("(");
@@ -191,7 +189,6 @@ public class Method extends GirElement implements CallableType {
         }
         
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     @Override

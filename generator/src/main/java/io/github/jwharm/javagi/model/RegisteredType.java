@@ -42,18 +42,18 @@ public abstract class RegisteredType extends GirElement {
      * Generate standard constructors from a MemoryAddress and a GObject
      */
     protected void generateCastFromGObject(Writer writer) throws IOException {
+        writer.write("    \n");
         writer.write("    /** Cast object to " + javaName + " */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
         writer.write("        return new " + javaName + "(gobject.refcounted());\n");
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
+        writer.write("    \n");
         writer.write("    public " + javaName + "(io.github.jwharm.javagi.Refcounted ref) {\n");
         writer.write("        super(ref);\n");
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     protected void generateEnsureInitialized(Writer writer) throws IOException {
@@ -62,13 +62,13 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateEnsureInitialized(Writer writer, String indent) throws IOException {
         writer.write(indent);
+        writer.write("\n");
+        writer.write(indent);
         writer.write("static {\n");
         writer.write(indent);
         writer.write("    " + Conversions.toSimpleJavaType(getNamespace().name) + ".javagi$ensureInitialized();\n");
         writer.write(indent);
         writer.write("}\n");
-        writer.write(indent);
-        writer.write("\n");
     }
 
     /**

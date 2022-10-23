@@ -15,17 +15,16 @@ public class Enumeration extends ValueWrapper {
         generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Enumeration {\n");
-        writer.write("\n");
 
         ArrayList<Integer> values = new ArrayList<>();
         for (Member m : memberList) {
             if (! values.contains(m.value)) {
+                writer.write("    \n");
                 if (m.doc != null) {
                     m.doc.generate(writer, 1);
                 }
                 writer.write("    public static final " + javaName + " " 
                         + m.name.toUpperCase() + " = new " + javaName + "(" + m.value + ");\n");
-                writer.write("    \n");
             }
         }
         

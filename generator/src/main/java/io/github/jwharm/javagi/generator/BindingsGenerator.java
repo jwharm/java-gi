@@ -50,8 +50,7 @@ public class BindingsGenerator {
                 writer.write("    \n");
             }
             writer.write("    @ApiStatus.Internal static void javagi$ensureInitialized() {}\n");
-            writer.write("    \n");
-
+ 
             for (Constant constant : gir.namespace.constantList) {
                 constant.generate(writer);
             }
@@ -62,7 +61,24 @@ public class BindingsGenerator {
                 }
             }
             
-            writer.write(signalCallbackFunctions.toString());
+            if (! gir.namespace.functionList.isEmpty()) {
+            	writer.write("    \n");
+                writer.write("    private static class DowncallHandles {\n");
+                for (Function f : gir.namespace.functionList) {
+                    if (f.isSafeToBind()) {
+                        f.generateMethodHandle(writer, false);
+                    }
+                }
+                writer.write("    }\n");
+            }
+            
+            if (! gir.namespace.callbackList.isEmpty()) {
+            	writer.write("    \n");
+            	writer.write("    @ApiStatus.Internal\n");
+                writer.write("    public static class Callbacks {\n");
+                writer.write(signalCallbackFunctions.toString());
+                writer.write("    }\n");
+            }
 
             writer.write("}\n");
         }

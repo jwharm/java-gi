@@ -29,6 +29,7 @@ public class Signal extends Method {
     
     // Generate the functional interface
     private void generateFunctionalInterface(Writer writer) throws IOException {
+        writer.write("    \n");
         writer.write("    @FunctionalInterface\n");
         writer.write("    public interface " + signalName + "Handler {\n");
         writer.write("        " + (returnsBool ? "boolean" : "void") + " signalReceived(" + className + " source");
@@ -40,7 +41,6 @@ public class Signal extends Method {
         writer.write(");\n");
 
         writer.write("    }\n");
-        writer.write("    \n");
     }
 
     // Generate the static callback method, that will run the handler method.
@@ -50,6 +50,7 @@ public class Signal extends Method {
             implClassName = className + "." + className + "Impl";
         }
 
+        writer.write("        \n");
         writer.write("        public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
 
         if (parameters != null) {
@@ -73,11 +74,11 @@ public class Signal extends Method {
         writer.write(");\n");
 
         writer.write("        }\n");
-        writer.write("        \n");
     }
 
     // Generate the method that connects the signal to the handler (defined by the functional interface above)
     private void generateSignalDeclaration(Writer writer, boolean isDefault) throws IOException {
+        writer.write("    \n");
         if (doc != null) {
             doc.generate(writer, 1);
         }
@@ -120,6 +121,5 @@ public class Signal extends Method {
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
         writer.write("    }\n");
-        writer.write("    \n");
     }
 }
