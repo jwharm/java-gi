@@ -28,7 +28,7 @@ public class Interop {
         
         // Initialize the memory session and an implicit allocator
         session = MemorySession.openConfined();
-        allocator = SegmentAllocator.implicitAllocator();
+        allocator = SegmentAllocator.newNativeArena(session);
 
         // Initialize upcall stub for DestroyNotify callback
         try {
