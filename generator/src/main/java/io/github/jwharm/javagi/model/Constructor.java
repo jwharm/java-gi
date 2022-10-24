@@ -101,11 +101,17 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        
+        // Generate checks for null parameters
+        generateNullParameterChecks(writer);
+        
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
+        
+        writer.write("        Refcounted RESULT;\n");
         writer.write("        try {\n");
-        writer.write("            Refcounted RESULT = Refcounted.get((MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        writer.write("            RESULT = Refcounted.get((MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -115,15 +121,15 @@ public class Constructor extends Method {
         }
         writer.write(returnValue.transferOwnership() ? ", true" : ", false");
         writer.write(");\n");
-        if (throws_ != null) {
-            writer.write("            if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("                throw new GErrorException(GERROR);\n");
-            writer.write("            }\n");
-        }
-        writer.write("            return RESULT;\n");
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
+        if (throws_ != null) {
+	        writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
+	        writer.write("            throw new GErrorException(GERROR);\n");
+	        writer.write("        }\n");
+        }
+        writer.write("        return RESULT;\n");
         writer.write("    }\n");
         return methodName;
     }

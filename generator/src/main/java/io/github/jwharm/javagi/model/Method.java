@@ -53,6 +53,24 @@ public class Method extends GirElement implements CallableType {
         writer.write("        );\n");
     }
 
+    protected void generateNullParameterChecks(Writer writer) throws IOException {
+        if (parameters != null) {
+        	for (Parameter p : parameters.parameterList) {
+        		// Don't null-check parameters that are hidden from the Java API, or primitive values
+        		if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify()
+        				|| (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
+        			if (p.nullable) {
+        				writer.write("        java.util.Objects.requireNonNullElse(" + p.name 
+        						+ ", MemoryAddress.NULL);\n");
+        			} else {
+            			writer.write("        java.util.Objects.requireNonNull(" + p.name 
+            					+ ", \"" + "Parameter '" + p.name + "' must not be null\");\n");
+        			}
+        		}
+        	}
+        }
+    }
+
     public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
         
         // Do not generate deprecated methods.
@@ -63,6 +81,9 @@ public class Method extends GirElement implements CallableType {
         writer.write("    \n");
         writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
         writer.write(" {\n");
+        
+        // Generate checks for null parameters
+        generateNullParameterChecks(writer);
 
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");

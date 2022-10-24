@@ -43,7 +43,7 @@ public class Type extends GirElement {
                 this.name = name;
             }
             if (name.equals("GType")) {
-                this.girNamespace = "GObject";
+                this.girNamespace = "GLib";
                 this.name = "Type";
             }
         }
