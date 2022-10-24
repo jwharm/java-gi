@@ -34,18 +34,16 @@ Some interesting features of the bindings:
 * Signals are mapped to type-safe methods and objects in Java.
 * Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is "owned" by the user and the proxy object in Java gets garbage-collected, a call to `g_object_unref` is automatically executed to release the native resources.
 * Functions with callback parameters are supported when there is a `user_data` parameter available to store a reference to the Java callback.
-* Nullability of parameters is indicated with `@Nullable` and `@NotNull` attributes.
+* Nullability of parameters is indicated with `@Nullable` and `@NotNull` attributes, and checked at runtime.
 * Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offers typesafe `get()` and `set()` methods to retrieve or modify the value.
 * Arrays with a known length are mapped to Java arrays.
-* `GError**` parameters are mapped to Java `GErrorException`s. (This is currently broken, but will be fixed soon.)
+* `GError**` parameters are mapped to Java `GErrorException`s.
 * Ability to rename or remove classes or methods in the build script.
 * GtkDoc API docstrings are (roughly) translated into Javadoc (though this also needs more work).
 
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * The generator has not been tested yet on different Linux distributions or GTK versions.
-* `null` parameters are passed directly to native code. These should at the very least be marshalled to `MemoryAddress.NULL` and vice versa.
-* `GErrorException` doesn't do anything right now.
 * Signals with `::detail`s are not supported yet. This is hard to implement in a type-safe way. I will probably add a workaround for `Object.notify`.
 * Errors occur during javadoc generation: invalid combinations of html tags, lists that aren't closed properly, dead links, and probably a few others issues.
 * The javadoc doesn't include the documentation of parameters and return values yet.
