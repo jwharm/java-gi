@@ -222,7 +222,7 @@ public class GirParser extends DefaultHandler {
             }
             case "glib:signal" -> {
                 Signal newSignal = new Signal(current, attr.getValue("name"), attr.getValue("when"),
-                        attr.getValue("deprecated"), attr.getValue("throws"));
+                        attr.getValue("detailed"), attr.getValue("deprecated"), attr.getValue("throws"));
                 current.signalList.add(newSignal);
                 current = newSignal;
             }

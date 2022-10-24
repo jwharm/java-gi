@@ -31,7 +31,7 @@ Because the Panama foreign function API is still in preview status, to run the a
 Some interesting features of the bindings:
 * Because Panama (JEP 424) allows direct access to native resources from the JVM, a 'glue library' that solutions using JNI or JNA need to interface between Java and native code, is unnecessary.
 * Interfaces are mapped to Java interfaces, using Java 8-style `default` methods to call native methods.
-* Signals are mapped to type-safe methods and objects in Java.
+* Signals are mapped to type-safe methods and objects in Java. (Detailed signals like `notify` have an extra `String` parameter.)
 * Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is "owned" by the user and the proxy object in Java gets garbage-collected, a call to `g_object_unref` is automatically executed to release the native resources.
 * Functions with callback parameters are supported when there is a `user_data` parameter available to store a reference to the Java callback.
 * Nullability of parameters is indicated with `@Nullable` and `@NotNull` attributes, and checked at runtime.
@@ -44,7 +44,6 @@ Some interesting features of the bindings:
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * The generator has not been tested yet on different Linux distributions or GTK versions.
-* Signals with `::detail`s are not supported yet. This is hard to implement in a type-safe way. I will probably add a workaround for `Object.notify`.
 * Errors occur during javadoc generation: invalid combinations of html tags, lists that aren't closed properly, dead links, and probably a few others issues.
 * The javadoc doesn't include the documentation of parameters and return values yet.
 * I haven't looked into GObject properties and ParamSpecs yet.

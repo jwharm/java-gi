@@ -8,13 +8,15 @@ import java.io.Writer;
 public class Signal extends Method {
 
     public final String when;
+    public boolean detailed;
     
     private String signalName, className, qualifiedName, callbackName;
     private boolean returnsBool;
 
-    public Signal(GirElement parent, String name, String when, String deprecated, String throws_) {
+    public Signal(GirElement parent, String name, String when, String detailed, String deprecated, String throws_) {
         super(parent, name, null, deprecated, throws_);
         this.when = when;
+        this.detailed = "1".equals(detailed);
     }
 
     public void generate(Writer writer, boolean isDefault) throws IOException {
@@ -83,11 +85,22 @@ public class Signal extends Method {
         if (doc != null) {
             doc.generate(writer, 1);
         }
-        writer.write("    public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(" + qualifiedName + " handler) {\n");
+        writer.write("    public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
+        
+        // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
+        if (detailed) {
+        	writer.write("@Nullable String detail, ");
+        }
+        
+        writer.write(qualifiedName + " handler) {\n");
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(),\n");
-        writer.write("                Interop.allocateNativeString(\"" + name + "\"),\n");
+        writer.write("                Interop.allocateNativeString(\"" + name + "\"");
+        if (detailed) {
+        	writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
+        }
+        writer.write("),\n");
         writer.write("                (Addressable) Linker.nativeLinker().upcallStub(\n");
         writer.write("                    MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"" + callbackName + "\",\n");
         writer.write("                        MethodType.methodType(");
