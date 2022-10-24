@@ -27,9 +27,9 @@ public class Class extends RegisteredType {
         }
         for (int i = 0; i < implementsList.size(); i++) {
             if (i == 0) {
-                writer.write(" implements " + Conversions.toQualifiedJavaType(implementsList.get(i).name));
+                writer.write(" implements " + Conversions.toQualifiedJavaType(implementsList.get(i).name, getNamespace().packageName));
             } else {
-                writer.write(", " + Conversions.toQualifiedJavaType(implementsList.get(i).name));
+                writer.write(", " + Conversions.toQualifiedJavaType(implementsList.get(i).name, getNamespace().packageName));
             }
         }
         writer.write(" {\n");

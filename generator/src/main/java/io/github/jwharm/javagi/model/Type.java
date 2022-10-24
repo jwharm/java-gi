@@ -48,8 +48,8 @@ public class Type extends GirElement {
             }
         }
         this.qualifiedName = name;
-        this.simpleJavaType = Conversions.convertToJavaType(name, false);
-        this.qualifiedJavaType = Conversions.convertToJavaType(name, true);
+        this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace().packageName);
+        this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace().packageName);
         this.namespacePath = Conversions.getJavaPackageName(name);
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
     }

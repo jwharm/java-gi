@@ -115,7 +115,7 @@ public class Parameters extends GirElement {
             } else if (callback != null && p.isUserDataParameter()) {
                 writer.write("\n                    ");
                 if (callbackParameter.nullable) writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
-                writer.write("(Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(" + callbackParamName + "))");
+                writer.write("Interop.registerCallback(" + callbackParamName + ")");
             } else {
                 p.generateInterop(writer, p.name, true);
             }

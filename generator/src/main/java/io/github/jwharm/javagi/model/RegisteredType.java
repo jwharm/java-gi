@@ -11,7 +11,7 @@ public abstract class RegisteredType extends GirElement {
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType) {
         super(parent);
-        this.parentClass = Conversions.toQualifiedJavaType(parentClass);
+        this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace().packageName);
         this.name = name;
         this.cType = cType;
         this.javaName = Conversions.toSimpleJavaType(name);

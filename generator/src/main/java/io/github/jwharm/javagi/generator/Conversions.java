@@ -38,10 +38,18 @@ public class Conversions {
         }
     }
 
-    /** Convert "Glib.type_name" to "org.gtk.glib.TypeName" */
-    public static String toQualifiedJavaType(String typeName) {
+    /** 
+     * Convert "Glib.type_name" to "org.gtk.glib.TypeName". 
+     * If the typeName does not contain a namespace, the currentPackage parameter
+     * is prepended to the result. For example, {@code toQualifiedJavaType("button", "org.gtk.gtk")}
+     * returns {@code "org.gtk.gtk.Button"}.
+     */
+    public static String toQualifiedJavaType(String typeName, String currentPackage) {
         if (typeName == null) {
             return null;
+        }
+        if (typeName.equals("VaList")) {
+        	return typeName;
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {
@@ -49,7 +57,7 @@ public class Conversions {
             if (namespace == null) System.err.println("Could not get namespace for " + typeName);
             return namespace + "." + toCamelCase(typeName.substring(idx + 1), true);
         } else {
-            return toCamelCase(typeName, true);
+            return currentPackage + "." + toCamelCase(typeName, true);
         }
     }
 
@@ -110,7 +118,7 @@ public class Conversions {
     }
 
     /** Convert C type declaration into Java type declaration */
-    public static String convertToJavaType(String name, boolean qualified) {
+    public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
         return name == null ? null : switch (name.toLowerCase()) {
             case "gboolean" -> "boolean";
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
@@ -122,8 +130,9 @@ public class Conversions {
             case "none" -> "void";
             case "utf8", "filename" -> "java.lang.String";
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
-            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type") : toSimpleJavaType("GLib.Type");
-            default -> qualified ? toQualifiedJavaType(name) : toSimpleJavaType(name);
+            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", currentPackage) : toSimpleJavaType("GLib.Type");
+            case "VaList", "va_list" -> "VaList";
+            default -> qualified ? toQualifiedJavaType(name, currentPackage) : toSimpleJavaType(name);
         };
     }
 

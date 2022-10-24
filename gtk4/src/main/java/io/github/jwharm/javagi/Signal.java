@@ -4,12 +4,12 @@ import org.gtk.gobject.GObject;
 
 import java.lang.foreign.Addressable;
 
-public class SignalHandle {
+public class Signal<T> {
 
     private final org.gtk.gobject.Object instance;
     private final long handlerId;
 
-    public SignalHandle(Addressable instance, long handlerId) {
+    public Signal(Addressable instance, long handlerId) {
         this.instance = new org.gtk.gobject.Object(Refcounted.get(instance));
         this.handlerId = handlerId;
     }

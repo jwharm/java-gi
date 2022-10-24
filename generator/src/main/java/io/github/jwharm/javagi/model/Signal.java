@@ -9,7 +9,7 @@ public class Signal extends Method {
 
     public final String when;
     
-    private String signalName, className, callbackName;
+    private String signalName, className, qualifiedName, callbackName;
     private boolean returnsBool;
 
     public Signal(GirElement parent, String name, String when, String deprecated, String throws_) {
@@ -20,6 +20,7 @@ public class Signal extends Method {
     public void generate(Writer writer, boolean isDefault) throws IOException {
         signalName = Conversions.toSimpleJavaType(name);
         className = ((RegisteredType) parent).javaName;
+        qualifiedName = className + "." + signalName;
         callbackName = "signal" + className + signalName;
         returnsBool = returnValue != null && returnValue.type.simpleJavaType.equals("boolean");
 
@@ -31,7 +32,7 @@ public class Signal extends Method {
     private void generateFunctionalInterface(Writer writer) throws IOException {
         writer.write("    \n");
         writer.write("    @FunctionalInterface\n");
-        writer.write("    public interface " + signalName + "Handler {\n");
+        writer.write("    public interface " + signalName + " {\n");
         writer.write("        " + (returnsBool ? "boolean" : "void") + " signalReceived(" + className + " source");
 
         if (parameters != null) {
@@ -62,7 +63,7 @@ public class Signal extends Method {
         writer.write(", MemoryAddress data) {\n");
 
         writer.write("            int HASH = data.get(ValueLayout.JAVA_INT, 0);\n");
-        writer.write("            var HANDLER = (" + className + "." + signalName + "Handler) Interop.signalRegistry.get(HASH);\n");
+        writer.write("            var HANDLER = (" + qualifiedName + ") Interop.signalRegistry.get(HASH);\n");
         writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(Refcounted.get(source))");
 
         if (parameters != null) {
@@ -82,7 +83,7 @@ public class Signal extends Method {
         if (doc != null) {
             doc.generate(writer, 1);
         }
-        writer.write("    public " + (isDefault ? "default " : "") + "SignalHandle on" + signalName + "(" + signalName + "Handler handler) {\n");
+        writer.write("    public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(" + qualifiedName + " handler) {\n");
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(),\n");
@@ -114,9 +115,9 @@ public class Signal extends Method {
         }
         writer.write(", ValueLayout.ADDRESS),\n");
         writer.write("                    Interop.getScope()),\n");
-        writer.write("                (Addressable) Interop.getAllocator().allocate(ValueLayout.JAVA_INT, Interop.registerCallback(handler)),\n");
+        writer.write("                Interop.registerCallback(handler),\n");
         writer.write("                (Addressable) MemoryAddress.NULL, 0);\n");
-        writer.write("            return new SignalHandle(handle(), RESULT);\n");
+        writer.write("            return new Signal<" + qualifiedName + ">(handle(), RESULT);\n");
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");

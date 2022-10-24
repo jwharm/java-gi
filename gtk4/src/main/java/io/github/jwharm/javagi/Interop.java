@@ -7,7 +7,7 @@ import java.util.HashMap;
 public class Interop {
 
     private final static MemorySession session;
-    private final static SegmentAllocator allocator;
+    private final static SegmentAllocator implicitAllocator, sessionAllocator;
     private final static MemorySegment cbDestroyNotify_nativeSymbol;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
@@ -28,7 +28,8 @@ public class Interop {
         
         // Initialize the memory session and an implicit allocator
         session = MemorySession.openConfined();
-        allocator = SegmentAllocator.newNativeArena(session);
+        implicitAllocator = SegmentAllocator.implicitAllocator();
+        sessionAllocator = SegmentAllocator.newNativeArena(session);
 
         // Initialize upcall stub for DestroyNotify callback
         try {
@@ -59,13 +60,23 @@ public class Interop {
     }
 
     /**
-     * Get the memory allocator
+     * Get the memory allocator (ImplicitAllocator).
      * @return An instance of SegmentAllocator.implicitAllocator(). Memory segments 
      *         allocated by this allocator register a Cleaner, that automatically 
      *         frees the native memory segment when it runs.
      */
     public static SegmentAllocator getAllocator() {
-        return allocator;
+        return implicitAllocator;
+    }
+    
+    /**
+     * Get a NativeArena memory allocator. This allocator allocates a new memory 
+     * segment in the current memory session every time it is called. The memory 
+     * segments are not released until the app is closed.
+     * @return The NativeArena memory allocator.
+     */
+    public static SegmentAllocator getSessionAllocator() {
+    	return sessionAllocator;
     }
 
     /**
@@ -85,12 +96,13 @@ public class Interop {
      * Register a callback in the signalRegistry map. The key is 
      * the hashcode of the callback.
      * @param callback Callback to save in the signalRegistry map
-     * @return the calculated hashcode
+     * @return a native memory segment with the calculated hashcode.
+     *         The memory segment is not automatically released.
      */
-    public static int registerCallback(Object callback) {
+    public static Addressable registerCallback(Object callback) {
         int hash = callback.hashCode();
         signalRegistry.put(hash, callback);
-        return hash;
+        return sessionAllocator.allocate(ValueLayout.JAVA_INT, hash);
     }
 
     /**
@@ -126,7 +138,7 @@ public class Interop {
      * @return the allocated MemorySegment
      */
     public static Addressable allocateNativeString(String string) {
-        return allocator.allocateUtf8String(string);
+        return implicitAllocator.allocateUtf8String(string);
     }
 
     /**
@@ -138,9 +150,9 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated) {
         int length = zeroTerminated ? strings.length : strings.length + 1;
-        var memorySegment = allocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = implicitAllocator.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
-            var cString = allocator.allocateUtf8String(strings[i]);
+            var cString = implicitAllocator.allocateUtf8String(strings[i]);
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
@@ -174,7 +186,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_BYTE, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_BYTE, array);
     }
 
     /**
@@ -187,7 +199,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_CHAR, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_CHAR, array);
     }
 
     /**
@@ -200,7 +212,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_DOUBLE, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_DOUBLE, array);
     }
 
     /**
@@ -213,7 +225,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_FLOAT, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_FLOAT, array);
     }
 
     /**
@@ -226,7 +238,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_INT, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_INT, array);
     }
 
     /**
@@ -239,7 +251,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_LONG, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_LONG, array);
     }
 
     /**
@@ -252,7 +264,7 @@ public class Interop {
         if (array == null || array.length == 0) {
             return null;
         }
-        return allocator.allocateArray(ValueLayout.JAVA_SHORT, array);
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_SHORT, array);
     }
 
     /**
@@ -279,7 +291,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated) {
         int length = zeroTerminated ? array.length : array.length + 1;
-        var memorySegment = allocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = implicitAllocator.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, array[i]);
         }
