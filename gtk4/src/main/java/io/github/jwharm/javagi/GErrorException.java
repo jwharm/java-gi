@@ -1,40 +1,45 @@
 package io.github.jwharm.javagi;
 
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.MemorySession;
+import java.lang.invoke.VarHandle;
+
+import org.jetbrains.annotations.ApiStatus;
 
 public class GErrorException extends Exception {
 
-    private final int code, domain;
+    private static final long serialVersionUID = -5219056090883059292L;
+    
+	private final int code, domain;
 
     private static MemorySegment dereference(MemorySegment pointer) {
-        return null; // GError.ofAddress(pointer.get(C_POINTER, 0), Interop.getScope());
+        return _GError.ofAddress(pointer.get(Interop.valueLayout.ADDRESS, 0), Interop.getScope());
     }
 
     private static String getMessage(MemorySegment pointer) {
-        return ""; // GError.message$get(dereference(pointer)).getUtf8String(0);
+        return _GError.message$get(dereference(pointer)).getUtf8String(0);
     }
 
     private int getCode(MemorySegment pointer) {
-        return 0; // GError.code$get(dereference(pointer));
+        return _GError.code$get(dereference(pointer));
     }
 
     private int getDomain(MemorySegment pointer) {
-        return 0; // GError.domain$get(dereference(pointer));
-    }
-
-    private void freeMemory(MemorySegment pointer) {
-        // io.github.jwharm.javagi.interop.jextract.gtk_h.g_error_free(dereference(pointer));
+        return _GError.domain$get(dereference(pointer));
     }
 
     /**
      * Create a GErrorException from a GError memory segment that was
      * returned by a native function.
      */
+    @ApiStatus.Internal
     public GErrorException(MemorySegment gerrorPtr) {
         super(getMessage(gerrorPtr));
         this.code = getCode(gerrorPtr);
         this.domain = getDomain(gerrorPtr);
-        freeMemory(gerrorPtr);
     }
 
     /**
@@ -55,8 +60,8 @@ public class GErrorException extends Exception {
      * @return true when an error was set on this pointer
      */
     public static boolean isErrorSet(MemorySegment gerrorPtr) {
-        return false; // MemoryAddress gerror = gerrorPtr.get(C_POINTER, 0);
-        // return (! gerror.equals(MemoryAddress.NULL));
+        MemoryAddress gerror = gerrorPtr.get(Interop.valueLayout.ADDRESS, 0);
+        return (! gerror.equals(MemoryAddress.NULL));
     }
 
     /**
@@ -72,4 +77,39 @@ public class GErrorException extends Exception {
     public int getDomain() {
         return domain;
     }
+    
+    /**
+     * Based on jextract-generated source file, generated from glib.h
+     */
+	private class _GError {
+
+		static final GroupLayout $struct$LAYOUT = 
+				MemoryLayout.structLayout(
+						Interop.valueLayout.C_INT.withName("domain"),
+						Interop.valueLayout.C_INT.withName("code"), 
+						Interop.valueLayout.ADDRESS.withName("message")
+				).withName("_GError");
+
+		private static final VarHandle domain$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("domain"));
+
+		public static int domain$get(MemorySegment seg) {
+			return (int) _GError.domain$VH.get(seg);
+		}
+
+		private static final VarHandle code$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("code"));
+
+		public static int code$get(MemorySegment seg) {
+			return (int) _GError.code$VH.get(seg);
+		}
+
+		private static final VarHandle message$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("message"));
+
+		public static MemoryAddress message$get(MemorySegment seg) {
+			return (MemoryAddress) _GError.message$VH.get(seg);
+		}
+
+		public static MemorySegment ofAddress(MemoryAddress addr, MemorySession scope) {
+			return MemorySegment.ofAddress(addr, _GError.$struct$LAYOUT.byteSize(), scope);
+		}
+	}
 }

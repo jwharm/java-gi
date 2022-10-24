@@ -11,6 +11,8 @@ public class Interop {
     private final static MemorySegment cbDestroyNotify_nativeSymbol;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
+    
+    public final static Layout_x86_64 valueLayout = new Layout_x86_64();
 
     /**
      * This map contains the callbacks used in g_signal_connect. The 

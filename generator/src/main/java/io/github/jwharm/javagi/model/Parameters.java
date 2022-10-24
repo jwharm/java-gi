@@ -113,9 +113,11 @@ public class Parameters extends GirElement {
                 writer.write("),\n");
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
-                writer.write("\n                    ");
-                if (callbackParameter.nullable) writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
-                writer.write("Interop.registerCallback(" + callbackParamName + ")");
+                writer.write("\n                   (Addressable) (");
+                if (callbackParameter.nullable) {
+                	writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
+                }
+                writer.write("Interop.registerCallback(" + callbackParamName + "))");
             } else {
                 p.generateInterop(writer, p.name, true);
             }
