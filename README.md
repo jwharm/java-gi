@@ -34,9 +34,11 @@ Some interesting features of the bindings:
 * Signals are mapped to type-safe methods and objects in Java.
 * Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is "owned" by the user and the proxy object in Java gets garbage-collected, a call to `g_object_unref` is automatically executed to release the native resources.
 * Functions with callback parameters are supported when there is a `user_data` parameter available to store a reference to the Java callback.
+* Nullability of parameters is indicated with `@Nullable` and `@NotNull` attributes.
 * Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offers typesafe `get()` and `set()` methods to retrieve or modify the value.
 * Arrays with a known length are mapped to Java arrays.
 * `GError**` parameters are mapped to Java `GErrorException`s. (This is currently broken, but will be fixed soon.)
+* Ability to rename or remove classes or methods in the build script.
 * GtkDoc API docstrings are (roughly) translated into Javadoc (though this also needs more work).
 
 ## Known issues
@@ -51,6 +53,7 @@ The bindings are still under active development and have not been thoroughly tes
 * I haven't looked into GObject properties and ParamSpecs yet.
 * The `castFrom()` method doesn't do type checks, so if you accidentally try to cast an object to another GType, it will crash the JVM.
 * Methods marked as `deprecated` are currently excluded.
+* Thread-safety has not been considered yet.
 * Varargs aren't supported yet.
 * Unions aren't supported.
 * Return values of nested arrays (like Gio `g_desktop_app_info_search`) aren't supported yet.
