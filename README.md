@@ -44,7 +44,6 @@ Some interesting features of the bindings:
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * The generator has not been tested yet on different Linux distributions or GTK versions.
-* The allocator used to allocate native memory segments ([`MemorySegment.newNativeArena`](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/SegmentAllocator.html#newNativeArena(java.lang.foreign.MemorySession))) does not release the memory afterwards. This means java-gi apps leak memory like crazy. The obvious solution is to use [`MemorySegment.implicitAllocator`](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/SegmentAllocator.html#implicitAllocator()) which releases memory automatically with a `Cleaner`, but currently the memory segments are released too soon, so it requires more work (and more testing).
 * `null` parameters are passed directly to native code. These should at the very least be marshalled to `MemoryAddress.NULL` and vice versa.
 * `GErrorException` doesn't do anything right now.
 * Signals with `::detail`s are not supported yet. This is hard to implement in a type-safe way. I will probably add a workaround for `Object.notify`.
