@@ -68,6 +68,7 @@ public class Method extends GirElement implements CallableType {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         
+        // MemorySegment declarations for pointer parameters
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
                 if (p.isOutParameter()) {
@@ -106,8 +107,16 @@ public class Method extends GirElement implements CallableType {
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
 
-        // Non-array out parameters
+        // Throw GErrorException
+        if (throws_ != null) {
+            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("            throw new GErrorException(GERROR);\n");
+            writer.write("        }\n");
+        }
+        
+        // Read pointer values from memory segments
         if (parameters != null) {
+            // Non-array out parameters
             for (Parameter p : parameters.parameterList) {
             	if (p.isOutParameter()) {
             		if (p.array == null) {
@@ -125,37 +134,27 @@ public class Method extends GirElement implements CallableType {
                     writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
-        }
-        // Array out parameters
-        if (parameters != null) {
+            // Array out parameters
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter()) {
-            		if (p.array != null) {
-            			String len = p.array.size();
-            			String valuelayout = Conversions.getValueLayout(p.array.type);
-            			if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
-            				// Array of primitive values
-                    		writer.write("        " + p.name + ".set(");
-                			writer.write("MemorySegment.ofAddress(" + p.name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
-            			} else {
-            				// Array of proxy objects
-            				writer.write("        " + p.array.type.qualifiedJavaType + "[] " + p.name + "ARRAY = new " + p.array.type.qualifiedJavaType + "[" + len + "];\n");
-            				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-            				writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
-            				writer.write("            " + p.name + "ARRAY[I] = ");
-            	            writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
-            				writer.write("        }\n");
-            				writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
-            			}
-            		}
+            	if (p.isOutParameter() && p.array != null) {
+        			String len = p.array.size();
+        			String valuelayout = Conversions.getValueLayout(p.array.type);
+        			if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
+        				// Array of primitive values
+                		writer.write("        " + p.name + ".set(");
+            			writer.write("MemorySegment.ofAddress(" + p.name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
+        			} else {
+        				// Array of proxy objects
+        				writer.write("        " + p.array.type.qualifiedJavaType + "[] " + p.name + "ARRAY = new " + p.array.type.qualifiedJavaType + "[" + len + "];\n");
+        				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
+        				writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
+        				writer.write("            " + p.name + "ARRAY[I] = ");
+        	            writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
+        				writer.write("        }\n");
+        				writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
+        			}
                 }
             }
-        }
-        
-        if (throws_ != null) {
-            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("            throw new GErrorException(GERROR);\n");
-            writer.write("        }\n");
         }
         
         if (returnValue.array != null) {
