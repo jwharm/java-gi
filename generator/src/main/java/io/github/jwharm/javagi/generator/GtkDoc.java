@@ -13,7 +13,7 @@ public class GtkDoc {
     // This is one huge regular expression that basically matches a series of separate 
     // regex patters, each with a named group, separated by an "or" ("|") operand.
     // Most of the individual patterns should be relatively self-explanatory.
-    private static final String REGEX =
+    private static final String REGEX_PASS_1 =
             // ``` multiline code block ```
               "(?<codeblock>```(?<content>(?s).+?)```)"
             // |[ multiline code block ]|
@@ -38,15 +38,16 @@ public class GtkDoc {
             + "|(?m)^\\s*(?<bulletpoint>\\-)\\s"
             // Match *strong*
             + "|(?<strong>\\*.+\\*)"
-            // Match <tags>
-            + "|(?<tag>\\<[^\\>]+\\>)"
-            // Match multiple newlines, unless followed by headers, codeblocks or bullet lists
-            + "|(?<p>\\n{2,}(?!(#{1,6}\\s|```|\\-\\s)))";
+            // Match entities: <, >, &
+            + "|(?<entity>\\<|\\>|\\&)"
+            // Match multiple newlines
+            + "|(?<p>\\n{2,})"
+    ;
 
     // These are the named groups for which the conversions to Javadoc are applied.
     // Other named groups are not matched separately, but only used as parameters 
     // for the conversion functions.
-    private static final String[] NAMED_GROUPS = new String[] {
+    private static final String[] NAMED_GROUPS_PASS_1 = new String[] {
             "codeblock",
             "codeblock2",
             "code",
@@ -59,8 +60,17 @@ public class GtkDoc {
             "header",
             "bulletpoint",
             "strong",
-            "tag",
+            "entity",
             "p"
+    };
+    
+    private static final String REGEX_PASS_2 =
+            // <p> immediately followed by <pre>
+              "(?<emptyp>\\<p\\>\\s*(?<tag>\\<(pre|ul)\\>))"
+    ;
+    
+    private static final String[] NAMED_GROUPS_PASS_2 = new String[] {
+    		"emptyp"
     };
 
     private static GtkDoc instance = null;
@@ -77,11 +87,12 @@ public class GtkDoc {
         return instance;
     }
 
-    private final Pattern pattern;
+    private final Pattern patternPass1, patternPass2;
 
-    // This class is a singleton. The regex pattern is compiled only once.
+    // This class is a singleton. The regex patterns are compiled only once.
     private GtkDoc() {
-        this.pattern = Pattern.compile(REGEX);
+        this.patternPass1 = Pattern.compile(REGEX_PASS_1);
+        this.patternPass2 = Pattern.compile(REGEX_PASS_2);
     }
 
     /**
@@ -90,24 +101,48 @@ public class GtkDoc {
     public String convert(Doc doc) {
         this.doc = doc;
         this.ul = false;
-        Matcher matcher = pattern.matcher(doc.contents);
+        
+        // Conversion pass 1
+        Matcher matcher = patternPass1.matcher(doc.contents);
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
-            String replacement = convert(matcher);
+        	String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_1);
+            String replacement = convert(matcher, groupName);
             matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(output);
-        return output.toString();
+        if (ul) {
+            ul = false;
+            output.append("</ul>");
+        }
+        String pass1Result = output.toString();
+        
+        // Conversion pass 2
+        matcher = patternPass2.matcher(pass1Result);
+        output = new StringBuilder();
+        while (matcher.find()) {
+        	String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_2);
+            String replacement = convert(matcher, groupName);
+            matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(output);
+        String pass2Result = output.toString();
+        
+        return pass2Result;
     }
-
-    // Determine which matching group was matched, and apply the relevant conversion
-    private String convert(Matcher matcher) {
-        String groupName = Arrays.stream(NAMED_GROUPS)
+    
+    private String getMatchedGroupName(Matcher matcher, String[] groupNames) {
+        return Arrays.stream(groupNames)
                 .filter((name) -> matcher.group(name) != null)
                 .findFirst()
                 .orElseThrow();
+    }
+
+    // Determine which matching group was matched, and apply the relevant conversion
+    private String convert(Matcher matcher, String groupName) {
 
         return switch(groupName) {
+        	// Pass 1 group names
             case "codeblock" -> convertCodeblock(matcher.group(), matcher.group("content"));
             case "codeblock2" -> convertCodeblock(matcher.group(), matcher.group("content2"));
             case "code" -> convertCode(matcher.group());
@@ -124,8 +159,12 @@ public class GtkDoc {
             case "header" -> convertHeader(matcher.group(), matcher.group("headerlevel"));
             case "bulletpoint" -> convertBulletpoint(matcher.group());
             case "strong" -> convertStrong(matcher.group());
-            case "tag" -> convertTag(matcher.group());
+            case "entity" -> convertEntity(matcher.group());
             case "p" -> convertP(matcher.group());
+            
+            // Pass 2 group names
+            case "emptyp" -> convertEmptyP(matcher.group(), matcher.group("tag"));
+            
             default -> matcher.group();
         };
     }
@@ -214,10 +253,10 @@ public class GtkDoc {
         return "<img src=\"./doc-files/" + url + "\" alt=\"" + alt + "\">";
     }
 
-    // Replace "# Header" with <h1>Header</h1>, ## with <h2>, etc
+    // Replace "# Header" with <strong>Header</strong><br/>
     private String convertHeader(String header, String headerlevel) {
         int h = headerlevel.length();
-        return "<h" + h + ">" + header.substring(h).trim() + "</h" + h + ">\n";
+        return "<strong>" + header.substring(h).trim() + "</strong><br/>\n";
     }
 
     // Replace a bullet point "- " with <li>
@@ -235,9 +274,14 @@ public class GtkDoc {
         return "<strong>" + text.substring(1, text.length() - 1) + "</strong>";
     }
 
-    // Replace <tag> with &lt;tag&gt;
-    private String convertTag(String text) {
-        return "&lt;" + text.substring(1, text.length() - 1) + "&gt;";
+    // Replace <, > and & with &lt;, &gt; and &amp;
+    private String convertEntity(String entity) {
+    	return switch (entity) {
+	    	case "<" -> "&lt;";
+	    	case ">" -> "&gt;";
+	    	case "&" -> "&amp;";
+	    	default -> entity;
+    	};
     }
 
     // Replace multiple newlines with <p>
@@ -248,6 +292,11 @@ public class GtkDoc {
         } else {
             return "\n<p>\n";
         }
+    }
+    
+    // Replace <p><pre> or <p><ul> (and any whitespace in between) with just the second tag
+    private String convertEmptyP(String ph, String tag) {
+    	return tag;
     }
 
     // Return the Java package name followed by "." for another (not our own) namespace
