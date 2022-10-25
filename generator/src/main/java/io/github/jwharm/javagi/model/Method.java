@@ -82,6 +82,12 @@ public class Method extends GirElement implements CallableType {
         writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
         writer.write(" {\n");
         
+        if (! isSafeToBind()) {
+        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            return;
+        }
+        
         // Generate checks for null parameters
         generateNullParameterChecks(writer);
 

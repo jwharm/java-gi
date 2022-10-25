@@ -19,21 +19,15 @@ public class Interface extends RegisteredType {
         writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.Proxy {\n");
 
         for (Method m : methodList) {
-            if (m.isSafeToBind()) {
-                m.generate(writer, true, false);
-            }
+            m.generate(writer, true, false);
         }
 
         for (Function function : functionList) {
-            if (function.isSafeToBind()) {
-                function.generate(writer, true, true);
-            }
+            function.generate(writer, true, true);
         }
 
         for (Signal s : signalList) {
-            if (s.isSafeToBind()) {
-                s.generate(writer, true);
-            }
+            s.generate(writer, true);
         }
 
         if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
@@ -57,9 +51,7 @@ public class Interface extends RegisteredType {
         	writer.write("    @ApiStatus.Internal\n");
             writer.write("    static class Callbacks {\n");
             for (Signal s : signalList) {
-                if (s.isSafeToBind()) {
-                    s.generateStaticCallback(writer, true);
-                }
+                s.generateStaticCallback(writer, true);
             }
             writer.write("    }\n");
             writer.write("    \n");

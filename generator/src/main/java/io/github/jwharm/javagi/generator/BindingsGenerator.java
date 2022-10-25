@@ -56,18 +56,14 @@ public class BindingsGenerator {
             }
 
             for (Function function : gir.namespace.functionList) {
-                if (function.isSafeToBind()) {
-                    function.generate(writer, function.parent instanceof Interface, true);
-                }
+                function.generate(writer, function.parent instanceof Interface, true);
             }
             
             if (! gir.namespace.functionList.isEmpty()) {
             	writer.write("    \n");
                 writer.write("    private static class DowncallHandles {\n");
                 for (Function f : gir.namespace.functionList) {
-                    if (f.isSafeToBind()) {
-                        f.generateMethodHandle(writer, false);
-                    }
+                    f.generateMethodHandle(writer, false);
                 }
                 writer.write("    }\n");
             }

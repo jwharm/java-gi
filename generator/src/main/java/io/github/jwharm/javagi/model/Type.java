@@ -29,8 +29,8 @@ public class Type extends GirElement {
 
     public Type(GirElement parent, String name, String cType) {
         super(parent);
-        init(name);
         this.cType = cType;
+        init(name);
     }
 
     public void init(String name) {
@@ -46,6 +46,9 @@ public class Type extends GirElement {
                 this.girNamespace = "GLib";
                 this.name = "Type";
             }
+        } else {
+        	// If the type does not have a name, it's possibly undefined in GI, so use gpointer as a generic fallback.
+        	name = "gpointer";
         }
         this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace().packageName);
@@ -97,7 +100,7 @@ public class Type extends GirElement {
     }
 
     public boolean isVoid() {
-        return name.equals("none");
+        return "none".equals(name);
     }
     
     public boolean isPointer() {

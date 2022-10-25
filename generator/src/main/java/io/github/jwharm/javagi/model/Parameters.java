@@ -36,6 +36,10 @@ public class Parameters extends GirElement {
             if (hasCallbackParameter() && (p.isUserDataParameter() || p.isDestroyNotify())) {
                 continue;
             }
+            // Varargs not yet supported
+            if (p.varargs) {
+            	continue;
+            }
             if (counter++ > 0) {
                 writer.write(", ");
             }

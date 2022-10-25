@@ -54,21 +54,15 @@ public class Record extends Class {
         }
 
         for (Method m : methodList) {
-            if (m.isSafeToBind()) {
-                m.generate(writer, false, false);
-            }
+            m.generate(writer, false, false);
         }
 
         for (Function function : functionList) {
-            if (function.isSafeToBind()) {
-                function.generate(writer, false, true);
-            }
+            function.generate(writer, false, true);
         }
 
         for (Signal s : signalList) {
-            if (s.isSafeToBind()) {
-                s.generate(writer, false);
-            }
+            s.generate(writer, false);
         }
 
         if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
@@ -91,9 +85,7 @@ public class Record extends Class {
         	writer.write("    @ApiStatus.Internal\n");
             writer.write("    public static class Callbacks {\n");
             for (Signal s : signalList) {
-                if (s.isSafeToBind()) {
-                    s.generateStaticCallback(writer, false);
-                }
+                s.generateStaticCallback(writer, false);
             }
             writer.write("    }\n");
         }

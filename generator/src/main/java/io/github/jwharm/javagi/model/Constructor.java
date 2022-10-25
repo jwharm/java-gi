@@ -36,6 +36,14 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        
+        if (! isSafeToBind()) {
+        	writer.write("        this(Refcounted.get(null)); // avoid compiler error\n");
+        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            return;
+        }
+        
         writer.write("        super(" + privateMethodName);
         if (parameters != null) {
             writer.write("(");
@@ -69,6 +77,13 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        
+        if (! isSafeToBind()) {
+        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            return;
+        }
+        
         writer.write("        return new " + clazz.javaName + "(" + privateMethodName);
         if (parameters != null) {
             writer.write("(");
@@ -82,7 +97,7 @@ public class Constructor extends Method {
     }
 
     // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
-    // calling "super(gtk_h.ns_obj_new(..., GERROR))", which is not allowed - the super() call must
+    // calling "super(..., GERROR)", which is not allowed - the super() call must
     // be the first statement in the constructor. Therefore, we always generate a private method that
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
@@ -101,6 +116,12 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        
+        if (! isSafeToBind()) {
+        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            return methodName;
+        }
         
         // Generate checks for null parameters
         generateNullParameterChecks(writer);

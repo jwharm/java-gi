@@ -64,6 +64,13 @@ public class Signal extends Method {
         }
         writer.write(", MemoryAddress data) {\n");
 
+        if (! isSafeToBind()) {
+        	writer.write("        // Operation not supported yet\n");
+        	if (returnsBool) writer.write("    return false;\n");
+            writer.write("    }\n");
+            return;
+        }
+        
         writer.write("            int HASH = data.get(ValueLayout.JAVA_INT, 0);\n");
         writer.write("            var HANDLER = (" + qualifiedName + ") Interop.signalRegistry.get(HASH);\n");
         writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(Refcounted.get(source))");
@@ -93,6 +100,13 @@ public class Signal extends Method {
         }
         
         writer.write(qualifiedName + " handler) {\n");
+        
+        if (! isSafeToBind()) {
+        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            return;
+        }
+        
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(),\n");

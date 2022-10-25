@@ -113,7 +113,7 @@ public class GtkDoc {
         matcher.appendTail(output);
         if (ul) {
             ul = false;
-            output.append("</ul>");
+            output.append("\n</ul>");
         }
         String pass1Result = output.toString();
         
@@ -233,7 +233,7 @@ public class GtkDoc {
         if (rt == null) {
             return "{@code " + ref.substring(1) + "}";
         } else {
-            return "{@link " + formatNS(rt.getNamespace().name) + rt.name + "}";
+            return "{@link " + formatNS(rt.getNamespace().name) + rt.javaName + "}";
         }
     }
 

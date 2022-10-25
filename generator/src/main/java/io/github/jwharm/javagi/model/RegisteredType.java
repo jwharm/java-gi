@@ -77,13 +77,11 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateConstructors(Writer writer) throws IOException {
         for (Constructor c : constructorList) {
-            if (c.isSafeToBind()) {
-                boolean isInterface = this instanceof Interface;
-                if (c.name.equals("new")) {
-                    c.generate(writer, isInterface);
-                } else {
-                    c.generateNamed(writer, isInterface);
-                }
+            boolean isInterface = this instanceof Interface;
+            if (c.name.equals("new")) {
+                c.generate(writer, isInterface);
+            } else {
+                c.generateNamed(writer, isInterface);
             }
         }
     }
