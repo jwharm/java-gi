@@ -50,7 +50,7 @@ public class Class extends RegisteredType {
         for (Signal s : signalList) {
             s.generate(writer, false);
         }
-        
+
         if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
         	writer.write("    \n");
             writer.write("    private static class DowncallHandles {\n");

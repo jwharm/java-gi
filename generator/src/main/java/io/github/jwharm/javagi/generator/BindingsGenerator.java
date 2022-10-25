@@ -21,11 +21,6 @@ public class BindingsGenerator {
 
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
             
-            if (rt instanceof io.github.jwharm.javagi.model.Record rec
-                    && rec.isEmpty()) {
-                continue;
-            }
-
             try (Writer writer = Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java"))) {
                 rt.generate(writer);
             }

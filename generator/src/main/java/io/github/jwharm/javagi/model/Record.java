@@ -14,19 +14,6 @@ public class Record extends Class {
     }
     
     /**
-     * Don't generate empty classes for GType struct declarations.
-     * @return Whether this record has a "is-gtype-struct-for" attribute and 
-     * does not contain any constructors, methods, functions or signals.
-     */
-    public boolean isEmpty() {
-        return (isGTypeStructFor != null)
-                && constructorList.isEmpty() 
-                && methodList.isEmpty() 
-                && functionList.isEmpty() 
-                && signalList.isEmpty();
-    }
-
-    /**
      * A record in GI is a struct in C. Java doesn't have a struct type, and the java 'record'
      * functionality has a different purpose. So the generated API just creates a class that
      * extends ResourceBase (instead of GObject).

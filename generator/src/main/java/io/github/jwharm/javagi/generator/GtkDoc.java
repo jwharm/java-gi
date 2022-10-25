@@ -1,12 +1,17 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.Doc;
-import io.github.jwharm.javagi.model.GirElement;
-import io.github.jwharm.javagi.model.RegisteredType;
-
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.github.jwharm.javagi.model.Constructor;
+import io.github.jwharm.javagi.model.Doc;
+import io.github.jwharm.javagi.model.Function;
+import io.github.jwharm.javagi.model.GirElement;
+import io.github.jwharm.javagi.model.Method;
+import io.github.jwharm.javagi.model.Namespace;
+import io.github.jwharm.javagi.model.RegisteredType;
+import io.github.jwharm.javagi.model.Repository;
 
 public class GtkDoc {
 
@@ -31,7 +36,7 @@ public class GtkDoc {
             // [url](for link)
             + "|(?<hyperlink>\\[(?<desc>.+)\\]\\((?<url>.+)\\))"
             // ! [url](for image)
-            + "|(?<img>\\!\\[(?<imgdesc>.+)\\]\\((?<imgurl>.+)\\))"
+            + "|(?<img>\\!\\[(?<imgdesc>.*?)\\]\\((?<imgurl>.+?)\\))"
             // # Header level 1, ## Header level 2 etc
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+)\\n*"
             // - Bullet lists, we generate <ul> for the first bullet and <li> for every bullet
@@ -185,23 +190,44 @@ public class GtkDoc {
         String name;
         switch (type) {
             case "ctor":
-                if ("new".equals(part3)) {
-                    return "{@link " + formatNS(part1) + part2 + "#" + part2 + "}";
-                }
+            	if (part3 == null) {
+                    if ("new".equals(part2)) {
+                    	return checkLink(part1) + part1 + "#" + part1 + "}";
+                    } else {
+                    	return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                    }
+            	} else {
+                    if ("new".equals(part3)) {
+                    	return checkLink(part1, part2) + formatNS(part1) + part2 + "#" + part2 + "}";
+                    } else {
+                    	return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                    }
+            	}
             case "method":
             case "vfunc":
                 if (part3 == null) {
-                    return "{@link " + part1 + formatMethod(part2) + "}";
+                    return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
                 } else {
-                    return "{@link " + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                    return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
                 }
             case "property":
                 return "{@code " + path + "}";
             case "func":
-                return "{@link " + part1 + formatMethod(part2) + "}";
+            	if (part3 == null) {
+                	if (part2 == null) {
+                        return checkLink(part1) + formatMethod(part1) + "}";
+                	} else {
+                        return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                	}
+            	} else {
+                    return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+            	}
             case "class":
-                name = (part2 == null) ? part1 : (formatNS(part1) + part2);
-                return "{@link " + name + "}";
+            	if (part2 == null) {
+            		return checkLink(part1) + part1 + "}";
+            	} else {
+            		return checkLink(part1, part2) + formatNS(part1) + part2 + "}";
+            	}
             case "id":
                 GirElement girElement = Conversions.cIdentifierLookupTable.get(part1);
                 name = girElementToString(girElement, false);
@@ -324,5 +350,56 @@ public class GtkDoc {
             name += (uppercase ? ("#" + call.toUpperCase()) : formatMethod(call));
         }
         return name;
+    }
+    
+    private String checkLink(String identifier) {
+    	return checkLink(doc.getNamespace().name, identifier);
+    }
+    
+    private String checkLink(String ns, String identifier) {
+    	Repository gir = Conversions.repositoriesLookupTable.get(ns);
+    	if (gir == null || gir.namespace == null) {
+    		return "{@code ";
+    	}
+    	Namespace namespace = gir.namespace;
+    	if (namespace.registeredTypeMap.containsKey(identifier)) {
+    		return "{@link ";
+    	}
+    	for (Function f : namespace.functionList) {
+    		if (identifier.equals(f.name)) {
+    	    	return "{@link ";
+    		}
+    	}
+    	return "{@code ";
+    }
+
+    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
+    // otherwise, generate a "{@code" tag.
+    private String checkLink(String ns, String type, String identifier) {
+    	Repository gir = Conversions.repositoriesLookupTable.get(ns);
+    	if (gir == null || gir.namespace == null) {
+    		return "{@code ";
+    	}
+    	Namespace namespace = gir.namespace;
+    	RegisteredType rt = namespace.registeredTypeMap.get(type);
+    	if (rt == null) {
+    		return "{@code ";
+    	}
+    	for (Method m : rt.methodList) {
+    		if (identifier.equals(m.name)) {
+    	    	return "{@link ";
+    		}
+    	}
+    	for (Constructor c : rt.constructorList) {
+    		if (identifier.equals(c.name)) {
+    	    	return "{@link ";
+    		}
+    	}
+    	for (Function f : rt.functionList) {
+    		if (identifier.equals(f.name)) {
+    	    	return "{@link ";
+    		}
+    	}
+    	return "{@code ";
     }
 }

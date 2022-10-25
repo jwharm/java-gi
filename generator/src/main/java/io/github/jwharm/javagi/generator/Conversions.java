@@ -4,9 +4,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.github.jwharm.javagi.model.GirElement;
 import io.github.jwharm.javagi.model.RegisteredType;
+import io.github.jwharm.javagi.model.Repository;
 import io.github.jwharm.javagi.model.Type;
 
 public class Conversions {
@@ -14,10 +16,11 @@ public class Conversions {
     public static Map<String, String> nsLookupTable = new HashMap<>();
     public static Map<String, GirElement> cIdentifierLookupTable;
     public static Map<String, RegisteredType> cTypeLookupTable;
+	public static Map<String, Repository> repositoriesLookupTable;
 
     /** Convert "Gdk" to "org.gtk.gdk" */
     public static String namespaceToJavaPackage(String ns) {
-        return nsLookupTable.get(ns.toLowerCase());
+        return Objects.requireNonNullElse(nsLookupTable.get(ns.toLowerCase()), ns);
     }
 
     /** Convert "identifier_name" to "identifierName" */
