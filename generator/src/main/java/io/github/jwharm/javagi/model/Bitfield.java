@@ -6,8 +6,8 @@ import java.io.Writer;
 // Not implemented
 public class Bitfield extends ValueWrapper {
 
-    public Bitfield(GirElement parent, String name, String cType) {
-        super(parent, name, null, cType);
+    public Bitfield(GirElement parent, String name, String cType, String version) {
+        super(parent, name, null, cType, version);
     }
 
     public void generate(Writer writer) throws IOException {

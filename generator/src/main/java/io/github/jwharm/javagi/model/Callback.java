@@ -12,8 +12,8 @@ public class Callback extends RegisteredType implements CallableType {
     public ReturnValue returnValue;
     public Parameters parameters;
 
-    public Callback(GirElement parent, String name, String cType) {
-        super(parent, name, null, cType);
+    public Callback(GirElement parent, String name, String cType, String version) {
+        super(parent, name, null, cType, version);
     }
 
     public void generate(Writer writer) throws IOException {

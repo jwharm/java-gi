@@ -243,7 +243,7 @@ public class Parameter extends GirElement {
         // Array of arrays - this is not supported yet
         if (array != null && array.array != null) {
             // Array of arrays - this is not supported yet
-            writer.write("");
+            writer.write("null /* Return type not supported yet */");
 
         } else if (type == null) {
             // This should not happen
@@ -286,6 +286,10 @@ public class Parameter extends GirElement {
     public String getReturnType() {
         // Arrays
         if (array != null) {
+            // Array of String arrays
+        	if (array.array != null && "gchar***".equals(array.cType)) {
+        		return "java.lang.String[][]";
+        	}
             return getPointerReturnType(array.type, array.size());
         }
         // Pointers

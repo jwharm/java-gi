@@ -44,11 +44,9 @@ Some interesting features of the bindings:
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * The generator has not been tested yet on different Linux distributions or GTK versions.
-* Errors occur during javadoc generation: invalid combinations of html tags, lists that aren't closed properly, dead links, and probably a few others issues.
-* The javadoc doesn't include the documentation of parameters and return values yet.
+* A large number of warnings occur during javadoc generation.
 * I haven't looked into GObject properties and ParamSpecs yet.
 * The `castFrom()` method doesn't do type checks, so if you accidentally try to cast an object to another GType, it will crash the JVM.
-* Methods marked as `deprecated` are not yet marked with a @deprecated javadoc attribute.
 * Thread-safety has not been considered yet.
 * Varargs aren't supported yet.
 * Unions aren't supported.

@@ -7,8 +7,8 @@ public class Interface extends RegisteredType {
 
     public Prerequisite prerequisite;
 
-    public Interface(GirElement parent, String name, String cType) {
-        super(parent, name, null, cType);
+    public Interface(GirElement parent, String name, String cType, String version) {
+        super(parent, name, null, cType, version);
     }
 
     public void generate(Writer writer) throws IOException {

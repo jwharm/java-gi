@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 public class Enumeration extends ValueWrapper {
 
-    public Enumeration(GirElement parent, String name, String cType) {
-        super(parent, name, null, cType);
+    public Enumeration(GirElement parent, String name, String cType, String version) {
+        super(parent, name, null, cType, version);
     }
 
     public void generate(Writer writer) throws IOException {

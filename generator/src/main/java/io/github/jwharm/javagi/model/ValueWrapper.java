@@ -6,8 +6,8 @@ import java.io.Writer;
 
 public abstract class ValueWrapper extends RegisteredType {
     
-    public ValueWrapper(GirElement parent, String name, String parentClass, String cType) {
-        super(parent, name, parentClass, cType);
+    public ValueWrapper(GirElement parent, String name, String parentClass, String cType, String version) {
+        super(parent, name, parentClass, cType, version);
     }
     
     public void generateValueConstructor(Writer writer, String typeStr) throws IOException {

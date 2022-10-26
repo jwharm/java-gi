@@ -27,8 +27,8 @@ public class Alias extends ValueWrapper {
         return UNKNOWN_ALIAS;
     }
 
-    public Alias(GirElement parent, String name, String cType) {
-        super(parent, name, null, cType);
+    public Alias(GirElement parent, String name, String cType, String version) {
+        super(parent, name, null, cType, version);
     }
 
     // Aliases (typedefs) don't exist in Java. We can emulate this using inheritance.

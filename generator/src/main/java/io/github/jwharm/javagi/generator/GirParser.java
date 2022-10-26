@@ -41,7 +41,8 @@ public class GirParser extends DefaultHandler {
 
         switch (qName) {
             case "alias" -> {
-                Alias newAlias = new Alias(current, attr.getValue("name"), attr.getValue("c:type"));
+                Alias newAlias = new Alias(current, attr.getValue("name"), 
+                		attr.getValue("c:type"), attr.getValue("version"));
                 current.aliasList.add(newAlias);
                 current = newAlias;
             }
@@ -58,13 +59,15 @@ public class GirParser extends DefaultHandler {
                 current = newAttribute;
             }
             case "bitfield" -> {
-                Bitfield newBitfield = new Bitfield(current, attr.getValue("name"), attr.getValue("c:type"));
+                Bitfield newBitfield = new Bitfield(current, attr.getValue("name"), 
+                		attr.getValue("c:type"), attr.getValue("version"));
                 current.bitfieldList.add(newBitfield);
                 current = newBitfield;
 
             }
             case "callback" -> {
-                Callback newCallback = new Callback(current, attr.getValue("name"), attr.getValue("c:type"));
+                Callback newCallback = new Callback(current, attr.getValue("name"), 
+                		attr.getValue("c:type"), attr.getValue("version"));
                 if (current instanceof Namespace ns) {
                     ns.callbackList.add(newCallback);
                 } else if (current instanceof Field f) {
@@ -74,7 +77,7 @@ public class GirParser extends DefaultHandler {
             }
             case "class" -> {
                 io.github.jwharm.javagi.model.Class newClass = new Class(current, attr.getValue("name"),
-                        attr.getValue("parent"), attr.getValue("c:type"));
+                        attr.getValue("parent"), attr.getValue("c:type"), attr.getValue("version"));
                 current.classList.add(newClass);
                 current = newClass;
             }
@@ -113,7 +116,7 @@ public class GirParser extends DefaultHandler {
             }
             case "enumeration" -> {
                 Enumeration newEnumeration = new Enumeration(current, attr.getValue("name"),
-                        attr.getValue("c:type"));
+                        attr.getValue("c:type"), attr.getValue("version"));
                 current.enumerationList.add(newEnumeration);
                 current = newEnumeration;
             }
@@ -155,7 +158,7 @@ public class GirParser extends DefaultHandler {
             }
             case "interface" -> {
                 Interface newInterface = new Interface(current, attr.getValue("name"),
-                        attr.getValue("c:type"));
+                        attr.getValue("c:type"), attr.getValue("version"));
                 current.interfaceList.add(newInterface);
                 current = newInterface;
             }
@@ -207,7 +210,8 @@ public class GirParser extends DefaultHandler {
             }
             case "record" -> {
                 Record newRecord = new Record(current, attr.getValue("name"),
-                        attr.getValue("c:type"), attr.getValue("disguised"), attr.getValue("glib:is-gtype-struct-for"));
+                        attr.getValue("c:type"), attr.getValue("version"), 
+                        attr.getValue("disguised"), attr.getValue("glib:is-gtype-struct-for"));
                 current.recordList.add(newRecord);
                 current = newRecord;
             }
@@ -232,7 +236,8 @@ public class GirParser extends DefaultHandler {
                 current = newType;
             }
             case "union" -> {
-                Union newUnion = new Union(current, attr.getValue("name"), attr.getValue("c:type"));
+                Union newUnion = new Union(current, attr.getValue("name"), attr.getValue("c:type"), 
+                		attr.getValue("version"));
                 current.unionList.add(newUnion);
                 current = newUnion;
             }
