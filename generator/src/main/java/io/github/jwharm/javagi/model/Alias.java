@@ -50,12 +50,8 @@ public class Alias extends ValueWrapper {
                 generateCastFromGObject(writer);
                 writer.write("}\n");
             }
-            case INTERFACE_ALIAS -> {
+            case INTERFACE_ALIAS, CALLBACK_ALIAS -> {
                 writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
-                writer.write("}\n");
-            }
-            case CALLBACK_ALIAS -> {
-                writer.write("public interface " + javaName + " {\n");
                 writer.write("}\n");
             }
             case VALUE_ALIAS -> {

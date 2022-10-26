@@ -40,6 +40,8 @@ public abstract class RegisteredType extends GirElement {
 
     /**
      * Generate standard constructors from a MemoryAddress and a GObject
+     * @param writer The writer for the source code
+     * @throws IOException Thrown by {@code writer.write()}
      */
     protected void generateCastFromGObject(Writer writer) throws IOException {
         writer.write("    \n");
@@ -74,6 +76,8 @@ public abstract class RegisteredType extends GirElement {
     /**
      * Generates all constructors listed for this type. When the constructor is not named "new", a static
      * factory method is generated with the provided name.
+     * @param writer The writer for the source code
+     * @throws IOException Thrown by {@code writer.write()}
      */
     protected void generateConstructors(Writer writer) throws IOException {
         for (Constructor c : constructorList) {
@@ -83,6 +87,48 @@ public abstract class RegisteredType extends GirElement {
             } else {
                 c.generateNamed(writer, isInterface);
             }
+        }
+    }
+    
+    /**
+     * Generates an inner class DowncallHandles with MethodHandle declarations.
+     * @param writer The writer for the source code
+     * @param isInterface true when the type is an interface (this will write default instead of public methods)
+     * @throws IOException Thrown by {@code writer.write()}
+     */
+    protected void generateDowncallHandles(Writer writer, boolean isInterface) throws IOException {
+        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
+        	writer.write("    \n");
+        	writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
+            writer.write("static class DowncallHandles {\n");
+            for (Constructor c : constructorList) {
+                c.generateMethodHandle(writer, isInterface);
+            }
+            for (Method m : methodList) {
+                m.generateMethodHandle(writer, isInterface);
+            }
+            for (Function f : functionList) {
+                f.generateMethodHandle(writer, isInterface);
+            }
+            writer.write("    }\n");
+        }
+    }
+    
+    /**
+     * Generates an inner class Callbacks with static signal callback functions that will be used for upcalls
+     * @param writer The writer for the source code
+     * @param isInterface true when the type is an interface (this will write default instead of public methods)
+     * @throws IOException Thrown by {@code writer.write()}
+     */
+    protected void generateSignalCallbacks(Writer writer, boolean isInterface) throws IOException {
+        if (! signalList.isEmpty()) {
+        	writer.write("    \n");
+        	writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
+            writer.write("static class Callbacks {\n");
+            for (Signal s : signalList) {
+                s.generateStaticCallback(writer, isInterface);
+            }
+            writer.write("    }\n");
         }
     }
     

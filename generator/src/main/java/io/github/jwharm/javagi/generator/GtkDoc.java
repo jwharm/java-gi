@@ -24,17 +24,17 @@ public class GtkDoc {
             // |[ multiline code block ]|
             + "|(?<codeblock2>\\|\\[(?<content2>(?s).+?)\\]\\|)"
             // `code`
-            + "|(?<code>`[^`]+`)"
+            + "|(?<code>`[^`]+?`)"
             // [link]
-            + "|(?<link>\\[(?<type>.+)@(?<path>(?<part1>[^\\.\\]]+)?\\.?(?<part2>[^\\.\\]\\:]+)?[\\.\\:]?(?<part3>.+)?)\\])"
-            // %macro reference
-            + "|(?<macroref>\\%\\w+)"
+            + "|(?<link>\\[(?<type>.+?)@(?<path>(?<part1>[^\\.\\]]+)?\\.?(?<part2>[^\\.\\]\\:]+)?[\\.\\:]?(?<part3>.+?)?)\\])"
+            // %constant reference
+            + "|(?<constantref>\\%\\w+)"
             // #type
             + "|(?<typeref>\\#[^\\#\\s]\\w*)"
             // @param
             + "|(?<paramref>\\@[^\\@\\s]\\w*)"
             // [url](for link)
-            + "|(?<hyperlink>\\[(?<desc>.+)\\]\\((?<url>.+)\\))"
+            + "|(?<hyperlink>\\[(?<desc>.+?)\\]\\((?<url>.+?)\\))"
             // ! [url](for image)
             + "|(?<img>\\!\\[(?<imgdesc>.*?)\\]\\((?<imgurl>.+?)\\))"
             // # Header level 1, ## Header level 2 etc
@@ -57,7 +57,7 @@ public class GtkDoc {
             "codeblock2",
             "code",
             "link",
-            "macroref",
+            "constantref",
             "typeref",
             "paramref",
             "hyperlink",
@@ -154,7 +154,7 @@ public class GtkDoc {
             case "link" -> convertLink(matcher.group(),
                     matcher.group("type"), matcher.group("path"),
                     matcher.group("part1"), matcher.group("part2"), matcher.group("part3"));
-            case "macroref" -> convertMacroref(matcher.group());
+            case "constantref" -> convertConstantref(matcher.group());
             case "typeref" -> convertTyperef(matcher.group());
             case "paramref" -> convertParamref(matcher.group());
             case "hyperlink" -> convertHyperlink(matcher.group(),
@@ -175,7 +175,16 @@ public class GtkDoc {
     }
 
     // Replace multi-line code blocks (starting and ending with ```) with <pre>{@code ... }</pre> blocks
+    // If the codeblock contains curly braces, we ensure they are matched with the same number of closing braces.
+    // This is required for valid javadoc.
     private String convertCodeblock(String codeblock, String content) {
+    	long count1 = content.chars().filter(ch -> ch == '{').count();
+    	long count2 = content.chars().filter(ch -> ch == '}').count();
+    	if (count1 < count2) {
+    		content = "{".repeat((int) (count2 - count1)) + content;
+    	} else if (count1 > count2) {
+    		content += "}".repeat((int) (count1 - count2));
+    	}
         return "<pre>{@code " + content + "}</pre>";
     }
 
@@ -215,9 +224,9 @@ public class GtkDoc {
             case "func":
             	if (part3 == null) {
                 	if (part2 == null) {
-                        return checkLink(part1) + formatMethod(part1) + "}";
+                        return checkLink(part1) + doc.getNamespace().name + formatMethod(part1) + "}";
                 	} else {
-                        return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                        return checkLink(part1, part2) + formatNS(part1) + part1 + formatMethod(part2) + "}";
                 	}
             	} else {
                     return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
@@ -238,7 +247,7 @@ public class GtkDoc {
     }
 
     // Replace %NULL, %TRUE and %FALSE with {@code true} etc, or %text with {@link text}
-    private String convertMacroref(String ref) {
+    private String convertConstantref(String ref) {
         switch (ref) {
             case "%NULL":   return "{@code null}";
             case "%TRUE":   return "{@code true}";

@@ -29,34 +29,9 @@ public class Interface extends RegisteredType {
         for (Signal s : signalList) {
             s.generate(writer, true);
         }
-
-        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
-        	writer.write("    \n");
-        	writer.write("    @ApiStatus.Internal\n");
-            writer.write("    static class DowncallHandles {\n");
-            for (Constructor c : constructorList) {
-                c.generateMethodHandle(writer, true);
-            }
-            for (Method m : methodList) {
-                m.generateMethodHandle(writer, true);
-            }
-            for (Function f : functionList) {
-                f.generateMethodHandle(writer, true);
-            }
-            writer.write("    }\n");
-        }
         
-        if (! signalList.isEmpty()) {
-        	writer.write("    \n");
-        	writer.write("    @ApiStatus.Internal\n");
-            writer.write("    static class Callbacks {\n");
-            for (Signal s : signalList) {
-                s.generateStaticCallback(writer, true);
-            }
-            writer.write("    }\n");
-            writer.write("    \n");
-        }
-        
+        generateDowncallHandles(writer, true);
+        generateSignalCallbacks(writer, true);
         generateImplClass(writer);
 
         writer.write("}\n");

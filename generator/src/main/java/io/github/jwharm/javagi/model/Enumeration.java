@@ -12,6 +12,7 @@ public class Enumeration extends ValueWrapper {
 
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
+        generateImportStatements(writer);
         generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Enumeration {\n");
@@ -29,6 +30,13 @@ public class Enumeration extends ValueWrapper {
         }
         
         generateValueConstructor(writer, "int");
+        
+        for (Function function : functionList) {
+            function.generate(writer, false, true);
+        }
+
+        generateDowncallHandles(writer, false);
+        
         writer.write("}\n");
     }
     

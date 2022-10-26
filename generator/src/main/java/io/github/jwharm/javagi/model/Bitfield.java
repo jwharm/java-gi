@@ -12,19 +12,27 @@ public class Bitfield extends ValueWrapper {
 
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
+        generateImportStatements(writer);
         generateJavadoc(writer);
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Bitfield {\n");
         
         for (Member m : memberList) {
+            writer.write("    \n");
             if (m.doc != null) {
                 m.doc.generate(writer, 1);
             }
-            writer.write("    \n");
             writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = new " + javaName + "("+ m.value + ");\n");
         }
         
         generateValueConstructor(writer, "int");
+        
+        for (Function function : functionList) {
+            function.generate(writer, false, true);
+        }
+
+        generateDowncallHandles(writer, false);
+        
         writer.write("}\n");
     }
     

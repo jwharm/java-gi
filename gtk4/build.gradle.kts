@@ -18,7 +18,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(19))
     }
     // Temporarily disabled since the generated docs were apparently invalid
-//    withJavadocJar()
+    withJavadocJar()
     withSourcesJar()
 }
 
@@ -58,9 +58,8 @@ val genSources by tasks.registering {
             }),
             source("GObject-2.0", "org.gtk.gobject", "gobject-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
-                    // These types require mapping va_list (varargs) types
+                    // This is an alias for Callback type
                     removeType(repo, "VaClosureMarshal")
-                    removeType(repo, "SignalCVaMarshaller")
                     removeFunction(repo, "signal_set_va_marshaller")
                     // Override with different return type
                     renameMethod(repo, "TypeModule", "use", "use_type_module")
@@ -110,6 +109,7 @@ val genSources by tasks.registering {
                     // Override with different return type
                     renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction");
                     renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
+                    renameMethod(repo, "PrintSettings", "get", "get_string");
                 }
             }),
             source("Adw-1", "org.gnome.adw", "adwaita-1", patches = object: PatchSet() {
@@ -127,7 +127,7 @@ tasks.compileJava.get().dependsOn(genSources.get())
 
 // Temporarily needed until panama is out of preview
 tasks.compileJava.get().options.compilerArgs.add("--enable-preview")
-//(tasks.javadoc.get().options as CoreJavadocOptions).run {
-//    addStringOption("source", "19")
-//    addBooleanOption("-enable-preview", true)
-//}
+(tasks.javadoc.get().options as CoreJavadocOptions).run {
+    addStringOption("source", "19")
+    addBooleanOption("-enable-preview", true)
+}

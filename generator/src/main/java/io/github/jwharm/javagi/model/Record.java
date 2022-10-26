@@ -52,30 +52,9 @@ public class Record extends Class {
             s.generate(writer, false);
         }
 
-        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
-        	writer.write("    \n");
-            writer.write("    private static class DowncallHandles {\n");
-            for (Constructor c : constructorList) {
-                c.generateMethodHandle(writer, false);
-            }
-            for (Method m : methodList) {
-                m.generateMethodHandle(writer, false);
-            }
-            for (Function f : functionList) {
-                f.generateMethodHandle(writer, false);
-            }
-            writer.write("    }\n");
-        }
+        generateDowncallHandles(writer, false);
+        generateSignalCallbacks(writer, false);
         
-        if (! signalList.isEmpty()) {
-        	writer.write("    \n");
-        	writer.write("    @ApiStatus.Internal\n");
-            writer.write("    public static class Callbacks {\n");
-            for (Signal s : signalList) {
-                s.generateStaticCallback(writer, false);
-            }
-            writer.write("    }\n");
-        }
         writer.write("}\n");
     }
 
