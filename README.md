@@ -48,7 +48,7 @@ The bindings are still under active development and have not been thoroughly tes
 * The javadoc doesn't include the documentation of parameters and return values yet.
 * I haven't looked into GObject properties and ParamSpecs yet.
 * The `castFrom()` method doesn't do type checks, so if you accidentally try to cast an object to another GType, it will crash the JVM.
-* Methods marked as `deprecated` are currently excluded.
+* Methods marked as `deprecated` are not yet marked with a @deprecated javadoc attribute.
 * Thread-safety has not been considered yet.
 * Varargs aren't supported yet.
 * Unions aren't supported.

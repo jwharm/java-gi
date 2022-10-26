@@ -73,11 +73,6 @@ public class Method extends GirElement implements CallableType {
 
     public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
         
-        // Do not generate deprecated methods.
-        if ("1".equals(deprecated)) {
-            return;
-        }
-        
         writer.write("    \n");
         writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
         writer.write(" {\n");
