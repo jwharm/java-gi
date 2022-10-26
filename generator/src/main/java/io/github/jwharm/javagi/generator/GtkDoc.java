@@ -30,9 +30,9 @@ public class GtkDoc {
             // %macro reference
             + "|(?<macroref>\\%\\w+)"
             // #type
-            + "|(?<typeref>\\#[^\\#\\s]\\w+)"
+            + "|(?<typeref>\\#[^\\#\\s]\\w*)"
             // @param
-            + "|(?<paramref>\\@[^\\@\\s]\\w+)"
+            + "|(?<paramref>\\@[^\\@\\s]\\w*)"
             // [url](for link)
             + "|(?<hyperlink>\\[(?<desc>.+)\\]\\((?<url>.+)\\))"
             // ! [url](for image)
@@ -41,8 +41,8 @@ public class GtkDoc {
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+)\\n*"
             // - Bullet lists, we generate <ul> for the first bullet and <li> for every bullet
             + "|(?m)^\\s*(?<bulletpoint>\\-)\\s"
-            // Match *strong*
-            + "|(?<strong>\\*.+\\*)"
+            // Match *emphasized text*
+            + "|(?<em>\\*.*\\w\\*)"
             // Match entities: <, >, &
             + "|(?<entity>\\<|\\>|\\&)"
             // Match multiple newlines
@@ -64,7 +64,7 @@ public class GtkDoc {
             "img",
             "header",
             "bulletpoint",
-            "strong",
+            "em",
             "entity",
             "p"
     };
@@ -163,7 +163,7 @@ public class GtkDoc {
                     matcher.group("imgdesc"), matcher.group("imgurl"));
             case "header" -> convertHeader(matcher.group(), matcher.group("headerlevel"));
             case "bulletpoint" -> convertBulletpoint(matcher.group());
-            case "strong" -> convertStrong(matcher.group());
+            case "em" -> convertEm(matcher.group());
             case "entity" -> convertEntity(matcher.group());
             case "p" -> convertP(matcher.group());
             
@@ -295,9 +295,9 @@ public class GtkDoc {
         }
     }
 
-    // Replace *text* with <strong>text</strong>
-    private String convertStrong(String text) {
-        return "<strong>" + text.substring(1, text.length() - 1) + "</strong>";
+    // Replace *text* with <em>text</em>
+    private String convertEm(String text) {
+        return "<em>" + text.substring(1, text.length() - 1) + "</em>";
     }
 
     // Replace <, > and & with &lt;, &gt; and &amp;
