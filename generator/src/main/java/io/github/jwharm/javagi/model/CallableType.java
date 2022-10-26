@@ -24,6 +24,10 @@ public interface CallableType {
             doc.generate(writer, 1);
         }
 
+        if (this instanceof Method m && "1".equals(m.deprecated)) {
+        	writer.write("    @Deprecated\n");
+        }
+        
         if (isInterface && !isStatic) {
             // Default interface methods
             writer.write("    default ");

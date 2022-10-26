@@ -26,7 +26,8 @@ public class Method extends GirElement implements CallableType {
     
     public void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
         writer.write("        \n");
-    	writer.write(isInterface ? "        @ApiStatus.Internal\n        " : "        private ");
+        writer.write("        ");
+    	writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
         writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
         writer.write("            \"" + cIdentifier + "\",\n");
         writer.write("            FunctionDescriptor.");

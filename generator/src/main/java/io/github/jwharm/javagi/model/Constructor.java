@@ -23,6 +23,11 @@ public class Constructor extends Method {
         if (doc != null) {
             doc.generate(writer, 1);
         }
+        
+        if ("1".equals(deprecated)) {
+        	writer.write("    @Deprecated\n");
+        }
+        
         writer.write("    public ");
         writer.write(((RegisteredType) parent).javaName);
         if (parameters != null) {
@@ -65,6 +70,11 @@ public class Constructor extends Method {
         if (doc != null) {
             doc.generate(writer, 1);
         }
+        
+        if ("1".equals(deprecated)) {
+        	writer.write("    @Deprecated\n");
+        }
+        
         writer.write("    public static " + clazz.javaName + " " + Conversions.toLowerCaseJavaName(name));
         if (parameters != null) {
             writer.write("(");
