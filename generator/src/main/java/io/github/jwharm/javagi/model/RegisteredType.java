@@ -63,8 +63,13 @@ public abstract class RegisteredType extends GirElement {
     	
         writer.write("    \n");
         writer.write("    /**\n");
-        writer.write("     * Memory layout of the native struct is unknown (no fields in the GIR file).\n");
-        writer.write("     * @return always {code Interop.valueLayout.ADDRESS}\n");
+        if (fieldList.isEmpty()) {
+	        writer.write("     * Memory layout of the native struct is unknown (no fields in the GIR file).\n");
+	        writer.write("     * @return always {code Interop.valueLayout.ADDRESS}\n");
+        } else {
+	        writer.write("     * Memory layout of the native struct (generated from the fields in the GIR file).\n");
+	        writer.write("     * @return the generated MemoryLayout\n");
+        }
         writer.write("     */\n");
         writer.write("    public static MemoryLayout getMemoryLayout() {\n");
         if (fieldList.isEmpty()) {
