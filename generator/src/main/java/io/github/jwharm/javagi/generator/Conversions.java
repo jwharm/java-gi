@@ -135,6 +135,7 @@ public class Conversions {
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
             case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", currentPackage) : toSimpleJavaType("GLib.Type");
             case "VaList", "va_list" -> "VaList";
+            case "long double" -> "double"; // unsupported data type
             default -> qualified ? toQualifiedJavaType(name, currentPackage) : toSimpleJavaType(name);
         };
     }

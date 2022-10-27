@@ -38,6 +38,42 @@ public abstract class RegisteredType extends GirElement {
             doc.generate(writer, 0);
         }
     }
+    
+    protected void generateMemoryLayout(Writer writer) throws IOException {
+    	if (! fieldList.isEmpty()) {
+            writer.write("    \n");
+            
+            writer.write("    private static GroupLayout memoryLayout = MemoryLayout.");
+            if (this instanceof Union) {
+            	writer.write("unionLayout(\n");
+            } else {
+            	writer.write("structLayout(\n");
+            }
+            
+            for (int f = 0; f < fieldList.size(); f++) {
+            	Field field = fieldList.get(f);
+            	if (f > 0) {
+            		writer.write(",\n");
+            	}
+            	writer.write("        " + field.getMemoryLayoutString());
+            }
+            
+            writer.write("\n    ).withName(\"" + this.cType + "\");\n");
+    	}
+    	
+        writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Memory layout of the native struct is unknown (no fields in the GIR file).\n");
+        writer.write("     * @return always {code Interop.valueLayout.ADDRESS}\n");
+        writer.write("     */\n");
+        writer.write("    public static MemoryLayout getMemoryLayout() {\n");
+        if (fieldList.isEmpty()) {
+            writer.write("        return Interop.valueLayout.ADDRESS;\n");
+        } else {
+            writer.write("        return memoryLayout;\n");
+        }
+        writer.write("    }\n");
+    }
 
     /**
      * Generate standard constructors from a MemoryAddress and a GObject
