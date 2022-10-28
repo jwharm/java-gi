@@ -38,4 +38,42 @@ public class Field extends GirElement {
     		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
     	}
     }
+    
+    public String getMemoryType() {
+    	if (type != null) {
+    		return getMemoryType(type);
+    	} else if (array != null && array.fixedSize != null) {
+    		return "ARRAY";
+    	} else {
+			return "ADDRESS";
+    	}
+    }
+    
+    public String getMemoryType(Type type) {
+		if (type.isPrimitive) {
+			return type.simpleJavaType;
+		} else if (type.isAliasForPrimitive()) {
+			return type.girElementInstance.type.simpleJavaType;
+		} else if (type.isBitfield() || type.isEnum()) {
+			return "int";
+		} else {
+			return "ADDRESS";
+		}
+    }
+    
+    public int getSize(String memoryType) {
+    	return switch(memoryType) {
+    		case "boolean" -> 32;
+    		case "byte" -> 8;
+    		case "char" -> 8;
+    		case "short" -> 16;
+    		case "int" -> 32;
+    		case "long" -> 64;
+    		case "float" -> 32;
+    		case "double" -> 64;
+    		case "address" -> 64;
+    		case "array" -> Integer.valueOf(array.fixedSize) * getSize(getMemoryType(array.type));
+    		default -> 64;
+    	};
+    }
 }

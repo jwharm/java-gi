@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
-
 import java.io.IOException;
 import java.io.Writer;
+
+import io.github.jwharm.javagi.generator.Conversions;
 
 public abstract class RegisteredType extends GirElement {
 
@@ -50,12 +50,21 @@ public abstract class RegisteredType extends GirElement {
             	writer.write("structLayout(\n");
             }
             
+            int size = 0;
+            
             for (int f = 0; f < fieldList.size(); f++) {
             	Field field = fieldList.get(f);
             	if (f > 0) {
             		writer.write(",\n");
             	}
+            	int s = field.getSize(field.getMemoryType());
+            	if (size % s > 0) {
+            		int padding = s - (size % s);
+            		writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
+            		size += padding;
+            	}
             	writer.write("        " + field.getMemoryLayoutString());
+            	size += s;
             }
             
             writer.write("\n    ).withName(\"" + this.cType + "\");\n");
