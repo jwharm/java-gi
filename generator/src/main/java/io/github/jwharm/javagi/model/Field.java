@@ -39,6 +39,11 @@ public class Field extends GirElement {
     	}
     }
     
+    /**
+     * Get the native type of this field. For example "int", "char".
+     * An array with fixed size is returned as "ARRAY", a pointer is returned as "ADDRESS".
+     * @return the native type of this field
+     */
     public String getMemoryType() {
     	if (type != null) {
     		return getMemoryType(type);
@@ -49,6 +54,11 @@ public class Field extends GirElement {
     	}
     }
     
+    /**
+     * Get the native type of a non-array type
+     * @param type the type
+     * @return the native type
+     */
     public String getMemoryType(Type type) {
 		if (type.isPrimitive) {
 			return type.simpleJavaType;
@@ -61,17 +71,22 @@ public class Field extends GirElement {
 		}
     }
     
+    /**
+     * Get the byte-size of the native types. This is obviously architecture- and platform-specific.
+     * @param memoryType The result of getMemoryType(). For example: int, byte, ...
+     * @return the native byte-size of the provided type
+     */
     public int getSize(String memoryType) {
     	return switch(memoryType) {
-    		case "boolean" -> 32;
+    		case "boolean" -> 32; // treated as an integer
     		case "byte" -> 8;
     		case "char" -> 8;
     		case "short" -> 16;
     		case "int" -> 32;
-    		case "long" -> 64;
+    		case "long" -> 64; // On Windows this is 32, on Linux this is 64
     		case "float" -> 32;
     		case "double" -> 64;
-    		case "address" -> 64;
+    		case "address" -> 64; // 64-bits pointer
     		case "array" -> Integer.valueOf(array.fixedSize) * getSize(getMemoryType(array.type));
     		default -> 64;
     	};

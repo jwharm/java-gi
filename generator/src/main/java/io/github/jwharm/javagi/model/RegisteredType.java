@@ -50,6 +50,7 @@ public abstract class RegisteredType extends GirElement {
             	writer.write("structLayout(\n");
             }
             
+            // How many bytes have we generated thus far
             int size = 0;
             
             for (int f = 0; f < fieldList.size(); f++) {
@@ -57,16 +58,18 @@ public abstract class RegisteredType extends GirElement {
             	if (f > 0) {
             		writer.write(",\n");
             	}
+            	// Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
             	int s = field.getSize(field.getMemoryType());
+            	// If the previous field had a smaller byte size than this one, add padding
             	if (size % s > 0) {
             		int padding = s - (size % s);
             		writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
             		size += padding;
             	}
+            	// Write the memorylayout declaration
             	writer.write("        " + field.getMemoryLayoutString());
             	size += s;
             }
-            
             writer.write("\n    ).withName(\"" + this.cType + "\");\n");
     	}
     	
