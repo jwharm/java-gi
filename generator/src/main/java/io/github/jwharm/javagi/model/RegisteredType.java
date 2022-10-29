@@ -39,7 +39,16 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
+    protected void generateCType(Writer writer) throws IOException {
+    	writer.write("    \n");
+    	writer.write("    private static final java.lang.String cTypeName = " + Conversions.literal("java.lang.String", cType) + ";\n");
+    }
+    
     protected void generateMemoryLayout(Writer writer) throws IOException {
+    	if (this instanceof Bitfield || this instanceof Enumeration) {
+    		return;
+    	}
+    	
     	if (! fieldList.isEmpty()) {
             writer.write("    \n");
             
@@ -70,6 +79,7 @@ public abstract class RegisteredType extends GirElement {
             	writer.write("        " + field.getMemoryLayoutString());
             	size += s;
             }
+            // Write the name of the struct
             writer.write("\n    ).withName(\"" + this.cType + "\");\n");
     	}
     	
@@ -77,7 +87,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    /**\n");
         if (fieldList.isEmpty()) {
 	        writer.write("     * Memory layout of the native struct is unknown (no fields in the GIR file).\n");
-	        writer.write("     * @return always {code Interop.valueLayout.ADDRESS}\n");
+	        writer.write("     * @return always {@code Interop.valueLayout.ADDRESS}\n");
         } else {
 	        writer.write("     * Memory layout of the native struct (generated from the fields in the GIR file).\n");
 	        writer.write("     * @return the generated MemoryLayout\n");
@@ -91,7 +101,7 @@ public abstract class RegisteredType extends GirElement {
         }
         writer.write("    }\n");
     }
-
+    
     /**
      * Generate standard constructors from a MemoryAddress and a GObject
      * @param writer The writer for the source code
@@ -99,9 +109,19 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateCastFromGObject(Writer writer) throws IOException {
         writer.write("    \n");
-        writer.write("    /** Cast object to " + javaName + " */\n");
+        writer.write("    /**\n");
+        writer.write("     * Cast object to " + javaName + " if its GType is a (or inherits from) \"" + cType + "\".\n");
+        writer.write("     * @param  gobject            An object that inherits from GObject\n");
+        writer.write("     * @return                    An instance of \"" + javaName + "\" that points to the memory address of the provided GObject.\n");
+        writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
+        writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
+        writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        return new " + javaName + "(gobject.refcounted());\n");
+        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
+        writer.write("            return new " + javaName + "(gobject.refcounted());\n");
+        writer.write("        } else {\n");
+        writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
+        writer.write("        }\n");
         writer.write("    }\n");
     }
 

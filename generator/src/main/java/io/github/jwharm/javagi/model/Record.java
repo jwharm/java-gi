@@ -8,7 +8,7 @@ public class Record extends Class {
     public final String disguised, isGTypeStructFor;
 
     public Record(GirElement parent, String name, String cType, String version, String disguised, String isGTypeStructFor) {
-        super(parent, name, null, cType, version);
+        super(parent, name, null, cType, null, version);
         this.disguised = disguised;
         this.isGTypeStructFor = isGTypeStructFor;
     }
@@ -32,7 +32,12 @@ public class Record extends Class {
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
 
         generateEnsureInitialized(writer);
+        generateCType(writer);
         generateMemoryLayout(writer);
+        for (Field f : fieldList) {
+        	f.generate(writer);
+        }
+
         generateMemoryAddressConstructor(writer);
 
         if (constructorList.isEmpty()) {

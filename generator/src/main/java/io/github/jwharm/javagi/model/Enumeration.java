@@ -17,6 +17,7 @@ public class Enumeration extends ValueWrapper {
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Enumeration {\n");
 
+        generateCType(writer);
         generateMemoryLayout(writer);
         
         ArrayList<Integer> values = new ArrayList<>();

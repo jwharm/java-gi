@@ -1,8 +1,11 @@
 package io.github.jwharm.javagi.model;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import io.github.jwharm.javagi.generator.Conversions;
 
-public class Field extends GirElement {
+public class Field extends Variable {
 
     public final String readable, isPrivate;
     public Callback callback;
@@ -14,34 +17,70 @@ public class Field extends GirElement {
         this.isPrivate = isPrivate;
     }
     
+    public void generate(Writer writer) throws IOException {
+    	// Don't try to generate a getter for callback or array fields yet
+    	if (type == null) {
+    		return;
+    	}
+    	// Don't generate a getter for a "disguised" record (often private data)
+    	if (type.girElementInstance != null 
+    			&& type.girElementInstance instanceof Record r 
+    			&& "1".equals(r.disguised)) {
+    		return;
+    	}
+    	writer.write("    \n");
+    	writer.write("    public " + getReturnType() + " " + this.name + "$get() {\n");
+    	
+    	if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
+    		writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"));\n");
+            writer.write("        return ");
+            generateReverseInterop(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
+            writer.write(";\n");
+    	} else {
+        	writer.write("        var RESULT = (" + getMemoryType() + ") getMemoryLayout()\n"
+        			+ "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+        			+ "            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
+            writer.write("        return ");
+            generateReverseInterop(writer, "RESULT", false);
+            writer.write(";\n");
+    	}
+    	writer.write("    }\n");
+    }
+    
     public String getMemoryLayoutString() {
     	if (type != null) {
-    		if (type.isPrimitive 
-    				|| type.isAliasForPrimitive()) {
-        		return Conversions.getValueLayout(type) + ".withName(\"" + this.name + "\")";
-			} else if ("java.lang.String".equals(type.qualifiedJavaType)
+    		if (type.isBitfield() || type.isEnum()) {
+    			return "Interop.valueLayout.C_INT.withName(\"" + this.name + "\")";
+    		}
+    		if (type.isPointer()
+    				|| "java.lang.String".equals(type.qualifiedJavaType)
 					|| "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
 					|| type.isCallback()) {
         		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
-    		} else {
-        		return type.qualifiedJavaType + ".getMemoryLayout()" + ".withName(\"" + this.name + "\")";
     		}
-    	} else if (array != null && array.fixedSize != null) {
+    		if (type.isPrimitive 
+    				|| type.isAliasForPrimitive()) {
+        		return Conversions.getValueLayout(type) + ".withName(\"" + this.name + "\")";
+    		}
+    		return type.qualifiedJavaType + ".getMemoryLayout()" + ".withName(\"" + this.name + "\")";
+    	}
+    	if (array != null && array.fixedSize != null) {
     		String valueLayout = Conversions.toPanamaMemoryLayout(array.type);
         	return "MemoryLayout.sequenceLayout(" + array.fixedSize + ", " + valueLayout + ").withName(\"" + this.name + "\")";
-    	} else if (array != null) {
-    		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
-    	} else if (callback != null) {
-    		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
-    	} else {
-			System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, name);
+    	}
+    	if (array != null) {
     		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
     	}
+    	if (callback != null) {
+    		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
+    	}
+		System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, name);
+		return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
     }
     
     /**
      * Get the native type of this field. For example "int", "char".
-     * An array with fixed size is returned as "ARRAY", a pointer is returned as "ADDRESS".
+     * An array with fixed size is returned as "ARRAY", a pointer is returned as "MemoryAddress".
      * @return the native type of this field
      */
     public String getMemoryType() {
@@ -50,7 +89,7 @@ public class Field extends GirElement {
     	} else if (array != null && array.fixedSize != null) {
     		return "ARRAY";
     	} else {
-			return "ADDRESS";
+			return "MemoryAddress";
     	}
     }
     
@@ -60,15 +99,19 @@ public class Field extends GirElement {
      * @return the native type
      */
     public String getMemoryType(Type type) {
+    	if (type.isPrimitive && type.isPointer()) {
+    		return "MemoryAddress";
+    	}
+		if (type.isBoolean() || type.isBitfield() || type.isEnum()) {
+			return "int";
+		}
 		if (type.isPrimitive) {
 			return type.simpleJavaType;
-		} else if (type.isAliasForPrimitive()) {
-			return type.girElementInstance.type.simpleJavaType;
-		} else if (type.isBitfield() || type.isEnum()) {
-			return "int";
-		} else {
-			return "ADDRESS";
 		}
+		if (type.isAliasForPrimitive()) {
+			return type.girElementInstance.type.simpleJavaType;
+		}
+		return "MemoryAddress";
     }
     
     /**
@@ -86,8 +129,8 @@ public class Field extends GirElement {
     		case "long" -> 64; // On Windows this is 32, on Linux this is 64
     		case "float" -> 32;
     		case "double" -> 64;
-    		case "address" -> 64; // 64-bits pointer
-    		case "array" -> Integer.valueOf(array.fixedSize) * getSize(getMemoryType(array.type));
+    		case "MemoryAddress" -> 64; // 64-bits pointer
+    		case "ARRAY" -> Integer.valueOf(array.fixedSize) * getSize(getMemoryType(array.type));
     		default -> 64;
     	};
     }

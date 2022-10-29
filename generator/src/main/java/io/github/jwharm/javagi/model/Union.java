@@ -16,6 +16,7 @@ public class Union extends RegisteredType {
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
         generateEnsureInitialized(writer);
+        generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
         writer.write("}\n");
