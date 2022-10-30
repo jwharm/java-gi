@@ -28,7 +28,18 @@ public class Field extends Variable {
     			&& "1".equals(r.disguised)) {
     		return;
     	}
+    	// Don't generate a getter for a field that is marked as not readable
+    	if ("0".equals(readable)) {
+    		return;
+    	}
+    	// Don't generate a getter for a private field
+    	if ("1".equals(isPrivate)) {
+    		return;
+    	}
     	writer.write("    \n");
+    	writer.write("    /**\n");
+    	writer.write("     * @return The value of the field {@code " + this.name + "}\n");
+    	writer.write("     */\n");
     	writer.write("    public " + getReturnType() + " " + this.name + "$get() {\n");
     	
     	if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
