@@ -96,7 +96,7 @@ public class Method extends GirElement implements CallableType {
             for (Parameter p : parameters.parameterList) {
                 if (p.isOutParameter()) {
                     writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
-                } else  if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                } else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                     String typeStr = p.type.girElementInstance.type.simpleJavaType;
                     typeStr = Conversions.primitiveClassName(typeStr);
                     writer.write("        Pointer" + typeStr + " " + p.name + "POINTER = new Pointer" + typeStr + "(" + p.name + ".getValue());\n");

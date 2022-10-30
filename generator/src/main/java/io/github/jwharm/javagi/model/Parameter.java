@@ -54,12 +54,29 @@ public class Parameter extends Variable {
     	}
     }
     
+    public boolean isProxy() {
+    	if (type == null) {
+    		return false;
+    	}
+    	if (type.isAlias()) {
+    		Alias a = (Alias) type.girElementInstance;
+    		return (a == null || a.aliasFor() == Alias.CLASS_ALIAS) || (a.aliasFor() == Alias.INTERFACE_ALIAS);
+    	}
+    	return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
+    }
+    
     public boolean transferOwnership() {
         return "full".equals(transferOwnership);
     }
     
+    /**
+     * Whether this parameter must receive special treatment as an out-parameter
+     * @return True if the direction attribute exists and contains "out", AND the parameter type
+     *         is NOT a Proxy object. (For Proxy object out-parameters, we can simply pas the 
+     *         object's memory address, and don't need to do anything special.
+     */
     public boolean isOutParameter() {
-        return direction != null && direction.contains("out");
+        return direction != null && direction.contains("out") && (! isProxy());
     }
 
     public boolean isInstanceParameter() {
