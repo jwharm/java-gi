@@ -50,8 +50,8 @@ public class Record extends Class {
             s.generate(writer, false);
         }
 
-        generateDowncallHandles(writer, false);
-        generateSignalCallbacks(writer, false);
+        generateDowncallHandles(writer);
+        generateSignalCallbacks(writer);
         
         writer.write("}\n");
     }

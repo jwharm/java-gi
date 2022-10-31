@@ -38,7 +38,7 @@ public class Enumeration extends ValueWrapper {
             function.generate(writer, false, true);
         }
 
-        generateDowncallHandles(writer, false);
+        generateDowncallHandles(writer);
         
         writer.write("}\n");
     }

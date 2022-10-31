@@ -41,7 +41,7 @@ public abstract class RegisteredType extends GirElement {
     
     protected void generateCType(Writer writer) throws IOException {
     	writer.write("    \n");
-    	writer.write("    private static final java.lang.String cTypeName = " + Conversions.literal("java.lang.String", cType) + ";\n");
+    	writer.write("    private static final java.lang.String C_TYPE_NAME = " + Conversions.literal("java.lang.String", cType) + ";\n");
     }
     
     protected void generateMemoryLayout(Writer writer) throws IOException {
@@ -80,7 +80,7 @@ public abstract class RegisteredType extends GirElement {
             	size += s;
             }
             // Write the name of the struct
-            writer.write("\n    ).withName(\"" + this.cType + "\");\n");
+            writer.write("\n    ).withName(C_TYPE_NAME);\n");
     	}
     	
         writer.write("    \n");
@@ -118,7 +118,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
         writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
-        writer.write("            return new " + javaName + "(gobject.refcounted());\n");
+        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.refcounted());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
         writer.write("        }\n");
@@ -168,10 +168,10 @@ public abstract class RegisteredType extends GirElement {
     /**
      * Generates an inner class DowncallHandles with MethodHandle declarations.
      * @param writer The writer for the source code
-     * @param isInterface true when the type is an interface (this will write default instead of public methods)
      * @throws IOException Thrown by {@code writer.write()}
      */
-    protected void generateDowncallHandles(Writer writer, boolean isInterface) throws IOException {
+    protected void generateDowncallHandles(Writer writer) throws IOException {
+    	boolean isInterface = this instanceof Interface;
         if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
         	writer.write("    \n");
         	writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
@@ -192,10 +192,10 @@ public abstract class RegisteredType extends GirElement {
     /**
      * Generates an inner class Callbacks with static signal callback functions that will be used for upcalls
      * @param writer The writer for the source code
-     * @param isInterface true when the type is an interface (this will write default instead of public methods)
      * @throws IOException Thrown by {@code writer.write()}
      */
-    protected void generateSignalCallbacks(Writer writer, boolean isInterface) throws IOException {
+    protected void generateSignalCallbacks(Writer writer) throws IOException {
+    	boolean isInterface = this instanceof Interface;
         if (! signalList.isEmpty()) {
         	writer.write("    \n");
         	writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
