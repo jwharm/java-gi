@@ -39,14 +39,13 @@ Some interesting features of the bindings:
 * Arrays with a known length are mapped to Java arrays.
 * `GError**` parameters are mapped to Java `GErrorException`s.
 * Ability to rename or remove classes or methods in the build script.
-* GtkDoc API docstrings are (roughly) translated into Javadoc (though this also needs more work).
+* GtkDoc API docstrings are (roughly) translated into Javadoc.
 
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * The generator has not been tested yet on different Linux distributions or GTK versions.
 * A large number of warnings occur during javadoc generation.
 * I haven't looked into GObject properties and ParamSpecs yet.
-* The `castFrom()` method doesn't do type checks, so if you accidentally try to cast an object to another GType, it will crash the JVM.
 * Thread-safety has not been considered yet.
 * Varargs aren't supported yet.
 * Unions aren't supported.
