@@ -134,7 +134,7 @@ public class Variable extends GirElement {
     	}
         // Create Java String from UTF8 memorysegment
     	if (type.qualifiedJavaType.equals("java.lang.String")) {
-    		return identifier + ".getUtf8String(0)";
+    		return "Interop.getStringFrom(" + identifier + ")";
     	}
         // Create ValueWrapper object
     	if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {

@@ -60,10 +60,7 @@ public class Method extends GirElement implements CallableType {
         		// Don't null-check parameters that are hidden from the Java API, or primitive values
         		if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify()
         				|| (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
-        			if (p.nullable) {
-        				writer.write("        java.util.Objects.requireNonNullElse(" + p.name 
-        						+ ", MemoryAddress.NULL);\n");
-        			} else {
+        			if (! p.nullable) {
             			writer.write("        java.util.Objects.requireNonNull(" + p.name 
             					+ ", \"" + "Parameter '" + p.name + "' must not be null\");\n");
         			}
@@ -143,7 +140,11 @@ public class Method extends GirElement implements CallableType {
             for (Parameter p : parameters.parameterList) {
             	if (p.isOutParameter()) {
             		if (p.array == null) {
-                		writer.write("        " + p.name + ".set(");
+                		writer.write("        ");
+            			if (p.checkNull()) {
+            				writer.write("if (" + p.name + " != null) ");
+            			}
+                		writer.write(p.name + ".set(");
                 		String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
                 		if (p.type.isPrimitive && p.type.isPointer()) {
                     		writer.write(identifier);

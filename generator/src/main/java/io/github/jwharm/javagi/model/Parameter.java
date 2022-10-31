@@ -96,4 +96,15 @@ public class Parameter extends Variable {
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
     }
+    
+    /**
+     * We don't need to perform a null-check parameters that are not nullable, or not user-specified
+     * (instance param, gerror, user_data or destroy_notify for callbacks), or primitive values.
+     * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
+     */
+    public boolean checkNull() {
+    	return nullable 
+    			&& (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
+    					|| (type != null && type.isPrimitive && (! type.isPointer()))));
+    }
 }

@@ -127,6 +127,7 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
         writer.write("    \n");
+    	writer.write("    @ApiStatus.Internal\n");
         writer.write("    public " + javaName + "(io.github.jwharm.javagi.Refcounted ref) {\n");
         writer.write("        super(ref);\n");
         writer.write("    }\n");

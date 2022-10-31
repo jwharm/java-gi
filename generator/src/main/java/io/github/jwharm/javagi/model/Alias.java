@@ -35,6 +35,7 @@ public class Alias extends ValueWrapper {
     // For primitives and Strings, we wrap the value.
     public void generate(Writer writer) throws IOException {
         generatePackageDeclaration(writer);
+        generateImportStatements(writer);
         generateJavadoc(writer);
 
         switch (aliasFor()) {
