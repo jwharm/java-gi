@@ -120,7 +120,11 @@ public class Conversions {
         return name;
     }
 
-    /** Convert C type declaration into Java type declaration */
+    /**
+     * Convert C type declaration into Java type declaration.
+     * This does not work correctly in all cases. For example, Java does not support 
+     * unsigned data types (like "unsigned short").
+     */
     public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
         return name == null ? null : switch (name.toLowerCase()) {
             case "gboolean" -> "boolean";
@@ -135,6 +139,7 @@ public class Conversions {
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
             case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", currentPackage) : toSimpleJavaType("GLib.Type");
             case "VaList", "va_list" -> "VaList";
+            case "long double" -> "double"; // unsupported data type
             default -> qualified ? toQualifiedJavaType(name, currentPackage) : toSimpleJavaType(name);
         };
     }
@@ -195,6 +200,21 @@ public class Conversions {
             case "char" -> "Character";
             case "int" -> "Integer";
             default -> toCamelCase(primitive, true);
+        };
+    }
+
+    public static String literal(String type, String value) throws NumberFormatException {
+        return switch (type) {
+            case "boolean" -> Boolean.valueOf(value).toString();
+            case "byte" -> Byte.valueOf(value).toString();
+            case "char" -> "'" + value + "'";
+            case "double" -> Double.valueOf(value) + "d";
+            case "float" -> Float.valueOf(value) + "f";
+            case "int" -> Integer.valueOf(value).toString();
+            case "long" -> Long.valueOf(value) + "L";
+            case "short" -> Short.valueOf(value).toString();
+            case "java.lang.String" -> '"' + value + '"';
+            default -> value;
         };
     }
 }

@@ -17,6 +17,9 @@ public class Bitfield extends ValueWrapper {
 
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Bitfield {\n");
         
+        generateCType(writer);
+        generateMemoryLayout(writer);
+        
         for (Member m : memberList) {
             writer.write("    \n");
             if (m.doc != null) {

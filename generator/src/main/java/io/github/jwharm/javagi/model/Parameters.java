@@ -76,18 +76,21 @@ public class Parameters extends GirElement {
 
         for (Parameter p : parameterList) {
             if (counter++ > 0) {
-                writer.write(", ");
+                writer.write(",");
             }
+            writer.write("\n                    ");
+    		// Don't null-check parameters that are hidden from the Java API, or primitive values
+        	if (p.checkNull()) {
+                writer.write("(Addressable) (" + p.name + " == null ? MemoryAddress.NULL : ");
+    		}
             if (p.isInstanceParameter()) {
                 writer.write("handle()");
             } else if (p.isDestroyNotify()) {
-                writer.write("\n");
-                writer.write("                    Interop.cbDestroyNotifySymbol()");
+                writer.write("Interop.cbDestroyNotifySymbol()");
             } else if (p.isCallbackParameter()) {
                 //TODO how should nullability be handled here?
                 String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
-                writer.write("\n");
-                writer.write("                    (Addressable) Linker.nativeLinker().upcallStub(\n");
+                writer.write("(Addressable) Linker.nativeLinker().upcallStub(\n");
                 writer.write("                        MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"cb" + p.type.simpleJavaType + "\",\n");
                 writer.write("                            MethodType.methodType(");
                 writer.write(Conversions.toPanamaJavaType(callback.returnValue.type) + ".class");
@@ -117,13 +120,16 @@ public class Parameters extends GirElement {
                 writer.write("),\n");
                 writer.write("                        Interop.getScope())");
             } else if (callback != null && p.isUserDataParameter()) {
-                writer.write("\n                   (Addressable) (");
+                writer.write("(Addressable) (");
                 if (callbackParameter.nullable) {
                 	writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
                 }
                 writer.write("Interop.registerCallback(" + callbackParamName + "))");
             } else {
                 p.generateInterop(writer, p.name, true);
+            }
+            if (p.checkNull()) {
+            	writer.write(")");
             }
         }
         if (throws_ != null) {

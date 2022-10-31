@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
-
 import java.io.IOException;
 import java.io.Writer;
+
+import io.github.jwharm.javagi.generator.Conversions;
 
 public abstract class RegisteredType extends GirElement {
 
@@ -38,7 +38,70 @@ public abstract class RegisteredType extends GirElement {
             doc.generate(writer, 0);
         }
     }
-
+    
+    protected void generateCType(Writer writer) throws IOException {
+    	writer.write("    \n");
+    	writer.write("    private static final java.lang.String cTypeName = " + Conversions.literal("java.lang.String", cType) + ";\n");
+    }
+    
+    protected void generateMemoryLayout(Writer writer) throws IOException {
+    	if (this instanceof Bitfield || this instanceof Enumeration) {
+    		return;
+    	}
+    	
+    	if (! fieldList.isEmpty()) {
+            writer.write("    \n");
+            
+            writer.write("    private static GroupLayout memoryLayout = MemoryLayout.");
+            if (this instanceof Union) {
+            	writer.write("unionLayout(\n");
+            } else {
+            	writer.write("structLayout(\n");
+            }
+            
+            // How many bytes have we generated thus far
+            int size = 0;
+            
+            for (int f = 0; f < fieldList.size(); f++) {
+            	Field field = fieldList.get(f);
+            	if (f > 0) {
+            		writer.write(",\n");
+            	}
+            	// Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
+            	int s = field.getSize(field.getMemoryType());
+            	// If the previous field had a smaller byte size than this one, add padding
+            	if (size % s > 0) {
+            		int padding = s - (size % s);
+            		writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
+            		size += padding;
+            	}
+            	// Write the memorylayout declaration
+            	writer.write("        " + field.getMemoryLayoutString());
+            	size += s;
+            }
+            // Write the name of the struct
+            writer.write("\n    ).withName(\"" + this.cType + "\");\n");
+    	}
+    	
+        writer.write("    \n");
+        writer.write("    /**\n");
+        if (fieldList.isEmpty()) {
+	        writer.write("     * Memory layout of the native struct is unknown.\n");
+	        writer.write("     * @return always {@code Interop.valueLayout.ADDRESS}\n");
+        } else {
+	        writer.write("     * The memory layout of the native struct.\n");
+	        writer.write("     * @return the memory layout\n");
+        }
+        writer.write("     */\n");
+        writer.write("    public static MemoryLayout getMemoryLayout() {\n");
+        if (fieldList.isEmpty()) {
+            writer.write("        return Interop.valueLayout.ADDRESS;\n");
+        } else {
+            writer.write("        return memoryLayout;\n");
+        }
+        writer.write("    }\n");
+    }
+    
     /**
      * Generate standard constructors from a MemoryAddress and a GObject
      * @param writer The writer for the source code
@@ -46,14 +109,25 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateCastFromGObject(Writer writer) throws IOException {
         writer.write("    \n");
-        writer.write("    /** Cast object to " + javaName + " */\n");
+        writer.write("    /**\n");
+        writer.write("     * Cast object to " + javaName + " if its GType is a (or inherits from) \"" + cType + "\".\n");
+        writer.write("     * @param  gobject            An object that inherits from GObject\n");
+        writer.write("     * @return                    An instance of \"" + javaName + "\" that points to the memory address of the provided GObject.\n");
+        writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
+        writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
+        writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        return new " + javaName + "(gobject.refcounted());\n");
+        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
+        writer.write("            return new " + javaName + "(gobject.refcounted());\n");
+        writer.write("        } else {\n");
+        writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
+        writer.write("        }\n");
         writer.write("    }\n");
     }
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
         writer.write("    \n");
+    	writer.write("    @ApiStatus.Internal\n");
         writer.write("    public " + javaName + "(io.github.jwharm.javagi.Refcounted ref) {\n");
         writer.write("        super(ref);\n");
         writer.write("    }\n");

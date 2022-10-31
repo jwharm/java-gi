@@ -18,7 +18,7 @@ public abstract class ValueWrapper extends RegisteredType {
     }
     
     public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
-        String str = paramName + ".getValue()";
+        String str = paramName + ".getValue()." + type.qualifiedJavaType + "Value()";
         if (isPointer) {
             return "new Pointer" + Conversions.primitiveClassName(type.qualifiedJavaType) + "(" + str + ").handle()";
         } else {

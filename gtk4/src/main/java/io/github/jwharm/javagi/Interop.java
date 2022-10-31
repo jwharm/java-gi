@@ -142,6 +142,22 @@ public class Interop {
     public static Addressable allocateNativeString(String string) {
         return implicitAllocator.allocateUtf8String(string);
     }
+    
+    /**
+     * Returns a Java string from native memory using {@code MemoryAddress.getUtf8String()}.
+     * If an error occurs or when the native address is NULL, null is returned.
+     * @param address The memory address of the native String (\0-terminated char*).
+     * @return A String or null
+     */
+    public static String getStringFrom(MemoryAddress address) {
+    	try {
+    		if (! MemoryAddress.NULL.equals(address)) {
+            	return address.getUtf8String(0);
+    		}
+    	} catch (Throwable t) {
+    	}
+		return null;
+    }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array 

@@ -23,15 +23,17 @@ public class Array extends GirElement {
     	}
     	// the "length" attribute refers to another parameter, which contains the length
     	if (length != null) {
-    		Parameter lp = ((Parameter) parent).getParameterAt(length);
-    		if (lp != null) {
-    			if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
-    				return lp.name + ".get().intValue()";
-    			}
-    			if (lp.type != null && lp.type.isAliasForPrimitive()) {
-    				return lp.name + ".getValue()";
-    			}
-    			return lp.name;
+    		if (parent instanceof Parameter p) {
+        		Parameter lp = p.getParameterAt(length);
+        		if (lp != null) {
+        			if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
+        				return lp.name + ".get().intValue()";
+        			}
+        			if (lp.type != null && lp.type.isAliasForPrimitive()) {
+        				return lp.name + ".getValue()";
+        			}
+        			return lp.name;
+        		}
     		}
     	}
     	// Size is unknown

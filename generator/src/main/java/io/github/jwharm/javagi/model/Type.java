@@ -78,9 +78,7 @@ public class Type extends GirElement {
     }
 
     public boolean isClass() {
-        return "Class".equals(girElementType)
-                || "Record".equals(girElementType)
-                || qualifiedJavaType.startsWith("org.gtk.gobject.");
+        return "Class".equals(girElementType) || "Record".equals(girElementType);
     }
 
     public boolean isEnum() {
