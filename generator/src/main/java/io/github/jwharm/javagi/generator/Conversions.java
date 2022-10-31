@@ -120,7 +120,11 @@ public class Conversions {
         return name;
     }
 
-    /** Convert C type declaration into Java type declaration */
+    /**
+     * Convert C type declaration into Java type declaration.
+     * This does not work correctly in all cases. For example, Java does not support 
+     * unsigned data types (like "unsigned short").
+     */
     public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
         return name == null ? null : switch (name.toLowerCase()) {
             case "gboolean" -> "boolean";

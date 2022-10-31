@@ -1,8 +1,5 @@
 package io.github.jwharm.javagi.model;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import io.github.jwharm.javagi.generator.Conversions;
 
 public class Parameter extends Variable {
@@ -99,43 +96,4 @@ public class Parameter extends Variable {
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
     }
-
-    public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
-        // Annotations
-        if (type != null && !type.isPrimitive) writer.write(nullable ? "@Nullable " : "@NotNull ");
-
-        if (array != null) {
-            // Out parameters
-            if (isOutParameter()) {
-            	writer.write("Out<" + array.type.qualifiedJavaType + "[]>");
-            } else if (pointerForArray) {
-                writer.write(getPointerReturnType(array.type, null));
-            } else {
-                writer.write(array.type.qualifiedJavaType + "[]");
-            }
-        
-        // Out parameters
-        } else if (isOutParameter()) {
-        	String typeStr = pointerForArray ? getReturnType() : type.qualifiedJavaType;
-        	if (type.isPrimitive) {
-        		typeStr = Conversions.primitiveClassName(type.simpleJavaType);
-        	}
-    		writer.write("Out<" + typeStr + ">");
-        
-        // Also arrays
-        } else if (type.cType != null && type.cType.endsWith("**")) {
-            // Also arrays
-            writer.write(getPointerReturnType(type, null));
-
-        } else if (type.isPrimitive && type.isPointer()) {
-            // Pointer to primitive type
-            writer.write("Pointer" + Conversions.primitiveClassName(type.simpleJavaType));
-
-        } else {
-            // Everything else
-            writer.write(type.qualifiedJavaType);
-        }
-        writer.write(" " + name);
-    }
-
 }

@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.model;
 import java.io.IOException;
 import java.io.Writer;
 
+import io.github.jwharm.javagi.JavaGI;
 import io.github.jwharm.javagi.generator.Conversions;
 
 public class Constant extends GirElement {
@@ -17,26 +18,35 @@ public class Constant extends GirElement {
     }
 
     public void generate(Writer writer) throws IOException {
+        String typeStr = "unknown type";
+        String printValue;
+        try {
+            if (type.isAliasForPrimitive()) {
+                typeStr = ((Alias) type.girElementInstance).type.simpleJavaType;
+                printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(typeStr, value) + ")";
+            } else if (type.isEnum()) {
+            	typeStr = "int";
+                printValue = type.qualifiedJavaType + ".fromValue(" + Conversions.literal(typeStr, value) + ")";
+            } else {
+            	typeStr = type.qualifiedJavaType;
+                printValue = Conversions.literal(typeStr, value);
+            }
+        } catch (NumberFormatException nfe) {
+            // Do not write anything
+        	if (JavaGI.DISPLAY_WARNINGS) {
+                System.out.println("Skipping <constant name=\"" + name + "\"" 
+                        + " value=\"" + value + "\"" 
+                        + ">: Value not allowed for " + typeStr);
+        	}
+        	return;
+        }
+        
         writer.write("    \n");
         
         // Documentation
         if (doc != null) {
             doc.generate(writer, 1);
         }
-        
-        try {
-            String printValue;
-            if (type.isAliasForPrimitive()) {
-                String aliasedType = ((Alias) type.girElementInstance).type.simpleJavaType;
-                printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(aliasedType, value) + ")";
-            } else if (type.isEnum()) {
-                printValue = type.qualifiedJavaType + ".fromValue(" + Conversions.literal("int", value) + ")";
-            } else {
-                printValue = Conversions.literal(type.qualifiedJavaType, value);
-            }
-            writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
-        } catch (NumberFormatException nfe) {
-            // Do not write anything
-        }
+        writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
     }
 }

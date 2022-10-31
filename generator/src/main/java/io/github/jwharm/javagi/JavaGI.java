@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class JavaGI {
+	
+	public static final boolean DISPLAY_WARNINGS = false;
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {

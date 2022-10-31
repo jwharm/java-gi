@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.JavaGI;
 import io.github.jwharm.javagi.generator.Conversions;
 
 public class Member extends GirElement {
@@ -16,10 +17,12 @@ public class Member extends GirElement {
         try {
             this.value = Integer.parseInt(value);
         } catch (NumberFormatException nfe) {
-            System.out.println("Skipping <member name=\"" + name + "\"" 
-                    + " c:identifier=\"" + cIdentifier + "\"" 
-                    + " value=\"" + value + "\"" 
-                    + ">: Not an integer");
+        	if (JavaGI.DISPLAY_WARNINGS) {
+                System.out.println("Skipping <member name=\"" + name + "\"" 
+                        + " c:identifier=\"" + cIdentifier + "\"" 
+                        + " value=\"" + value + "\"" 
+                        + ">: Not an integer");
+        	}
         }
     }
 }

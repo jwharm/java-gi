@@ -16,7 +16,15 @@ public class Field extends Variable {
         this.readable = readable;
         this.isPrivate = isPrivate;
     }
-    
+    /*
+     * Generates a getter and setter method for a field in (the memorylayout of) a C struct.
+     * Manipulating these fields directly isn't exactly a best practice, but there are some 
+     * valid use cases IMO for at least some field getters.
+     * The getters receive the name of the field followed by "$get()" or "$set(value)".
+     * 
+     * I didn't put too much effort into this, so any special cases (like arrays or callbacks) 
+     * are not supported (i.e. will not generate a getter or setter).
+     */
     public void generate(Writer writer) throws IOException {
     	// Don't try to generate a getter for callback or array fields yet
     	if (type == null) {
@@ -36,8 +44,11 @@ public class Field extends Variable {
     	if ("1".equals(isPrivate)) {
     		return;
     	}
+    	
+    	// Write setter
     	writer.write("    \n");
     	writer.write("    /**\n");
+    	writer.write("     * Get the value of the field {@code " + this.name + "}\n");
     	writer.write("     * @return The value of the field {@code " + this.name + "}\n");
     	writer.write("     */\n");
     	writer.write("    public " + getReturnType() + " " + this.name + "$get() {\n");
@@ -55,6 +66,30 @@ public class Field extends Variable {
             generateReverseInterop(writer, "RESULT", false);
             writer.write(";\n");
     	}
+    	writer.write("    }\n");
+    	
+    	// Don't try to generate a setter for nested struct type definitions
+    	if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
+    		return;
+    	}
+    	// Don't try to generate a setter for callbacks
+    	if (type.isCallback()) {
+    		return;
+    	}
+    	// Generate setter
+    	writer.write("    \n");
+    	writer.write("    /**\n");
+    	writer.write("     * Change the value of the field {@code " + this.name + "}\n");
+    	writer.write("     * @param " + this.name + " The new value of the field {@code " + this.name + "}\n");
+    	writer.write("     */\n");
+    	writer.write("    public void " + this.name + "$set(");
+    	generateTypeAndName(writer, true);
+    	writer.write(") {\n");
+    	writer.write("        getMemoryLayout()\n"
+    			+ "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+    			+ "            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+    	generateInterop(writer, this.name, false);
+    	writer.write(");\n");
     	writer.write("    }\n");
     }
     
