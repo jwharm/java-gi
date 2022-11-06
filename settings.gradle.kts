@@ -1,5 +1,5 @@
 rootProject.name = "java-gi"
 
 includeBuild("generator")
-includeBuild("gtk4")
-includeBuild("example")
+include("gtk4")
+include("example")

@@ -3,34 +3,7 @@ import io.github.jwharm.javagi.generator.PatchSet
 import io.github.jwharm.javagi.model.Repository
 
 plugins {
-    `java-library`
-}
-
-buildscript {
-    dependencies {
-        classpath("io.github.jwharm.javagi:generator:1.0")
-    }
-}
-
-java {
-    // Temporarily needed until gradle 7.6 is out
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(19))
-    }
-    // Temporarily disabled since the generated docs were apparently invalid
-    withJavadocJar()
-    withSourcesJar()
-}
-
-group = "io.github.jwharm.javagi"
-version = "gtk4"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compileOnly("org.jetbrains:annotations:23.0.0")
+    id("java-gi.library-conventions")
 }
 
 val generatedPath = buildDir.resolve("generated/sources/javagi/java/main")
@@ -126,10 +99,3 @@ val genSources by tasks.registering {
 }
 
 tasks.compileJava.get().dependsOn(genSources.get())
-
-// Temporarily needed until panama is out of preview
-tasks.compileJava.get().options.compilerArgs.add("--enable-preview")
-(tasks.javadoc.get().options as CoreJavadocOptions).run {
-    addStringOption("source", "19")
-    addBooleanOption("-enable-preview", true)
-}
