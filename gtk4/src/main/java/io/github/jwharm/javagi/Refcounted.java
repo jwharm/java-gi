@@ -19,7 +19,8 @@ public class Refcounted {
     // Method handle that is used for the g_object_unref native call
     private static final MethodHandle g_object_unref = Interop.downcallHandle(
             "g_object_unref",
-            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+            false
     );
 
     // The State class is used by the Cleaner

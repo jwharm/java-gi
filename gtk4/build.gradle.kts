@@ -66,6 +66,8 @@ val genSources by tasks.registering {
                     // These functions have two Callback parameters, this isn't supported yet
                     removeFunction(repo, "signal_new_valist")
                     removeFunction(repo, "signal_newv")
+                    removeFunction(repo, "signal_new")
+                    removeFunction(repo, "signal_new_class_handler")
                 }
             }),
             source("Gio-2.0", "org.gtk.gio", "gio-2.0", patches = object: PatchSet() {

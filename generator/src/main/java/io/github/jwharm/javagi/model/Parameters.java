@@ -36,10 +36,6 @@ public class Parameters extends GirElement {
             if (hasCallbackParameter() && (p.isUserDataParameter() || p.isDestroyNotify())) {
                 continue;
             }
-            // Varargs not yet supported
-            if (p.varargs) {
-            	continue;
-            }
             if (counter++ > 0) {
                 writer.write(", ");
             }
@@ -59,7 +55,7 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            writer.write(p.name);
+            writer.write(p.varargs ? "varargs" : p.name);
         }
     }
 
@@ -88,7 +84,6 @@ public class Parameters extends GirElement {
             } else if (p.isDestroyNotify()) {
                 writer.write("Interop.cbDestroyNotifySymbol()");
             } else if (p.isCallbackParameter()) {
-                //TODO how should nullability be handled here?
                 String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
                 writer.write("(Addressable) Linker.nativeLinker().upcallStub(\n");
                 writer.write("                        MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"cb" + p.type.simpleJavaType + "\",\n");
@@ -125,6 +120,8 @@ public class Parameters extends GirElement {
                 	writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
                 }
                 writer.write("Interop.registerCallback(" + callbackParamName + "))");
+            } else if (p.varargs) {
+                writer.write("varargs");
             } else {
                 p.generateInterop(writer, p.name, true);
             }

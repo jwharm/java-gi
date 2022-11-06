@@ -10,45 +10,52 @@ public class Variable extends GirElement {
 	public Variable(GirElement parent) {
 		super(parent);
 	}
-
+	
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
+        String typeStr;
+        
         // Annotations
         if (type != null && (! type.isPrimitive) && (this instanceof Parameter p)) {
         	writer.write(p.nullable ? "@Nullable " : "@NotNull ");
         }
+        
+        // Varargs parameter: re-use the typeStr of the previous parameter
+        if (this instanceof Parameter p && p.varargs) {
+            typeStr = "java.lang.Object...";
 
-        if (array != null) {
+        // Array parameter
+        } else if (array != null) {
             // Out parameters
             if (this instanceof Parameter p && p.isOutParameter()) {
-            	writer.write("Out<" + array.type.qualifiedJavaType + "[]>");
+                typeStr = "Out<" + array.type.qualifiedJavaType + "[]>";
             } else if (pointerForArray) {
-                writer.write(getPointerReturnType(array.type, null));
+                typeStr = getPointerReturnType(array.type, null);
             } else {
-                writer.write(array.type.qualifiedJavaType + "[]");
+                typeStr = array.type.qualifiedJavaType + "[]";
             }
         
         // Out parameters
         } else if (this instanceof Parameter p && p.isOutParameter()) {
-        	String typeStr = pointerForArray ? getReturnType() : type.qualifiedJavaType;
+        	typeStr = pointerForArray ? getReturnType() : type.qualifiedJavaType;
         	if (type.isPrimitive) {
         		typeStr = Conversions.primitiveClassName(type.simpleJavaType);
         	}
-    		writer.write("Out<" + typeStr + ">");
+        	typeStr = "Out<" + typeStr + ">";
         
         // Also arrays
         } else if (type.cType != null && type.cType.endsWith("**")) {
             // Also arrays
-            writer.write(getPointerReturnType(type, null));
+            typeStr = getPointerReturnType(type, null);
 
         } else if (type.isPrimitive && type.isPointer()) {
             // Pointer to primitive type
-            writer.write("Pointer" + Conversions.primitiveClassName(type.simpleJavaType));
+            typeStr = "Pointer" + Conversions.primitiveClassName(type.simpleJavaType);
 
         } else {
             // Everything else
-            writer.write(type.qualifiedJavaType);
+            typeStr = type.qualifiedJavaType;
         }
-        writer.write(" " + name);
+        writer.write(typeStr + " " + ("...".equals(name) ? "varargs" : name));
     }
 
     public void generateInterop(Writer writer, String identifier, boolean checkForOutParameter) throws IOException {

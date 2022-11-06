@@ -25,6 +25,7 @@ public class Method extends GirElement implements CallableType {
     }
     
     public void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
+        boolean varargs = false;
         writer.write("        \n");
         writer.write("        ");
     	writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
@@ -41,6 +42,10 @@ public class Method extends GirElement implements CallableType {
         }
         if (parameters != null) {
             for (int i = 0; i < parameters.parameterList.size(); i++) {
+                if (parameters.parameterList.get(i).varargs) {
+                    varargs = true;
+                    break;
+                }
                 if (i > 0) {
                     writer.write(", ");
                 }
@@ -50,7 +55,8 @@ public class Method extends GirElement implements CallableType {
         if (throws_ != null) {
             writer.write(", ValueLayout.ADDRESS");
         }
-        writer.write(")\n");
+        writer.write("),\n");
+        writer.write(varargs ? "            true\n" : "            false\n");
         writer.write("        );\n");
     }
 
@@ -58,7 +64,7 @@ public class Method extends GirElement implements CallableType {
         if (parameters != null) {
         	for (Parameter p : parameters.parameterList) {
         		// Don't null-check parameters that are hidden from the Java API, or primitive values
-        		if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify()
+        		if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify() || p.varargs
         				|| (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
         			if (! p.nullable) {
             			writer.write("        java.util.Objects.requireNonNull(" + p.name 
