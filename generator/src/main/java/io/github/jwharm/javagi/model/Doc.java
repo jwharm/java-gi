@@ -70,6 +70,15 @@ public class Doc extends GirElement {
             }
         }
         
+        // Signals
+        if (parent instanceof Signal signal) {
+            if (signal.detailed) {
+                writeDoc(writer, indent, "The signal detail", "@param detail");
+            }
+            writeDoc(writer, indent, "The signal handler", "@param handler");
+            writeDoc(writer, indent, "A {@link io.github.jwharm.javagi.Signal} object to keep track of the signal connection", "@return");
+        }
+        
         // Deprecated
         if (parent instanceof Method m && "1".equals(m.deprecated)) {
         	if (parent.docDeprecated != null) {

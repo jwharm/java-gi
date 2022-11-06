@@ -34,6 +34,9 @@ public class BindingsGenerator {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             RegisteredType.generateImportStatements(writer);
+            writer.write("/**\n");
+            writer.write(" * Constants and functions that are declared in the global " + className + " namespace.\n");
+            writer.write(" */\n");
             writer.write("public final class " + className + " {\n");
             writer.write("    \n");
             if (!natives.isEmpty()) {

@@ -3,7 +3,6 @@ package io.github.jwharm.javagi.model;
 import java.io.IOException;
 import java.io.Writer;
 
-// Not implemented
 public class Bitfield extends ValueWrapper {
 
     public Bitfield(GirElement parent, String name, String cType, String version) {
