@@ -82,7 +82,7 @@ public interface CallableType {
             if (ps.parameterList.stream().anyMatch(p ->
 
                        // We don't support parameters without type
-                       (p.array == null && p.type == null)
+                       (p.array == null && p.type == null && (! p.varargs))
                        // We don't support types without a name
                     || (p.type != null && p.type.name == null)
                        // We don't support out parameter arrays with unknown length
