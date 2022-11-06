@@ -32,6 +32,32 @@ public class Bitfield extends ValueWrapper {
         for (Function function : functionList) {
             function.generate(writer, false, true);
         }
+        
+        writer.write(
+                  "    \n"
+                + "    /**\n"
+                + "     * Combine (bitwise OR) operation\n"
+                + "     * @param mask the value to combine with\n"
+                + "     * @return the combined value by calculating {@code this | mask} \n"
+                + "     */\n"
+                + "    public " + javaName + " combined(" + javaName + " mask) {\n"
+                + "        this.setValue(this.getValue() | mask.getValue());\n"
+                + "        return this;\n"
+                + "    }\n"
+                + "    \n"
+                + "    /**\n"
+                + "     * Combine (bitwise OR) operation\n"
+                + "     * @param mask the first value to combine\n"
+                + "     * @param masks the other values to combine\n"
+                + "     * @return the combined value by calculating {@code mask | masks[0] | masks[1] | ...} \n"
+                + "     */\n"
+                + "    public static " + javaName + " combined(" + javaName + " mask, " + javaName + "... masks) {\n"
+                + "        for (" + javaName + " arg : masks) {\n"
+                + "            mask.setValue(mask.getValue() | arg.getValue());\n"
+                + "        }\n"
+                + "        return mask;\n"
+                + "    }\n"
+        );
 
         generateDowncallHandles(writer);
         
