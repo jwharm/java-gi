@@ -76,11 +76,64 @@ public class Method extends GirElement implements CallableType {
     }
 
     public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
-        
         writer.write("    \n");
-        writeMethodDeclaration(writer, doc, name, throws_, isInterface, isStatic);
+        
+        // Documentation
+        if (doc != null) {
+            doc.generate(writer, 1);
+        }
+
+        // Deprecation
+        if ("1".equals(deprecated)) {
+            writer.write("    @Deprecated\n");
+        }
+
+        if (isInterface && !isStatic) {
+            // Default interface methods
+            writer.write("    default ");
+        } else {
+            // Visibility
+            writer.write("    public ");
+        }
+
+        // Static methods (functions)
+        if (isStatic) {
+            writer.write("static ");
+        }
+
+        // Annotations
+        if ((getReturnValue().type != null && !getReturnValue().type.isPrimitive && !getReturnValue().type.isVoid())
+                || getReturnValue().array != null) {
+            writer.write(getReturnValue().nullable ? "@Nullable " : "@NotNull ");
+        }
+
+        // Return type
+        writer.write(getReturnValue().getReturnType());
+
+        // Method name
+        String methodName = Conversions.toLowerCaseJavaName(name);
+        if (isInterface) { // Overriding toString() in a default method is not allowed.
+            methodName = Conversions.replaceJavaObjectMethodNames(methodName);
+        }
+        writer.write(" ");
+        writer.write(methodName);
+
+        // Parameters
+        if (getParameters() != null) {
+            writer.write("(");
+            getParameters().generateJavaParameters(writer, false);
+            writer.write(")");
+        } else {
+            writer.write("()");
+        }
+
+        // Exceptions
+        if (throws_ != null) {
+            writer.write(" throws io.github.jwharm.javagi.GErrorException");
+        }
         writer.write(" {\n");
         
+        // Currently unsupported method: throw an exception
         if (! isSafeToBind()) {
         	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
@@ -90,6 +143,7 @@ public class Method extends GirElement implements CallableType {
         // Generate checks for null parameters
         generateNullParameterChecks(writer);
 
+        // Allocate GError pointer
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
@@ -107,20 +161,27 @@ public class Method extends GirElement implements CallableType {
             }
         }
 
+        // Variable declaration for return value
         String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("        " + panamaReturnType + " RESULT;\n");
         }
+        
+        // The method call is wrapped in a try-catch block
         writer.write("        try {\n");
         writer.write("            ");
+        
+        // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("RESULT = (");
             writer.write(panamaReturnType);
             writer.write(") ");
         }
-        
+
+        // Invoke to the method handle
         writer.write("DowncallHandles." + cIdentifier + ".invokeExact");
         
+        // Marshall the parameters to the native types
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -129,6 +190,8 @@ public class Method extends GirElement implements CallableType {
             writer.write("()");
         }
         writer.write(";\n");
+        
+        // If something goes wrong in the invokeExact() call
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
@@ -142,7 +205,8 @@ public class Method extends GirElement implements CallableType {
         
         // Read pointer values from memory segments
         if (parameters != null) {
-            // Non-array out parameters
+            // First the regular (non-array) out-parameters. These could include an out-parameter with 
+            // the length of an array out-parameter, so we have to process these first.
             for (Parameter p : parameters.parameterList) {
             	if (p.isOutParameter()) {
             		if (p.array == null) {
@@ -164,7 +228,7 @@ public class Method extends GirElement implements CallableType {
                     writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
-            // Array out parameters
+            // Secondly, process the array out parameters
             for (Parameter p : parameters.parameterList) {
             	if (p.isOutParameter() && p.array != null) {
         			String len = p.array.size();
@@ -187,6 +251,7 @@ public class Method extends GirElement implements CallableType {
             }
         }
         
+        // If the return value is an array, try to convert it to a Java array
         if (returnValue.array != null) {
         	String len = returnValue.array.size();
         	if (len != null) {

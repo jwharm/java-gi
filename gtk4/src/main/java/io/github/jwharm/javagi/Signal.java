@@ -10,7 +10,7 @@ public class Signal<T> {
     private final long handlerId;
 
     public Signal(Addressable instance, long handlerId) {
-        this.instance = new org.gtk.gobject.Object(Refcounted.get(instance));
+        this.instance = new org.gtk.gobject.Object(instance, Ownership.UNKNOWN);
         this.handlerId = handlerId;
     }
 

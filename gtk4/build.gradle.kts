@@ -33,6 +33,7 @@ val genSources by tasks.registering {
                 override fun patch(repo: Repository?) {
                     // This is an alias for Callback type
                     removeType(repo, "VaClosureMarshal")
+                    removeType(repo, "SignalCVaMarshaller")
                     removeFunction(repo, "signal_set_va_marshaller")
                     // Override with different return type
                     renameMethod(repo, "TypeModule", "use", "use_type_module")

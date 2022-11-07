@@ -62,8 +62,13 @@ public class Parameter extends Variable {
     	return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
     }
     
-    public boolean transferOwnership() {
-        return "full".equals(transferOwnership);
+    /**
+     * Returns an Ownership enum value (for example, tranfer-ownership="full" -> "Ownership.FULL").
+     * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is retuned
+     * @return a String containing the Ownership enum value
+     */
+    public String transferOwnership() {
+        return "Ownership." + (transferOwnership == null ? "UNKNOWN" : transferOwnership.toUpperCase());
     }
     
     /**

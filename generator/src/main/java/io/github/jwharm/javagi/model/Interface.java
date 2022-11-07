@@ -44,14 +44,14 @@ public class Interface extends RegisteredType {
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
         generateEnsureInitialized(writer, "        ");
     	writer.write("        \n");
-        writer.write("        public " + javaName + "Impl(io.github.jwharm.javagi.Refcounted ref) {\n");
-        writer.write("            super(ref);\n");
+        writer.write("        public " + javaName + "Impl(Addressable address, Ownership ownership) {\n");
+        writer.write("            super(address, ownership);\n");
         writer.write("        }\n");
         writer.write("    }\n");
     }
 
-    public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
-        if (transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        if ("Ownership.FULL".equals(transferOwnership)) {
             return paramName + ".refcounted().unowned().handle()";
         } else {
             return paramName + ".handle()";

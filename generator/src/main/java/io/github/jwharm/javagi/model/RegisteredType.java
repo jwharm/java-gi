@@ -93,6 +93,7 @@ public abstract class RegisteredType extends GirElement {
 	        writer.write("     * @return the memory layout\n");
         }
         writer.write("     */\n");
+        writer.write("    @ApiStatus.Internal\n");
         writer.write("    public static MemoryLayout getMemoryLayout() {\n");
         if (fieldList.isEmpty()) {
             writer.write("        return Interop.valueLayout.ADDRESS;\n");
@@ -118,7 +119,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
         writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
-        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.refcounted());\n");
+        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.refcounted().getOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
         writer.write("        }\n");
@@ -127,9 +128,14 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Create a " + javaName + " proxy instance for the provided memory address.\n");
+        writer.write("     * @param address   The memory address of the native object\n");
+        writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
+        writer.write("     */\n");
     	writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public " + javaName + "(io.github.jwharm.javagi.Refcounted ref) {\n");
-        writer.write("        super(ref);\n");
+        writer.write("    public " + javaName + "(Addressable address, Ownership ownership) {\n");
+        writer.write("        super(address, ownership);\n");
         writer.write("    }\n");
     }
 
@@ -207,5 +213,5 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
-    public abstract String getInteropString(String paramName, boolean isPointer, boolean transferOwnership);
+    public abstract String getInteropString(String paramName, boolean isPointer, String transferOwnership);
 }

@@ -43,7 +43,7 @@ public class Constructor extends Method {
         writer.write(" {\n");
         
         if (! isSafeToBind()) {
-        	writer.write("        this(Refcounted.get(null)); // avoid compiler error\n");
+        	writer.write("        this(null, null); // avoid compiler error\n");
         	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return;
@@ -57,7 +57,7 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(");\n");
+        writer.write(", " + returnValue.transferOwnership() + ");\n");
         writer.write("    }\n");
     }
 
@@ -102,7 +102,7 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(");\n");
+        writer.write(", " + returnValue.transferOwnership() + ");\n");
         writer.write("    }\n");
     }
 
@@ -114,7 +114,7 @@ public class Constructor extends Method {
     private String generateConstructorHelper(Writer writer) throws IOException {
         String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("    \n");
-        writer.write("    private static Refcounted " + methodName);
+        writer.write("    private static Addressable " + methodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameters(writer, false);
@@ -140,9 +140,9 @@ public class Constructor extends Method {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         
-        writer.write("        Refcounted RESULT;\n");
+        writer.write("        Addressable RESULT;\n");
         writer.write("        try {\n");
-        writer.write("            RESULT = Refcounted.get((MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        writer.write("            RESULT = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -150,8 +150,7 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(returnValue.transferOwnership() ? ", true" : ", false");
-        writer.write(");\n");
+        writer.write(";\n");
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");

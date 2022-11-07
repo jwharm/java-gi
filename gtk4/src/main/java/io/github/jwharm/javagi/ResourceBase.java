@@ -6,10 +6,10 @@ public class ResourceBase implements Proxy {
 
     private Refcounted ref;
 
-    public ResourceBase(Refcounted ref) {
-        this.ref = ref;
+    public ResourceBase(Addressable address, Ownership ownership) {
+        this.ref = Refcounted.get(address, ownership);
     }
-
+    
     public Addressable handle() {
         return this.ref.handle();
     }

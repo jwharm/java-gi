@@ -163,8 +163,8 @@ public class Callback extends RegisteredType implements CallableType {
         this.returnValue = rv;
     }
 
-    public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
-        if (transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        if ("Ownership.FULL".equals(transferOwnership)) {
             return paramName + ".refcounted().unowned().handle()";
         } else {
             return paramName + ".handle()";

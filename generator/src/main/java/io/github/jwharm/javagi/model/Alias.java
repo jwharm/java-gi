@@ -72,7 +72,7 @@ public class Alias extends ValueWrapper {
         }
     }
 
-    public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         if (aliasFor() == VALUE_ALIAS) {
             return super.getInteropString(paramName, isPointer, transferOwnership);
         } else {

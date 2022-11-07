@@ -26,15 +26,15 @@ public class Refcounted {
     // The State class is used by the Cleaner
     private static class State implements Runnable {
         Addressable address;
-        boolean owned;
+        Ownership ownership;
 
-        State(Addressable address, boolean owned) {
+        State(Addressable address, Ownership owned) {
             this.address = address;
-            this.owned = owned;
+            this.ownership = owned;
         }
 
         public void run() {
-            if (owned) {
+            if (ownership == Ownership.FULL) {
                 try {
                     g_object_unref.invokeExact(address);
                 } catch (Throwable ERR) {
@@ -45,7 +45,7 @@ public class Refcounted {
     }
 
     // Private constructor. Use Refcounted.get() to obtain a Refcounted instance.
-    private Refcounted(Addressable handle, boolean owned) {
+    private Refcounted(Addressable handle, Ownership owned) {
         state = new Refcounted.State(handle, owned);
         cleanable = cleaner.register(this, state);
     }
@@ -60,31 +60,39 @@ public class Refcounted {
 
     /**
      * Set ownership of the ref-counted object. For objects where 
-     * {@code owned == true}, the {@code unref()} function is automatically 
+     * {@code owned == FULL}, the {@code unref()} function is automatically 
      * called during garbage collection.
-     * @param owned whether the ownership of the ref-counted object belongs to the user
+     * @param ownership whether the ownership of the ref-counted object belongs to the user
      */
-    public void setOwnership(boolean owned) {
-        state.owned = owned;
+    public void setOwnership(Ownership ownership) {
+        state.ownership = ownership;
+    }
+    
+    /**
+     * Get ownership of the ref-counted object.
+     * @return The ownership indicator
+     */
+    public Ownership getOwnership() {
+        return state.ownership;
     }
 
     /**
-     * Set the ownership attribute of this Refcounted object to false,
+     * Set the ownership attribute of this Refcounted object to NONE,
      * so it will <strong>not</strong> be {@code unref()}-ed when cleaned.
      * @return the Refcounted instance
      */
     public Refcounted unowned() {
-        setOwnership(false);
+        setOwnership(Ownership.NONE);
         return this;
     }
 
     /**
-     * Set the ownership attribute of this Refcounted object to false,
+     * Set the ownership attribute of this Refcounted object to FULL,
      * so it will be {@code unref()}-ed when cleaned.
      * @return the Refcounted instance
      */
     public Refcounted owned() {
-        setOwnership(true);
+        setOwnership(Ownership.FULL);
         return this;
     }
 
@@ -103,7 +111,7 @@ public class Refcounted {
      * Retrieve the Refcounted instance for this memory address from the cache,
      * or add a new instance to the cache if it did not yet exist. Ownership
      * of an existing Refcounted instance remains unchanged. For new instances,
-     * ownership is set to false.
+     * ownership is set to NONE.
      * 
      * @param address The memory address of a refcounted object to lookup in the cache
      * @return A Refcounted object, or null when address is null (or MemoryAddress.NULL)
@@ -117,7 +125,7 @@ public class Refcounted {
                 return r;
             }
         }
-        Refcounted ref = new Refcounted(address, false);
+        Refcounted ref = new Refcounted(address, Ownership.NONE);
         cache.add(ref);
         return ref;
     }
@@ -125,11 +133,22 @@ public class Refcounted {
     /**
      * Retrieve the Refcounted for this memory address from the cache,
      * or add a new instance to the cache if it did not yet exist.
-     * Ownership is updated to the given value.
+     * Ownership is updated to the given value unless Ownership.UNCHANGED 
+     *           is provided, in which case the ownership is unchanged.
+     *           When the address did not exist in the cache and the 
+     *           requested ownership was UNCHANGED, the ownership for the 
+     *           new Refcounted object is NONE.
+     * 
+     * @param address The memory address of the object
+     * @param ownership Ownership indicator
+     * @return The Refcounted instance from the cache, or a new Refcounted
+     *         instance if it did not yet exist
      */
-    public static Refcounted get(Addressable address, boolean owned) {
+    public static Refcounted get(Addressable address, Ownership ownership) {
         Refcounted ref = get(address);
-        ref.setOwnership(owned);
+        if (ownership != Ownership.UNKNOWN) {
+            ref.setOwnership(ownership);
+        }
         return ref;
     }
 }

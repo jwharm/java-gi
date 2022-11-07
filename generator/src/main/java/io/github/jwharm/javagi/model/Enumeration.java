@@ -43,7 +43,7 @@ public class Enumeration extends ValueWrapper {
         writer.write("}\n");
     }
     
-    public String getInteropString(String paramName, boolean isPointer, boolean transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         String str = paramName + ".getValue()";
         if (isPointer) {
             return "new PointerInteger(" + str + ").handle()";

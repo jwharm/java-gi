@@ -89,7 +89,7 @@ public class Variable extends GirElement {
         
         // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
-        	boolean transferOwnership = this instanceof Parameter p && p.transferOwnership();
+        	String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
             writer.write(type.girElementInstance.getInteropString(identifier, type.isPointer(), transferOwnership));
         
         // Primitive types
@@ -157,13 +157,13 @@ public class Variable extends GirElement {
     	}
         // Create an Impl object when we only know the interface but not the class
     	if (type.isInterface()) {
-        	boolean transferOwnership = this instanceof Parameter p && p.transferOwnership();
-    		return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(Refcounted.get(" + identifier + ", " + (transferOwnership ? "true" : "false") + "))";
+            String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
+    		return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(" + identifier + ", " + transferOwnership + ")";
     	}
         // Objects
     	if (type.isClass() || type.isAlias() || type.isUnion()) {
-        	boolean transferOwnership = this instanceof Parameter p && p.transferOwnership();
-    		return "new " + type.qualifiedJavaType + "(Refcounted.get(" + identifier + ", " + (transferOwnership ? "true" : "false") + "))";
+            String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
+    		return "new " + type.qualifiedJavaType + "(" + identifier + ", " + transferOwnership + ")";
     	}
         // Primitive values remain as-is
     	return identifier;
