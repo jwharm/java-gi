@@ -25,41 +25,41 @@ public class Parameter extends Variable {
      * The index counts from zero and ignores the instance-parameter.
      */
     public Parameter getParameterAt(String indexAttr) {
-    	if (indexAttr == null) {
-    		return null;
-    	}
-    	// Parse the value of the 'length' attribute
-    	int index;
-    	try {
+        if (indexAttr == null) {
+            return null;
+        }
+        // Parse the value of the 'length' attribute
+        int index;
+        try {
             index = Integer.parseInt(indexAttr);
-    	} catch (NumberFormatException nfe) {
-    		return null;
-    	}
-    	// Get the <parameters> node
-    	Parameters params;
-    	if (this instanceof ReturnValue) {
-    		params = ((CallableType) parent).getParameters();
-    	} else {
-    		params = (Parameters) parent;
-    	}
-    	// Find the parameter that was specified in the value of the 'length' attribute.
-    	// Ignore the instance parameter.
-    	if (params.parameterList.get(0) instanceof InstanceParameter) {
-    		return params.parameterList.get(index + 1);
-    	} else {
-    		return params.parameterList.get(index);
-    	}
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
+        // Get the <parameters> node
+        Parameters params;
+        if (this instanceof ReturnValue) {
+            params = ((CallableType) parent).getParameters();
+        } else {
+            params = (Parameters) parent;
+        }
+        // Find the parameter that was specified in the value of the 'length' attribute.
+        // Ignore the instance parameter.
+        if (params.parameterList.get(0) instanceof InstanceParameter) {
+            return params.parameterList.get(index + 1);
+        } else {
+            return params.parameterList.get(index);
+        }
     }
     
     public boolean isProxy() {
-    	if (type == null) {
-    		return false;
-    	}
-    	if (type.isAlias()) {
-    		Alias a = (Alias) type.girElementInstance;
-    		return (a == null || a.aliasFor() == Alias.CLASS_ALIAS) || (a.aliasFor() == Alias.INTERFACE_ALIAS);
-    	}
-    	return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
+        if (type == null) {
+            return false;
+        }
+        if (type.isAlias()) {
+            Alias a = (Alias) type.girElementInstance;
+            return (a == null || a.aliasFor() == Alias.CLASS_ALIAS) || (a.aliasFor() == Alias.INTERFACE_ALIAS);
+        }
+        return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
     }
     
     /**
@@ -108,8 +108,8 @@ public class Parameter extends Variable {
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
     public boolean checkNull() {
-    	return nullable 
-    			&& (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
-    					|| (type != null && type.isPrimitive && (! type.isPointer()))));
+        return nullable 
+                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
+                        || (type != null && type.isPrimitive && (! type.isPointer()))));
     }
 }

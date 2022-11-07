@@ -25,20 +25,20 @@ public class Constant extends GirElement {
                 typeStr = ((Alias) type.girElementInstance).type.simpleJavaType;
                 printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(typeStr, value) + ")";
             } else if (type.isEnum()) {
-            	typeStr = "int";
+                typeStr = "int";
                 printValue = type.qualifiedJavaType + ".fromValue(" + Conversions.literal(typeStr, value) + ")";
             } else {
-            	typeStr = type.qualifiedJavaType;
+                typeStr = type.qualifiedJavaType;
                 printValue = Conversions.literal(typeStr, value);
             }
         } catch (NumberFormatException nfe) {
             // Do not write anything
-        	if (JavaGI.DISPLAY_WARNINGS) {
+            if (JavaGI.DISPLAY_WARNINGS) {
                 System.out.println("Skipping <constant name=\"" + name + "\"" 
                         + " value=\"" + value + "\"" 
                         + ">: Value not allowed for " + typeStr);
-        	}
-        	return;
+            }
+            return;
         }
         
         writer.write("    \n");

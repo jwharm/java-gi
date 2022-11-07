@@ -16,7 +16,7 @@ public class Conversions {
     public static Map<String, String> nsLookupTable = new HashMap<>();
     public static Map<String, GirElement> cIdentifierLookupTable;
     public static Map<String, RegisteredType> cTypeLookupTable;
-	public static Map<String, Repository> repositoriesLookupTable;
+    public static Map<String, Repository> repositoriesLookupTable;
 
     /** Convert "Gdk" to "org.gtk.gdk" */
     public static String namespaceToJavaPackage(String ns) {
@@ -52,7 +52,7 @@ public class Conversions {
             return null;
         }
         if (typeName.equals("VaList")) {
-        	return typeName;
+            return typeName;
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {

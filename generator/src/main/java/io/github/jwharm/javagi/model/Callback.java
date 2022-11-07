@@ -38,13 +38,13 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
-            	if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
-	                if (counter > 0) {
-	                    writer.write(", ");
-	                }
-	                p.generateTypeAndName(writer, true);
-	                counter++;
-            	}
+                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
+                    if (counter > 0) {
+                        writer.write(", ");
+                    }
+                    p.generateTypeAndName(writer, true);
+                    counter++;
+                }
             }
         }
         writer.write(");\n");
@@ -91,13 +91,13 @@ public class Callback extends RegisteredType implements CallableType {
         
         // For out-parameters, create a local Out<> object and pass that to the callback.
         if (parameters != null) {
-        	for (Parameter p : parameters.parameterList) {
-        		if (p.isOutParameter()) {
-        			writer.write("        var " + p.name + "OUT = new Out<" + p.getReturnType() + ">(");
-        			p.generateReverseInterop(writer, p.name, true);
-        			writer.write(");\n");
-        		}
-        	}
+            for (Parameter p : parameters.parameterList) {
+                if (p.isOutParameter()) {
+                    writer.write("        var " + p.name + "OUT = new Out<" + p.getReturnType() + ">(");
+                    p.generateReverseInterop(writer, p.name, true);
+                    writer.write(");\n");
+                }
+            }
         }
         
         writer.write("            ");
@@ -109,17 +109,17 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
-            	if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
-	                if (counter > 0) {
-	                    writer.write(", ");
-	                }
-	                if (p.isOutParameter()) {
-	                	writer.write(p.name + "OUT");
-	                } else {
-	                    p.generateReverseInterop(writer, p.name, true);
-	                }
-	                counter++;
-            	}
+                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
+                    if (counter > 0) {
+                        writer.write(", ");
+                    }
+                    if (p.isOutParameter()) {
+                        writer.write(p.name + "OUT");
+                    } else {
+                        p.generateReverseInterop(writer, p.name, true);
+                    }
+                    counter++;
+                }
             }
         }
         writer.write(");\n");
@@ -127,13 +127,13 @@ public class Callback extends RegisteredType implements CallableType {
         // For out-parameters, read the value of the Out<> object that was generated above, 
         // and write the value to the out-parameter memory address that was passed from the native code.
         if (parameters != null) {
-        	for (Parameter p : parameters.parameterList) {
-        		if (p.isOutParameter()) {
-        			writer.write("            " + p.name + ".set(" + Conversions.getValueLayout(p.type) + ", 0, ");
-        			p.generateInterop(writer, p.name + "OUT.get()", false);
-        			writer.write(");\n");
-        		}
-        	}
+            for (Parameter p : parameters.parameterList) {
+                if (p.isOutParameter()) {
+                    writer.write("            " + p.name + ".set(" + Conversions.getValueLayout(p.type) + ", 0, ");
+                    p.generateInterop(writer, p.name + "OUT.get()", false);
+                    writer.write(");\n");
+                }
+            }
         }
 
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {

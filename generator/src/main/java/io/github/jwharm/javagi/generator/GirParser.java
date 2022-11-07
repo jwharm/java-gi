@@ -42,7 +42,7 @@ public class GirParser extends DefaultHandler {
         switch (qName) {
             case "alias" -> {
                 Alias newAlias = new Alias(current, attr.getValue("name"), 
-                		attr.getValue("c:type"), attr.getValue("version"));
+                        attr.getValue("c:type"), attr.getValue("version"));
                 current.aliasList.add(newAlias);
                 current = newAlias;
             }
@@ -60,14 +60,14 @@ public class GirParser extends DefaultHandler {
             }
             case "bitfield" -> {
                 Bitfield newBitfield = new Bitfield(current, attr.getValue("name"), 
-                		attr.getValue("c:type"), attr.getValue("version"));
+                        attr.getValue("c:type"), attr.getValue("version"));
                 current.bitfieldList.add(newBitfield);
                 current = newBitfield;
 
             }
             case "callback" -> {
                 Callback newCallback = new Callback(current, attr.getValue("name"), 
-                		attr.getValue("c:type"), attr.getValue("version"));
+                        attr.getValue("c:type"), attr.getValue("version"));
                 if (current instanceof Namespace ns) {
                     ns.callbackList.add(newCallback);
                 } else if (current instanceof Field f) {
@@ -238,7 +238,7 @@ public class GirParser extends DefaultHandler {
             }
             case "union" -> {
                 Union newUnion = new Union(current, attr.getValue("name"), attr.getValue("c:type"), 
-                		attr.getValue("version"));
+                        attr.getValue("version"));
                 current.unionList.add(newUnion);
                 current = newUnion;
             }

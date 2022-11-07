@@ -47,8 +47,8 @@ public class Type extends GirElement {
                 this.name = "Type";
             }
         } else {
-        	// If the type does not have a name, it's possibly undefined in GI, so use gpointer as a generic fallback.
-        	name = "gpointer";
+            // If the type does not have a name, it's possibly undefined in GI, so use gpointer as a generic fallback.
+            name = "gpointer";
         }
         this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace().packageName);

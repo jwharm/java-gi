@@ -75,7 +75,7 @@ public class GtkDoc {
     ;
     
     private static final String[] NAMED_GROUPS_PASS_2 = new String[] {
-    		"emptyp"
+            "emptyp"
     };
 
     private static GtkDoc instance = null;
@@ -111,7 +111,7 @@ public class GtkDoc {
         Matcher matcher = patternPass1.matcher(doc.contents);
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
-        	String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_1);
+            String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_1);
             String replacement = convert(matcher, groupName);
             matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
         }
@@ -126,7 +126,7 @@ public class GtkDoc {
         matcher = patternPass2.matcher(pass1Result);
         output = new StringBuilder();
         while (matcher.find()) {
-        	String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_2);
+            String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_2);
             String replacement = convert(matcher, groupName);
             matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
         }
@@ -147,7 +147,7 @@ public class GtkDoc {
     private String convert(Matcher matcher, String groupName) {
 
         return switch(groupName) {
-        	// Pass 1 group names
+            // Pass 1 group names
             case "codeblock" -> convertCodeblock(matcher.group(), matcher.group("content"));
             case "codeblock2" -> convertCodeblock(matcher.group(), matcher.group("content2"));
             case "code" -> convertCode(matcher.group());
@@ -178,13 +178,13 @@ public class GtkDoc {
     // If the codeblock contains curly braces, we ensure they are matched with the same number of closing braces.
     // This is required for valid javadoc.
     private String convertCodeblock(String codeblock, String content) {
-    	long count1 = content.chars().filter(ch -> ch == '{').count();
-    	long count2 = content.chars().filter(ch -> ch == '}').count();
-    	if (count1 < count2) {
-    		content = "{".repeat((int) (count2 - count1)) + content;
-    	} else if (count1 > count2) {
-    		content += "}".repeat((int) (count1 - count2));
-    	}
+        long count1 = content.chars().filter(ch -> ch == '{').count();
+        long count2 = content.chars().filter(ch -> ch == '}').count();
+        if (count1 < count2) {
+            content = "{".repeat((int) (count2 - count1)) + content;
+        } else if (count1 > count2) {
+            content += "}".repeat((int) (count1 - count2));
+        }
         return "<pre>{@code " + content + "}</pre>";
     }
 
@@ -199,19 +199,19 @@ public class GtkDoc {
         String name;
         switch (type) {
             case "ctor":
-            	if (part3 == null) {
+                if (part3 == null) {
                     if ("new".equals(part2)) {
-                    	return checkLink(part1) + part1 + "#" + part1 + "}";
+                        return checkLink(part1) + part1 + "#" + part1 + "}";
                     } else {
-                    	return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                        return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
                     }
-            	} else {
+                } else {
                     if ("new".equals(part3)) {
-                    	return checkLink(part1, part2) + formatNS(part1) + part2 + "#" + part2 + "}";
+                        return checkLink(part1, part2) + formatNS(part1) + part2 + "#" + part2 + "}";
                     } else {
-                    	return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                        return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
                     }
-            	}
+                }
             case "method":
             case "vfunc":
                 if (part3 == null) {
@@ -222,21 +222,21 @@ public class GtkDoc {
             case "property":
                 return "{@code " + path + "}";
             case "func":
-            	if (part3 == null) {
-                	if (part2 == null) {
+                if (part3 == null) {
+                    if (part2 == null) {
                         return checkLink(part1) + doc.getNamespace().name + formatMethod(part1) + "}";
-                	} else {
+                    } else {
                         return checkLink(part1, part2) + formatNS(part1) + part1 + formatMethod(part2) + "}";
-                	}
-            	} else {
+                    }
+                } else {
                     return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
-            	}
+                }
             case "class":
-            	if (part2 == null) {
-            		return checkLink(part1) + part1 + "}";
-            	} else {
-            		return checkLink(part1, part2) + formatNS(part1) + part2 + "}";
-            	}
+                if (part2 == null) {
+                    return checkLink(part1) + part1 + "}";
+                } else {
+                    return checkLink(part1, part2) + formatNS(part1) + part2 + "}";
+                }
             case "id":
                 GirElement girElement = Conversions.cIdentifierLookupTable.get(part1);
                 name = girElementToString(girElement, false);
@@ -311,12 +311,12 @@ public class GtkDoc {
 
     // Replace <, > and & with &lt;, &gt; and &amp;
     private String convertEntity(String entity) {
-    	return switch (entity) {
-	    	case "<" -> "&lt;";
-	    	case ">" -> "&gt;";
-	    	case "&" -> "&amp;";
-	    	default -> entity;
-    	};
+        return switch (entity) {
+            case "<" -> "&lt;";
+            case ">" -> "&gt;";
+            case "&" -> "&amp;";
+            default -> entity;
+        };
     }
 
     // Replace multiple newlines with <p>
@@ -331,7 +331,7 @@ public class GtkDoc {
     
     // Replace <p><pre> or <p><ul> (and any whitespace in between) with just the second tag
     private String convertEmptyP(String ph, String tag) {
-    	return tag;
+        return tag;
     }
 
     // Return the Java package name followed by "." for another (not our own) namespace
@@ -362,53 +362,53 @@ public class GtkDoc {
     }
     
     private String checkLink(String identifier) {
-    	return checkLink(doc.getNamespace().name, identifier);
+        return checkLink(doc.getNamespace().name, identifier);
     }
     
     private String checkLink(String ns, String identifier) {
-    	Repository gir = Conversions.repositoriesLookupTable.get(ns);
-    	if (gir == null || gir.namespace == null) {
-    		return "{@code ";
-    	}
-    	Namespace namespace = gir.namespace;
-    	if (namespace.registeredTypeMap.containsKey(identifier)) {
-    		return "{@link ";
-    	}
-    	for (Function f : namespace.functionList) {
-    		if (identifier.equals(f.name)) {
-    	    	return "{@link ";
-    		}
-    	}
-    	return "{@code ";
+        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        if (gir == null || gir.namespace == null) {
+            return "{@code ";
+        }
+        Namespace namespace = gir.namespace;
+        if (namespace.registeredTypeMap.containsKey(identifier)) {
+            return "{@link ";
+        }
+        for (Function f : namespace.functionList) {
+            if (identifier.equals(f.name)) {
+                return "{@link ";
+            }
+        }
+        return "{@code ";
     }
 
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String type, String identifier) {
-    	Repository gir = Conversions.repositoriesLookupTable.get(ns);
-    	if (gir == null || gir.namespace == null) {
-    		return "{@code ";
-    	}
-    	Namespace namespace = gir.namespace;
-    	RegisteredType rt = namespace.registeredTypeMap.get(type);
-    	if (rt == null) {
-    		return "{@code ";
-    	}
-    	for (Method m : rt.methodList) {
-    		if (identifier.equals(m.name)) {
-    	    	return "{@link ";
-    		}
-    	}
-    	for (Constructor c : rt.constructorList) {
-    		if (identifier.equals(c.name)) {
-    	    	return "{@link ";
-    		}
-    	}
-    	for (Function f : rt.functionList) {
-    		if (identifier.equals(f.name)) {
-    	    	return "{@link ";
-    		}
-    	}
-    	return "{@code ";
+        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        if (gir == null || gir.namespace == null) {
+            return "{@code ";
+        }
+        Namespace namespace = gir.namespace;
+        RegisteredType rt = namespace.registeredTypeMap.get(type);
+        if (rt == null) {
+            return "{@code ";
+        }
+        for (Method m : rt.methodList) {
+            if (identifier.equals(m.name)) {
+                return "{@link ";
+            }
+        }
+        for (Constructor c : rt.constructorList) {
+            if (identifier.equals(c.name)) {
+                return "{@link ";
+            }
+        }
+        for (Function f : rt.functionList) {
+            if (identifier.equals(f.name)) {
+                return "{@link ";
+            }
+        }
+        return "{@code ";
     }
 }

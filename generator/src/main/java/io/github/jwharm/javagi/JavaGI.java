@@ -22,21 +22,21 @@ import io.github.jwharm.javagi.generator.PatchSet;
 import io.github.jwharm.javagi.model.Repository;
 
 public class JavaGI {
-	
+    
     /**
      * Change this to TRUE to display warnings about invalid types that are skipped 
      * by the GIR parser and the bindings generator.
      */
-	public static final boolean DISPLAY_WARNINGS = false;
+    public static final boolean DISPLAY_WARNINGS = false;
 
-	/**
-	 * Run the JavaGI bindings generator as a command-line application instead of a Gradle task.
-	 * You will need to specify an XML file with the repository locations and package names, 
-	 * and an output folder location as command-line parameters.
-	 * See {@link #run(String, String)} for more information about the input file.
-	 * @param args Command-line parameters
+    /**
+     * Run the JavaGI bindings generator as a command-line application instead of a Gradle task.
+     * You will need to specify an XML file with the repository locations and package names, 
+     * and an output folder location as command-line parameters.
+     * See {@link #run(String, String)} for more information about the input file.
+     * @param args Command-line parameters
      * @throws Exception Any exceptions that occur while parsing the GIR file and generating the bindings
-	 */
+     */
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             System.err.println("ERROR: No input file provided.");

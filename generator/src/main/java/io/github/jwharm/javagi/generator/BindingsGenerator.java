@@ -58,7 +58,7 @@ public class BindingsGenerator {
             }
             
             if (! gir.namespace.functionList.isEmpty()) {
-            	writer.write("    \n");
+                writer.write("    \n");
                 writer.write("    private static class DowncallHandles {\n");
                 for (Function f : gir.namespace.functionList) {
                     f.generateMethodHandle(writer, false);
@@ -67,8 +67,8 @@ public class BindingsGenerator {
             }
             
             if (! gir.namespace.callbackList.isEmpty()) {
-            	writer.write("    \n");
-            	writer.write("    @ApiStatus.Internal\n");
+                writer.write("    \n");
+                writer.write("    @ApiStatus.Internal\n");
                 writer.write("    public static class Callbacks {\n");
                 writer.write(signalCallbackFunctions.toString());
                 writer.write("    }\n");

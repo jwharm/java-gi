@@ -117,9 +117,9 @@ public class Refcounted {
      * @return A Refcounted object, or null when address is null (or MemoryAddress.NULL)
      */
     public static Refcounted get(Addressable address) {
-    	if (address == null || address.equals(MemoryAddress.NULL)) {
-    		return null;
-    	}
+        if (address == null || address.equals(MemoryAddress.NULL)) {
+            return null;
+        }
         for (Refcounted r : cache) {
             if (r.handle().equals(address)) {
                 return r;

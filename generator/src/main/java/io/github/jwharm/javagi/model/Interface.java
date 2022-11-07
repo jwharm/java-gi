@@ -40,10 +40,10 @@ public class Interface extends RegisteredType {
     }
 
     public void generateImplClass(Writer writer) throws IOException {
-    	writer.write("    \n");
+        writer.write("    \n");
         writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
         generateEnsureInitialized(writer, "        ");
-    	writer.write("        \n");
+        writer.write("        \n");
         writer.write("        public " + javaName + "Impl(Addressable address, Ownership ownership) {\n");
         writer.write("            super(address, ownership);\n");
         writer.write("        }\n");

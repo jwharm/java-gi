@@ -32,7 +32,7 @@ public class Record extends Class {
         generateMemoryLayout(writer);
         generateRecordAllocator(writer);
         for (Field f : fieldList) {
-        	f.generate(writer);
+            f.generate(writer);
         }
 
         generateMemoryAddressConstructor(writer);
@@ -58,7 +58,7 @@ public class Record extends Class {
 
     public void generateRecordAllocator(Writer writer) throws IOException {
         writer.write("    \n");
-    	writer.write("    private MemorySegment allocatedMemorySegment;\n");
+        writer.write("    private MemorySegment allocatedMemorySegment;\n");
         writer.write("    \n");
         writer.write("    public static " + javaName + " allocate() {\n");
         writer.write("        MemorySegment segment = Interop.getAllocator().allocate(getMemoryLayout());\n");

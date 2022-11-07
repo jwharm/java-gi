@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class Class extends RegisteredType {
-	
-	public String typeStruct;
+    
+    public String typeStruct;
 
     public Class(GirElement parent, String name, String parentClass, String cType, String typeStruct, String version) {
         super(parent, name, parentClass, cType, version);
@@ -41,7 +41,7 @@ public class Class extends RegisteredType {
         generateCType(writer);
         generateMemoryLayout(writer);
         for (Field f : fieldList) {
-        	f.generate(writer);
+            f.generate(writer);
         }
 
         generateMemoryAddressConstructor(writer);

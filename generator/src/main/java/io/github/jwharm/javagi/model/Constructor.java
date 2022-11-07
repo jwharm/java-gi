@@ -25,7 +25,7 @@ public class Constructor extends Method {
         }
         
         if ("1".equals(deprecated)) {
-        	writer.write("    @Deprecated\n");
+            writer.write("    @Deprecated\n");
         }
         
         writer.write("    public ");
@@ -43,8 +43,8 @@ public class Constructor extends Method {
         writer.write(" {\n");
         
         if (! isSafeToBind()) {
-        	writer.write("        this(null, null); // avoid compiler error\n");
-        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("        this(null, null); // avoid compiler error\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return;
         }
@@ -72,7 +72,7 @@ public class Constructor extends Method {
         }
         
         if ("1".equals(deprecated)) {
-        	writer.write("    @Deprecated\n");
+            writer.write("    @Deprecated\n");
         }
         
         writer.write("    public static " + clazz.javaName + " " + Conversions.toLowerCaseJavaName(name));
@@ -89,7 +89,7 @@ public class Constructor extends Method {
         writer.write(" {\n");
         
         if (! isSafeToBind()) {
-        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return;
         }
@@ -128,7 +128,7 @@ public class Constructor extends Method {
         writer.write(" {\n");
         
         if (! isSafeToBind()) {
-        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return methodName;
         }
@@ -155,9 +155,9 @@ public class Constructor extends Method {
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
         if (throws_ != null) {
-	        writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
-	        writer.write("            throw new GErrorException(GERROR);\n");
-	        writer.write("        }\n");
+            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("            throw new GErrorException(GERROR);\n");
+            writer.write("        }\n");
         }
         writer.write("        return RESULT;\n");
         writer.write("    }\n");

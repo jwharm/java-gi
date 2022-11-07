@@ -17,12 +17,12 @@ public class Member extends GirElement {
         try {
             this.value = Integer.parseInt(value);
         } catch (NumberFormatException nfe) {
-        	if (JavaGI.DISPLAY_WARNINGS) {
+            if (JavaGI.DISPLAY_WARNINGS) {
                 System.out.println("Skipping <member name=\"" + name + "\"" 
                         + " c:identifier=\"" + cIdentifier + "\"" 
                         + " value=\"" + value + "\"" 
                         + ">: Not an integer");
-        	}
+            }
         }
     }
 }

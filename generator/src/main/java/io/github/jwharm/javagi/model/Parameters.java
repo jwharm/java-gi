@@ -75,10 +75,10 @@ public class Parameters extends GirElement {
                 writer.write(",");
             }
             writer.write("\n                    ");
-    		// Don't null-check parameters that are hidden from the Java API, or primitive values
-        	if (p.checkNull()) {
+            // Don't null-check parameters that are hidden from the Java API, or primitive values
+            if (p.checkNull()) {
                 writer.write("(Addressable) (" + p.name + " == null ? MemoryAddress.NULL : ");
-    		}
+            }
             if (p.isInstanceParameter()) {
                 writer.write("handle()");
             } else if (p.isDestroyNotify()) {
@@ -117,7 +117,7 @@ public class Parameters extends GirElement {
             } else if (callback != null && p.isUserDataParameter()) {
                 writer.write("(Addressable) (");
                 if (callbackParameter.nullable) {
-                	writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
+                    writer.write(callbackParamName + " == null ? MemoryAddress.NULL : ");
                 }
                 writer.write("Interop.registerCallback(" + callbackParamName + "))");
             } else if (p.varargs) {
@@ -126,7 +126,7 @@ public class Parameters extends GirElement {
                 p.generateInterop(writer, p.name, true);
             }
             if (p.checkNull()) {
-            	writer.write(")");
+                writer.write(")");
             }
         }
         if (throws_ != null) {

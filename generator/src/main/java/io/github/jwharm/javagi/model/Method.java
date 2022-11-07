@@ -28,7 +28,7 @@ public class Method extends GirElement implements CallableType {
         boolean varargs = false;
         writer.write("        \n");
         writer.write("        ");
-    	writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
+        writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
         writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
         writer.write("            \"" + cIdentifier + "\",\n");
         writer.write("            FunctionDescriptor.");
@@ -62,16 +62,16 @@ public class Method extends GirElement implements CallableType {
 
     protected void generateNullParameterChecks(Writer writer) throws IOException {
         if (parameters != null) {
-        	for (Parameter p : parameters.parameterList) {
-        		// Don't null-check parameters that are hidden from the Java API, or primitive values
-        		if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify() || p.varargs
-        				|| (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
-        			if (! p.nullable) {
-            			writer.write("        java.util.Objects.requireNonNull(" + p.name 
-            					+ ", \"" + "Parameter '" + p.name + "' must not be null\");\n");
-        			}
-        		}
-        	}
+            for (Parameter p : parameters.parameterList) {
+                // Don't null-check parameters that are hidden from the Java API, or primitive values
+                if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify() || p.varargs
+                        || (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
+                    if (! p.nullable) {
+                        writer.write("        java.util.Objects.requireNonNull(" + p.name 
+                                + ", \"" + "Parameter '" + p.name + "' must not be null\");\n");
+                    }
+                }
+            }
         }
     }
 
@@ -135,7 +135,7 @@ public class Method extends GirElement implements CallableType {
         
         // Currently unsupported method: throw an exception
         if (! isSafeToBind()) {
-        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return;
         }
@@ -208,53 +208,53 @@ public class Method extends GirElement implements CallableType {
             // First the regular (non-array) out-parameters. These could include an out-parameter with 
             // the length of an array out-parameter, so we have to process these first.
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter()) {
-            		if (p.array == null) {
-                		writer.write("        ");
-            			if (p.checkNull()) {
-            				writer.write("if (" + p.name + " != null) ");
-            			}
-                		writer.write(p.name + ".set(");
-                		String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
-                		if (p.type.isPrimitive && p.type.isPointer()) {
-                    		writer.write(identifier);
-                    		if (p.type.isBoolean()) writer.write(" != 0");
-                    		writer.write(");\n");
-                		} else {
-                    		writer.write(p.getNewInstanceString(p.type, identifier, false) + ");\n");
-                		}
-            		}
-            	} else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                if (p.isOutParameter()) {
+                    if (p.array == null) {
+                        writer.write("        ");
+                        if (p.checkNull()) {
+                            writer.write("if (" + p.name + " != null) ");
+                        }
+                        writer.write(p.name + ".set(");
+                        String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
+                        if (p.type.isPrimitive && p.type.isPointer()) {
+                            writer.write(identifier);
+                            if (p.type.isBoolean()) writer.write(" != 0");
+                            writer.write(");\n");
+                        } else {
+                            writer.write(p.getNewInstanceString(p.type, identifier, false) + ");\n");
+                        }
+                    }
+                } else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                     writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
             // Secondly, process the array out parameters
             for (Parameter p : parameters.parameterList) {
-            	if (p.isOutParameter() && p.array != null) {
-        			String len = p.array.size();
-        			String valuelayout = Conversions.getValueLayout(p.array.type);
-        			if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
-        				// Array of primitive values
-                		writer.write("        " + p.name + ".set(");
-            			writer.write("MemorySegment.ofAddress(" + p.name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
-        			} else {
-        				// Array of proxy objects
-        				writer.write("        " + p.array.type.qualifiedJavaType + "[] " + p.name + "ARRAY = new " + p.array.type.qualifiedJavaType + "[" + len + "];\n");
-        				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-        				writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
-        				writer.write("            " + p.name + "ARRAY[I] = ");
-        	            writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
-        				writer.write("        }\n");
-        				writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
-        			}
+                if (p.isOutParameter() && p.array != null) {
+                    String len = p.array.size();
+                    String valuelayout = Conversions.getValueLayout(p.array.type);
+                    if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
+                        // Array of primitive values
+                        writer.write("        " + p.name + ".set(");
+                        writer.write("MemorySegment.ofAddress(" + p.name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
+                    } else {
+                        // Array of proxy objects
+                        writer.write("        " + p.array.type.qualifiedJavaType + "[] " + p.name + "ARRAY = new " + p.array.type.qualifiedJavaType + "[" + len + "];\n");
+                        writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
+                        writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
+                        writer.write("            " + p.name + "ARRAY[I] = ");
+                        writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
+                        writer.write("        }\n");
+                        writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
+                    }
                 }
             }
         }
         
         // If the return value is an array, try to convert it to a Java array
         if (returnValue.array != null) {
-        	String len = returnValue.array.size();
-        	if (len != null) {
+            String len = returnValue.array.size();
+            if (len != null) {
                 if (getReturnValue().nullable) {
                     switch (panamaReturnType) {
                         case "MemoryAddress" -> writer.write("        if (RESULT.equals(MemoryAddress.NULL)) return null;\n");
@@ -263,19 +263,19 @@ public class Method extends GirElement implements CallableType {
                     }
                 }
                 String valuelayout = Conversions.getValueLayout(returnValue.array.type);
-    			if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
-    				// Array of primitive values
-            		writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
-    			} else {
-    				// Array of proxy objects
-    				writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
-    				writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-    				writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-    				writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ", false) + ";\n");
-    				writer.write("        }\n");
-    				writer.write("        return resultARRAY;\n");
-    			}
-        	} else {
+                if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
+                    // Array of primitive values
+                    writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
+                } else {
+                    // Array of proxy objects
+                    writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
+                    writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
+                    writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ", false) + ";\n");
+                    writer.write("        }\n");
+                    writer.write("        return resultARRAY;\n");
+                }
+            } else {
                 returnValue.generateReturnStatement(writer, 2);
             }
         } else {

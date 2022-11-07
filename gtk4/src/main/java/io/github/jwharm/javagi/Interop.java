@@ -91,7 +91,7 @@ public class Interop {
      * @return The NativeArena memory allocator.
      */
     public static SegmentAllocator getSessionAllocator() {
-    	return sessionAllocator;
+        return sessionAllocator;
     }
 
     /**
@@ -165,13 +165,13 @@ public class Interop {
      * @return A String or null
      */
     public static String getStringFrom(MemoryAddress address) {
-    	try {
-    		if (! MemoryAddress.NULL.equals(address)) {
-            	return address.getUtf8String(0);
-    		}
-    	} catch (Throwable t) {
-    	}
-		return null;
+        try {
+            if (! MemoryAddress.NULL.equals(address)) {
+                return address.getUtf8String(0);
+            }
+        } catch (Throwable t) {
+        }
+        return null;
     }
 
     /**

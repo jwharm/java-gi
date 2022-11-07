@@ -65,8 +65,8 @@ public class Signal extends Method {
         writer.write(", MemoryAddress data) {\n");
 
         if (! isSafeToBind()) {
-        	writer.write("        // Operation not supported yet\n");
-        	if (returnsBool) writer.write("    return false;\n");
+            writer.write("        // Operation not supported yet\n");
+            if (returnsBool) writer.write("    return false;\n");
             writer.write("    }\n");
             return;
         }
@@ -96,13 +96,13 @@ public class Signal extends Method {
         
         // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
         if (detailed) {
-        	writer.write("@Nullable String detail, ");
+            writer.write("@Nullable String detail, ");
         }
         
         writer.write(qualifiedName + " handler) {\n");
         
         if (! isSafeToBind()) {
-        	writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return;
         }
@@ -112,7 +112,7 @@ public class Signal extends Method {
         writer.write("                handle(),\n");
         writer.write("                Interop.allocateNativeString(\"" + name + "\"");
         if (detailed) {
-        	writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
+            writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
         writer.write("),\n");
         writer.write("                (Addressable) Linker.nativeLinker().upcallStub(\n");

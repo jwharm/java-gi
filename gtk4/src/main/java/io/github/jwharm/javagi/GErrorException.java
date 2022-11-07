@@ -13,7 +13,7 @@ public class GErrorException extends Exception {
 
     private static final long serialVersionUID = -5219056090883059292L;
     
-	private final int code, domain;
+    private final int code, domain;
 
     private static MemorySegment dereference(MemorySegment pointer) {
         return _GError.ofAddress(pointer.get(Interop.valueLayout.ADDRESS, 0), Interop.getScope());
@@ -81,35 +81,35 @@ public class GErrorException extends Exception {
     /**
      * Based on jextract-generated source file, generated from glib.h
      */
-	private class _GError {
+    private class _GError {
 
-		static final GroupLayout $struct$LAYOUT = 
-				MemoryLayout.structLayout(
-						Interop.valueLayout.C_INT.withName("domain"),
-						Interop.valueLayout.C_INT.withName("code"), 
-						Interop.valueLayout.ADDRESS.withName("message")
-				).withName("_GError");
+        static final GroupLayout $struct$LAYOUT = 
+                MemoryLayout.structLayout(
+                        Interop.valueLayout.C_INT.withName("domain"),
+                        Interop.valueLayout.C_INT.withName("code"), 
+                        Interop.valueLayout.ADDRESS.withName("message")
+                ).withName("_GError");
 
-		private static final VarHandle domain$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("domain"));
+        private static final VarHandle domain$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("domain"));
 
-		public static int domain$get(MemorySegment seg) {
-			return (int) _GError.domain$VH.get(seg);
-		}
+        public static int domain$get(MemorySegment seg) {
+            return (int) _GError.domain$VH.get(seg);
+        }
 
-		private static final VarHandle code$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("code"));
+        private static final VarHandle code$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("code"));
 
-		public static int code$get(MemorySegment seg) {
-			return (int) _GError.code$VH.get(seg);
-		}
+        public static int code$get(MemorySegment seg) {
+            return (int) _GError.code$VH.get(seg);
+        }
 
-		private static final VarHandle message$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("message"));
+        private static final VarHandle message$VH = $struct$LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("message"));
 
-		public static MemoryAddress message$get(MemorySegment seg) {
-			return (MemoryAddress) _GError.message$VH.get(seg);
-		}
+        public static MemoryAddress message$get(MemorySegment seg) {
+            return (MemoryAddress) _GError.message$VH.get(seg);
+        }
 
-		public static MemorySegment ofAddress(MemoryAddress addr, MemorySession scope) {
-			return MemorySegment.ofAddress(addr, _GError.$struct$LAYOUT.byteSize(), scope);
-		}
-	}
+        public static MemorySegment ofAddress(MemoryAddress addr, MemorySession scope) {
+            return MemorySegment.ofAddress(addr, _GError.$struct$LAYOUT.byteSize(), scope);
+        }
+    }
 }
