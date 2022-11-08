@@ -4,6 +4,11 @@ import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 
+/**
+ * This type of Pointer object points to a GObject-derived object 
+ * in native memory.
+ * @param <T> The type of the object
+ */
 public class PointerProxy<T extends Proxy> extends Pointer<T> {
 
     private final Class<T> cls;
@@ -17,15 +22,16 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
+     * @param value the new value that is pointed to
      */
     public void set(T value) {
         address.set(ValueLayout.ADDRESS, 0, value.handle());
     }
 
     /**
-     * Use this method to retreive the value of the parameter after the
-     * function call that set the value, has been executed.
+     * Use this method to retrieve the value of the pointer.
+     * @return The value of the pointer
      */
     public T get() {
         return get(0);
@@ -34,6 +40,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     /**
      * Treat the pointer as an array, and return the given element.
      * <p>
+     * <strong>Warning: There is no bounds checking.</strong>
      * <strong>Performance warning:</strong> This method uses reflection to instantiate the new object.
      * @param index The array index
      * @return The value stored at the given index

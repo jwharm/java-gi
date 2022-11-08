@@ -6,7 +6,7 @@ import java.lang.foreign.ValueLayout;
 /**
  * A pointer to an int value.
  * Use {@code new PointerInteger()} to create an instance, and
- * use {@link #get()} afterwards to retreive the results.
+ * use {@link #get()} and {@link #set(Integer)} to get and set the value.
  */
 public class PointerInteger extends Pointer<Integer> {
 
@@ -19,6 +19,7 @@ public class PointerInteger extends Pointer<Integer> {
 
     /**
      * Create a pointer to an existing memory address.
+     * @param address the memory address
      */
     public PointerInteger(MemoryAddress address) {
         super(address);
@@ -26,6 +27,7 @@ public class PointerInteger extends Pointer<Integer> {
 
     /**
      * Create the pointer and point it to the given initial value.
+     * @param initialValue The initial value
      */
     public PointerInteger(int initialValue) {
         this();
@@ -33,15 +35,16 @@ public class PointerInteger extends Pointer<Integer> {
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
+     * @param value the new value that is pointed to
      */
     public void set(Integer value) {
         address.set(ValueLayout.JAVA_INT, 0, value);
     }
 
     /**
-     * Use this method to retreive the value of the parameter after the
-     * function call that set the value, has been executed.
+     * Use this method to retrieve the value of the pointer.
+     * @return The value of the pointer
      */
     public Integer get() {
         return get(0);
@@ -49,6 +52,7 @@ public class PointerInteger extends Pointer<Integer> {
 
     /**
      * Treat the pointer as an array, and return the given element.
+     * <strong>Warning: There is no bounds checking.</strong>
      * @param index The array index
      * @return The value stored at the given index
      */

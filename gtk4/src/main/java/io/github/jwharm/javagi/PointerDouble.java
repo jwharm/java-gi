@@ -6,7 +6,7 @@ import java.lang.foreign.ValueLayout;
 /**
  * A pointer to a double value.
  * Use {@code new PointerDouble()} to create an instance, and
- * use {@link #get()} afterwards to retreive the results.
+ * use {@link #get()} and {@link #set(Double)} to get and set the value.
  */
 public class PointerDouble extends Pointer<Double> {
 
@@ -19,6 +19,7 @@ public class PointerDouble extends Pointer<Double> {
 
     /**
      * Create a pointer to an existing memory address.
+     * @param address the memory address
      */
     public PointerDouble(MemoryAddress address) {
         super(address);
@@ -26,6 +27,7 @@ public class PointerDouble extends Pointer<Double> {
 
     /**
      * Create the pointer and point it to the given initial value.
+     * @param initialValue The initial value
      */
     public PointerDouble(double initialValue) {
         this();
@@ -33,15 +35,16 @@ public class PointerDouble extends Pointer<Double> {
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
+     * @param value the new value that is pointed to
      */
     public void set(Double value) {
         address.set(ValueLayout.JAVA_DOUBLE, 0, value);
     }
 
     /**
-     * Use this method to retreive the value of the parameter after the
-     * function call that set the value, has been executed.
+     * Use this method to retrieve the value of the pointer.
+     * @return The value of the pointer
      */
     public Double get() {
         return get(0);
@@ -49,6 +52,7 @@ public class PointerDouble extends Pointer<Double> {
 
     /**
      * Treat the pointer as an array, and return the given element.
+     * <strong>Warning: There is no bounds checking.</strong>
      * @param index The array index
      * @return The value stored at the given index
      */

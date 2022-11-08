@@ -3,6 +3,9 @@ package io.github.jwharm.javagi;
 import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.ValueLayout;
 
+/**
+ * This class implements a pointer to a String in native memory.
+ */
 public class PointerString extends Pointer<String> {
 
     /**
@@ -12,6 +15,10 @@ public class PointerString extends Pointer<String> {
         super(ValueLayout.ADDRESS);
     }
 
+    /**
+     * Create the pointer and set the provided initial value.
+     * @param initialValue The initial value
+     */
     public PointerString(String initialValue) {
         this();
         set(initialValue);
@@ -19,21 +26,23 @@ public class PointerString extends Pointer<String> {
 
     /**
      * Create a pointer to an existing memory address.
+     * @param address the memory address
      */
     public PointerString(MemoryAddress address) {
         super(address);
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
+     * @param value the new value that is pointed to
      */
     public void set(String value) {
         address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value));
     }
 
     /**
-     * Use this method to retreive the value of the parameter after the
-     * function call that set the value, has been executed.
+     * Use this method to retrieve the value of the pointer.
+     * @return The value of the pointer
      */
     public String get() {
         return get(0);
@@ -41,6 +50,7 @@ public class PointerString extends Pointer<String> {
 
     /**
      * Treat the pointer as an array, and return the given element.
+     * <strong>Warning: There is no bounds checking.</strong>
      * @param index The array index
      * @return The value stored at the given index
      */

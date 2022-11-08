@@ -4,12 +4,18 @@ import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 
+/**
+ * A pointer type that points to an enumeration
+ * @param <T> the type of enumeration
+ */
 public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
 
     private final Class<T> cls;
 
     /**
-     * Create a pointer to an existing enum.
+     * Create a pointer to an existing enumeration.
+     * @param address the memory address
+     * @param cls the type of enumeration
      */
     public PointerEnumeration(MemoryAddress address, Class<T> cls) {
         super(address);
@@ -17,15 +23,16 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
     }
 
     /**
-     * Use this mehod to set the value that the pointer points to.
+     * Use this method to set the value that the pointer points to.
+     * @param value the new value that is pointed to
      */
     public void set(T value) {
         address.set(ValueLayout.JAVA_INT, 0, value.getValue());
     }
 
     /**
-     * Use this method to retreive the value of the parameter after the
-     * function call that set the value, has been executed.
+     * Use this method to retrieve the value of the pointer.
+     * @return The value of the pointer
      */
     public T get() {
         return get(0);
@@ -34,6 +41,7 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
     /**
      * Treat the pointer as an array, and return the given element.
      * <p>
+     * <strong>Warning: There is no bounds checking.</strong>
      * <strong>Performance warning:</strong> This method uses reflection to instantiate the new object.
      * @param index The array index
      * @return The value stored at the given index
