@@ -75,10 +75,13 @@ public class GtkDoc {
     private static final String REGEX_PASS_2 =
             // <p> immediately followed by <pre>
               "(?<emptyp>\\<p\\>\\s*(?<tag>\\<(pre|ul)\\>))"
+            // > one or more blockquote lines
+            + "|(?m)(?<blockquote>(^\\&gt;\\s+.*\\n?)+)"
     ;
     
     private static final String[] NAMED_GROUPS_PASS_2 = new String[] {
-            "emptyp"
+            "emptyp",
+            "blockquote"
     };
 
     private static GtkDoc instance = null;
@@ -175,6 +178,7 @@ public class GtkDoc {
             
             // Pass 2 group names
             case "emptyp" -> convertEmptyP(matcher.group(), matcher.group("tag"));
+            case "blockquote" -> convertBlockquote(matcher.group());
             
             default -> matcher.group();
         };
@@ -343,6 +347,18 @@ public class GtkDoc {
     // Replace <p><pre> or <p><ul> (and any whitespace in between) with just the second tag
     private String convertEmptyP(String ph, String tag) {
         return tag;
+    }
+    
+    // Convert quote lines (starting with "> ") to html <blockquote>s
+    private String convertBlockquote(String blockquoteLines) {
+        String result = blockquoteLines.replace("\n&gt;", "\n");
+        if (result.startsWith("&gt;")) {
+            result = result.substring(4);
+        }
+        if (! result.endsWith("\n")) {
+            result += "\n";
+        }
+        return "<blockquote>\n" + result + "</blockquote>";
     }
 
     // Return the Java package name followed by "." for another (not our own) namespace
