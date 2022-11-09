@@ -41,8 +41,10 @@ public class GtkDoc {
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+)\\n*"
             // - Bullet lists, we generate <ul> for the first bullet and <li> for every bullet
             + "|(?m)^\\s*(?<bulletpoint>\\-)\\s"
+            // Match **strong text**
+            + "|(?<strong>\\*\\*.*?\\w\\*\\*)"
             // Match *emphasized text*
-            + "|(?<em>\\*.*\\w\\*)"
+            + "|(?<em>\\*.*?\\w\\*)"
             // Match entities: <, >, &
             + "|(?<entity>\\<|\\>|\\&)"
             // Match multiple newlines
@@ -64,6 +66,7 @@ public class GtkDoc {
             "img",
             "header",
             "bulletpoint",
+            "strong",
             "em",
             "entity",
             "p"
@@ -101,7 +104,7 @@ public class GtkDoc {
     }
 
     /**
-     * Convert the GtkDoc comments into Javadoc as best as possible.
+     * Convert the GtkDoc comments into Javadoc.
      */
     public String convert(Doc doc) {
         this.doc = doc;
@@ -116,6 +119,7 @@ public class GtkDoc {
             matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(output);
+        // If the docstring ends with a list, append </ul>
         if (ul) {
             ul = false;
             output.append("\n</ul>");
@@ -135,7 +139,8 @@ public class GtkDoc {
         
         return pass2Result;
     }
-    
+
+    // Helper function to find out which named group was matched
     private String getMatchedGroupName(Matcher matcher, String[] groupNames) {
         return Arrays.stream(groupNames)
                 .filter((name) -> matcher.group(name) != null)
@@ -143,7 +148,7 @@ public class GtkDoc {
                 .orElseThrow();
     }
 
-    // Determine which matching group was matched, and apply the relevant conversion
+    // Apply the relevant conversion for the provided named group
     private String convert(Matcher matcher, String groupName) {
 
         return switch(groupName) {
@@ -163,6 +168,7 @@ public class GtkDoc {
                     matcher.group("imgdesc"), matcher.group("imgurl"));
             case "header" -> convertHeader(matcher.group(), matcher.group("headerlevel"));
             case "bulletpoint" -> convertBulletpoint(matcher.group());
+            case "strong" -> convertStrong(matcher.group());
             case "em" -> convertEm(matcher.group());
             case "entity" -> convertEntity(matcher.group());
             case "p" -> convertP(matcher.group());
@@ -304,6 +310,11 @@ public class GtkDoc {
         }
     }
 
+    // Replace **text** with <strong>text</strong>
+    private String convertStrong(String text) {
+        return "<strong>" + text.substring(2, text.length() - 2) + "</strong>";
+    }
+
     // Replace *text* with <em>text</em>
     private String convertEm(String text) {
         return "<em>" + text.substring(1, text.length() - 1) + "</em>";
@@ -361,10 +372,14 @@ public class GtkDoc {
         return name;
     }
     
+    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
+    // otherwise, generate a "{@code" tag.
     private String checkLink(String identifier) {
         return checkLink(doc.getNamespace().name, identifier);
     }
     
+    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
+    // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String identifier) {
         Repository gir = Conversions.repositoriesLookupTable.get(ns);
         if (gir == null || gir.namespace == null) {
