@@ -15,8 +15,8 @@ import io.github.jwharm.javagi.model.Repository;
 
 public class GtkDoc {
 
-    // This is one huge regular expression that basically matches a series of separate 
-    // regex patters, each with a named group, separated by an "or" ("|") operand.
+    // This regular expression matches a series of separate regex patterns, 
+    // each with a named group, separated by an "or" ("|") operand.
     // Most of the individual patterns should be relatively self-explanatory.
     private static final String REGEX_PASS_1 =
             // ``` multiline code block ```

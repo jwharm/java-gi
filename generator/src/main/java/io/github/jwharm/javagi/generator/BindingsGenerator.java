@@ -9,25 +9,33 @@ import java.util.Set;
 
 public class BindingsGenerator {
 
+    // Callback functions for signals are appended to this StringBuilder.
+    // When a class has been generated, these function declarations are written into 
+    // a static inner class "Callbacks".
     public static StringBuilder signalCallbackFunctions;
 
     public BindingsGenerator() {
     }
-
+    
+    // Generate Java bindings for the provided GI repository
     public void generate(Repository gir, Set<String> natives, Path basePath) throws IOException {
         signalCallbackFunctions = new StringBuilder();
 
         Files.createDirectories(basePath);
 
+        // Create a java file for each RegisteredType (class, interface, ...)
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
             
             try (Writer writer = Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java"))) {
                 rt.generate(writer);
             }
         }
+        // Create a class file for global declarations
         generateGlobals(gir, natives, basePath);
     }
 
+    // Generate the contents for the class with the namespace-global declarations.
+    // The name of the class is the namespace identifier.
     public void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
         String className = Conversions.toSimpleJavaType(gir.namespace.name);
         try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {

@@ -8,7 +8,14 @@ import java.util.stream.Stream;
 
 public class CrossReference {
 
+    // This method does two things:
+    // 1. Create a global map of all registered types in all repositories;
+    // 2. Loop through all type references in all repositories, find the 
+    //    actual type instance in the parsed GI tree, and save a reference
+    //    to that GirElement.
     public static void link(Map<String, Repository> repositories) {
+        
+        // Create the registeredTypeMap of all registered types of all GI repositories
         for (Repository r : repositories.values()) {
             Namespace ns = r.namespace;
             Stream<? extends RegisteredType> registeredTypes = Stream.of(
@@ -26,6 +33,7 @@ public class CrossReference {
             registeredTypes.forEach(rt -> ns.registeredTypeMap.put(rt.name, rt));
         }
 
+        // Link all type references to the accompanying types
         for (Repository repository : repositories.values()) {
             GirElement element = repository;
             while (element != null) {
@@ -46,6 +54,7 @@ public class CrossReference {
                         }
                     }
                     // Redo the initialization, now that all repositories have loaded.
+                    // If the repositories were loaded in the correct order, this will not change anything.
                     t.init(t.qualifiedName);
                 }
                 element = element.next;
@@ -53,6 +62,7 @@ public class CrossReference {
         }
     }
 
+    // Create a map to find a type by its "c:identifier" attribute
     public static Map<String, GirElement> createIdLookupTable(Map<String, Repository> repositories) {
         Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
         for (Repository repository : repositories.values()) {
@@ -69,13 +79,14 @@ public class CrossReference {
         return cIdentifierLookupTable;
     }
 
+    // Create a map to find a type by its "c:type" attribute
     public static Map<String, RegisteredType> createCTypeLookupTable(Map<String, Repository> repositories) {
-        Map<String, RegisteredType> cIdentifierLookupTable = new HashMap<>();
+        Map<String, RegisteredType> cTypeLookupTable = new HashMap<>();
         for (Repository gir : repositories.values()) {
             for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
-                cIdentifierLookupTable.put(rt.cType, rt);
+                cTypeLookupTable.put(rt.cType, rt);
             }
         }
-        return cIdentifierLookupTable;
+        return cTypeLookupTable;
     }
 }

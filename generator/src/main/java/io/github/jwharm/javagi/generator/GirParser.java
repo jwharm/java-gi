@@ -14,6 +14,12 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The GirParser class is a simple SAX parser that creates a tree of "GirElement" objects 
+ * that (roughly) corresponds to the XML elements in the GIR file.
+ * Most of the work is done in the startElement() callback. The endElement() callback is 
+ * mostly used to set the docstrings into the currently open Doc element.
+ */
 public class GirParser extends DefaultHandler {
 
     private final SAXParser parser;
@@ -22,6 +28,9 @@ public class GirParser extends DefaultHandler {
     private GirElement current;
     private String skip;
 
+    /**
+     * Reset the parser
+     */
     @Override
     public void startDocument() {
         chars = new StringBuilder();
@@ -29,10 +38,17 @@ public class GirParser extends DefaultHandler {
         skip = null;
     }
 
+    /**
+     * Not used
+     */
     @Override
     public void endDocument() {
     }
 
+    /**
+     * Create a GirElement for this XML element and its attributes, and add it to
+     * the tree.
+     */
     @Override
     public void startElement(String uri, String lName, String qName, Attributes attr) {
         if (skip != null) {
@@ -263,6 +279,19 @@ public class GirParser extends DefaultHandler {
         }
     }
 
+    /**
+     * The characters callback is not guaranteed to receive the complete text inside
+     * the currently open XML element in one call. So we append the chars to a 
+     * StringBuilder, and save the complete text in the endElement() callback.
+     */
+    @Override
+    public void characters(char[] ch, int start, int length) {
+        chars.append(ch, start, length);
+    }
+
+    /**
+     * Save the text (docstring) into the currently open Doc instance.
+     */
     @Override
     public void endElement(String uri, String localName, String qName) {
         if (!(chars.isEmpty() || chars.toString().isBlank())) {
@@ -279,15 +308,24 @@ public class GirParser extends DefaultHandler {
         }
     }
 
-    @Override
-    public void characters(char[] ch, int start, int length) {
-        chars.append(ch, start, length);
-    }
-
+    /**
+     * Setup a new XML parser to process a GIR file
+     * @throws ParserConfigurationException Indicates a serious SAX configuration error. Should not happen.
+     * @throws SAXException Generic SAX error. Should not happen here.
+     */
     public GirParser() throws ParserConfigurationException, SAXException {
         parser = SAXParserFactory.newInstance().newSAXParser();
     }
 
+    /**
+     * Parse the provided GIR file and create a tree of GirElement instances that 
+     * represents the GI repository.
+     * @param uri Location of the GIR file
+     * @param pkg Name of the Java package to use
+     * @return The GI repository tree of GirElement instances
+     * @throws IOException If an error is encountered while reading the GIR file
+     * @throws SAXException If an error is encountered while parsing the XML in the GIR file
+     */
     public Repository parse(String uri, String pkg) throws IOException, SAXException {
         if (! new File(uri).exists()) {
             throw new IOException("Specified GIR file does not exist: " + uri);

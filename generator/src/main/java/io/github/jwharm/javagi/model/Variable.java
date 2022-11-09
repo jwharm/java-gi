@@ -10,7 +10,8 @@ public class Variable extends GirElement {
     public Variable(GirElement parent) {
         super(parent);
     }
-    
+
+    // Generate the type and name as is used for the parameter declarations of a Java method.
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
         String typeStr;
         
@@ -58,6 +59,7 @@ public class Variable extends GirElement {
         writer.write(typeStr + " " + ("...".equals(name) ? "varargs" : name));
     }
 
+    // Generate the code to convert the value of this variable to a native function parameter
     public void generateInterop(Writer writer, String identifier, boolean checkForOutParameter) throws IOException {
         // Arrays
         if (array != null) {
@@ -97,7 +99,8 @@ public class Variable extends GirElement {
             writer.write(identifier);
         }
     }
-    
+
+    // Generate code to create an array in native memory for this parameter value
     private void generateArrayInterop(Writer writer, String identifier, Type type, String zeroTerminated) throws IOException {
         String zeroTerminatedBool = "1".equals(zeroTerminated) ? "true" : "false";
         
@@ -122,6 +125,7 @@ public class Variable extends GirElement {
         }
     }
     
+    // Generate code to create the Java instance for a value that is returned/created from native code
     public String getNewInstanceString(Type type, String identifier, boolean generatePointerProxy) {
         // This should not happen
         if (type == null) {
@@ -169,6 +173,7 @@ public class Variable extends GirElement {
         return identifier;
     }
 
+    // Generate code to convert a native value to a Java value
     public void generateReverseInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
         if (array != null) {
             generateReverseArrayInterop(writer, identifier, pointerForArrays);
@@ -177,6 +182,7 @@ public class Variable extends GirElement {
         }
     }
     
+    // Generate code to convert a native array into a Java array (or Pointer instance)
     public void generateReverseArrayInterop(Writer writer, String identifier, boolean pointerForArrays) throws IOException {
         Type type = array != null ? array.type : this.type;
         String len = null;
@@ -226,7 +232,8 @@ public class Variable extends GirElement {
             writer.write("new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
         }
     }
-    
+
+    // Generate the return type declaration for a Java method
     public String getReturnType() {
         // Arrays
         if (array != null) {
@@ -247,7 +254,8 @@ public class Variable extends GirElement {
         // Anything else
         return type.qualifiedJavaType;
     }
-    
+
+    // Generate the return type declaration (for a Java method) for a pointer instance
     public String getPointerReturnType(Type type, String size) {
         // This should not happen
         if (type == null) {

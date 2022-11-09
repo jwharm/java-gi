@@ -18,17 +18,23 @@ public class Conversions {
     public static Map<String, RegisteredType> cTypeLookupTable;
     public static Map<String, Repository> repositoriesLookupTable;
 
-    /** Convert "Gdk" to "org.gtk.gdk" */
+    /**
+     * Convert "Gdk" to "org.gtk.gdk"
+     */
     public static String namespaceToJavaPackage(String ns) {
         return Objects.requireNonNullElse(nsLookupTable.get(ns.toLowerCase()), ns);
     }
 
-    /** Convert "identifier_name" to "identifierName" */
+    /** 
+     * Convert "identifier_name" to "identifierName"
+     */
     public static String toLowerCaseJavaName(String typeName) {
         return replaceKeywords(toCamelCase(typeName, false));
     }
 
-    /** Convert "GLib.type_name" to "TypeName" */
+    /**
+     * Convert "GLib.type_name" to "TypeName"
+     */
     public static String toSimpleJavaType(String typeName) {
         if (typeName == null) {
             return null;
@@ -64,7 +70,9 @@ public class Conversions {
         }
     }
 
-    /** Convert "GLib.TypeName" to "org.gtk.glib" */
+    /**
+     * Convert "GLib.TypeName" to "org.gtk.glib"
+     */
     public static String getJavaPackageName(String typeName) {
         if (typeName == null) {
             return null;
@@ -76,6 +84,12 @@ public class Conversions {
         return null;
     }
 
+    /**
+     * Convert a "type_name" or "type-name" to "typeName" or "TypeName".
+     * @param typeName the string to convert
+     * @param startUpperCase if the result should start with an uppercase letter
+     * @return the CamelCased string
+     */
     public static String toCamelCase(String typeName, boolean startUpperCase) {
         if (typeName == null) {
             return null;
@@ -95,10 +109,16 @@ public class Conversions {
         return builder.toString();
     }
 
+    /**
+     * A type name starting with a digit is not allowed; prefix it with an underscore.
+     */
     public static String prefixDigits(String name) {
         return Character.isDigit(name.charAt(0)) ? "_" + name : name;
     }
 
+    /**
+     * For types that are reserved Java keywords, append an underscore.
+     */
     private static String replaceKeywords(String name) {
         final String[] keywords = new String[] {
                 "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
@@ -111,6 +131,10 @@ public class Conversions {
         return (Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name))) ? name + "_" : name;
     }
 
+    /**
+     * Overriding java.lang.Object methods is not allowed in default methods (in interfaces),
+     * so we append an underscore to those method names.
+     */
     public static String replaceJavaObjectMethodNames(String name) {
         for (java.lang.reflect.Method m : Object.class.getMethods()) {
             if (m.getName().equals(name)) {
@@ -123,7 +147,7 @@ public class Conversions {
     /**
      * Convert C type declaration into Java type declaration.
      * This does not work correctly in all cases. For example, Java does not support 
-     * unsigned data types (like "unsigned short").
+     * unsigned types.
      */
     public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
         return name == null ? null : switch (name.toLowerCase()) {
@@ -144,6 +168,9 @@ public class Conversions {
         };
     }
 
+    /**
+     * Get the type name to use when interfacing with native code
+     */
     public static String toPanamaJavaType(Type t) {
         if (t == null) {
             return "MemoryAddress";
@@ -160,6 +187,9 @@ public class Conversions {
         }
     }
 
+    /**
+     * Get the memory layout of this type. Pointer types are returned as ValueLayout.ADDRESS.
+     */
     public static String toPanamaMemoryLayout(Type t) {
         if (t == null) {
             return "ValueLayout.ADDRESS";
@@ -176,6 +206,9 @@ public class Conversions {
         }
     }
 
+    /**
+     * Get the memory layout of this type. Pointer types are treated as the actual type.
+     */
     public static String getValueLayout(Type t) {
         if (t == null) {
             return "ValueLayout.ADDRESS";
@@ -190,11 +223,17 @@ public class Conversions {
         }
     }
 
+    /**
+     * Returns true when this type is a Java primitive type
+     */
     public static boolean isPrimitive(String javaType) {
         return javaType != null
                 && List.of("boolean", "byte", "char", "double", "float", "int", "long", "short").contains(javaType);
     }
     
+    /**
+     * Convert "char" to "Character", "int" to "Integer", and uppercase all other primitive types
+     */
     public static String primitiveClassName(String primitive) {
         return switch(primitive) {
             case "char" -> "Character";
@@ -203,6 +242,10 @@ public class Conversions {
         };
     }
 
+    /**
+     * Generate the literal representation of the provided value, according 
+     * to the provided type.
+     */
     public static String literal(String type, String value) throws NumberFormatException {
         return switch (type) {
             case "boolean" -> Boolean.valueOf(value).toString();
