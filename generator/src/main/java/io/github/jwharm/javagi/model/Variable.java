@@ -14,8 +14,8 @@ public class Variable extends GirElement {
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
         String typeStr;
         
-        // Annotations
-        if (type != null && (! type.isPrimitive) && (this instanceof Parameter p)) {
+        // Nullable/NotNull annotations
+        if ((array != null || (type != null && (! type.isPrimitive))) && (this instanceof Parameter p)) {
             writer.write(p.nullable ? "@Nullable " : "@NotNull ");
         }
         
