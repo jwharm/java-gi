@@ -14,6 +14,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Interop {
@@ -195,10 +196,10 @@ public class Interop {
     }
 
     /**
-     * Converts the boolean[] array into an int[] array, and calls allocateNativeArray(int, boolean).
+     * Converts the boolean[] array into an int[] array, and calls {@link #allocateNativeArray(int[], boolean)}.
      * Each boolean value "true" is converted 1, boolean value "false" to 0.
      * @param array Array of booleans
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, an (int) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(boolean[] array, boolean zeroTerminated) {
@@ -212,92 +213,99 @@ public class Interop {
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of bytes.
      * @param array The array of bytes
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (byte) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(byte[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_BYTE, array);
+        byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_BYTE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of chars.
      * @param array The array of chars
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (char) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(char[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_CHAR, array);
+        char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_CHAR, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of doubles.
      * @param array The array of doubles
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (double) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(double[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_DOUBLE, array);
+        double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
      * @param array The array of floats
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (float) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(float[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_FLOAT, array);
+        float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_FLOAT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
      * @param array The array of floats
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (int) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(int[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_INT, array);
+        int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_INT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of longs.
      * @param array The array of longs
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (long) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(long[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_LONG, array);
+        long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_LONG, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of shorts.
      * @param array The array of shorts
-     * @param zeroTerminated TODO currently ignored
+     * @param zeroTerminated When true, a (short) 0 is appended to the array
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(short[] array, boolean zeroTerminated) {
         if (array == null || array.length == 0) {
             return null;
         }
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_SHORT, array);
+        short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
+        return implicitAllocator.allocateArray(ValueLayout.JAVA_SHORT, copy);
     }
 
     /**
@@ -381,6 +389,7 @@ public class Interop {
             }
         }
 
+        // This method is used from a MethodHandle (INVOKE_MH).
         private Object invoke(SegmentAllocator allocator, Object[] args) throws Throwable {
             // one trailing Object[]
             int nNamedArgs = function.argumentLayouts().size();
@@ -493,7 +502,7 @@ public class Interop {
             if (o instanceof Proxy proxy) {
                 return proxy.handle();
             }
-            if (o instanceof Alias alias) {
+            if (o instanceof Alias<?> alias) {
                 return alias.getValue();
             }
             if (o instanceof Bitfield bitfield) {
