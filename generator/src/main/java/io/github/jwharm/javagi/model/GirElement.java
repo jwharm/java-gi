@@ -66,4 +66,8 @@ public class GirElement {
     public String toString() {
         return this.getClass().getSimpleName() + " " + this.name;
     }
+    
+    protected String tab(int tabs) {
+        return " ".repeat(tabs * 4);
+    }
 }

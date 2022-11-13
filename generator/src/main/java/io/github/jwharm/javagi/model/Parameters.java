@@ -137,31 +137,33 @@ public class Parameters extends GirElement {
     /**
      * Generate preprocessing statements for all parameters
      * @param writer The source code file writer
+     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generatePreprocessing(Writer writer) throws IOException {
+    public void generatePreprocessing(Writer writer, int indent) throws IOException {
         for (Parameter p : parameterList) {
-            p.generatePreprocessing(writer);
+            p.generatePreprocessing(writer, indent);
         }
     }
     
     /**
      * Generate postprocessing statements for all parameters
      * @param writer The source code file writer
+     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generatePostprocessing(Writer writer) throws IOException {
+    public void generatePostprocessing(Writer writer, int indent) throws IOException {
         // First the regular (non-array) out-parameters. These could include an out-parameter with 
         // the length of an array out-parameter, so we have to process these first.
         for (Parameter p : parameterList) {
             if (p.array == null) {
-                p.generatePostprocessing(writer);
+                p.generatePostprocessing(writer, indent);
             }
         }
         // Secondly, process the array out parameters
         for (Parameter p : parameterList) {
             if (p.array != null) {
-                p.generatePostprocessing(writer);
+                p.generatePostprocessing(writer, indent);
             }
         }
     }

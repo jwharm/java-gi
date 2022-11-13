@@ -127,7 +127,7 @@ public class Method extends GirElement implements CallableType {
         
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
-            parameters.generatePreprocessing(writer);
+            parameters.generatePreprocessing(writer, 2);
         }
 
         // Allocate GError pointer
@@ -179,39 +179,11 @@ public class Method extends GirElement implements CallableType {
         
         // Generate post-processing actions for parameters
         if (parameters != null) {
-            parameters.generatePostprocessing(writer);
+            parameters.generatePostprocessing(writer, 2);
         }
         
-        // If the return value is an array, try to convert it to a Java array
-        if (returnValue.array != null) {
-            String len = returnValue.array.size();
-            if (len != null) {
-                if (getReturnValue().nullable) {
-                    switch (panamaReturnType) {
-                        case "MemoryAddress" -> writer.write("        if (RESULT.equals(MemoryAddress.NULL)) return null;\n");
-                        case "MemorySegment" -> writer.write("        if (RESULT.address().equals(MemoryAddress.NULL)) return null;\n");
-                        default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
-                    }
-                }
-                String valuelayout = Conversions.getValueLayout(returnValue.array.type);
-                if (returnValue.array.type.isPrimitive && (! returnValue.array.type.isBoolean())) {
-                    // Array of primitive values
-                    writer.write("        return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
-                } else {
-                    // Array of proxy objects
-                    writer.write("        " + returnValue.array.type.qualifiedJavaType + "[] resultARRAY = new " + returnValue.array.type.qualifiedJavaType + "[" + len + "];\n");
-                    writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-                    writer.write("            var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-                    writer.write("            resultARRAY[I] = " + returnValue.getNewInstanceString(returnValue.array.type, "OBJ", false) + ";\n");
-                    writer.write("        }\n");
-                    writer.write("        return resultARRAY;\n");
-                }
-            } else {
-                returnValue.generateReturnStatement(writer, 2);
-            }
-        } else {
-            returnValue.generateReturnStatement(writer, 2);
-        }
+        // Generate code to process and return the result value
+        returnValue.generate(writer, panamaReturnType, 2);
         
         writer.write("    }\n");
     }

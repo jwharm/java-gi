@@ -142,7 +142,7 @@ public class Constructor extends Method {
         
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
-            parameters.generatePreprocessing(writer);
+            parameters.generatePreprocessing(writer, 2);
         }
 
         // Allocate GError pointer
@@ -183,7 +183,7 @@ public class Constructor extends Method {
         
         // Generate post-processing actions for parameters
         if (parameters != null) {
-            parameters.generatePostprocessing(writer);
+            parameters.generatePostprocessing(writer, 2);
         }
         
         writer.write("        return RESULT;\n");
