@@ -112,14 +112,19 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    \n");
         writer.write("    /**\n");
         writer.write("     * Cast object to " + javaName + " if its GType is a (or inherits from) \"" + cType + "\".\n");
+        writer.write("     * <p>\n");
+        writer.write("     * Internally, this creates a new Proxy object with the same ownership status as the parameter. If \n");
+        writer.write("     * the parameter object was owned by the user, the Cleaner will be removed from it, and will be attached \n");
+        writer.write("     * to the new Proxy object, so the call to {@code g_object_unref} will happen only once the new Proxy instance \n");
+        writer.write("     * is garbage-collected. \n");
         writer.write("     * @param  gobject            An object that inherits from GObject\n");
-        writer.write("     * @return                    An instance of \"" + javaName + "\" that points to the memory address of the provided GObject.\n");
+        writer.write("     * @return                    A new proxy instance of type {@code " + javaName + "} that points to the memory address of the provided GObject.\n");
         writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
         writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
-        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.refcounted().getOwnership());\n");
+        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
         writer.write("        }\n");
@@ -213,5 +218,7 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
-    public abstract String getInteropString(String paramName, boolean isPointer, String transferOwnership);
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        return paramName + ".handle()";
+    }
 }

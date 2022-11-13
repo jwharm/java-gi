@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
@@ -46,12 +47,15 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      * @return The value stored at the given index
      */
     public T get(int index) {
-        Refcounted ref = Refcounted.get(address.get(
+        // Get the memory address of the native object.
+        Addressable ref = address.get(
                 ValueLayout.ADDRESS,
                 ValueLayout.ADDRESS.byteSize() * index
-        ));
+        );
+        // Call the constructor of the proxy object and return the created instance.
         try {
-            T instance = cls.getDeclaredConstructor(new Class[] {Refcounted.class}).newInstance(ref);
+            T instance = cls.getDeclaredConstructor(new Class[] {Addressable.class, Ownership.class})
+                    .newInstance(ref, Ownership.UNKNOWN);
             return instance;
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             return null;

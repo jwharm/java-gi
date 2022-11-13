@@ -154,6 +154,19 @@ public class Constructor extends Method {
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
+        // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
+        if (parameters != null) {
+            for (Parameter p : parameters.parameterList) {
+                // Only for proxy objects where ownership is fully transferred away, 
+                // unless it's an out parameter or a pointer
+                if (p.isProxy()
+                        && "full".equals(p.transferOwnership) 
+                        && (! p.isOutParameter()) 
+                        && (p.type.cType == null || (! p.type.cType.endsWith("**")))) {
+                    writer.write("        " + (p.isInstanceParameter() ? "this" : p.name) + ".yieldOwnership();\n");
+                }
+            }
+        }
         if (throws_ != null) {
             writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
             writer.write("            throw new GErrorException(GERROR);\n");

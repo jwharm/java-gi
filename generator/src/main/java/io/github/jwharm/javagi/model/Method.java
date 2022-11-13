@@ -203,8 +203,9 @@ public class Method extends GirElement implements CallableType {
             writer.write("        }\n");
         }
         
-        // Read pointer values from memory segments
+        // Generate post-processing actions for parameters
         if (parameters != null) {
+            
             // First the regular (non-array) out-parameters. These could include an out-parameter with 
             // the length of an array out-parameter, so we have to process these first.
             for (Parameter p : parameters.parameterList) {
@@ -228,6 +229,7 @@ public class Method extends GirElement implements CallableType {
                     writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
                 }
             }
+            
             // Secondly, process the array out parameters
             for (Parameter p : parameters.parameterList) {
                 if (p.isOutParameter() && p.array != null) {
@@ -247,6 +249,18 @@ public class Method extends GirElement implements CallableType {
                         writer.write("        }\n");
                         writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
                     }
+                }
+            }
+            
+            // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
+            for (Parameter p : parameters.parameterList) {
+                // Only for proxy objects where ownership is fully transferred away, 
+                // unless it's an out parameter or a pointer
+                if (p.isProxy()
+                        && "full".equals(p.transferOwnership) 
+                        && (! p.isOutParameter()) 
+                        && (p.type.cType == null || (! p.type.cType.endsWith("**")))) {
+                    writer.write("        " + (p.isInstanceParameter() ? "this" : p.name) + ".yieldOwnership();\n");
                 }
             }
         }

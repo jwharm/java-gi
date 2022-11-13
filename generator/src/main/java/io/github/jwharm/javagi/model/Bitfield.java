@@ -64,6 +64,7 @@ public class Bitfield extends ValueWrapper {
         writer.write("}\n");
     }
     
+    @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         String str = paramName + ".getValue()";
         if (isPointer) {

@@ -14,20 +14,12 @@ public class Union extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ResourceBase {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ProxyBase {\n");
         generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
         writer.write("}\n");
         writer.write("\n");
-    }
-
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        if ("Ownership.FULL".equals(transferOwnership)) {
-            return paramName + ".refcounted().unowned().handle()";
-        } else {
-            return paramName + ".handle()";
-        }
     }
 }

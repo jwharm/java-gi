@@ -22,7 +22,7 @@ public class Class extends RegisteredType {
         writer.write("public class " + javaName);
         writer.write(" extends ");
         if (name.equals("Object")) {
-            writer.write("io.github.jwharm.javagi.ResourceBase");
+            writer.write("io.github.jwharm.javagi.ProxyBase");
         } else if (parentClass == null) {
             writer.write("org.gtk.gobject.Object");
         } else {
@@ -64,13 +64,5 @@ public class Class extends RegisteredType {
         generateSignalCallbacks(writer);
         
         writer.write("}\n");
-    }
-
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        if ("Ownership.FULL".equals(transferOwnership)) {
-            return paramName + ".refcounted().unowned().handle()";
-        } else {
-            return paramName + ".handle()";
-        }
     }
 }
