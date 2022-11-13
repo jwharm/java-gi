@@ -60,21 +60,6 @@ public class Method extends GirElement implements CallableType {
         writer.write("        );\n");
     }
 
-    protected void generateNullParameterChecks(Writer writer) throws IOException {
-        if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                // Don't null-check parameters that are hidden from the Java API, or primitive values
-                if (! (p.isInstanceParameter() || p.isErrorParameter() || p.isUserDataParameter() || p.isDestroyNotify() || p.varargs
-                        || (p.type != null && p.type.isPrimitive && (! p.type.isPointer())))) {
-                    if (! p.nullable) {
-                        writer.write("        java.util.Objects.requireNonNull(" + p.name 
-                                + ", \"" + "Parameter '" + p.name + "' must not be null\");\n");
-                    }
-                }
-            }
-        }
-    }
-
     public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
         writer.write("    \n");
         
@@ -140,27 +125,16 @@ public class Method extends GirElement implements CallableType {
             return;
         }
         
-        // Generate checks for null parameters
-        generateNullParameterChecks(writer);
+        // Generate preprocessing statements for all parameters
+        if (parameters != null) {
+            parameters.generatePreprocessing(writer);
+        }
 
         // Allocate GError pointer
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         
-        // MemorySegment declarations for pointer parameters
-        if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                if (p.isOutParameter()) {
-                    writer.write("        MemorySegment " + p.name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(p.type) + ");\n");
-                } else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
-                    String typeStr = p.type.girElementInstance.type.simpleJavaType;
-                    typeStr = Conversions.primitiveClassName(typeStr);
-                    writer.write("        Pointer" + typeStr + " " + p.name + "POINTER = new Pointer" + typeStr + "(" + p.name + ".getValue());\n");
-                }
-            }
-        }
-
         // Variable declaration for return value
         String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
@@ -205,64 +179,7 @@ public class Method extends GirElement implements CallableType {
         
         // Generate post-processing actions for parameters
         if (parameters != null) {
-            
-            // First the regular (non-array) out-parameters. These could include an out-parameter with 
-            // the length of an array out-parameter, so we have to process these first.
-            for (Parameter p : parameters.parameterList) {
-                if (p.isOutParameter()) {
-                    if (p.array == null) {
-                        writer.write("        ");
-                        if (p.checkNull()) {
-                            writer.write("if (" + p.name + " != null) ");
-                        }
-                        writer.write(p.name + ".set(");
-                        String identifier = p.name + "POINTER.get(" + Conversions.getValueLayout(p.type) + ", 0)";
-                        if (p.type.isPrimitive && p.type.isPointer()) {
-                            writer.write(identifier);
-                            if (p.type.isBoolean()) writer.write(" != 0");
-                            writer.write(");\n");
-                        } else {
-                            writer.write(p.getNewInstanceString(p.type, identifier, false) + ");\n");
-                        }
-                    }
-                } else if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
-                    writer.write("            " + p.name + ".setValue(" + p.name + "POINTER.get());\n");
-                }
-            }
-            
-            // Secondly, process the array out parameters
-            for (Parameter p : parameters.parameterList) {
-                if (p.isOutParameter() && p.array != null) {
-                    String len = p.array.size();
-                    String valuelayout = Conversions.getValueLayout(p.array.type);
-                    if (p.array.type.isPrimitive && (! p.array.type.isBoolean())) {
-                        // Array of primitive values
-                        writer.write("        " + p.name + ".set(");
-                        writer.write("MemorySegment.ofAddress(" + p.name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
-                    } else {
-                        // Array of proxy objects
-                        writer.write("        " + p.array.type.qualifiedJavaType + "[] " + p.name + "ARRAY = new " + p.array.type.qualifiedJavaType + "[" + len + "];\n");
-                        writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
-                        writer.write("            var OBJ = " + p.name + "POINTER.get(" + valuelayout + ", I);\n");
-                        writer.write("            " + p.name + "ARRAY[I] = ");
-                        writer.write(p.getNewInstanceString(p.array.type, "OBJ", false) + ";\n");
-                        writer.write("        }\n");
-                        writer.write("        " + p.name + ".set(" + p.name + "ARRAY);\n");
-                    }
-                }
-            }
-            
-            // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
-            for (Parameter p : parameters.parameterList) {
-                // Only for proxy objects where ownership is fully transferred away, 
-                // unless it's an out parameter or a pointer
-                if (p.isProxy()
-                        && "full".equals(p.transferOwnership) 
-                        && (! p.isOutParameter()) 
-                        && (p.type.cType == null || (! p.type.cType.endsWith("**")))) {
-                    writer.write("        " + (p.isInstanceParameter() ? "this" : p.name) + ".yieldOwnership();\n");
-                }
-            }
+            parameters.generatePostprocessing(writer);
         }
         
         // If the return value is an array, try to convert it to a Java array

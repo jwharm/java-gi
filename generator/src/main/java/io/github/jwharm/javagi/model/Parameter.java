@@ -1,5 +1,8 @@
 package io.github.jwharm.javagi.model;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import io.github.jwharm.javagi.generator.Conversions;
 
 public class Parameter extends Variable {
@@ -111,5 +114,90 @@ public class Parameter extends Variable {
         return nullable 
                 && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
                         || (type != null && type.isPrimitive && (! type.isPointer()))));
+    }
+    
+    /**
+     * Generate code to do pre-processing of the parameter before the function call. This will 
+     * generate a null check for NotNull parameters, and generate pointer allocation logic for 
+     * pointer parameters.
+     * @param writer The source code file writer
+     * @throws IOException Thrown when an error occurs while writing to the file
+     */
+    public void generatePreprocessing(Writer writer) throws IOException {
+        
+        // Generate null-check
+        // Don't null-check parameters that are hidden from the Java API, or primitive values
+        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify() || varargs
+                || (type != null && type.isPrimitive && (! type.isPointer())))) {
+            if (! nullable) {
+                writer.write("        java.util.Objects.requireNonNull(" + name 
+                        + ", \"" + "Parameter '" + name + "' must not be null\");\n");
+            }
+        }
+        
+        // Generate pointer allocation
+        if (isOutParameter()) {
+            writer.write("        MemorySegment " + name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(type) + ");\n");
+        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            String typeStr = type.girElementInstance.type.simpleJavaType;
+            typeStr = Conversions.primitiveClassName(typeStr);
+            writer.write("        Pointer" + typeStr + " " + name + "POINTER = new Pointer" + typeStr + "(" + name + ".getValue());\n");
+        }
+    }
+    
+    /**
+     * Generate code to do post-processing of the parameter after the function call.
+     * @param writer The source code file writer
+     * @throws IOException Thrown when an error occurs while writing to the file
+     */
+    public void generatePostprocessing(Writer writer) throws IOException {
+        if (isOutParameter()) {
+            if (array == null) {
+                // First the regular (non-array) out-parameters. These could include an out-parameter with 
+                // the length of an array out-parameter, so we have to process these first.
+                writer.write("        ");
+                if (checkNull()) {
+                    writer.write("if (" + name + " != null) ");
+                }
+                writer.write(name + ".set(");
+                String identifier = name + "POINTER.get(" + Conversions.getValueLayout(type) + ", 0)";
+                if (type.isPrimitive && type.isPointer()) {
+                    writer.write(identifier);
+                    if (type.isBoolean()) writer.write(" != 0");
+                    writer.write(");\n");
+                } else {
+                    writer.write(getNewInstanceString(type, identifier, false) + ");\n");
+                }
+            } else {
+                // Secondly, process the array out parameters
+                String len = array.size();
+                String valuelayout = Conversions.getValueLayout(array.type);
+                if (array.type.isPrimitive && (! array.type.isBoolean())) {
+                    // Array of primitive values
+                    writer.write("        " + name + ".set(");
+                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
+                } else {
+                    // Array of proxy objects
+                    writer.write("        " + array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("        for (int I = 0; I < " + len + "; I++) {\n");
+                    writer.write("            var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
+                    writer.write("            " + name + "ARRAY[I] = ");
+                    writer.write(getNewInstanceString(array.type, "OBJ", false) + ";\n");
+                    writer.write("        }\n");
+                    writer.write("        " + name + ".set(" + name + "ARRAY);\n");
+                }
+            }
+        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            writer.write("            " + name + ".setValue(" + name + "POINTER.get());\n");
+        }
+        
+        // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
+        // Only for proxy objects where ownership is fully transferred away, unless it's an out parameter or a pointer.
+        if (isProxy()
+                && "full".equals(transferOwnership) 
+                && (! isOutParameter()) 
+                && (type.cType == null || (! type.cType.endsWith("**")))) {
+            writer.write("        " + (isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
+        }
     }
 }

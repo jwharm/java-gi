@@ -112,9 +112,13 @@ public class Constructor extends Method {
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
     private String generateConstructorHelper(Writer writer) throws IOException {
+
+        // Method name
         String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("    \n");
         writer.write("    private static Addressable " + methodName);
+
+        // Parameters
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameters(writer, false);
@@ -122,27 +126,40 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
+
+        // Exceptions
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
         
+        // Currently unsupported constructor method: throw an exception
         if (! isSafeToBind()) {
             writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
             writer.write("    }\n");
             return methodName;
         }
         
-        // Generate checks for null parameters
-        generateNullParameterChecks(writer);
-        
+        // Generate preprocessing statements for all parameters
+        if (parameters != null) {
+            parameters.generatePreprocessing(writer);
+        }
+
+        // Allocate GError pointer
         if (throws_ != null) {
             writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
         }
         
+        // Generate the return type
         writer.write("        Addressable RESULT;\n");
+        
+        // The method call is wrapped in a try-catch block
         writer.write("        try {\n");
+
+        // Invoke to the method handle
         writer.write("            RESULT = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        
+        // Marshall the parameters to the native types
         if (parameters != null) {
             writer.write("(");
             parameters.generateCParameters(writer, throws_);
@@ -151,27 +168,24 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(";\n");
+        
+        // If something goes wrong in the invokeExact() call
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
         writer.write("        }\n");
-        // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
-        if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                // Only for proxy objects where ownership is fully transferred away, 
-                // unless it's an out parameter or a pointer
-                if (p.isProxy()
-                        && "full".equals(p.transferOwnership) 
-                        && (! p.isOutParameter()) 
-                        && (p.type.cType == null || (! p.type.cType.endsWith("**")))) {
-                    writer.write("        " + (p.isInstanceParameter() ? "this" : p.name) + ".yieldOwnership();\n");
-                }
-            }
-        }
+        
+        // Throw GErrorException
         if (throws_ != null) {
             writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
             writer.write("            throw new GErrorException(GERROR);\n");
             writer.write("        }\n");
         }
+        
+        // Generate post-processing actions for parameters
+        if (parameters != null) {
+            parameters.generatePostprocessing(writer);
+        }
+        
         writer.write("        return RESULT;\n");
         writer.write("    }\n");
         return methodName;
