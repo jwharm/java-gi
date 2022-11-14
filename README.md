@@ -8,18 +8,25 @@ C functions like `gtk_button_set_icon_name(GtkButton* button, const char* icon_n
 Using GObject-Introspection, it is possible to generate a wrapper API that includes "proxy" classes that native functions with automatically marshalled parameters and return values, for example `button.setIconName(iconName)`.
 Java-gi tries to achieve this.
 
-## Prerequisites
+## Quickstart
 
-- First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/). The Gradle build will also download and install a dependency jar [JetBrains Annotations](https://www.jetbrains.com/help/idea/annotating-source-code.html).
-- Gradle doesn't run on JDK 19 yet, so you will also need to install a supported JDK, for example [JDK 18](https://jdk.java.net/18/), and configure Gradle to use it, until version 7.6 is released.
+- First, download and install [JDK 19](https://jdk.java.net/19/).
+- Download [gtk4-0.1.jar](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1.jar) and add it to the Java module path. The 0.1 release contains bindings for GTK version 4.6.2.
+- Add `requires org.gtk;` to your `module-info.java` file.
+- You can now import and use GTK classes in your application code.
+- Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when running your application. To suppress warnings about illegal native access, add the command line parameter `--enable-native-access=org.gtk`.
+- It is recommended to download the [Javadoc documentation](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-javadoc.jar) to assist during the development of your GTK application. Optionally, download the [sources](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-sources.jar) too.
+
+## Generating java-gi bindings
+
+If you want to generate bindings by yourself, by following these steps:
+- First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/).
+- Gradle doesn't run on JDK 19 yet, so you will also need to install a supported JDK, for example [JDK 18](https://jdk.java.net/18/), and configure Gradle to use it, until Gradle version 7.6 is released.
 - Make sure that `javac` and `java` from JDK 19 and `gradle` are in your `PATH`.
 - Install the GObject-introspection (gir) files of the library you want to generate bindings for. 
-  For example, in Fedora, to generate bindings for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
-
-## How to create bindings
-
-Running `gradle build` is enough to generate and build gtk4 bindings.
-If you wish to create bindings for other libraries, you can run the extractor to generate source files which you can then compile.
+  For example, in Fedora, to install the gir files for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
+- Running `gradle build` is enough to generate and build gtk4 bindings.
+- If you wish to create bindings for other libraries, you can run the extractor to generate source files which you can then compile.
 
 ## What the bindings look like
 
@@ -30,23 +37,26 @@ Because the Panama foreign function API is still in preview status, to run the a
 ## Features
 Some interesting features of the bindings:
 * Because Panama (JEP 424) allows direct access to native resources from the JVM, a 'glue library' that solutions using JNI or JNA need to interface between Java and native code, is unnecessary.
-* Interfaces are mapped to Java interfaces, using Java 8-style `default` methods to call native methods.
+* GtkDoc API docstrings are translated into Javadoc. You can use the GTK documentation in your IDE like you are used to.
+* Interfaces are mapped to Java interfaces, using `default` interface methods to call native methods.
 * Signals are mapped to type-safe methods and objects in Java. (Detailed signals like `notify` have an extra `String` parameter.)
-* Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is "owned" by the user and the proxy object in Java gets garbage-collected, a call to `g_object_unref` is automatically executed to release the native resources.
-* Functions with callback parameters are supported when there is a `user_data` parameter available to store a reference to the Java callback.
+* Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is fully "owned" by the user, and the object becomes unreachable in Java, a call to `g_object_unref` is automatically executed.
+* Most functions with callback parameters are supported. Java-gi uses the `user_data` parameter to store a reference to the Java callback.
 * Nullability of parameters is indicated with `@Nullable` and `@NotNull` attributes, and checked at runtime.
 * Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offers typesafe `get()` and `set()` methods to retrieve or modify the value.
 * Arrays with a known length are mapped to Java arrays.
 * `GError**` parameters are mapped to Java `GErrorException`s.
+* Variadic functions (varargs) are supported.
+* All generated classes contain a `castFrom()` method to cast between different GTypes. This method is typesafe: Illegal casts throw a `ClassCastException`.
+* Record types (`struct`s in native code) are mapped to Java classes. Because these types do not always offer a constructor method, the Java classes offer an `allocate()` method to allocate a new uninitialized record. The memory layouts have been generated from the field definitions in the gir files.
 * Ability to rename or remove classes or methods in the build script.
-* GtkDoc API docstrings are (roughly) translated into Javadoc.
 
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
+* Java does not support unsigned data types. You might encounter issues when native code expects, for example, a `guint` parameter.
+* You cannot create new GObject types, or subclass existing ones, from Java code.
 * The generator has not been tested yet on different Linux distributions or GTK versions.
 * A large number of warnings occur during javadoc generation.
-* I haven't looked into GObject properties and ParamSpecs yet.
 * Thread-safety has not been considered yet.
-* Varargs aren't supported yet.
-* Unions aren't supported.
+* Unions (including GValue) aren't supported yet.
 * Return values of nested arrays (like Gio `g_desktop_app_info_search`) aren't supported yet.
