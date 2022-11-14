@@ -503,6 +503,9 @@ public class Interop {
             if (o == null) {
                 return MemoryAddress.NULL;
             }
+            if (o instanceof Boolean bool) {
+                return bool.booleanValue() ? 1 : 0;
+            }
             if (o instanceof Proxy proxy) {
                 return proxy.handle();
             }
