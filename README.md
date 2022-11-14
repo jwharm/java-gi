@@ -70,7 +70,7 @@ If you want to generate bindings by yourself, by following these steps:
 
 Some interesting features of the bindings:
 * Because Panama (JEP 424) allows direct access to native resources from the JVM, a 'glue library' that solutions using JNI or JNA need to interface between Java and native code, is unnecessary.
-* GtkDoc API docstrings are translated into Javadoc. You can use the GTK documentation in your IDE like you are used to.
+* GtkDoc API docstrings are translated into Javadoc, so they are directly available in your IDE.
 * Interfaces are mapped to Java interfaces, using `default` interface methods to call native methods.
 * Signals are mapped to type-safe methods and objects in Java. (Detailed signals like `notify` have an extra `String` parameter.)
 * Memory management of `GObject`s is automatically taken care of: When a ref-counted object (like `GObject` and its descendants) is fully "owned" by the user, and the object becomes unreachable in Java, a call to `g_object_unref` is automatically executed.
