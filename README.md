@@ -13,8 +13,46 @@ Java-gi tries to achieve this.
 - First, download and install [JDK 19](https://jdk.java.net/19/).
 - Download [gtk4-0.1.jar](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1.jar) and add it to the Java module path. The 0.1 release contains bindings for GTK version 4.6.2.
 - Add `requires org.gtk;` to your `module-info.java` file.
-- You can now import and use GTK classes in your application code.
-- Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when running your application. To suppress warnings about illegal native access, add the command line parameter `--enable-native-access=org.gtk`.
+- Write your GTK application:
+
+```java
+package io.github.jwharm.javagi.example;
+
+import org.gtk.gtk.*;
+import org.gtk.gio.ApplicationFlags;
+
+public class HelloWorld {
+
+    public void activate(org.gtk.gio.Application g_application) {
+        var window = new ApplicationWindow(Application.castFrom(g_application));
+        window.setTitle("Window");
+        window.setDefaultSize(300, 200);
+        
+        var box = new Box(Orientation.VERTICAL, 0);
+        box.setHalign(Align.CENTER);
+        box.setValign(Align.CENTER);
+        
+        var button = Button.newWithLabel("Hello world!");
+        button.onClicked((btn) -> window.close());
+        
+        box.append(button);
+        window.setChild(box);
+        window.show();
+    }
+
+    public HelloWorld(String[] args) {
+        var app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
+        app.onActivate(this::activate);
+        app.run(args.length, args);
+    }
+
+    public static void main(String[] args) {
+        new HelloWorld(args);
+    }
+}
+```
+
+- Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when running your application. To suppress warnings about native access, also add `--enable-native-access=org.gtk`.
 - It is recommended to download the [Javadoc documentation](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-javadoc.jar) to assist during the development of your GTK application. Optionally, download the [sources](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-sources.jar) too.
 
 ## Generating java-gi bindings
@@ -28,13 +66,8 @@ If you want to generate bindings by yourself, by following these steps:
 - Running `gradle build` is enough to generate and build gtk4 bindings.
 - If you wish to create bindings for other libraries, you can run the extractor to generate source files which you can then compile.
 
-## What the bindings look like
-
-A "Hello world" example can be found in [`example`](https://github.com/jwharm/java-gi/blob/main/example/src/main/java/io/github/jwharm/javagi/example/HelloWorld.java)
-
-Because the Panama foreign function API is still in preview status, to run the above application, be sure to add the `--enable-preview` command-line parameter when running `javac` and `java`. To suppress warnings about illegal native access, add the parameter `--enable-native-access=org.gtk`.
-
 ## Features
+
 Some interesting features of the bindings:
 * Because Panama (JEP 424) allows direct access to native resources from the JVM, a 'glue library' that solutions using JNI or JNA need to interface between Java and native code, is unnecessary.
 * GtkDoc API docstrings are translated into Javadoc. You can use the GTK documentation in your IDE like you are used to.
@@ -52,6 +85,7 @@ Some interesting features of the bindings:
 * Ability to rename or remove classes or methods in the build script.
 
 ## Known issues
+
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * Java does not support unsigned data types. You might encounter issues when native code expects, for example, a `guint` parameter.
 * You cannot create new GObject types, or subclass existing ones, from Java code.
