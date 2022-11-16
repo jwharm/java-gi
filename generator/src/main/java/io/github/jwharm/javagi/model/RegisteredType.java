@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
 
@@ -11,11 +12,15 @@ public abstract class RegisteredType extends GirElement {
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
         super(parent);
+        
         this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace().packageName);
         this.name = name;
-        this.cType = cType;
-        this.version = version;
         this.javaName = Conversions.toSimpleJavaType(name);
+        
+        // If c type is not provided, guess that the name is also the c type
+        this.cType = Objects.requireNonNullElse(cType, name);
+        
+        this.version = version;
     }
 
     public abstract void generate(Writer writer) throws IOException;
@@ -64,19 +69,29 @@ public abstract class RegisteredType extends GirElement {
             
             for (int f = 0; f < fieldList.size(); f++) {
                 Field field = fieldList.get(f);
+                
                 if (f > 0) {
                     writer.write(",\n");
                 }
+                
                 // Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
                 int s = field.getSize(field.getMemoryType());
-                // If the previous field had a smaller byte size than this one, add padding
-                if (size % s > 0) {
-                    int padding = s - (size % s);
-                    writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
-                    size += padding;
+                
+                // Calculate padding (except for union layouts)
+                if (! (this instanceof Union)) {
+                    
+                    // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
+                    if (size % s % 64 > 0) {
+                        int padding = s - (size % s);
+                        writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
+                        size += padding;
+                    }
+                    
                 }
-                // Write the memorylayout declaration
+                
+                // Write the memory layout declaration
                 writer.write("        " + field.getMemoryLayoutString());
+                
                 size += s;
             }
             // Write the name of the struct

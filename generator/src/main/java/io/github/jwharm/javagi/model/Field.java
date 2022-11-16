@@ -94,32 +94,67 @@ public class Field extends Variable {
     }
     
     public String getMemoryLayoutString() {
+        
+        // Regular types (not arrays or callbacks)
         if (type != null) {
+            
+            // Bitfields and enumerations are integers
             if (type.isBitfield() || type.isEnum()) {
                 return "Interop.valueLayout.C_INT.withName(\"" + this.name + "\")";
             }
+            
+            // Pointers, strings and callbacks are memory addresses
             if (type.isPointer()
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
                 return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
             }
+            
+            // Primitive types and aliases
             if (type.isPrimitive 
                     || type.isAliasForPrimitive()) {
                 return Conversions.getValueLayout(type) + ".withName(\"" + this.name + "\")";
             }
+            
+            // For Proxy objects we recursively get the memory layout
             return type.qualifiedJavaType + ".getMemoryLayout()" + ".withName(\"" + this.name + "\")";
         }
+        
+        // Arrays with a fixed size
         if (array != null && array.fixedSize != null) {
-            String valueLayout = Conversions.toPanamaMemoryLayout(array.type);
+            String valueLayout;
+            
+            // Array of primitive values or pointers
+            if (array.type.isPrimitive 
+                    || array.type.isBitfield() 
+                    || array.type.isEnum() 
+                    || array.type.isAliasForPrimitive() 
+                    || array.type.isPointer()
+                    || array.type.isCallback()
+                    || "java.lang.String".equals(array.type.qualifiedJavaType)
+                    || "java.lang.foreign.MemoryAddress".equals(array.type.qualifiedJavaType)) {
+                
+                valueLayout = Conversions.toPanamaMemoryLayout(array.type);
+                
+            // Proxy objects
+            } else {
+                valueLayout = array.type.qualifiedJavaType + ".getMemoryLayout()";
+            }
+            
             return "MemoryLayout.sequenceLayout(" + array.fixedSize + ", " + valueLayout + ").withName(\"" + this.name + "\")";
         }
+        
+        // Arrays with non-fixed size
         if (array != null) {
             return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
         }
+        
+        // Callbacks
         if (callback != null) {
             return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
         }
+        
         System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, name);
         return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
     }
