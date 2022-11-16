@@ -61,6 +61,7 @@ val genSources by tasks.registering {
                     removeFunction(repo, "image_surface_create");
                 }
             }),
+            source("freetype2-2.0", "org.freetype"),
             source("HarfBuzz-0.0", "org.harfbuzz", "harfbuzz", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This constant has type "language_t" which cannot be instantiated
