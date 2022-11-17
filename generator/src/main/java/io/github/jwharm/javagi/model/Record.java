@@ -3,6 +3,8 @@ package io.github.jwharm.javagi.model;
 import java.io.IOException;
 import java.io.Writer;
 
+import io.github.jwharm.javagi.generator.GValueCreator;
+
 public class Record extends Class {
 
     public final String disguised, isGTypeStructFor;
@@ -52,6 +54,11 @@ public class Record extends Class {
 
         generateDowncallHandles(writer);
         generateSignalCallbacks(writer);
+        
+        // Write convenience constructors to allocate, initialize and set GValues
+        if (getNamespace().packageName.equals("org.gtk.gobject") && this.javaName.equals("Value")) {
+            GValueCreator.generateGValueConstructors(writer);
+        }
         
         writer.write("}\n");
     }

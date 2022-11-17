@@ -1,8 +1,10 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
 import java.io.IOException;
 import java.io.Writer;
+
+import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.GTypeDefinitions;
 
 public class Alias extends ValueWrapper {
     
@@ -63,6 +65,12 @@ public class Alias extends ValueWrapper {
                 writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
                 writer.write("\n");
                 generateValueConstructor(writer, type.qualifiedJavaType);
+                
+                // Write fundamental G_TYPE definitions
+                if (getNamespace().packageName.equals("org.gtk.glib") && this.javaName.equals("Type")) {
+                    GTypeDefinitions.generateFundamentalGTypes(writer);
+                }
+                
                 writer.write("}\n");
             }
             case UNKNOWN_ALIAS -> {
@@ -71,7 +79,7 @@ public class Alias extends ValueWrapper {
             }
         }
     }
-
+    
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         if (aliasFor() == VALUE_ALIAS) {
