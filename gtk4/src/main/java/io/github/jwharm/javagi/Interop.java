@@ -326,6 +326,28 @@ public class Interop {
         }
         return allocateNativeArray(addressArray, zeroTerminated);
     }
+    
+    /**
+     * Allocates and initializes an (optionally NULL-terminated) array
+     * of structs (from Proxy instances). The actual memory segments (not 
+     * the pointers) are copied into the array.
+     * @param array The array of Proxy instances
+     * @param layout The memory layout of the object type
+     * @param zeroTerminated Whether to add an additional NUL to the array
+     * @return The memory segment of the native array
+     */
+    public static Addressable allocateNativeArray(ProxyBase[] array, MemoryLayout layout, boolean zeroTerminated) {
+        int length = zeroTerminated ? array.length : array.length + 1;
+        MemorySegment memorySegment = implicitAllocator.allocateArray(layout, length);
+        for (int i = 0; i < array.length; i++) {
+            MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), getScope());
+            memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
+        }
+        if (zeroTerminated) {
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemoryAddress.NULL);
+        }
+        return memorySegment;
+    }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array 

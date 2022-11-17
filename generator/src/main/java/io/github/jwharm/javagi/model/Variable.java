@@ -104,7 +104,6 @@ public class Variable extends GirElement {
     private void generateArrayInterop(Writer writer, String identifier, Type type, String zeroTerminated) throws IOException {
         String zeroTerminatedBool = "1".equals(zeroTerminated) ? "true" : "false";
         
-        // This should not happen
         if (type == null) {
             // This should not happen
             writer.write("MemoryAddress.NULL");
@@ -120,7 +119,16 @@ public class Variable extends GirElement {
             }
             writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "), " + zeroTerminatedBool + ")");
 
+        } else if (type.cType != null && type.cType.endsWith("*")) {
+            // Array of pointers
+            writer.write("Interop.allocateNativeArray(" + identifier + ", " + zeroTerminatedBool + ")");
+            
+        } else if (type.isRecord()) {
+            // Array of structs
+            writer.write("Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminatedBool + ")");
+            
         } else {
+            // Array of primitive values
             writer.write("Interop.allocateNativeArray(" + identifier + ", " + zeroTerminatedBool + ")");
         }
     }

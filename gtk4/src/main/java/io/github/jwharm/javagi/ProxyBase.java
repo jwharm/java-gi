@@ -2,6 +2,7 @@ package io.github.jwharm.javagi;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
@@ -9,14 +10,14 @@ import java.lang.ref.Cleaner;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Base class for proxy objects that represent a GObject instance in
- * native memory. The {@link #handle()} method returns the memory address
+ * Abastract base class for proxy objects that represent a GObject instance 
+ * in native memory. The {@link #handle()} method returns the memory address
  * of the object.
  * For ref-counted objects where ownership is transferred to the user, a 
  * Cleaner is registered by the constructor that will automatically call 
  * {@code g_object_unref} when the proxy object is garbage-collected.
  */
-public class ProxyBase implements Proxy {
+public abstract class ProxyBase implements Proxy {
 
     private final Addressable address;
     private final Ownership ownership;
