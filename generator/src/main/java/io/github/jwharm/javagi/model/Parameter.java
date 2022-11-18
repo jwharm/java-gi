@@ -67,7 +67,7 @@ public class Parameter extends Variable {
     
     /**
      * Returns an Ownership enum value (for example, tranfer-ownership="full" -> "Ownership.FULL").
-     * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is retuned
+     * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is returned
      * @return a String containing the Ownership enum value
      */
     public String transferOwnership() {
