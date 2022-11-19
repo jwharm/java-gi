@@ -6,6 +6,7 @@ import java.lang.foreign.*;
  * A Pointer object represents a pointer to a value or array, where native 
  * code expects a pointer and Java-GI cannot marshall it to something nicer.
  * For example, use {@code PointerInteger} for an {@code *int} pointer.
+ * @param <T> The type of the value that the pointer refers to
  */
 public abstract class Pointer<T> implements Iterable<T> {
 

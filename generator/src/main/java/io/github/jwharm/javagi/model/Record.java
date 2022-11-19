@@ -67,6 +67,10 @@ public class Record extends Class {
         writer.write("    \n");
         writer.write("    private MemorySegment allocatedMemorySegment;\n");
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Allocate a new {@link " + javaName + "}\n");
+        writer.write("     * @return A new, uninitialized @{link " + javaName + "}\n");
+        writer.write("     */\n");
         writer.write("    public static " + javaName + " allocate() {\n");
         writer.write("        MemorySegment segment = Interop.getAllocator().allocate(getMemoryLayout());\n");
         writer.write("        " + javaName + " newInstance = new " + javaName + "(segment.address(), Ownership.NONE);\n");

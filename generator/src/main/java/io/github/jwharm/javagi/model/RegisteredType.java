@@ -54,12 +54,19 @@ public abstract class RegisteredType extends GirElement {
      * @param getType the name of the function
      */
     protected void registerGetTypeFunction(String getType) {
-        if (getType != null) {
-            Function getTypeFunc = new Function(this, "get_type", getType, null, null);
-            getTypeFunc.returnValue = new ReturnValue(getTypeFunc, "none", null);
-            getTypeFunc.returnValue.type = new Type(getTypeFunc.returnValue, "GType", "GType");
-            this.functionList.add(getTypeFunc);
-        }
+        // Function
+        Function getTypeFunc = new Function(this, "get_type", getType, null, null);
+        getTypeFunc.returnValue = new ReturnValue(getTypeFunc, "none", null);
+        getTypeFunc.returnValue.type = new Type(getTypeFunc.returnValue, "GType", "GType");
+        
+        // Docstrings
+        getTypeFunc.doc = new Doc(getTypeFunc, null);
+        getTypeFunc.doc.contents = "Get the gtype";
+        getTypeFunc.returnValue.doc = new Doc(getTypeFunc.returnValue, null);
+        getTypeFunc.returnValue.doc.contents = "The gtype";
+        
+        // Add the function
+        this.functionList.add(getTypeFunc);
     }
     
     protected void generateMemoryLayout(Writer writer) throws IOException {

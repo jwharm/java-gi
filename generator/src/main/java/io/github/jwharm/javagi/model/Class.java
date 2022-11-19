@@ -17,7 +17,9 @@ public class Class extends RegisteredType {
         this.typeStruct = typeStruct;
         
         // Generate a function declaration to retrieve the type of this object.
-        registerGetTypeFunction(getType);
+        if (! (this instanceof Record)) {
+            registerGetTypeFunction(getType);
+        }
     }
 
     public void generate(Writer writer) throws IOException {

@@ -51,7 +51,6 @@ public class Alias extends ValueWrapper {
                 } else {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
-                writer.write("\n");
                 
                 generateMemoryAddressConstructor(writer);
                 
