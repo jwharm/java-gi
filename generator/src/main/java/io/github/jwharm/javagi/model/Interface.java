@@ -5,10 +5,16 @@ import java.io.Writer;
 
 public class Interface extends RegisteredType {
 
+    public String typeName, getType, typeStruct;
     public Prerequisite prerequisite;
 
-    public Interface(GirElement parent, String name, String cType, String version) {
+    public Interface(GirElement parent, String name, String cType, String typeName, String getType,
+            String typeStruct, String version) {
+        
         super(parent, name, null, cType, version);
+        
+        // Generate a function declaration to retrieve the type of this object.
+        registerGetTypeFunction(getType);
     }
 
     public void generate(Writer writer) throws IOException {

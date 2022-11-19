@@ -49,6 +49,19 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    private static final java.lang.String C_TYPE_NAME = " + Conversions.literal("java.lang.String", cType) + ";\n");
     }
     
+    /**
+     * Generate a function declaration to retrieve the type of this object.
+     * @param getType the name of the function
+     */
+    protected void registerGetTypeFunction(String getType) {
+        if (getType != null) {
+            Function getTypeFunc = new Function(this, "get_type", getType, null, null);
+            getTypeFunc.returnValue = new ReturnValue(getTypeFunc, "none", null);
+            getTypeFunc.returnValue.type = new Type(getTypeFunc.returnValue, "GType", "GType");
+            this.functionList.add(getTypeFunc);
+        }
+    }
+    
     protected void generateMemoryLayout(Writer writer) throws IOException {
         if (this instanceof Bitfield || this instanceof Enumeration) {
             return;
@@ -138,7 +151,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), org.gtk.gobject.GObject.typeFromName(\"" + cType + "\"))) {\n");
+        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");

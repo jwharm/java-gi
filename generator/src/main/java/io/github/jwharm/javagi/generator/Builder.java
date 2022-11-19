@@ -55,7 +55,7 @@ public class Builder {
                 + "        public " + c.javaName + " construct() {\n"
                 + "            return " + c.javaName + ".castFrom(\n"
                 + "                org.gtk.gobject.Object.newWithProperties(\n"
-                + "                    org.gtk.gobject.GObject.typeFromName(\"" + c.cType + "\"),\n"
+                + "                    " + c.javaName + ".getType(),\n"
                 + "                    names.size(),\n"
                 + "                    names.toArray(new String[0]),\n"
                 + "                    values.toArray(new org.gtk.gobject.Value[0])\n"

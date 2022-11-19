@@ -93,7 +93,8 @@ public class GirParser extends DefaultHandler {
             }
             case "class" -> {
                 io.github.jwharm.javagi.model.Class newClass = new Class(current, attr.getValue("name"),
-                        attr.getValue("parent"), attr.getValue("c:type"), attr.getValue("glib:type-struct"),
+                        attr.getValue("parent"), attr.getValue("c:type"), attr.getValue("glib:type-name"), 
+                        attr.getValue("glib:get-type"), attr.getValue("glib:type-struct"), 
                         attr.getValue("version"));
                 current.classList.add(newClass);
                 current = newClass;
@@ -175,7 +176,9 @@ public class GirParser extends DefaultHandler {
             }
             case "interface" -> {
                 Interface newInterface = new Interface(current, attr.getValue("name"),
-                        attr.getValue("c:type"), attr.getValue("version"));
+                        attr.getValue("c:type"), attr.getValue("glib:type-name"), 
+                        attr.getValue("glib:get-type"), attr.getValue("glib:type-struct"),
+                        attr.getValue("version"));
                 current.interfaceList.add(newInterface);
                 current = newInterface;
             }

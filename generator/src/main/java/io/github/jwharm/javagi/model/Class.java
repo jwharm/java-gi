@@ -8,11 +8,16 @@ import java.io.Writer;
 
 public class Class extends RegisteredType {
     
-    public String typeStruct;
+    public String typeName, getType, typeStruct;
 
-    public Class(GirElement parent, String name, String parentClass, String cType, String typeStruct, String version) {
+    public Class(GirElement parent, String name, String parentClass, String cType, String typeName, String getType,
+            String typeStruct, String version) {
+        
         super(parent, name, parentClass, cType, version);
         this.typeStruct = typeStruct;
+        
+        // Generate a function declaration to retrieve the type of this object.
+        registerGetTypeFunction(getType);
     }
 
     public void generate(Writer writer) throws IOException {

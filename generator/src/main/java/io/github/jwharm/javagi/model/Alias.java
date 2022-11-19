@@ -9,10 +9,11 @@ import io.github.jwharm.javagi.generator.GTypeDefinitions;
 public class Alias extends ValueWrapper {
     
     public static final int UNKNOWN_ALIAS = 0;
-    public static final int CLASS_ALIAS = 1;
-    public static final int INTERFACE_ALIAS = 2;
-    public static final int CALLBACK_ALIAS = 3;
-    public static final int VALUE_ALIAS = 4;
+    public static final int RECORD_ALIAS = 1;
+    public static final int CLASS_ALIAS = 2;
+    public static final int INTERFACE_ALIAS = 3;
+    public static final int CALLBACK_ALIAS = 4;
+    public static final int VALUE_ALIAS = 5;
     
     public int aliasFor() {
         if (type.isPrimitive || "utf8".equals(type.name)) {
@@ -23,6 +24,8 @@ public class Alias extends ValueWrapper {
             return CALLBACK_ALIAS;
         } else if (type.girElementInstance instanceof Interface) {
             return INTERFACE_ALIAS;
+        } else if (type.girElementInstance instanceof Record) {
+            return RECORD_ALIAS;
         } else if (type.girElementInstance instanceof Class) {
             return CLASS_ALIAS;
         }
@@ -41,7 +44,7 @@ public class Alias extends ValueWrapper {
         generateJavadoc(writer);
 
         switch (aliasFor()) {
-            case CLASS_ALIAS -> {
+            case CLASS_ALIAS, RECORD_ALIAS -> {
                 writer.write("public class " + javaName);
                 if (type.qualifiedJavaType.equals("void")) {
                     writer.write(" extends org.gtk.gobject.Object {\n");
@@ -49,8 +52,14 @@ public class Alias extends ValueWrapper {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
                 writer.write("\n");
+                
                 generateMemoryAddressConstructor(writer);
-                generateCastFromGObject(writer);
+                
+                // Do not generate a cast from GObject for records
+                if (aliasFor() == CLASS_ALIAS) {
+                    generateCastFromGObject(writer);
+                }
+                
                 writer.write("}\n");
             }
             case INTERFACE_ALIAS, CALLBACK_ALIAS -> {
