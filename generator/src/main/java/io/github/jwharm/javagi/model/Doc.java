@@ -87,6 +87,12 @@ public class Doc extends GirElement {
             }
         }
         
+        // Property setters
+        if (parent instanceof Property p) {
+            writeDoc(writer, indent, p.name + " The value for the {@code " + p.propertyName + "} property", "@param");
+            writeDoc(writer, indent, "The {@code Build} instance is returned, to allow method chaining", "@return");
+        }
+        
         writer.write(" ".repeat(indent * 4) + " */\n");
     }
     

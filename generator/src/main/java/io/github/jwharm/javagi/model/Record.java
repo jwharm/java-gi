@@ -27,7 +27,7 @@ public class Record extends Class {
         generateImportStatements(writer);
         generateJavadoc(writer);
         
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ProxyBase {\n");
+        writer.write("public class " + javaName + " extends Boxed {\n");
 
         generateEnsureInitialized(writer);
         generateCType(writer);

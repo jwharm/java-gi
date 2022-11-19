@@ -1,13 +1,38 @@
 package io.github.jwharm.javagi.model;
 
-public class Property extends GirElement {
+import java.io.IOException;
+import java.io.Writer;
 
-    public final String transferOwnership, getter;
+import io.github.jwharm.javagi.generator.Conversions;
+
+public class Property extends Variable {
+
+    public final String propertyName, transferOwnership, getter;
 
     public Property(GirElement parent, String name, String transferOwnership, String getter) {
         super(parent);
-        this.name = name;
+        this.propertyName = name;
+        this.name = Conversions.toLowerCaseJavaName(name);
         this.transferOwnership = transferOwnership;
         this.getter = getter;
+    }
+    
+    /**
+     * Generate a setter method for use in a Builder
+     * @param writer The writer to the class file
+     * @throws IOException Thrown when an exception occurs during writing
+     */
+    public void generate(Writer writer) throws IOException {
+        writer.write("        \n");
+        if (doc != null) {
+            doc.generate(writer, 2);
+        }
+        writer.write("        public Build set" + Conversions.toCamelCase(name, true) + "(");
+        generateTypeAndName(writer, false);
+        writer.write(") {\n");
+        writer.write("            names.add(\"" + propertyName + "\");\n");
+        writer.write("            values.add(org.gtk.gobject.Value.create(" + name + "));\n");
+        writer.write("            return this;\n");
+        writer.write("        }\n");
     }
 }
