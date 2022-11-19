@@ -19,7 +19,7 @@ public class GValueCreator {
         generateGValueConstructor(writer, "Enumeration", "org.gtk.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())");
         generateGValueConstructor(writer, "Bitfield", "org.gtk.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())");
         generateGValueConstructor(writer, "org.gtk.gobject.Object", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject(arg)");
-        generateGValueConstructor(writer, "org.gtk.glib.Type", "arg", "setGtype(arg)");
+        generateGValueConstructor(writer, "org.gtk.glib.Type", "org.gtk.gobject.GObject.gtypeGetType()", "setGtype(arg)");
         generateGValueConstructor(writer, "Boxed", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())");
         generateGValueConstructor(writer, "MemoryAddress", "org.gtk.glib.Type.G_TYPE_POINTER", "setPointer(arg)");
         generateGValueConstructor(writer, "ParamSpec", "org.gtk.glib.Type.G_TYPE_PARAM", "setParam(arg)");
@@ -29,7 +29,7 @@ public class GValueCreator {
     private static void generateGValueConstructor(Writer writer, String javatype, String gtype, String method) throws IOException {
         writer.write("    \n");
         writer.write("    /**\n");
-        writer.write("     * Create a {@code " + gtype + "} {@link Value} of with the provided {@code " + javatype + "} value.\n");
+        writer.write("     * Create a {@link Value} of with the provided {@code " + javatype + "} value.\n");
         writer.write("     * @param  arg The initial value to set\n");
         writer.write("     * @return The new {@link Value}\n");
         writer.write("     */\n");
