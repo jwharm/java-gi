@@ -30,7 +30,7 @@ public class Class extends RegisteredType {
         writer.write("public class " + javaName);
         writer.write(" extends ");
         if (name.equals("Object")) {
-            writer.write("io.github.jwharm.javagi.ProxyBase");
+            writer.write("io.github.jwharm.javagi.ObjectBase");
         } else if (parentClass == null) {
             writer.write("org.gtk.gobject.Object");
         } else {

@@ -14,7 +14,7 @@ public class Union extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ProxyBase {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ObjectBase {\n");
         generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);

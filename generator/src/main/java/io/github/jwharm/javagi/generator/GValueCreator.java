@@ -20,7 +20,7 @@ public class GValueCreator {
         generateGValueConstructor(writer, "Bitfield", "org.gtk.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())");
         generateGValueConstructor(writer, "org.gtk.gobject.Object", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject(arg)");
         generateGValueConstructor(writer, "org.gtk.glib.Type", "org.gtk.gobject.GObject.gtypeGetType()", "setGtype(arg)");
-        generateGValueConstructor(writer, "Boxed", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())");
+        generateGValueConstructor(writer, "Struct", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())");
         generateGValueConstructor(writer, "MemoryAddress", "org.gtk.glib.Type.G_TYPE_POINTER", "setPointer(arg)");
         generateGValueConstructor(writer, "ParamSpec", "org.gtk.glib.Type.G_TYPE_PARAM", "setParam(arg)");
         generateGValueConstructor(writer, "Proxy", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject((org.gtk.gobject.Object) arg)");

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.ApiStatus;
  * Cleaner is registered by the constructor that will automatically call 
  * {@code g_object_unref} when the proxy object is garbage-collected.
  */
-public abstract class ProxyBase implements Proxy {
+public abstract class ObjectBase implements Proxy {
 
     private final Addressable address;
     private final Ownership ownership;
@@ -65,7 +65,7 @@ public abstract class ProxyBase implements Proxy {
      *                  to automatically call g_object_unref on the memory address.
      */
     @ApiStatus.Internal
-    public ProxyBase(Addressable address, Ownership ownership) {
+    public ObjectBase(Addressable address, Ownership ownership) {
         this.address = address;
         this.ownership = ownership;
         if (ownership == Ownership.FULL) {
