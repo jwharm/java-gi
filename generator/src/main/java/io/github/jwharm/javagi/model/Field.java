@@ -16,6 +16,7 @@ public class Field extends Variable {
         this.readable = readable;
         this.isPrivate = isPrivate;
     }
+    
     /*
      * Generates a getter and setter method for a field in (the memorylayout of) a C struct.
      * Manipulating these fields directly isn't exactly a best practice, but there are some 
@@ -45,7 +46,7 @@ public class Field extends Variable {
             return;
         }
         
-        // Write setter
+        // Generate getter method
         writer.write("    \n");
         writer.write("    /**\n");
         writer.write("     * Get the value of the field {@code " + this.name + "}\n");
@@ -72,11 +73,13 @@ public class Field extends Variable {
         if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
             return;
         }
+        
         // Don't try to generate a setter for callbacks
         if (type.isCallback()) {
             return;
         }
-        // Generate setter
+        
+        // Generate setter method
         writer.write("    \n");
         writer.write("    /**\n");
         writer.write("     * Change the value of the field {@code " + this.name + "}\n");
@@ -93,6 +96,10 @@ public class Field extends Variable {
         writer.write("    }\n");
     }
     
+    /**
+     * Generates a String containing the MemoryLayout definition for this field.
+     * @return A String containing the MemoryLayout definition for this field
+     */
     public String getMemoryLayoutString() {
         
         // Regular types (not arrays or callbacks)
