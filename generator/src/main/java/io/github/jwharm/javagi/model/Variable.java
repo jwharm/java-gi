@@ -94,6 +94,10 @@ public class Variable extends GirElement {
             String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
             writer.write(type.girElementInstance.getInteropString(identifier, type.isPointer(), transferOwnership));
         
+        // Memory addresses: cast to Addressable
+        } else if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress")) {
+            writer.write("(Addressable) " + identifier);
+        
         // Primitive types
         } else {
             writer.write(identifier);

@@ -45,7 +45,11 @@ public abstract class ProxyBase implements Proxy {
         public void run() {
             if (registered) {
                 try {
+                    // Debug logging
+                    // System.out.println("g_object_unref " + address);
+                    
                     g_object_unref.invokeExact(address);
+                    
                 } catch (Throwable ERR) {
                     throw new AssertionError("Unexpected exception occured: ", ERR);
                 }
@@ -68,6 +72,9 @@ public abstract class ProxyBase implements Proxy {
             state = new State(address);
             cleanable = cleaner.register(this, state);
         }
+        
+        // Debug logging
+        // System.out.printf("New: %s %s %s\n", address, this.getClass().getName(), ownership);
     }
     
     /**
@@ -87,6 +94,10 @@ public abstract class ProxyBase implements Proxy {
      */
     @ApiStatus.Internal
     public Ownership yieldOwnership() {
+        
+        // Debug logging
+        // System.out.printf("Yield ownership for address %s\n", address);
+        
         if (this.state != null && this.state.registered) {
             this.state.registered = false;
         }
