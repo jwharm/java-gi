@@ -43,6 +43,10 @@ public class Variable extends GirElement {
             }
             typeStr = "Out<" + typeStr + ">";
         
+        // Callback field
+        } else if (this instanceof Field f && f.callback != null) {
+            typeStr = "java.lang.foreign.MemoryAddress";
+        
         // Also arrays
         } else if (type.cType != null && type.cType.endsWith("**")) {
             // Also arrays

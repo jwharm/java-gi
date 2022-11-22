@@ -96,6 +96,22 @@ public class Field extends Variable {
         writer.write("    }\n");
     }
     
+    public void generateStructField(Writer writer) throws IOException {
+        writer.write("        \n");
+        if (doc != null) {
+            doc.generate(writer, 2);
+        }
+        writer.write("        public Build set" + Conversions.toCamelCase(this.name, true) + "(");
+        generateTypeAndName(writer, false);
+        writer.write(") {\n");
+        writer.write("            getMemoryLayout()\n"
+                + "                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+                + "                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        generateInterop(writer, this.name, false);
+        writer.write(");\n");
+        writer.write("        }\n");
+    }
+    
     /**
      * Generates a String containing the MemoryLayout definition for this field.
      * @return A String containing the MemoryLayout definition for this field

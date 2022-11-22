@@ -18,7 +18,7 @@ public class Property extends Variable {
     }
     
     /**
-     * Generate a setter method for use in a Builder
+     * Generate a setter method for use in a GObjectBuilder
      * @param writer The writer to the class file
      * @throws IOException Thrown when an exception occurs during writing
      */

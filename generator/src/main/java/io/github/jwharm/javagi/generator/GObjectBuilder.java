@@ -6,10 +6,10 @@ import java.io.Writer;
 import io.github.jwharm.javagi.model.Property;
 
 /**
- * Helper class to generate a Builder subclass in GObjects.
+ * Helper class to generate a {@code Build} subclass in GObjects.
  * This way, a new GObject can be instantiated using a builder pattern.
  */
-public class Builder {
+public class GObjectBuilder {
 
     /**
      * Generate a public static inner class {@code Build} to implement the <em>builder pattern</em>.

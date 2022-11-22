@@ -103,4 +103,33 @@ public abstract class ObjectBase implements Proxy {
         }
         return this.ownership;
     }
+    
+    public void registerGType(String parentTypeName) {
+        try {
+            Class<?> parentClass = getClass().getSuperclass();
+            
+            // Get parent typeinstance struct
+            MemoryLayout instanceMemoryLayout = MemoryLayout.structLayout(
+                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout()").invoke(this)).withName("parent_instance")
+            ).withName(getClass().getName());
+            
+            // Get parent typeinstance gtype
+            org.gtk.glib.Type parentGType = (org.gtk.glib.Type) parentClass.getMethod("getType").invoke(this);
+            
+            // Get parent typeclass
+            org.gtk.gobject.TypeClass parentTypeClass = org.gtk.gobject.TypeClass.peek(parentGType);
+            
+            // Get parent typeclass struct
+            MemoryLayout classMemoryLayout = MemoryLayout.structLayout(
+                    parentTypeClass.getMemoryLayout().withName("parent_class")
+            ).withName(getClass().getName() + "Class");
+            
+            // Create TypeInfo struct
+            
+            // Call GObject.typeRegisterStatic
+            
+        } catch (Exception e) {
+            return;
+        }
+    }
 }

@@ -142,6 +142,11 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("        }\n");
         BindingsGenerator.signalCallbackFunctions.append(writer);
     }
+    
+    @Override
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        return "MemoryAddress.NULL"; // TODO
+    }
 
     @Override
     public Parameters getParameters() {

@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Builder;
+import io.github.jwharm.javagi.generator.GObjectBuilder;
 import io.github.jwharm.javagi.generator.Conversions;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ public class Class extends RegisteredType {
             s.generate(writer, false);
         }
 
-        Builder.generateBuilder(writer, this);
+        GObjectBuilder.generateBuilder(writer, this);
         
         generateDowncallHandles(writer);
         

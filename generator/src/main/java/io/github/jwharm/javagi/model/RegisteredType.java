@@ -46,7 +46,10 @@ public abstract class RegisteredType extends GirElement {
     
     protected void generateCType(Writer writer) throws IOException {
         writer.write("    \n");
-        writer.write("    private static final java.lang.String C_TYPE_NAME = " + Conversions.literal("java.lang.String", cType) + ";\n");
+        writer.write(
+                  "    private static java.lang.String C_TYPE_NAME() {\n"
+                + "        return " + Conversions.literal("java.lang.String", cType) + ";\n"
+                + "    }\n");
     }
     
     /**
@@ -115,7 +118,7 @@ public abstract class RegisteredType extends GirElement {
                 size += s;
             }
             // Write the name of the struct
-            writer.write("\n    ).withName(C_TYPE_NAME);\n");
+            writer.write("\n    ).withName(C_TYPE_NAME());\n");
         }
         
         writer.write("    \n");

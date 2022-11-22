@@ -336,7 +336,7 @@ public class Interop {
      * @param zeroTerminated Whether to add an additional NUL to the array
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(ObjectBase[] array, MemoryLayout layout, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated) {
         int length = zeroTerminated ? array.length : array.length + 1;
         MemorySegment memorySegment = implicitAllocator.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
