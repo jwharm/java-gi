@@ -14,7 +14,7 @@ public class StructBuilder {
     /**
      * Generate a public static inner class {@code Build} to implement the <em>builder pattern</em>.
      * @param writer The writer to the source file
-     * @param c The outer class
+     * @param r The outer class
      * @throws IOException Thrown when an error occurs while writing
      */
     public static void generateBuilder(Writer writer, io.github.jwharm.javagi.model.Record r) throws IOException {

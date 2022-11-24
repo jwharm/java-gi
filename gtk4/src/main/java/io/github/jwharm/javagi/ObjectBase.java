@@ -1,13 +1,15 @@
 package io.github.jwharm.javagi;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
-import java.lang.ref.Cleaner;
-
+import org.gtk.glib.Type;
+import org.gtk.gobject.TypeFlags;
+import org.gtk.gobject.TypeInfo;
 import org.jetbrains.annotations.ApiStatus;
+
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.ref.Cleaner;
 
 /**
  * Abastract base class for proxy objects that represent a GObject instance 
@@ -103,33 +105,76 @@ public abstract class ObjectBase implements Proxy {
         }
         return this.ownership;
     }
+
+    public static void initClass(MemoryAddress gClass, MemoryAddress classData) {
+    }
+
+    public static void initInstance(MemoryAddress instance, MemoryAddress gClass) {
+    }
     
-    public void registerGType(String parentTypeName) {
+    public static Type register(Class<?> c) {
         try {
-            Class<?> parentClass = getClass().getSuperclass();
+            Class<?> parentClass = c.getSuperclass();
             
-            // Get parent typeinstance struct
+            // Create memorylayout for typeinstance struct
             MemoryLayout instanceMemoryLayout = MemoryLayout.structLayout(
-                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout()").invoke(this)).withName("parent_instance")
-            ).withName(getClass().getName());
+                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_instance")
+            ).withName(c.getSimpleName());
+            short instanceSize = Long.valueOf(instanceMemoryLayout.byteSize()).shortValue();
             
             // Get parent typeinstance gtype
-            org.gtk.glib.Type parentGType = (org.gtk.glib.Type) parentClass.getMethod("getType").invoke(this);
-            
+            org.gtk.glib.Type parentGType = (org.gtk.glib.Type) parentClass.getMethod("getType").invoke(null);
+
             // Get parent typeclass
-            org.gtk.gobject.TypeClass parentTypeClass = org.gtk.gobject.TypeClass.peek(parentGType);
-            
-            // Get parent typeclass struct
+            Class<?> parentTypeClass = null;
+            if (parentClass.getName().equals("org.gtk.gobject.Object")) {
+                parentTypeClass = org.gtk.gobject.TypeClass.class;
+            } else {
+                parentTypeClass = Class.forName(parentClass.getName() + "Class");
+            }
+
+            // Create memorylayout for typeclass struct
             MemoryLayout classMemoryLayout = MemoryLayout.structLayout(
-                    parentTypeClass.getMemoryLayout().withName("parent_class")
-            ).withName(getClass().getName() + "Class");
-            
+                    ((MemoryLayout) parentTypeClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_class")
+            ).withName(c.getSimpleName() + "Class");
+            short classSize = Long.valueOf(classMemoryLayout.byteSize()).shortValue();
+
+            // Create upcall stub for class init
+            MemoryAddress classInit = Linker.nativeLinker().upcallStub(
+                    MethodHandles.lookup().findStatic(c, "initClass",
+                            MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    Interop.getScope()
+            ).address();
+
+            // Create upcall stub for instance init (constructor)
+            MemoryAddress instanceInit = Linker.nativeLinker().upcallStub(
+                    MethodHandles.lookup().findStatic(c, "initInstance",
+                            MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    Interop.getScope()
+            ).address();
+
             // Create TypeInfo struct
-            
-            // Call GObject.typeRegisterStatic
-            
+            TypeInfo typeInfo = new TypeInfo.Build()
+                    .setBaseInit(null)
+                    .setBaseFinalize(null)
+                    .setClassSize(classSize)
+                    .setClassInit(classInit)
+                    .setClassFinalize(null)
+                    .setClassData(null)
+                    .setInstanceSize(instanceSize)
+                    .setInstanceInit(instanceInit)
+                    .setNPreallocs((short) 0)
+                    .setValueTable(null)
+                    .construct();
+
+            // Call GObject.typeRegisterStatic and return the generated GType
+            return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, TypeFlags.NONE);
+
         } catch (Exception e) {
-            return;
+            e.printStackTrace();
+            return null;
         }
     }
 }

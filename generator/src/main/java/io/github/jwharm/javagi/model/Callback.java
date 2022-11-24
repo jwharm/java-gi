@@ -145,7 +145,7 @@ public class Callback extends RegisteredType implements CallableType {
     
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        return "MemoryAddress.NULL"; // TODO
+        return paramName; // TODO
     }
 
     @Override

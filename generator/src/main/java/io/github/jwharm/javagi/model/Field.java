@@ -18,7 +18,7 @@ public class Field extends Variable {
     }
     
     /*
-     * Generates a getter and setter method for a field in (the memorylayout of) a C struct.
+     * Generates a getter and setter method for a field in (the MemoryLayout of) a C struct.
      * Manipulating these fields directly isn't exactly a best practice, but there are some 
      * valid use cases IMO for at least some field getters.
      * The getters receive the name of the field followed by "$get()" or "$set(value)".
@@ -98,17 +98,36 @@ public class Field extends Variable {
     
     public void generateStructField(Writer writer) throws IOException {
         writer.write("        \n");
+
+        // Generate javadoc
         if (doc != null) {
             doc.generate(writer, 2);
         }
+
         writer.write("        public Build set" + Conversions.toCamelCase(this.name, true) + "(");
+
+        // Write the parameter
         generateTypeAndName(writer, false);
+
+        // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
         writer.write("            getMemoryLayout()\n"
                 + "                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
                 + "                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        // Check for null values
+        if (checkNull()) {
+            writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
+        }
+
+        // Convert the parameter to the C function argument
         generateInterop(writer, this.name, false);
+
+        if (checkNull()) {
+            writer.write(")");
+        }
+
         writer.write(");\n");
+        writer.write("        return this;\n");
         writer.write("        }\n");
     }
     
@@ -234,7 +253,7 @@ public class Field extends Variable {
             case "float" -> 32;
             case "double" -> 64;
             case "MemoryAddress" -> 64; // 64-bits pointer
-            case "ARRAY" -> Integer.valueOf(array.fixedSize) * getSize(getMemoryType(array.type));
+            case "ARRAY" -> Integer.parseInt(array.fixedSize) * getSize(getMemoryType(array.type));
             default -> 64;
         };
     }

@@ -11,6 +11,14 @@ public class Variable extends GirElement {
         super(parent);
     }
 
+    /**
+     * We cannot null-check primitive values.
+     * @return true if this parameter is not a primitive value
+     */
+    public boolean checkNull() {
+        return ! (type != null && type.isPrimitive && (! type.isPointer()));
+    }
+
     // Generate the type and name as is used for the parameter declarations of a Java method.
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
         String typeStr;
@@ -44,7 +52,8 @@ public class Variable extends GirElement {
             typeStr = "Out<" + typeStr + ">";
         
         // Callback field
-        } else if (this instanceof Field f && f.callback != null) {
+        } else if (this instanceof Field f
+                && ((f.callback != null) || (f.type != null && f.type.isCallback()))) {
             typeStr = "java.lang.foreign.MemoryAddress";
         
         // Also arrays
