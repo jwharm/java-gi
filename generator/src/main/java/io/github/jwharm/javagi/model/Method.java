@@ -53,7 +53,7 @@ public class Method extends GirElement implements CallableType {
             }
         }
         if (throws_ != null) {
-            writer.write(", ValueLayout.ADDRESS");
+            writer.write(", Interop.valueLayout.ADDRESS");
         }
         writer.write("),\n");
         writer.write(varargs ? "            true\n" : "            false\n");
@@ -132,7 +132,7 @@ public class Method extends GirElement implements CallableType {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
+            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value

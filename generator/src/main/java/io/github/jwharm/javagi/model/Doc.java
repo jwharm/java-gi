@@ -93,6 +93,12 @@ public class Doc extends GirElement {
             writeDoc(writer, indent, "The {@code Build} instance is returned, to allow method chaining", "@return");
         }
         
+        // Field setters
+        if (parent instanceof Field f) {
+            writeDoc(writer, indent, f.name + " The value for the {@code " + f.name + "} field", "@param");
+            writeDoc(writer, indent, "The {@code Build} instance is returned, to allow method chaining", "@return");
+        }
+        
         writer.write(" ".repeat(indent * 4) + " */\n");
     }
     

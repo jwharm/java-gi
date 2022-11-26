@@ -146,8 +146,6 @@ public class Conversions {
 
     /**
      * Convert C type declaration into Java type declaration.
-     * This does not work correctly in all cases. For example, Java does not support 
-     * unsigned types.
      */
     public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
         return name == null ? null : switch (name.toLowerCase()) {
@@ -162,7 +160,7 @@ public class Conversions {
             case "utf8", "filename" -> "java.lang.String";
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
             case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", currentPackage) : toSimpleJavaType("GLib.Type");
-            case "VaList", "va_list" -> "VaList";
+            case "valist", "va_list" -> "VaList";
             case "long double" -> "double"; // unsupported data type
             default -> qualified ? toQualifiedJavaType(name, currentPackage) : toSimpleJavaType(name);
         };
@@ -188,21 +186,21 @@ public class Conversions {
     }
 
     /**
-     * Get the memory layout of this type. Pointer types are returned as ValueLayout.ADDRESS.
+     * Get the memory layout of this type. Pointer types are returned as Interop.valueLayout.ADDRESS.
      */
     public static String toPanamaMemoryLayout(Type t) {
         if (t == null) {
-            return "ValueLayout.ADDRESS";
+            return "Interop.valueLayout.ADDRESS";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "ValueLayout.JAVA_INT";
+            return "Interop.valueLayout.C_INT";
         } else if (t.isPointer()) {
-            return "ValueLayout.ADDRESS";
+            return "Interop.valueLayout.ADDRESS";
         } else if (t.isPrimitive) {
-            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+            return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
-            return "ValueLayout.JAVA_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
+            return "Interop.valueLayout.C_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
         } else {
-            return "ValueLayout.ADDRESS";
+            return "Interop.valueLayout.ADDRESS";
         }
     }
 
@@ -211,15 +209,15 @@ public class Conversions {
      */
     public static String getValueLayout(Type t) {
         if (t == null) {
-            return "ValueLayout.ADDRESS";
+            return "Interop.valueLayout.ADDRESS";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "ValueLayout.JAVA_INT";
+            return "Interop.valueLayout.C_INT";
         } else if (t.isPrimitive) {
-            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+            return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
-            return "ValueLayout.JAVA_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
+            return "Interop.valueLayout.C_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
         } else {
-            return "ValueLayout.ADDRESS";
+            return "Interop.valueLayout.ADDRESS";
         }
     }
 

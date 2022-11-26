@@ -45,8 +45,9 @@ public abstract class RegisteredType extends GirElement {
     }
     
     protected void generateCType(Writer writer) throws IOException {
+        String typeLiteral = Conversions.literal("java.lang.String", cType);
         writer.write("    \n");
-        writer.write("    private static final java.lang.String C_TYPE_NAME = " + Conversions.literal("java.lang.String", cType) + ";\n");
+        writer.write("    private static final java.lang.String C_TYPE_NAME = " + typeLiteral + ";\n");
     }
     
     /**
@@ -77,7 +78,7 @@ public abstract class RegisteredType extends GirElement {
         if (! fieldList.isEmpty()) {
             writer.write("    \n");
             
-            writer.write("    private static GroupLayout memoryLayout = MemoryLayout.");
+            writer.write("    private static final GroupLayout memoryLayout = MemoryLayout.");
             if (this instanceof Union) {
                 writer.write("unionLayout(\n");
             } else {

@@ -11,6 +11,14 @@ public class Variable extends GirElement {
         super(parent);
     }
 
+    /**
+     * We cannot null-check primitive values.
+     * @return true if this parameter is not a primitive value
+     */
+    public boolean checkNull() {
+        return ! (type != null && type.isPrimitive && (! type.isPointer()));
+    }
+
     // Generate the type and name as is used for the parameter declarations of a Java method.
     public void generateTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
         String typeStr;
@@ -42,6 +50,11 @@ public class Variable extends GirElement {
                 typeStr = Conversions.primitiveClassName(type.simpleJavaType);
             }
             typeStr = "Out<" + typeStr + ">";
+        
+        // Callback field
+        } else if (this instanceof Field f
+                && ((f.callback != null) || (f.type != null && f.type.isCallback()))) {
+            typeStr = "java.lang.foreign.MemoryAddress";
         
         // Also arrays
         } else if (type.cType != null && type.cType.endsWith("**")) {
@@ -213,7 +226,7 @@ public class Variable extends GirElement {
         
         } else if ((! pointerForArrays) && len != null) {
             String valuelayout = Conversions.getValueLayout(type);
-            writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
+            writer.write("MemorySegment.ofAddress(" + identifier + ".get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
         
         } else if (type.isEnum()) {
             // Pointer to enumeration

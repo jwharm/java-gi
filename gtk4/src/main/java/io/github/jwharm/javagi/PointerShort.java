@@ -14,7 +14,7 @@ public class PointerShort extends Pointer<Short> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerShort() {
-        super(ValueLayout.JAVA_SHORT);
+        super(Interop.valueLayout.C_SHORT);
     }
 
     /**
@@ -29,7 +29,7 @@ public class PointerShort extends Pointer<Short> {
      */
     public PointerShort(short initialValue) {
         this();
-        address.set(ValueLayout.JAVA_SHORT, 0, initialValue);
+        address.set(Interop.valueLayout.C_SHORT, 0, initialValue);
     }
 
     /**
@@ -37,7 +37,7 @@ public class PointerShort extends Pointer<Short> {
      * @param value the new value that is pointed to
      */
     public void set(Short value) {
-        address.set(ValueLayout.JAVA_SHORT, 0, value);
+        address.set(Interop.valueLayout.C_SHORT, 0, value);
     }
 
     /**
@@ -56,8 +56,8 @@ public class PointerShort extends Pointer<Short> {
      */
     public Short get(int index) {
         return address.get(
-                ValueLayout.JAVA_SHORT,
-                ValueLayout.JAVA_SHORT.byteSize() * index
+                Interop.valueLayout.C_SHORT,
+                Interop.valueLayout.C_SHORT.byteSize() * index
         );
     }
 }

@@ -86,7 +86,7 @@ public class Callback extends RegisteredType implements CallableType {
             return;
         }
 
-        writer.write("            int HASH = " + dataParamName + ".get(ValueLayout.JAVA_INT, 0);\n");
+        writer.write("            int HASH = " + dataParamName + ".get(Interop.valueLayout.C_INT, 0);\n");
         writer.write("            var HANDLER = (" + javaName + ") Interop.signalRegistry.get(HASH);\n");
         
         // For out-parameters, create a local Out<> object and pass that to the callback.
@@ -141,6 +141,11 @@ public class Callback extends RegisteredType implements CallableType {
         }
         writer.write("        }\n");
         BindingsGenerator.signalCallbackFunctions.append(writer);
+    }
+    
+    @Override
+    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        return paramName; // TODO
     }
 
     @Override

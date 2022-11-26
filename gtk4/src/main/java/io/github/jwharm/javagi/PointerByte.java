@@ -14,7 +14,7 @@ public class PointerByte extends Pointer<Byte> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerByte() {
-        super(ValueLayout.JAVA_BYTE);
+        super(Interop.valueLayout.C_BYTE);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerByte extends Pointer<Byte> {
      */
     public PointerByte(byte initialValue) {
         this();
-        address.set(ValueLayout.JAVA_BYTE, 0, initialValue);
+        address.set(Interop.valueLayout.C_BYTE, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerByte extends Pointer<Byte> {
      * @param value the new value that is pointed to
      */
     public void set(Byte value) {
-        address.set(ValueLayout.JAVA_BYTE, 0, value);
+        address.set(Interop.valueLayout.C_BYTE, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerByte extends Pointer<Byte> {
      */
     public Byte get(int index) {
         return address.get(
-                ValueLayout.JAVA_BYTE,
-                ValueLayout.JAVA_BYTE.byteSize() * index
+                Interop.valueLayout.C_BYTE,
+                Interop.valueLayout.C_BYTE.byteSize() * index
         );
     }
 }

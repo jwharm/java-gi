@@ -1,13 +1,14 @@
 package io.github.jwharm.javagi;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
-import java.lang.ref.Cleaner;
+import org.gtk.glib.Type;
+import org.gtk.gobject.TypeFlags;
+import org.gtk.gobject.TypeInfo;
 
-import org.jetbrains.annotations.ApiStatus;
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.ref.Cleaner;
 
 /**
  * Abastract base class for proxy objects that represent a GObject instance 
@@ -64,7 +65,6 @@ public abstract class ObjectBase implements Proxy {
      * @param ownership The ownership status. When ownership is FULL, a cleaner is registered
      *                  to automatically call g_object_unref on the memory address.
      */
-    @ApiStatus.Internal
     public ObjectBase(Addressable address, Ownership ownership) {
         this.address = address;
         this.ownership = ownership;
@@ -76,12 +76,11 @@ public abstract class ObjectBase implements Proxy {
         // Debug logging
         // System.out.printf("New: %s %s %s\n", address, this.getClass().getName(), ownership);
     }
-    
+
     /**
      * Return the memory address of the object in native memory
      * @return The native memory address of the object
      */
-    @ApiStatus.Internal
     public Addressable handle() {
         return this.address;
     }
@@ -92,7 +91,6 @@ public abstract class ObjectBase implements Proxy {
      * indicator.
      * @return The ownership indicator of this object
      */
-    @ApiStatus.Internal
     public Ownership yieldOwnership() {
         
         // Debug logging
@@ -102,5 +100,89 @@ public abstract class ObjectBase implements Proxy {
             this.state.registered = false;
         }
         return this.ownership;
+    }
+
+    /**
+     * This function is called during class initialization of GObject-derived classes.
+     * It is a no-op, but you can define the same function in a derived class to
+     * add an implementation for that class.
+     * @param gClass Pointer to the class struct
+     * @param classData Always {@link MemoryAddress#NULL}
+     */
+    protected static void classInit(MemoryAddress gClass, MemoryAddress classData) {
+    }
+
+    /**
+     * This function is called during instance initialization of GObject-derived class
+     * instances. It is a no-op, but you can define the same function in a derived class
+     * to add an implementation for that class instance.
+     * @param instance Pointer to the instance struct
+     * @param gClass Pointer to the class struct
+     */
+    protected static void init(MemoryAddress instance, MemoryAddress gClass) {
+    }
+
+    /**
+     * Registers the provided class as a GType.
+     * See {@link org.gtk.gobject.GObject#typeRegisterStatic(Type, String, TypeInfo, TypeFlags)}
+     * @param c The class to register. The class must implement the {@link Derived} interface.
+     * @return the registered {@link org.gtk.glib.Type}
+     */
+    public static Type register(Class<? extends Derived> c) {
+        try {
+            Class<?> parentClass = c.getSuperclass();
+            Type parentGType = (Type) parentClass.getMethod("getType").invoke(null);
+            Class<?> parentTypeClass = Class.forName(parentClass.getName() + "Class");
+
+            // Create memorylayout for typeclass struct
+            MemoryLayout classMemoryLayout = MemoryLayout.structLayout(
+                    ((MemoryLayout) parentTypeClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_class")
+            ).withName(c.getSimpleName() + "Class");
+            short classSize = Long.valueOf(classMemoryLayout.byteSize()).shortValue();
+
+            // Create memorylayout for typeinstance struct
+            MemoryLayout instanceMemoryLayout = MemoryLayout.structLayout(
+                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_instance"),
+                    ValueLayout.JAVA_INT.withName("value_object")
+            ).withName(c.getSimpleName());
+            short instanceSize = Long.valueOf(instanceMemoryLayout.byteSize()).shortValue();
+
+            // Create upcall stub for class init
+            MemoryAddress classInit = Linker.nativeLinker().upcallStub(
+                    MethodHandles.lookup().findStatic(c, "classInit",
+                            MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    Interop.getScope()
+            ).address();
+
+            // Create upcall stub for instance init
+            MemoryAddress instanceInit = Linker.nativeLinker().upcallStub(
+                    MethodHandles.lookup().findStatic(c, "init",
+                            MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    Interop.getScope()
+            ).address();
+
+            // Create TypeInfo struct
+            TypeInfo typeInfo = new TypeInfo.Build()
+                    .setBaseInit(null)
+                    .setBaseFinalize(null)
+                    .setClassSize(classSize)
+                    .setClassInit(classInit)
+                    .setClassFinalize(null)
+                    .setClassData(null)
+                    .setInstanceSize(instanceSize)
+                    .setInstanceInit(instanceInit)
+                    .setNPreallocs((short) 0)
+                    .setValueTable(null)
+                    .construct();
+
+            // Call GObject.typeRegisterStatic and return the generated GType
+            return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, TypeFlags.NONE);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

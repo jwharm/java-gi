@@ -14,7 +14,7 @@ public class PointerCharacter extends Pointer<Character> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerCharacter() {
-        super(ValueLayout.JAVA_CHAR);
+        super(Interop.valueLayout.C_CHAR);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerCharacter extends Pointer<Character> {
      */
     public PointerCharacter(char initialValue) {
         this();
-        address.set(ValueLayout.JAVA_CHAR, 0, initialValue);
+        address.set(Interop.valueLayout.C_CHAR, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerCharacter extends Pointer<Character> {
      * @param value the new value that is pointed to
      */
     public void set(Character value) {
-        address.set(ValueLayout.JAVA_CHAR, 0, value);
+        address.set(Interop.valueLayout.C_CHAR, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerCharacter extends Pointer<Character> {
      */
     public Character get(int index) {
         return address.get(
-                ValueLayout.JAVA_CHAR,
-                ValueLayout.JAVA_CHAR.byteSize() * index
+                Interop.valueLayout.C_CHAR,
+                Interop.valueLayout.C_CHAR.byteSize() * index
         );
     }
 }

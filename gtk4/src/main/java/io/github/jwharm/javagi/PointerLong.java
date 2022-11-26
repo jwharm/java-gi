@@ -14,7 +14,7 @@ public class PointerLong extends Pointer<Long> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerLong() {
-        super(ValueLayout.JAVA_LONG);
+        super(Interop.valueLayout.C_LONG);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerLong extends Pointer<Long> {
      */
     public PointerLong(long initialValue) {
         this();
-        address.set(ValueLayout.JAVA_LONG, 0, initialValue);
+        address.set(Interop.valueLayout.C_LONG, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerLong extends Pointer<Long> {
      * @param value the new value that is pointed to
      */
     public void set(Long value) {
-        address.set(ValueLayout.JAVA_LONG, 0, value);
+        address.set(Interop.valueLayout.C_LONG, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerLong extends Pointer<Long> {
      */
     public Long get(int index) {
         return address.get(
-                ValueLayout.JAVA_LONG,
-                ValueLayout.JAVA_LONG.byteSize() * index
+                Interop.valueLayout.C_LONG,
+                Interop.valueLayout.C_LONG.byteSize() * index
         );
     }
 }
