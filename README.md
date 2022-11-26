@@ -11,7 +11,7 @@ Java-gi tries to achieve this.
 ## Quickstart
 
 - First, download and install [JDK 19](https://jdk.java.net/19/).
-- Download [gtk4-0.1.jar](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1.jar) and add it to the Java module path. The 0.1 release contains bindings for GTK version 4.6.2.
+- Download [gtk4-0.2.jar](https://github.com/jwharm/java-gi/releases/download/v0.2/gtk4-0.2.jar) and add it to the Java module path. The 0.2 release contains bindings for GTK version 4.8.2.
 - Add `requires org.gtk;` to your `module-info.java` file.
 - Write your GTK application:
 
@@ -53,7 +53,7 @@ public class HelloWorld {
 ```
 
 - Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when running your application. To suppress warnings about native access, also add `--enable-native-access=org.gtk`.
-- It is recommended to download the [Javadoc documentation](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-javadoc.jar) to assist during the development of your GTK application. Optionally, download the [sources](https://github.com/jwharm/java-gi/releases/download/v0.1/gtk4-0.1-sources.jar) too.
+- It is recommended to download the [Javadoc documentation](https://github.com/jwharm/java-gi/releases/download/v0.2/gtk4-0.2-javadoc.jar) to assist during the development of your GTK application. Optionally, download the [sources](https://github.com/jwharm/java-gi/releases/download/v0.2/gtk4-0.2-sources.jar) too.
 
 ## Generating java-gi bindings
 The instructions above link to pre-built bindings for the entire GTK4 library stack and LibAdwaita.
