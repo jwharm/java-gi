@@ -3,7 +3,6 @@ package io.github.jwharm.javagi;
 import org.gtk.glib.Type;
 import org.gtk.gobject.TypeFlags;
 import org.gtk.gobject.TypeInfo;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -66,7 +65,6 @@ public abstract class ObjectBase implements Proxy {
      * @param ownership The ownership status. When ownership is FULL, a cleaner is registered
      *                  to automatically call g_object_unref on the memory address.
      */
-    @ApiStatus.Internal
     public ObjectBase(Addressable address, Ownership ownership) {
         this.address = address;
         this.ownership = ownership;
@@ -78,12 +76,11 @@ public abstract class ObjectBase implements Proxy {
         // Debug logging
         // System.out.printf("New: %s %s %s\n", address, this.getClass().getName(), ownership);
     }
-    
+
     /**
      * Return the memory address of the object in native memory
      * @return The native memory address of the object
      */
-    @ApiStatus.Internal
     public Addressable handle() {
         return this.address;
     }
@@ -94,7 +91,6 @@ public abstract class ObjectBase implements Proxy {
      * indicator.
      * @return The ownership indicator of this object
      */
-    @ApiStatus.Internal
     public Ownership yieldOwnership() {
         
         // Debug logging
@@ -106,32 +102,37 @@ public abstract class ObjectBase implements Proxy {
         return this.ownership;
     }
 
-    public static void initClass(MemoryAddress gClass, MemoryAddress classData) {
+    /**
+     * This function is called during class initialization of GObject-derived classes.
+     * It is a no-op, but you can define the same function in a derived class to
+     * add an implementation for that class.
+     * @param gClass Pointer to the class struct
+     * @param classData Always {@link MemoryAddress#NULL}
+     */
+    protected static void classInit(MemoryAddress gClass, MemoryAddress classData) {
     }
 
-    public static void initInstance(MemoryAddress instance, MemoryAddress gClass) {
+    /**
+     * This function is called during instance initialization of GObject-derived class
+     * instances. It is a no-op, but you can define the same function in a derived class
+     * to add an implementation for that class instance.
+     * @param instance Pointer to the instance struct
+     * @param gClass Pointer to the class struct
+     */
+    protected static void init(MemoryAddress instance, MemoryAddress gClass) {
     }
-    
-    public static Type register(Class<?> c) {
+
+    /**
+     * Registers the provided class as a GType.
+     * See {@link org.gtk.gobject.GObject#typeRegisterStatic(Type, String, TypeInfo, TypeFlags)}
+     * @param c The class to register. The class must implement the {@link Derived} interface.
+     * @return the registered {@link org.gtk.glib.Type}
+     */
+    public static Type register(Class<? extends Derived> c) {
         try {
             Class<?> parentClass = c.getSuperclass();
-            
-            // Create memorylayout for typeinstance struct
-            MemoryLayout instanceMemoryLayout = MemoryLayout.structLayout(
-                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_instance")
-            ).withName(c.getSimpleName());
-            short instanceSize = Long.valueOf(instanceMemoryLayout.byteSize()).shortValue();
-            
-            // Get parent typeinstance gtype
-            org.gtk.glib.Type parentGType = (org.gtk.glib.Type) parentClass.getMethod("getType").invoke(null);
-
-            // Get parent typeclass
-            Class<?> parentTypeClass = null;
-            if (parentClass.getName().equals("org.gtk.gobject.Object")) {
-                parentTypeClass = org.gtk.gobject.TypeClass.class;
-            } else {
-                parentTypeClass = Class.forName(parentClass.getName() + "Class");
-            }
+            Type parentGType = (Type) parentClass.getMethod("getType").invoke(null);
+            Class<?> parentTypeClass = Class.forName(parentClass.getName() + "Class");
 
             // Create memorylayout for typeclass struct
             MemoryLayout classMemoryLayout = MemoryLayout.structLayout(
@@ -139,17 +140,24 @@ public abstract class ObjectBase implements Proxy {
             ).withName(c.getSimpleName() + "Class");
             short classSize = Long.valueOf(classMemoryLayout.byteSize()).shortValue();
 
+            // Create memorylayout for typeinstance struct
+            MemoryLayout instanceMemoryLayout = MemoryLayout.structLayout(
+                    ((MemoryLayout) parentClass.getMethod("getMemoryLayout").invoke(null)).withName("parent_instance"),
+                    ValueLayout.JAVA_INT.withName("value_object")
+            ).withName(c.getSimpleName());
+            short instanceSize = Long.valueOf(instanceMemoryLayout.byteSize()).shortValue();
+
             // Create upcall stub for class init
             MemoryAddress classInit = Linker.nativeLinker().upcallStub(
-                    MethodHandles.lookup().findStatic(c, "initClass",
+                    MethodHandles.lookup().findStatic(c, "classInit",
                             MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
                     FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
                     Interop.getScope()
             ).address();
 
-            // Create upcall stub for instance init (constructor)
+            // Create upcall stub for instance init
             MemoryAddress instanceInit = Linker.nativeLinker().upcallStub(
-                    MethodHandles.lookup().findStatic(c, "initInstance",
+                    MethodHandles.lookup().findStatic(c, "init",
                             MethodType.methodType(void.class, MemoryAddress.class, MemoryAddress.class)),
                     FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
                     Interop.getScope()

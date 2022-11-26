@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import java.lang.foreign.Addressable;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.GroupLayout;
@@ -17,6 +19,7 @@ import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.HashMap;
 
+@ApiStatus.Internal
 public class Interop {
 
     private final static MemorySession session;
@@ -36,6 +39,18 @@ public class Interop {
      * callback function from the signalRegistry map, and run it.
      */
     public final static HashMap<Integer, Object> signalRegistry = new HashMap<>();
+
+    /**
+     * This map contains the objects that are stored in the native struct of
+     * user-derived GObject subclasses in Java. The actual object is stored in
+     * this hashmap, while the hashcode is stored in native memory.
+     * <p>
+     * The methods in the {@link Derived} interface can be used to set, get and
+     * clear the object. Be sure to call {@link Derived#clearValueObject()} when
+     * the object can be cleared, because otherwise the object will still be
+     * referenced from {@code objectRegistry} and will not be garbage collected.
+     */
+    public final static HashMap<Integer, Object> objectRegistry = new HashMap<>();
     
     static {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
@@ -125,6 +140,21 @@ public class Interop {
         int hash = callback.hashCode();
         signalRegistry.put(hash, callback);
         return sessionAllocator.allocate(ValueLayout.JAVA_INT, hash);
+    }
+
+    /**
+     * Register an object in the ObjectRegistry map. The key is
+     * the hashcode of the object.
+     * @param object The object to save in the objectRegistry map
+     * @return the hashcode of the object, or 0 if the object is {@code null}
+     */
+    public static int registerValueObject(Object object) {
+        if (object == null) {
+            return 0;
+        }
+        int hash = object.hashCode();
+        objectRegistry.put(hash, object);
+        return hash;
     }
 
     /**

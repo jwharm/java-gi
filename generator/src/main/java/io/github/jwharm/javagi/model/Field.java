@@ -127,7 +127,7 @@ public class Field extends Variable {
         }
 
         writer.write(");\n");
-        writer.write("        return this;\n");
+        writer.write("            return this;\n");
         writer.write("        }\n");
     }
     
