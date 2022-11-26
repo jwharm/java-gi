@@ -178,7 +178,7 @@ public class Parameter extends Variable {
                 if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write(tab(indent) + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
+                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write(tab(indent) + array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");

@@ -14,7 +14,7 @@ public class PointerInteger extends Pointer<Integer> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerInteger() {
-        super(ValueLayout.JAVA_INT);
+        super(Interop.valueLayout.C_INT);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerInteger extends Pointer<Integer> {
      */
     public PointerInteger(int initialValue) {
         this();
-        address.set(ValueLayout.JAVA_INT, 0, initialValue);
+        address.set(Interop.valueLayout.C_INT, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerInteger extends Pointer<Integer> {
      * @param value the new value that is pointed to
      */
     public void set(Integer value) {
-        address.set(ValueLayout.JAVA_INT, 0, value);
+        address.set(Interop.valueLayout.C_INT, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerInteger extends Pointer<Integer> {
      */
     public Integer get(int index) {
         return address.get(
-                ValueLayout.JAVA_INT,
-                ValueLayout.JAVA_INT.byteSize() * index
+                Interop.valueLayout.C_INT,
+                Interop.valueLayout.C_INT.byteSize() * index
         );
     }
 }

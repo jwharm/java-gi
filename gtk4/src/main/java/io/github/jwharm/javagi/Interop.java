@@ -27,8 +27,15 @@ public class Interop {
     private final static MemorySegment cbDestroyNotify_nativeSymbol;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
-    
-    public final static Layout_x86_64 valueLayout = new Layout_x86_64();
+
+    /**
+     * Configure the layout of native data types here.<br>
+     * On Linux, this should be set to {@link Layout_LP64}.<br>
+     * On Windows, this should be set to {@link Layout_LLP64}.
+     * @see <a href="https://en.wikipedia.org/wiki/64-bit_computing#64-bit_data_models">
+     *     this Wikipedia text</a> about the difference between 64-bit data models.
+     */
+    public final static Layout_LP64 valueLayout = new Layout_LP64();
 
     /**
      * This map contains the callbacks used in g_signal_connect. The 
@@ -65,7 +72,7 @@ public class Interop {
         try {
             MethodType methodType = MethodType.methodType(void.class, MemoryAddress.class);
             MethodHandle methodHandle = MethodHandles.lookup().findStatic(Interop.class, "cbDestroyNotify", methodType);
-            FunctionDescriptor descriptor = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+            FunctionDescriptor descriptor = FunctionDescriptor.ofVoid(valueLayout.ADDRESS);
             cbDestroyNotify_nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, session);
         } catch (IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -80,9 +87,17 @@ public class Interop {
      * The method handle for g_signal_connect_data is used by all
      * generated signal methods.
      */
-    public static final MethodHandle g_signal_connect_data = Interop.downcallHandle(
+    public static final MethodHandle g_signal_connect_data = downcallHandle(
             "g_signal_connect_data",
-            FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT),
+            FunctionDescriptor.of(
+                    valueLayout.C_LONG,
+                    valueLayout.ADDRESS,
+                    valueLayout.ADDRESS,
+                    valueLayout.ADDRESS,
+                    valueLayout.ADDRESS,
+                    valueLayout.ADDRESS,
+                    valueLayout.C_INT
+            ),
             false
     );
 
@@ -139,7 +154,7 @@ public class Interop {
     public static Addressable registerCallback(Object callback) {
         int hash = callback.hashCode();
         signalRegistry.put(hash, callback);
-        return sessionAllocator.allocate(ValueLayout.JAVA_INT, hash);
+        return sessionAllocator.allocate(valueLayout.C_INT, hash);
     }
 
     /**
@@ -158,21 +173,12 @@ public class Interop {
     }
 
     /**
-     * Retrieves a memory address from the provided memory segment
-     * @param pointer The memory segment that contains an address
-     * @return the memory address
-     */
-    public static MemoryAddress dereference(MemorySegment pointer) {
-        return pointer.get(ValueLayout.ADDRESS, 0);
-    }
-
-    /**
      * This callback function will remove a signal callback from the 
      * signalRegistry map.
      * @param data The hashcode of the callback
      */
     public static void cbDestroyNotify(MemoryAddress data) {
-        int hash = data.get(ValueLayout.JAVA_INT, 0);
+        int hash = data.get(valueLayout.C_INT, 0);
         signalRegistry.remove(hash);
     }
 
@@ -218,13 +224,13 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated) {
         int length = zeroTerminated ? strings.length : strings.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
             var cString = implicitAllocator.allocateUtf8String(strings[i]);
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -255,7 +261,7 @@ public class Interop {
             return null;
         }
         byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_BYTE, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_BYTE, copy);
     }
 
     /**
@@ -269,7 +275,7 @@ public class Interop {
             return null;
         }
         char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_CHAR, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_CHAR, copy);
     }
 
     /**
@@ -283,7 +289,7 @@ public class Interop {
             return null;
         }
         double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_DOUBLE, copy);
     }
 
     /**
@@ -297,7 +303,7 @@ public class Interop {
             return null;
         }
         float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_FLOAT, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_FLOAT, copy);
     }
 
     /**
@@ -311,7 +317,7 @@ public class Interop {
             return null;
         }
         int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_INT, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_INT, copy);
     }
 
     /**
@@ -325,7 +331,7 @@ public class Interop {
             return null;
         }
         long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_LONG, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_LONG, copy);
     }
 
     /**
@@ -339,7 +345,7 @@ public class Interop {
             return null;
         }
         short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(ValueLayout.JAVA_SHORT, copy);
+        return implicitAllocator.allocateArray(valueLayout.C_SHORT, copy);
     }
 
     /**
@@ -374,7 +380,7 @@ public class Interop {
             memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -388,12 +394,12 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated) {
         int length = zeroTerminated ? array.length : array.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, array[i]);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i]);
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }

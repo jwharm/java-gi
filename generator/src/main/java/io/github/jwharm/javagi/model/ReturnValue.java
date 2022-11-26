@@ -33,7 +33,7 @@ public class ReturnValue extends Parameter {
                 String valuelayout = Conversions.getValueLayout(array.type);
                 if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write(tab(indent) + "return MemorySegment.ofAddress(RESULT.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
+                    writer.write(tab(indent) + "return MemorySegment.ofAddress(RESULT.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
                 } else {
                     // Array of proxy objects
                     writer.write(tab(indent) + array.type.qualifiedJavaType + "[] resultARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");

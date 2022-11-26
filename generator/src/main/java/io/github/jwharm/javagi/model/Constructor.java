@@ -147,7 +147,7 @@ public class Constructor extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(ValueLayout.ADDRESS);\n");
+            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Generate the return type

@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -27,7 +26,7 @@ public class PointerBitfield<T extends Bitfield> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(ValueLayout.JAVA_INT, 0, value.getValue());
+        address.set(Interop.valueLayout.C_INT, 0, value.getValue());
     }
 
     /**
@@ -47,8 +46,8 @@ public class PointerBitfield<T extends Bitfield> extends Pointer<T> {
      */
     public T get(int index) {
         int value = address.get(
-                ValueLayout.JAVA_INT,
-                ValueLayout.JAVA_DOUBLE.byteSize() * index
+                Interop.valueLayout.C_INT,
+                Interop.valueLayout.C_INT.byteSize() * index
         );
         try {
             T instance = cls.getDeclaredConstructor(new Class[] {Integer.class}).newInstance(value);

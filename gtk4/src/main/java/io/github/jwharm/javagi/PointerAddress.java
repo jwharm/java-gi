@@ -12,7 +12,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * Create the pointer. It does not point to a specific address.
      */
     public PointerAddress() {
-        super(ValueLayout.ADDRESS);
+        super(Interop.valueLayout.ADDRESS);
     }
     
     /**
@@ -28,7 +28,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * @param value the new value that is pointed to
      */
     public void set(MemoryAddress value) {
-        address.set(ValueLayout.ADDRESS, 0, value);
+        address.set(Interop.valueLayout.ADDRESS, 0, value);
     }
 
     /**
@@ -48,8 +48,8 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      */
     public MemoryAddress get(int index) {
         return address.get(
-                ValueLayout.ADDRESS,
-                ValueLayout.ADDRESS.byteSize() * index
+                Interop.valueLayout.ADDRESS,
+                Interop.valueLayout.ADDRESS.byteSize() * index
         );
     }
 }

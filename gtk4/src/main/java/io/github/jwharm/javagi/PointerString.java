@@ -37,7 +37,7 @@ public class PointerString extends Pointer<String> {
      * @param value the new value that is pointed to
      */
     public void set(String value) {
-        address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value));
+        address.set(Interop.valueLayout.ADDRESS, 0, Interop.allocateNativeString(value));
     }
 
     /**
@@ -56,8 +56,8 @@ public class PointerString extends Pointer<String> {
      */
     public String get(int index) {
         return address.get(
-                ValueLayout.ADDRESS,
-                ValueLayout.ADDRESS.byteSize() * index
+                Interop.valueLayout.ADDRESS,
+                Interop.valueLayout.ADDRESS.byteSize() * index
         ).getUtf8String(0);
     }
 }

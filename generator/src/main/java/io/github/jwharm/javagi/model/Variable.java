@@ -226,7 +226,7 @@ public class Variable extends GirElement {
         
         } else if ((! pointerForArrays) && len != null) {
             String valuelayout = Conversions.getValueLayout(type);
-            writer.write("MemorySegment.ofAddress(" + identifier + ".get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
+            writer.write("MemorySegment.ofAddress(" + identifier + ".get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ")");
         
         } else if (type.isEnum()) {
             // Pointer to enumeration

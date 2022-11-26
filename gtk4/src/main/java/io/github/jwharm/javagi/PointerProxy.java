@@ -27,7 +27,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(ValueLayout.ADDRESS, 0, value.handle());
+        address.set(Interop.valueLayout.ADDRESS, 0, value.handle());
     }
 
     /**
@@ -49,8 +49,8 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     public T get(int index) {
         // Get the memory address of the native object.
         Addressable ref = address.get(
-                ValueLayout.ADDRESS,
-                ValueLayout.ADDRESS.byteSize() * index
+                Interop.valueLayout.ADDRESS,
+                Interop.valueLayout.ADDRESS.byteSize() * index
         );
         // Call the constructor of the proxy object and return the created instance.
         try {

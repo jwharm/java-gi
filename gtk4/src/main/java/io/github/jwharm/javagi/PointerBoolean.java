@@ -14,7 +14,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerBoolean() {
-        super(ValueLayout.JAVA_INT);
+        super(Interop.valueLayout.C_INT);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      */
     public PointerBoolean(boolean initialValue) {
         this();
-        address.set(ValueLayout.JAVA_INT, 0, initialValue ? 1 : 0);
+        address.set(Interop.valueLayout.C_INT, 0, initialValue ? 1 : 0);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      * @param value the new value that is pointed to
      */
     public void set(Boolean value) {
-        address.set(ValueLayout.JAVA_INT, 0, value ? 1 : 0);
+        address.set(Interop.valueLayout.C_INT, 0, value ? 1 : 0);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerBoolean extends Pointer<Boolean> {
      */
     public Boolean get(int index) {
         return address.get(
-                ValueLayout.JAVA_INT,
-                ValueLayout.JAVA_INT.byteSize() * index
+                Interop.valueLayout.C_INT,
+                Interop.valueLayout.C_INT.byteSize() * index
         ) != 0;
     }
 }

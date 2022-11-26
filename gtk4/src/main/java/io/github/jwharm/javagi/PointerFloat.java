@@ -14,7 +14,7 @@ public class PointerFloat extends Pointer<Float> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerFloat() {
-        super(ValueLayout.JAVA_FLOAT);
+        super(Interop.valueLayout.C_FLOAT);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerFloat extends Pointer<Float> {
      */
     public PointerFloat(float initialValue) {
         this();
-        address.set(ValueLayout.JAVA_FLOAT, 0, initialValue);
+        address.set(Interop.valueLayout.C_FLOAT, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerFloat extends Pointer<Float> {
      * @param value the new value that is pointed to
      */
     public void set(Float value) {
-        address.set(ValueLayout.JAVA_FLOAT, 0, value);
+        address.set(Interop.valueLayout.C_FLOAT, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerFloat extends Pointer<Float> {
      */
     public Float get(int index) {
         return address.get(
-                ValueLayout.JAVA_FLOAT,
-                ValueLayout.JAVA_FLOAT.byteSize() * index
+                Interop.valueLayout.C_FLOAT,
+                Interop.valueLayout.C_FLOAT.byteSize() * index
         );
     }
 }

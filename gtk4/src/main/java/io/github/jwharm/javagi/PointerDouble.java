@@ -14,7 +14,7 @@ public class PointerDouble extends Pointer<Double> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerDouble() {
-        super(ValueLayout.JAVA_DOUBLE);
+        super(Interop.valueLayout.C_DOUBLE);
     }
 
     /**
@@ -31,7 +31,7 @@ public class PointerDouble extends Pointer<Double> {
      */
     public PointerDouble(double initialValue) {
         this();
-        address.set(ValueLayout.JAVA_DOUBLE, 0, initialValue);
+        address.set(Interop.valueLayout.C_DOUBLE, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerDouble extends Pointer<Double> {
      * @param value the new value that is pointed to
      */
     public void set(Double value) {
-        address.set(ValueLayout.JAVA_DOUBLE, 0, value);
+        address.set(Interop.valueLayout.C_DOUBLE, 0, value);
     }
 
     /**
@@ -58,8 +58,8 @@ public class PointerDouble extends Pointer<Double> {
      */
     public Double get(int index) {
         return address.get(
-                ValueLayout.JAVA_DOUBLE,
-                ValueLayout.JAVA_DOUBLE.byteSize() * index
+                Interop.valueLayout.C_DOUBLE,
+                Interop.valueLayout.C_DOUBLE.byteSize() * index
         );
     }
 }

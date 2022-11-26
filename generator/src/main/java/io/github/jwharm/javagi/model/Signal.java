@@ -71,7 +71,7 @@ public class Signal extends Method {
             return;
         }
         
-        writer.write("            int HASH = data.get(ValueLayout.JAVA_INT, 0);\n");
+        writer.write("            int HASH = data.get(Interop.valueLayout.C_INT, 0);\n");
         writer.write("            var HANDLER = (" + qualifiedName + ") Interop.signalRegistry.get(HASH);\n");
         writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(source, Ownership.NONE)");
 
@@ -131,16 +131,16 @@ public class Signal extends Method {
         writer.write(", MemoryAddress.class)),\n");
         writer.write("                    FunctionDescriptor.");
         if (returnsBool) {
-            writer.write("of(ValueLayout.JAVA_BOOLEAN, ValueLayout.ADDRESS");
+            writer.write("of(Interop.valueLayout.C_BOOLEAN, Interop.valueLayout.ADDRESS");
         } else {
-            writer.write("ofVoid(ValueLayout.ADDRESS");
+            writer.write("ofVoid(Interop.valueLayout.ADDRESS");
         }
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
                 writer.write(", " + Conversions.toPanamaMemoryLayout(p.type));
             }
         }
-        writer.write(", ValueLayout.ADDRESS),\n");
+        writer.write(", Interop.valueLayout.ADDRESS),\n");
         writer.write("                    Interop.getScope()),\n");
         writer.write("                Interop.registerCallback(handler),\n");
         writer.write("                (Addressable) MemoryAddress.NULL, 0);\n");
