@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "io.github.jwharm.javagi"
-version = "0.2"
+version = "0.3"
 
 java {
     // Temporarily needed until gradle 7.6 is out

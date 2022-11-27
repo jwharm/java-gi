@@ -4,14 +4,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.github.jwharm.javagi.model.Constructor;
-import io.github.jwharm.javagi.model.Doc;
-import io.github.jwharm.javagi.model.Function;
-import io.github.jwharm.javagi.model.GirElement;
-import io.github.jwharm.javagi.model.Method;
-import io.github.jwharm.javagi.model.Namespace;
-import io.github.jwharm.javagi.model.RegisteredType;
-import io.github.jwharm.javagi.model.Repository;
+import io.github.jwharm.javagi.model.*;
 
 public class GtkDoc {
 
@@ -31,8 +24,8 @@ public class GtkDoc {
             + "|(?<constantref>\\%\\w+)"
             // #type
             + "|(?<typeref>\\#[^\\#\\s]\\w*)"
-            // @param
-            + "|(?<paramref>\\@[^\\@\\s]\\w*)"
+            // @param and @@param
+            + "|(?<paramref>\\@{1,2}[^\\@\\s]\\w*)"
             // [url](for link)
             + "|(?<hyperlink>\\[(?<desc>.+?)\\]\\((?<url>.+?)\\))"
             // ! [url](for image)
@@ -284,7 +277,7 @@ public class GtkDoc {
 
     // Replace @text with {@code text}
     private String convertParamref(String ref) {
-        return "{@code " + ref.substring(1) + "}";
+        return "{@code " + ref.substring(ref.lastIndexOf('@') + 1) + "}";
     }
 
     // Replace "[...](...)" with <a href="...">...</a>
@@ -383,7 +376,7 @@ public class GtkDoc {
         }
         String call = girElement.name;
         if (call != null) {
-            name += (uppercase ? ("#" + call.toUpperCase()) : formatMethod(call));
+            name += ((uppercase && (girElement instanceof Member)) ? ("#" + call.toUpperCase()) : formatMethod(call));
         }
         return name;
     }

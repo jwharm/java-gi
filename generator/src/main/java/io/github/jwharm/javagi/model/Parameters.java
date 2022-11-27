@@ -77,7 +77,7 @@ public class Parameters extends GirElement {
             writer.write("\n                    ");
             // Don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
-                writer.write("(Addressable) (" + p.name + " == null ? MemoryAddress.NULL : ");
+                writer.write("(Addressable) (" + (p.varargs ? "varargs" : p.name) + " == null ? MemoryAddress.NULL : ");
             }
             if (p.isInstanceParameter()) {
                 writer.write("handle()");

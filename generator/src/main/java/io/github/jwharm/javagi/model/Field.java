@@ -9,10 +9,12 @@ public class Field extends Variable {
 
     public final String readable, isPrivate;
     public Callback callback;
+    public final String fieldName;
 
     public Field(GirElement parent, String name, String readable, String isPrivate) {
         super(parent);
-        this.name = name;
+        this.fieldName = name;
+        this.name = Conversions.toLowerCaseJavaName(name);
         this.readable = readable;
         this.isPrivate = isPrivate;
     }
@@ -49,19 +51,19 @@ public class Field extends Variable {
         // Generate getter method
         writer.write("    \n");
         writer.write("    /**\n");
-        writer.write("     * Get the value of the field {@code " + this.name + "}\n");
-        writer.write("     * @return The value of the field {@code " + this.name + "}\n");
+        writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
+        writer.write("     * @return The value of the field {@code " + this.fieldName + "}\n");
         writer.write("     */\n");
         writer.write("    public " + getReturnType() + " " + this.name + "$get() {\n");
         
         if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
-            writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"));\n");
+            writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
             writer.write("        return ");
             generateReverseInterop(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
             writer.write(";\n");
         } else {
             writer.write("        var RESULT = (" + getMemoryType() + ") getMemoryLayout()\n"
-                    + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+                    + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
                     + "            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
             writer.write("        return ");
             generateReverseInterop(writer, "RESULT", false);
@@ -82,14 +84,14 @@ public class Field extends Variable {
         // Generate setter method
         writer.write("    \n");
         writer.write("    /**\n");
-        writer.write("     * Change the value of the field {@code " + this.name + "}\n");
-        writer.write("     * @param " + this.name + " The new value of the field {@code " + this.name + "}\n");
+        writer.write("     * Change the value of the field {@code " + this.fieldName + "}\n");
+        writer.write("     * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
         writer.write("     */\n");
         writer.write("    public void " + this.name + "$set(");
         generateTypeAndName(writer, true);
         writer.write(") {\n");
         writer.write("        getMemoryLayout()\n"
-                + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+                + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
                 + "            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
         generateInterop(writer, this.name, false);
         writer.write(");\n");
@@ -112,7 +114,7 @@ public class Field extends Variable {
         // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
         writer.write("            getMemoryLayout()\n"
-                + "                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.name + "\"))\n"
+                + "                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
                 + "                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
         // Check for null values
         if (checkNull()) {
@@ -142,7 +144,7 @@ public class Field extends Variable {
             
             // Bitfields and enumerations are integers
             if (type.isBitfield() || type.isEnum()) {
-                return "Interop.valueLayout.C_INT.withName(\"" + this.name + "\")";
+                return "Interop.valueLayout.C_INT.withName(\"" + this.fieldName + "\")";
             }
             
             // Pointers, strings and callbacks are memory addresses
@@ -150,17 +152,17 @@ public class Field extends Variable {
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
-                return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
+                return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
             }
             
             // Primitive types and aliases
             if (type.isPrimitive 
                     || type.isAliasForPrimitive()) {
-                return Conversions.getValueLayout(type) + ".withName(\"" + this.name + "\")";
+                return Conversions.getValueLayout(type) + ".withName(\"" + this.fieldName + "\")";
             }
             
             // For Proxy objects we recursively get the memory layout
-            return type.qualifiedJavaType + ".getMemoryLayout()" + ".withName(\"" + this.name + "\")";
+            return type.qualifiedJavaType + ".getMemoryLayout()" + ".withName(\"" + this.fieldName + "\")";
         }
         
         // Arrays with a fixed size
@@ -184,21 +186,21 @@ public class Field extends Variable {
                 valueLayout = array.type.qualifiedJavaType + ".getMemoryLayout()";
             }
             
-            return "MemoryLayout.sequenceLayout(" + array.fixedSize + ", " + valueLayout + ").withName(\"" + this.name + "\")";
+            return "MemoryLayout.sequenceLayout(" + array.fixedSize + ", " + valueLayout + ").withName(\"" + this.fieldName + "\")";
         }
         
         // Arrays with non-fixed size
         if (array != null) {
-            return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
+            return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
         }
         
         // Callbacks
         if (callback != null) {
-            return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
+            return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
         }
         
-        System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, name);
-        return "Interop.valueLayout.ADDRESS.withName(\"" + this.name + "\")";
+        System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, fieldName);
+        return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
     }
     
     /**

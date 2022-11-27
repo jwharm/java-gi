@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.github.jwharm.javagi.model.GirElement;
-import io.github.jwharm.javagi.model.RegisteredType;
-import io.github.jwharm.javagi.model.Repository;
-import io.github.jwharm.javagi.model.Type;
+import io.github.jwharm.javagi.model.*;
 
 public class Conversions {
 
@@ -126,7 +123,7 @@ public class Conversions {
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
-                "const", "float", "native", "super", "while"
+                "const", "float", "native", "super", "while", "wait"
         };
         return (Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name))) ? name + "_" : name;
     }
@@ -198,7 +195,7 @@ public class Conversions {
         } else if (t.isPrimitive) {
             return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
-            return "Interop.valueLayout.C_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
+            return toPanamaMemoryLayout(t.girElementInstance.type);
         } else {
             return "Interop.valueLayout.ADDRESS";
         }
@@ -215,7 +212,7 @@ public class Conversions {
         } else if (t.isPrimitive) {
             return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
-            return "Interop.valueLayout.C_" + t.girElementInstance.type.simpleJavaType.toUpperCase();
+            return getValueLayout(t.girElementInstance.type);
         } else {
             return "Interop.valueLayout.ADDRESS";
         }

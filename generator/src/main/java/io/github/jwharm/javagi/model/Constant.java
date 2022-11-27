@@ -24,9 +24,9 @@ public class Constant extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typeStr = ((Alias) type.girElementInstance).type.simpleJavaType;
                 printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(typeStr, value) + ")";
-            } else if (type.isEnum()) {
+            } else if (type.isBitfield() || type.isEnum()) {
                 typeStr = "int";
-                printValue = type.qualifiedJavaType + ".fromValue(" + Conversions.literal(typeStr, value) + ")";
+                printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(typeStr, value) + ")";
             } else {
                 typeStr = type.qualifiedJavaType;
                 printValue = Conversions.literal(typeStr, value);

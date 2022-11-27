@@ -15,4 +15,4 @@ dependencies {
 }
 
 group = "io.github.jwharm.javagi"
-version = "0.2"
+version = "0.3"
