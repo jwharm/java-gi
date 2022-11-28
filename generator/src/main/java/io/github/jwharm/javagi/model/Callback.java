@@ -60,7 +60,12 @@ public class Callback extends RegisteredType implements CallableType {
         if (returnValue.type == null) {
             writer.write("void");
         } else {
-            writer.write(returnValue.type.qualifiedJavaType);
+            // Pointer parameters are "MemoryAddress", but return values are "Addressable"
+            String returnType = Conversions.toPanamaJavaType(returnValue.type);
+            if (returnType.equals("MemoryAddress")) {
+                returnType = "Addressable";
+            }
+            writer.write(returnType);
         }
         writer.write(" cb" + javaName + "(");
 
@@ -137,7 +142,9 @@ public class Callback extends RegisteredType implements CallableType {
         }
 
         if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
-            writer.write("            return RESULT;\n");
+            writer.write("            return ");
+            returnValue.generateInterop(writer, "RESULT", false);
+            writer.write(";\n");
         }
         writer.write("        }\n");
         BindingsGenerator.signalCallbackFunctions.append(writer);
