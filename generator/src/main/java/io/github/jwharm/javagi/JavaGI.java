@@ -66,7 +66,7 @@ public class JavaGI {
             @Override
             public void startElement(String uri, String lName, String qName, Attributes attr) {
                 if ("repository".equals(qName)) {
-                    toGenerate.add(new Source(attr.getValue("path"), attr.getValue("package"), Set.of(), Path.of(outputDir), PatchSet.EMPTY));
+                    toGenerate.add(new Source(attr.getValue("path"), attr.getValue("package"), true, Set.of(), Path.of(outputDir), PatchSet.EMPTY));
                 }
             }
         });
@@ -91,7 +91,7 @@ public class JavaGI {
             System.out.println("PARSE " + source.path());
             Repository r = parser.parse(source.path(), source.pkg());
             repositories.put(r.namespace.name, r);
-            parsed.put(r.namespace.name, new Parsed(r, source.natives, source.outputDir, source.patches));
+            parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.outputDir, source.patches));
         }
         
         // Link the type references to the GIR type definition across the GI repositories
@@ -111,12 +111,14 @@ public class JavaGI {
         
         // Generate the Java class files
         for (Parsed p : parsed.values()) {
-            Path basePath = p.outputDir.resolve(p.repository.namespace.pathName);
-            System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
-            generator.generate(p.repository, p.natives, basePath);
+            if (p.generate) {
+                Path basePath = p.outputDir.resolve(p.repository.namespace.pathName);
+                System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
+                generator.generate(p.repository, p.natives, basePath);
+            }
         }
     }
 
-    public record Source(String path, String pkg, Set<String> natives, Path outputDir, PatchSet patches) {}
-    private record Parsed(Repository repository, Set<String> natives, Path outputDir, PatchSet patches) {}
+    public record Source(String path, String pkg, boolean generate, Set<String> natives, Path outputDir, PatchSet patches) {}
+    private record Parsed(Repository repository, boolean generate, Set<String> natives, Path outputDir, PatchSet patches) {}
 }

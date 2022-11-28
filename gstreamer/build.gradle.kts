@@ -60,46 +60,11 @@ val genSources by tasks.registering {
                 }
             }),
             source("GModule-2.0", "org.gtk.gmodule", false),
-            source("cairo-1.0", "org.cairographics", true, "cairo", "cairo-gobject", patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // Incompletely defined
-                    removeFunction(repo, "image_surface_create");
-                }
-            }),
-            source("freetype2-2.0", "org.freetype", true),
-            source("HarfBuzz-0.0", "org.harfbuzz", true, "harfbuzz", patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // This constant has type "language_t" which cannot be instantiated
-                    removeConstant(repo, "LANGUAGE_INVALID");
-                }
-            }),
-            source("Pango-1.0", "org.pango", true, "pango-1.0"),
-            source("PangoCairo-1.0", "org.pango.cairo", true, "pangocairo-1.0"),
-            source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", true, "gdk_pixbuf-2.0"),
-            source("Gdk-4.0", "org.gtk.gdk", true),
-            source("Graphene-1.0", "org.gtk.graphene", true, "graphene-1.0"),
-            source("Gsk-4.0", "org.gtk.gsk", true, patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // These types are defined in the GIR, but unavailable by default
-                    removeType(repo, "BroadwayRenderer");
-                    removeType(repo, "BroadwayRendererClass");
-                }
-            }),
-            source("Gtk-4.0", "org.gtk.gtk", true, "gtk-4", patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // Override with different return type
-                    renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction");
-                    renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
-                    renameMethod(repo, "PrintSettings", "get", "get_string");
-                }
-            }),
-            source("Adw-1", "org.gnome.adw", true, "adwaita-1", patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // Override with different return type
-                    renameMethod(repo, "ActionRow", "activate", "activate_row");
-                    renameMethod(repo, "SplitButton", "get_direction", "get_arrow_direction");
-                }
-            })
+            source("Gst-1.0", "org.gstreamer.gst", true, "gstreamer-1.0"),
+            source("GstBase-1.0", "org.gstreamer.base", true),
+            source("GstCheck-1.0", "org.gstreamer.check", true),
+            source("GstController-1.0", "org.gstreamer.controller", true),
+            source("GstNet-1.0", "org.gstreamer.net", true)
         )
     }
 }

@@ -8,7 +8,9 @@ application {
 }
 
 dependencies {
+    implementation(project(":glib"))
     implementation(project(":gtk4"))
+    implementation(project(":gstreamer"))
 }
 
 // Temporarily needed until panama is out of preview
