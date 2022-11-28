@@ -9,6 +9,6 @@ public class HelloWorld {
 
         // GStreamer example
         // To run example, provide a valid path to an Ogg Vorbis file:
-        new GStreamerExample(new String[]{"/home/jw/Downloads/Example.ogg"});
+        new GStreamerExample(new String[]{"Example.ogg"});
     }
 }

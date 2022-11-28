@@ -15,7 +15,7 @@ public class Member extends GirElement {
             this.name = Conversions.prefixDigits(name);
         }
         try {
-            this.value = Integer.parseInt(value);
+            this.value = Integer.parseUnsignedInt(value);
         } catch (NumberFormatException nfe) {
             if (JavaGI.DISPLAY_WARNINGS) {
                 System.out.println("Skipping <member name=\"" + name + "\"" 
