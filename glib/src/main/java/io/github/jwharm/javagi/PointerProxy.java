@@ -2,7 +2,6 @@ package io.github.jwharm.javagi;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 
 /**

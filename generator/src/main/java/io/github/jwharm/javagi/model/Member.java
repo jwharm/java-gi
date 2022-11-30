@@ -25,4 +25,13 @@ public class Member extends GirElement {
             }
         }
     }
+
+    /**
+     * Compare equality with another member of the same structure
+     * @param other Another member
+     * @return true iff both members share the same parent and have equal names
+     */
+    public boolean equals(Member other) {
+        return (parent == other.parent) && name.equals(other.name);
+    }
 }

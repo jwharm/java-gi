@@ -35,7 +35,8 @@ public class Signal extends Method {
         writer.write("    \n");
         writer.write("    @FunctionalInterface\n");
         writer.write("    public interface " + signalName + " {\n");
-        writer.write("        " + (returnsBool ? "boolean" : "void") + " signalReceived(" + className + " source");
+        writer.write("        " + (returnsBool ? "boolean" : "void") + " signalReceived("
+                + className + " source" + Conversions.toLowerCaseJavaName(className));
 
         if (parameters != null) {
             writer.write(", ");
@@ -49,12 +50,13 @@ public class Signal extends Method {
     // Generate the static callback method, that will run the handler method.
     public void generateStaticCallback(Writer writer, boolean isDefault) throws IOException {
         String implClassName = className;
+        String source = "source" + Conversions.toLowerCaseJavaName(className);
         if (isDefault) {
             implClassName = className + "." + className + "Impl";
         }
 
         writer.write("        \n");
-        writer.write("        public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress source");
+        writer.write("        public static " + (returnsBool ? "boolean " : "void ") + callbackName + "(MemoryAddress " + source);
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
@@ -62,7 +64,7 @@ public class Signal extends Method {
                 writer.write(" " + Conversions.toLowerCaseJavaName(p.name));
             }
         }
-        writer.write(", MemoryAddress data) {\n");
+        writer.write(", MemoryAddress DATA) {\n");
 
         if (! isSafeToBind()) {
             writer.write("        // Operation not supported yet\n");
@@ -71,9 +73,9 @@ public class Signal extends Method {
             return;
         }
         
-        writer.write("            int HASH = data.get(Interop.valueLayout.C_INT, 0);\n");
+        writer.write("            int HASH = DATA.get(Interop.valueLayout.C_INT, 0);\n");
         writer.write("            var HANDLER = (" + qualifiedName + ") Interop.signalRegistry.get(HASH);\n");
-        writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(source, Ownership.NONE)");
+        writer.write("            " + (returnsBool ? "return " : "") + "HANDLER.signalReceived(new " + implClassName + "(" + source + ", Ownership.NONE)");
 
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {

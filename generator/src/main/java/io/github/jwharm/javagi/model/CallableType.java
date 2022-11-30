@@ -43,7 +43,7 @@ public interface CallableType {
 
         if (rv.type == null) return true;
 
-        // We don't support callbacks yet
+        // We don't support callback return values yet
         if (rv.type.isCallback()) return false;
 
         return true;

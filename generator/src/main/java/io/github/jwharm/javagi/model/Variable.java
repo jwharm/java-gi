@@ -161,7 +161,7 @@ public class Variable extends GirElement {
             return "new PointerString(" + identifier + ")";
         }
         // Create Pointer to an object
-        if (array == null && type.cType != null && type.cType.endsWith("**") && generatePointerProxy) {
+        if (array == null && type.cType != null && (! type.isPrimitive) && type.cType.endsWith("**") && generatePointerProxy) {
             return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
         }
         // Create Pointer to primitive value
@@ -203,7 +203,11 @@ public class Variable extends GirElement {
         if (array != null) {
             generateReverseArrayInterop(writer, identifier, pointerForArrays);
         } else {
-            writer.write(getNewInstanceString(type, identifier, true));
+            String ident = identifier;
+            if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+                ident = identifier + ".get(" + Conversions.getValueLayout(type.girElementInstance.type) + ", 0)";
+            }
+            writer.write(getNewInstanceString(type, ident, true));
         }
     }
     

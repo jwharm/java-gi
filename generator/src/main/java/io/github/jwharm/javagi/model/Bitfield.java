@@ -2,6 +2,9 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class Bitfield extends ValueWrapper {
 
@@ -18,8 +21,9 @@ public class Bitfield extends ValueWrapper {
         
         generateCType(writer);
         generateMemoryLayout(writer);
-        
-        for (Member m : memberList) {
+
+        // Filter duplicate members
+        for (Member m : filterDuplicates(memberList)) {
             writer.write("    \n");
             if (m.doc != null) {
                 m.doc.generate(writer, 1);
@@ -72,5 +76,18 @@ public class Bitfield extends ValueWrapper {
         } else {
             return str;
         }
+    }
+
+    private List<Member> filterDuplicates(List<Member> input) {
+        HashSet<String> set = new HashSet<>();
+        ArrayList<Member> output = new ArrayList<>();
+
+        for (Member m : input) {
+            if (! set.contains(m.name)) {
+                output.add(m);
+                set.add(m.name);
+            }
+        }
+        return output;
     }
 }

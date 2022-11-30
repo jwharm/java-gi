@@ -3,7 +3,7 @@ package io.github.jwharm.javagi.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GirElement {
+public abstract class GirElement {
 
     private static GirElement previouslyCreated = null;
 

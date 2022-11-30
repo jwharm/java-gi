@@ -26,7 +26,7 @@ public class Conversions {
      * Convert "identifier_name" to "identifierName"
      */
     public static String toLowerCaseJavaName(String typeName) {
-        return replaceKeywords(toCamelCase(typeName, false));
+        return prefixDigits(replaceKeywords(toCamelCase(typeName, false)));
     }
 
     /**
@@ -110,7 +110,7 @@ public class Conversions {
      * A type name starting with a digit is not allowed; prefix it with an underscore.
      */
     public static String prefixDigits(String name) {
-        return Character.isDigit(name.charAt(0)) ? "_" + name : name;
+        return name == null ? null : (Character.isDigit(name.charAt(0)) ? "_" + name : name);
     }
 
     /**
@@ -150,7 +150,7 @@ public class Conversions {
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
-            case "glong", "gulong", "gint64", "gssize", "gsize", "goffset", "guint64" -> "long";
+            case "glong", "gulong", "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr" -> "long";
             case "gdouble" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
