@@ -18,8 +18,8 @@ public class GObjectBuilder {
      * @throws IOException Thrown when an error occurs while writing
      */
     public static void generateBuilder(Writer writer, io.github.jwharm.javagi.model.Class c) throws IOException {
-        
-        // Each Build class extends the Build class of the object's parent, to allow 
+
+        // Each Build class extends the Build class of the object's parent, to allow
         // setting the properties of the parent type. GObject does not have a parent, 
         // so GObject.Build extends from the base Build class.
         String parent = c.parentClass + ".Build";

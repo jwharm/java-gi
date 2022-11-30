@@ -18,7 +18,12 @@ public class StructBuilder {
      * @throws IOException Thrown when an error occurs while writing
      */
     public static void generateBuilder(Writer writer, io.github.jwharm.javagi.model.Record r) throws IOException {
-        
+
+        // No builder for structs without field definitions
+        if (r.fieldList.isEmpty()) {
+            return;
+        }
+
         // Write the inner Build class definition
         writer.write("\n" 
                 + "    /**\n"
