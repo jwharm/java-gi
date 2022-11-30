@@ -216,6 +216,30 @@ public class Interop {
     }
 
     /**
+     * Marshall the provided object to a memory address.
+     * The object must be an instance of {@link Proxy}, {@link String},
+     * {@link Addressable} or {@code null}.
+     * @param object The object to marshall
+     * @return a memory address referring to the object in native memory.
+     */
+    public static Addressable objectToAddress(Object object) {
+        if (object == null) {
+            return MemoryAddress.NULL;
+        }
+        if (object instanceof Addressable address) {
+            return address;
+        }
+        if (object instanceof String str) {
+            return allocateNativeString(str);
+        }
+        if (object instanceof Proxy proxy) {
+            return proxy.handle();
+        }
+        String type = object.getClass().getName();
+        throw new IllegalArgumentException("Cannot marshall " + type + " to java.lang.foreign.Addressable");
+    }
+
+    /**
      * Allocates and initializes an (optionally NULL-terminated) array 
      * of strings (NUL-terminated utf8 char*).
      * @param strings Array of Strings
@@ -231,6 +255,27 @@ public class Interop {
         }
         if (zeroTerminated) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
+        }
+        return memorySegment;
+    }
+
+    /**
+     * Allocates and initializes an (optionally NULL-terminated) array
+     * of memory addresses for the provided objects. The objects are marshalled
+     * to native addresses using {@link #objectToAddress(Object)}.
+     * @param objects Array of Objects that can be marshalled to a native address
+     * @param zeroTerminated Whether to add a NUL at the end the array
+     * @return The memory segment of the native array
+     */
+    public static Addressable allocateNativeArray(Object[] objects, boolean zeroTerminated) {
+        int length = zeroTerminated ? objects.length : objects.length + 1;
+        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
+        for (int i = 0; i < objects.length; i++) {
+            var address = objectToAddress(objects[i]);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, i, address);
+        }
+        if (zeroTerminated) {
+            memorySegment.setAtIndex(valueLayout.ADDRESS, objects.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
