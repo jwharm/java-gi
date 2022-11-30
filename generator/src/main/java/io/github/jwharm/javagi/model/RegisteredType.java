@@ -159,11 +159,11 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-//        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(gobject.g_type_instance$get(), " + javaName + ".getType())) {\n");
+        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
-//        writer.write("        } else {\n");
-//        writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
-//        writer.write("        }\n");
+        writer.write("        } else {\n");
+        writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
+        writer.write("        }\n");
         writer.write("    }\n");
     }
 
