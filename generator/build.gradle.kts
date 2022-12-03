@@ -4,6 +4,11 @@ plugins {
     `maven-publish`
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 application {
     mainClass.set("io.github.jwharm.javagi.JavaGI")
 }
