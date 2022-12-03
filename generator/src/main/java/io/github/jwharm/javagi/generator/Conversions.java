@@ -14,6 +14,7 @@ public class Conversions {
     public static Map<String, GirElement> cIdentifierLookupTable;
     public static Map<String, RegisteredType> cTypeLookupTable;
     public static Map<String, Repository> repositoriesLookupTable;
+    public static Map<String, String> superLookupTable = new HashMap<>();
 
     /**
      * Convert "Gdk" to "org.gtk.gdk"

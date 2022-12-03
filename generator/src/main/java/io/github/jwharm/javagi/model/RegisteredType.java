@@ -9,6 +9,7 @@ import io.github.jwharm.javagi.generator.Conversions;
 public abstract class RegisteredType extends GirElement {
 
     public final String javaName, parentClass, cType, version;
+    private final String qualifiedName;
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
         super(parent);
@@ -16,11 +17,30 @@ public abstract class RegisteredType extends GirElement {
         this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace().packageName);
         this.name = name;
         this.javaName = Conversions.toSimpleJavaType(name);
+        this.qualifiedName = Conversions.toQualifiedJavaType(name, getNamespace().packageName);
         
         // If c type is not provided, guess that the name is also the c type
         this.cType = Objects.requireNonNullElse(cType, name);
         
         this.version = version;
+
+        // Register the full names of this class and the parent class
+        Conversions.superLookupTable.put(this.qualifiedName, this.parentClass);
+    }
+
+    // Find out if this tyjpe is a subclass of the provided classname
+    private boolean isInstanceOf(String classname) {
+        if (this.qualifiedName.equals(classname)) {
+            return true;
+        }
+        String current = this.qualifiedName;
+        while (current != null) {
+            current = Conversions.superLookupTable.get(current);
+            if (classname.equals(current)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public abstract void generate(Writer writer) throws IOException;
@@ -168,15 +188,36 @@ public abstract class RegisteredType extends GirElement {
     }
 
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
+
+        // Find out if this class is instanceof InitiallyUnowned
+        boolean initiallyUnowned = isInstanceOf("org.gtk.gobject.InitiallyUnowned");
+
         writer.write("    \n");
         writer.write("    /**\n");
         writer.write("     * Create a " + javaName + " proxy instance for the provided memory address.\n");
+        if (initiallyUnowned) {
+            writer.write("     * <p>\n");
+            writer.write("     * Because " +javaName + " is an {@code InitiallyUnowned} instance, when \n");
+            writer.write("     * {@code ownership == Ownership.NONE}, the ownership is set to {@code FULL} \n");
+            writer.write("     * and a call to {@code refSink()} is executed to sink the floating reference.\n");
+        }
         writer.write("     * @param address   The memory address of the native object\n");
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
         writer.write("     */\n");
         writer.write("    @ApiStatus.Internal\n");
         writer.write("    public " + javaName + "(Addressable address, Ownership ownership) {\n");
-        writer.write("        super(address, ownership);\n");
+
+        if (initiallyUnowned) {
+            writer.write("        super(address, Ownership.FULL);\n");
+            writer.write("        if (ownership == Ownership.NONE) {\n");
+            writer.write("            refSink();\n");
+            writer.write("        }\n");
+        } else {
+            writer.write("        super(address, ownership);\n");
+        }
+
+
+
         writer.write("    }\n");
     }
 
