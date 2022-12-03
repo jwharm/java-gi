@@ -178,7 +178,7 @@ public abstract class ObjectBase implements Proxy {
                     .construct();
 
             // Call GObject.typeRegisterStatic and return the generated GType
-            return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, TypeFlags.NONE);
+            return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, new TypeFlags(0));
 
         } catch (Exception e) {
             e.printStackTrace();

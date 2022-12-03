@@ -27,9 +27,10 @@ jobs:
       - name: Install dependencies
         run: |
           dnf install -y gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel
+          dnf install -y gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel
       - name: Publish package
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: publish
+          arguments: publish --stacktrace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
