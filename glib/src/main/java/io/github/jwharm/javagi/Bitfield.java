@@ -5,21 +5,13 @@ package io.github.jwharm.javagi;
  */
 public abstract class Bitfield {
 
-    private int value;
+    private final int value;
 
     /**
      * Create a bitfield with the provided integer value
      * @param value the initial value of the bitfield
      */
     public Bitfield(int value) {
-        this.value = value;
-    }
-
-    /**
-     * Set the value of this bitfield to the provided integer
-     * @param value the new value
-     */
-    public void setValue(int value) {
         this.value = value;
     }
 
