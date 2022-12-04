@@ -50,7 +50,7 @@ public class BindingsGenerator {
             if (!natives.isEmpty()) {
                 writer.write("    static {\n");
                 for (String libraryName : natives) {
-                    writer.write("        System.loadLibrary(\"" + libraryName + "\");\n");
+                    writer.write("        LibLoad.loadLibrary(\"" + libraryName + "\");\n");
                 }
                 writer.write("    }\n");
                 writer.write("    \n");

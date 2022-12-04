@@ -80,7 +80,7 @@ public class Interop {
         
         // Ensure that the "gobject-2.0" library has been loaded. 
         // This is required for the downcall handle to g_signal_connect.
-        System.loadLibrary("gobject-2.0");
+        LibLoad.loadLibrary("gobject-2.0");
     }
 
     /**
