@@ -245,13 +245,13 @@ public class Conversions {
     public static String literal(String type, String value) throws NumberFormatException {
         return switch (type) {
             case "boolean" -> Boolean.valueOf(value).toString();
-            case "byte" -> Byte.valueOf(value).toString();
+            case "byte" -> Numbers.parseByte(value).toString();
             case "char" -> "'" + value + "'";
             case "double" -> Double.valueOf(value) + "d";
             case "float" -> Float.valueOf(value) + "f";
-            case "int" -> Integer.valueOf(value).toString();
-            case "long" -> Long.valueOf(value) + "L";
-            case "short" -> Short.valueOf(value).toString();
+            case "int" -> Numbers.parseInt(value).toString();
+            case "long" -> Numbers.parseLong(value) + "L";
+            case "short" -> Numbers.parseShort(value).toString();
             case "java.lang.String" -> '"' + value + '"';
             default -> value;
         };

@@ -15,7 +15,31 @@ public class Gtk4Example {
         box.setValign(Align.CENTER);
 
         var button = Button.newWithLabel("Hello world!");
-        button.onClicked((btn) -> window.close());
+        button.onClicked(btn -> {
+            MessageDialog dialog = new MessageDialog(
+                    window,
+                    // Using combined() would mutate these fields
+                    new DialogFlags(DialogFlags.MODAL.getValue() | DialogFlags.DESTROY_WITH_PARENT.getValue()),
+                    MessageType.INFO,
+                    ButtonsType.OK_CANCEL,
+                    null
+            );
+            dialog.setTitle("Hello!");
+            dialog.setMarkup("This is some **content**");
+            dialog.onResponse(($, responseId) -> {
+                // Would be ResponseType, but that can't be used in a switch
+                switch (responseId) {
+                    case -5 -> { // OK
+                        window.close();
+                    }
+                    case -6 -> { // Cancel
+                        System.out.println("Cancel");
+                    }
+                }
+                dialog.close();
+            });
+            dialog.show();
+        });
 
         box.append(button);
         window.setChild(box);

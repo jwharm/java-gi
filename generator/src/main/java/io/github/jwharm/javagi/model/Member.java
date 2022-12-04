@@ -1,12 +1,13 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.JavaGI;
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.Numbers;
 
 public class Member extends GirElement {
 
-    public String cIdentifier;
-    int value;
+    public final String cIdentifier;
+    final int value;
+    final boolean usable;
 
     public Member(GirElement parent, String name, String cIdentifier, String value) {
         super(parent);
@@ -14,16 +15,20 @@ public class Member extends GirElement {
         if (name != null) {
             this.name = Conversions.prefixDigits(name);
         }
+        int v;
+        boolean u = true;
         try {
-            this.value = Integer.parseUnsignedInt(value);
+            v = Numbers.parseInt(value);
         } catch (NumberFormatException nfe) {
-            if (JavaGI.DISPLAY_WARNINGS) {
-                System.out.println("Skipping <member name=\"" + name + "\"" 
-                        + " c:identifier=\"" + cIdentifier + "\"" 
-                        + " value=\"" + value + "\"" 
-                        + ">: Not an integer");
-            }
+            v = 0;
+            u = false;
+            System.out.println("Skipping <member name=\"" + name + "\""
+                    + " c:identifier=\"" + cIdentifier + "\""
+                    + " value=\"" + value + "\""
+                    + ">: Not an integer");
         }
+        this.value = v;
+        this.usable = u;
     }
 
     /**

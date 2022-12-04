@@ -11,5 +11,5 @@ tasks.register("publish") {
 }
 
 tasks.register("example") {
-    dependsOn(project(":example").task(":run"))
+    dependsOn(project(":example").tasks["run"])
 }

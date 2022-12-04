@@ -19,16 +19,17 @@ public class Enumeration extends ValueWrapper {
 
         generateCType(writer);
         generateMemoryLayout(writer);
-        
-        ArrayList<Integer> values = new ArrayList<>();
+
         for (Member m : memberList) {
-            if (! values.contains(m.value)) {
+            if (m.usable) {
                 writer.write("    \n");
                 if (m.doc != null) {
                     m.doc.generate(writer, 1);
                 }
-                writer.write("    public static final " + javaName + " " 
+                writer.write("    public static final " + javaName + " "
                         + m.name.toUpperCase() + " = new " + javaName + "(" + m.value + ");\n");
+            } else {
+                writer.write("    // Skipped " + m.name.toUpperCase() + "\n");
             }
         }
         

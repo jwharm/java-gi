@@ -24,11 +24,15 @@ public class Bitfield extends ValueWrapper {
 
         // Filter duplicate members
         for (Member m : filterDuplicates(memberList)) {
-            writer.write("    \n");
-            if (m.doc != null) {
-                m.doc.generate(writer, 1);
+            if (m.usable) {
+                writer.write("    \n");
+                if (m.doc != null) {
+                    m.doc.generate(writer, 1);
+                }
+                writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = new " + javaName + "("+ m.value + ");\n");
+            } else {
+                writer.write("    // Skipped: " + m.name.toUpperCase() + "\n");
             }
-            writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = new " + javaName + "("+ m.value + ");\n");
         }
         
         generateValueConstructor(writer, "int");

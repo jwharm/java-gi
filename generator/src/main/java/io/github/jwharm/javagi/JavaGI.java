@@ -20,12 +20,6 @@ import io.github.jwharm.javagi.generator.PatchSet;
 import io.github.jwharm.javagi.model.Repository;
 
 public class JavaGI {
-    
-    /**
-     * Change this to TRUE to display warnings about invalid types that are skipped 
-     * by the GIR parser and the bindings generator.
-     */
-    public static final boolean DISPLAY_WARNINGS = false;
 
     /**
      * Run the JavaGI bindings generator as a command-line application instead of a Gradle task.
