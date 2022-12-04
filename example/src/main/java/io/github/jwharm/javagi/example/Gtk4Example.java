@@ -26,12 +26,11 @@ public class Gtk4Example {
             dialog.setTitle("Hello!");
             dialog.setMarkup("This is some **content**");
             dialog.onResponse(($, responseId) -> {
-                // Would be ResponseType, but that can't be used in a switch
-                switch (responseId) {
-                    case -5 -> { // OK
+                switch (ResponseType.of(responseId)) {
+                    case OK -> {
                         window.close();
                     }
-                    case -6 -> { // Cancel
+                    case CANCEL -> {
                         System.out.println("Cancel");
                     }
                 }
