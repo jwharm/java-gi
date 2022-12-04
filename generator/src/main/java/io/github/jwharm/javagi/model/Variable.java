@@ -134,7 +134,7 @@ public class Variable extends GirElement {
             if (type.isAliasForPrimitive()) {
                 typename = Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
             }
-            writer.write("Interop.allocateNativeArray(" + type.qualifiedJavaType + ".get" + typename + "Values(" + identifier + "), " + zeroTerminatedBool + ")");
+            writer.write("Interop.allocateNativeArray(" + (type.isEnum() ? "Enumeration" : type.qualifiedJavaType) + ".get" + typename + "Values(" + identifier + "), " + zeroTerminatedBool + ")");
 
         } else if (type.cType != null && type.cType.endsWith("*")) {
             // Array of pointers
@@ -171,6 +171,10 @@ public class Variable extends GirElement {
         // Create Java String from UTF8 memorysegment
         if (type.qualifiedJavaType.equals("java.lang.String")) {
             return "Interop.getStringFrom(" + identifier + ")";
+        }
+        // Get enum value
+        if (type.isEnum()) {
+            return type.qualifiedJavaType + ".of(" + identifier + ")";
         }
         // Create ValueWrapper object
         if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
