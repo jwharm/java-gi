@@ -6,10 +6,6 @@ group = "io.github.jwharm.javagi"
 version = "0.3"
 
 java {
-    // Temporarily needed until gradle 7.6 is out
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(19))
-    }
     withJavadocJar()
     withSourcesJar()
 }

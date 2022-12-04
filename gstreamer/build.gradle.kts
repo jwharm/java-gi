@@ -103,4 +103,4 @@ val genSources by tasks.registering {
     }
 }
 
-tasks.compileJava.get().dependsOn(genSources.get())
+tasks.compileJava.get().dependsOn(genSources)

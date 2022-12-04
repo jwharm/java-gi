@@ -60,7 +60,6 @@ The instructions above link to pre-built bindings for the entire GTK4 library st
 
 If you want to generate bindings for other versions, platforms or libraries, follow these steps:
 - First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/).
-- Gradle doesn't run on JDK 19 yet, so you will also need to install a supported JDK, for example [JDK 18](https://jdk.java.net/18/), and configure Gradle to use it, until Gradle version 7.6 is released.
 - Install the GObject-introspection (gir) files of the library you want to generate bindings for. 
   For example, in Fedora, to install the gir files for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
 - Running `gradle build` is enough to generate and build gtk4 bindings.
