@@ -22,7 +22,7 @@ public class Constant extends GirElement {
         String printValue;
         try {
             if (type.isAliasForPrimitive()) {
-                typeStr = ((Alias) type.girElementInstance).type.simpleJavaType;
+                typeStr = type.girElementInstance.type.simpleJavaType;
                 printValue = "new " + type.qualifiedJavaType + "(" + Conversions.literal(typeStr, value) + ")";
             } else if (type.isBitfield() || type.isEnum()) {
                 typeStr = "int";
@@ -33,11 +33,9 @@ public class Constant extends GirElement {
             }
         } catch (NumberFormatException nfe) {
             // Do not write anything
-            if (JavaGI.DISPLAY_WARNINGS) {
-                System.out.println("Skipping <constant name=\"" + name + "\"" 
-                        + " value=\"" + value + "\"" 
-                        + ">: Value not allowed for " + typeStr);
-            }
+            System.out.println("Skipping <constant name=\"" + name + "\""
+                    + " value=\"" + value + "\""
+                    + ">: Value not allowed for " + typeStr);
             return;
         }
         
