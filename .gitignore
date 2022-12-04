@@ -53,3 +53,4 @@ generated/
 
 # Local configurations
 gradle.properties
+!gradle/wrapper/gradle-wrapper.jar

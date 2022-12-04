@@ -55,7 +55,7 @@ public class JavaGI {
 
     /**
      * Run the JavaGI bindings generator with an XML input file.
-     * @param inputFile An XML file with <repository> elements with attributes "path" and "package".
+     * @param inputFile An XML file with &#60;repository&#62; elements with attributes "path" and "package".
      * @param outputDir The directory in to write the Java files
      * @throws Exception Any exceptions that occur while parsing the GIR file and generating the bindings
      */
