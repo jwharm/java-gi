@@ -59,14 +59,14 @@ public class HelloWorld {
 The instructions above link to pre-built bindings for the entire GTK4 library stack and LibAdwaita.
 
 If you want to generate bindings for other versions, platforms or libraries, follow these steps:
-- First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/).
+- First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/) version 7.6 or newer.
 - Install the GObject-introspection (gir) files of the library you want to generate bindings for. 
   For example, in Fedora, to install the gir files for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
 - Running `gradle build` is enough to generate and build gtk4 bindings.
 
 The resulting jar files are located in the `gtk4/build/libs` folder.
 
-If you encounter errors about an unsupported `class file version`, make sure that Gradle is using a supported JDK (18 or older) and try again.
+If you encounter errors about an unsupported `class file version`, make sure that Gradle is at least version 7.6.
 
 If you wish to create bindings for other libraries, add the library name, Java package name, and the name of the GIR file to `gtk4/gradle.build.kts`. In this file, you can also override method names or exclude certain types if neccessary.
 
@@ -273,7 +273,9 @@ System.out.printf("Value 1: %s, Value 2: %s\n", value1.getString(), value2.getSt
 
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 * Java does not support unsigned data types. You might encounter issues when native code returns, for example, a `guint`.
-* You cannot create custom GObject interfaces yet.
+* You cannot create custom GType interfaces yet.
+* You cannot create custom signals yet.
 * The generator has not been tested yet on different Linux distributions or GTK versions.
+* There are a few places where the generator assumes a 64-bit Linux platform, specifically in the naming scheme of libraries, and because the size of `glong` is assumed to be equal to the size of a (64-bit) Java `long`.
 * While running the gradle build script, a large number of warnings occur during javadoc generation. These are safe to ignore.
 * Return values of nested arrays (like Gio `g_desktop_app_info_search`) aren't supported yet.
