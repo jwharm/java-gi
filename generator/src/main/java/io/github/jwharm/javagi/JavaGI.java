@@ -1,12 +1,10 @@
 package io.github.jwharm.javagi;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -66,11 +64,11 @@ public class JavaGI {
             @Override
             public void startElement(String uri, String lName, String qName, Attributes attr) {
                 if ("repository".equals(qName)) {
-                    toGenerate.add(new Source(attr.getValue("path"), attr.getValue("package"), true, Set.of(), Path.of(outputDir), PatchSet.EMPTY));
+                    toGenerate.add(new Source(Path.of(attr.getValue("path")), attr.getValue("package"), true, Set.of(), PatchSet.EMPTY));
                 }
             }
         });
-        generate(toGenerate.toArray(Source[]::new));
+        generate(Path.of(outputDir), toGenerate.toArray(Source[]::new));
     }
 
     /**
@@ -79,7 +77,7 @@ public class JavaGI {
      *                and patches to be applied
      * @throws Exception Any exceptions that occur while parsing the GIR file and generating the bindings
      */
-    public static void generate(Source... sources) throws Exception {
+    public static Generated generate(Path outputDir, Source... sources) throws Exception {
         GirParser parser = new GirParser();
         BindingsGenerator generator = new BindingsGenerator();
 
@@ -88,10 +86,10 @@ public class JavaGI {
         
         // Parse the GI files into Repository objects
         for (Source source : sources) {
-            System.out.println("PARSE " + source.path());
-            Repository r = parser.parse(source.path(), source.pkg());
+            System.out.println("PARSE " + source.source());
+            Repository r = parser.parse(source.source(), source.pkg());
             repositories.put(r.namespace.name, r);
-            parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.outputDir, source.patches));
+            parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.patches));
         }
         
         // Link the type references to the GIR type definition across the GI repositories
@@ -110,15 +108,32 @@ public class JavaGI {
         Conversions.repositoriesLookupTable = repositories;
         
         // Generate the Java class files
+        Set<Generated.Element> namespaces = new LinkedHashSet<>();
         for (Parsed p : parsed.values()) {
             if (p.generate) {
-                Path basePath = p.outputDir.resolve(p.repository.namespace.pathName);
+                Path basePath = outputDir.resolve(p.repository.namespace.pathName);
                 System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
                 generator.generate(p.repository, p.natives, basePath);
+                namespaces.add(new Generated.Element(p.repository.namespace.packageName));
             }
         }
+
+        return new Generated(namespaces, outputDir);
     }
 
-    public record Source(String path, String pkg, boolean generate, Set<String> natives, Path outputDir, PatchSet patches) {}
-    private record Parsed(Repository repository, boolean generate, Set<String> natives, Path outputDir, PatchSet patches) {}
+    public record Source(Path source, String pkg, boolean generate, Set<String> natives, PatchSet patches) {}
+    private record Parsed(Repository repository, boolean generate, Set<String> natives, PatchSet patches) {}
+
+    public record Generated(Set<Element> elements, Path outputDir) {
+        public record Element(String namespace) {}
+
+        public void writeModuleInfo(String format) throws IOException {
+            Files.writeString(outputDir.resolve("module-info.java"), format
+                    .formatted(elements.stream()
+                            .map(s -> "exports " + s.namespace + ";")
+                            .collect(Collectors.joining("\n    "))
+                    )
+            );
+        }
+    }
 }

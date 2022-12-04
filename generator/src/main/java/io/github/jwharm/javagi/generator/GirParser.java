@@ -11,8 +11,9 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * The GirParser class is a simple SAX parser that creates a tree of "GirElement" objects 
@@ -321,20 +322,23 @@ public class GirParser extends DefaultHandler {
     }
 
     /**
-     * Parse the provided GIR file and create a tree of GirElement instances that 
+     * Parse the provided GIR file and create a tree of GirElement instances that
      * represents the GI repository.
-     * @param uri Location of the GIR file
-     * @param pkg Name of the Java package to use
+     *
+     * @param source Location of the GIR file
+     * @param pkg    Name of the Java package to use
      * @return The GI repository tree of GirElement instances
-     * @throws IOException If an error is encountered while reading the GIR file
+     * @throws IOException  If an error is encountered while reading the GIR file
      * @throws SAXException If an error is encountered while parsing the XML in the GIR file
      */
-    public Repository parse(String uri, String pkg) throws IOException, SAXException {
-        if (! new File(uri).exists()) {
-            throw new IOException("Specified GIR file does not exist: " + uri);
+    public Repository parse(Path source, String pkg) throws IOException, SAXException {
+        if (!Files.exists(source)) {
+            throw new IOException("Specified GIR file does not exist: " + source);
         }
         this.pkg = pkg;
-        parser.parse(uri, this);
+        try (InputStream is = Files.newInputStream(source)) {
+            parser.parse(is, this);
+        }
         return (Repository) current;
     }
 }

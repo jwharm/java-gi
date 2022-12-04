@@ -1,6 +1,7 @@
 import io.github.jwharm.javagi.JavaGI
 import io.github.jwharm.javagi.generator.PatchSet
 import io.github.jwharm.javagi.model.Repository
+import java.nio.file.Path;
 
 plugins {
     id("java-gi.library-conventions")
@@ -22,9 +23,9 @@ sourceSets {
 
 val genSources by tasks.registering {
     doLast {
-        val sourcePath = if (project.hasProperty("girSources")) project.property("girSources").toString() else "/usr/share/gir-1.0"
-        fun source(name: String, pkg: String, generate: Boolean, vararg natives: String, patches: PatchSet? = null) = JavaGI.Source("$sourcePath/$name.gir", pkg, generate, setOf(*natives), generatedPath.toPath(), patches ?: PatchSet.EMPTY)
-        JavaGI.generate(
+        val sourcePath = Path.of(if (project.hasProperty("girSources")) project.property("girSources").toString() else "/usr/share/gir-1.0")
+        fun source(name: String, pkg: String, generate: Boolean, vararg natives: String, patches: PatchSet? = null) = JavaGI.Source(sourcePath.resolve("$name.gir"), pkg, generate, setOf(*natives), patches ?: PatchSet.EMPTY)
+        JavaGI.generate(generatedPath.toPath(),
             source("GLib-2.0", "org.gtk.glib", false, "glib-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This method has parameters that jextract does not support
@@ -99,7 +100,13 @@ val genSources by tasks.registering {
             source("GstVulkanWayland-1.0", "org.gstreamer.vulkan.wayland", true),
             source("GstWebRTC-1.0", "org.gstreamer.webrtc", true, "gstwebrtc-1.0"),
             source("GstCodecs-1.0", "org.gstreamer.codecs", true, "gstcodecs-1.0")
-        )
+        ).writeModuleInfo("""
+            module org.gstreamer {
+                requires org.jetbrains.annotations;
+                requires org.glib;
+                %s
+            }
+        """.trimIndent())
     }
 }
 
