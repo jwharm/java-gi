@@ -18,8 +18,7 @@ public class Gtk4Example {
         button.onClicked(btn -> {
             MessageDialog dialog = new MessageDialog(
                     window,
-                    // Using combined() would mutate these fields
-                    new DialogFlags(DialogFlags.MODAL.getValue() | DialogFlags.DESTROY_WITH_PARENT.getValue()),
+                    DialogFlags.MODAL.or(DialogFlags.DESTROY_WITH_PARENT),
                     MessageType.INFO,
                     ButtonsType.OK_CANCEL,
                     null
