@@ -29,9 +29,9 @@ val genSources by tasks.registering {
             source("GLib-2.0", "org.gtk.glib", false, "glib-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This method has parameters that jextract does not support
-                    removeFunction(repo, "assertion_message_cmpnum");
+                    removeFunction(repo, "assertion_message_cmpnum")
                     // Incompletely defined
-                    removeFunction(repo, "clear_error");
+                    removeFunction(repo, "clear_error")
                 }
             }),
             source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0", patches = object: PatchSet() {
@@ -52,26 +52,26 @@ val genSources by tasks.registering {
             source("Gio-2.0", "org.gtk.gio", false, "gio-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
-                    renameMethod(repo, "BufferedInputStream", "read_byte", "read_int");
+                    renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
                     // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
                     // It is meant to be implemented as a constructor (actually, a static factory method).
                     // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
                     // The current solution is to remove the method from the interface. It is still available in the implementing classes.
-                    removeMethod(repo, "AsyncInitable", "new_finish");
+                    removeMethod(repo, "AsyncInitable", "new_finish")
                 }
             }),
             source("GModule-2.0", "org.gtk.gmodule", false),
             source("cairo-1.0", "org.cairographics", true, "cairo", "cairo-gobject", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Incompletely defined
-                    removeFunction(repo, "image_surface_create");
+                    removeFunction(repo, "image_surface_create")
                 }
             }),
             source("freetype2-2.0", "org.freetype", true),
             source("HarfBuzz-0.0", "org.harfbuzz", true, "harfbuzz", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This constant has type "language_t" which cannot be instantiated
-                    removeConstant(repo, "LANGUAGE_INVALID");
+                    removeConstant(repo, "LANGUAGE_INVALID")
                 }
             }),
             source("Pango-1.0", "org.pango", true, "pango-1.0"),
@@ -82,23 +82,23 @@ val genSources by tasks.registering {
             source("Gsk-4.0", "org.gtk.gsk", true, patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // These types are defined in the GIR, but unavailable by default
-                    removeType(repo, "BroadwayRenderer");
-                    removeType(repo, "BroadwayRendererClass");
+                    removeType(repo, "BroadwayRenderer")
+                    removeType(repo, "BroadwayRendererClass")
                 }
             }),
             source("Gtk-4.0", "org.gtk.gtk", true, "gtk-4", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
-                    renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction");
-                    renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
-                    renameMethod(repo, "PrintSettings", "get", "get_string");
+                    renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
+                    renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
+                    renameMethod(repo, "PrintSettings", "get", "get_string")
                 }
             }),
             source("Adw-1", "org.gnome.adw", true, "adwaita-1", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
-                    renameMethod(repo, "ActionRow", "activate", "activate_row");
-                    renameMethod(repo, "SplitButton", "get_direction", "get_arrow_direction");
+                    renameMethod(repo, "ActionRow", "activate", "activate_row")
+                    renameMethod(repo, "SplitButton", "get_direction", "get_arrow_direction")
                 }
             })
         ).writeModuleInfo("""

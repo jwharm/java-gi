@@ -1,7 +1,7 @@
 import io.github.jwharm.javagi.JavaGI
 import io.github.jwharm.javagi.generator.PatchSet
 import io.github.jwharm.javagi.model.Repository
-import java.nio.file.Path;
+import java.nio.file.Path
 
 plugins {
     id("java-gi.library-conventions")
@@ -29,9 +29,9 @@ val genSources by tasks.registering {
             source("GLib-2.0", "org.gtk.glib", false, "glib-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // This method has parameters that jextract does not support
-                    removeFunction(repo, "assertion_message_cmpnum");
+                    removeFunction(repo, "assertion_message_cmpnum")
                     // Incompletely defined
-                    removeFunction(repo, "clear_error");
+                    removeFunction(repo, "clear_error")
                 }
             }),
             source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0", patches = object: PatchSet() {
@@ -52,12 +52,12 @@ val genSources by tasks.registering {
             source("Gio-2.0", "org.gtk.gio", false, "gio-2.0", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
-                    renameMethod(repo, "BufferedInputStream", "read_byte", "read_int");
+                    renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
                     // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
                     // It is meant to be implemented as a constructor (actually, a static factory method).
                     // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
                     // The current solution is to remove the method from the interface. It is still available in the implementing classes.
-                    removeMethod(repo, "AsyncInitable", "new_finish");
+                    removeMethod(repo, "AsyncInitable", "new_finish")
                 }
             }),
             source("GModule-2.0", "org.gtk.gmodule", false),
