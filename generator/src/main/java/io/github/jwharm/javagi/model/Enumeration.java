@@ -18,6 +18,9 @@ public class Enumeration extends ValueWrapper {
 
         writer.write("public enum " + javaName + " implements io.github.jwharm.javagi.Enumeration {\n");
 
+        // Some enumerations contain duplicate members or members with invalid values
+        // This filters them from inclusion as enum members.
+        // Duplicates are added as public static final fields below
         List<Member> usable = memberList.stream()
                 .filter(s -> s.usable)
                 .collect(Collectors.groupingBy(s -> s.value, LinkedHashMap::new, Collectors.reducing((l, r) -> l)))
@@ -36,6 +39,7 @@ public class Enumeration extends ValueWrapper {
             }
         }
 
+        // Add usable but duplicate members as public static final fields pointing to the member with the same value
         for (Member m : memberList) {
             if (m.usable && !usable.contains(m)) {
                 Member u = null;
