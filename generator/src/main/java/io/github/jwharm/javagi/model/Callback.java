@@ -37,126 +37,63 @@ public class Callback extends RegisteredType implements CallableType {
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
-                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
-                    if (counter > 0) {
-                        writer.write(", ");
-                    }
-                    p.generateTypeAndName(writer, true);
-                    counter++;
+                if (counter > 0) {
+                    writer.write(", ");
                 }
+                p.generateTypeAndName(writer, true);
+                counter++;
             }
         }
         writer.write(");\n");
         writer.write("}\n");
     }
 
-    // Callback with user_data parameter. TODO: Remove this when new functionality is ready
-    private void generateStaticCallback_OLD() throws IOException {
-        StringWriter writer = new StringWriter();
-
-        writer.write("        \n");
-        writer.write("        public static ");
-        if (returnValue.type == null) {
-            writer.write("void");
-        } else {
-            // Pointer parameters are "MemoryAddress", but return values are "Addressable"
-            String returnType = Conversions.toPanamaJavaType(returnValue.type);
-            if (returnType.equals("MemoryAddress")) {
-                returnType = "Addressable";
-            }
-            writer.write(returnType);
-        }
-        writer.write(" cb" + javaName + "(");
-
-        String dataParamName = "";
-        if (parameters != null) {
-            int counter = 0;
-            for (Parameter p : parameters.parameterList) {
-                if (counter > 0) {
-                    writer.write(", ");
-                }
-                writer.write (Conversions.toPanamaJavaType(p.type) + " ");
-                writer.write(Conversions.toLowerCaseJavaName(p.name));
-                if (p.isUserDataParameter()) {
-                    dataParamName = Conversions.toLowerCaseJavaName(p.name);
-                }
-                counter++;
-            }
-        }
-        writer.write(") {\n");
-
-        // Cannot handle callback without user_data parameter.
-        if (dataParamName.equals("")) {
-            return;
-        }
-
-        writer.write("            int HASH = " + dataParamName + ".get(Interop.valueLayout.C_INT, 0);\n");
-        writer.write("            var HANDLER = (" + javaName + ") Interop.signalRegistry.get(HASH);\n");
-        
-        // For out-parameters, create a local Out<> object and pass that to the callback.
-        if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                if (p.isOutParameter()) {
-                    writer.write("        var " + p.name + "OUT = new Out<" + p.getReturnType() + ">(");
-                    p.generateReverseInterop(writer, p.name, true);
-                    writer.write(");\n");
-                }
-            }
-        }
-        
-        writer.write("            ");
-        if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
-            writer.write("var RESULT = ");
-        }
-        writer.write("HANDLER.on" + javaName + "(");
-
-        if (parameters != null) {
-            int counter = 0;
-            for (Parameter p : parameters.parameterList) {
-                if (! (p.isUserDataParameter() || p.isDestroyNotify())) {
-                    if (counter > 0) {
-                        writer.write(", ");
-                    }
-                    if (p.isOutParameter()) {
-                        writer.write(p.name + "OUT");
-                    } else {
-                        p.generateReverseInterop(writer, p.name, true);
-                    }
-                    counter++;
-                }
-            }
-        }
-        writer.write(");\n");
-        
-        // For out-parameters, read the value of the Out<> object that was generated above, 
-        // and write the value to the out-parameter memory address that was passed from the native code.
-        if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                if (p.isOutParameter()) {
-                    writer.write("            " + p.name + ".set(" + Conversions.getValueLayout(p.type) + ", 0, ");
-                    p.generateInterop(writer, p.name + "OUT.get()", false);
-                    writer.write(");\n");
-                }
-            }
-        }
-
-        if ((returnValue.type != null) && (! "void".equals(returnValue.type.simpleJavaType))) {
-            writer.write("            return ");
-            returnValue.generateInterop(writer, "RESULT", false);
-            writer.write(";\n");
-        }
-        writer.write("        }\n");
-        BindingsGenerator.signalCallbackFunctions.append(writer);
-    }
-    
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+        String methodType = "MethodType.methodType(";
+        methodType += Conversions.toPanamaJavaType(returnValue.type) + ".class";
+        if (parameters != null) {
+            for (Parameter cbp : parameters.parameterList) {
+                methodType += ", " + Conversions.toPanamaJavaType(cbp.type) + ".class";
+            }
+        }
+        methodType += ")";
+
+        String functionDescriptor = "FunctionDescriptor.";
+        if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
+            functionDescriptor += "ofVoid(";
+        } else {
+            functionDescriptor += "of(" + Conversions.toPanamaMemoryLayout(returnValue.type);
+            if (parameters != null) {
+                functionDescriptor += ", ";
+            }
+        }
+        if (parameters != null) {
+            for (int i = 0; i < parameters.parameterList.size(); i++) {
+                if (i > 0) {
+                    functionDescriptor += ", ";
+                }
+                functionDescriptor += Conversions.toPanamaMemoryLayout(parameters.parameterList.get(i).type);
+            }
+        }
+        functionDescriptor += ")";
+
+        String marshals = "new Marshal[] {";
+        marshals += Conversions.getMarshal(returnValue.type);
+        if (parameters != null) {
+            for (Parameter cbp : parameters.parameterList) {
+                marshals += ", " + Conversions.getMarshal(cbp.type);
+            }
+        }
+        marshals += "}";
+
+        String indent = " ".repeat(24);
+
         return "Interop.toCallback(\n" +
-                "                " + paramName + ",\n" +
-                "                MethodType.methodType(int.class, MemoryAddress.class, MemoryAddress.class),\n" +
-                "                FunctionDescriptor.of(Interop.valueLayout.C_INT, Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS),\n" +
-                "                new Marshal[] {Marshal.passthrough, Marshal.passthrough, Marshal.passthrough}\n" +
-                "            )";
+                indent + paramName + ",\n" +
+                indent + methodType + ",\n" +
+                indent + functionDescriptor +",\n" +
+                indent + marshals + ")";
     }
 
     @Override

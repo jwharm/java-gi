@@ -18,15 +18,16 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ApiStatus.Internal
 public class Interop {
 
     private final static MemorySession session;
     private final static SegmentAllocator implicitAllocator, sessionAllocator;
-    private final static MemorySegment cbDestroyNotify_nativeSymbol;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
+    private final static AtomicInteger count = new AtomicInteger();
 
     /**
      * Configure the layout of native data types here.<br>
@@ -68,17 +69,7 @@ public class Interop {
         implicitAllocator = SegmentAllocator.implicitAllocator();
         sessionAllocator = SegmentAllocator.newNativeArena(session);
 
-        // Initialize upcall stub for DestroyNotify callback
-        try {
-            MethodType methodType = MethodType.methodType(void.class, MemoryAddress.class);
-            MethodHandle methodHandle = MethodHandles.lookup().findStatic(Interop.class, "cbDestroyNotify", methodType);
-            FunctionDescriptor descriptor = FunctionDescriptor.ofVoid(valueLayout.ADDRESS);
-            cbDestroyNotify_nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, session);
-        } catch (IllegalAccessException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        
-        // Ensure that the "gobject-2.0" library has been loaded. 
+        // Ensure that the "gobject-2.0" library has been loaded.
         // This is required for the downcall handle to g_signal_connect.
         System.loadLibrary("gobject-2.0");
     }
@@ -173,24 +164,6 @@ public class Interop {
     }
 
     /**
-     * This callback function will remove a signal callback from the 
-     * signalRegistry map.
-     * @param data The hashcode of the callback
-     */
-    public static void cbDestroyNotify(MemoryAddress data) {
-        int hash = data.get(valueLayout.C_INT, 0);
-        signalRegistry.remove(hash);
-    }
-
-    /**
-     * Return the cached native symbol for cbDestroyNotify(MemoryAddress).
-     * @return the native symbol for cbDestroyNotify(MemoryAddress)
-     */
-    public static MemorySegment cbDestroyNotifySymbol() {
-        return cbDestroyNotify_nativeSymbol;
-    }
-
-    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @return the allocated MemorySegment
@@ -216,30 +189,6 @@ public class Interop {
     }
 
     /**
-     * Marshall the provided object to a memory address.
-     * The object must be an instance of {@link Proxy}, {@link String},
-     * {@link Addressable} or {@code null}.
-     * @param object The object to marshall
-     * @return a memory address referring to the object in native memory.
-     */
-    public static Addressable objectToAddress(Object object) {
-        if (object == null) {
-            return MemoryAddress.NULL;
-        }
-        if (object instanceof Addressable address) {
-            return address;
-        }
-        if (object instanceof String str) {
-            return allocateNativeString(str);
-        }
-        if (object instanceof Proxy proxy) {
-            return proxy.handle();
-        }
-        String type = object.getClass().getName();
-        throw new IllegalArgumentException("Cannot marshall " + type + " to java.lang.foreign.Addressable");
-    }
-
-    /**
      * Allocates and initializes an (optionally NULL-terminated) array 
      * of strings (NUL-terminated utf8 char*).
      * @param strings Array of Strings
@@ -255,27 +204,6 @@ public class Interop {
         }
         if (zeroTerminated) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
-        }
-        return memorySegment;
-    }
-
-    /**
-     * Allocates and initializes an (optionally NULL-terminated) array
-     * of memory addresses for the provided objects. The objects are marshalled
-     * to native addresses using {@link #objectToAddress(Object)}.
-     * @param objects Array of Objects that can be marshalled to a native address
-     * @param zeroTerminated Whether to add a NUL at the end the array
-     * @return The memory segment of the native array
-     */
-    public static Addressable allocateNativeArray(Object[] objects, boolean zeroTerminated) {
-        int length = zeroTerminated ? objects.length : objects.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
-        for (int i = 0; i < objects.length; i++) {
-            var address = objectToAddress(objects[i]);
-            memorySegment.setAtIndex(valueLayout.ADDRESS, i, address);
-        }
-        if (zeroTerminated) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, objects.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -449,8 +377,25 @@ public class Interop {
         return memorySegment;
     }
 
-    public static Object toCallback(MemoryAddress interfaceInit, MethodType methodType, FunctionDescriptor functionDescriptor, Marshal[] marshals) {
-        return null;
+    public static MemoryAddress toCallback(Object delegate, MethodType mt, FunctionDescriptor fd, Marshal[] marshals) {
+
+        return MemoryAddress.NULL;
+
+//        String methodName = "m$" + count.incrementAndGet();
+//
+//        // Generate bytecode
+//        Class<?> cls = generateClassWithStaticMethod(delegate, mt, marshals, methodName);
+//
+//        MemorySegment stub = null;
+//        try {
+//            stub = Linker.nativeLinker().upcallStub(
+//                    MethodHandles.lookup().findStatic(cls, "run", mt), fd, Interop.getScope()
+//            );
+//        } catch (NoSuchMethodException | IllegalAccessException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return stub.address();
     }
 
     // Adapted from code that was generated by jextract

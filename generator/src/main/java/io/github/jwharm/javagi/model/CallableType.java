@@ -22,13 +22,6 @@ public interface CallableType {
             )) {
                 return false;
             }
-
-            // We don't support methods with a callback parameter but no user_data parameter
-            if (ps.parameterList.stream().anyMatch(Parameter::isCallbackParameter)
-                    && ps.parameterList.stream().noneMatch(Parameter::isUserDataParameter)
-            ) {
-                return false;
-            }
         }
         
         // Check for signals with out parameters or arrays

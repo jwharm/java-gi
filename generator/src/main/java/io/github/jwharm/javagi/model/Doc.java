@@ -43,9 +43,6 @@ public class Doc extends GirElement {
                     if (p.isInstanceParameter()) {
                         continue;
                     }
-                    if (parameters.hasCallbackParameter() && (p.isUserDataParameter() || p.isDestroyNotify())) {
-                        continue;
-                    }
                     if (p.doc != null) {
                         String pJavadoc = GtkDoc.getInstance().convert(p.doc);
                         writeDoc(writer, indent, pJavadoc, "@param " + (p.varargs ? "varargs" : p.name));

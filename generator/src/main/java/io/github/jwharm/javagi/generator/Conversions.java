@@ -183,6 +183,32 @@ public class Conversions {
         }
     }
 
+    public static String getMarshal(Type t) {
+        if (t == null) {
+            return "Marshal.passthrough";
+        } else if ("java.lang.foreign.MemoryAddress".equals(t.qualifiedJavaType)) {
+            return "Marshal.passthrough";
+        } else if ("java.lang.String".equals(t.qualifiedJavaType)) {
+            return "Marshal.stringToAddress";
+        } else if (t.cType != null && t.cType.endsWith("*")) {
+            return "Marshal.passthrough";
+        } else if (t.isBoolean()) {
+            return "Marshal.booleanToInteger";
+        } else if (t.isEnum()) {
+            return "Marshal.enumerationToInteger";
+        } else if (t.isBitfield()) {
+            return "Marshal.bitfieldToInteger";
+        } else if (t.isPrimitive || "void".equals(t.simpleJavaType)) {
+            return "Marshal.passthrough";
+        } else if (t.isAliasForPrimitive()) {
+            return "Marshal.aliasToPrimitive";
+        } else if (t.isCallback()) {
+            return "Marshal.callbackToAddress";
+        } else {
+            return t.qualifiedJavaType + ".fromAddress";
+        }
+    }
+
     /**
      * Get the memory layout of this type. Pointer types are returned as Interop.valueLayout.ADDRESS.
      */

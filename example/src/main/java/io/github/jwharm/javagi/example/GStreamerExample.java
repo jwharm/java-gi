@@ -7,6 +7,7 @@ import org.gtk.glib.GLib;
 import org.gtk.glib.MainLoop;
 import org.gtk.glib.Source;
 
+import java.lang.foreign.MemoryAddress;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -18,7 +19,7 @@ public class GStreamerExample {
     Bus bus;
     int busWatchId;
 
-    private boolean busCall(Bus bus, Message msg) {
+    private boolean busCall(Bus bus, Message msg, MemoryAddress userData) {
 
         if (msg.type$get().equals(MessageType.EOS)) {
             GLib.print("End of stream\n");
@@ -85,7 +86,7 @@ public class GStreamerExample {
 
         // We add a message handler
         bus = pipeline.getBus();
-        busWatchId = bus.addWatch(this::busCall);
+        busWatchId = bus.addWatch(this::busCall, MemoryAddress.NULL);
 
         // We add all elements into the pipeline
         // file-source | ogg-demuxer | vorbis-decoder | converter | alsa-output

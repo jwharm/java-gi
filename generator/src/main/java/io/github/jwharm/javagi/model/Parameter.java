@@ -96,14 +96,14 @@ public class Parameter extends Variable {
         return (type != null) && type.isCallback();
     }
 
-    public boolean isUserDataParameter() {
-        return (type != null) && name.toLowerCase().endsWith("data")
-                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
-    }
-
-    public boolean isDestroyNotify() {
-        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
-    }
+//    public boolean isUserDataParameter() {
+//        return (type != null) && name.toLowerCase().endsWith("data")
+//                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
+//    }
+//
+//    public boolean isDestroyNotify() {
+//        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
+//    }
 
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
@@ -116,7 +116,7 @@ public class Parameter extends Variable {
      */
     public boolean checkNull() {
         return nullable 
-                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
+                && (! (isInstanceParameter() || isErrorParameter()
                         || (type != null && type.isPrimitive && (! type.isPointer()))));
     }
     
@@ -132,7 +132,7 @@ public class Parameter extends Variable {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
-        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify() || varargs
+        if (! (isInstanceParameter() || isErrorParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (! nullable) {
                 writer.write(tab(indent) + "java.util.Objects.requireNonNull(" + name 
