@@ -179,7 +179,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
-        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
+        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA((org.gtk.gobject.TypeInstance) org.gtk.gobject.TypeInstance.fromAddress.marshal(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
@@ -205,7 +205,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
         writer.write("     */\n");
         writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public " + javaName + "(Addressable address, Ownership ownership) {\n");
+        writer.write("    protected " + javaName + "(Addressable address, Ownership ownership) {\n");
 
         if (initiallyUnowned) {
             writer.write("        super(address, Ownership.FULL);\n");
@@ -215,10 +215,15 @@ public abstract class RegisteredType extends GirElement {
         } else {
             writer.write("        super(address, ownership);\n");
         }
-
-
-
         writer.write("    }\n");
+    }
+
+    protected void generateMarshal(Writer writer) throws IOException {
+        writer.write("    \n");
+        writer.write("    @ApiStatus.Internal\n");
+        writer.write("    public static final Marshal fromAddress = (input, ownership) -> "
+                + "new " + javaName + (this instanceof Interface ? "Impl" : "") + "((Addressable) input, ownership);\n"
+        );
     }
 
     protected void generateEnsureInitialized(Writer writer) throws IOException {

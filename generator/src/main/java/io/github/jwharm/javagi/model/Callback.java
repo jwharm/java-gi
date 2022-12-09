@@ -18,7 +18,6 @@ public class Callback extends RegisteredType implements CallableType {
 
     public void generate(Writer writer) throws IOException {
         generateFunctionalInterface(writer);
-        generateStaticCallback();
     }
 
     private void generateFunctionalInterface(Writer writer) throws IOException {
@@ -34,7 +33,7 @@ public class Callback extends RegisteredType implements CallableType {
         } else {
             writer.write(returnValue.type.qualifiedJavaType);
         }
-        writer.write(" on" + javaName + "(");
+        writer.write(" run(");
         if (parameters != null) {
             int counter = 0;
             for (Parameter p : parameters.parameterList) {
@@ -51,8 +50,8 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("}\n");
     }
 
-    // Generate the static callback method, that will run the handler method.
-    private void generateStaticCallback() throws IOException {
+    // Callback with user_data parameter. TODO: Remove this when new functionality is ready
+    private void generateStaticCallback_OLD() throws IOException {
         StringWriter writer = new StringWriter();
 
         writer.write("        \n");
@@ -152,7 +151,12 @@ public class Callback extends RegisteredType implements CallableType {
     
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        return paramName; // TODO
+        return "Interop.toCallback(\n" +
+                "                " + paramName + ",\n" +
+                "                MethodType.methodType(int.class, MemoryAddress.class, MemoryAddress.class),\n" +
+                "                FunctionDescriptor.of(Interop.valueLayout.C_INT, Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS),\n" +
+                "                new Marshal[] {Marshal.passthrough, Marshal.passthrough, Marshal.passthrough}\n" +
+                "            )";
     }
 
     @Override

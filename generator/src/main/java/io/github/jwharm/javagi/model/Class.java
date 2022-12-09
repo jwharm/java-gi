@@ -65,6 +65,7 @@ public class Class extends RegisteredType {
         generateMemoryAddressConstructor(writer);
         generateCastFromGObject(writer);
         generateConstructors(writer);
+        generateMarshal(writer);
         
         for (Method m : methodList) {
             m.generate(writer, false, false);

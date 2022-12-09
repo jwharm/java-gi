@@ -92,15 +92,15 @@ public class Variable extends GirElement {
         
         // Strings: allocate utf8 string
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("Interop.allocateNativeString(" + identifier + ")");
-        
+            writer.write("(Addressable) Marshal.stringToAddress.marshal(" + identifier + ", null)");
+
         // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
             writer.write(identifier + ".handle()");
         
         // Convert boolean to int
         } else if (type.isBoolean()) {
-            writer.write(identifier + " ? 1 : 0");
+            writer.write("(int) Marshal.booleanToInteger.marshal(" + identifier + ", null)");
         
         // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
@@ -170,7 +170,7 @@ public class Variable extends GirElement {
         }
         // Create Java String from UTF8 memorysegment
         if (type.qualifiedJavaType.equals("java.lang.String")) {
-            return "Interop.getStringFrom(" + identifier + ")";
+            return "(java.lang.String) Marshal.addressToString.marshal(" + identifier + ", null)";
         }
         // Create ValueWrapper object
         if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
@@ -182,17 +182,12 @@ public class Variable extends GirElement {
         }
         // Convert int back to boolean
         if (type.isBoolean()) {
-            return identifier + " != 0";
-        }
-        // Create an Impl object when we only know the interface but not the class
-        if (type.isInterface()) {
-            String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
-            return "new " + type.qualifiedJavaType + "." + type.simpleJavaType + "Impl(" + identifier + ", " + transferOwnership + ")";
+            return "(boolean) Marshal.integerToBoolean.marshal(" + identifier + ", null)";
         }
         // Objects
-        if (type.isClass() || type.isAlias() || type.isUnion()) {
+        if (type.isClass() || type.isAlias() || type.isUnion() || type.isInterface()) {
             String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
-            return "new " + type.qualifiedJavaType + "(" + identifier + ", " + transferOwnership + ")";
+            return "(" + type.qualifiedJavaType + ") " + type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", " + transferOwnership + ")";
         }
         // Primitive values remain as-is
         return identifier;

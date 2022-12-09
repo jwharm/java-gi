@@ -14,11 +14,12 @@ public class Union extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.ObjectBase {\n");
+        writer.write("public class " + javaName + " extends ObjectBase {\n");
         generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
+        generateMarshal(writer);
         writer.write("}\n");
         writer.write("\n");
     }

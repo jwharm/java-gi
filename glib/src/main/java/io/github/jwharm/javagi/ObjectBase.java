@@ -3,6 +3,7 @@ package io.github.jwharm.javagi;
 import org.gtk.glib.Type;
 import org.gtk.gobject.TypeFlags;
 import org.gtk.gobject.TypeInfo;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -65,7 +66,8 @@ public abstract class ObjectBase implements Proxy {
      * @param ownership The ownership status. When ownership is FULL, a cleaner is registered
      *                  to automatically call g_object_unref on the memory address.
      */
-    public ObjectBase(Addressable address, Ownership ownership) {
+    @ApiStatus.Internal
+    protected ObjectBase(Addressable address, Ownership ownership) {
         this.address = address;
         this.ownership = ownership;
         if (ownership == Ownership.FULL) {

@@ -39,6 +39,7 @@ public class Record extends Class {
         }
 
         generateMemoryAddressConstructor(writer);
+        generateMarshal(writer);
         generateConstructors(writer);
 
         for (Method m : methodList) {
