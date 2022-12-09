@@ -7,6 +7,10 @@ plugins {
     id("java-gi.library-conventions")
 }
 
+dependencies {
+    implementation("org.ow2.asm:asm:9.4")
+}
+
 val generatedPath = buildDir.resolve("generated/sources/javagi/java/main")
 
 sourceSets {
@@ -60,6 +64,7 @@ val genSources by tasks.registering {
         ).writeModuleInfo("""
             module org.glib {
                 requires org.jetbrains.annotations;
+                requires org.objectweb.asm;
                 exports io.github.jwharm.javagi;
                 %s
             }
