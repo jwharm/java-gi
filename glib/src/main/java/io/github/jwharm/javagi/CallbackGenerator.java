@@ -4,25 +4,50 @@ import org.objectweb.asm.*;
 
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CallbackGenerator implements Opcodes {
 
     private final static AtomicInteger count = new AtomicInteger();
 
-    public static Class<?> generateClassWithStaticMethod(Object delegate, MethodType mt, Marshal[] marshals, String methodName) {
+    private static String internalName(Class<?> cls) {
+        return cls.getName().replace('.', '/');
+    }
+
+    private static int getReturnOpcode(String typeDescriptor) {
+        return switch (typeDescriptor) {
+            case "Z", "B", "C", "S", "I" -> Opcodes.IRETURN;
+            case "J" -> Opcodes.LRETURN;
+            case "F" -> Opcodes.FRETURN;
+            case "D" -> Opcodes.DRETURN;
+            case "V" -> Opcodes.RETURN;
+            default -> Opcodes.ARETURN;
+        };
+    }
+
+    private static int getLoadOpcode(String typeDescriptor) {
+        return switch (typeDescriptor) {
+            case "Z", "B", "C", "S", "I" -> Opcodes.ILOAD;
+            case "J" -> Opcodes.LLOAD;
+            case "F" -> Opcodes.FLOAD;
+            case "D" -> Opcodes.DLOAD;
+            default -> Opcodes.ALOAD;
+        };
+    }
+
+    public static Class<?> generateClassWithStaticMethod(Class<?> delegateClass, MethodType mt, Marshal[] marshals, String methodName) {
         String name = "JavaGIcb" + count.incrementAndGet();
         String internalName = "io/github/jwharm/javagi/" + name;
         String qualifiedName = "io.github.jwharm.javagi." + name;
 
-        String delegateInternalName = delegate.getClass().getName().replace('.', '/');
-        String delegateDescriptor = 'L' + delegateInternalName + ';';
+        String delegateInternalName = internalName(delegateClass);
+        String delegateDescriptor = delegateClass.descriptorString();
 
-        Method[] methods = delegate.getClass().getMethods();
-        if (methods.length != 1) {
-            return null;
-        }
-        String delegateMethodName = methods[0].getName();
+        Method[] methods = delegateClass.getDeclaredMethods();
+        Method method = methods[0];
+        String delegateMethodName = method.getName();
 
         try {
             ClassWriter classWriter = new ClassWriter(0);
@@ -34,7 +59,7 @@ public class CallbackGenerator implements Opcodes {
             classWriter.visitSource(name + ".java", null);
 
             {
-                fieldVisitor = classWriter.visitField(ACC_PRIVATE | ACC_STATIC, "delegate", delegateDescriptor, null, null);
+                fieldVisitor = classWriter.visitField(ACC_PUBLIC | ACC_STATIC, "delegate", delegateDescriptor, null, null);
                 fieldVisitor.visitEnd();
             }
 
@@ -55,26 +80,37 @@ public class CallbackGenerator implements Opcodes {
             }
 
             {
-                methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, "(Ljava/lang/foreign/MemoryAddress;Ljava/lang/foreign/MemoryAddress;)I", null, null);
+                methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, mt.descriptorString(), null, null);
                 methodVisitor.visitCode();
                 Label label0 = new Label();
                 methodVisitor.visitLabel(label0);
                 methodVisitor.visitLineNumber(10, label0);
                 methodVisitor.visitFieldInsn(GETSTATIC, name, "delegate", delegateDescriptor);
-                methodVisitor.visitVarInsn(ALOAD, 0);
-                methodVisitor.visitVarInsn(ALOAD, 1);
-                methodVisitor.visitMethodInsn(INVOKEINTERFACE, delegateInternalName, delegateMethodName, "(Ljava/lang/foreign/MemoryAddress;Ljava/lang/foreign/MemoryAddress;)I", true);
-                methodVisitor.visitInsn(IRETURN);
+
+                for (int i = 0; i < mt.parameterCount(); i++) {
+                    String descriptor = mt.parameterType(i).descriptorString();
+                    methodVisitor.visitVarInsn(getLoadOpcode(descriptor), i);
+                }
+
+                methodVisitor.visitMethodInsn(INVOKEINTERFACE, delegateInternalName, delegateMethodName, mt.descriptorString(), true);
+
+                methodVisitor.visitInsn(getReturnOpcode(mt.returnType().descriptorString()));
+
                 Label label1 = new Label();
                 methodVisitor.visitLabel(label1);
-                methodVisitor.visitLocalVariable("a", "Ljava/lang/foreign/MemoryAddress;", null, label0, label1, 0);
-                methodVisitor.visitLocalVariable("b", "Ljava/lang/foreign/MemoryAddress;", null, label0, label1, 1);
-                methodVisitor.visitMaxs(3, 2);
+
+                for (int i = 0; i < mt.parameterCount(); i++) {
+                    methodVisitor.visitLocalVariable("arg" + i, mt.parameterType(i).descriptorString(), null, label0, label1, i);
+                }
+
+                methodVisitor.visitMaxs(mt.parameterCount() + 1, mt.parameterCount());
                 methodVisitor.visitEnd();
             }
             classWriter.visitEnd();
 
             byte[] bytes = classWriter.toByteArray();
+
+            Files.write(Paths.get("/home/jw/Documents/Generated.class"), bytes);
 
             return new ClassLoader() {
                 public Class<?> defineClass(byte[] bytes) {

@@ -9,7 +9,7 @@ import io.github.jwharm.javagi.generator.Conversions;
 public abstract class RegisteredType extends GirElement {
 
     public final String javaName, parentClass, cType, version;
-    private final String qualifiedName;
+    protected final String qualifiedName;
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
         super(parent);

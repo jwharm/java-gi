@@ -377,22 +377,43 @@ public class Interop {
         return memorySegment;
     }
 
-    public static MemoryAddress toCallback(Object delegate, MethodType mt, FunctionDescriptor fd, Marshal[] marshals) {
+    public static MemoryAddress toCallback(Object delegate, Class<?> delegateClass, FunctionDescriptor fd, Marshal[] marshals) {
 
         String methodName = "m$" + count.incrementAndGet();
 
-        // Generate bytecode
-        Class<?> cls = CallbackGenerator.generateClassWithStaticMethod(delegate, mt, marshals, methodName);
+        MethodType mt = Linker.upcallType(fd);
 
-        // Generate upcall stub
+        /*
+         * Generate bytecode for a small static class that looks like this:
+         *
+         *     public class JavaGIcb1 {
+         *         private static ListBoxForeachFunc delegate;
+         *         public static void run(ListBox arg1, ListBoxRow arg2, MemoryAddress arg3) {
+         *             delegate.run(arg1, arg2, arg3);
+         *         }
+         *     }
+         *
+         * Each generated class has a unique name (JavaGIcb + unique number), so even though all
+         * generated callbacks are unique static classes, they are all unique.
+         */
+        Class<?> cls = CallbackGenerator.generateClassWithStaticMethod(delegateClass, mt, marshals, methodName);
+        if (cls == null) {
+            return MemoryAddress.NULL;
+        }
+
         MemorySegment stub = null;
         try {
+            // Set the delegate as  a static field value in the generated class
+            cls.getField("delegate").set(null, delegate);
+
+            // Generate upcall stub for the generated class
             stub = Linker.nativeLinker().upcallStub(
                     MethodHandles.lookup().findStatic(cls, "run", mt), fd, Interop.getScope()
             );
-        } catch (NoSuchMethodException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+        // Return the address of the upcall stub
         return stub.address();
     }
 

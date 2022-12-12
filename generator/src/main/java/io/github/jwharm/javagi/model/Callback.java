@@ -50,14 +50,6 @@ public class Callback extends RegisteredType implements CallableType {
 
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        String methodType = "MethodType.methodType(";
-        methodType += Conversions.toPanamaJavaType(returnValue.type) + ".class";
-        if (parameters != null) {
-            for (Parameter cbp : parameters.parameterList) {
-                methodType += ", " + Conversions.toPanamaJavaType(cbp.type) + ".class";
-            }
-        }
-        methodType += ")";
 
         String functionDescriptor = "FunctionDescriptor.";
         if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
@@ -89,9 +81,9 @@ public class Callback extends RegisteredType implements CallableType {
 
         String indent = " ".repeat(24);
 
-        return "Interop.toCallback(\n" +
+        return "(Addressable) Interop.toCallback(\n" +
                 indent + paramName + ",\n" +
-                indent + methodType + ",\n" +
+                indent + this.qualifiedName + ".class,\n" +
                 indent + functionDescriptor +",\n" +
                 indent + marshals + ")";
     }
