@@ -396,19 +396,20 @@ public class Interop {
          * Each generated class has a unique name (JavaGIcb + unique number), so even though all
          * generated callbacks are unique static classes, they are all unique.
          */
-        Class<?> cls = CallbackGenerator.generateClassWithStaticMethod(delegateClass, mt, marshals, methodName);
+        Class<?> cls = CallbackGenerator.generateClassWithStaticMethod(delegateClass, mt, methodName);
         if (cls == null) {
             return MemoryAddress.NULL;
         }
 
         MemorySegment stub = null;
         try {
-            // Set the delegate as  a static field value in the generated class
+            // Set the delegate and marshal functions as static field values in the generated class
             cls.getField("delegate").set(null, delegate);
+            cls.getField("marshallers").set(null, marshals);
 
             // Generate upcall stub for the generated class
             stub = Linker.nativeLinker().upcallStub(
-                    MethodHandles.lookup().findStatic(cls, "run", mt), fd, Interop.getScope()
+                    MethodHandles.lookup().findStatic(cls, methodName, mt), fd, Interop.getScope()
             );
         } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);

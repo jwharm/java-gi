@@ -5,6 +5,7 @@ import org.objectweb.asm.*;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,7 +38,7 @@ public class CallbackGenerator implements Opcodes {
         };
     }
 
-    public static Class<?> generateClassWithStaticMethod(Class<?> delegateClass, MethodType mt, Marshal[] marshals, String methodName) {
+    public static Class<?> generateClassWithStaticMethod(Class<?> delegateClass, MethodType mt, String methodName) {
         String name = "JavaGIcb" + count.incrementAndGet();
         String internalName = "io/github/jwharm/javagi/" + name;
         String qualifiedName = "io.github.jwharm.javagi." + name;
@@ -49,20 +50,33 @@ public class CallbackGenerator implements Opcodes {
         Method method = methods[0];
         String delegateMethodName = method.getName();
 
+        int argc = mt.parameterCount();
+        if (argc != method.getParameterCount()) {
+            throw new RuntimeException("Number of delegate parameters and methodtype parameters do not match");
+        }
+
         try {
             ClassWriter classWriter = new ClassWriter(0);
             FieldVisitor fieldVisitor;
             MethodVisitor methodVisitor;
 
+            // Class
             classWriter.visit(-65473, ACC_PUBLIC | ACC_SUPER, internalName, null, "java/lang/Object", null);
-
             classWriter.visitSource(name + ".java", null);
 
+            // Field `delegate`
             {
                 fieldVisitor = classWriter.visitField(ACC_PUBLIC | ACC_STATIC, "delegate", delegateDescriptor, null, null);
                 fieldVisitor.visitEnd();
             }
 
+            // Field `Marshal[] marshallers`
+            {
+                fieldVisitor = classWriter.visitField(ACC_PUBLIC | ACC_STATIC, "marshallers", "[Lio/github/jwharm/javagi/Marshal;", null, null);
+                fieldVisitor.visitEnd();
+            }
+
+            // Constructor
             {
                 methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
                 methodVisitor.visitCode();
@@ -79,38 +93,63 @@ public class CallbackGenerator implements Opcodes {
                 methodVisitor.visitEnd();
             }
 
+            // Method
             {
                 methodVisitor = classWriter.visitMethod(ACC_PUBLIC | ACC_STATIC, methodName, mt.descriptorString(), null, null);
                 methodVisitor.visitCode();
-                Label label0 = new Label();
-                methodVisitor.visitLabel(label0);
-                methodVisitor.visitLineNumber(10, label0);
-                methodVisitor.visitFieldInsn(GETSTATIC, name, "delegate", delegateDescriptor);
 
-                for (int i = 0; i < mt.parameterCount(); i++) {
-                    String descriptor = mt.parameterType(i).descriptorString();
-                    methodVisitor.visitVarInsn(getLoadOpcode(descriptor), i);
+                Class<?>[] delegateParamTypes = method.getParameterTypes();
+                for (int i = 0; i < argc; i++) {
+
+                    Class<?> ptype = delegateParamTypes[i];
+                    String ptypeInternal = internalName(ptype);
+
+                    Label label = new Label();
+                    methodVisitor.visitLabel(label);
+                    methodVisitor.visitLineNumber(20 + i, label);
+
+                    methodVisitor.visitFieldInsn(GETSTATIC, internalName, "marshallers", "[Lio/github/jwharm/javagi/Marshal;");
+                    methodVisitor.visitInsn(ICONST_0 + i);
+                    methodVisitor.visitInsn(AALOAD);
+                    methodVisitor.visitVarInsn(ALOAD, i);
+                    methodVisitor.visitFieldInsn(GETSTATIC, "io/github/jwharm/javagi/Ownership", "NONE", "Lio/github/jwharm/javagi/Ownership;");
+                    methodVisitor.visitMethodInsn(INVOKEINTERFACE, "io/github/jwharm/javagi/Marshal", "marshal", "(Ljava/lang/Object;Lio/github/jwharm/javagi/Ownership;)Ljava/lang/Object;", true);
+                    methodVisitor.visitTypeInsn(CHECKCAST, ptypeInternal);
+                    methodVisitor.visitVarInsn(ASTORE, argc + i);
                 }
 
+                Label label = new Label();
+                methodVisitor.visitLabel(label);
+                methodVisitor.visitLineNumber(30, label);
+                methodVisitor.visitFieldInsn(GETSTATIC, name, "delegate", delegateDescriptor);
+
+                // Method parameters
+                for (int i = 0; i < argc; i++) {
+                    String descriptor = mt.parameterType(i).descriptorString();
+                    methodVisitor.visitVarInsn(getLoadOpcode(descriptor), argc + i);
+                }
+
+                // Invoke the delegate
                 methodVisitor.visitMethodInsn(INVOKEINTERFACE, delegateInternalName, delegateMethodName, mt.descriptorString(), true);
 
                 methodVisitor.visitInsn(getReturnOpcode(mt.returnType().descriptorString()));
 
+                // Local variables
                 Label label1 = new Label();
                 methodVisitor.visitLabel(label1);
-
-                for (int i = 0; i < mt.parameterCount(); i++) {
-                    methodVisitor.visitLocalVariable("arg" + i, mt.parameterType(i).descriptorString(), null, label0, label1, i);
+                for (int i = 0; i < argc; i++) {
+                    methodVisitor.visitLocalVariable("arg" + i, mt.parameterType(i).descriptorString(), null, label, label1, i);
                 }
+                for (int i = 0; i < argc; i++) {
+                    methodVisitor.visitLocalVariable("m" + i, delegateParamTypes[i].descriptorString(), null, label, label1, argc + i);
+                }
+                methodVisitor.visitMaxs((argc * 2) + 2, argc * 2);
 
-                methodVisitor.visitMaxs(mt.parameterCount() + 1, mt.parameterCount());
                 methodVisitor.visitEnd();
             }
             classWriter.visitEnd();
 
             byte[] bytes = classWriter.toByteArray();
-
-            Files.write(Paths.get("/home/jw/Documents/Generated.class"), bytes);
 
             return new ClassLoader() {
                 public Class<?> defineClass(byte[] bytes) {
