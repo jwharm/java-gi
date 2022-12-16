@@ -32,7 +32,7 @@ public class StructBuilder {
                 + "     */\n"
                 + "    public static class Build {\n" 
                 + "        \n"
-                + "        private " + r.javaName + " struct;\n"
+                + "        private final " + r.javaName + " struct;\n"
                 + "        \n"
                 + "         /**\n"
                 + "         * A {@link " + r.javaName + ".Build} object constructs a {@link " + r.javaName + "} \n"
