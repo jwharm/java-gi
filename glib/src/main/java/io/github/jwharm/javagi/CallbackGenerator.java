@@ -2,7 +2,9 @@ package io.github.jwharm.javagi;
 
 import org.objectweb.asm.*;
 
-import java.lang.invoke.MethodType;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -152,6 +154,14 @@ public class CallbackGenerator {
                 }
             }.defineClass(bytes);
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static MethodHandle getHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
+        try {
+            return lookup.findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

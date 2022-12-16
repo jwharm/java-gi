@@ -82,11 +82,9 @@ public class Callback extends RegisteredType implements CallableType {
             writer.write(";\n");
         }
         writer.write("    }\n");
-        writer.write("\n");
-        // Generate toCallback()
-        writer.write("    default MemoryAddress toCallback() {\n");
-        writer.write("        try {\n");
-        writer.write("            FunctionDescriptor fd = FunctionDescriptor.");
+        writer.write("    \n");
+        // Generate fields
+        writer.write("    @ApiStatus.Internal FunctionDescriptor DESCRIPTOR = FunctionDescriptor.");
         if (isVoid) {
             writer.write("ofVoid(");
         } else {
@@ -105,14 +103,11 @@ public class Callback extends RegisteredType implements CallableType {
             }
         }
         writer.write(");\n");
-        writer.write("            return Linker.nativeLinker().upcallStub(\n");
-        writer.write("                MethodHandles.lookup().findVirtual(" + javaName + ".class, \"upcall\", Linker.upcallType(fd)).bindTo(this),\n");
-        writer.write("                fd,\n");
-        writer.write("                Interop.getScope()\n");
-        writer.write("            ).address();\n");
-        writer.write("        } catch (NoSuchMethodException | IllegalAccessException e) {\n");
-        writer.write("            throw new RuntimeException(e);\n");
-        writer.write("        }\n");
+        writer.write("    @ApiStatus.Internal MethodHandle HANDLE = CallbackGenerator.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
+        writer.write("    \n");
+        // Generate toCallback()
+        writer.write("    default MemoryAddress toCallback() {\n");
+        writer.write("        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
         writer.write("    }\n");
         writer.write("}\n");
     }
