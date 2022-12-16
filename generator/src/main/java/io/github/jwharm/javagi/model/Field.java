@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.stream.Stream;
 
 import io.github.jwharm.javagi.generator.Conversions;
 
@@ -29,12 +30,13 @@ public class Field extends Variable {
      * are not supported (i.e. will not generate a getter or setter).
      */
     public void generate(Writer writer) throws IOException {
-        // Don't try to generate a getter for callback or array fields yet
-        if (type == null) {
+        // Don't try to generate a getter for array fields yet
+        if (array != null) {
             return;
         }
         // Don't generate a getter for a "disguised" record (often private data)
-        if (type.girElementInstance != null 
+        if (type != null
+                && type.girElementInstance != null
                 && type.girElementInstance instanceof Record r 
                 && "1".equals(r.disguised)) {
             return;
@@ -47,33 +49,41 @@ public class Field extends Variable {
         if ("1".equals(isPrivate)) {
             return;
         }
-        
-        // Generate getter method
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
-        writer.write("     * @return The value of the field {@code " + this.fieldName + "}\n");
-        writer.write("     */\n");
-        writer.write("    public " + getReturnType() + " " + this.name + "$get() {\n");
-        
-        if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
-            writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
-            writer.write("        return ");
-            generateReverseInterop(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
-            writer.write(";\n");
-        } else {
-            writer.write("        var RESULT = (" + getMemoryType() + ") getMemoryLayout()\n"
-                    + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
-                    + "            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
+
+        String camelName = Conversions.toCamelCase(this.name, true);
+        String setter = "set" + camelName;
+        String getter = "get" + camelName;
+
+        for (Method method : Stream.concat(parent.methodList.stream(), parent.functionList.stream()).toList()) {
+            String n = Conversions.toLowerCaseJavaName(method.name);
+            if (n.equals(getter)) getter += "_";
+            if (n.equals(setter)) setter += "_";
+        }
+
+        if (type != null) {
+            // Generate getter method
+            writer.write("    \n");
+            writer.write("    /**\n");
+            writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
+            writer.write("     * @return The value of the field {@code " + this.fieldName + "}\n");
+            writer.write("     */\n");
+            writer.write("    public " + getReturnType() + " " + getter + "() {\n");
+
+            if (!type.isPointer() && (type.isClass() || type.isInterface())) {
+                writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
+                writer.write("        return ");
+                generateReverseInterop(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
+                writer.write(";\n");
+                writer.write("    }\n");
+                return;
+            }
+            writer.write("        var RESULT = (" + getMemoryType() + ") getMemoryLayout()\n");
+            writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+            writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
             writer.write("        return ");
             generateReverseInterop(writer, "RESULT", false);
             writer.write(";\n");
-        }
-        writer.write("    }\n");
-        
-        // Don't try to generate a setter for nested struct type definitions
-        if ((! type.isPointer()) && (type.isClass() || type.isInterface())) {
-            return;
+            writer.write("    }\n");
         }
         
         // Generate setter method
@@ -82,13 +92,23 @@ public class Field extends Variable {
         writer.write("     * Change the value of the field {@code " + this.fieldName + "}\n");
         writer.write("     * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
         writer.write("     */\n");
-        writer.write("    public void " + this.name + "$set(");
+        writer.write("    public void " + setter + "(");
         generateTypeAndName(writer, true);
         writer.write(") {\n");
-        writer.write("        getMemoryLayout()\n"
-                + "            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
-                + "            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("        getMemoryLayout()\n");
+        writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        // Check for null values
+        if (checkNull()) {
+            writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
+        }
+
         generateInterop(writer, this.name, false);
+
+        if (checkNull()) {
+            writer.write(")");
+        }
+
         writer.write(");\n");
         writer.write("    }\n");
     }
@@ -108,9 +128,9 @@ public class Field extends Variable {
 
         // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
-        writer.write("            getMemoryLayout()\n"
-                + "                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n"
-                + "                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("            getMemoryLayout()\n");
+        writer.write("                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+        writer.write("                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
