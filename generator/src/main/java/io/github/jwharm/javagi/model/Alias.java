@@ -60,7 +60,9 @@ public class Alias extends ValueWrapper {
                 if (aliasFor() == CLASS_ALIAS) {
                     generateCastFromGObject(writer);
                 }
-                
+
+                generateMarshal(writer);
+
                 writer.write("}\n");
             }
             case INTERFACE_ALIAS, CALLBACK_ALIAS -> {

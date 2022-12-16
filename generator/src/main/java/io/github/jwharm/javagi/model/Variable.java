@@ -189,7 +189,7 @@ public class Variable extends GirElement {
         // Objects
         if (type.isClass() || type.isAlias() || type.isUnion() || type.isInterface()) {
             String transferOwnership = this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN";
-            return "(" + type.qualifiedJavaType + ") " + type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", " + transferOwnership + ")";
+            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", " + transferOwnership + ")";
         }
         // Primitive values remain as-is
         return identifier;
