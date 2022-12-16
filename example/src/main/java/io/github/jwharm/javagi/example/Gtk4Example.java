@@ -15,7 +15,7 @@ public class Gtk4Example {
         box.setHalign(Align.CENTER);
         box.setValign(Align.CENTER);
 
-        var button = Button.newWithLabel("Hello world!");
+        var button = Button.newWithLabel("Hello world! 30");
         button.onClicked(btn -> {
             MessageDialog dialog = new MessageDialog(
                     window,
@@ -44,22 +44,20 @@ public class Gtk4Example {
         var state = new Object() {
             long tickStart;
             long second;
-            int callbackId;
         };
 
-        state.callbackId = button.addTickCallback((widget, frameClock, userData) -> {
+        button.addTickCallback((widget, frameClock, userData) -> {
             if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
-            else {
-                long time = frameClock.getFrameTime();
-                long sec = (time - state.tickStart) / 1000000;
-                if (sec > 60) {
-                    button.removeTickCallback(state.callbackId);
-                    button.setLabel("Hello world!");
-                } else if (sec > state.second) {
-                    state.second = sec;
-                    button.setLabel("Hello world! " + (60 - sec));
-                    widget.queueDraw();
-                }
+            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
+            if (sec > 30) {
+                button.setLabel("Hello world!");
+                System.out.println("Done counting");
+                return GLib.SOURCE_REMOVE;
+            }
+            if (sec > state.second) {
+                state.second = sec;
+                button.setLabel("Hello world! " + (30 - sec));
+                widget.queueDraw();
             }
             return GLib.SOURCE_CONTINUE;
         }, null, data -> {});
