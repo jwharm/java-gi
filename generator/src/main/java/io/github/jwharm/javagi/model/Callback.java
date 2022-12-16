@@ -106,11 +106,7 @@ public class Callback extends RegisteredType implements CallableType {
         }
         writer.write(");\n");
         writer.write("            return Linker.nativeLinker().upcallStub(\n");
-        writer.write("                MethodHandles.lookup().findVirtual(\n");
-        writer.write("                    " + javaName + ".class,\n");
-        writer.write("                    \"upcall\",\n");
-        writer.write("                    Linker.upcallType(fd)\n");
-        writer.write("                ),\n");
+        writer.write("                MethodHandles.insertArguments(MethodHandles.lookup().findVirtual(" + javaName + ".class, \"upcall\", Linker.upcallType(fd)), 0, this),\n");
         writer.write("                fd,\n");
         writer.write("                Interop.getScope()\n");
         writer.write("            ).address();\n");

@@ -96,10 +96,9 @@ public class Variable extends GirElement {
         // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
             writer.write(identifier + ".handle()");
-        
         // Convert boolean to int
         } else if (type.isBoolean()) {
-            writer.write("Marshal.booleanToInteger.marshal(" + identifier + ", null)");
+            writer.write("Marshal.booleanToInteger.marshal(" + identifier + ", null).intValue()");
         
         // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
@@ -181,7 +180,7 @@ public class Variable extends GirElement {
         }
         // Convert int back to boolean
         if (type.isBoolean()) {
-            return "Marshal.integerToBoolean.marshal(" + identifier + ", null)";
+            return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
         }
         // Objects
         if (type.isClass() || type.isAlias() || type.isUnion() || type.isInterface()) {
