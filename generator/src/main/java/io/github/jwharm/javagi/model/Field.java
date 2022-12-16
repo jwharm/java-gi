@@ -76,11 +76,6 @@ public class Field extends Variable {
             return;
         }
         
-        // Don't try to generate a setter for callbacks
-        if (type.isCallback()) {
-            return;
-        }
-        
         // Generate setter method
         writer.write("    \n");
         writer.write("    /**\n");
