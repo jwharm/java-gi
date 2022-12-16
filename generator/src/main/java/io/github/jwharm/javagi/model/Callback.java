@@ -1,10 +1,8 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.BindingsGenerator;
 import io.github.jwharm.javagi.generator.Conversions;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 
 public class Callback extends RegisteredType implements CallableType {
@@ -21,71 +19,102 @@ public class Callback extends RegisteredType implements CallableType {
     }
 
     private void generateFunctionalInterface(Writer writer) throws IOException {
+        boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
         
         writer.write("@FunctionalInterface\n");
         writer.write("public interface " + javaName + " {\n");
-        writer.write("        ");
-        if (returnValue.type == null) {
-            writer.write("void");
-        } else {
-            writer.write(returnValue.type.qualifiedJavaType);
-        }
+        // Generate run(...)
+        writer.write("    ");
+        writer.write(isVoid ? "void" : returnValue.type.qualifiedJavaType);
         writer.write(" run(");
         if (parameters != null) {
-            int counter = 0;
+            boolean first = true;
             for (Parameter p : parameters.parameterList) {
-                if (counter > 0) {
-                    writer.write(", ");
-                }
+                if (!first) writer.write(", ");
+                first = false;
                 p.generateTypeAndName(writer, true);
-                counter++;
             }
         }
         writer.write(");\n");
+        writer.write("\n");
+        if (parameters != null && parameters.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
+            writer.write("    // This callback is NOT supported as it contains an Out parameter!\n");
+            writer.write("    default MemoryAddress toCallback() {\n");
+            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
+            writer.write("    }\n");
+            writer.write("}\n");
+            return;
+        }
+        // Generate upcall(...)
+        writer.write("    private ");
+        writer.write(isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type));
+        writer.write(" upcall(");
+        if (parameters != null) {
+            boolean first = true;
+            for (Parameter p : parameters.parameterList) {
+                if (!first) writer.write(", ");
+                first = false;
+                writer.write(Conversions.toPanamaJavaType(p.type) + " " + p.name);
+            }
+        }
+        writer.write(") {\n");
+        writer.write("        ");
+        if (!isVoid) writer.write("var RESULT = ");
+        writer.write("run(");
+        if (parameters != null) {
+            boolean first = true;
+            for (Parameter p : parameters.parameterList) {
+                if (!first) writer.write(", ");
+                first = false;
+                p.generateReverseInterop(writer, p.name, true);
+            }
+        }
+        writer.write(");\n");
+        if (!isVoid) {
+            writer.write("        return ");
+            boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
+            if (isMemoryAddress) writer.write("(");
+            returnValue.generateInterop(writer, "RESULT", false);
+            if (isMemoryAddress) writer.write(").address()");
+            writer.write(";\n");
+        }
+        writer.write("    }\n");
+        writer.write("    \n");
+        // Generate fields
+        writer.write("    @ApiStatus.Internal FunctionDescriptor DESCRIPTOR = FunctionDescriptor.");
+        if (isVoid) {
+            writer.write("ofVoid(");
+        } else {
+            writer.write("of(");
+            writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
+            if (parameters != null) {
+                writer.write(", ");
+            }
+        }
+        if (parameters != null) {
+            boolean first = true;
+            for (Parameter p : parameters.parameterList) {
+                if (!first) writer.write(", ");
+                first = false;
+                writer.write(Conversions.toPanamaMemoryLayout(p.type));
+            }
+        }
+        writer.write(");\n");
+        writer.write("    @ApiStatus.Internal MethodHandle HANDLE = CallbackGenerator.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
+        writer.write("    \n");
+        // Generate toCallback()
+        writer.write("    default MemoryAddress toCallback() {\n");
+        writer.write("        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
+        writer.write("    }\n");
         writer.write("}\n");
     }
 
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-
-        String functionDescriptor = "FunctionDescriptor.";
-        if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
-            functionDescriptor += "ofVoid(";
-        } else {
-            functionDescriptor += "of(" + Conversions.toPanamaMemoryLayout(returnValue.type);
-            if (parameters != null) {
-                functionDescriptor += ", ";
-            }
-        }
-        if (parameters != null) {
-            for (int i = 0; i < parameters.parameterList.size(); i++) {
-                if (i > 0) {
-                    functionDescriptor += ", ";
-                }
-                functionDescriptor += Conversions.toPanamaMemoryLayout(parameters.parameterList.get(i).type);
-            }
-        }
-        functionDescriptor += ")";
-
-        String marshals = "new Marshal[] {";
-        marshals += Conversions.getMarshal(returnValue.type);
-        if (parameters != null) {
-            for (Parameter cbp : parameters.parameterList) {
-                marshals += ", " + Conversions.getMarshal(cbp.type);
-            }
-        }
-        marshals += "}";
-
-        String indent = " ".repeat(24);
-
-        return "(Addressable) Interop.toCallback(\n" +
-                indent + paramName + ",\n" +
-                indent + this.qualifiedName + ".class,\n" +
-                indent + functionDescriptor +",\n" +
-                indent + marshals + ")";
+        return "(Addressable) " + paramName + ".toCallback()";
     }
 
     @Override

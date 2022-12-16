@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.example;
 
 import org.gtk.gio.ApplicationFlags;
+import org.gtk.glib.GLib;
 import org.gtk.gtk.*;
 
 public class Gtk4Example {
@@ -14,7 +15,7 @@ public class Gtk4Example {
         box.setHalign(Align.CENTER);
         box.setValign(Align.CENTER);
 
-        var button = Button.newWithLabel("Hello world!");
+        var button = Button.newWithLabel("Hello world! 30");
         button.onClicked(btn -> {
             MessageDialog dialog = new MessageDialog(
                     window,
@@ -39,6 +40,27 @@ public class Gtk4Example {
             });
             dialog.show();
         });
+
+        var state = new Object() {
+            long tickStart;
+            long second;
+        };
+
+        button.addTickCallback((widget, frameClock, userData) -> {
+            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
+            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
+            if (sec > 30) {
+                button.setLabel("Hello world!");
+                System.out.println("Done counting");
+                return GLib.SOURCE_REMOVE;
+            }
+            if (sec > state.second) {
+                state.second = sec;
+                button.setLabel("Hello world! " + (30 - sec));
+                widget.queueDraw();
+            }
+            return GLib.SOURCE_CONTINUE;
+        }, null, data -> {});
 
         box.append(button);
         window.setChild(box);

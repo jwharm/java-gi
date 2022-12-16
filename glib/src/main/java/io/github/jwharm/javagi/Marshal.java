@@ -1,22 +1,25 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.gobject.Object;
+
+import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
 
 @FunctionalInterface
-public interface Marshal {
+public interface Marshal<In, Out> {
 
-    Object marshal(Object input, Ownership ownership);
+    Out marshal(In input, Ownership ownership);
 
-    Marshal passthrough             = (input, ownership) -> input;
+    Marshal<Object, Object> passthrough             = (input, ownership) -> input;
 
-    Marshal integerToBoolean        = (input, ownership) -> ((Integer) input) == 1;
-    Marshal booleanToInteger        = (input, ownership) -> ((Boolean) input) ? 1 : 0;
+    Marshal<Integer, Boolean> integerToBoolean        = (input, ownership) -> input == 1;
+    Marshal<Boolean, Integer> booleanToInteger        = (input, ownership) -> input ? 1 : 0;
 
-    Marshal addressToString         = (input, ownership) -> Interop.getStringFrom((MemoryAddress) input);
-    Marshal stringToAddress         = (input, ownership) -> Interop.allocateNativeString((String) input);
+    Marshal<MemoryAddress, String> addressToString         = (input, ownership) -> Interop.getStringFrom(input);
+    Marshal<String, Addressable> stringToAddress         = (input, ownership) -> Interop.allocateNativeString(input);
 
-    Marshal enumerationToInteger    = (input, ownership) -> ((Enumeration) input).getValue();
-    Marshal bitfieldToInteger       = (input, ownership) -> ((Bitfield) input).getValue();
+    Marshal<Enumeration, Integer> enumerationToInteger    = (input, ownership) -> input.getValue();
+    Marshal<Bitfield, Integer> bitfieldToInteger       = (input, ownership) -> input.getValue();
     Marshal aliasToPrimitive        = (input, ownership) -> ((Alias<?>) input).getValue();
 
     Marshal callbackToAddress       = (input, ownership) -> MemoryAddress.NULL; // TODO: Marshaller for callback parameters

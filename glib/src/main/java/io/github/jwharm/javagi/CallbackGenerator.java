@@ -2,16 +2,17 @@ package io.github.jwharm.javagi;
 
 import org.objectweb.asm.*;
 
-import java.lang.invoke.MethodType;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.invoke.*;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CallbackGenerator implements Opcodes {
+import static org.objectweb.asm.Opcodes.*;
 
-    private final static AtomicInteger count = new AtomicInteger();
+public class CallbackGenerator {
+
+    private static final AtomicInteger count = new AtomicInteger();
 
     private static String internalName(Class<?> cls) {
         return cls.getName().replace('.', '/');
@@ -104,10 +105,6 @@ public class CallbackGenerator implements Opcodes {
                     Class<?> ptype = delegateParamTypes[i];
                     String ptypeInternal = internalName(ptype);
 
-                    Label label = new Label();
-                    methodVisitor.visitLabel(label);
-                    methodVisitor.visitLineNumber(20 + i, label);
-
                     methodVisitor.visitFieldInsn(GETSTATIC, internalName, "marshallers", "[Lio/github/jwharm/javagi/Marshal;");
                     methodVisitor.visitInsn(ICONST_0 + i);
                     methodVisitor.visitInsn(AALOAD);
@@ -157,6 +154,14 @@ public class CallbackGenerator implements Opcodes {
                 }
             }.defineClass(bytes);
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static MethodHandle getHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
+        try {
+            return lookup.findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

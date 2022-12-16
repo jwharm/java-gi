@@ -91,15 +91,14 @@ public class Variable extends GirElement {
         
         // Strings: allocate utf8 string
         } else if (type.qualifiedJavaType.equals("java.lang.String")) {
-            writer.write("(Addressable) Marshal.stringToAddress.marshal(" + identifier + ", null)");
+            writer.write("Marshal.stringToAddress.marshal(" + identifier + ", null)");
 
         // Pointer to primitive type: get memory address
         } else if (type.isPrimitive && type.isPointer()) {
             writer.write(identifier + ".handle()");
-        
         // Convert boolean to int
         } else if (type.isBoolean()) {
-            writer.write("(int) Marshal.booleanToInteger.marshal(" + identifier + ", null)");
+            writer.write("Marshal.booleanToInteger.marshal(" + identifier + ", null).intValue()");
         
         // Objects and ValueWrappers
         } else if (type.girElementInstance != null) {
@@ -169,7 +168,7 @@ public class Variable extends GirElement {
         }
         // Create Java String from UTF8 memorysegment
         if (type.qualifiedJavaType.equals("java.lang.String")) {
-            return "(java.lang.String) Marshal.addressToString.marshal(" + identifier + ", null)";
+            return "Marshal.addressToString.marshal(" + identifier + ", null)";
         }
         // Create ValueWrapper object
         if (type.isBitfield() || type.isEnum() || type.isAliasForPrimitive()) {
@@ -181,7 +180,7 @@ public class Variable extends GirElement {
         }
         // Convert int back to boolean
         if (type.isBoolean()) {
-            return "(boolean) Marshal.integerToBoolean.marshal(" + identifier + ", null)";
+            return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
         }
         // Objects
         if (type.isClass() || type.isAlias() || type.isUnion() || type.isInterface()) {
