@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.example;
 
 import org.gtk.gio.ApplicationFlags;
+import org.gtk.glib.GLib;
 import org.gtk.gtk.*;
 
 public class Gtk4Example {
@@ -39,6 +40,29 @@ public class Gtk4Example {
             });
             dialog.show();
         });
+
+        var state = new Object() {
+            long tickStart;
+            long second;
+            int callbackId;
+        };
+
+        state.callbackId = button.addTickCallback((widget, frameClock, userData) -> {
+            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
+            else {
+                long time = frameClock.getFrameTime();
+                long sec = (time - state.tickStart) / 1000000;
+                if (sec > 60) {
+                    button.removeTickCallback(state.callbackId);
+                    button.setLabel("Hello world!");
+                } else if (sec > state.second) {
+                    state.second = sec;
+                    button.setLabel("Hello world! " + (60 - sec));
+                    widget.queueDraw();
+                }
+            }
+            return GLib.SOURCE_CONTINUE;
+        }, null, data -> {});
 
         box.append(button);
         window.setChild(box);
