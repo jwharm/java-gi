@@ -4,14 +4,13 @@ import org.objectweb.asm.*;
 
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CallbackGenerator implements Opcodes {
+import static org.objectweb.asm.Opcodes.*;
 
-    private final static AtomicInteger count = new AtomicInteger();
+public class CallbackGenerator {
+
+    private static final AtomicInteger count = new AtomicInteger();
 
     private static String internalName(Class<?> cls) {
         return cls.getName().replace('.', '/');
@@ -103,10 +102,6 @@ public class CallbackGenerator implements Opcodes {
 
                     Class<?> ptype = delegateParamTypes[i];
                     String ptypeInternal = internalName(ptype);
-
-                    Label label = new Label();
-                    methodVisitor.visitLabel(label);
-                    methodVisitor.visitLineNumber(20 + i, label);
 
                     methodVisitor.visitFieldInsn(GETSTATIC, internalName, "marshallers", "[Lio/github/jwharm/javagi/Marshal;");
                     methodVisitor.visitInsn(ICONST_0 + i);

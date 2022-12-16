@@ -423,7 +423,7 @@ public class Interop {
         private static final MethodHandle INVOKE_MH;
         private final MemorySegment symbol;
         private final FunctionDescriptor function;
-        private final static SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
+        private static final SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
 
         private VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
             this.symbol = symbol;
