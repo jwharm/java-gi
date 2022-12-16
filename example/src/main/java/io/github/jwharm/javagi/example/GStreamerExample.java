@@ -20,17 +20,17 @@ public class GStreamerExample {
 
     private boolean busCall(Bus bus, Message msg) {
 
-        if (msg.type$get().equals(MessageType.EOS)) {
+        if (msg.getType().equals(MessageType.EOS)) {
             GLib.print("End of stream\n");
             loop.quit();
         }
 
-        else if (msg.type$get().equals(MessageType.ERROR)) {
+        else if (msg.getType().equals(MessageType.ERROR)) {
             Out<Error> error = new Out<>();
             Out<String> debug = new Out<>();
             msg.parseError(error, debug);
 
-            GLib.printerr("Error: %s\n", error.get().message$get());
+            GLib.printerr("Error: %s\n", error.get().getMessage());
 
             loop.quit();
         }

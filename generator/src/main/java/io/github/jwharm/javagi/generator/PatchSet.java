@@ -42,6 +42,27 @@ public abstract class PatchSet {
         }
     }
 
+    protected static void removeEnumMember(Repository repo, String type, String member) {
+        RegisteredType rt = repo.namespace.registeredTypeMap.get(type);
+        if (rt == null) {
+            System.err.println("Did not remove " + member + " in " + type + ": Enumeration not found");
+            return;
+        }
+        if (!(rt instanceof Enumeration e)) {
+            System.err.println("Did not remove " + member + " in " + type + ": Not an enumeration");
+            return;
+        }
+        Member found = null;
+        for (Member m : e.memberList) {
+            if (m.name.equals(member)) {
+                found = m;
+                break;
+            }
+        }
+        if (found == null) System.err.println("Did not remove " + member + " in " + e + ": Member not found");
+        else e.memberList.remove(found);
+    }
+
     private static class Empty extends PatchSet {
         @Override
         public void patch(Repository repository) {

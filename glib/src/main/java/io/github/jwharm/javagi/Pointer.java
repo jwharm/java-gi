@@ -65,6 +65,6 @@ public abstract class Pointer<T> implements Iterable<T> {
      */
     @Override
     public PointerIterator<T> iterator() {
-        return new PointerIterator<T>(this);
+        return new PointerIterator<>(this);
     }
 }

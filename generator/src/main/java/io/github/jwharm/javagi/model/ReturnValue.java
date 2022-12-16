@@ -31,7 +31,7 @@ public class ReturnValue extends Parameter {
                     }
                 }
                 String valuelayout = Conversions.getValueLayout(array.type);
-                if (array.type.isPrimitive && (! array.type.isBoolean())) {
+                if (array.type.isPrimitive && (!array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write(tab(indent) + "return MemorySegment.ofAddress(RESULT.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + ");\n");
                 } else {

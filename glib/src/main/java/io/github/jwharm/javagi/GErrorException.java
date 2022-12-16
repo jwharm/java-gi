@@ -27,7 +27,7 @@ public class GErrorException extends Exception {
     
     // Get the message from the GError instance (used by the GErrorException constructor)
     private static String getMessage(MemorySegment pointer) {
-        return dereference(pointer).message$get();
+        return dereference(pointer).getMessage();
     }
 
     /**
@@ -68,7 +68,7 @@ public class GErrorException extends Exception {
      * @return the code of the GError
      */
     public int getCode() {
-        return gerror.code$get();
+        return gerror.getCode();
     }
 
     /**
@@ -76,7 +76,7 @@ public class GErrorException extends Exception {
      * @return The domain of the GError
      */
     public Quark getDomain() {
-        return gerror.domain$get();
+        return gerror.getDomain();
     }
     
     /**
