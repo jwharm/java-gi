@@ -2,9 +2,7 @@ package io.github.jwharm.javagi;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
-import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * This type of Pointer object points to a GObject-derived object 
