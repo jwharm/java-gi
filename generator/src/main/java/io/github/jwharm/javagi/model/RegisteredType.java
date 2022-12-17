@@ -223,7 +223,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    @ApiStatus.Internal\n");
         String name = javaName + (this instanceof Interface ? "Impl" : "");
         writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = (input, ownership) -> "
-                + "new " + name + "(input, ownership);\n"
+                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input, ownership);\n"
         );
     }
 
