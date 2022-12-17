@@ -204,7 +204,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @param address   The memory address of the native object\n");
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
         writer.write("     */\n");
-        writer.write("    @ApiStatus.Internal\n");
         writer.write("    protected " + javaName + "(Addressable address, Ownership ownership) {\n");
 
         if (initiallyUnowned) {

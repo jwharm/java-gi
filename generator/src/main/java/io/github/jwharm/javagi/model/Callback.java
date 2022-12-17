@@ -49,7 +49,7 @@ public class Callback extends RegisteredType implements CallableType {
             return;
         }
         // Generate upcall(...)
-        writer.write("    private ");
+        writer.write("    @ApiStatus.Internal default ");
         writer.write(isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type));
         writer.write(" upcall(");
         if (parameters != null) {
@@ -103,7 +103,7 @@ public class Callback extends RegisteredType implements CallableType {
             }
         }
         writer.write(");\n");
-        writer.write("    @ApiStatus.Internal MethodHandle HANDLE = CallbackGenerator.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
+        writer.write("    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(" + javaName + ".class, DESCRIPTOR);\n");
         writer.write("    \n");
         // Generate toCallback()
         writer.write("    default MemoryAddress toCallback() {\n");
