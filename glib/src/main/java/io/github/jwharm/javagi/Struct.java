@@ -7,13 +7,13 @@ import java.lang.foreign.Addressable;
  */
 public class Struct implements Proxy {
 
-    private Addressable address;
+    private final Addressable address;
     private Ownership ownership;
     
     /**
      * Create a new {@code Struct} object for a struct in native memory.
-     * @param address    The memory address of the struct
-     * @param ownership  The ownership indicator for the struct
+     * @param address    the memory address of the struct
+     * @param ownership  the ownership indicator for the struct
      */
     public Struct(Addressable address, Ownership ownership) {
         this.address = address;

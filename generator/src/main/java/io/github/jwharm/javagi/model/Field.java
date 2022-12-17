@@ -121,7 +121,7 @@ public class Field extends Variable {
             doc.generate(writer, 2);
         }
 
-        writer.write("        public Build set" + Conversions.toCamelCase(this.name, true) + "(");
+        writer.write("        public Builder set" + Conversions.toCamelCase(this.name, true) + "(");
 
         // Write the parameter
         generateTypeAndName(writer, false);

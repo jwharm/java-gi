@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.gobject.GObject;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.Addressable;
@@ -18,15 +19,17 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 @ApiStatus.Internal
 public class Interop {
 
-    private final static MemorySession session;
-    private final static SegmentAllocator implicitAllocator, sessionAllocator;
-    private final static MemorySegment cbDestroyNotify_nativeSymbol;
-    private final static SymbolLookup symbolLookup;
-    private final static Linker linker = Linker.nativeLinker();
+    private static final MemorySession session;
+    private static final SegmentAllocator implicitAllocator;
+    private static final SegmentAllocator sessionAllocator;
+    private static final MemorySegment cbDestroyNotify_nativeSymbol;
+    private static final SymbolLookup symbolLookup;
+    private static final Linker linker = Linker.nativeLinker();
 
     /**
      * Configure the layout of native data types here.<br>
@@ -35,7 +38,7 @@ public class Interop {
      * @see <a href="https://en.wikipedia.org/wiki/64-bit_computing#64-bit_data_models">
      *     this Wikipedia text</a> about the difference between 64-bit data models.
      */
-    public final static Layout_LP64 valueLayout = new Layout_LP64();
+    public static final Layout_LP64 valueLayout = new Layout_LP64();
 
     /**
      * This map contains the callbacks used in g_signal_connect. The 
@@ -45,7 +48,7 @@ public class Interop {
      * callback functions use the hashcode to retrieve the user-defined 
      * callback function from the signalRegistry map, and run it.
      */
-    public final static HashMap<Integer, Object> signalRegistry = new HashMap<>();
+    public static final Map<Integer, Object> signalRegistry = new HashMap<>();
 
     /**
      * This map contains the objects that are stored in the native struct of
@@ -57,7 +60,7 @@ public class Interop {
      * the object can be cleared, because otherwise the object will still be
      * referenced from {@code objectRegistry} and will not be garbage collected.
      */
-    public final static HashMap<Integer, Object> objectRegistry = new HashMap<>();
+    public static final Map<Integer, Object> objectRegistry = new HashMap<>();
     
     static {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
@@ -75,12 +78,12 @@ public class Interop {
             FunctionDescriptor descriptor = FunctionDescriptor.ofVoid(valueLayout.ADDRESS);
             cbDestroyNotify_nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, session);
         } catch (IllegalAccessException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            throw new InteropException(e);
         }
         
         // Ensure that the "gobject-2.0" library has been loaded. 
         // This is required for the downcall handle to g_signal_connect.
-        System.loadLibrary("gobject-2.0");
+        GObject.javagi$ensureInitialized();
     }
 
     /**
@@ -207,10 +210,10 @@ public class Interop {
      */
     public static String getStringFrom(MemoryAddress address) {
         try {
-            if (! MemoryAddress.NULL.equals(address)) {
+            if (!MemoryAddress.NULL.equals(address)) {
                 return address.getUtf8String(0);
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         return null;
     }
@@ -465,7 +468,7 @@ public class Interop {
             try {
                 INVOKE_MH = MethodHandles.lookup().findVirtual(VarargsInvoker.class, "invoke", MethodType.methodType(Object.class, SegmentAllocator.class, Object[].class));
             } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
+                throw new InteropException(e);
             }
         }
 

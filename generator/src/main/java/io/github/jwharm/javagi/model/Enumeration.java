@@ -79,6 +79,8 @@ public class Enumeration extends ValueWrapper {
         }
 
         generateDowncallHandles(writer);
+
+        generateInjected(writer);
         
         writer.write("}\n");
     }

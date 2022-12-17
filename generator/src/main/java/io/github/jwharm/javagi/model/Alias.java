@@ -4,34 +4,37 @@ import java.io.IOException;
 import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.GTypeDefinitions;
 
+/**
+ * Represents an {@code alias} element
+ */
 public class Alias extends ValueWrapper {
-    
-    public static final int UNKNOWN_ALIAS = 0;
-    public static final int RECORD_ALIAS = 1;
-    public static final int CLASS_ALIAS = 2;
-    public static final int INTERFACE_ALIAS = 3;
-    public static final int CALLBACK_ALIAS = 4;
-    public static final int VALUE_ALIAS = 5;
-    
-    public int aliasFor() {
+
+    /**
+     * Represents the different types of elements which may be aliased
+     */
+    public enum TargetType {
+        CLASS, RECORD, INTERFACE, CALLBACK, VALUE, UNKNOWN
+    }
+
+    /**
+     * Gets the type of element that this alias targets
+     */
+    public TargetType getTargetType() {
         if (type.isPrimitive
                 || "java.lang.String".equals(type.qualifiedJavaType)
                 || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)) {
-            return VALUE_ALIAS;
-        } else if (type.girElementInstance == null) {
-            return UNKNOWN_ALIAS;
+            return TargetType.VALUE;
         } else if (type.girElementInstance instanceof Callback) {
-            return CALLBACK_ALIAS;
+            return TargetType.CALLBACK;
         } else if (type.girElementInstance instanceof Interface) {
-            return INTERFACE_ALIAS;
+            return TargetType.INTERFACE;
         } else if (type.girElementInstance instanceof Record) {
-            return RECORD_ALIAS;
+            return TargetType.RECORD;
         } else if (type.girElementInstance instanceof Class) {
-            return CLASS_ALIAS;
+            return TargetType.CLASS;
         }
-        return UNKNOWN_ALIAS;
+        return TargetType.UNKNOWN;
     }
 
     public Alias(GirElement parent, String name, String cType, String version) {
@@ -45,11 +48,11 @@ public class Alias extends ValueWrapper {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        switch (aliasFor()) {
-            case CLASS_ALIAS, RECORD_ALIAS -> {
+        switch (getTargetType()) {
+            case CLASS, RECORD -> {
                 writer.write("public class " + javaName);
                 if (type.qualifiedJavaType.equals("void")) {
-                    writer.write(" extends org.gtk.gobject.Object {\n");
+                    writer.write(" extends org.gtk.gobject.GiObject {\n");
                 } else {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
@@ -57,17 +60,14 @@ public class Alias extends ValueWrapper {
                 generateMemoryAddressConstructor(writer);
                 
                 // Do not generate a cast from GObject for records
-                if (aliasFor() == CLASS_ALIAS) {
+                if (getTargetType() == TargetType.CLASS) {
                     generateCastFromGObject(writer);
                 }
-                
-                writer.write("}\n");
             }
-            case INTERFACE_ALIAS, CALLBACK_ALIAS -> {
+            case INTERFACE, CALLBACK -> {
                 writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
-                writer.write("}\n");
             }
-            case VALUE_ALIAS -> {
+            case VALUE -> {
                 String genericType = Conversions.primitiveClassName(type.qualifiedJavaType);
                 if ("utf8".equals(type.name)) {
                     genericType = "java.lang.String";
@@ -77,24 +77,18 @@ public class Alias extends ValueWrapper {
                 writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
                 writer.write("\n");
                 generateValueConstructor(writer, type.qualifiedJavaType);
-                
-                // Write fundamental G_TYPE definitions
-                if (getNamespace().packageName.equals("org.gtk.glib") && this.javaName.equals("Type")) {
-                    GTypeDefinitions.generateFundamentalGTypes(writer);
-                }
-                
-                writer.write("}\n");
             }
-            case UNKNOWN_ALIAS -> {
+            default -> {
                 writer.write("public class " + javaName + " {\n");
-                writer.write("}\n");
             }
         }
+        generateInjected(writer);
+        writer.write("}\n");
     }
     
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
-        if (aliasFor() == VALUE_ALIAS) {
+        if (getTargetType() == TargetType.VALUE) {
             return super.getInteropString(paramName, isPointer, transferOwnership);
         } else {
             return type.girElementInstance.getInteropString(paramName, isPointer, transferOwnership);

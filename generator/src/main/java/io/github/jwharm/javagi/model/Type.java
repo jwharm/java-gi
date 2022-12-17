@@ -62,7 +62,7 @@ public class Type extends GirElement {
     }
 
     public boolean isAliasForPrimitive() {
-        return isAlias() && ((Alias) girElementInstance).aliasFor() == Alias.VALUE_ALIAS;
+        return isAlias() && ((Alias) girElementInstance).getTargetType() == Alias.TargetType.VALUE;
     }
 
     public boolean isBitfield() {

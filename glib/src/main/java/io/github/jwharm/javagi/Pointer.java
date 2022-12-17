@@ -25,7 +25,7 @@ public abstract class Pointer<T> implements Iterable<T> {
      * Instantiate a Pointer object that points to the provided address.
      * @param address The memory address
      */
-    public Pointer(MemoryAddress address) {
+    protected Pointer(MemoryAddress address) {
         this.address = address;
     }
 

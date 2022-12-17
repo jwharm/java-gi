@@ -22,7 +22,7 @@ public abstract class ObjectBase implements Proxy {
 
     private final Addressable address;
     private final Ownership ownership;
-    private final static Cleaner cleaner = Cleaner.create();
+    private static final Cleaner cleaner = Cleaner.create();
     private State state;
     private Cleaner.Cleanable cleanable;
 
@@ -51,8 +51,8 @@ public abstract class ObjectBase implements Proxy {
                     
                     g_object_unref.invokeExact(address);
                     
-                } catch (Throwable ERR) {
-                    throw new AssertionError("Unexpected exception occured: ", ERR);
+                } catch (Throwable err) {
+                    throw new AssertionError("Unexpected exception occured: ", err);
                 }
             }
         }
@@ -65,7 +65,7 @@ public abstract class ObjectBase implements Proxy {
      * @param ownership The ownership status. When ownership is FULL, a cleaner is registered
      *                  to automatically call g_object_unref on the memory address.
      */
-    public ObjectBase(Addressable address, Ownership ownership) {
+    protected ObjectBase(Addressable address, Ownership ownership) {
         this.address = address;
         this.ownership = ownership;
         if (ownership == Ownership.FULL) {
@@ -164,7 +164,7 @@ public abstract class ObjectBase implements Proxy {
             ).address();
 
             // Create TypeInfo struct
-            TypeInfo typeInfo = new TypeInfo.Build()
+            TypeInfo typeInfo = TypeInfo.builder()
                     .setBaseInit(null)
                     .setBaseFinalize(null)
                     .setClassSize(classSize)
@@ -175,7 +175,7 @@ public abstract class ObjectBase implements Proxy {
                     .setInstanceInit(instanceInit)
                     .setNPreallocs((short) 0)
                     .setValueTable(null)
-                    .construct();
+                    .build();
 
             // Call GObject.typeRegisterStatic and return the generated GType
             return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, new TypeFlags(0));

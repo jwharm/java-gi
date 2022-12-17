@@ -10,11 +10,26 @@ import io.github.jwharm.javagi.model.*;
 
 public class Conversions {
 
-    public static Map<String, String> nsLookupTable = new HashMap<>();
-    public static Map<String, GirElement> cIdentifierLookupTable;
-    public static Map<String, RegisteredType> cTypeLookupTable;
-    public static Map<String, Repository> repositoriesLookupTable;
-    public static Map<String, String> superLookupTable = new HashMap<>();
+    /**
+     * Map to find java packages by namespaces
+     */
+    public static final Map<String, String> nsLookupTable = new HashMap<>();
+    /**
+     * Map to find elements by their {@code c:identifier} attribute
+     */
+    public static final Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
+    /**
+     * Map to find types by their {@code c:type} attribute
+     */
+    public static final Map<String, RegisteredType> cTypeLookupTable = new HashMap<>();
+    /**
+     * Map to find repositories by their name
+     */
+    public static final Map<String, Repository> repositoriesLookupTable = new HashMap<>();
+    /**
+     * Map to find parent types by a types qualified name
+     */
+    public static final Map<String, String> superLookupTable = new HashMap<>();
 
     /**
      * Convert "Gdk" to "org.gtk.gdk"
@@ -39,9 +54,9 @@ public class Conversions {
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {
-            return toCamelCase(typeName.substring(idx + 1), true);
+            return replaceKnownType(toCamelCase(typeName.substring(idx + 1), true));
         } else {
-            return toCamelCase(typeName, true);
+            return replaceKnownType(toCamelCase(typeName, true));
         }
     }
 
@@ -62,9 +77,9 @@ public class Conversions {
         if (idx > 0) {
             String namespace = Conversions.namespaceToJavaPackage(typeName.substring(0, idx));
             if (namespace == null) System.err.println("Could not get namespace for " + typeName);
-            return namespace + "." + toCamelCase(typeName.substring(idx + 1), true);
+            return namespace + "." + replaceKnownType(toCamelCase(typeName.substring(idx + 1), true));
         } else {
-            return currentPackage + "." + toCamelCase(typeName, true);
+            return currentPackage + "." + replaceKnownType(toCamelCase(typeName, true));
         }
     }
 
@@ -118,7 +133,7 @@ public class Conversions {
      * For types that are reserved Java keywords, append an underscore.
      */
     private static String replaceKeywords(String name) {
-        final String[] keywords = new String[] {
+        final String[] keywords = {
                 "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
                 "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
@@ -126,7 +141,15 @@ public class Conversions {
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
                 "const", "float", "native", "super", "while", "wait"
         };
-        return (Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name))) ? name + "_" : name;
+        return Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? name + "_" : name;
+    }
+
+    /**
+     * For types that conflict with common Java classes, prefix with Gi
+     */
+    public static String replaceKnownType(String name) {
+        final String[] types = {"String", "Object", "Builder"};
+        return Arrays.stream(types).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? "Gi" + name : name;
     }
 
     /**

@@ -3,6 +3,7 @@ package io.github.jwharm.javagi;
 import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.Function;
 
 /**
  * A pointer type that points to an enumeration
@@ -10,16 +11,16 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
 
-    private final Class<T> cls;
+    private final Function<Integer, T> make;
 
     /**
      * Create a pointer to an existing enumeration.
      * @param address the memory address
-     * @param cls the type of enumeration
+     * @param make a function to create an enumeration instance of an int
      */
-    public PointerEnumeration(MemoryAddress address, Class<T> cls) {
+    public PointerEnumeration(MemoryAddress address, Function<Integer, T> make) {
         super(address);
-        this.cls = cls;
+        this.make = make;
     }
 
     /**
@@ -32,7 +33,7 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
 
     /**
      * Use this method to retrieve the value of the pointer.
-     * @return The value of the pointer
+     * @return the value of the pointer
      */
     public T get() {
         return get(0);
@@ -43,19 +44,14 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
      * <p>
      * <strong>Warning: There is no bounds checking.</strong>
      * <strong>Performance warning:</strong> This method uses reflection to instantiate the new object.
-     * @param index The array index
-     * @return The value stored at the given index
+     * @param index the array index
+     * @return the value stored at the given index
      */
     public T get(int index) {
         int value = address.get(
                 Interop.valueLayout.C_INT,
                 Interop.valueLayout.C_INT.byteSize() * index
         );
-        try {
-            T instance = cls.getDeclaredConstructor(new Class[] {Integer.class}).newInstance(value);
-            return instance;
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            return null;
-        }
+        return make.apply(value);
     }
 }

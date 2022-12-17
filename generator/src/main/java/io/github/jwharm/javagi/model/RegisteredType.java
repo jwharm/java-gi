@@ -8,8 +8,13 @@ import io.github.jwharm.javagi.generator.Conversions;
 
 public abstract class RegisteredType extends GirElement {
 
-    public final String javaName, parentClass, cType, version;
+    public final String javaName;
+    public final String parentClass;
+    public final String cType;
+    public final String version;
     private final String qualifiedName;
+
+    public String injected = null;
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
         super(parent);
@@ -178,7 +183,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
-        writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.Object gobject) {\n");
+        writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.GiObject gobject) {\n");
         writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
@@ -297,5 +302,9 @@ public abstract class RegisteredType extends GirElement {
     
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         return paramName + ".handle()";
+    }
+
+    protected void generateInjected(Writer writer) throws IOException {
+        if (injected != null) writer.write(injected);
     }
 }

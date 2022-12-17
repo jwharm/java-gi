@@ -48,6 +48,9 @@ public class Callback extends RegisteredType implements CallableType {
             }
         }
         writer.write(");\n");
+
+        generateInjected(writer);
+
         writer.write("}\n");
     }
 

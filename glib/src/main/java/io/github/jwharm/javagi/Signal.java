@@ -6,11 +6,11 @@ import java.lang.foreign.Addressable;
 
 public class Signal<T> {
 
-    private final org.gtk.gobject.Object instance;
+    private final org.gtk.gobject.GiObject instance;
     private final long handlerId;
 
     public Signal(Addressable instance, long handlerId) {
-        this.instance = new org.gtk.gobject.Object(instance, Ownership.UNKNOWN);
+        this.instance = new org.gtk.gobject.GiObject(instance, Ownership.UNKNOWN);
         this.handlerId = handlerId;
     }
 

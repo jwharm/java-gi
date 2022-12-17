@@ -20,7 +20,7 @@ public interface Derived extends Proxy {
                     ValueLayout.JAVA_INT.withName("value_object")
             );
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new InteropException(e);
         }
     }
 

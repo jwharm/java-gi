@@ -2,21 +2,24 @@ package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public class CrossReference {
 
-    // This method does two things:
-    // 1. Create a global map of all registered types in all repositories;
-    // 2. Loop through all type references in all repositories, find the 
-    //    actual type instance in the parsed GI tree, and save a reference
-    //    to that GirElement.
-    public static void link(Map<String, Repository> repositories) {
-        
+    /**
+     * This method does two things:
+     * <ul>
+     *     <li>Create a global map of all registered types in all repositories;</li>
+     *     <li>
+     *         Loop through all type references in all repositories, find the
+     *         actual type instance in the parsed GI tree, and save a reference
+     *         to that GirElement.
+     *     </li>
+     * </ul>
+     */
+    public static void link() {
         // Create the registeredTypeMap of all registered types of all GI repositories
-        for (Repository r : repositories.values()) {
+        for (Repository r : Conversions.repositoriesLookupTable.values()) {
             Namespace ns = r.namespace;
             Stream<? extends RegisteredType> registeredTypes = Stream.of(
                     ns.aliasList.stream(),
@@ -34,7 +37,7 @@ public class CrossReference {
         }
 
         // Link all type references to the accompanying types
-        for (Repository repository : repositories.values()) {
+        for (Repository repository : Conversions.repositoriesLookupTable.values()) {
             GirElement element = repository;
             while (element != null) {
 
@@ -46,7 +49,7 @@ public class CrossReference {
                         && (! t.name.equals("gpointer")
                         && (! t.name.equals("gconstpointer")))) {
 
-                    Repository r = repositories.get(t.girNamespace);
+                    Repository r = Conversions.repositoriesLookupTable.get(t.girNamespace);
                     if (r != null) {
                         t.girElementInstance = r.namespace.registeredTypeMap.get(t.name);
                         if (t.girElementInstance != null) {
@@ -62,31 +65,33 @@ public class CrossReference {
         }
     }
 
-    // Create a map to find a type by its "c:identifier" attribute
-    public static Map<String, GirElement> createIdLookupTable(Map<String, Repository> repositories) {
-        Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
-        for (Repository repository : repositories.values()) {
+    /**
+     * Update {@code cIdentifierLookupTable} with current {@code repositoriesLookupTable}
+     */
+    public static void createIdLookupTable() {
+        Conversions.cIdentifierLookupTable.clear();
+        for (Repository repository : Conversions.repositoriesLookupTable.values()) {
             GirElement element = repository;
             while (element != null) {
                 if (element instanceof Method m) {
-                    cIdentifierLookupTable.put(m.cIdentifier, m);
+                    Conversions.cIdentifierLookupTable.put(m.cIdentifier, m);
                 } else if (element instanceof Member m) {
-                    cIdentifierLookupTable.put(m.cIdentifier, m);
+                    Conversions.cIdentifierLookupTable.put(m.cIdentifier, m);
                 }
                 element = element.next;
             }
         }
-        return cIdentifierLookupTable;
     }
 
-    // Create a map to find a type by its "c:type" attribute
-    public static Map<String, RegisteredType> createCTypeLookupTable(Map<String, Repository> repositories) {
-        Map<String, RegisteredType> cTypeLookupTable = new HashMap<>();
-        for (Repository gir : repositories.values()) {
+    /**
+     * Update {@code cTypeLookupTable} with current {@code repositoriesLookupTable}
+     */
+    public static void createCTypeLookupTable() {
+        Conversions.cTypeLookupTable.clear();
+        for (Repository gir : Conversions.repositoriesLookupTable.values()) {
             for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
-                cTypeLookupTable.put(rt.cType, rt);
+                Conversions.cTypeLookupTable.put(rt.cType, rt);
             }
         }
-        return cTypeLookupTable;
     }
 }

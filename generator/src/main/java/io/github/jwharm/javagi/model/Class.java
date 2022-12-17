@@ -83,6 +83,8 @@ public class Class extends RegisteredType {
         generateDowncallHandles(writer);
         
         generateSignalCallbacks(writer);
+
+        generateInjected(writer);
         
         writer.write("}\n");
     }

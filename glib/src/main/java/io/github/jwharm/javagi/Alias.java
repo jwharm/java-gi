@@ -12,7 +12,7 @@ public abstract class Alias<T> {
      * Create a new alias with the provided value
      * @param value the initial value of the alias
      */
-    public Alias(T value) {
+    protected Alias(T value) {
         this.value = value;
     }
 
@@ -31,14 +31,20 @@ public abstract class Alias<T> {
     public T getValue() {
         return this.value;
     }
-    
+
     /**
      * Check if the values of this alias equals the value of the provided alias
      * @param other another Alias instance
      * @return true if the value of this Alias equals the value of the provided alias
      */
-    public boolean equals(Alias<T> other) {
-        return this.value.equals(other.value);
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Alias<?> alias && this.value.equals(alias.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 
     /**

@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import java.io.Serial;
 import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
 
@@ -15,6 +16,7 @@ import org.gtk.glib.Quark;
 public class GErrorException extends Exception {
 
     // Auto-generated
+    @Serial
     private static final long serialVersionUID = -5219056090883059292L;
     
     // The GError proxy object
