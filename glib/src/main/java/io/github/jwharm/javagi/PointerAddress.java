@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer that points to a raw memory address

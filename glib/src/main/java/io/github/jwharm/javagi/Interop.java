@@ -3,23 +3,9 @@ package io.github.jwharm.javagi;
 import org.gtk.gobject.GObject;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.GroupLayout;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
-import java.lang.foreign.SegmentAllocator;
-import java.lang.foreign.SymbolLookup;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.foreign.*;
+import java.lang.invoke.*;
+import java.util.*;
 
 @ApiStatus.Internal
 public class Interop {

@@ -1,9 +1,6 @@
 package io.github.jwharm.javagi;
 
-import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
+import java.lang.foreign.*;
 
 /**
  * This interface should be implemented by all classes that derive from a

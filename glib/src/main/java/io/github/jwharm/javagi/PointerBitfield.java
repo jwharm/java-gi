@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.MemoryAddress;
-import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 
 /**
