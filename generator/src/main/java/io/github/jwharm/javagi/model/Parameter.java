@@ -60,7 +60,7 @@ public class Parameter extends Variable {
         }
         if (type.isAlias()) {
             Alias a = (Alias) type.girElementInstance;
-            return (a == null || a.aliasFor() == Alias.CLASS_ALIAS) || (a.aliasFor() == Alias.INTERFACE_ALIAS);
+            return (a == null || a.getTargetType() == Alias.TargetType.CLASS) || (a.getTargetType() == Alias.TargetType.INTERFACE);
         }
         // A pointer to a proxy is not a proxy
         if (type.cType != null && type.cType.endsWith("**")) {

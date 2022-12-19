@@ -17,7 +17,7 @@ public class PointerString extends Pointer<String> {
 
     /**
      * Create the pointer and set the provided initial value.
-     * @param initialValue The initial value
+     * @param initialValue the initial value
      */
     public PointerString(String initialValue) {
         this();
@@ -42,7 +42,7 @@ public class PointerString extends Pointer<String> {
 
     /**
      * Use this method to retrieve the value of the pointer.
-     * @return The value of the pointer
+     * @return the value of the pointer
      */
     public String get() {
         return get(0);
@@ -51,8 +51,8 @@ public class PointerString extends Pointer<String> {
     /**
      * Treat the pointer as an array, and return the given element.
      * <strong>Warning: There is no bounds checking.</strong>
-     * @param index The array index
-     * @return The value stored at the given index
+     * @param index the array index
+     * @return the value stored at the given index
      */
     public String get(int index) {
         return address.get(

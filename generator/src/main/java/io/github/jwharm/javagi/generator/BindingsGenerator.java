@@ -9,17 +9,19 @@ import java.util.Set;
 
 public class BindingsGenerator {
 
-    // Callback functions for signals are appended to this StringBuilder.
-    // When a class has been generated, these function declarations are written into 
-    // a static inner class "Callbacks".
-    public static StringBuilder signalCallbackFunctions;
+    /**
+     * Callback functions for signals are appended to this StringBuilder.<br>
+     * When a class has been generated, these function declarations are written into
+     * a static inner class "Callbacks".
+     */
+    public static final StringBuilder signalCallbackFunctions = new StringBuilder();
 
-    public BindingsGenerator() {
-    }
-    
-    // Generate Java bindings for the provided GI repository
-    public void generate(Repository gir, Set<String> natives, Path basePath) throws IOException {
-        signalCallbackFunctions = new StringBuilder();
+    /**
+     * Generate Java bindings for the provided GI repository
+     */
+    public static void generate(Repository gir, Set<String> natives, Path basePath) throws IOException {
+        signalCallbackFunctions.setLength(0);
+
 
         Files.createDirectories(basePath);
 
@@ -34,10 +36,12 @@ public class BindingsGenerator {
         generateGlobals(gir, natives, basePath);
     }
 
-    // Generate the contents for the class with the namespace-global declarations.
-    // The name of the class is the namespace identifier.
-    public void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
-        String className = Conversions.toSimpleJavaType(gir.namespace.name);
+    /**
+     * Generate the contents for the class with the namespace-global declarations.
+     * The name of the class is the namespace identifier.
+     */
+    public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
+        String className = Conversions.convertToJavaType(gir.namespace.globalClassName, false, gir.namespace);
         try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
@@ -55,7 +59,7 @@ public class BindingsGenerator {
                 writer.write("    }\n");
                 writer.write("    \n");
             }
-            writer.write("    @ApiStatus.Internal static void javagi$ensureInitialized() {}\n");
+            writer.write("    @ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
  
             for (Constant constant : gir.namespace.constantList) {
                 constant.generate(writer);

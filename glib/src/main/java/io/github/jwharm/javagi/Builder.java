@@ -3,9 +3,9 @@ package io.github.jwharm.javagi;
 import java.util.ArrayList;
 
 /**
- * Base class for all inner {@code Build} classes inside GObject proxy classes.
+ * Base class for all inner {@code Builder} classes inside GObject proxy classes.
  */
-public class Build {
+public class Builder {
 
     /**
      * List of all property names that are set
