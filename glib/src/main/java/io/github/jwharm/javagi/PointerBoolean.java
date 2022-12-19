@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a boolean value.
@@ -27,7 +26,7 @@ public class PointerBoolean extends Pointer<Boolean> {
 
     /**
      * Create the pointer and point it to the given initial value.
-     * @param initialValue The initial value
+     * @param initialValue the initial value
      */
     public PointerBoolean(boolean initialValue) {
         this();
@@ -44,7 +43,7 @@ public class PointerBoolean extends Pointer<Boolean> {
 
     /**
      * Use this method to retrieve the value that the pointer points to.
-     * @return The value of the pointer
+     * @return the value of the pointer
      */
     public Boolean get() {
         return get(0);
@@ -53,8 +52,8 @@ public class PointerBoolean extends Pointer<Boolean> {
     /**
      * Treat the pointer as an array, and return the given element.
      * <strong>Warning: There is no bounds checking.</strong>
-     * @param index The array index
-     * @return The value stored at the given index
+     * @param index the array index
+     * @return the value stored at the given index
      */
     public Boolean get(int index) {
         return address.get(

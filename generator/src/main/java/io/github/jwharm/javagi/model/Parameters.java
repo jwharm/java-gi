@@ -50,7 +50,7 @@ public class Parameters extends GirElement {
             }
             writer.write("\n                    ");
 
-            // Generate null-chack. But don't null-check parameters that are hidden from the Java API, or primitive values
+            // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
                 writer.write("(Addressable) (" + (p.varargs ? "varargs" : p.name) + " == null ? MemoryAddress.NULL : ");
             }

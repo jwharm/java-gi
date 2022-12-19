@@ -43,12 +43,14 @@ public class Interface extends RegisteredType {
         generateSignalCallbacks(writer);
         generateImplClass(writer);
 
+        generateInjected(writer);
+
         writer.write("}\n");
     }
 
     public void generateImplClass(Writer writer) throws IOException {
         writer.write("    \n");
-        writer.write("    class " + javaName + "Impl extends org.gtk.gobject.Object implements " + javaName + " {\n");
+        writer.write("    class " + javaName + "Impl extends org.gtk.gobject.GObject implements " + javaName + " {\n");
         generateEnsureInitialized(writer, "        ");
         writer.write("        \n");
         writer.write("        public " + javaName + "Impl(Addressable address, Ownership ownership) {\n");

@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi;
 
-import org.gtk.gobject.Object;
+import org.gtk.gobject.GObject;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
@@ -10,7 +10,7 @@ public interface Marshal<In, Out> {
 
     Out marshal(In input, Ownership ownership);
 
-    Marshal<Object, Object> passthrough             = (input, ownership) -> input;
+    Marshal<GObject, GObject> passthrough             = (input, ownership) -> input;
 
     Marshal<Integer, Boolean> integerToBoolean        = (input, ownership) -> input == 1;
     Marshal<Boolean, Integer> booleanToInteger        = (input, ownership) -> input ? 1 : 0;

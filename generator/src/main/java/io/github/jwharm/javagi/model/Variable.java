@@ -160,7 +160,7 @@ public class Variable extends GirElement {
         }
         // Create Pointer to an object
         if (array == null && type.cType != null && (! type.isPrimitive) && type.cType.endsWith("**") && generatePointerProxy) {
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)";
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)";
         }
         // Create Pointer to primitive value
         if (type.isPrimitive && type.isPointer()) {
@@ -231,11 +231,11 @@ public class Variable extends GirElement {
         
         } else if (type.isEnum()) {
             // Pointer to enumeration
-            writer.write("new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
+            writer.write("new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)");
 
         } else if (type.isBitfield()) {
             // Pointer to bitfield
-            writer.write("new PointerBitfield<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
+            writer.write("new PointerBitfield<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)");
 
         } else if (type.isAliasForPrimitive()) {
             // Pointer to wrapped primitive value
@@ -255,7 +255,7 @@ public class Variable extends GirElement {
 
         } else {
             // Pointer to object
-            writer.write("new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".class)");
+            writer.write("new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)");
         }
     }
 

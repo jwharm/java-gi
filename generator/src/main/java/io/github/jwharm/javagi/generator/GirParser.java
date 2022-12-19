@@ -197,7 +197,9 @@ public class GirParser extends DefaultHandler {
                 current = newMethod;
             }
             case "namespace" -> {
-                Namespace newNamespace = new Namespace(current, attr.getValue("name"), pkg);
+                Namespace newNamespace = new Namespace(current, attr.getValue("name"), attr.getValue("version"),
+                        attr.getValue("shared-library"), attr.getValue("c:identifier-prefixes"),
+                        attr.getValue("c:symbol-prefixes"), pkg);
                 ((Repository) current).namespace = newNamespace;
                 current = newNamespace;
             }

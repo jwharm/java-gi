@@ -109,6 +109,9 @@ public class Callback extends RegisteredType implements CallableType {
         writer.write("    default MemoryAddress toCallback() {\n");
         writer.write("        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
         writer.write("    }\n");
+
+        generateInjected(writer);
+
         writer.write("}\n");
     }
 

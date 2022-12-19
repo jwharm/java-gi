@@ -91,7 +91,8 @@ public class GtkDoc {
         return instance;
     }
 
-    private final Pattern patternPass1, patternPass2;
+    private final Pattern patternPass1;
+    private final Pattern patternPass2;
 
     // This class is a singleton. The regex patterns are compiled only once.
     private GtkDoc() {
@@ -218,9 +219,10 @@ public class GtkDoc {
             case "method":
             case "vfunc":
                 if (part3 == null) {
-                    return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                    return checkLink(part1, part2) + Conversions.replaceKnownType(part1, doc.getNamespace()) + formatMethod(part2) + "}";
                 } else {
-                    return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                    Namespace ns = getNamespace(part1);
+                    return checkLink(part1, part2, part3) + formatNS(part1) + Conversions.replaceKnownType(part2, ns) + formatMethod(part3) + "}";
                 }
             case "property":
                 return "{@code " + path + "}";
@@ -236,9 +238,10 @@ public class GtkDoc {
                 }
             case "class":
                 if (part2 == null) {
-                    return checkLink(part1) + part1 + "}";
+                    return checkLink(part1) + Conversions.replaceKnownType(part1, doc.getNamespace()) + "}";
                 } else {
-                    return checkLink(part1, part2) + formatNS(part1) + part2 + "}";
+                    Namespace ns = getNamespace(part1);
+                    return checkLink(part1, part2) + formatNS(part1) + Conversions.replaceKnownType(part2, ns) + "}";
                 }
             case "id":
                 GirElement girElement = Conversions.cIdentifierLookupTable.get(part1);
@@ -379,6 +382,12 @@ public class GtkDoc {
             name += ((uppercase && (girElement instanceof Member)) ? ("#" + call.toUpperCase()) : formatMethod(call));
         }
         return name;
+    }
+
+    // Get the Namespace node for the provided namespace prefix
+    private Namespace getNamespace(String ns) {
+        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        return gir == null ? null : gir.namespace;
     }
     
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,

@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.gobject.GObjects;
 import org.gtk.glib.Type;
 import org.gtk.gobject.TypeFlags;
 import org.gtk.gobject.TypeInfo;
@@ -23,7 +24,7 @@ public abstract class ObjectBase implements Proxy {
 
     private final Addressable address;
     private final Ownership ownership;
-    private final static Cleaner cleaner = Cleaner.create();
+    private static final Cleaner cleaner = Cleaner.create();
     private State state;
     private Cleaner.Cleanable cleanable;
 
@@ -52,8 +53,8 @@ public abstract class ObjectBase implements Proxy {
                     
                     g_object_unref.invokeExact(address);
                     
-                } catch (Throwable ERR) {
-                    throw new AssertionError("Unexpected exception occured: ", ERR);
+                } catch (Throwable err) {
+                    throw new AssertionError("Unexpected exception occured: ", err);
                 }
             }
         }
