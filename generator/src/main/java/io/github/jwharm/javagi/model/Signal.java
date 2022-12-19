@@ -20,7 +20,7 @@ public class Signal extends Method {
     }
 
     public void generate(Writer writer, boolean isDefault) throws IOException {
-        signalName = Conversions.toSimpleJavaType(name);
+        signalName = Conversions.toSimpleJavaType(name, getNamespace());
         className = ((RegisteredType) parent).javaName;
         qualifiedName = className + "." + signalName;
         callbackName = "signal" + className + signalName;

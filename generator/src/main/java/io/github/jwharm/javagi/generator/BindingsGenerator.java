@@ -41,7 +41,7 @@ public class BindingsGenerator {
      * The name of the class is the namespace identifier.
      */
     public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
-        String className = Conversions.toSimpleJavaType(gir.namespace.name);
+        String className = Conversions.convertToJavaType(gir.namespace.globalClassName, false, gir.namespace);
         try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");

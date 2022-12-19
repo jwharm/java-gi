@@ -19,10 +19,10 @@ public abstract class RegisteredType extends GirElement {
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
         super(parent);
         
-        this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace().packageName);
+        this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace());
         this.name = name;
-        this.javaName = Conversions.toSimpleJavaType(name);
-        this.qualifiedName = Conversions.toQualifiedJavaType(name, getNamespace().packageName);
+        this.javaName = Conversions.toSimpleJavaType(name, getNamespace());
+        this.qualifiedName = Conversions.toQualifiedJavaType(name, getNamespace());
         
         // If c type is not provided, guess that the name is also the c type
         this.cType = Objects.requireNonNullElse(cType, name);
@@ -183,8 +183,8 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
-        writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.GiObject gobject) {\n");
-        writer.write("        if (org.gtk.gobject.GObject.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
+        writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.GObject gobject) {\n");
+        writer.write("        if (org.gtk.gobject.GObjects.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
@@ -236,7 +236,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write(indent);
         writer.write("static {\n");
         writer.write(indent);
-        writer.write("    " + Conversions.toSimpleJavaType(getNamespace().name) + ".javagi$ensureInitialized();\n");
+        writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
         writer.write(indent);
         writer.write("}\n");
     }

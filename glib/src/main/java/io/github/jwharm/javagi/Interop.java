@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi;
 
-import org.gtk.gobject.GObject;
+import org.gtk.gobject.GObjects;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
@@ -69,7 +69,7 @@ public class Interop {
         
         // Ensure that the "gobject-2.0" library has been loaded. 
         // This is required for the downcall handle to g_signal_connect.
-        GObject.javagi$ensureInitialized();
+        GObjects.javagi$ensureInitialized();
     }
 
     /**

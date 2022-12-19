@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.gobject.GObjects;
 import org.gtk.glib.Type;
 import org.gtk.gobject.TypeFlags;
 import org.gtk.gobject.TypeInfo;
@@ -124,7 +125,7 @@ public abstract class ObjectBase implements Proxy {
 
     /**
      * Registers the provided class as a GType.
-     * See {@link org.gtk.gobject.GObject#typeRegisterStatic(Type, String, TypeInfo, TypeFlags)}
+     * See {@link org.gtk.gobject.GObjects#typeRegisterStatic(Type, String, TypeInfo, TypeFlags)}
      * @param c The class to register. The class must implement the {@link Derived} interface.
      * @return the registered {@link org.gtk.glib.Type}
      */
@@ -178,7 +179,7 @@ public abstract class ObjectBase implements Proxy {
                     .build();
 
             // Call GObject.typeRegisterStatic and return the generated GType
-            return org.gtk.gobject.GObject.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, new TypeFlags(0));
+            return GObjects.typeRegisterStatic(parentGType, c.getSimpleName(), typeInfo, new TypeFlags(0));
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -51,8 +51,8 @@ public class Type extends GirElement {
             name = "gpointer";
         }
         this.qualifiedName = name;
-        this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace().packageName);
-        this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace().packageName);
+        this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace());
+        this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace());
         this.namespacePath = Conversions.getJavaPackageName(name);
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
     }

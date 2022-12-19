@@ -98,12 +98,12 @@ val genSources by tasks.registering {
                         template("String", "org.gtk.glib.Type.G_TYPE_STRING", "setString(arg)")
                         template("Enumeration", "org.gtk.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())")
                         template("Bitfield", "org.gtk.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")
-                        template("org.gtk.gobject.GiObject", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
-                        template("org.gtk.glib.Type", "org.gtk.gobject.GObject.gtypeGetType()", "setGtype(arg)")
+                        template("org.gtk.gobject.GObject", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
+                        template("org.gtk.glib.Type", "org.gtk.gobject.GObjects.gtypeGetType()", "setGtype(arg)")
                         template("Struct", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
                         template("MemoryAddress", "org.gtk.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
                         template("ParamSpec", "org.gtk.glib.Type.G_TYPE_PARAM", "setParam(arg)")
-                        template("Proxy", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject((org.gtk.gobject.GiObject) arg)")
+                        template("Proxy", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject((org.gtk.gobject.GObject) arg)")
                     }.toString().replaceIndent("    ") + "\n")
                 }
             }),
