@@ -67,12 +67,14 @@ public class Field extends Variable {
             writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
             writer.write("     * @return The value of the field {@code " + this.fieldName + "}\n");
             writer.write("     */\n");
-            writer.write("    public " + getReturnType() + " " + getter + "() {\n");
+            writer.write("    public ");
+            writeType(writer, true);
+            writer.write(" " + getter + "() {\n");
 
             if (!type.isPointer() && (type.isClass() || type.isInterface())) {
                 writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("        return ");
-                generateReverseInterop(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
+                marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
                 writer.write(";\n");
                 writer.write("    }\n");
                 return;
@@ -81,7 +83,7 @@ public class Field extends Variable {
             writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
             writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
             writer.write("        return ");
-            generateReverseInterop(writer, "RESULT", false);
+            marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
             writer.write("    }\n");
         }
@@ -93,7 +95,7 @@ public class Field extends Variable {
         writer.write("     * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
         writer.write("     */\n");
         writer.write("    public void " + setter + "(");
-        generateTypeAndName(writer, true);
+        writeTypeAndName(writer, true);
         writer.write(") {\n");
         writer.write("        getMemoryLayout()\n");
         writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
@@ -103,7 +105,7 @@ public class Field extends Variable {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
         }
 
-        generateInterop(writer, this.name, false);
+        marshalJavaToNative(writer, this.name, false);
 
         if (checkNull()) {
             writer.write(")");
@@ -124,7 +126,7 @@ public class Field extends Variable {
         writer.write("        public Builder set" + Conversions.toCamelCase(this.name, true) + "(");
 
         // Write the parameter
-        generateTypeAndName(writer, false);
+        writeTypeAndName(writer, false);
 
         // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
@@ -137,7 +139,7 @@ public class Field extends Variable {
         }
 
         // Convert the parameter to the C function argument
-        generateInterop(writer, this.name, false);
+        marshalJavaToNative(writer, this.name, false);
 
         if (checkNull()) {
             writer.write(")");

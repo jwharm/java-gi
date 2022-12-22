@@ -39,7 +39,7 @@ public class ReturnValue extends Parameter {
                     writer.write(tab(indent) + array.type.qualifiedJavaType + "[] resultARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
                     writer.write(tab(indent) + "for (int I = 0; I < " + len + "; I++) {\n");
                     writer.write(tab(indent) + "    var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-                    writer.write(tab(indent) + "    resultARRAY[I] = " + getNewInstanceString(array.type, "OBJ", false) + ";\n");
+                    writer.write(tab(indent) + "    resultARRAY[I] = " + marshalNativeToJava(array.type, "OBJ", false) + ";\n");
                     writer.write(tab(indent) + "}\n");
                     writer.write(tab(indent) + "return resultARRAY;\n");
                 }
@@ -62,7 +62,7 @@ public class ReturnValue extends Parameter {
             return;
         }
         writer.write(tab(indent) + "return ");
-        generateReverseInterop(writer, "RESULT", false);
+        marshalNativeToJava(writer, "RESULT", false);
         writer.write(";\n");
     }
 }

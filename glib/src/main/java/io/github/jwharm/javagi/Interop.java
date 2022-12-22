@@ -16,7 +16,6 @@ public class Interop {
     private final static SegmentAllocator sessionAllocator;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
-    private final static AtomicInteger count = new AtomicInteger();
 
     /**
      * Configure the layout of native data types here.<br>
@@ -26,16 +25,6 @@ public class Interop {
      *     this Wikipedia text</a> about the difference between 64-bit data models.
      */
     public static final Layout_LP64 valueLayout = new Layout_LP64();
-
-    /**
-     * This map contains the callbacks used in g_signal_connect. The 
-     * keys are the hashcodes of the callback objects. This hashcode is 
-     * passed to g_signal_connect in the user_data parameter and passed 
-     * as a parameter to the static callback functions. The static 
-     * callback functions use the hashcode to retrieve the user-defined 
-     * callback function from the signalRegistry map, and run it.
-     */
-    public static final Map<Integer, Object> signalRegistry = new HashMap<>();
 
     /**
      * This map contains the objects that are stored in the native struct of
@@ -125,19 +114,6 @@ public class Interop {
     }
 
     /**
-     * Register a callback in the signalRegistry map. The key is 
-     * the hashcode of the callback.
-     * @param callback Callback to save in the signalRegistry map
-     * @return a native memory segment with the calculated hashcode.
-     *         The memory segment is not automatically released.
-     */
-    public static Addressable registerCallback(Object callback) {
-        int hash = callback.hashCode();
-        signalRegistry.put(hash, callback);
-        return sessionAllocator.allocate(valueLayout.C_INT, hash);
-    }
-
-    /**
      * Register an object in the ObjectRegistry map. The key is
      * the hashcode of the object.
      * @param object The object to save in the objectRegistry map
@@ -175,6 +151,88 @@ public class Interop {
         } catch (Throwable ignored) {
         }
         return null;
+    }
+
+    public static String[] getStringArrayFrom(MemoryAddress address) {
+        ArrayList<String> list = new ArrayList<String>();
+        long offset = 0;
+        while (!MemoryAddress.NULL.equals(address)) {
+            list.add(address.getUtf8String(offset));
+            offset += valueLayout.ADDRESS.byteSize();
+        }
+        String[] result = new String[list.size()];
+        list.toArray(result);
+        return result;
+    }
+
+    public static String[] getStringArrayFrom(MemoryAddress address, int length) {
+        String[] result = new String[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getUtf8String(i * valueLayout.ADDRESS.byteSize());
+        return result;
+    }
+
+    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
+        MemoryAddress[] result = new MemoryAddress[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.ADDRESS, i);
+        return result;
+    }
+
+    public static boolean[] getBooleanArrayFrom(MemoryAddress address, int length) {
+        boolean[] result = new boolean[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_INT, i) == 1;
+        return result;
+    }
+
+    public static byte[] getByteArrayFrom(MemoryAddress address, int length) {
+        byte[] result = new byte[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.get(valueLayout.C_BYTE, i);
+        return result;
+    }
+
+    public static char[] getCharacterArrayFrom(MemoryAddress address, int length) {
+        char[] result = new char[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_CHAR, i);
+        return result;
+    }
+
+    public static double[] getDoubleArrayFrom(MemoryAddress address, int length) {
+        double[] result = new double[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_DOUBLE, i);
+        return result;
+    }
+
+    public static float[] getFloatArrayFrom(MemoryAddress address, int length) {
+        float[] result = new float[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_FLOAT, i);
+        return result;
+    }
+
+    public static int[] getIntegerArrayFrom(MemoryAddress address, int length) {
+        int[] result = new int[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_INT, i);
+        return result;
+    }
+
+    public static long[] getLongArrayFrom(MemoryAddress address, int length) {
+        long[] result = new long[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_LONG, i);
+        return result;
+    }
+
+    public static short[] getShortArrayFrom(MemoryAddress address, int length) {
+        short[] result = new short[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(valueLayout.C_SHORT, i);
+        return result;
     }
 
     /**

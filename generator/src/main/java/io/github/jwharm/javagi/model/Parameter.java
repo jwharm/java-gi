@@ -11,6 +11,7 @@ public class Parameter extends Variable {
     public final boolean nullable;
 
     public boolean varargs = false;
+    public boolean signalSource = false;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String direction) {
         super(parent);
@@ -47,7 +48,8 @@ public class Parameter extends Variable {
         }
         // Find the parameter that was specified in the value of the 'length' attribute.
         // Ignore the instance parameter.
-        if (params.parameterList.get(0) instanceof InstanceParameter) {
+        Parameter p0 = params.parameterList.get(0);
+        if (p0 instanceof InstanceParameter || p0.signalSource) {
             return params.parameterList.get(index + 1);
         } else {
             return params.parameterList.get(index);
@@ -68,7 +70,7 @@ public class Parameter extends Variable {
         }
         return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
     }
-    
+
     /**
      * Returns an Ownership enum value (for example, tranfer-ownership="full" -> "Ownership.FULL").
      * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is returned
@@ -81,11 +83,11 @@ public class Parameter extends Variable {
     /**
      * Whether this parameter must receive special treatment as an out-parameter
      * @return True if the direction attribute exists and contains "out", AND the parameter type
-     *         is NOT a Proxy object. (For Proxy object out-parameters, we can simply pas the 
-     *         object's memory address, and don't need to do anything special.
+     *         is NOT a Proxy object. (For Proxy objects, we can simply pass the memory address,
+     *         and don't need to do anything special.
      */
     public boolean isOutParameter() {
-        return direction != null && direction.contains("out") && (! isProxy());
+        return direction != null && direction.contains("out") && (!isProxy());
     }
 
     public boolean isInstanceParameter() {
@@ -96,10 +98,11 @@ public class Parameter extends Variable {
         return (type != null) && type.isCallback();
     }
 
-//    public boolean isUserDataParameter() {
-//        return (type != null) && name.toLowerCase().endsWith("data")
-//                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
-//    }
+    public boolean isUserDataParameter() {
+        return (type != null)
+                && (name.toLowerCase().endsWith("data") || name.equalsIgnoreCase("userdata2"))
+                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
+    }
 //
 //    public boolean isDestroyNotify() {
 //        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
@@ -116,7 +119,7 @@ public class Parameter extends Variable {
      */
     public boolean checkNull() {
         return nullable 
-                && (! (isInstanceParameter() || isErrorParameter()
+                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
                         || (type != null && type.isPrimitive && (! type.isPointer()))));
     }
     
@@ -132,7 +135,7 @@ public class Parameter extends Variable {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
-        if (! (isInstanceParameter() || isErrorParameter() || varargs
+        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (! nullable) {
                 writer.write(tab(indent) + "java.util.Objects.requireNonNull(" + name 
@@ -173,7 +176,7 @@ public class Parameter extends Variable {
                     if (type.isBoolean()) writer.write(" != 0");
                     writer.write(");\n");
                 } else {
-                    writer.write(getNewInstanceString(type, identifier, false) + ");\n");
+                    writer.write(marshalNativeToJava(type, identifier, false) + ");\n");
                 }
             } else {
                 // Secondly, process the array out parameters
@@ -189,7 +192,7 @@ public class Parameter extends Variable {
                     writer.write(tab(indent) + "for (int I = 0; I < " + len + "; I++) {\n");
                     writer.write(tab(indent + 1) + "var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
                     writer.write(tab(indent + 1) + name + "ARRAY[I] = ");
-                    writer.write(getNewInstanceString(array.type, "OBJ", false) + ";\n");
+                    writer.write(marshalNativeToJava(array.type, "OBJ", false) + ";\n");
                     writer.write(tab(indent) + "}\n");
                     writer.write(tab(indent) + name + ".set(" + name + "ARRAY);\n");
                 }
@@ -205,6 +208,20 @@ public class Parameter extends Variable {
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             writer.write(tab(indent) + (isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
+        }
+    }
+
+    public void generateUpcallPreprocessing(Writer writer, int indent) throws IOException {
+        if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
+            writer.write(tab(indent) + type.qualifiedJavaType + " " + name + "ALIAS = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
+        }
+    }
+
+    public void generateUpcallPostprocessing(Writer writer, int indent) throws IOException {
+        if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
+            writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + name + "ALIAS.getValue());\n");
         }
     }
 }

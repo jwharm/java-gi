@@ -38,6 +38,7 @@ public class Record extends Class {
         }
 
         generateMemoryAddressConstructor(writer);
+        generateArrayConstructor(writer);
         generateMarshal(writer);
         generateConstructors(writer);
 
@@ -54,7 +55,6 @@ public class Record extends Class {
         }
 
         generateDowncallHandles(writer);
-        generateSignalCallbacks(writer);
         
         // Write builder class
         StructBuilder.generateBuilder(writer, this);

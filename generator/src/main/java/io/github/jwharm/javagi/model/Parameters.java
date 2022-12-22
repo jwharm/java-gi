@@ -1,7 +1,5 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -18,20 +16,20 @@ public class Parameters extends GirElement {
     public void generateJavaParameters(Writer writer, boolean pointerForArray) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter()) {
                 continue;
             }
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.generateTypeAndName(writer, pointerForArray);
+            p.writeTypeAndName(writer, pointerForArray);
         }
     }
 
     public void generateJavaParameterNames(Writer writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -59,13 +57,17 @@ public class Parameters extends GirElement {
             if (p.isInstanceParameter()) {
                 writer.write("handle()");
 
+            // user_data
+            } else if (p.isUserDataParameter()) {
+                writer.write("(Addressable) MemoryAddress.NULL");
+
             // Varargs
             } else if (p.varargs) {
                 writer.write("varargs");
 
             // Custom interop
             } else {
-                p.generateInterop(writer, p.name, true);
+                p.marshalJavaToNative(writer, p.name, false);
             }
 
             // Closing parentheses for null-check

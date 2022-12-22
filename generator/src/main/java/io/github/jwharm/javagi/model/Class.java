@@ -63,10 +63,11 @@ public class Class extends RegisteredType {
 //        }
 
         generateMemoryAddressConstructor(writer);
+        generateArrayConstructor(writer);
         generateCastFromGObject(writer);
-        generateConstructors(writer);
         generateMarshal(writer);
-        
+        generateConstructors(writer);
+
         for (Method m : methodList) {
             m.generate(writer, false, false);
         }
@@ -82,8 +83,6 @@ public class Class extends RegisteredType {
         GObjectBuilder.generateBuilder(writer, this);
         
         generateDowncallHandles(writer);
-        
-        generateSignalCallbacks(writer);
 
         generateInjected(writer);
         

@@ -19,7 +19,7 @@ public class GStreamerExample {
     Bus bus;
     int busWatchId;
 
-    private boolean busCall(Bus bus, Message msg, MemoryAddress userData) {
+    private boolean busCall(Bus bus, Message msg) {
 
         if (msg.getType().equals(MessageType.EOS)) {
             GLib.print("End of stream\n");
@@ -39,7 +39,7 @@ public class GStreamerExample {
         return true;
     }
 
-    private void onPadAdded(Element element, Pad pad) {
+    private void onPadAdded(Pad pad) {
 
         // We can now link this pad with the vorbis-decoder sink pad
         GLib.print("Dynamic pad created, linking demuxer/decoder\n");
@@ -86,7 +86,7 @@ public class GStreamerExample {
 
         // We add a message handler
         bus = pipeline.getBus();
-        busWatchId = bus.addWatch(this::busCall, MemoryAddress.NULL);
+        busWatchId = bus.addWatch(this::busCall);
 
         // We add all elements into the pipeline
         // file-source | ogg-demuxer | vorbis-decoder | converter | alsa-output
