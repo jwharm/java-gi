@@ -102,6 +102,6 @@ public class Type extends GirElement {
     }
     
     public boolean isPointer() {
-        return cType != null && cType.endsWith("*");
+        return cType != null && (cType.endsWith("*") || cType.endsWith("gpointer"));
     }
 }

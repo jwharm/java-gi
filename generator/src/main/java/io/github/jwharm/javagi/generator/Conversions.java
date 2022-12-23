@@ -198,7 +198,7 @@ public class Conversions {
     public static String toPanamaJavaType(Type t) {
         if (t == null) {
             return "MemoryAddress";
-        } else if (t.cType != null && t.cType.endsWith("*")) {
+        } else if (t.isPointer()) {
             return "MemoryAddress";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "int";
@@ -288,6 +288,8 @@ public class Conversions {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
+            case "java.lang.foreign.MemoryAddress" -> "Address";
+            case "java.lang.String" -> "String";
             default -> toCamelCase(primitive, true);
         };
     }

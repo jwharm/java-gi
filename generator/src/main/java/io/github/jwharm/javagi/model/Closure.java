@@ -33,14 +33,6 @@ public interface Closure extends CallableType {
         }
         writer.write(");\n");
         writer.write("\n");
-        if (parameters != null && parameters.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
-            writer.write(indent + "    // This callback is NOT supported as it contains an Out parameter!\n");
-            writer.write(indent + "    default MemoryAddress toCallback() {\n");
-            writer.write(indent + "        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write(indent + "    }\n");
-            writer.write(indent + "}\n");
-            return;
-        }
 
         // Generate upcall(...)
         writer.write(indent + "    @ApiStatus.Internal default ");
@@ -59,7 +51,7 @@ public interface Closure extends CallableType {
         // Generate preprocessing statements
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-                p.generateUpcallPreprocessing(writer, 2);
+                p.generateUpcallPreprocessing(writer, this instanceof Callback ? 2 : 3);
             }
         }
 
@@ -68,22 +60,14 @@ public interface Closure extends CallableType {
         if (!isVoid) writer.write("var RESULT = ");
         writer.write("run(");
         if (parameters != null) {
-            boolean first = true;
-            for (Parameter p : parameters.parameterList) {
-                if (p.isUserDataParameter() || p.signalSource) {
-                    continue;
-                }
-                if (!first) writer.write(", ");
-                first = false;
-                p.marshalNativeToJava(writer, p.name, true);
-            }
+            parameters.generateJavaParameters(writer);
         }
         writer.write(");\n");
 
         // Generate postprocessing statements
         if (parameters != null) {
             for (Parameter p : parameters.parameterList) {
-                p.generateUpcallPostprocessing(writer, 2);
+                p.generateUpcallPostprocessing(writer, this instanceof Callback ? 2 : 3);
             }
         }
 
@@ -92,7 +76,7 @@ public interface Closure extends CallableType {
             writer.write(indent + "        return ");
             boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
             if (isMemoryAddress) writer.write("(");
-            returnValue.marshalJavaToNative(writer, "RESULT", false);
+            returnValue.marshalJavaToNative(writer, "RESULT", false, false);
             if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
         }

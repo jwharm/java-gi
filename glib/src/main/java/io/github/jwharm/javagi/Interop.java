@@ -172,69 +172,6 @@ public class Interop {
         return result;
     }
 
-    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
-        MemoryAddress[] result = new MemoryAddress[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.ADDRESS, i);
-        return result;
-    }
-
-    public static boolean[] getBooleanArrayFrom(MemoryAddress address, int length) {
-        boolean[] result = new boolean[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_INT, i) == 1;
-        return result;
-    }
-
-    public static byte[] getByteArrayFrom(MemoryAddress address, int length) {
-        byte[] result = new byte[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.get(valueLayout.C_BYTE, i);
-        return result;
-    }
-
-    public static char[] getCharacterArrayFrom(MemoryAddress address, int length) {
-        char[] result = new char[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_CHAR, i);
-        return result;
-    }
-
-    public static double[] getDoubleArrayFrom(MemoryAddress address, int length) {
-        double[] result = new double[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_DOUBLE, i);
-        return result;
-    }
-
-    public static float[] getFloatArrayFrom(MemoryAddress address, int length) {
-        float[] result = new float[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_FLOAT, i);
-        return result;
-    }
-
-    public static int[] getIntegerArrayFrom(MemoryAddress address, int length) {
-        int[] result = new int[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_INT, i);
-        return result;
-    }
-
-    public static long[] getLongArrayFrom(MemoryAddress address, int length) {
-        long[] result = new long[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_LONG, i);
-        return result;
-    }
-
-    public static short[] getShortArrayFrom(MemoryAddress address, int length) {
-        short[] result = new short[length];
-        for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(valueLayout.C_SHORT, i);
-        return result;
-    }
-
     /**
      * Produce a method handle for a {@code upcall} method in the provided class.
      * @param klazz the callback class

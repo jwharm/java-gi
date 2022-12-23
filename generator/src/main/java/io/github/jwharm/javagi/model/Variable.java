@@ -33,8 +33,8 @@ public class Variable extends GirElement {
         writeName(writer);
     }
 
-    public void marshalJavaToNative(Writer writer, String identifier, boolean pointerForArray) throws IOException {
-        writer.write(marshalJavaToNative(identifier, pointerForArray));
+    public void marshalJavaToNative(Writer writer, String identifier, boolean pointerForArray, boolean upcall) throws IOException {
+        writer.write(marshalJavaToNative(identifier, pointerForArray, upcall));
     }
 
     public void marshalNativeToJava(Writer writer, String identifier, boolean upcall) throws IOException {
@@ -119,9 +119,9 @@ public class Variable extends GirElement {
         return "...".equals(name) ? "varargs" : name;
     }
 
-    private String marshalJavaToNative(String identifier, boolean pointerForArray) {
+    private String marshalJavaToNative(String identifier, boolean pointerForArray, boolean upcall) {
         if (type != null)
-            return marshalJavaToNative(type, identifier);
+            return marshalJavaToNative(type, identifier, upcall);
 
         if (array != null && array.array != null)
             return "(Addressable) MemoryAddress.NULL /* unsupported */";
@@ -134,10 +134,7 @@ public class Variable extends GirElement {
         return "(Addressable) MemoryAddress.NULL /* unsupported */";
     }
 
-    private String marshalJavaToNative(Type type, String identifier) {
-        if (this instanceof Parameter p && p.isOutParameter())
-            return "(Addressable) " + identifier + "POINTER.address()";
-
+    protected String marshalJavaToNative(Type type, String identifier, boolean upcall) {
         if (type.cType != null && type.cType.endsWith("**"))
             return marshalJavaPointerToNative(identifier);
 
@@ -165,9 +162,6 @@ public class Variable extends GirElement {
     private String marshalJavaArrayToNative(Array array, String identifier) {
         Type type = array.type;
         String zeroTerminated = "1".equals(array.zeroTerminated) ? "true" : "false";
-
-        if (this instanceof Parameter p && p.isOutParameter())
-            return "(Addressable) " + identifier + "POINTER.address()";
 
         if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive())
             return "Interop.allocateNativeArray("
@@ -213,9 +207,6 @@ public class Variable extends GirElement {
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
 
-        if (upcall && type.isAliasForPrimitive() && type.isPointer())
-            return identifier + "ALIAS";
-
         if (type.isBitfield() || type.isAliasForPrimitive())
             return "new " + type.qualifiedJavaType + "(" + identifier + ")";
 
@@ -251,7 +242,8 @@ public class Variable extends GirElement {
             return "null /* unsupported */";
 
         if (type.isPrimitive)
-            return "Interop.get" + Conversions.primitiveClassName(type.simpleJavaType) + "ArrayFrom(" + identifier + ", " + array.size() + ")";
+            return "MemorySegment.ofAddress(" + identifier + ", " + array.size()
+                    + ", Interop.getScope()).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         return type.qualifiedJavaType + ".fromNativeArray(" + identifier + ", " + array.size() + ", "
                 + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";

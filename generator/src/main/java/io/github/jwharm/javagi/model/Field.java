@@ -105,7 +105,7 @@ public class Field extends Variable {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
         }
 
-        marshalJavaToNative(writer, this.name, false);
+        marshalJavaToNative(writer, this.name, false, false);
 
         if (checkNull()) {
             writer.write(")");
@@ -139,7 +139,7 @@ public class Field extends Variable {
         }
 
         // Convert the parameter to the C function argument
-        marshalJavaToNative(writer, this.name, false);
+        marshalJavaToNative(writer, this.name, false, false);
 
         if (checkNull()) {
             writer.write(")");

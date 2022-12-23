@@ -65,9 +65,18 @@ public class Parameters extends GirElement {
             } else if (p.varargs) {
                 writer.write("varargs");
 
+            // Preprocessing statement
+            } else if (p.type != null && p.type.isPointer()
+                    && (p.isOutParameter() || p.isAliasForPrimitive())) {
+                writer.write("(Addressable) " + p.name + "POINTER.address()");
+
+            // Preprocessing statement
+            } else if (p.array != null && p.isOutParameter()) {
+                writer.write("(Addressable) " + p.name + "POINTER.address()");
+
             // Custom interop
             } else {
-                p.marshalJavaToNative(writer, p.name, false);
+                p.marshalJavaToNative(writer, p.name, false, false);
             }
 
             // Closing parentheses for null-check
@@ -79,6 +88,30 @@ public class Parameters extends GirElement {
         // GError
         if (throws_ != null) {
             writer.write(",\n                    (Addressable) GERROR");
+        }
+    }
+
+    public void generateJavaParameters(Writer writer) throws IOException {
+        boolean first = true;
+        for (Parameter p : parameterList) {
+            if (p.isUserDataParameter() || p.signalSource) {
+                continue;
+            }
+
+            if (!first) writer.write(", ");
+            first = false;
+
+            if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
+                writer.write(p.name + "ALIAS");
+                continue;
+            }
+
+            if (p.isOutParameter()) {
+                writer.write(p.name + "OUT");
+                continue;
+            }
+
+            p.marshalNativeToJava(writer, p.name, true);
         }
     }
 
