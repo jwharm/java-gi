@@ -63,6 +63,16 @@ public abstract class PatchSet {
         else e.memberList.remove(found);
     }
 
+    protected static void inject(Repository repo, String type, String code) {
+        RegisteredType inst = repo.namespace.registeredTypeMap.get(type);
+        if (inst == null) {
+            System.err.println("Did not inject code into " + type + ": Type not found");
+            return;
+        }
+        if (inst.injected == null) inst.injected = code;
+        else inst.injected += code;
+    }
+
     private static class Empty extends PatchSet {
         @Override
         public void patch(Repository repository) {

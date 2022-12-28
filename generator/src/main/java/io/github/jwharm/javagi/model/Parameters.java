@@ -84,7 +84,7 @@ public class Parameters extends GirElement {
             } else if (p.isDestroyNotify()) {
                 writer.write("Interop.cbDestroyNotifySymbol()");
             } else if (p.isCallbackParameter()) {
-                String className = Conversions.toSimpleJavaType(p.type.getNamespace().name);
+                String className = p.type.getNamespace().globalClassName;
                 writer.write("(Addressable) Linker.nativeLinker().upcallStub(\n");
                 writer.write("                        MethodHandles.lookup().findStatic(" + className + ".Callbacks.class, \"cb" + p.type.simpleJavaType + "\",\n");
                 writer.write("                            MethodType.methodType(");

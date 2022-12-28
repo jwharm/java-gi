@@ -27,7 +27,7 @@ public class Property extends Variable {
         if (doc != null) {
             doc.generate(writer, 2);
         }
-        writer.write("        public Build set" + Conversions.toCamelCase(name, true) + "(");
+        writer.write("        public Builder set" + Conversions.toCamelCase(name, true) + "(");
         generateTypeAndName(writer, false);
         writer.write(") {\n");
         writer.write("            names.add(\"" + propertyName + "\");\n");

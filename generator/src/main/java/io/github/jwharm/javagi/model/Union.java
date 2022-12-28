@@ -19,6 +19,7 @@ public class Union extends RegisteredType {
         generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
+        generateInjected(writer);
         writer.write("}\n");
         writer.write("\n");
     }

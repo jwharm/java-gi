@@ -72,6 +72,8 @@ public class Bitfield extends ValueWrapper {
         );
 
         generateDowncallHandles(writer);
+
+        generateInjected(writer);
         
         writer.write("}\n");
     }

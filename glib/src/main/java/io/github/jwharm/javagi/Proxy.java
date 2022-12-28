@@ -21,7 +21,7 @@ public interface Proxy {
      * Disable the Cleaner that automatically calls {@code g_object_unref} 
      * when this object is garbage collected, and return the ownership 
      * indicator.
-     * @return The ownership indicator of this object
+     * @return the ownership indicator of this object
      */
     @ApiStatus.Internal
     Ownership yieldOwnership();
@@ -29,8 +29,8 @@ public interface Proxy {
     /**
      * Check if the memory address of this proxy instance is equal to the 
      * memory address of the provided proxy instance.
-     * @param proxy Another Proxy instance
-     * @return True when the memory addresses are equal, false otherwise
+     * @param proxy another Proxy instance
+     * @return true when the memory addresses are equal, false otherwise
      */
     default boolean equals(Proxy proxy) {
         return handle() != null && handle().equals(proxy.handle());

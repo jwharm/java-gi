@@ -11,7 +11,7 @@ public abstract class Bitfield {
      * Create a bitfield with the provided integer value
      * @param value the initial value of the bitfield
      */
-    public Bitfield(int value) {
+    protected Bitfield(int value) {
         this.value = value;
     }
 
@@ -39,6 +39,18 @@ public abstract class Bitfield {
      */
     public boolean equals(Bitfield mask) {
         return this.value == mask.value;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Bitfield mask) return equals(mask);
+        if (other instanceof Integer bitfield) return equals(bitfield.intValue());
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return value;
     }
 
     /**

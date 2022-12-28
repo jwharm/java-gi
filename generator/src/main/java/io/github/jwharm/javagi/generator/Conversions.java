@@ -10,11 +10,26 @@ import io.github.jwharm.javagi.model.*;
 
 public class Conversions {
 
-    public static Map<String, String> nsLookupTable = new HashMap<>();
-    public static Map<String, GirElement> cIdentifierLookupTable;
-    public static Map<String, RegisteredType> cTypeLookupTable;
-    public static Map<String, Repository> repositoriesLookupTable;
-    public static Map<String, String> superLookupTable = new HashMap<>();
+    /**
+     * Map to find java packages by namespaces
+     */
+    public static final Map<String, String> nsLookupTable = new HashMap<>();
+    /**
+     * Map to find elements by their {@code c:identifier} attribute
+     */
+    public static final Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
+    /**
+     * Map to find types by their {@code c:type} attribute
+     */
+    public static final Map<String, RegisteredType> cTypeLookupTable = new HashMap<>();
+    /**
+     * Map to find repositories by their name
+     */
+    public static final Map<String, Repository> repositoriesLookupTable = new HashMap<>();
+    /**
+     * Map to find parent types by a types qualified name
+     */
+    public static final Map<String, String> superLookupTable = new HashMap<>();
 
     /**
      * Convert "Gdk" to "org.gtk.gdk"
@@ -33,15 +48,15 @@ public class Conversions {
     /**
      * Convert "GLib.type_name" to "TypeName"
      */
-    public static String toSimpleJavaType(String typeName) {
+    public static String toSimpleJavaType(String typeName, Namespace ns) {
         if (typeName == null) {
             return null;
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {
-            return toCamelCase(typeName.substring(idx + 1), true);
+            return replaceKnownType(toCamelCase(typeName.substring(idx + 1), true), ns);
         } else {
-            return toCamelCase(typeName, true);
+            return replaceKnownType(toCamelCase(typeName, true), ns);
         }
     }
 
@@ -51,7 +66,8 @@ public class Conversions {
      * is prepended to the result. For example, {@code toQualifiedJavaType("button", "org.gtk.gtk")}
      * returns {@code "org.gtk.gtk.Button"}.
      */
-    public static String toQualifiedJavaType(String typeName, String currentPackage) {
+    public static String toQualifiedJavaType(String typeName, Namespace ns) {
+        String currentPackage = ns.packageName;
         if (typeName == null) {
             return null;
         }
@@ -60,11 +76,15 @@ public class Conversions {
         }
         int idx = typeName.indexOf('.');
         if (idx > 0) {
-            String namespace = Conversions.namespaceToJavaPackage(typeName.substring(0, idx));
-            if (namespace == null) System.err.println("Could not get namespace for " + typeName);
-            return namespace + "." + toCamelCase(typeName.substring(idx + 1), true);
+            String nsPrefix = typeName.substring(0, idx);
+            String packageName = Conversions.namespaceToJavaPackage(nsPrefix);
+            if (packageName == null) System.err.println("Could not get namespace for " + typeName);
+            Namespace namespace = ns;
+            Repository repo = repositoriesLookupTable.get(nsPrefix);
+            if (repo != null) namespace = repo.namespace;
+            return packageName + "." + replaceKnownType(toCamelCase(typeName.substring(idx + 1), true), namespace);
         } else {
-            return currentPackage + "." + toCamelCase(typeName, true);
+            return currentPackage + "." + replaceKnownType(toCamelCase(typeName, true), ns);
         }
     }
 
@@ -118,7 +138,7 @@ public class Conversions {
      * For types that are reserved Java keywords, append an underscore.
      */
     private static String replaceKeywords(String name) {
-        final String[] keywords = new String[] {
+        final String[] keywords = {
                 "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
                 "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
@@ -126,7 +146,15 @@ public class Conversions {
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
                 "const", "float", "native", "super", "while", "wait"
         };
-        return (Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name))) ? name + "_" : name;
+        return Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? name + "_" : name;
+    }
+
+    /**
+     * For types that conflict with common Java classes, prefix with Gi
+     */
+    public static String replaceKnownType(String name, Namespace ns) {
+        final String[] types = {"String", "Object", "Builder"};
+        return Arrays.stream(types).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? ns.cIdentifierPrefix + name : name;
     }
 
     /**
@@ -145,7 +173,7 @@ public class Conversions {
     /**
      * Convert C type declaration into Java type declaration.
      */
-    public static String convertToJavaType(String name, boolean qualified, String currentPackage) {
+    public static String convertToJavaType(String name, boolean qualified, Namespace ns) {
         return name == null ? null : switch (name.toLowerCase()) {
             case "gboolean" -> "boolean";
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
@@ -157,10 +185,10 @@ public class Conversions {
             case "none" -> "void";
             case "utf8", "filename" -> "java.lang.String";
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
-            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", currentPackage) : toSimpleJavaType("GLib.Type");
+            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", ns) : toSimpleJavaType("GLib.Type", ns);
             case "valist", "va_list" -> "VaList";
             case "long double" -> "double"; // unsupported data type
-            default -> qualified ? toQualifiedJavaType(name, currentPackage) : toSimpleJavaType(name);
+            default -> qualified ? toQualifiedJavaType(name, ns) : toSimpleJavaType(name, ns);
         };
     }
 
