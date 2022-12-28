@@ -102,8 +102,8 @@ val genSources by tasks.registering {
             source("GstCodecs-1.0", "org.gstreamer.codecs", true, "gstcodecs-1.0")
         ).writeModuleInfo("""
             module org.gstreamer {
-                requires org.jetbrains.annotations;
-                requires org.glib;
+                requires static org.jetbrains.annotations;
+                requires transitive org.glib;
                 %s
             }
         """.trimIndent())
