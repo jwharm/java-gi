@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.gobject.GObject;
 import org.gtk.gobject.GObjects;
 
 import java.lang.foreign.Addressable;
@@ -10,7 +11,7 @@ public class Signal<T> {
     private final long handlerId;
 
     public Signal(Addressable instance, long handlerId) {
-        this.instance = new org.gtk.gobject.GObject(instance, Ownership.UNKNOWN);
+        this.instance = GObject.fromAddress.marshal(instance, Ownership.UNKNOWN);
         this.handlerId = handlerId;
     }
 

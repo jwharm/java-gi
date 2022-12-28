@@ -86,14 +86,8 @@ public class Method extends GirElement implements CallableType {
             writer.write("static ");
         }
 
-        // Annotations
-        if ((getReturnValue().type != null && !getReturnValue().type.isPrimitive && !getReturnValue().type.isVoid())
-                || getReturnValue().array != null) {
-            writer.write(getReturnValue().nullable ? "@Nullable " : "@NotNull ");
-        }
-
         // Return type
-        writer.write(getReturnValue().getReturnType());
+        getReturnValue().writeType(writer, true);
 
         // Method name
         String methodName = Conversions.toLowerCaseJavaName(name);

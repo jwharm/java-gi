@@ -12,11 +12,6 @@ public class Constructor extends Method {
     }
 
     public void generate(Writer writer, boolean isInterface) throws IOException {
-        // Do not generate deprecated constructors.
-        if ("1".equals(deprecated)) {
-            return;
-        }
-
         String privateMethodName = generateConstructorHelper(writer);
 
         writer.write("    \n");

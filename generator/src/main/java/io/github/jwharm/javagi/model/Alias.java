@@ -52,7 +52,7 @@ public class Alias extends ValueWrapper {
             case CLASS, RECORD -> {
                 writer.write("public class " + javaName);
                 if (type.qualifiedJavaType.equals("void")) {
-                    writer.write(" extends org.gtk.gobject.GiObject {\n");
+                    writer.write(" extends org.gtk.gobject.GObject {\n");
                 } else {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
@@ -63,6 +63,8 @@ public class Alias extends ValueWrapper {
                 if (getTargetType() == TargetType.CLASS) {
                     generateCastFromGObject(writer);
                 }
+
+                generateMarshal(writer);
             }
             case INTERFACE, CALLBACK -> {
                 writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
@@ -77,6 +79,7 @@ public class Alias extends ValueWrapper {
                 writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
                 writer.write("\n");
                 generateValueConstructor(writer, type.qualifiedJavaType);
+                generateArrayConstructor(writer);
             }
             default -> {
                 writer.write("public class " + javaName + " {\n");

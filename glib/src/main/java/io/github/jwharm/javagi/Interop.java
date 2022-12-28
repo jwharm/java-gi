@@ -6,16 +6,16 @@ import org.jetbrains.annotations.ApiStatus;
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ApiStatus.Internal
 public class Interop {
 
-    private static final MemorySession session;
-    private static final SegmentAllocator implicitAllocator;
-    private static final SegmentAllocator sessionAllocator;
-    private static final MemorySegment cbDestroyNotify_nativeSymbol;
-    private static final SymbolLookup symbolLookup;
-    private static final Linker linker = Linker.nativeLinker();
+    private final static MemorySession session;
+    private final static SegmentAllocator implicitAllocator;
+    private final static SegmentAllocator sessionAllocator;
+    private final static SymbolLookup symbolLookup;
+    private final static Linker linker = Linker.nativeLinker();
 
     /**
      * Configure the layout of native data types here.<br>
@@ -25,16 +25,6 @@ public class Interop {
      *     this Wikipedia text</a> about the difference between 64-bit data models.
      */
     public static final Layout_LP64 valueLayout = new Layout_LP64();
-
-    /**
-     * This map contains the callbacks used in g_signal_connect. The 
-     * keys are the hashcodes of the callback objects. This hashcode is 
-     * passed to g_signal_connect in the user_data parameter and passed 
-     * as a parameter to the static callback functions. The static 
-     * callback functions use the hashcode to retrieve the user-defined 
-     * callback function from the signalRegistry map, and run it.
-     */
-    public static final Map<Integer, Object> signalRegistry = new HashMap<>();
 
     /**
      * This map contains the objects that are stored in the native struct of
@@ -57,17 +47,7 @@ public class Interop {
         implicitAllocator = SegmentAllocator.implicitAllocator();
         sessionAllocator = SegmentAllocator.newNativeArena(session);
 
-        // Initialize upcall stub for DestroyNotify callback
-        try {
-            MethodType methodType = MethodType.methodType(void.class, MemoryAddress.class);
-            MethodHandle methodHandle = MethodHandles.lookup().findStatic(Interop.class, "cbDestroyNotify", methodType);
-            FunctionDescriptor descriptor = FunctionDescriptor.ofVoid(valueLayout.ADDRESS);
-            cbDestroyNotify_nativeSymbol = Linker.nativeLinker().upcallStub(methodHandle, descriptor, session);
-        } catch (IllegalAccessException | NoSuchMethodException e) {
-            throw new InteropException(e);
-        }
-        
-        // Ensure that the "gobject-2.0" library has been loaded. 
+        // Ensure that the "gobject-2.0" library has been loaded.
         // This is required for the downcall handle to g_signal_connect.
         GObjects.javagi$ensureInitialized();
     }
@@ -134,19 +114,6 @@ public class Interop {
     }
 
     /**
-     * Register a callback in the signalRegistry map. The key is 
-     * the hashcode of the callback.
-     * @param callback Callback to save in the signalRegistry map
-     * @return a native memory segment with the calculated hashcode.
-     *         The memory segment is not automatically released.
-     */
-    public static Addressable registerCallback(Object callback) {
-        int hash = callback.hashCode();
-        signalRegistry.put(hash, callback);
-        return sessionAllocator.allocate(valueLayout.C_INT, hash);
-    }
-
-    /**
      * Register an object in the ObjectRegistry map. The key is
      * the hashcode of the object.
      * @param object The object to save in the objectRegistry map
@@ -159,24 +126,6 @@ public class Interop {
         int hash = object.hashCode();
         objectRegistry.put(hash, object);
         return hash;
-    }
-
-    /**
-     * This callback function will remove a signal callback from the 
-     * signalRegistry map.
-     * @param data The hashcode of the callback
-     */
-    public static void cbDestroyNotify(MemoryAddress data) {
-        int hash = data.get(valueLayout.C_INT, 0);
-        signalRegistry.remove(hash);
-    }
-
-    /**
-     * Return the cached native symbol for cbDestroyNotify(MemoryAddress).
-     * @return the native symbol for cbDestroyNotify(MemoryAddress)
-     */
-    public static MemorySegment cbDestroyNotifySymbol() {
-        return cbDestroyNotify_nativeSymbol;
     }
 
     /**
@@ -204,28 +153,37 @@ public class Interop {
         return null;
     }
 
+    public static String[] getStringArrayFrom(MemoryAddress address) {
+        ArrayList<String> list = new ArrayList<String>();
+        long offset = 0;
+        while (!MemoryAddress.NULL.equals(address)) {
+            list.add(address.getUtf8String(offset));
+            offset += valueLayout.ADDRESS.byteSize();
+        }
+        String[] result = new String[list.size()];
+        list.toArray(result);
+        return result;
+    }
+
+    public static String[] getStringArrayFrom(MemoryAddress address, int length) {
+        String[] result = new String[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getUtf8String(i * valueLayout.ADDRESS.byteSize());
+        return result;
+    }
+
     /**
-     * Marshall the provided object to a memory address.
-     * The object must be an instance of {@link Proxy}, {@link String},
-     * {@link Addressable} or {@code null}.
-     * @param object The object to marshall
-     * @return a memory address referring to the object in native memory.
+     * Produce a method handle for a {@code upcall} method in the provided class.
+     * @param klazz the callback class
+     * @param descriptor the function descriptor for the native function
+     * @return a method handle to use when creating an upcall stub
      */
-    public static Addressable objectToAddress(Object object) {
-        if (object == null) {
-            return MemoryAddress.NULL;
+    public static MethodHandle getHandle(Class<?> klazz, FunctionDescriptor descriptor) {
+        try {
+            return MethodHandles.lookup().findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        if (object instanceof Addressable address) {
-            return address;
-        }
-        if (object instanceof String str) {
-            return allocateNativeString(str);
-        }
-        if (object instanceof Proxy proxy) {
-            return proxy.handle();
-        }
-        String type = object.getClass().getName();
-        throw new IllegalArgumentException("Cannot marshall " + type + " to java.lang.foreign.Addressable");
     }
 
     /**
@@ -244,27 +202,6 @@ public class Interop {
         }
         if (zeroTerminated) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
-        }
-        return memorySegment;
-    }
-
-    /**
-     * Allocates and initializes an (optionally NULL-terminated) array
-     * of memory addresses for the provided objects. The objects are marshalled
-     * to native addresses using {@link #objectToAddress(Object)}.
-     * @param objects Array of Objects that can be marshalled to a native address
-     * @param zeroTerminated Whether to add a NUL at the end the array
-     * @return The memory segment of the native array
-     */
-    public static Addressable allocateNativeArray(Object[] objects, boolean zeroTerminated) {
-        int length = zeroTerminated ? objects.length : objects.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
-        for (int i = 0; i < objects.length; i++) {
-            var address = objectToAddress(objects[i]);
-            memorySegment.setAtIndex(valueLayout.ADDRESS, i, address);
-        }
-        if (zeroTerminated) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, objects.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -437,13 +374,13 @@ public class Interop {
         }
         return memorySegment;
     }
-    
+
     // Adapted from code that was generated by jextract
     private static class VarargsInvoker {
         private static final MethodHandle INVOKE_MH;
         private final MemorySegment symbol;
         private final FunctionDescriptor function;
-        private final static SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
+        private static final SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
 
         private VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
             this.symbol = symbol;

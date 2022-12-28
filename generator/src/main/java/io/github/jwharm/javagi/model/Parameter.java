@@ -11,6 +11,7 @@ public class Parameter extends Variable {
     public final boolean nullable;
 
     public boolean varargs = false;
+    public boolean signalSource = false;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String direction) {
         super(parent);
@@ -47,7 +48,8 @@ public class Parameter extends Variable {
         }
         // Find the parameter that was specified in the value of the 'length' attribute.
         // Ignore the instance parameter.
-        if (params.parameterList.get(0) instanceof InstanceParameter) {
+        Parameter p0 = params.parameterList.get(0);
+        if (p0 instanceof InstanceParameter || p0.signalSource) {
             return params.parameterList.get(index + 1);
         } else {
             return params.parameterList.get(index);
@@ -68,7 +70,11 @@ public class Parameter extends Variable {
         }
         return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
     }
-    
+
+    public boolean isAliasForPrimitive() {
+        return type != null && type.isAliasForPrimitive();
+    }
+
     /**
      * Returns an Ownership enum value (for example, tranfer-ownership="full" -> "Ownership.FULL").
      * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is returned
@@ -81,11 +87,15 @@ public class Parameter extends Variable {
     /**
      * Whether this parameter must receive special treatment as an out-parameter
      * @return True if the direction attribute exists and contains "out", AND the parameter type
-     *         is NOT a Proxy object. (For Proxy object out-parameters, we can simply pas the 
-     *         object's memory address, and don't need to do anything special.
+     *         is NOT a Proxy object or a primitive alias. (For Proxy objects, we can simply pass
+     *         the memory address, and don't need to do anything special. For aliases, we can
+     *         pass the alias object.
      */
     public boolean isOutParameter() {
-        return direction != null && direction.contains("out") && (! isProxy());
+        return direction != null && direction.contains("out")
+                && (type == null || type.isPointer())
+                && (!isProxy())
+                && (!isAliasForPrimitive());
     }
 
     public boolean isInstanceParameter() {
@@ -97,13 +107,14 @@ public class Parameter extends Variable {
     }
 
     public boolean isUserDataParameter() {
-        return (type != null) && name.toLowerCase().endsWith("data")
+        return (type != null)
+                && (name.toLowerCase().endsWith("data") || name.equalsIgnoreCase("userdata2"))
                 && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
     }
-
-    public boolean isDestroyNotify() {
-        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
-    }
+//
+//    public boolean isDestroyNotify() {
+//        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
+//    }
 
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
@@ -116,7 +127,7 @@ public class Parameter extends Variable {
      */
     public boolean checkNull() {
         return nullable 
-                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify()
+                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
                         || (type != null && type.isPrimitive && (! type.isPointer()))));
     }
     
@@ -132,7 +143,7 @@ public class Parameter extends Variable {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
-        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isDestroyNotify() || varargs
+        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (! nullable) {
                 writer.write(tab(indent) + "java.util.Objects.requireNonNull(" + name 
@@ -141,13 +152,8 @@ public class Parameter extends Variable {
         }
         
         // Generate pointer allocation
-        if (isOutParameter()) {
+        if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             writer.write(tab(indent) + "MemorySegment " + name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(type) + ");\n");
-            
-        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
-            String typeStr = type.girElementInstance.type.simpleJavaType;
-            typeStr = Conversions.primitiveClassName(typeStr);
-            writer.write(tab(indent) + "Pointer" + typeStr + " " + name + "POINTER = new Pointer" + typeStr + "(" + name + ".getValue());\n");
         }
     }
     
@@ -158,7 +164,7 @@ public class Parameter extends Variable {
      * @throws IOException Thrown when an error occurs while writing to the file
      */
     public void generatePostprocessing(Writer writer, int indent) throws IOException {
-        if (isOutParameter()) {
+        if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             if (array == null) {
                 // First the regular (non-array) out-parameters. These could include an out-parameter with 
                 // the length of an array out-parameter, so we have to process these first.
@@ -166,14 +172,14 @@ public class Parameter extends Variable {
                 if (checkNull()) {
                     writer.write("if (" + name + " != null) ");
                 }
-                writer.write(name + ".set(");
+                writer.write(name + (isAliasForPrimitive() ? ".setValue(" : ".set("));
                 String identifier = name + "POINTER.get(" + Conversions.getValueLayout(type) + ", 0)";
-                if (type.isPrimitive && type.isPointer()) {
+                if (isAliasForPrimitive() || (type.isPrimitive && type.isPointer())) {
                     writer.write(identifier);
                     if (type.isBoolean()) writer.write(" != 0");
                     writer.write(");\n");
                 } else {
-                    writer.write(getNewInstanceString(type, identifier, false) + ");\n");
+                    writer.write(marshalNativeToJava(type, identifier, false) + ");\n");
                 }
             } else {
                 // Secondly, process the array out parameters
@@ -189,13 +195,11 @@ public class Parameter extends Variable {
                     writer.write(tab(indent) + "for (int I = 0; I < " + len + "; I++) {\n");
                     writer.write(tab(indent + 1) + "var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
                     writer.write(tab(indent + 1) + name + "ARRAY[I] = ");
-                    writer.write(getNewInstanceString(array.type, "OBJ", false) + ";\n");
+                    writer.write(marshalNativeToJava(array.type, "OBJ", false) + ";\n");
                     writer.write(tab(indent) + "}\n");
                     writer.write(tab(indent) + name + ".set(" + name + "ARRAY);\n");
                 }
             }
-        } else if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
-            writer.write(tab(indent + 1) + name + ".setValue(" + name + "POINTER.get());\n");
         }
         
         // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
@@ -205,6 +209,61 @@ public class Parameter extends Variable {
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             writer.write(tab(indent) + (isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
+        }
+    }
+
+    public void generateUpcallPreprocessing(Writer writer, int indent) throws IOException {
+        if (isAliasForPrimitive() && type.isPointer()) {
+            String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
+            writer.write(tab(indent) + type.qualifiedJavaType + " " + name + "ALIAS = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
+        } else if (isOutParameter()) {
+            if (type != null) {
+                String typeStr = type.qualifiedJavaType;
+                if (type.isPrimitive) typeStr = Conversions.primitiveClassName(typeStr);
+                writer.write(tab(indent) + "Out<" + typeStr + "> " + name + "OUT = new Out<>(");
+                if (type.isPrimitive || type.isAliasForPrimitive()) {
+                    String layout = Conversions.getValueLayout(type);
+                    writer.write(name + ".get(" + layout + ", 0)");
+                    if (type.isBoolean()) writer.write(" != 0");
+                    writer.write(");\n");
+                } else {
+                    writer.write(marshalNativeToJava(type, name, true) + ");\n");
+                }
+            }
+            if (array != null) {
+                writer.write(tab(indent));
+                writeType(writer, false);
+                writer.write(" " + name + "OUT = new Out<>(");
+                if (array.type.isPrimitive || array.type.isAliasForPrimitive()) {
+                    String layout = Conversions.getValueLayout(array.type);
+                    writer.write(name + ".get(" + layout + ", 0)");
+                    if (array.type.isBoolean()) writer.write(" != 0");
+                    writer.write(");\n");
+                } else {
+                    marshalNativeToJava(writer, name, true);
+                    writer.write(");\n");
+                }
+            }
+        }
+    }
+
+    public void generateUpcallPostprocessing(Writer writer, int indent) throws IOException {
+        if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
+            String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
+            writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + name + "ALIAS.getValue());\n");
+        } else if (isOutParameter()) {
+            if (type != null) {
+                String typeStr = Conversions.getValueLayout(type);
+                String identifier = marshalJavaToNative(type, name + "OUT.get()", true);
+                if (type.isPrimitive || type.isAliasForPrimitive()) {
+                    identifier = name + "OUT.get()";
+                    if (type.isBoolean()) writer.write(" ? 1 : 0");
+                }
+                writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
+            }
+            if (array != null) {
+                // TODO: Copy the array from the Out<> parameter to the provided memory address.
+            }
         }
     }
 }

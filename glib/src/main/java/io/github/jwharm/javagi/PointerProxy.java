@@ -2,7 +2,6 @@ package io.github.jwharm.javagi;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
-import java.util.function.BiFunction;
 
 /**
  * This type of Pointer object points to a GObject-derived object 
@@ -11,14 +10,14 @@ import java.util.function.BiFunction;
  */
 public class PointerProxy<T extends Proxy> extends Pointer<T> {
 
-    private final BiFunction<Addressable, Ownership, T> make;
+    private final Marshal<Addressable, T> make;
 
     /**
      * Create a pointer to an existing memory address.
      * @param address the memory address
      * @param make a function to create an instance
      */
-    public PointerProxy(MemoryAddress address, BiFunction<Addressable, Ownership, T> make) {
+    public PointerProxy(MemoryAddress address, Marshal<Addressable, T> make) {
         super(address);
         this.make = make;
     }
@@ -54,6 +53,6 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
                 Interop.valueLayout.ADDRESS.byteSize() * index
         );
         // Call the constructor of the proxy object and return the created instance.
-        return make.apply(ref, Ownership.UNKNOWN);
+        return make.marshal(ref, Ownership.UNKNOWN);
     }
 }
