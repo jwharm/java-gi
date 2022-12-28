@@ -121,7 +121,7 @@ val genSources by tasks.registering {
             source("GModule-2.0", "org.gtk.gmodule", true)
         ).writeModuleInfo("""
             module org.glib {
-                requires org.jetbrains.annotations;
+                requires static org.jetbrains.annotations;
                 exports io.github.jwharm.javagi;
                 %s
             }
