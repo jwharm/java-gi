@@ -61,7 +61,7 @@ public class Gtk4Example {
                 widget.queueDraw();
             }
             return GLib.SOURCE_CONTINUE;
-        }, null);
+        }, () -> {});
 
         box.append(button);
         window.setChild(box);

@@ -42,7 +42,7 @@ public class Variable extends GirElement {
     }
 
     private String getAnnotations(Type type) {
-        if ((! type.isPrimitive) && (this instanceof Parameter p))
+        if ((! type.isPrimitive) && (!type.isVoid()) && (this instanceof Parameter p))
             return p.nullable ? "@Nullable " : "@NotNull ";
 
         return "";
