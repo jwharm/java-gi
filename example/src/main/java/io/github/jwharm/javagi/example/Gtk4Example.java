@@ -4,21 +4,9 @@ import org.gtk.gio.ApplicationFlags;
 import org.gtk.glib.GLib;
 import org.gtk.gtk.*;
 
-import java.util.*;
-
 public class Gtk4Example {
 
-    private static final Queue<Runnable> SCHEDULED = new ArrayDeque<>();
-
-    public static void schedule(Runnable task) {
-        SCHEDULED.add(Objects.requireNonNull(task));
-    }
-
-
     private final Application app;
-    private final List<String> list;
-    private final ListIndex listIndex;
-    private final Random rnd = new Random();
 
     public void activate() {
         var window = new ApplicationWindow(app);
@@ -31,60 +19,57 @@ public class Gtk4Example {
 
         var button = Button.newWithLabel("Hello world! 30");
         button.onClicked(() -> {
-            list.clear();
-            int len = rnd.nextInt(100, 1000);
-            for (int i = 0; i < len; i++) list.add(randomString());
-            listIndex.setSize(list.size());
+            MessageDialog dialog = new MessageDialog(
+                    window,
+                    DialogFlags.MODAL.or(DialogFlags.DESTROY_WITH_PARENT),
+                    MessageType.INFO,
+                    ButtonsType.OK_CANCEL,
+                    null
+            );
+            dialog.setTitle("Hello!");
+            dialog.setMarkup("This is some **content**");
+            dialog.onResponse(responseId -> {
+                switch (ResponseType.of(responseId)) {
+                    case OK -> {
+                        window.close();
+                    }
+                    case CANCEL -> {
+                        System.out.println("Cancel");
+                    }
+                }
+                dialog.close();
+            });
+            dialog.show();
         });
 
+        var state = new Object() {
+            long tickStart;
+            long second;
+        };
+
+        button.addTickCallback((widget, frameClock) -> {
+            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
+            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
+            if (sec > 30) {
+                button.setLabel("Hello world!");
+                System.out.println("Done counting");
+                return GLib.SOURCE_REMOVE;
+            }
+            if (sec > state.second) {
+                state.second = sec;
+                button.setLabel("Hello world! " + (30 - sec));
+                widget.queueDraw();
+            }
+            return GLib.SOURCE_CONTINUE;
+        }, () -> {});
+
         box.append(button);
-
-        box.append(new ListView(listIndex.inSelectionModel(), new CListEntryFactory(list)));
-
         window.setChild(box);
         window.show();
     }
 
-    private String randomString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0, len = rnd.nextInt(5, 10); i < len; i++) {
-            sb.append((char) rnd.nextInt('a', 'z' + 1));
-        }
-        return sb.toString();
-    }
-
-    private static class CListEntryFactory extends SignalListItemFactory {
-        public CListEntryFactory(List<String> entries) {
-            onSetup(object -> {
-                ListItem.castFrom(object).setChild(new Label(""));
-            });
-            onBind(object -> {
-                ListItem item = ListItem.castFrom(object);
-                String text = entries.get(ListIndex.toIndex(item));
-                Label.castFrom(Objects.requireNonNull(item.getChild())).setLabel(text);
-            });
-        }
-    }
-
     public Gtk4Example(String[] args) {
         app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
-
-        GLib.idleAdd(() -> {
-            Runnable r;
-            while ((r = SCHEDULED.poll()) != null) {
-                try {
-                    r.run();
-                } catch (Throwable t) {
-                    System.err.println("Could not run scheduled task");
-                    t.printStackTrace();
-                }
-            }
-            return true;
-        });
-
-        list = new ArrayList<>();
-        listIndex = new ListIndex();
-
         app.onActivate(this::activate);
         app.run(args.length, args);
     }
