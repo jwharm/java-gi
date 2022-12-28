@@ -39,7 +39,7 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void generateCParameters(Writer writer, String throws_) throws IOException {
+    public void marshalJavaToNative(Writer writer, String throws_) throws IOException {
         int counter = 0;
 
         for (Parameter p : parameterList) {
@@ -91,7 +91,7 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void generateJavaParameters(Writer writer) throws IOException {
+    public void marshalNativeToJava(Writer writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
             if (p.isUserDataParameter() || p.signalSource) {
@@ -146,6 +146,40 @@ public class Parameters extends GirElement {
             if (p.array != null) {
                 p.generatePostprocessing(writer, indent);
             }
+        }
+    }
+
+    /**
+     * Generate preprocessing statements for all parameters in an upcall
+     * @param writer The source code file writer
+     * @param indent How many tabs to indent
+     * @throws IOException Thrown when an error occurs while writing
+     */
+    public void generateUpcallPreprocessing(Writer writer, int indent) throws IOException {
+        // First the regular (non-array) out-parameters. These could include an out-parameter with
+        // the length of an array out-parameter, so we have to process these first.
+        for (Parameter p : parameterList) {
+            if (p.array == null) {
+                p.generateUpcallPreprocessing(writer, indent);
+            }
+        }
+        // Secondly, process the array out parameters
+        for (Parameter p : parameterList) {
+            if (p.array != null) {
+                p.generateUpcallPreprocessing(writer, indent);
+            }
+        }
+    }
+
+    /**
+     * Generate postprocessing statements for all parameters in an upcall
+     * @param writer The source code file writer
+     * @param indent How many tabs to indent
+     * @throws IOException Thrown when an error occurs while writing
+     */
+    public void generateUpcallPostprocessing(Writer writer, int indent) throws IOException {
+        for (Parameter p : parameterList) {
+            p.generateUpcallPostprocessing(writer, indent);
         }
     }
 }

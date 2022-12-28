@@ -57,12 +57,15 @@ public class Variable extends GirElement {
 
         if (array != null && array.type != null)
             return getAnnotations(array.type)
-                    + ((array.size() != null)
+                    + ((array.size(false) != null)
                     ? getArrayType(array.type)
                     : (pointerForArray ? getPointerType(array.type) : getArrayType(array.type)));
 
         if (this instanceof Parameter p && p.varargs)
             return "java.lang.Object...";
+
+        if (this instanceof Field f && f.callback != null)
+            return f.callbackType;
 
         return "java.lang.Object /* unsupported */";
     }
@@ -82,6 +85,12 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive && type.isPointer())
             return "Pointer" + Conversions.primitiveClassName(type.simpleJavaType);
+
+        if (type.isBitfield() && type.isPointer())
+            return "PointerBitfield<" + type.qualifiedJavaType + ">";
+
+        if (type.isEnum() && type.isPointer())
+            return "PointerEnumeration<" + type.qualifiedJavaType + ">";
 
         return type.qualifiedJavaType;
     }
@@ -127,16 +136,20 @@ public class Variable extends GirElement {
             return "(Addressable) MemoryAddress.NULL /* unsupported */";
 
         if (array != null && array.type != null)
-            return (array.size() != null)
+            return (array.size(upcall) != null)
                     ? marshalJavaArrayToNative(array, identifier)
-                    : (pointerForArray ? marshalJavaPointerToNative(identifier) : marshalJavaArrayToNative(array, identifier));
+                    : (pointerForArray ? marshalJavaPointerToNative(array.type, identifier, upcall)
+                    : marshalJavaArrayToNative(array, identifier));
+
+        if (this instanceof Field f && f.callback != null)
+            return identifier + ".toCallback()";
 
         return "(Addressable) MemoryAddress.NULL /* unsupported */";
     }
 
     protected String marshalJavaToNative(Type type, String identifier, boolean upcall) {
         if (type.cType != null && type.cType.endsWith("**"))
-            return marshalJavaPointerToNative(identifier);
+            return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
             return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
@@ -144,7 +157,7 @@ public class Variable extends GirElement {
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
 
-        if (type.isPrimitive && type.isPointer())
+        if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum()))
             return identifier + ".handle()";
 
         if (type.isBoolean())
@@ -175,7 +188,10 @@ public class Variable extends GirElement {
         return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ")";
     }
 
-    private String marshalJavaPointerToNative(String identifier) {
+    private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
+        if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
+            return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
+
         return identifier + ".handle()";
     }
 
@@ -184,7 +200,7 @@ public class Variable extends GirElement {
             if (type.cType != null && type.cType.endsWith("**"))
                 return marshalNativetoJavaPointer(type, identifier);
 
-            if (type.isPrimitive && type.isPointer())
+            if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum()))
                 return marshalNativetoJavaPointer(type, identifier);
 
             return marshalNativeToJava(type, identifier, upcall);
@@ -194,8 +210,8 @@ public class Variable extends GirElement {
             return "null /* unsupported */";
 
         if (array != null && array.type != null)
-            return (array.size() == null)
-                    ? marshalNativetoJavaPointer(array.type, identifier) : marshalNativeToJavaArray(array, identifier);
+            return (array.size(upcall) == null)
+                    ? marshalNativetoJavaPointer(array.type, identifier) : marshalNativeToJavaArray(array, identifier, upcall);
 
         return "null /* unsupported */";
     }
@@ -223,14 +239,14 @@ public class Variable extends GirElement {
         return identifier;
     }
 
-    private String marshalNativeToJavaArray(Array array, String identifier) {
+    private String marshalNativeToJavaArray(Array array, String identifier, boolean upcall) {
         Type type = array.type;
 
         if ("java.lang.String".equals(type.qualifiedJavaType))
-            return "Interop.getStringArrayFrom(" + identifier + ", " + array.size() + ")";
+            return "Interop.getStringArrayFrom(" + identifier + ", " + array.size(upcall) + ")";
 
         if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType))
-            return "Interop.getAddressArrayFrom(" + identifier + ", " + array.size() + ")";
+            return "Interop.getAddressArrayFrom(" + identifier + ", " + array.size(upcall) + ")";
 
         if (type.isEnum())
             return "null /* unsupported */";
@@ -242,10 +258,10 @@ public class Variable extends GirElement {
             return "null /* unsupported */";
 
         if (type.isPrimitive)
-            return "MemorySegment.ofAddress(" + identifier + ", " + array.size()
+            return "MemorySegment.ofAddress(" + identifier + ", " + array.size(upcall)
                     + ", Interop.getScope()).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
-        return type.qualifiedJavaType + ".fromNativeArray(" + identifier + ", " + array.size() + ", "
+        return type.qualifiedJavaType + ".fromNativeArray(" + identifier + ", " + array.size(upcall) + ", "
                 + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
     }
 
@@ -257,7 +273,7 @@ public class Variable extends GirElement {
             return "new PointerAddress(" + identifier + ")";
 
         if (type.isEnum())
-            return "new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)";
+            return "new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::of)";
 
         if (type.isBitfield())
             return "new PointerBitfield<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)";
@@ -266,7 +282,7 @@ public class Variable extends GirElement {
             return "new Pointer" + Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) + "(" + identifier + ")";
 
         if (type.isBoolean())
-            return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + " == 1)";
+            return "new PointerBoolean(" + identifier + ")";
 
         if (type.isPrimitive)
             return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";

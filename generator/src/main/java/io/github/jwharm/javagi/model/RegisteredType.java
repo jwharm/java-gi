@@ -223,7 +223,7 @@ public abstract class RegisteredType extends GirElement {
     }
 
     protected void generateArrayConstructor(Writer writer) throws IOException {
-        String layout = (this instanceof Record) ? "getMemoryLayout()" : "Interop.valueLayout.ADDRESS";
+        String layout = (this instanceof Record || this instanceof Union) ? "getMemoryLayout()" : "Interop.valueLayout.ADDRESS";
         boolean primitiveAlias = false;
         if (this instanceof Alias a) {
             layout = Conversions.getValueLayout(a.type);
@@ -236,7 +236,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    @ApiStatus.Internal\n");
         writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length, Ownership ownership) {\n");
         writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
-        writer.write("        long bytesSize = length * " + layout + ".byteSize();\n");
+        writer.write("        long bytesSize = " + layout + ".byteSize();\n");
         writer.write("        for (int i = 0; i < length; i++) {\n");
         if (primitiveAlias) {
             if ("utf8".equals(type.name)) {

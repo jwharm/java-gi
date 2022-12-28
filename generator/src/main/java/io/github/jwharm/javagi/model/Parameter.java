@@ -7,18 +7,18 @@ import io.github.jwharm.javagi.generator.Conversions;
 
 public class Parameter extends Variable {
 
-    public final String transferOwnership, allowNone, direction;
+    public final String transferOwnership;
     public final boolean nullable;
+    public final String direction;
 
     public boolean varargs = false;
     public boolean signalSource = false;
 
-    public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String direction) {
+    public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String optional, String direction) {
         super(parent);
         this.name = Conversions.toLowerCaseJavaName(name);
         this.transferOwnership = transferOwnership;
-        this.nullable = "1".equals(nullable);
-        this.allowNone = allowNone;
+        this.nullable = "1".equals(nullable) || "1".equals(allowNone) || "1".equals(optional);
         this.direction = direction;
     }
 
@@ -87,11 +87,15 @@ public class Parameter extends Variable {
     /**
      * Whether this parameter must receive special treatment as an out-parameter
      * @return True if the direction attribute exists and contains "out", AND the parameter type
-     *         is NOT a Proxy object or a primitive alias. (For Proxy objects, we can simply pass
-     *         the memory address, and don't need to do anything special. For aliases, we can
-     *         pass the alias object.
+     *         is NOT a Proxy object, a primitive alias, or an array with unknown size. (For Proxy
+     *         objects, we can simply pass the memory address, and don't need to do anything
+     *         special. For aliases, we can pass the alias object. Arrays with unknown size are
+     *         already marshalled to Pointer objects.
      */
     public boolean isOutParameter() {
+        if (array != null && array.size(false) == null)
+            return false;
+
         return direction != null && direction.contains("out")
                 && (type == null || type.isPointer())
                 && (!isProxy())
@@ -183,7 +187,7 @@ public class Parameter extends Variable {
                 }
             } else {
                 // Secondly, process the array out parameters
-                String len = array.size();
+                String len = array.size(false);
                 String valuelayout = Conversions.getValueLayout(array.type);
                 if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
@@ -227,22 +231,19 @@ public class Parameter extends Variable {
                     if (type.isBoolean()) writer.write(" != 0");
                     writer.write(");\n");
                 } else {
-                    writer.write(marshalNativeToJava(type, name, true) + ");\n");
+                    String identifier = name;
+                    if (type.isEnum() || type.isBitfield()) {
+                        identifier = name + ".get(Interop.valueLayout.C_INT, 0)";
+                    }
+                    writer.write(marshalNativeToJava(type, identifier, true) + ");\n");
                 }
             }
             if (array != null) {
                 writer.write(tab(indent));
                 writeType(writer, false);
                 writer.write(" " + name + "OUT = new Out<>(");
-                if (array.type.isPrimitive || array.type.isAliasForPrimitive()) {
-                    String layout = Conversions.getValueLayout(array.type);
-                    writer.write(name + ".get(" + layout + ", 0)");
-                    if (array.type.isBoolean()) writer.write(" != 0");
-                    writer.write(");\n");
-                } else {
-                    marshalNativeToJava(writer, name, true);
-                    writer.write(");\n");
-                }
+                marshalNativeToJava(writer, name, true);
+                writer.write(");\n");
             }
         }
     }
@@ -257,7 +258,10 @@ public class Parameter extends Variable {
                 String identifier = marshalJavaToNative(type, name + "OUT.get()", true);
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
                     identifier = name + "OUT.get()";
-                    if (type.isBoolean()) writer.write(" ? 1 : 0");
+                    if (type.isBoolean()) identifier += " ? 1 : 0";
+                }
+                if (type.isEnum() || type.isBitfield()) {
+                    identifier = name + "OUT.get().getValue()";
                 }
                 writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
             }

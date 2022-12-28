@@ -152,7 +152,7 @@ public class Method extends GirElement implements CallableType {
         // Marshall the parameters to the native types
         if (parameters != null) {
             writer.write("(");
-            parameters.generateCParameters(writer, throws_);
+            parameters.marshalJavaToNative(writer, throws_);
             writer.write(")");
         } else {
             writer.write("()");

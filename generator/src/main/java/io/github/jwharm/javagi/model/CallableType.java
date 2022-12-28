@@ -15,7 +15,7 @@ public interface CallableType {
             boolean isSignal = this instanceof Signal;
             for (Parameter p : ps.parameterList) {
                 // We don't support out parameter arrays with unknown length
-                if (p.isOutParameter() && p.array != null && p.array.size() == null) return false;
+                if (p.isOutParameter() && p.array != null && p.array.size(false) == null) return false;
 
                 // Check for signals with out parameters or arrays
                 if (isSignal) {

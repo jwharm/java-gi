@@ -172,6 +172,13 @@ public class Interop {
         return result;
     }
 
+    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
+        MemoryAddress[] result = new MemoryAddress[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(Interop.valueLayout.ADDRESS, i);
+        return result;
+    }
+
     /**
      * Produce a method handle for a {@code upcall} method in the provided class.
      * @param klazz the callback class

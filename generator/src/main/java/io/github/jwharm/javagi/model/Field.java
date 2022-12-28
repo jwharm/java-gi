@@ -10,7 +10,7 @@ public class Field extends Variable {
 
     public final String readable, isPrivate;
     public Callback callback;
-    public final String fieldName;
+    public final String fieldName, callbackType;
 
     public Field(GirElement parent, String name, String readable, String isPrivate) {
         super(parent);
@@ -18,35 +18,30 @@ public class Field extends Variable {
         this.name = Conversions.toLowerCaseJavaName(name);
         this.readable = readable;
         this.isPrivate = isPrivate;
+        this.callbackType = Conversions.toCamelCase(this.name, true) + "Callback";
     }
     
     /*
      * Generates a getter and setter method for a field in (the MemoryLayout of) a C struct.
-     * Manipulating these fields directly isn't exactly a best practice, but there are some 
-     * valid use cases IMO for at least some field getters.
-     * The getters receive the name of the field followed by "$get()" or "$set(value)".
-     * 
-     * I didn't put too much effort into this, so any special cases (like arrays or callbacks) 
-     * are not supported (i.e. will not generate a getter or setter).
      */
     public void generate(Writer writer) throws IOException {
-        // Don't try to generate a getter for array fields yet
-        if (array != null) {
-            return;
-        }
-        // Don't generate a getter for a "disguised" record (often private data)
+        // Don't generate a getter/setter for a "disguised" record (often private data)
         if (type != null
                 && type.girElementInstance != null
                 && type.girElementInstance instanceof Record r 
                 && "1".equals(r.disguised)) {
             return;
         }
-        // Don't generate a getter for a field that is marked as not readable
+        // Don't generate a getter/setter for a field that is marked as not readable
         if ("0".equals(readable)) {
             return;
         }
-        // Don't generate a getter for a private field
+        // Don't generate a getter/setter for a private field
         if ("1".equals(isPrivate)) {
+            return;
+        }
+        // Don't generate a getter/setter for padding/reserved space
+        if ("padding".equals(name) || "reserved".equals(name)) {
             return;
         }
 
@@ -60,8 +55,14 @@ public class Field extends Variable {
             if (n.equals(setter)) setter += "_";
         }
 
-        if (type != null) {
-            // Generate getter method
+        // Generate a inner callback class declarations for callback fields
+        if (callback != null) {
+            writer.write("    \n");
+            callback.generateFunctionalInterface(writer, callbackType, 1);
+        }
+
+        // Generate getter method
+        if (callback == null) {
             writer.write("    \n");
             writer.write("    /**\n");
             writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
@@ -71,23 +72,25 @@ public class Field extends Variable {
             writeType(writer, true);
             writer.write(" " + getter + "() {\n");
 
-            if (!type.isPointer() && (type.isClass() || type.isInterface())) {
+            if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
                 writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("        return ");
                 marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
                 writer.write(";\n");
                 writer.write("    }\n");
-                return;
+            } else {
+                String memoryType = getMemoryType();
+                if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
+                writer.write("        var RESULT = (" + memoryType + ") getMemoryLayout()\n");
+                writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
+                writer.write("        return ");
+                marshalNativeToJava(writer, "RESULT", false);
+                writer.write(";\n");
+                writer.write("    }\n");
             }
-            writer.write("        var RESULT = (" + getMemoryType() + ") getMemoryLayout()\n");
-            writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-            writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
-            writer.write("        return ");
-            marshalNativeToJava(writer, "RESULT", false);
-            writer.write(";\n");
-            writer.write("    }\n");
         }
-        
+
         // Generate setter method
         writer.write("    \n");
         writer.write("    /**\n");
@@ -95,7 +98,7 @@ public class Field extends Variable {
         writer.write("     * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
         writer.write("     */\n");
         writer.write("    public void " + setter + "(");
-        writeTypeAndName(writer, true);
+        writeTypeAndName(writer, false);
         writer.write(") {\n");
         writer.write("        getMemoryLayout()\n");
         writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
@@ -241,7 +244,7 @@ public class Field extends Variable {
      * @return the native type
      */
     public String getMemoryType(Type type) {
-        if (type.isPrimitive && type.isPointer()) {
+        if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum())) {
             return "MemoryAddress";
         }
         if (type.isBoolean() || type.isBitfield() || type.isEnum()) {

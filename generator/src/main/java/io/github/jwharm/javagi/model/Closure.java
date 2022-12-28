@@ -7,10 +7,10 @@ import java.io.Writer;
 
 public interface Closure extends CallableType {
 
-    default void generateFunctionalInterface(Writer writer, String javaName) throws IOException {
+    default void generateFunctionalInterface(Writer writer, String javaName, int tabs) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
-        String indent = (this instanceof Signal) ? "    " : "";
+        String indent = " ".repeat(tabs * 4);
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
         writer.write(indent + "@FunctionalInterface\n");
@@ -50,9 +50,7 @@ public interface Closure extends CallableType {
 
         // Generate preprocessing statements
         if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                p.generateUpcallPreprocessing(writer, this instanceof Callback ? 2 : 3);
-            }
+            parameters.generateUpcallPreprocessing(writer, tabs + 2);
         }
 
         // Call run()
@@ -60,15 +58,13 @@ public interface Closure extends CallableType {
         if (!isVoid) writer.write("var RESULT = ");
         writer.write("run(");
         if (parameters != null) {
-            parameters.generateJavaParameters(writer);
+            parameters.marshalNativeToJava(writer);
         }
         writer.write(");\n");
 
         // Generate postprocessing statements
         if (parameters != null) {
-            for (Parameter p : parameters.parameterList) {
-                p.generateUpcallPostprocessing(writer, this instanceof Callback ? 2 : 3);
-            }
+            parameters.generateUpcallPostprocessing(writer, tabs + 2);
         }
 
         // Return statement
@@ -102,7 +98,7 @@ public interface Closure extends CallableType {
                 writer.write(Conversions.toPanamaMemoryLayout(p.type));
             }
         }
-        writer.write(indent + ");\n");
+        writer.write(");\n");
         writer.write(indent + "    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(" + javaName + ".class, DESCRIPTOR);\n");
         writer.write(indent + "    \n");
 
