@@ -28,7 +28,7 @@ public class Property extends Variable {
             doc.generate(writer, 2);
         }
         writer.write("        public Builder set" + Conversions.toCamelCase(name, true) + "(");
-        generateTypeAndName(writer, false);
+        writeTypeAndName(writer, false);
         writer.write(") {\n");
         writer.write("            names.add(\"" + propertyName + "\");\n");
         writer.write("            values.add(org.gtk.gobject.Value.create(" + name + "));\n");

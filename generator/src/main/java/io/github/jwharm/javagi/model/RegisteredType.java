@@ -12,7 +12,7 @@ public abstract class RegisteredType extends GirElement {
     public final String parentClass;
     public final String cType;
     public final String version;
-    private final String qualifiedName;
+    protected final String qualifiedName;
 
     public String injected = null;
 
@@ -184,7 +184,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
         writer.write("     */\n");
         writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.GObject gobject) {\n");
-        writer.write("        if (org.gtk.gobject.GObjects.typeCheckInstanceIsA(new org.gtk.gobject.TypeInstance(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
+        writer.write("        if (org.gtk.gobject.GObjects.typeCheckInstanceIsA(org.gtk.gobject.TypeInstance.fromAddress.marshal(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
         writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
         writer.write("        } else {\n");
         writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
@@ -209,8 +209,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     * @param address   The memory address of the native object\n");
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
         writer.write("     */\n");
-        writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public " + javaName + "(Addressable address, Ownership ownership) {\n");
+        writer.write("    protected " + javaName + "(Addressable address, Ownership ownership) {\n");
 
         if (initiallyUnowned) {
             writer.write("        super(address, Ownership.FULL);\n");
@@ -220,10 +219,47 @@ public abstract class RegisteredType extends GirElement {
         } else {
             writer.write("        super(address, ownership);\n");
         }
-
-
-
         writer.write("    }\n");
+    }
+
+    protected void generateArrayConstructor(Writer writer) throws IOException {
+        String layout = (this instanceof Record) ? "getMemoryLayout()" : "Interop.valueLayout.ADDRESS";
+        boolean primitiveAlias = false;
+        if (this instanceof Alias a) {
+            layout = Conversions.getValueLayout(a.type);
+            if (a.getTargetType().equals(Alias.TargetType.VALUE)) {
+                primitiveAlias = true;
+            }
+        }
+
+        writer.write("    \n");
+        writer.write("    @ApiStatus.Internal\n");
+        writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length, Ownership ownership) {\n");
+        writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
+        writer.write("        long bytesSize = length * " + layout + ".byteSize();\n");
+        writer.write("        for (int i = 0; i < length; i++) {\n");
+        if (primitiveAlias) {
+            if ("utf8".equals(type.name)) {
+                writer.write("            array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
+            } else {
+                writer.write("            array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
+            }
+
+        } else {
+            writer.write("            array[i] = " + javaName + ".fromAddress.marshal(address.addOffset(i * bytesSize), ownership);\n");
+        }
+        writer.write("        }\n");
+        writer.write("        return array;\n");
+        writer.write("    }\n");
+    }
+
+    protected void generateMarshal(Writer writer) throws IOException {
+        writer.write("    \n");
+        writer.write("    @ApiStatus.Internal\n");
+        String name = javaName + (this instanceof Interface ? "Impl" : "");
+        writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = (input, ownership) -> "
+                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input, ownership);\n"
+        );
     }
 
     protected void generateEnsureInitialized(Writer writer) throws IOException {
@@ -277,24 +313,6 @@ public abstract class RegisteredType extends GirElement {
             }
             for (Function f : functionList) {
                 f.generateMethodHandle(writer, isInterface);
-            }
-            writer.write("    }\n");
-        }
-    }
-    
-    /**
-     * Generates an inner class Callbacks with static signal callback functions that will be used for upcalls
-     * @param writer The writer for the source code
-     * @throws IOException Thrown by {@code writer.write()}
-     */
-    protected void generateSignalCallbacks(Writer writer) throws IOException {
-        boolean isInterface = this instanceof Interface;
-        if (! signalList.isEmpty()) {
-            writer.write("    \n");
-            writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
-            writer.write("static class Callbacks {\n");
-            for (Signal s : signalList) {
-                s.generateStaticCallback(writer, isInterface);
             }
             writer.write("    }\n");
         }

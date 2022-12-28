@@ -24,8 +24,10 @@ public class Interface extends RegisteredType {
 
         writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.Proxy {\n");
 
+        generateArrayConstructor(writer);
         generateCastFromGObject(writer);
-        
+        generateMarshal(writer);
+
         for (Method m : methodList) {
             m.generate(writer, true, false);
         }
@@ -39,7 +41,6 @@ public class Interface extends RegisteredType {
         }
         
         generateDowncallHandles(writer);
-        generateSignalCallbacks(writer);
         generateImplClass(writer);
 
         generateInjected(writer);

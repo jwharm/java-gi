@@ -198,7 +198,7 @@ public class Conversions {
     public static String toPanamaJavaType(Type t) {
         if (t == null) {
             return "MemoryAddress";
-        } else if (t.cType != null && t.cType.endsWith("*")) {
+        } else if (t.isPointer()) {
             return "MemoryAddress";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "int";
@@ -208,6 +208,32 @@ public class Conversions {
             return t.girElementInstance.type.simpleJavaType;
         } else {
             return "MemoryAddress";
+        }
+    }
+
+    public static String getMarshal(Type t) {
+        if (t == null) {
+            return "Marshal.passthrough";
+        } else if ("java.lang.foreign.MemoryAddress".equals(t.qualifiedJavaType)) {
+            return "Marshal.passthrough";
+        } else if ("java.lang.String".equals(t.qualifiedJavaType)) {
+            return "Marshal.stringToAddress";
+        } else if (t.cType != null && t.cType.endsWith("*")) {
+            return "Marshal.passthrough";
+        } else if (t.isBoolean()) {
+            return "Marshal.booleanToInteger";
+        } else if (t.isEnum()) {
+            return "Marshal.enumerationToInteger";
+        } else if (t.isBitfield()) {
+            return "Marshal.bitfieldToInteger";
+        } else if (t.isPrimitive || "void".equals(t.simpleJavaType)) {
+            return "Marshal.passthrough";
+        } else if (t.isAliasForPrimitive()) {
+            return "Marshal.aliasToPrimitive";
+        } else if (t.isCallback()) {
+            return "Marshal.callbackToAddress";
+        } else {
+            return t.qualifiedJavaType + ".fromAddress";
         }
     }
 
@@ -262,6 +288,8 @@ public class Conversions {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
+            case "java.lang.foreign.MemoryAddress" -> "Address";
+            case "java.lang.String" -> "String";
             default -> toCamelCase(primitive, true);
         };
     }

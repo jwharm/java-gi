@@ -216,8 +216,11 @@ public class GirParser extends DefaultHandler {
                 current = newParameter;
             }
             case "parameters" -> {
-                Parameters newParameters = new Parameters(current);
-                ((CallableType) current).setParameters(newParameters);
+                Parameters newParameters = ((CallableType) current).getParameters();
+                if (newParameters == null) {
+                    newParameters = new Parameters(current);
+                    ((CallableType) current).setParameters(newParameters);
+                }
                 current = newParameters;
             }
             case "prerequisite" -> {

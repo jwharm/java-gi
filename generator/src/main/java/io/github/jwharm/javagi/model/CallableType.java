@@ -11,40 +11,25 @@ public interface CallableType {
     /** Performs a series of checks to determine if this call can be mapped to C. */
     default boolean isSafeToBind() {
         Parameters ps = getParameters();
-        ReturnValue rv = getReturnValue();
-
         if (ps != null) {
+            boolean isSignal = this instanceof Signal;
+            for (Parameter p : ps.parameterList) {
+                // We don't support out parameter arrays with unknown length
+                if (p.isOutParameter() && p.array != null && p.array.size() == null) return false;
 
-            if (ps.parameterList.stream().anyMatch(p ->
-
-                       // We don't support out parameter arrays with unknown length
-                       (p.isOutParameter() && p.array != null && p.array.size() == null)
-            )) {
-                return false;
-            }
-
-            // We don't support methods with a callback parameter but no user_data parameter
-            if (ps.parameterList.stream().anyMatch(Parameter::isCallbackParameter)
-                    && ps.parameterList.stream().noneMatch(Parameter::isUserDataParameter)
-            ) {
-                return false;
-            }
-        }
-        
-        // Check for signals with out parameters or arrays
-        if (this instanceof Signal && ps != null) {
-            if (ps.parameterList.stream().anyMatch(Parameter::isOutParameter)) {
-                return false;
-            }
-            if (ps.parameterList.stream().anyMatch(p -> p.array != null)) {
-                return false;
+                // Check for signals with out parameters or arrays
+                if (isSignal) {
+                    if (p.isOutParameter()) return false;
+                    if (p.array != null) return false;
+                }
             }
         }
 
-        if (rv.type == null) return true;
-
-        // We don't support callback return values yet
-        if (rv.type.isCallback()) return false;
+        ReturnValue rv = getReturnValue();
+        if (rv.type != null) {
+            // We don't support callback return values yet
+            if (rv.type.isCallback()) return false;
+        }
 
         return true;
     }

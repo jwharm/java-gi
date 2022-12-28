@@ -103,8 +103,8 @@ val genSources by tasks.registering {
             })
         ).writeModuleInfo("""
             module org.gtk {
-                requires org.jetbrains.annotations;
-                requires org.glib;
+                requires static org.jetbrains.annotations;
+                requires transitive org.glib;
                 %s
             }
         """.trimIndent())
