@@ -35,9 +35,10 @@ public interface Closure extends CallableType {
         writer.write("\n");
 
         // Generate upcall(...)
-        writer.write(indent + "    @ApiStatus.Internal default ");
-        writer.write(isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type));
-        writer.write(" upcall(");
+        String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
+        if ("MemoryAddress".equals(returnType))
+            returnType = "Addressable";
+        writer.write(indent + "    @ApiStatus.Internal default " + returnType + " upcall(");
         if (parameters != null) {
             boolean first = true;
             for (Parameter p : parameters.parameterList) {
