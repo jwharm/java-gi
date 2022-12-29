@@ -1,6 +1,8 @@
 package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
+import io.github.jwharm.javagi.model.Class;
+import io.github.jwharm.javagi.model.Record;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,6 +36,8 @@ public class BindingsGenerator {
         }
         // Create a class file for global declarations
         generateGlobals(gir, natives, basePath);
+
+        generateTypeRegister(gir, natives, basePath);
     }
 
     /**
@@ -56,6 +60,7 @@ public class BindingsGenerator {
                 for (String libraryName : natives) {
                     writer.write("        System.loadLibrary(\"" + libraryName + "\");\n");
                 }
+                writer.write("        JavaGITypeRegister.register();\n");
                 writer.write("    }\n");
                 writer.write("    \n");
             }
@@ -86,6 +91,31 @@ public class BindingsGenerator {
                 writer.write("    }\n");
             }
 
+            writer.write("}\n");
+        }
+    }
+
+    public static void generateTypeRegister(Repository gir, Set<String> natives, Path basePath) throws IOException {
+        String className = Conversions.convertToJavaType("JavaGITypeRegister", false, gir.namespace);
+        try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {
+            writer.write("package " + gir.namespace.packageName + ";\n");
+            writer.write("\n");
+            RegisteredType.generateImportStatements(writer);
+            writer.write("final class " + className + " {\n");
+            writer.write("    \n");
+            writer.write("    static void register() {\n");
+
+            for (Class c : gir.namespace.classList)
+                writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+
+            for (Interface c : gir.namespace.interfaceList)
+                writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+
+            for (Alias c : gir.namespace.aliasList)
+                if (c.getTargetType() == Alias.TargetType.CLASS || c.getTargetType() == Alias.TargetType.INTERFACE)
+                    writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+
+            writer.write("    }\n");
             writer.write("}\n");
         }
     }

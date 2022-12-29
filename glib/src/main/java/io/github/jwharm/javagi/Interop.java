@@ -1,12 +1,13 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.glib.Type;
+import org.gtk.gobject.GObject;
 import org.gtk.gobject.GObjects;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @ApiStatus.Internal
 public class Interop {
@@ -17,6 +18,8 @@ public class Interop {
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
+    public static final HashMap<Type, Marshal> typeRegister;
+
     /**
      * Configure the layout of native data types here.<br>
      * On Linux, this should be set to {@link Layout_LP64}.<br>
@@ -26,19 +29,8 @@ public class Interop {
      */
     public static final Layout_LP64 valueLayout = new Layout_LP64();
 
-    /**
-     * This map contains the objects that are stored in the native struct of
-     * user-derived GObject subclasses in Java. The actual object is stored in
-     * this hashmap, while the hashcode is stored in native memory.
-     * <p>
-     * The methods in the {@link Derived} interface can be used to set, get and
-     * clear the object. Be sure to call {@link Derived#clearValueObject()} when
-     * the object can be cleared, because otherwise the object will still be
-     * referenced from {@code objectRegistry} and will not be garbage collected.
-     */
-    public static final Map<Integer, Object> objectRegistry = new HashMap<>();
-    
     static {
+        typeRegister = new HashMap<>();
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
         
@@ -111,21 +103,6 @@ public class Interop {
         return symbolLookup.lookup(name).map(addr -> {
             return variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc);
         }).orElse(null);
-    }
-
-    /**
-     * Register an object in the ObjectRegistry map. The key is
-     * the hashcode of the object.
-     * @param object The object to save in the objectRegistry map
-     * @return the hashcode of the object, or 0 if the object is {@code null}
-     */
-    public static int registerValueObject(Object object) {
-        if (object == null) {
-            return 0;
-        }
-        int hash = object.hashCode();
-        objectRegistry.put(hash, object);
-        return hash;
     }
 
     /**

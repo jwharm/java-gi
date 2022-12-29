@@ -1,15 +1,9 @@
 package io.github.jwharm.javagi;
 
-import org.gtk.gobject.GObjects;
-import org.gtk.glib.Type;
-import org.gtk.gobject.TypeFlags;
-import org.gtk.gobject.TypeInfo;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.ref.Cleaner;
 
 /**
