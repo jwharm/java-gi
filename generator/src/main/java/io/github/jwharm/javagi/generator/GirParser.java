@@ -190,11 +190,17 @@ public class GirParser extends DefaultHandler {
                 current = newMember;
             }
             case "method" -> {
-                Method newMethod = new Method(current, attr.getValue("name"),
-                        attr.getValue("c:identifier"), attr.getValue("deprecated"),
-                        attr.getValue("throws"));
-                current.methodList.add(newMethod);
-                current = newMethod;
+                if (attr.getValue("shadowed-by") != null) {
+                    // Do not generate shadowed methods
+                    skip = qName;
+                } else {
+                    Method newMethod = new Method(current, attr.getValue("name"),
+                            attr.getValue("c:identifier"), attr.getValue("deprecated"),
+                            attr.getValue("throws"), attr.getValue("shadowed-by"),
+                            attr.getValue("shadows"));
+                    current.methodList.add(newMethod);
+                    current = newMethod;
+                }
             }
             case "namespace" -> {
                 Namespace newNamespace = new Namespace(current, attr.getValue("name"), attr.getValue("version"),

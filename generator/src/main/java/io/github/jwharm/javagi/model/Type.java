@@ -11,7 +11,7 @@ public class Type extends GirElement {
     public String girElementType;
 
     /** Example: gboolean, const char*, GdkRectangle* */
-    public final String cType;
+    public String cType;
 
     /** This is the type name from the gir file. For example: Gdk.Rectangle */
     public String qualifiedName;

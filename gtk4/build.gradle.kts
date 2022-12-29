@@ -92,6 +92,9 @@ val genSources by tasks.registering {
                     renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
                     renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
                     renameMethod(repo, "PrintSettings", "get", "get_string")
+                    // This method returns void in interface ActionGroup, but returns boolean in class Widget.
+                    // Subclasses from Widget that implement ActionGroup throw a compile error.
+                    setReturnVoid(repo, "Widget", "activate_action");
                 }
             }),
             source("Adw-1", "org.gnome.adw", true, "adwaita-1", patches = object: PatchSet() {
