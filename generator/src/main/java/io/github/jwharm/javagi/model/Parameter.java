@@ -9,6 +9,7 @@ public class Parameter extends Variable {
 
     public final String transferOwnership;
     public final boolean nullable;
+    public final boolean notnull;
     public final String direction;
 
     public boolean varargs = false;
@@ -19,6 +20,7 @@ public class Parameter extends Variable {
         this.name = Conversions.toLowerCaseJavaName(name);
         this.transferOwnership = transferOwnership;
         this.nullable = "1".equals(nullable) || "1".equals(allowNone) || "1".equals(optional);
+        this.notnull = "0".equals(nullable) || "0".equals(allowNone) || "0".equals(optional);
         this.direction = direction;
     }
 
@@ -149,7 +151,7 @@ public class Parameter extends Variable {
         // Don't null-check parameters that are hidden from the Java API, or primitive values
         if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
-            if (! nullable) {
+            if (notnull) {
                 writer.write(tab(indent) + "java.util.Objects.requireNonNull(" + name 
                         + ", \"" + "Parameter '" + name + "' must not be null\");\n");
             }
