@@ -72,7 +72,7 @@ public interface Closure extends CallableType {
         if (!isVoid) {
             writer.write(indent + "        return ");
             boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
-            if (isMemoryAddress) writer.write("(");
+            if (isMemoryAddress) writer.write("RESULT == null ? MemoryAddress.NULL.address() : (");
             returnValue.marshalJavaToNative(writer, "RESULT", false, false);
             if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
