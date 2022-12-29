@@ -50,12 +50,6 @@ public class Signal extends Method implements Closure {
         
         writer.write(qualifiedName + " handler) {\n");
         
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
-        
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(), Interop.allocateNativeString(\"" + name + "\"");

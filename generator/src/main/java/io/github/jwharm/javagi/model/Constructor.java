@@ -37,13 +37,6 @@ public class Constructor extends Method {
         }
         writer.write(" {\n");
         
-        if (! isSafeToBind()) {
-            writer.write("        this(null, null); // avoid compiler error\n");
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
-        
         writer.write("        super(" + privateMethodName);
         if (parameters != null) {
             writer.write("(");
@@ -83,12 +76,6 @@ public class Constructor extends Method {
         }
         writer.write(" {\n");
         
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
-        
         writer.write("        return new " + clazz.javaName + "(" + privateMethodName);
         if (parameters != null) {
             writer.write("(");
@@ -127,13 +114,6 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        
-        // Currently unsupported constructor method: throw an exception
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return methodName;
-        }
         
         // Generate preprocessing statements for all parameters
         if (parameters != null) {

@@ -119,13 +119,6 @@ public class Method extends GirElement implements CallableType {
         }
         writer.write(" {\n");
         
-        // Currently unsupported method: throw an exception
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
-        
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
             parameters.generatePreprocessing(writer, 2);
