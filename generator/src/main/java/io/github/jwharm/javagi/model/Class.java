@@ -63,7 +63,6 @@ public class Class extends RegisteredType {
 //        }
 
         generateMemoryAddressConstructor(writer);
-        generateArrayConstructor(writer);
         generateCastFromGObject(writer);
         generateMarshal(writer);
         generateConstructors(writer);

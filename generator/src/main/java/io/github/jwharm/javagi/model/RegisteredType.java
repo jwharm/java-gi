@@ -222,37 +222,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write("    }\n");
     }
 
-    protected void generateArrayConstructor(Writer writer) throws IOException {
-        String layout = (this instanceof Record || this instanceof Union) ? "getMemoryLayout()" : "Interop.valueLayout.ADDRESS";
-        boolean primitiveAlias = false;
-        if (this instanceof Alias a) {
-            layout = Conversions.getValueLayout(a.type);
-            if (a.getTargetType().equals(Alias.TargetType.VALUE)) {
-                primitiveAlias = true;
-            }
-        }
-
-        writer.write("    \n");
-        writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length, Ownership ownership) {\n");
-        writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
-        writer.write("        long bytesSize = " + layout + ".byteSize();\n");
-        writer.write("        for (int i = 0; i < length; i++) {\n");
-        if (primitiveAlias) {
-            if ("utf8".equals(type.name)) {
-                writer.write("            array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
-            } else {
-                writer.write("            array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
-            }
-
-        } else {
-            writer.write("            array[i] = " + javaName + ".fromAddress.marshal(address.addOffset(i * bytesSize), ownership);\n");
-        }
-        writer.write("        }\n");
-        writer.write("        return array;\n");
-        writer.write("    }\n");
-    }
-
     protected void generateMarshal(Writer writer) throws IOException {
         writer.write("    \n");
         writer.write("    @ApiStatus.Internal\n");

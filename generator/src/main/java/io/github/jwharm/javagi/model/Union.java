@@ -19,7 +19,6 @@ public class Union extends RegisteredType {
         generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
-        generateArrayConstructor(writer);
         generateMarshal(writer);
         generateInjected(writer);
         writer.write("}\n");

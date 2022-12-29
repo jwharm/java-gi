@@ -38,7 +38,6 @@ public class Record extends Class {
         }
 
         generateMemoryAddressConstructor(writer);
-        generateArrayConstructor(writer);
         generateMarshal(writer);
         generateConstructors(writer);
 

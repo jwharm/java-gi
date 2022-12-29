@@ -10,14 +10,14 @@ import java.lang.foreign.MemoryAddress;
  */
 public class PointerProxy<T extends Proxy> extends Pointer<T> {
 
-    private final Marshal<Addressable, T> make;
+    private final Marshal<Addressable, ? extends T> make;
 
     /**
      * Create a pointer to an existing memory address.
      * @param address the memory address
      * @param make a function to create an instance
      */
-    public PointerProxy(MemoryAddress address, Marshal<Addressable, T> make) {
+    public PointerProxy(MemoryAddress address, Marshal<Addressable, ? extends T> make) {
         super(address);
         this.make = make;
     }

@@ -24,7 +24,6 @@ public class Interface extends RegisteredType {
 
         writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.Proxy {\n");
 
-        generateArrayConstructor(writer);
         generateCastFromGObject(writer);
         generateMarshal(writer);
 

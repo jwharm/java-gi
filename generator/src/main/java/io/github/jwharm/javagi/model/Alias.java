@@ -88,7 +88,25 @@ public class Alias extends ValueWrapper {
         generateInjected(writer);
         writer.write("}\n");
     }
-    
+
+    protected void generateArrayConstructor(Writer writer) throws IOException {
+        String layout = Conversions.getValueLayout(type);
+        writer.write("    \n");
+        writer.write("    @ApiStatus.Internal\n");
+        writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length) {\n");
+        writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
+        writer.write("        long bytesSize = " + layout + ".byteSize();\n");
+        writer.write("        for (int i = 0; i < length; i++) {\n");
+        if ("utf8".equals(type.name)) {
+            writer.write("            array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
+        } else {
+            writer.write("            array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
+        }
+        writer.write("        }\n");
+        writer.write("        return array;\n");
+        writer.write("    }\n");
+    }
+
     @Override
     public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
         if (getTargetType() == TargetType.VALUE) {

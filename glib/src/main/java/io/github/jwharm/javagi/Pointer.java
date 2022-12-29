@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.*;
+import java.lang.reflect.Array;
 
 /**
  * A Pointer object represents a pointer to a value or array, where native 
@@ -66,5 +67,19 @@ public abstract class Pointer<T> implements Iterable<T> {
     @Override
     public PointerIterator<T> iterator() {
         return new PointerIterator<>(this);
+    }
+
+    /**
+     * Read an array of values from the pointer
+     * @param length length of the array
+     * @param clazz type of the array elements
+     * @return the array
+     */
+    public T[] toArray(int length, Class<T> clazz) {
+        T[] array = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            array[i] = get(i);
+        }
+        return array;
     }
 }
