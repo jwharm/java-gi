@@ -14,12 +14,16 @@ public class Class extends RegisteredType {
             String typeStruct, String version, String abstract_) {
         
         super(parent, name, parentClass, cType, version);
+        this.typeName = typeName;
+        this.getType = getType;
         this.typeStruct = typeStruct;
         this.abstract_ = abstract_;
-        
+
         // Generate a function declaration to retrieve the type of this object.
         if (! (this instanceof Record)) {
-            registerGetTypeFunction(getType);
+            if (! (name.startsWith("ParamSpec") && "intern".equals(getType))) {
+                registerGetTypeFunction(getType);
+            }
         }
     }
 
@@ -55,7 +59,6 @@ public class Class extends RegisteredType {
         }
         writer.write(" {\n");
 
-        generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);
 //        for (Field f : fieldList) {
@@ -84,7 +87,17 @@ public class Class extends RegisteredType {
         generateDowncallHandles(writer);
 
         generateInjected(writer);
-        
+
+        generateEnsureInitialized(writer);
+
+        // Generate a custom getType() function for ParamSpec
+        if (name.startsWith("ParamSpec") && "intern".equals(getType)) {
+            writer.write("\n");
+            writer.write("    public static org.gtk.glib.Type getType() {\n");
+            writer.write("        return org.gtk.glib.Type.G_TYPE_PARAM;\n");
+            writer.write("    }\n");
+        }
+
         writer.write("}\n");
     }
 }

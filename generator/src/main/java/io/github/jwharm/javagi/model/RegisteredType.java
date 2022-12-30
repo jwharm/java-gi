@@ -204,7 +204,7 @@ public abstract class RegisteredType extends GirElement {
             writer.write("     * <p>\n");
             writer.write("     * Because " +javaName + " is an {@code InitiallyUnowned} instance, when \n");
             writer.write("     * {@code ownership == Ownership.NONE}, the ownership is set to {@code FULL} \n");
-            writer.write("     * and a call to {@code refSink()} is executed to sink the floating reference.\n");
+            writer.write("     * and a call to {@code g_object_ref_sink()} is executed to sink the floating reference.\n");
         }
         writer.write("     * @param address   The memory address of the native object\n");
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
@@ -214,7 +214,11 @@ public abstract class RegisteredType extends GirElement {
         if (initiallyUnowned) {
             writer.write("        super(address, Ownership.FULL);\n");
             writer.write("        if (ownership == Ownership.NONE) {\n");
-            writer.write("            refSink();\n");
+            writer.write("            try {\n");
+            writer.write("                var RESULT = (MemoryAddress) Interop.g_object_ref_sink.invokeExact(address);\n");
+            writer.write("            } catch (Throwable ERR) {\n");
+            writer.write("                throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+            writer.write("            }\n");
             writer.write("        }\n");
         } else {
             writer.write("        super(address, ownership);\n");

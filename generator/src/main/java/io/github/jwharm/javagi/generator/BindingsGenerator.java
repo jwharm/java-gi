@@ -59,13 +59,13 @@ public class BindingsGenerator {
                 writer.write("    static {\n");
                 for (String libraryName : natives) {
                     writer.write("        System.loadLibrary(\"" + libraryName + "\");\n");
+                    writer.write("        JavaGITypeRegister.register();\n");
                 }
-                writer.write("        JavaGITypeRegister.register();\n");
                 writer.write("    }\n");
                 writer.write("    \n");
             }
             writer.write("    @ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
- 
+
             for (Constant constant : gir.namespace.constantList) {
                 constant.generate(writer);
             }

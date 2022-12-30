@@ -45,6 +45,17 @@ public class Interop {
     }
 
     /**
+     * Get the type of a GObject instance. Comparable to the G_TYPE_FROM_INSTANCE macro in C.
+     * @param address the memory address of a GObject instance
+     * @return the type (GType) of the object
+     */
+    public static Type getType(MemoryAddress address) {
+        MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
+        long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
+        return new Type(g_type);
+    }
+
+    /**
      * The method handle for g_signal_connect_data is used by all
      * generated signal methods.
      */
@@ -59,6 +70,16 @@ public class Interop {
                     valueLayout.ADDRESS,
                     valueLayout.C_INT
             ),
+            false
+    );
+
+    /**
+     * The method handle for g_object_ref_sink is used to sink
+     * floating references of new GInitiallyUnowned instances.
+     */
+    public static final MethodHandle g_object_ref_sink = downcallHandle(
+            "g_object_ref_sink",
+            FunctionDescriptor.of(valueLayout.ADDRESS, valueLayout.ADDRESS),
             false
     );
 
