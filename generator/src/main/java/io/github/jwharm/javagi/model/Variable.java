@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
 
@@ -229,8 +230,12 @@ public class Variable extends GirElement {
         if (type.isCallback())
             return "null /* Unsupported parameter type */";
 
-        if (type.isClass() || type.isAlias() || type.isUnion() || type.isInterface())
+        if (type.isRecord() || type.isUnion())
             return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", "
+                    + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+
+        if (type.isClass() || type.isInterface() || type.isAlias())
+            return "(" + type.qualifiedJavaType + ") java.util.Objects.requireNonNullElse(Interop.typeRegister.get(Interop.getType(" + identifier + ")), " + type.qualifiedJavaType + ".fromAddress).marshal(" + identifier + ", "
                     + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
 
         if (type.isBoolean())

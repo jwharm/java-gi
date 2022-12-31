@@ -79,13 +79,7 @@ val genSources by tasks.registering {
             source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", true, "gdk_pixbuf-2.0"),
             source("Gdk-4.0", "org.gtk.gdk", true),
             source("Graphene-1.0", "org.gtk.graphene", true, "graphene-1.0"),
-            source("Gsk-4.0", "org.gtk.gsk", true, patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // These types are defined in the GIR, but unavailable by default
-                    removeType(repo, "BroadwayRenderer")
-                    removeType(repo, "BroadwayRendererClass")
-                }
-            }),
+            source("Gsk-4.0", "org.gtk.gsk", true),
             source("Gtk-4.0", "org.gtk.gtk", true, "gtk-4", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type

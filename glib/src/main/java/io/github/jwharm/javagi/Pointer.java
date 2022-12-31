@@ -82,4 +82,5 @@ public abstract class Pointer<T> implements Iterable<T> {
         }
         return array;
     }
+
 }
