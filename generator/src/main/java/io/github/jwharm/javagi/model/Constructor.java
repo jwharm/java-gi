@@ -50,7 +50,15 @@ public class Constructor extends Method {
     }
 
     public void generateNamed(Writer writer, boolean isInterface) throws IOException {
-        RegisteredType clazz = (RegisteredType) parent;
+        RegisteredType constructed = (RegisteredType) parent;
+
+        // Return value should always be the constructed type, but it is often specified in the GIR as
+        // one of its parent types. For example, button#newWithLabel returns a Widget instead of a Button.
+        // We override this for constructors, to always return the constructed type.
+        returnValue.type = new Type(returnValue, constructed.name, constructed.cType + "*");
+        returnValue.type.init(constructed.name);
+        returnValue.type.girElementInstance = constructed;
+        returnValue.type.girElementType = constructed.getClass().getSimpleName();
 
         String privateMethodName = generateConstructorHelper(writer);
 
@@ -63,7 +71,7 @@ public class Constructor extends Method {
             writer.write("    @Deprecated\n");
         }
         
-        writer.write("    public static " + clazz.javaName + " " + Conversions.toLowerCaseJavaName(name));
+        writer.write("    public static " + constructed.javaName + " " + Conversions.toLowerCaseJavaName(name));
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameters(writer, false);
@@ -75,8 +83,8 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        
-        writer.write("        return new " + clazz.javaName + "(" + privateMethodName);
+
+        writer.write("        var RESULT = " + privateMethodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameterNames(writer);
@@ -84,7 +92,10 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(", " + returnValue.transferOwnership() + ");\n");
+        writer.write(";\n");
+        writer.write("        return ");
+        returnValue.marshalNativeToJava(writer, "RESULT", false);
+        writer.write(";\n");
         writer.write("    }\n");
     }
 
@@ -98,7 +109,7 @@ public class Constructor extends Method {
         // Method name
         String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("    \n");
-        writer.write("    private static Addressable " + methodName);
+        writer.write("    private static MemoryAddress " + methodName);
 
         // Parameters
         if (parameters != null) {
@@ -126,7 +137,7 @@ public class Constructor extends Method {
         }
         
         // Generate the return type
-        writer.write("        Addressable RESULT;\n");
+        writer.write("        MemoryAddress RESULT;\n");
         
         // The method call is wrapped in a try-catch block
         writer.write("        try {\n");
