@@ -56,14 +56,7 @@ public class Alias extends ValueWrapper {
                 } else {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
-                
                 generateMemoryAddressConstructor(writer);
-                
-                // Do not generate a cast from GObject for records
-                if (getTargetType() == TargetType.CLASS) {
-                    generateCastFromGObject(writer);
-                }
-
                 generateMarshal(writer);
             }
             case INTERFACE, CALLBACK -> {

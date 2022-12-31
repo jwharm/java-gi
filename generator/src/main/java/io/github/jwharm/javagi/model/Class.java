@@ -21,7 +21,7 @@ public class Class extends RegisteredType {
 
         // Generate a function declaration to retrieve the type of this object.
         if (! (this instanceof Record)) {
-            if (! (name.startsWith("ParamSpec") && "intern".equals(getType))) {
+            if (! "intern".equals(getType)) {
                 registerGetTypeFunction(getType);
             }
         }
@@ -59,14 +59,10 @@ public class Class extends RegisteredType {
         }
         writer.write(" {\n");
 
+        generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);
-//        for (Field f : fieldList) {
-//            f.generate(writer);
-//        }
-
         generateMemoryAddressConstructor(writer);
-        generateCastFromGObject(writer);
         generateMarshal(writer);
         generateConstructors(writer);
 
@@ -82,16 +78,14 @@ public class Class extends RegisteredType {
             s.generate(writer, false);
         }
 
-        GObjectBuilder.generateBuilder(writer, this);
-        
+        if (isInstanceOf("org.gtk.gobject.GObject")) {
+            GObjectBuilder.generateBuilder(writer, this);
+        }
         generateDowncallHandles(writer);
-
         generateInjected(writer);
 
-        generateEnsureInitialized(writer);
-
         // Generate a custom getType() function for ParamSpec
-        if (name.startsWith("ParamSpec") && "intern".equals(getType)) {
+        if (isInstanceOf("org.gtk.gobject.ParamSpec") && "intern".equals(getType)) {
             writer.write("\n");
             writer.write("    public static org.gtk.glib.Type getType() {\n");
             writer.write("        return org.gtk.glib.Type.G_TYPE_PARAM;\n");

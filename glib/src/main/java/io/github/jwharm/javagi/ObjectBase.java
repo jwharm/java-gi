@@ -23,11 +23,7 @@ public abstract class ObjectBase implements Proxy {
     private Cleaner.Cleanable cleanable;
 
     // Method handle that is used for the g_object_unref native call
-    private static final MethodHandle g_object_unref = Interop.downcallHandle(
-            "g_object_unref",
-            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
-            false
-    );
+    private static MethodHandle g_object_unref;
 
     // The State class is used by the Cleaner
     private static class State implements Runnable {
@@ -44,7 +40,14 @@ public abstract class ObjectBase implements Proxy {
                 try {
                     // Debug logging
                     // System.out.println("g_object_unref " + address);
-                    
+
+                    if (g_object_unref == null)
+                        g_object_unref = Interop.downcallHandle(
+                                "g_object_unref",
+                                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                                false
+                        );
+
                     g_object_unref.invokeExact(address);
                     
                 } catch (Throwable err) {
