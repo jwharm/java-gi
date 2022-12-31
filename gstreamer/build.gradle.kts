@@ -10,7 +10,7 @@ plugins {
 val generatedPath = buildDir.resolve("generated/sources/javagi/java/main")
 
 dependencies {
-    implementation(project(":glib"))
+    api(project(":glib"))
 }
 
 sourceSets {
