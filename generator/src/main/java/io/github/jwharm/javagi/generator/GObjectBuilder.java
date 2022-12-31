@@ -60,8 +60,8 @@ public class GObjectBuilder {
                 + "            return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n"
                 + "                " + c.javaName + ".getType(),\n"
                 + "                names.size(),\n"
-                + "                names.toArray(new String[0]),\n"
-                + "                values.toArray(new org.gtk.gobject.Value[0])\n"
+                + "                names.toArray(new String[names.size()]),\n"
+                + "                values.toArray(new org.gtk.gobject.Value[names.size()])\n"
                 + "            );\n"
                 + "        }\n");
         
