@@ -100,7 +100,7 @@ public interface Closure extends CallableType {
             }
         }
         writer.write(");\n");
-        writer.write(indent + "    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(" + javaName + ".class, DESCRIPTOR);\n");
+        writer.write(indent + "    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
         writer.write(indent + "    \n");
 
         // Generate toCallback()
