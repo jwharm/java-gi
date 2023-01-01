@@ -13,6 +13,13 @@ public class LibLoad {
         if (OS_WINDOWS) LIB_SUFFIX = ".dll";
         else if (OS_MACOS) LIB_SUFFIX = ".dylib";
         else LIB_SUFFIX = ".so";
+
+        String javagiPath = System.getProperty("javagi.path");
+        String javaPath = System.getProperty("java.library.path");
+        if (javagiPath != null) {
+            if (javaPath == null) System.setProperty("java.library.path", javagiPath);
+            else System.setProperty("java.library.path", javaPath + File.pathSeparator + javagiPath);
+        }
     }
 
     public static void loadLibrary(String name) {
