@@ -8,7 +8,7 @@ import io.github.jwharm.javagi.generator.Conversions;
 public class ReturnValue extends Parameter {
 
     public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
-        super(parent, null, transferOwnership, nullable, null, null);
+        super(parent, null, transferOwnership, nullable, null, null, null);
     }
 
     /**
@@ -21,7 +21,7 @@ public class ReturnValue extends Parameter {
     public void generate(Writer writer, String panamaReturnType, int indent) throws IOException {
         // If the return value is an array, try to convert it to a Java array
         if (array != null) {
-            String len = array.size();
+            String len = array.size(false);
             if (len != null) {
                 if (nullable) {
                     switch (panamaReturnType) {

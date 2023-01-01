@@ -31,6 +31,16 @@ public abstract class PatchSet {
         if (repo.namespace.registeredTypeMap.remove(type) == null) System.err.println("Did not remove " + type + ": Not found");
     }
 
+    protected static void setReturnVoid(Repository repo, String type, String name) {
+        Method m = findMethod(repo, type, name);
+        if (m != null) {
+            ReturnValue rv = m.returnValue;
+            rv.type = new Type(rv, "none", "void");
+            rv.doc = null;
+        } else
+            System.err.println("Did not change return type of " + type + "." + name + ": Not found");
+    }
+
     protected static Method findMethod(Repository repo, String type, String method) {
         try {
             for (Method m : repo.namespace.registeredTypeMap.get(type).methodList) {

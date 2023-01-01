@@ -18,7 +18,7 @@ public class Callback extends RegisteredType implements CallableType, Closure {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
-        generateFunctionalInterface(writer, javaName);
+        generateFunctionalInterface(writer, javaName, 0);
     }
 
     @Override

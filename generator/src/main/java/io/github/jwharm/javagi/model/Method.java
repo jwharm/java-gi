@@ -7,16 +7,23 @@ import io.github.jwharm.javagi.generator.Conversions;
 
 public class Method extends GirElement implements CallableType {
 
-    public final String cIdentifier, deprecated, throws_;
+    public final String cIdentifier;
+    public final String deprecated;
+    public final String throws_;
+    public final String shadowedBy;
+    public final String shadows;
     public ReturnValue returnValue;
     public Parameters parameters;
 
-    public Method(GirElement parent, String name, String cIdentifier, String deprecated, String throws_) {
+    public Method(GirElement parent, String name, String cIdentifier, String deprecated,
+                  String throws_, String shadowedBy, String shadows) {
         super(parent);
-        this.name = name;
+        this.name = shadows == null ? name : shadows; // Language bindings are expected to rename a function to the shadowed function
         this.cIdentifier = cIdentifier;
         this.deprecated = deprecated;
         this.throws_ = throws_;
+        this.shadowedBy = shadowedBy;
+        this.shadows = shadows;
 
         // Handle empty names. (For example, GLib.g_iconv is named "".)
         if ("".equals(name)) {
@@ -112,13 +119,6 @@ public class Method extends GirElement implements CallableType {
         }
         writer.write(" {\n");
         
-        // Currently unsupported method: throw an exception
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
-        
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
             parameters.generatePreprocessing(writer, 2);
@@ -152,7 +152,7 @@ public class Method extends GirElement implements CallableType {
         // Marshall the parameters to the native types
         if (parameters != null) {
             writer.write("(");
-            parameters.generateCParameters(writer, throws_);
+            parameters.marshalJavaToNative(writer, throws_);
             writer.write(")");
         } else {
             writer.write("()");

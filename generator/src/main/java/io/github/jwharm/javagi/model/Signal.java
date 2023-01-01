@@ -14,7 +14,7 @@ public class Signal extends Method implements Closure {
     
 
     public Signal(GirElement parent, String name, String when, String detailed, String deprecated, String throws_) {
-        super(parent, name, null, deprecated, throws_);
+        super(parent, name, null, deprecated, throws_, null, null);
         this.when = when;
         this.detailed = "1".equals(detailed);
 
@@ -27,7 +27,7 @@ public class Signal extends Method implements Closure {
             parameters = new Parameters(this);
         }
         String paramName = "source" + className;
-        Parameter p = new Parameter(parameters, paramName, "none", "0", "0", null);
+        Parameter p = new Parameter(parameters, paramName, "none", "0", "0", "0", null);
         p.type = new Type(p, className, ((RegisteredType) parent).cType);
         p.signalSource = true;
         parameters.parameterList.add(0, p);
@@ -35,7 +35,7 @@ public class Signal extends Method implements Closure {
 
     public void generate(Writer writer, boolean isDefault) throws IOException {
         writer.write("    \n");
-        generateFunctionalInterface(writer, signalName);
+        generateFunctionalInterface(writer, signalName, 1);
         writer.write("    \n");
 
         if (doc != null) {
@@ -49,12 +49,6 @@ public class Signal extends Method implements Closure {
         }
         
         writer.write(qualifiedName + " handler) {\n");
-        
-        if (! isSafeToBind()) {
-            writer.write("        throw new UnsupportedOperationException(\"Operation not supported yet\");\n");
-            writer.write("    }\n");
-            return;
-        }
         
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");

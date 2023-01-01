@@ -1,12 +1,13 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.glib.Type;
+import org.gtk.gobject.GObject;
 import org.gtk.gobject.GObjects;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @ApiStatus.Internal
 public class Interop {
@@ -17,6 +18,8 @@ public class Interop {
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
+    public static final HashMap<Type, Marshal> typeRegister;
+
     /**
      * Configure the layout of native data types here.<br>
      * On Linux, this should be set to {@link Layout_LP64}.<br>
@@ -26,19 +29,8 @@ public class Interop {
      */
     public static final Layout_LP64 valueLayout = new Layout_LP64();
 
-    /**
-     * This map contains the objects that are stored in the native struct of
-     * user-derived GObject subclasses in Java. The actual object is stored in
-     * this hashmap, while the hashcode is stored in native memory.
-     * <p>
-     * The methods in the {@link Derived} interface can be used to set, get and
-     * clear the object. Be sure to call {@link Derived#clearValueObject()} when
-     * the object can be cleared, because otherwise the object will still be
-     * referenced from {@code objectRegistry} and will not be garbage collected.
-     */
-    public static final Map<Integer, Object> objectRegistry = new HashMap<>();
-    
     static {
+        typeRegister = new HashMap<>();
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
         
@@ -50,6 +42,17 @@ public class Interop {
         // Ensure that the "gobject-2.0" library has been loaded.
         // This is required for the downcall handle to g_signal_connect.
         GObjects.javagi$ensureInitialized();
+    }
+
+    /**
+     * Get the type of a GObject instance. Comparable to the G_TYPE_FROM_INSTANCE macro in C.
+     * @param address the memory address of a GObject instance
+     * @return the type (GType) of the object
+     */
+    public static Type getType(MemoryAddress address) {
+        MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
+        long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
+        return new Type(g_type);
     }
 
     /**
@@ -67,6 +70,16 @@ public class Interop {
                     valueLayout.ADDRESS,
                     valueLayout.C_INT
             ),
+            false
+    );
+
+    /**
+     * The method handle for g_object_ref_sink is used to sink
+     * floating references of new GInitiallyUnowned instances.
+     */
+    public static final MethodHandle g_object_ref_sink = downcallHandle(
+            "g_object_ref_sink",
+            FunctionDescriptor.of(valueLayout.ADDRESS, valueLayout.ADDRESS),
             false
     );
 
@@ -114,21 +127,6 @@ public class Interop {
     }
 
     /**
-     * Register an object in the ObjectRegistry map. The key is
-     * the hashcode of the object.
-     * @param object The object to save in the objectRegistry map
-     * @return the hashcode of the object, or 0 if the object is {@code null}
-     */
-    public static int registerValueObject(Object object) {
-        if (object == null) {
-            return 0;
-        }
-        int hash = object.hashCode();
-        objectRegistry.put(hash, object);
-        return hash;
-    }
-
-    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @return the allocated MemorySegment
@@ -169,6 +167,13 @@ public class Interop {
         String[] result = new String[length];
         for (int i = 0; i < length; i++)
             result[i] = address.getUtf8String(i * valueLayout.ADDRESS.byteSize());
+        return result;
+    }
+
+    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
+        MemoryAddress[] result = new MemoryAddress[length];
+        for (int i = 0; i < length; i++)
+            result[i] = address.getAtIndex(Interop.valueLayout.ADDRESS, i);
         return result;
     }
 

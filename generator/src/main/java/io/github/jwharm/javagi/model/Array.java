@@ -16,7 +16,7 @@ public class Array extends GirElement {
     /**
      * Returns a String that will contain or retrieve the array size.
      */
-    public String size() {
+    public String size(boolean upcall) {
         // fixed-size attribute: Return the value of the attribute
         if (fixedSize != null) {
             return fixedSize;
@@ -26,6 +26,9 @@ public class Array extends GirElement {
             if (parent instanceof Parameter p) {
                 Parameter lp = p.getParameterAt(length);
                 if (lp != null) {
+                    if (upcall && lp.isOutParameter()) {
+                        return lp.name + "OUT.get()";
+                    }
                     if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
                         return lp.name + ".get().intValue()";
                     }

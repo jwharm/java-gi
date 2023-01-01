@@ -10,7 +10,7 @@ plugins {
 val generatedPath = buildDir.resolve("generated/sources/javagi/java/main")
 
 dependencies {
-    implementation(project(":glib"))
+    api(project(":glib"))
 }
 
 sourceSets {
@@ -79,19 +79,16 @@ val genSources by tasks.registering {
             source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", true, "gdk_pixbuf-2.0"),
             source("Gdk-4.0", "org.gtk.gdk", true),
             source("Graphene-1.0", "org.gtk.graphene", true, "graphene-1.0"),
-            source("Gsk-4.0", "org.gtk.gsk", true, patches = object: PatchSet() {
-                override fun patch(repo: Repository?) {
-                    // These types are defined in the GIR, but unavailable by default
-                    removeType(repo, "BroadwayRenderer")
-                    removeType(repo, "BroadwayRendererClass")
-                }
-            }),
+            source("Gsk-4.0", "org.gtk.gsk", true),
             source("Gtk-4.0", "org.gtk.gtk", true, "gtk-4", patches = object: PatchSet() {
                 override fun patch(repo: Repository?) {
                     // Override with different return type
                     renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
                     renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
                     renameMethod(repo, "PrintSettings", "get", "get_string")
+                    // This method returns void in interface ActionGroup, but returns boolean in class Widget.
+                    // Subclasses from Widget that implement ActionGroup throw a compile error.
+                    setReturnVoid(repo, "Widget", "activate_action");
                 }
             }),
             source("Adw-1", "org.gnome.adw", true, "adwaita-1", patches = object: PatchSet() {

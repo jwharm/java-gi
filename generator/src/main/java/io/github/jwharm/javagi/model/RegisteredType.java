@@ -34,7 +34,7 @@ public abstract class RegisteredType extends GirElement {
     }
 
     // Find out if this tyjpe is a subclass of the provided classname
-    private boolean isInstanceOf(String classname) {
+    protected boolean isInstanceOf(String classname) {
         if (this.qualifiedName.equals(classname)) {
             return true;
         }
@@ -99,51 +99,7 @@ public abstract class RegisteredType extends GirElement {
         if (this instanceof Bitfield || this instanceof Enumeration) {
             return;
         }
-        
-        if (! fieldList.isEmpty()) {
-            writer.write("    \n");
-            
-            writer.write("    private static final GroupLayout memoryLayout = MemoryLayout.");
-            if (this instanceof Union) {
-                writer.write("unionLayout(\n");
-            } else {
-                writer.write("structLayout(\n");
-            }
-            
-            // How many bytes have we generated thus far
-            int size = 0;
-            
-            for (int f = 0; f < fieldList.size(); f++) {
-                Field field = fieldList.get(f);
-                
-                if (f > 0) {
-                    writer.write(",\n");
-                }
-                
-                // Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
-                int s = field.getSize(field.getMemoryType());
-                
-                // Calculate padding (except for union layouts)
-                if (! (this instanceof Union)) {
-                    
-                    // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
-                    if (size % s % 64 > 0) {
-                        int padding = s - (size % s);
-                        writer.write("        MemoryLayout.paddingLayout(" + padding + "),\n");
-                        size += padding;
-                    }
-                    
-                }
-                
-                // Write the memory layout declaration
-                writer.write("        " + field.getMemoryLayoutString());
-                
-                size += s;
-            }
-            // Write the name of the struct
-            writer.write("\n    ).withName(C_TYPE_NAME);\n");
-        }
-        
+
         writer.write("    \n");
         writer.write("    /**\n");
         if (fieldList.isEmpty()) {
@@ -159,39 +115,49 @@ public abstract class RegisteredType extends GirElement {
         if (fieldList.isEmpty()) {
             writer.write("        return Interop.valueLayout.ADDRESS;\n");
         } else {
-            writer.write("        return memoryLayout;\n");
+            writer.write("        return MemoryLayout.");
+            if (this instanceof Union) {
+                writer.write("unionLayout(\n");
+            } else {
+                writer.write("structLayout(\n");
+            }
+
+            // How many bytes have we generated thus far
+            int size = 0;
+
+            for (int f = 0; f < fieldList.size(); f++) {
+                Field field = fieldList.get(f);
+
+                if (f > 0) {
+                    writer.write(",\n");
+                }
+
+                // Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
+                int s = field.getSize(field.getMemoryType());
+
+                // Calculate padding (except for union layouts)
+                if (! (this instanceof Union)) {
+
+                    // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
+                    if (size % s % 64 > 0) {
+                        int padding = s - (size % s);
+                        writer.write("            MemoryLayout.paddingLayout(" + padding + "),\n");
+                        size += padding;
+                    }
+
+                }
+
+                // Write the memory layout declaration
+                writer.write("            " + field.getMemoryLayoutString());
+
+                size += s;
+            }
+            // Write the name of the struct
+            writer.write("\n        ).withName(C_TYPE_NAME);\n");
         }
         writer.write("    }\n");
     }
     
-    /**
-     * Generate standard constructors from a MemoryAddress and a GObject
-     * @param writer The writer for the source code
-     * @throws IOException Thrown by {@code writer.write()}
-     */
-    protected void generateCastFromGObject(Writer writer) throws IOException {
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Cast object to " + javaName + " if its GType is a (or inherits from) \"" + cType + "\".\n");
-        writer.write("     * <p>\n");
-        writer.write("     * Internally, this creates a new Proxy object with the same ownership status as the parameter. If \n");
-        writer.write("     * the parameter object was owned by the user, the Cleaner will be removed from it, and will be attached \n");
-        writer.write("     * to the new Proxy object, so the call to {@code g_object_unref} will happen only once the new Proxy instance \n");
-        writer.write("     * is garbage-collected. \n");
-        writer.write("     * @param  gobject            An object that inherits from GObject\n");
-        writer.write("     * @return                    A new proxy instance of type {@code " + javaName + "} that points to the memory address of the provided GObject.\n");
-        writer.write("     *                            The type of the object is checked with {@code g_type_check_instance_is_a}.\n");
-        writer.write("     * @throws ClassCastException If the GType is not derived from \"" + cType + "\", a ClassCastException will be thrown.\n");
-        writer.write("     */\n");
-        writer.write("    public static " + javaName + " castFrom(org.gtk.gobject.GObject gobject) {\n");
-        writer.write("        if (org.gtk.gobject.GObjects.typeCheckInstanceIsA(org.gtk.gobject.TypeInstance.fromAddress.marshal(gobject.handle(), Ownership.NONE), " + javaName + ".getType())) {\n");
-        writer.write("            return new " + javaName + (this instanceof Interface ? "Impl" : "") + "(gobject.handle(), gobject.yieldOwnership());\n");
-        writer.write("        } else {\n");
-        writer.write("            throw new ClassCastException(\"Object type is not an instance of " + cType + "\");\n");
-        writer.write("        }\n");
-        writer.write("    }\n");
-    }
-
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
 
         // Find out if this class is instanceof InitiallyUnowned
@@ -204,7 +170,7 @@ public abstract class RegisteredType extends GirElement {
             writer.write("     * <p>\n");
             writer.write("     * Because " +javaName + " is an {@code InitiallyUnowned} instance, when \n");
             writer.write("     * {@code ownership == Ownership.NONE}, the ownership is set to {@code FULL} \n");
-            writer.write("     * and a call to {@code refSink()} is executed to sink the floating reference.\n");
+            writer.write("     * and a call to {@code g_object_ref_sink()} is executed to sink the floating reference.\n");
         }
         writer.write("     * @param address   The memory address of the native object\n");
         writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
@@ -214,42 +180,15 @@ public abstract class RegisteredType extends GirElement {
         if (initiallyUnowned) {
             writer.write("        super(address, Ownership.FULL);\n");
             writer.write("        if (ownership == Ownership.NONE) {\n");
-            writer.write("            refSink();\n");
+            writer.write("            try {\n");
+            writer.write("                var RESULT = (MemoryAddress) Interop.g_object_ref_sink.invokeExact(address);\n");
+            writer.write("            } catch (Throwable ERR) {\n");
+            writer.write("                throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+            writer.write("            }\n");
             writer.write("        }\n");
         } else {
             writer.write("        super(address, ownership);\n");
         }
-        writer.write("    }\n");
-    }
-
-    protected void generateArrayConstructor(Writer writer) throws IOException {
-        String layout = (this instanceof Record) ? "getMemoryLayout()" : "Interop.valueLayout.ADDRESS";
-        boolean primitiveAlias = false;
-        if (this instanceof Alias a) {
-            layout = Conversions.getValueLayout(a.type);
-            if (a.getTargetType().equals(Alias.TargetType.VALUE)) {
-                primitiveAlias = true;
-            }
-        }
-
-        writer.write("    \n");
-        writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length, Ownership ownership) {\n");
-        writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
-        writer.write("        long bytesSize = length * " + layout + ".byteSize();\n");
-        writer.write("        for (int i = 0; i < length; i++) {\n");
-        if (primitiveAlias) {
-            if ("utf8".equals(type.name)) {
-                writer.write("            array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
-            } else {
-                writer.write("            array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
-            }
-
-        } else {
-            writer.write("            array[i] = " + javaName + ".fromAddress.marshal(address.addOffset(i * bytesSize), ownership);\n");
-        }
-        writer.write("        }\n");
-        writer.write("        return array;\n");
         writer.write("    }\n");
     }
 
