@@ -232,9 +232,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(byte[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_BYTE, copy);
     }
@@ -246,9 +243,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(char[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_CHAR, copy);
     }
@@ -260,9 +254,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(double[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_DOUBLE, copy);
     }
@@ -274,9 +265,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(float[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_FLOAT, copy);
     }
@@ -288,9 +276,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(int[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_INT, copy);
     }
@@ -302,9 +287,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(long[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_LONG, copy);
     }
@@ -316,9 +298,6 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(short[] array, boolean zeroTerminated) {
-        if (array == null || array.length == 0) {
-            return null;
-        }
         short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
         return implicitAllocator.allocateArray(valueLayout.C_SHORT, copy);
     }
