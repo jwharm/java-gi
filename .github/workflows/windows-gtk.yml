@@ -1,0 +1,60 @@
+name: Build GTK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Upload artifacts as release'
+        required: true
+        type: boolean
+      tag:
+        description: 'The tag to clone'
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Install Dependencies
+        run: |
+          choco uninstall -y mingw strawberryperl cmake.install llvm
+          pip install meson ninja
+      - name: Clone GTK tree
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag }}
+          repository: 'GNOME/gtk'
+          submodules: recursive
+      - name: Perform Build
+        run: |
+          meson setup build --prefix ${{ github.workspace }}\dist --buildtype release -Db_pie=true -Db_lto=true -Dbuild-tests=false -Dmedia-gstreamer=disabled
+          meson compile -C build
+          meson install -C build
+          cd dist\bin
+          7z a ..\..\natives.zip *.dll
+          7z a ..\..\executable.zip *.exe
+          cd ..\..
+      - name: Library artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: natives
+          path: |
+            dist\bin\*.dll
+      - name: Application artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: natives
+          path: |
+            dist\bin\*.exe
+      - name: Generate Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: ${{ inputs.release }}
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "natives"
+          prerelease: false
+          title: "GTK Natives for ${{ inputs.tag }}"
+          files: |
+            natives.zip
+            executable.zip

@@ -78,6 +78,9 @@ public class Alias extends ValueWrapper {
                 writer.write("public class " + javaName + " {\n");
             }
         }
+        if (getTargetType() == TargetType.CLASS || getTargetType() == TargetType.INTERFACE) {
+            generateIsAvailable(writer);
+        }
         generateInjected(writer);
         writer.write("}\n");
     }

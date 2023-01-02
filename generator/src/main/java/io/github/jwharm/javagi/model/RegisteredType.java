@@ -201,6 +201,21 @@ public abstract class RegisteredType extends GirElement {
         );
     }
 
+    protected void generateIsAvailable(Writer writer) throws IOException {
+        writer.write("    \n");
+        writer.write("    public static boolean isAvailable() {\n");
+        String targetName = null;
+        for (Method m : functionList) {
+            if (m.name.equals("get_type") && m.getParameters() == null) {
+                targetName = m.cIdentifier;
+                break;
+            }
+        }
+        if (targetName == null) throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
+        writer.write("        return DowncallHandles." + targetName + " != null;\n");
+        writer.write("    }\n");
+    }
+
     protected void generateEnsureInitialized(Writer writer) throws IOException {
         generateEnsureInitialized(writer, "    ");
     }
