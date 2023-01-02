@@ -235,8 +235,8 @@ public class Variable extends GirElement {
                     + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
 
         if (type.isClass() || type.isInterface() || type.isAlias())
-            return "(" + type.qualifiedJavaType + ") java.util.Objects.requireNonNullElse(Interop.typeRegister.get(Interop.getType(" + identifier + ")), " + type.qualifiedJavaType + ".fromAddress).marshal(" + identifier + ", "
-                    + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+            return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
+                    + ".marshal(" + identifier + ", " + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
 
         if (type.isBoolean())
             return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
