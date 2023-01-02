@@ -82,15 +82,22 @@ public class Class extends RegisteredType {
             GObjectBuilder.generateBuilder(writer, this);
         }
         generateDowncallHandles(writer);
-        generateInjected(writer);
 
         // Generate a custom getType() function for ParamSpec
         if (isInstanceOf("org.gtk.gobject.ParamSpec") && "intern".equals(getType)) {
-            writer.write("\n");
+            writer.write("    \n");
             writer.write("    public static org.gtk.glib.Type getType() {\n");
             writer.write("        return org.gtk.glib.Type.G_TYPE_PARAM;\n");
             writer.write("    }\n");
+            writer.write("    \n");
+            writer.write("    public static boolean isAvailable() {\n");
+            writer.write("        return true;\n");
+            writer.write("    }\n");
+        } else {
+            generateIsAvailable(writer);
         }
+
+        generateInjected(writer);
 
         writer.write("}\n");
     }

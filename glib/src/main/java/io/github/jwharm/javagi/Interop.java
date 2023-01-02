@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import org.gtk.glib.Type;
-import org.gtk.gobject.GObject;
 import org.gtk.gobject.GObjects;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -18,7 +17,7 @@ public class Interop {
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
-    public static final HashMap<Type, Marshal> typeRegister;
+    public static final Map<Type, Marshal<Addressable, ? extends Proxy>> typeRegister;
 
     /**
      * Configure the layout of native data types here.<br>

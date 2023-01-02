@@ -1,10 +1,10 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.*;
 import io.github.jwharm.javagi.model.Class;
-import io.github.jwharm.javagi.model.Record;
+import io.github.jwharm.javagi.model.*;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -113,14 +113,14 @@ public class BindingsGenerator {
             writer.write("    static void register() {\n");
 
             for (Class c : gir.namespace.classList)
-                writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                writer.write("        if (" + c.javaName + ".isAvailable()) Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
 
             for (Interface c : gir.namespace.interfaceList)
-                writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                writer.write("        if (" + c.javaName + ".isAvailable()) Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
 
             for (Alias c : gir.namespace.aliasList)
                 if (c.getTargetType() == Alias.TargetType.CLASS || c.getTargetType() == Alias.TargetType.INTERFACE)
-                    writer.write("        Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                    writer.write("        if (" + c.javaName + ".isAvailable()) Interop.typeRegister.put(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
 
             writer.write("    }\n");
             writer.write("}\n");

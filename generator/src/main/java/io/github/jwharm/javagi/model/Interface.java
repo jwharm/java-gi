@@ -43,6 +43,8 @@ public class Interface extends RegisteredType {
 
         generateInjected(writer);
 
+        generateIsAvailable(writer);
+
         writer.write("}\n");
     }
 
