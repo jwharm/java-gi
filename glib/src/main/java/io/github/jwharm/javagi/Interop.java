@@ -182,9 +182,9 @@ public class Interop {
      * @param descriptor the function descriptor for the native function
      * @return a method handle to use when creating an upcall stub
      */
-    public static MethodHandle getHandle(Class<?> klazz, FunctionDescriptor descriptor) {
+    public static MethodHandle getHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
         try {
-            return MethodHandles.lookup().findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
+            return lookup.findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

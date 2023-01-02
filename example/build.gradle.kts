@@ -5,6 +5,7 @@ plugins {
 
 application {
     mainClass.set("io.github.jwharm.javagi.example.HelloWorld")
+    mainModule.set("io.github.jwharm.javagi.example")
 }
 
 dependencies {
@@ -14,4 +15,9 @@ dependencies {
 }
 
 // Temporarily needed until panama is out of preview
-tasks.run.get().jvmArgs!!.add("--enable-preview")
+tasks.run.get().jvmArgs!!.addAll(listOf(
+    "--enable-preview",
+    "--enable-native-access=org.glib",
+    "--enable-native-access=org.gtk",
+    "--enable-native-access=org.gstreamer"
+))
