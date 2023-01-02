@@ -55,23 +55,14 @@ public class BindingsGenerator {
             writer.write(" */\n");
             writer.write("public final class " + className + " {\n");
             writer.write("    \n");
-            if (!natives.isEmpty()) {
-                writer.write("    static {\n");
-                for (String libraryName : natives) {
-                    writer.write("        LibLoad.loadLibrary(\"" + libraryName + "\");\n");
-                }
-                writer.write("    }\n");
-                writer.write("    \n");
+            writer.write("    static {\n");
+            for (String libraryName : natives) {
+                writer.write("        LibLoad.loadLibrary(\"" + libraryName + "\");\n");
             }
-            writer.write("    private static boolean javagi$initialized = false;\n");
-            writer.write("    \n");
-            writer.write("    @ApiStatus.Internal\n");
-            writer.write("    public static void javagi$ensureInitialized() {\n");
-            writer.write("        if (!javagi$initialized) {\n");
-            writer.write("            javagi$initialized = true;\n");
             writer.write("            JavaGITypeRegister.register();\n");
-            writer.write("        }\n");
             writer.write("    }\n");
+            writer.write("    \n");
+            writer.write("    @ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
 
             for (Constant constant : gir.namespace.constantList) {
                 constant.generate(writer);
