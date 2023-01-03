@@ -12,6 +12,9 @@ public abstract class ValueWrapper extends RegisteredType {
     
     public void generateValueConstructor(Writer writer, String typeStr) throws IOException {
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Create a new " + javaName + " with the provided value\n");
+        writer.write("     */\n");
         writer.write("    public " + javaName + "(" + typeStr + " value) {\n");
         writer.write("        super(value);\n");
         writer.write("    }\n");
