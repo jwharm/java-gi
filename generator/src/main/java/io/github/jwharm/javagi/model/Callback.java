@@ -45,4 +45,9 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     public void setReturnValue(ReturnValue rv) {
         this.returnValue = rv;
     }
+
+    @Override
+    public Doc getDoc() {
+        return doc;
+    }
 }

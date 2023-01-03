@@ -3,7 +3,7 @@ package io.github.jwharm.javagi;
 import java.lang.foreign.Addressable;
 
 /**
- * Base type for {@code struct} data that is not a GObject instance.
+ * Base type for a Java proxy object to a {@code struct} in native memory.
  */
 public class Struct implements Proxy {
 
@@ -19,12 +19,20 @@ public class Struct implements Proxy {
         this.address = address;
         this.ownership = ownership;
     }
-    
+
+    /**
+     * Get the memory address of the struct
+     * @return the memory address of the struct
+     */
     @Override
     public Addressable handle() {
         return address;
     }
-    
+
+    /**
+     * Set the Ownership indicator to {@link Ownership#NONE}.
+     * @return the new ownership indicator of this object, always {@link Ownership#NONE}.
+     */
     @Override
     public Ownership yieldOwnership() {
         this.ownership = Ownership.NONE;

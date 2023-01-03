@@ -13,10 +13,19 @@ public interface Closure extends CallableType {
         String indent = " ".repeat(tabs * 4);
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
+        writer.write(indent + "/**\n");
+        writer.write(indent + " * Functional interface declaration of the {@code " + javaName + "} callback.\n");
+        writer.write(indent + " */\n");
         writer.write(indent + "@FunctionalInterface\n");
         writer.write(indent + "public interface " + javaName + " {\n");
+        writer.write(indent + "\n");
 
-        // Generate run(...)
+        // Generate javadoc for run(...)
+        Doc doc = getDoc();
+        if (doc != null)
+            doc.generate(writer, tabs + 1, false);
+
+        // Generate run(...) method
         writer.write(indent + "    ");
         returnValue.writeType(writer, false);
         writer.write(" run(");
@@ -81,6 +90,9 @@ public interface Closure extends CallableType {
         writer.write(indent + "    \n");
 
         // Generate fields
+        writer.write(indent + "    /**\n");
+        writer.write(indent + "     * Describes the parameter types of the native callback function.\n");
+        writer.write(indent + "     */\n");
         writer.write(indent + "    @ApiStatus.Internal FunctionDescriptor DESCRIPTOR = FunctionDescriptor.");
         if (isVoid) {
             writer.write("ofVoid(");
@@ -100,10 +112,18 @@ public interface Closure extends CallableType {
             }
         }
         writer.write(");\n");
+        writer.write(indent + "    \n");
+        writer.write(indent + "    /**\n");
+        writer.write(indent + "     * The method handle for the callback.\n");
+        writer.write(indent + "     */\n");
         writer.write(indent + "    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
         writer.write(indent + "    \n");
 
         // Generate toCallback()
+        writer.write(indent + "    /**\n");
+        writer.write(indent + "     * Creates a callback that can be called from native code and executes the {@code run} method.\n");
+        writer.write(indent + "     * @return the memory address of the callback function\n");
+        writer.write(indent + "     */\n");
         writer.write(indent + "    default MemoryAddress toCallback() {\n");
         writer.write(indent + "        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
         writer.write(indent + "    }\n");

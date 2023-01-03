@@ -35,6 +35,7 @@ public class GErrorException extends Exception {
     /**
      * Create a GErrorException from a GError memory segment that was
      * returned by a native function.
+     * @param gerrorPtr Pointer to a GError in native memory
      */
     @ApiStatus.Internal
     public GErrorException(MemorySegment gerrorPtr) {
@@ -58,6 +59,7 @@ public class GErrorException extends Exception {
 
     /**
      * Check if an error is set.
+     * @param gerrorPtr pointer to a GError in native memory
      * @return true when an error was set on this pointer
      */
     public static boolean isErrorSet(MemorySegment gerrorPtr) {

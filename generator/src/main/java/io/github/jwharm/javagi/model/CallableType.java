@@ -7,4 +7,6 @@ public interface CallableType {
 
     ReturnValue getReturnValue();
     void setReturnValue(ReturnValue rv);
+
+    Doc getDoc();
 }

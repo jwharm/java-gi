@@ -41,6 +41,13 @@ public abstract class Bitfield {
         return this.value == mask.value;
     }
 
+    /**
+     * If the provided object is a {@link Bitfield} instance, the values are compared.
+     * If the provided object is an {@link Integer}, the value is compared to it.
+     * Otherwise, false is returned.
+     * @param other the object to compare the bitfield to
+     * @return true when the value of the bitfield is equal to the provided value
+     */
     @Override
     public boolean equals(Object other) {
         if (other instanceof Bitfield mask) return equals(mask);
@@ -48,6 +55,10 @@ public abstract class Bitfield {
         return false;
     }
 
+    /**
+     * Returns the (integer) value of the bitfield
+     * @return the value of the bitfield
+     */
     @Override
     public int hashCode() {
         return value;

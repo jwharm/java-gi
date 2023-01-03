@@ -42,6 +42,10 @@ public abstract class Alias<T> {
         return other instanceof Alias<?> alias && this.value.equals(alias.value);
     }
 
+    /**
+     * Returns the hashcode of the value
+     * @return hashcode of the value
+     */
     @Override
     public int hashCode() {
         return value.hashCode();

@@ -11,6 +11,9 @@ import java.lang.reflect.Array;
  */
 public abstract class Pointer<T> implements Iterable<T> {
 
+    /**
+     * The memory address of the pointer
+     */
     protected final MemoryAddress address;
 
     /**

@@ -172,18 +172,12 @@ public class Interop {
         return null;
     }
 
-    public static String[] getStringArrayFrom(MemoryAddress address) {
-        ArrayList<String> list = new ArrayList<String>();
-        long offset = 0;
-        while (!MemoryAddress.NULL.equals(address)) {
-            list.add(address.getUtf8String(offset));
-            offset += valueLayout.ADDRESS.byteSize();
-        }
-        String[] result = new String[list.size()];
-        list.toArray(result);
-        return result;
-    }
-
+    /**
+     * Read an array of Strings with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @return Array of Strings
+     */
     public static String[] getStringArrayFrom(MemoryAddress address, int length) {
         String[] result = new String[length];
         for (int i = 0; i < length; i++)
@@ -191,6 +185,12 @@ public class Interop {
         return result;
     }
 
+    /**
+     * Read an array of pointers with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @return Array of pointers
+     */
     public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
         MemoryAddress[] result = new MemoryAddress[length];
         for (int i = 0; i < length; i++)

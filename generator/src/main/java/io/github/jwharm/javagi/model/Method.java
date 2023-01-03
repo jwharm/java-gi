@@ -72,7 +72,7 @@ public class Method extends GirElement implements CallableType {
         
         // Documentation
         if (doc != null) {
-            doc.generate(writer, 1);
+            doc.generate(writer, 1, false);
         }
 
         // Deprecation
@@ -200,5 +200,10 @@ public class Method extends GirElement implements CallableType {
     @Override
     public void setReturnValue(ReturnValue rv) {
         this.returnValue = rv;
+    }
+
+    @Override
+    public Doc getDoc() {
+        return doc;
     }
 }

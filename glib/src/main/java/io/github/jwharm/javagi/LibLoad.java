@@ -5,6 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+/**
+ * The LibLoad class is used internally to load native libraries by name
+ */
 public class LibLoad {
     private static final boolean OS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
     private static final boolean OS_MACOS = System.getProperty("os.name").toLowerCase().contains("mac");
@@ -22,6 +25,10 @@ public class LibLoad {
         }
     }
 
+    /**
+     * Load the native library with the provided name
+     * @param name the name of the library
+     */
     public static void loadLibrary(String name) {
         InteropException fail = new InteropException("Could not load library");
         try {

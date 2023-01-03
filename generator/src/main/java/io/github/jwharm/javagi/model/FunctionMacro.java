@@ -36,4 +36,9 @@ public class FunctionMacro extends GirElement implements CallableType {
     public void setReturnValue(ReturnValue rv) {
         this.returnValue = rv;
     }
+
+    @Override
+    public Doc getDoc() {
+        return doc;
+    }
 }

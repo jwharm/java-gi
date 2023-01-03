@@ -39,7 +39,7 @@ public class Signal extends Method implements Closure {
         writer.write("    \n");
 
         if (doc != null) {
-            doc.generate(writer, 1);
+            doc.generate(writer, 1, true);
         }
         writer.write("    public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
         

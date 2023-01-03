@@ -14,7 +14,7 @@ public class Doc extends GirElement {
         this.space = space;
     }
 
-    public void generate(Writer writer, int indent) throws IOException {
+    public void generate(Writer writer, int indent, boolean signalDeclaration) throws IOException {
         if (contents == null || contents.length() == 0) {
             return;
         }
@@ -68,7 +68,7 @@ public class Doc extends GirElement {
         }
         
         // Signals
-        if (parent instanceof Signal signal) {
+        if (signalDeclaration && parent instanceof Signal signal) {
             if (signal.detailed) {
                 writeDoc(writer, indent, "The signal detail", "@param detail");
             }

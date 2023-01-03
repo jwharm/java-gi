@@ -30,7 +30,8 @@ public class Enumeration extends ValueWrapper {
         Member lastUsable = usable.get(usable.size() - 1);
         for (Member m : memberList) {
             if (usable.contains(m)) {
-                if (m.doc != null) m.doc.generate(writer, 1);
+                writer.write("\n");
+                if (m.doc != null) m.doc.generate(writer, 1, false);
                 writer.write("    " + m.name.toUpperCase() + "(" + m.value + ")");
                 if (m == lastUsable) writer.write(";\n");
                 else writer.write(",\n");
@@ -47,7 +48,11 @@ public class Enumeration extends ValueWrapper {
                     if (u1.value == m.value) u = u1;
                 }
                 if (u == null) System.out.println("Could not get corresponding enum member for " + m.name.toUpperCase());
-                else writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = " + u.name.toUpperCase() + ";\n");
+                else {
+                    writer.write("\n");
+                    if (m.doc != null) m.doc.generate(writer, 1, false);
+                    writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = " + u.name.toUpperCase() + ";\n");
+                }
             }
         }
 
@@ -56,15 +61,29 @@ public class Enumeration extends ValueWrapper {
 
         writer.write("    \n");
         writer.write("    private final int value;\n");
+        writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Create a new " + javaName + " for the provided value\n");
+        writer.write("     * @param numeric value the enum value\n");
+        writer.write("     */\n");
         writer.write("    " + javaName + "(int value) {\n");
         writer.write("        this.value = value;\n");
         writer.write("    }\n");
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Get the numeric value of this enum\n");
+        writer.write("     * @return the enum value\n");
+        writer.write("     */\n");
         writer.write("    @Override\n");
         writer.write("    public int getValue() {\n");
         writer.write("        return value;\n");
         writer.write("    }\n");
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Create a new " + javaName + " for the provided value\n");
+        writer.write("     * @param value the enum value\n");
+        writer.write("     * @return the enum for the provided value\n");
+        writer.write("     */\n");
         writer.write("    public static " + javaName + " of(int value) {\n");
         writer.write("        return switch (value) {\n");
         for (Member m : usable) {

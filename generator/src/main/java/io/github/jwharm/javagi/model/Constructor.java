@@ -16,7 +16,7 @@ public class Constructor extends Method {
 
         writer.write("    \n");
         if (doc != null) {
-            doc.generate(writer, 1);
+            doc.generate(writer, 1, false);
         }
         
         if ("1".equals(deprecated)) {
@@ -64,7 +64,7 @@ public class Constructor extends Method {
 
         writer.write("    \n");
         if (doc != null) {
-            doc.generate(writer, 1);
+            doc.generate(writer, 1, false);
         }
         
         if ("1".equals(deprecated)) {

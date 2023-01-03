@@ -123,7 +123,7 @@ public class Field extends Variable {
 
         // Generate javadoc
         if (doc != null) {
-            doc.generate(writer, 2);
+            doc.generate(writer, 2, false);
         }
 
         writer.write("        public Builder set" + Conversions.toCamelCase(this.name, true) + "(");

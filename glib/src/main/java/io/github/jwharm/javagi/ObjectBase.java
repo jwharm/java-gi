@@ -35,6 +35,10 @@ public abstract class ObjectBase implements Proxy {
             this.registered = true;
         }
 
+        /**
+         * This function is run by the {@link Cleaner} when an {@ObjectBase} instance has become unreachable.
+         * If the ownership is set, a call to {@code g_object_unref} is executed.
+         */
         public void run() {
             if (registered) {
                 try {

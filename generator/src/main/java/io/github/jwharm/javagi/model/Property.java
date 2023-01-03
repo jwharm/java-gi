@@ -25,7 +25,7 @@ public class Property extends Variable {
     public void generate(Writer writer) throws IOException {
         writer.write("        \n");
         if (doc != null) {
-            doc.generate(writer, 2);
+            doc.generate(writer, 2, false);
         }
         writer.write("        public Builder set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);

@@ -65,7 +65,7 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateJavadoc(Writer writer) throws IOException {
         if (doc != null) {
-            doc.generate(writer, 0);
+            doc.generate(writer, 0, false);
         }
     }
     
@@ -194,6 +194,9 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateMarshal(Writer writer) throws IOException {
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * The marshal function from a native memory address to a Java proxy instance\n");
+        writer.write("     */\n");
         writer.write("    @ApiStatus.Internal\n");
         String name = javaName + (this instanceof Interface ? "Impl" : "");
         writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = (input, ownership) -> "
@@ -203,6 +206,10 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateIsAvailable(Writer writer) throws IOException {
         writer.write("    \n");
+        writer.write("    /**\n");
+        writer.write("     * Check whether the type is available on the runtime platform.\n");
+        writer.write("     * @return {@code true} when the type is available on the runtime platform\n");
+        writer.write("     */\n");
         writer.write("    public static boolean isAvailable() {\n");
         String targetName = null;
         for (Method m : functionList) {

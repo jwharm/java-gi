@@ -43,7 +43,7 @@ public class Constant extends GirElement {
         
         // Documentation
         if (doc != null) {
-            doc.generate(writer, 1);
+            doc.generate(writer, 1, false);
         }
         writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
     }

@@ -42,7 +42,7 @@ public class ListIndex extends GObject implements ListModel {
                     .setInterfaceFinalize(null)
                     .build());
         }
-        Interop.typeRegister.put(type, fromAddress);
+        Interop.register(type, fromAddress);
         return type;
     }
 

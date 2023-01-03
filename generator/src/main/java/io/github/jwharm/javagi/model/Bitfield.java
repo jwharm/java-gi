@@ -27,7 +27,7 @@ public class Bitfield extends ValueWrapper {
             if (m.usable) {
                 writer.write("    \n");
                 if (m.doc != null) {
-                    m.doc.generate(writer, 1);
+                    m.doc.generate(writer, 1, false);
                 }
                 writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = new " + javaName + "("+ m.value + ");\n");
             } else {
