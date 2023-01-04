@@ -42,9 +42,6 @@ public abstract class ObjectBase implements Proxy {
         public void run() {
             if (registered) {
                 try {
-                    // Debug logging
-                    // System.out.println("g_object_unref " + address);
-
                     if (g_object_unref == null)
                         g_object_unref = Interop.downcallHandle(
                                 "g_object_unref",
@@ -52,8 +49,8 @@ public abstract class ObjectBase implements Proxy {
                                 false
                         );
 
-                    g_object_unref.invokeExact(address);
-                    
+                    // g_object_unref.invokeExact(address);
+
                 } catch (Throwable err) {
                     throw new AssertionError("Unexpected exception occured: ", err);
                 }
@@ -76,9 +73,6 @@ public abstract class ObjectBase implements Proxy {
             state = new State(address);
             cleanable = cleaner.register(this, state);
         }
-        
-        // Debug logging
-        // System.out.printf("New: %s %s %s\n", address, this.getClass().getName(), ownership);
     }
 
     /**
@@ -96,10 +90,6 @@ public abstract class ObjectBase implements Proxy {
      * @return The ownership indicator of this object
      */
     public Ownership yieldOwnership() {
-        
-        // Debug logging
-        // System.out.printf("Yield ownership for address %s\n", address);
-        
         if (this.state != null && this.state.registered) {
             this.state.registered = false;
         }
