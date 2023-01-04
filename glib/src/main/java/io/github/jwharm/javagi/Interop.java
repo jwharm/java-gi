@@ -153,7 +153,7 @@ public class Interop {
      * @return the allocated MemorySegment
      */
     public static Addressable allocateNativeString(String string) {
-        return implicitAllocator.allocateUtf8String(string);
+        return string == null ? MemoryAddress.NULL : implicitAllocator.allocateUtf8String(string);
     }
     
     /**
