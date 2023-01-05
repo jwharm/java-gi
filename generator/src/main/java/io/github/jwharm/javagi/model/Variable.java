@@ -2,7 +2,6 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
 
@@ -153,7 +152,7 @@ public class Variable extends GirElement {
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
+            return "Marshal.stringToAddress.marshal(" + identifier + ")";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -162,13 +161,10 @@ public class Variable extends GirElement {
             return identifier + ".handle()";
 
         if (type.isBoolean())
-            return "Marshal.booleanToInteger.marshal(" + identifier + ", null).intValue()";
+            return "Marshal.booleanToInteger.marshal(" + identifier + ").intValue()";
 
         if (type.girElementInstance != null)
-            return type.girElementInstance.getInteropString(
-                    identifier,
-                    type.isPointer(),
-                    (this instanceof Parameter p) ? p.transferOwnership() : "Ownership.UNKNOWN");
+            return type.girElementInstance.getInteropString(identifier, type.isPointer());
 
         return identifier;
     }
@@ -191,7 +187,7 @@ public class Variable extends GirElement {
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
+            return "Marshal.stringToAddress.marshal(" + identifier + ")";
 
         return identifier + ".handle()";
     }
@@ -219,7 +215,7 @@ public class Variable extends GirElement {
 
     protected String marshalNativeToJava(Type type, String identifier, boolean upcall) {
         if ("java.lang.String".equals(type.qualifiedJavaType))
-            return "Marshal.addressToString.marshal(" + identifier + ", null)";
+            return "Marshal.addressToString.marshal(" + identifier + ")";
 
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
@@ -231,15 +227,14 @@ public class Variable extends GirElement {
             return "null /* Unsupported parameter type */";
 
         if (type.isRecord() || type.isUnion())
-            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", "
-                    + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ")";
 
         if (type.isClass() || type.isInterface() || type.isAlias())
             return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
-                    + ".marshal(" + identifier + ", " + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+                    + ".marshal(" + identifier + ")";
 
         if (type.isBoolean())
-            return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
+            return "Marshal.integerToBoolean.marshal(" + identifier + ").booleanValue()";
 
         return identifier;
     }

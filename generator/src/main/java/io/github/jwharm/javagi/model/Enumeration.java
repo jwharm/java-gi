@@ -105,7 +105,7 @@ public class Enumeration extends ValueWrapper {
     }
     
     @Override
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         String str = paramName + ".getValue()";
         if (isPointer) {
             return "new PointerInteger(" + str + ").handle()";

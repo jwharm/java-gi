@@ -61,8 +61,21 @@ public class ReturnValue extends Parameter {
         if (type != null && type.isVoid()) {
             return;
         }
-        writer.write(tab(indent) + "return ");
-        marshalNativeToJava(writer, "RESULT", false);
-        writer.write(";\n");
+
+        // When transfer-ownership="full", we must take ownership.
+        if (isProxy() && "full".equals(transferOwnership)) {
+
+            writer.write(tab(indent) + "var OBJECT = ");
+            marshalNativeToJava(writer, "RESULT", false);
+            writer.write(";\n");
+            writer.write(tab(indent) + "OBJECT.takeOwnership();\n");
+            writer.write(tab(indent) + "return OBJECT;\n");
+
+        } else {
+
+            writer.write(tab(indent) + "return ");
+            marshalNativeToJava(writer, "RESULT", false);
+            writer.write(";\n");
+        }
     }
 }

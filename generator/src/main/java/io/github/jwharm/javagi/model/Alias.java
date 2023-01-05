@@ -104,11 +104,11 @@ public class Alias extends ValueWrapper {
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         if (getTargetType() == TargetType.VALUE) {
-            return super.getInteropString(paramName, isPointer, transferOwnership);
+            return super.getInteropString(paramName, isPointer);
         } else {
-            return type.girElementInstance.getInteropString(paramName, isPointer, transferOwnership);
+            return type.girElementInstance.getInteropString(paramName, isPointer);
         }
     }
 }

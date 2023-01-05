@@ -52,6 +52,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
                 Interop.valueLayout.ADDRESS.byteSize() * index
         );
         // Call the constructor of the proxy object and return the created instance.
-        return make.marshal(ref, Ownership.UNKNOWN);
+        // TODO: What about ownership of the object?
+        return make.marshal(ref);
     }
 }

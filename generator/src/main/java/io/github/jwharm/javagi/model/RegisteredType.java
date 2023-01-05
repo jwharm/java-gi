@@ -159,36 +159,13 @@ public abstract class RegisteredType extends GirElement {
     }
     
     protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
-
-        // Find out if this class is instanceof InitiallyUnowned
-        boolean initiallyUnowned = isInstanceOf("org.gtk.gobject.InitiallyUnowned");
-
         writer.write("    \n");
         writer.write("    /**\n");
         writer.write("     * Create a " + javaName + " proxy instance for the provided memory address.\n");
-        if (initiallyUnowned) {
-            writer.write("     * <p>\n");
-            writer.write("     * Because " +javaName + " is an {@code InitiallyUnowned} instance, when \n");
-            writer.write("     * {@code ownership == Ownership.NONE}, the ownership is set to {@code FULL} \n");
-            writer.write("     * and a call to {@code g_object_ref_sink()} is executed to sink the floating reference.\n");
-        }
         writer.write("     * @param address   The memory address of the native object\n");
-        writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
         writer.write("     */\n");
-        writer.write("    protected " + javaName + "(Addressable address, Ownership ownership) {\n");
-
-        if (initiallyUnowned) {
-            writer.write("        super(address, Ownership.FULL);\n");
-            writer.write("        if (ownership == Ownership.NONE) {\n");
-            writer.write("            try {\n");
-            writer.write("                var RESULT = (MemoryAddress) Interop.g_object_ref_sink.invokeExact(address);\n");
-            writer.write("            } catch (Throwable ERR) {\n");
-            writer.write("                throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
-            writer.write("            }\n");
-            writer.write("        }\n");
-        } else {
-            writer.write("        super(address, ownership);\n");
-        }
+        writer.write("    protected " + javaName + "(Addressable address) {\n");
+        writer.write("        super(address);\n");
         writer.write("    }\n");
     }
 
@@ -199,8 +176,8 @@ public abstract class RegisteredType extends GirElement {
         writer.write("     */\n");
         writer.write("    @ApiStatus.Internal\n");
         String name = javaName + (this instanceof Interface ? "Impl" : "");
-        writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = (input, ownership) -> "
-                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input, ownership);\n"
+        writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = input -> "
+                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input);\n"
         );
     }
 
@@ -279,7 +256,7 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         return paramName + ".handle()";
     }
 

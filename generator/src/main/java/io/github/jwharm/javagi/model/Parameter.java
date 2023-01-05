@@ -78,15 +78,6 @@ public class Parameter extends Variable {
     }
 
     /**
-     * Returns an Ownership enum value (for example, tranfer-ownership="full" -> "Ownership.FULL").
-     * If the transfer-ownership attribute is not set, Ownership.UNKNOWN is returned
-     * @return a String containing the Ownership enum value
-     */
-    public String transferOwnership() {
-        return "Ownership." + (transferOwnership == null ? "UNKNOWN" : transferOwnership.toUpperCase());
-    }
-    
-    /**
      * Whether this parameter must receive special treatment as an out-parameter
      * @return True if the direction attribute exists and contains "out", AND the parameter type
      *         is NOT a Proxy object, a primitive alias, or an array with unknown size. (For Proxy

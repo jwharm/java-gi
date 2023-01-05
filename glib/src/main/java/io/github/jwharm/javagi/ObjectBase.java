@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import org.gtk.glib.GLib;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.*;
@@ -17,7 +18,6 @@ import java.lang.ref.Cleaner;
 public abstract class ObjectBase implements Proxy {
 
     private final Addressable address;
-    private final Ownership ownership;
     private static final Cleaner cleaner = Cleaner.create();
     private State state;
     private Cleaner.Cleanable cleanable;
@@ -36,12 +36,13 @@ public abstract class ObjectBase implements Proxy {
         }
 
         /**
-         * This function is run by the {@link Cleaner} when an {@ObjectBase} instance has become unreachable.
+         * This function is run by the {@link Cleaner} when an {@link ObjectBase} instance has become unreachable.
          * If the ownership is set, a call to {@code g_object_unref} is executed.
          */
         public void run() {
             if (registered) {
                 try {
+                    GLib.print("Unref %s\n", address.toString());
                     // Debug logging
                     // System.out.println("g_object_unref " + address);
 
@@ -62,23 +63,12 @@ public abstract class ObjectBase implements Proxy {
     }
     
     /**
-     * Instantiate the Proxy base class. When ownership is FULL, a cleaner is registered
-     * to automatically call g_object_unref on the memory address.
-     * @param address   The memory address of the object in native memory
-     * @param ownership The ownership status. When ownership is FULL, a cleaner is registered
-     *                  to automatically call g_object_unref on the memory address.
+     * Instantiate the ObjectBase class.
+     * @param address the memory address of the object in native memory
      */
     @ApiStatus.Internal
-    protected ObjectBase(Addressable address, Ownership ownership) {
+    protected ObjectBase(Addressable address) {
         this.address = address;
-        this.ownership = ownership;
-        if (ownership == Ownership.FULL) {
-            state = new State(address);
-            cleanable = cleaner.register(this, state);
-        }
-        
-        // Debug logging
-        // System.out.printf("New: %s %s %s\n", address, this.getClass().getName(), ownership);
     }
 
     /**
@@ -91,18 +81,26 @@ public abstract class ObjectBase implements Proxy {
     
     /**
      * Disable the Cleaner that automatically calls {@code g_object_unref} 
-     * when this object is garbage collected, and return the ownership 
-     * indicator.
-     * @return The ownership indicator of this object
+     * when this object is garbage collected.
      */
-    public Ownership yieldOwnership() {
-        
-        // Debug logging
-        // System.out.printf("Yield ownership for address %s\n", address);
-        
+    public void yieldOwnership() {
+        GLib.print("YieldOwnership %s %s\n", getClass().getSimpleName(), address.toString());
         if (this.state != null && this.state.registered) {
             this.state.registered = false;
         }
-        return this.ownership;
+    }
+
+    /**
+     * Enable the Cleaner that automatically calls {@code g_object_unref}
+     * when this object is garbage collected.
+     */
+    public void takeOwnership() {
+        GLib.print("TakeOwnership %s %s\n", getClass().getSimpleName(), address.toString());
+        if (this.state == null) {
+            state = new State(address);
+            cleanable = cleaner.register(this, state);
+        } else {
+            this.state.registered = true;
+        }
     }
 }

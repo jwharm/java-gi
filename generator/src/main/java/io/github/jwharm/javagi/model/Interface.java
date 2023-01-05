@@ -59,10 +59,9 @@ public class Interface extends RegisteredType {
         writer.write("        /**\n");
         writer.write("         * Creates a new instance of " + javaName + " for the provided memory address.\n");
         writer.write("         * @param address the memory address of the instance\n");
-        writer.write("         * @param ownership the ownership indicator of the instance\n");
         writer.write("         */\n");
-        writer.write("        public " + javaName + "Impl(Addressable address, Ownership ownership) {\n");
-        writer.write("            super(address, ownership);\n");
+        writer.write("        public " + javaName + "Impl(Addressable address) {\n");
+        writer.write("            super(address);\n");
         writer.write("        }\n");
         writer.write("    }\n");
     }

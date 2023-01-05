@@ -73,7 +73,7 @@ public class Record extends Class {
         writer.write("     */\n");
         writer.write("    public static " + javaName + " allocate() {\n");
         writer.write("        MemorySegment segment = Interop.getAllocator().allocate(getMemoryLayout());\n");
-        writer.write("        " + javaName + " newInstance = new " + javaName + "(segment.address(), Ownership.NONE);\n");
+        writer.write("        " + javaName + " newInstance = new " + javaName + "(segment.address());\n");
         writer.write("        newInstance.allocatedMemorySegment = segment;\n");
         writer.write("        return newInstance;\n");
         writer.write("    }\n");

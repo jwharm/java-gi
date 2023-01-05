@@ -45,7 +45,20 @@ public class Constructor extends Method {
         } else {
             writer.write("()");
         }
-        writer.write(", " + returnValue.transferOwnership() + ");\n");
+        writer.write(");\n");
+
+        // Ownership transfer
+        if ("full".equals(returnValue.transferOwnership)) {
+            writer.write("        this.takeOwnership();\n");
+        }
+
+        // Ownership transfer for InitiallyUnowned instances
+        boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
+        if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
+            writer.write("        this.refSink();\n");
+            writer.write("        this.takeOwnership();\n");
+        }
+
         writer.write("    }\n");
     }
 
@@ -93,9 +106,20 @@ public class Constructor extends Method {
             writer.write("()");
         }
         writer.write(";\n");
-        writer.write("        return ");
-        returnValue.marshalNativeToJava(writer, "RESULT", false);
-        writer.write(";\n");
+
+        // Ownership transfer for InitiallyUnowned instances
+        boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
+        if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
+            writer.write("        var OBJECT = ");
+            returnValue.marshalNativeToJava(writer, "RESULT", false);
+            writer.write(";\n");
+            writer.write("        OBJECT.refSink();\n");
+            writer.write("        OBJECT.takeOwnership();\n");
+            writer.write("        return OBJECT;\n");
+        } else {
+            returnValue.generateReturnStatement(writer, 2);
+        }
+
         writer.write("    }\n");
     }
 

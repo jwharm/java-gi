@@ -19,12 +19,17 @@ public interface Proxy {
 
     /**
      * Disable the Cleaner that automatically calls {@code g_object_unref} 
-     * when this object is garbage collected, and return the ownership 
-     * indicator.
-     * @return the ownership indicator of this object
+     * when this object is garbage collected.
      */
     @ApiStatus.Internal
-    Ownership yieldOwnership();
+    void yieldOwnership();
+
+    /**
+     * Enable the Cleaner that automatically calls {@code g_object_unref}
+     * when this object is garbage collected.
+     */
+    @ApiStatus.Internal
+    void takeOwnership();
     
     /**
      * Check if the memory address of this proxy instance is equal to the 

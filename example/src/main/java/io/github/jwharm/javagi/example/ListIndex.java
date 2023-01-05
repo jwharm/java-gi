@@ -49,9 +49,9 @@ public class ListIndex extends GObject implements ListModel {
     private static final VarHandle index = memoryLayout.varHandle(MemoryLayout.PathElement.groupElement("index"));
     private static final VarHandle size = memoryLayout.varHandle(MemoryLayout.PathElement.groupElement("size"));
 
-    public static final Marshal<Addressable, ListIndex> fromAddress = (input, ownership) -> input.equals(MemoryAddress.NULL) ? null : new ListIndex(input, ownership);
-    protected ListIndex(Addressable address, Ownership ownership) {
-        super(address, ownership);
+    public static final Marshal<Addressable, ListIndex> fromAddress = input -> input.equals(MemoryAddress.NULL) ? null : new ListIndex(input);
+    protected ListIndex(Addressable address) {
+        super(address);
     }
 
     public ListIndex(int size) {
@@ -60,11 +60,11 @@ public class ListIndex extends GObject implements ListModel {
     }
 
     public ListIndex() {
-        super(new GObject(getType(), PROP_NAME, getType()).handle(),
-                Ownership.FULL);
+        super(new GObject(getType(), PROP_NAME, getType()).handle());
+        takeOwnership();
     }
 
-    private static final InstanceInitFunc instanceInit = (instance, gClass) -> fromAddress.marshal(instance.handle(), Ownership.NONE).initInstance();
+    private static final InstanceInitFunc instanceInit = (instance, gClass) -> fromAddress.marshal(instance.handle()).initInstance();
 
     private void initInstance() {
         setIndex(0);
@@ -102,7 +102,7 @@ public class ListIndex extends GObject implements ListModel {
     private static final ClassInitFunc classInit = klass -> {
         System.out.println("ListIndex::classInit");
         parentClass = klass.peekParent();
-        ObjectClass objectClass = ObjectClass.fromAddress.marshal(GObjects.typeCheckClassCast(klass, PARENT_TYPE).handle(), Ownership.NONE);
+        ObjectClass objectClass = ObjectClass.fromAddress.marshal(GObjects.typeCheckClassCast(klass, PARENT_TYPE).handle());
         objectClass.setDispose(instanceDispose);
         objectClass.setGetProperty(getProperty);
         objectClass.setSetProperty(setProperty);
@@ -122,8 +122,8 @@ public class ListIndex extends GObject implements ListModel {
         System.out.println("ListIndex::getItemType");
         return getType();
     };
-    private static final ListModelInterface.GetNItemsCallback getNItems = model -> fromAddress.marshal(model.handle(), Ownership.NONE).getSize();
-    private static final ListModelInterface.GetItemCallback getItem = (model, position) -> fromAddress.marshal(model.handle(), Ownership.NONE).getItem(position);
+    private static final ListModelInterface.GetNItemsCallback getNItems = model -> fromAddress.marshal(model.handle()).getSize();
+    private static final ListModelInterface.GetItemCallback getItem = (model, position) -> fromAddress.marshal(model.handle()).getItem(position);
 
     public ListIndex getItem(int position) {
         if (position >= getSize() || position <= -1) return null;
@@ -134,7 +134,7 @@ public class ListIndex extends GObject implements ListModel {
 
     private static final InterfaceInitFunc interfaceInit = iface -> {
         System.out.println("ListIndex::interfaceInit");
-        ListModelInterface lmi = ListModelInterface.fromAddress.marshal(iface.handle(), Ownership.NONE);
+        ListModelInterface lmi = ListModelInterface.fromAddress.marshal(iface.handle());
         lmi.setGetItem(getItem);
         lmi.setGetNItems(getNItems);
         lmi.setGetItemType(getItemType);

@@ -8,16 +8,13 @@ import java.lang.foreign.Addressable;
 public class Struct implements Proxy {
 
     private final Addressable address;
-    private Ownership ownership;
-    
+
     /**
      * Create a new {@code Struct} object for a struct in native memory.
      * @param address    the memory address of the struct
-     * @param ownership  the ownership indicator for the struct
      */
-    public Struct(Addressable address, Ownership ownership) {
+    public Struct(Addressable address) {
         this.address = address;
-        this.ownership = ownership;
     }
 
     /**
@@ -30,12 +27,16 @@ public class Struct implements Proxy {
     }
 
     /**
-     * Set the Ownership indicator to {@link Ownership#NONE}.
-     * @return the new ownership indicator of this object, always {@link Ownership#NONE}.
+     * No op
      */
     @Override
-    public Ownership yieldOwnership() {
-        this.ownership = Ownership.NONE;
-        return ownership;
+    public void yieldOwnership() {
+    }
+
+    /**
+     * No op
+     */
+    @Override
+    public void takeOwnership() {
     }
 }

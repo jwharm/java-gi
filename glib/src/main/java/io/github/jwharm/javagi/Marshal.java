@@ -14,59 +14,57 @@ import java.lang.foreign.MemoryAddress;
 public interface Marshal<In, Out> {
 
     /**
-     * Marshal the provided input value. If {@code ownership} is not null, and the {@code Out}
-     * type is a {@link Proxy}, it can be used to set the ownership of the proxy object.
+     * Marshal the provided input value.
      * @param input Value to marshal
-     * @param ownership Ownership to set on a {@link Proxy} object
      * @return the marshalled object
      */
-    Out marshal(In input, Ownership ownership);
+    Out marshal(In input);
 
     /**
      * A no-op marshal function that returns the input
      */
-    Marshal<GObject, GObject> passthrough              = (input, ownership) -> input;
+    Marshal<GObject, GObject> passthrough              = input -> input;
 
     /**
      * Booleans in GLib are typedefs for integers with value 1 or 0. This marshal function
      * converts such a value to a Java boolean.
      */
-    Marshal<Integer, Boolean> integerToBoolean         = (input, ownership) -> input == 1;
+    Marshal<Integer, Boolean> integerToBoolean         = input -> input == 1;
 
     /**
      * Booleans in GLib are typedefs for integers with value 1 or 0. This marshal function
      * converts a Java boolean to such a value.
      */
-    Marshal<Boolean, Integer> booleanToInteger         = (input, ownership) -> input ? 1 : 0;
+    Marshal<Boolean, Integer> booleanToInteger         = input -> input ? 1 : 0;
 
     /**
      * Marshal function that reads a String from the provided address
      */
-    Marshal<MemoryAddress, String> addressToString     = (input, ownership) -> Interop.getStringFrom(input);
+    Marshal<MemoryAddress, String> addressToString     = Interop::getStringFrom;
 
     /**
      * Marshal function that writes a String to the provided address
      */
-    Marshal<String, Addressable> stringToAddress       = (input, ownership) -> Interop.allocateNativeString(input);
+    Marshal<String, Addressable> stringToAddress       = Interop::allocateNativeString;
 
     /**
      * Marshal function to write an Enumeration to native memory
      */
-    Marshal<Enumeration, Integer> enumerationToInteger = (input, ownership) -> input.getValue();
+    Marshal<Enumeration, Integer> enumerationToInteger = Enumeration::getValue;
 
     /**
      * Marshal function to write a Bitfield to native memory
      */
-    Marshal<Bitfield, Integer> bitfieldToInteger       = (input, ownership) -> input.getValue();
+    Marshal<Bitfield, Integer> bitfieldToInteger       = Bitfield::getValue;
 
     /**
      * Marshal function to write the value of a primitive alias to native memory
      */
-    Marshal aliasToPrimitive                           = (input, ownership) -> ((Alias<?>) input).getValue();
+    Marshal<Alias<?>, ?> aliasToPrimitive              = Alias::getValue;
 
     /**
      * Marshal function to write a callback to native memory.
      * Currently not implemented, always returns {@link MemoryAddress#NULL}.
      */
-    Marshal callbackToAddress                          = (input, ownership) -> MemoryAddress.NULL; // TODO: Marshaller for callback parameters
+    Marshal<?, Addressable> callbackToAddress          = input -> MemoryAddress.NULL; // TODO: Marshaller for callback parameters
 }
