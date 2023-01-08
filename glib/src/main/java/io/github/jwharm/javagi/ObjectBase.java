@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi;
 
-import org.gtk.glib.GLib;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.Addressable;
@@ -40,7 +39,6 @@ public abstract class ObjectBase implements Proxy {
      * when this object is garbage collected.
      */
     public void yieldOwnership() {
-        GLib.printerr("YieldOwnership %s %s\n", getClass().getSimpleName(), address.toString());
         if (this.refCleaner != null && this.refCleaner.registered) {
             this.refCleaner.registered = false;
         }
@@ -51,8 +49,6 @@ public abstract class ObjectBase implements Proxy {
      * when this object is garbage collected.
      */
     public void takeOwnership() {
-        GLib.printerr("TakeOwnership %s %s\n", getClass().getSimpleName(), address.toString());
-
         if (this.refCleaner == null) {
             refCleaner = new RefCleaner(address);
             cleanable = cleaner.register(this, refCleaner);

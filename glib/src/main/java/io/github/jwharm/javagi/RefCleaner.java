@@ -1,7 +1,5 @@
 package io.github.jwharm.javagi;
 
-import org.gtk.glib.GLib;
-
 import java.lang.foreign.Addressable;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
@@ -13,7 +11,7 @@ import java.lang.ref.Cleaner;
  */
 class RefCleaner implements Runnable {
 
-    private Addressable address;
+    private final Addressable address;
     boolean registered;
 
     // Method handle that is used for the g_object_unref native call
@@ -35,7 +33,6 @@ class RefCleaner implements Runnable {
     public void run() {
         if (registered) {
             try {
-                GLib.printerr("Unref " + address.toString() + "\n");
 
                 if (g_object_unref == null)
                     g_object_unref = Interop.downcallHandle(
