@@ -77,6 +77,11 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPostprocessing(writer, tabs + 2);
         }
 
+        // If the return value is a proxy object with transfer-ownership="full", we don't need to unref it anymore.
+        if (returnValue.isProxy() && "full".equals(returnValue.transferOwnership)) {
+            writer.write(indent + "        RESULT.yieldOwnership();\n");
+        }
+
         // Return statement
         if (!isVoid) {
             writer.write(indent + "        return ");
