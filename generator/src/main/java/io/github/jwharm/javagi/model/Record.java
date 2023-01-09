@@ -1,8 +1,8 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
+import io.github.jwharm.javagi.generator.SourceWriter;
 import io.github.jwharm.javagi.generator.StructBuilder;
 
 public class Record extends Class {
@@ -22,12 +22,13 @@ public class Record extends Class {
      * Structs are often initialized implicitly, which means they don't always have constructors.
      * To solve this, we generate a static allocate() function that allocates a memory segment.
      */
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
         
         writer.write("public class " + javaName + " extends Struct {\n");
+        writer.increaseIndent();
 
         generateEnsureInitialized(writer);
         generateCType(writer);
@@ -59,23 +60,24 @@ public class Record extends Class {
         StructBuilder.generateBuilder(writer, this);
 
         generateInjected(writer);
-        
+
+        writer.decreaseIndent();
         writer.write("}\n");
     }
 
-    public void generateRecordAllocator(Writer writer) throws IOException {
-        writer.write("    \n");
-        writer.write("    private MemorySegment allocatedMemorySegment;\n");
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Allocate a new {@link " + javaName + "}\n");
-        writer.write("     * @return A new, uninitialized @{link " + javaName + "}\n");
-        writer.write("     */\n");
-        writer.write("    public static " + javaName + " allocate() {\n");
-        writer.write("        MemorySegment segment = Interop.getAllocator().allocate(getMemoryLayout());\n");
-        writer.write("        " + javaName + " newInstance = new " + javaName + "(segment.address(), Ownership.NONE);\n");
-        writer.write("        newInstance.allocatedMemorySegment = segment;\n");
-        writer.write("        return newInstance;\n");
-        writer.write("    }\n");
+    public void generateRecordAllocator(SourceWriter writer) throws IOException {
+        writer.write("\n");
+        writer.write("private MemorySegment allocatedMemorySegment;\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Allocate a new {@link " + javaName + "}\n");
+        writer.write(" * @return A new, uninitialized @{link " + javaName + "}\n");
+        writer.write(" */\n");
+        writer.write("public static " + javaName + " allocate() {\n");
+        writer.write("    MemorySegment segment = MemorySession.openImplicit().allocate(getMemoryLayout());\n");
+        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment.address());\n");
+        writer.write("    newInstance.allocatedMemorySegment = segment;\n");
+        writer.write("    return newInstance;\n");
+        writer.write("}\n");
     }
 }

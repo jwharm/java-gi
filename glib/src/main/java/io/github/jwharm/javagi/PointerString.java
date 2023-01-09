@@ -1,12 +1,16 @@
 package io.github.jwharm.javagi;
 
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.MemorySession;
 import java.lang.foreign.ValueLayout;
 
 /**
  * This class implements a pointer to a String in native memory.
  */
 public class PointerString extends Pointer<String> {
+
+    private MemorySegment allocatedString;
 
     /**
      * Create the pointer. It does not have an initial value set.
@@ -33,11 +37,26 @@ public class PointerString extends Pointer<String> {
     }
 
     /**
-     * Use this method to set the value that the pointer points to.
-     * @param value the new value that is pointed to
+     * Allocate a native string and set the pointer to its address.
+     * The native memory is released when the {@code PointerString} instance
+     * becomes unreachable and is garbage collected.
+     * When {@link #set(String)} is called multiple times for the same
+     * {@code PointerString} instance, the previously allocated memory
+     * segment will also be released during garbage collection.
+     * @param value the new string that is pointed to
      */
     public void set(String value) {
-        address.set(Interop.valueLayout.ADDRESS, 0, Interop.allocateNativeString(value));
+        this.allocatedString = (MemorySegment) Interop.allocateNativeString(value, MemorySession.global());
+        address.set(Interop.valueLayout.ADDRESS, 0, this.allocatedString);
+    }
+
+    /**
+     * Allocate a native string and set the pointer to its address.
+     * @param value the new string that is pointed to
+     * @param scope the memory allocator for the native string
+     */
+    public void set(String value, MemorySession scope) {
+        address.set(Interop.valueLayout.ADDRESS, 0, Interop.allocateNativeString(value, scope));
     }
 
     /**

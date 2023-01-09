@@ -1,10 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
-import io.github.jwharm.javagi.JavaGI;
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Constant extends GirElement {
 
@@ -17,7 +16,7 @@ public class Constant extends GirElement {
         this.cType = cType;
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         String typeStr = "unknown type";
         String printValue;
         try {
@@ -43,8 +42,8 @@ public class Constant extends GirElement {
         
         // Documentation
         if (doc != null) {
-            doc.generate(writer, 1, false);
+            doc.generate(writer, false);
         }
-        writer.write("    public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
+        writer.write("public static final " + type.qualifiedJavaType + " " + name + " = " + printValue + ";\n");
     }
 }

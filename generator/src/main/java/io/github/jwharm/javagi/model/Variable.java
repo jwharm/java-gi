@@ -1,10 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
-import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Variable extends GirElement {
 
@@ -20,25 +19,25 @@ public class Variable extends GirElement {
         return ! (type != null && type.isPrimitive && (! type.isPointer()));
     }
 
-    public void writeType(Writer writer, boolean pointerForArray) throws IOException {
+    public void writeType(SourceWriter writer, boolean pointerForArray) throws IOException {
         writer.write(getType(pointerForArray));
     }
 
-    public void writeName(Writer writer) throws IOException {
+    public void writeName(SourceWriter writer) throws IOException {
         writer.write(getName());
     }
 
-    public void writeTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
+    public void writeTypeAndName(SourceWriter writer, boolean pointerForArray) throws IOException {
         writeType(writer, pointerForArray);
         writer.write(" ");
         writeName(writer);
     }
 
-    public void marshalJavaToNative(Writer writer, String identifier, boolean pointerForArray, boolean upcall) throws IOException {
+    public void marshalJavaToNative(SourceWriter writer, String identifier, boolean pointerForArray, boolean upcall) throws IOException {
         writer.write(marshalJavaToNative(identifier, pointerForArray, upcall));
     }
 
-    public void marshalNativeToJava(Writer writer, String identifier, boolean upcall) throws IOException {
+    public void marshalNativeToJava(SourceWriter writer, String identifier, boolean upcall) throws IOException {
         writer.write(marshalNativeToJava(identifier, upcall));
     }
 
@@ -153,7 +152,7 @@ public class Variable extends GirElement {
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
+            return "Marshal.stringToAddress.marshal(" + identifier + ", SCOPE)";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -165,10 +164,7 @@ public class Variable extends GirElement {
             return "Marshal.booleanToInteger.marshal(" + identifier + ", null).intValue()";
 
         if (type.girElementInstance != null)
-            return type.girElementInstance.getInteropString(
-                    identifier,
-                    type.isPointer(),
-                    (this instanceof Parameter p) ? p.transferOwnership() : "Ownership.UNKNOWN");
+            return type.girElementInstance.getInteropString(identifier, type.isPointer());
 
         return identifier;
     }
@@ -181,17 +177,17 @@ public class Variable extends GirElement {
             return "Interop.allocateNativeArray("
                     + (type.isEnum() ? "Enumeration" : type.isBitfield() ? "Bitfield" : type.qualifiedJavaType) + ".get"
                     + (type.isAliasForPrimitive() ? Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) : "")
-                    + "Values(" + identifier + "), " + zeroTerminated + ")";
+                    + "Values(" + identifier + "), " + zeroTerminated + ", SCOPE)";
 
         if (type.isRecord())
-            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ")";
+            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ", SCOPE)";
 
-        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ")";
+        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", SCOPE)";
     }
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", null)";
+            return "Marshal.stringToAddress.marshal(" + identifier + ", SCOPE)";
 
         return identifier + ".handle()";
     }
@@ -231,12 +227,11 @@ public class Variable extends GirElement {
             return "null /* Unsupported parameter type */";
 
         if (type.isRecord() || type.isUnion())
-            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", "
-                    + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", null)";
 
         if (type.isClass() || type.isInterface() || type.isAlias())
             return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
-                    + ".marshal(" + identifier + ", " + (this instanceof Parameter p ? p.transferOwnership() : "Ownership.UNKNOWN") + ")";
+                    + ".marshal(" + identifier + ", null)";
 
         if (type.isBoolean())
             return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
@@ -266,7 +261,7 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive)
             return "MemorySegment.ofAddress(" + identifier + ", " + array.size(upcall)
-                    + ", Interop.getScope()).toArray(" + Conversions.getValueLayout(array.type) + ")";
+                    + ", SCOPE).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
                 + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class)";

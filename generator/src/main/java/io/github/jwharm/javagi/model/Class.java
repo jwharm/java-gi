@@ -2,9 +2,9 @@ package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.GObjectBuilder;
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class Class extends RegisteredType {
     
@@ -27,7 +27,7 @@ public class Class extends RegisteredType {
         }
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
@@ -58,6 +58,7 @@ public class Class extends RegisteredType {
             }
         }
         writer.write(" {\n");
+        writer.increaseIndent();
 
         generateEnsureInitialized(writer);
         generateCType(writer);
@@ -85,20 +86,21 @@ public class Class extends RegisteredType {
 
         // Generate a custom getType() function for ParamSpec
         if (isInstanceOf("org.gtk.gobject.ParamSpec") && "intern".equals(getType)) {
-            writer.write("    \n");
-            writer.write("    public static org.gtk.glib.Type getType() {\n");
-            writer.write("        return org.gtk.glib.Type.G_TYPE_PARAM;\n");
-            writer.write("    }\n");
-            writer.write("    \n");
-            writer.write("    public static boolean isAvailable() {\n");
-            writer.write("        return true;\n");
-            writer.write("    }\n");
+            writer.write("\n");
+            writer.write("public static org.gtk.glib.Type getType() {\n");
+            writer.write("    return org.gtk.glib.Type.G_TYPE_PARAM;\n");
+            writer.write("}\n");
+            writer.write("\n");
+            writer.write("public static boolean isAvailable() {\n");
+            writer.write("    return true;\n");
+            writer.write("}\n");
         } else {
             generateIsAvailable(writer);
         }
 
         generateInjected(writer);
 
+        writer.decreaseIndent();
         writer.write("}\n");
     }
 }

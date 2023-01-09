@@ -59,15 +59,7 @@ public abstract class GirElement {
         }
     }
 
-    public Repository getRepository() {
-        return (Repository) getNamespace().parent;
-    }
-
     public String toString() {
         return this.getClass().getSimpleName() + " " + this.name;
-    }
-    
-    protected String tab(int tabs) {
-        return " ".repeat(tabs * 4);
     }
 }

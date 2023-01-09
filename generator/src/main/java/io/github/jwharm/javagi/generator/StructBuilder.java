@@ -17,7 +17,7 @@ public class StructBuilder {
      * @param r The outer class
      * @throws IOException Thrown when an error occurs while writing
      */
-    public static void generateBuilder(Writer writer, io.github.jwharm.javagi.model.Record r) throws IOException {
+    public static void generateBuilder(SourceWriter writer, io.github.jwharm.javagi.model.Record r) throws IOException {
 
         // No builder for structs without field definitions
         if (r.fieldList.isEmpty()) {
@@ -25,43 +25,46 @@ public class StructBuilder {
         }
 
         // Write the inner Build class definition
-        writer.write("    \n"
-                + "    /**\n"
-                + "     * A {@link " + r.javaName + ".Builder} object constructs a {@link " + r.javaName + "} \n"
-                + "     * struct using the <em>builder pattern</em> to set the field values. \n"
-                + "     * Use the various {@code set...()} methods to set field values, \n"
-                + "     * and finish construction with {@link " + r.javaName + ".Builder#build()}. \n"
-                + "     */\n"
-                + "    public static Builder builder() {\n"
-                + "        return new Builder();\n"
-                + "    }\n"
-                + "    \n"
-                + "    /**\n"
-                + "     * Inner class implementing a builder pattern to construct \n"
-                + "     * a struct and set its values.\n"
-                + "     */\n"
-                + "    public static class Builder {\n"
-                + "        \n"
-                + "        private final " + r.javaName + " struct;\n"
-                + "        \n"
-                + "        private Builder() {\n"
-                + "            struct = " + r.javaName + ".allocate();\n"
-                + "        }\n"
-                + "        \n"
-                + "         /**\n"
-                + "         * Finish building the {@link " + r.javaName + "} struct.\n"
-                + "         * @return A new instance of {@code " + r.javaName + "} with the fields \n"
-                + "         *         that were set in the Builder object.\n"
-                + "         */\n"
-                + "        public " + r.javaName + " build() {\n"
-                + "            return struct;\n"
-                + "        }\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * A {@link " + r.javaName + ".Builder} object constructs a {@link " + r.javaName + "} \n");
+        writer.write(" * struct using the <em>builder pattern</em> to set the field values. \n");
+        writer.write(" * Use the various {@code set...()} methods to set field values, \n");
+        writer.write(" * and finish construction with {@link " + r.javaName + ".Builder#build()}. \n");
+        writer.write(" */\n");
+        writer.write("public static Builder builder() {\n");
+        writer.write("    return new Builder();\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Inner class implementing a builder pattern to construct \n");
+        writer.write(" * a struct and set its values.\n");
+        writer.write(" */\n");
+        writer.write("public static class Builder {\n");
+        writer.increaseIndent();
+
+        writer.write("\n");
+        writer.write("private final " + r.javaName + " struct;\n");
+        writer.write("\n");
+        writer.write("private Builder() {\n");
+        writer.write("    struct = " + r.javaName + ".allocate();\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Finish building the {@link " + r.javaName + "} struct.\n");
+        writer.write(" * @return A new instance of {@code " + r.javaName + "} with the fields \n");
+        writer.write(" *         that were set in the Builder object.\n");
+        writer.write(" */\n");
+        writer.write("public " + r.javaName + " build() {\n");
+        writer.write("    return struct;\n");
+        writer.write("}\n");
         
         // Generate setters for the fields
         for (Field f : r.fieldList) {
             f.generateStructField(writer);
         }
-        
-        writer.write("    }\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }

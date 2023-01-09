@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 /**
  * Represents an {@code alias} element
@@ -43,7 +43,7 @@ public class Alias extends ValueWrapper {
 
     // Aliases (typedefs) don't exist in Java. We can emulate this using inheritance.
     // For primitives and Strings, we wrap the value.
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
@@ -56,11 +56,13 @@ public class Alias extends ValueWrapper {
                 } else {
                     writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 }
+                writer.increaseIndent();
                 generateMemoryAddressConstructor(writer);
                 generateMarshal(writer);
             }
             case INTERFACE, CALLBACK -> {
                 writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
+                writer.increaseIndent();
             }
             case VALUE -> {
                 String genericType = Conversions.primitiveClassName(type.qualifiedJavaType);
@@ -69,46 +71,48 @@ public class Alias extends ValueWrapper {
                 } else if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)) {
                     genericType = type.qualifiedJavaType;
                 }
-                writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {");
-                writer.write("\n");
+                writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {\n");
+                writer.increaseIndent();
                 generateValueConstructor(writer, type.qualifiedJavaType);
                 generateArrayConstructor(writer);
             }
             default -> {
                 writer.write("public class " + javaName + " {\n");
+                writer.increaseIndent();
             }
         }
         if (getTargetType() == TargetType.CLASS || getTargetType() == TargetType.INTERFACE) {
             generateIsAvailable(writer);
         }
         generateInjected(writer);
+        writer.decreaseIndent();
         writer.write("}\n");
     }
 
-    protected void generateArrayConstructor(Writer writer) throws IOException {
+    protected void generateArrayConstructor(SourceWriter writer) throws IOException {
         String layout = Conversions.getValueLayout(type);
-        writer.write("    \n");
-        writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length) {\n");
-        writer.write("        " + javaName + "[] array = new " + javaName + "[(int) length];\n");
-        writer.write("        long bytesSize = " + layout + ".byteSize();\n");
-        writer.write("        for (int i = 0; i < length; i++) {\n");
+        writer.write("\n");
+        writer.write("@ApiStatus.Internal\n");
+        writer.write("public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length) {\n");
+        writer.write("    " + javaName + "[] array = new " + javaName + "[(int) length];\n");
+        writer.write("    long bytesSize = " + layout + ".byteSize();\n");
+        writer.write("    for (int i = 0; i < length; i++) {\n");
         if ("utf8".equals(type.name)) {
-            writer.write("            array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
+            writer.write("        array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize)));\n");
         } else {
-            writer.write("            array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
+            writer.write("        array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
         }
-        writer.write("        }\n");
-        writer.write("        return array;\n");
         writer.write("    }\n");
+        writer.write("    return array;\n");
+        writer.write("}\n");
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         if (getTargetType() == TargetType.VALUE) {
-            return super.getInteropString(paramName, isPointer, transferOwnership);
+            return super.getInteropString(paramName, isPointer);
         } else {
-            return type.girElementInstance.getInteropString(paramName, isPointer, transferOwnership);
+            return type.girElementInstance.getInteropString(paramName, isPointer);
         }
     }
 }

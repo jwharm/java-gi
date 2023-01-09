@@ -1,9 +1,8 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class Callback extends RegisteredType implements CallableType, Closure {
 
@@ -14,15 +13,15 @@ public class Callback extends RegisteredType implements CallableType, Closure {
         super(parent, name, null, cType, version);
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
-        generateFunctionalInterface(writer, javaName, 0);
+        generateFunctionalInterface(writer, javaName);
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         return "(Addressable) " + paramName + ".toCallback()";
     }
 
@@ -49,5 +48,10 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     @Override
     public Doc getDoc() {
         return doc;
+    }
+
+    @Override
+    public String getThrows() {
+        return null;
     }
 }

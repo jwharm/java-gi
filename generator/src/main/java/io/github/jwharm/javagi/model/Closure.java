@@ -1,32 +1,31 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public interface Closure extends CallableType {
 
-    default void generateFunctionalInterface(Writer writer, String javaName, int tabs) throws IOException {
+    default void generateFunctionalInterface(SourceWriter writer, String javaName) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
-        String indent = " ".repeat(tabs * 4);
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
-        writer.write(indent + "/**\n");
-        writer.write(indent + " * Functional interface declaration of the {@code " + javaName + "} callback.\n");
-        writer.write(indent + " */\n");
-        writer.write(indent + "@FunctionalInterface\n");
-        writer.write(indent + "public interface " + javaName + " {\n");
-        writer.write(indent + "\n");
+        writer.write("/**\n");
+        writer.write(" * Functional interface declaration of the {@code " + javaName + "} callback.\n");
+        writer.write(" */\n");
+        writer.write("@FunctionalInterface\n");
+        writer.write("public interface " + javaName + " {\n");
+        writer.write("\n");
+        writer.increaseIndent();
 
         // Generate javadoc for run(...)
         Doc doc = getDoc();
         if (doc != null)
-            doc.generate(writer, tabs + 1, false);
+            doc.generate(writer, false);
 
         // Generate run(...) method
-        writer.write(indent + "    ");
         returnValue.writeType(writer, false);
         writer.write(" run(");
         if (parameters != null) {
@@ -47,7 +46,7 @@ public interface Closure extends CallableType {
         String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
         if ("MemoryAddress".equals(returnType))
             returnType = "Addressable";
-        writer.write(indent + "    @ApiStatus.Internal default " + returnType + " upcall(");
+        writer.write("@ApiStatus.Internal default " + returnType + " upcall(");
         if (parameters != null) {
             boolean first = true;
             for (Parameter p : parameters.parameterList) {
@@ -57,14 +56,21 @@ public interface Closure extends CallableType {
             }
         }
         writer.write(") {\n");
+        writer.increaseIndent();
+
+        // Is memory allocated?
+        boolean hasScope = allocatesMemory();
+        if (hasScope) {
+            writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.increaseIndent();
+        }
 
         // Generate preprocessing statements
         if (parameters != null) {
-            parameters.generateUpcallPreprocessing(writer, tabs + 2);
+            parameters.generateUpcallPreprocessing(writer);
         }
 
         // Call run()
-        writer.write(indent + "        ");
         if (!isVoid) writer.write("var RESULT = ");
         writer.write("run(");
         if (parameters != null) {
@@ -74,26 +80,36 @@ public interface Closure extends CallableType {
 
         // Generate postprocessing statements
         if (parameters != null) {
-            parameters.generateUpcallPostprocessing(writer, tabs + 2);
+            parameters.generateUpcallPostprocessing(writer);
+        }
+
+        // If the return value is a proxy object with transfer-ownership="full", we don't need to unref it anymore.
+        if (returnValue.isProxy() && "full".equals(returnValue.transferOwnership)) {
+            writer.write("RESULT.yieldOwnership();\n");
         }
 
         // Return statement
         if (!isVoid) {
-            writer.write(indent + "        return ");
+            writer.write("return ");
             boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
             if (isMemoryAddress) writer.write("RESULT == null ? MemoryAddress.NULL.address() : (");
             returnValue.marshalJavaToNative(writer, "RESULT", false, false);
             if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
         }
-        writer.write(indent + "    }\n");
-        writer.write(indent + "    \n");
+        if (hasScope) {
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+        writer.decreaseIndent();
+        writer.write("}\n");
+        writer.write("\n");
 
         // Generate fields
-        writer.write(indent + "    /**\n");
-        writer.write(indent + "     * Describes the parameter types of the native callback function.\n");
-        writer.write(indent + "     */\n");
-        writer.write(indent + "    @ApiStatus.Internal FunctionDescriptor DESCRIPTOR = FunctionDescriptor.");
+        writer.write("/**\n");
+        writer.write(" * Describes the parameter types of the native callback function.\n");
+        writer.write(" */\n");
+        writer.write("@ApiStatus.Internal FunctionDescriptor DESCRIPTOR = FunctionDescriptor.");
         if (isVoid) {
             writer.write("ofVoid(");
         } else {
@@ -112,21 +128,23 @@ public interface Closure extends CallableType {
             }
         }
         writer.write(");\n");
-        writer.write(indent + "    \n");
-        writer.write(indent + "    /**\n");
-        writer.write(indent + "     * The method handle for the callback.\n");
-        writer.write(indent + "     */\n");
-        writer.write(indent + "    @ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
-        writer.write(indent + "    \n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * The method handle for the callback.\n");
+        writer.write(" */\n");
+        writer.write("@ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
+        writer.write("\n");
 
         // Generate toCallback()
-        writer.write(indent + "    /**\n");
-        writer.write(indent + "     * Creates a callback that can be called from native code and executes the {@code run} method.\n");
-        writer.write(indent + "     * @return the memory address of the callback function\n");
-        writer.write(indent + "     */\n");
-        writer.write(indent + "    default MemoryAddress toCallback() {\n");
-        writer.write(indent + "        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
-        writer.write(indent + "    }\n");
-        writer.write(indent + "}\n");
+        writer.write("/**\n");
+        writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
+        writer.write(" * @return the memory address of the callback function\n");
+        writer.write(" */\n");
+        writer.write("default MemoryAddress toCallback() {\n");
+        writer.write("    return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, MemorySession.global()).address();\n");
+        writer.write("}\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }

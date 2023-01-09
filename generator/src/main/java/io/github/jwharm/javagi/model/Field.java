@@ -1,10 +1,10 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.util.stream.Stream;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Field extends Variable {
 
@@ -24,7 +24,7 @@ public class Field extends Variable {
     /*
      * Generates a getter and setter method for a field in (the MemoryLayout of) a C struct.
      */
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         // Don't generate a getter/setter for a "disguised" record (often private data)
         if (type != null
                 && type.girElementInstance != null
@@ -57,100 +57,100 @@ public class Field extends Variable {
 
         // Generate a inner callback class declarations for callback fields
         if (callback != null) {
-            writer.write("    \n");
-            callback.generateFunctionalInterface(writer, callbackType, 1);
+            writer.write("\n");
+            callback.generateFunctionalInterface(writer, callbackType);
         }
 
         // Generate getter method
         if (callback == null) {
-            writer.write("    \n");
-            writer.write("    /**\n");
-            writer.write("     * Get the value of the field {@code " + this.fieldName + "}\n");
-            writer.write("     * @return The value of the field {@code " + this.fieldName + "}\n");
-            writer.write("     */\n");
-            writer.write("    public ");
+            writer.write("\n");
+            writer.write("/**\n");
+            writer.write(" * Get the value of the field {@code " + this.fieldName + "}\n");
+            writer.write(" * @return The value of the field {@code " + this.fieldName + "}\n");
+            writer.write(" */\n");
+            writer.write("public ");
             writeType(writer, true);
             writer.write(" " + getter + "() {\n");
 
             if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
-                writer.write("        long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
-                writer.write("        return ");
+                writer.write("    long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
+                writer.write("    return ");
                 marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
                 writer.write(";\n");
-                writer.write("    }\n");
+                writer.write("}\n");
             } else {
+                writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
                 writer.write("        var RESULT = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
+                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE));\n");
                 writer.write("        return ");
                 marshalNativeToJava(writer, "RESULT", false);
                 writer.write(";\n");
                 writer.write("    }\n");
+                writer.write("}\n");
             }
         }
 
         // Generate setter method
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Change the value of the field {@code " + this.fieldName + "}\n");
-        writer.write("     * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
-        writer.write("     */\n");
-        writer.write("    public void " + setter + "(");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Change the value of the field {@code " + this.fieldName + "}\n");
+        writer.write(" * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
+        writer.write(" */\n");
+        writer.write("public void " + setter + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
+        writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
         writer.write("        getMemoryLayout()\n");
         writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
         }
-
         marshalJavaToNative(writer, this.name, false, false);
-
         if (checkNull()) {
             writer.write(")");
         }
-
         writer.write(");\n");
         writer.write("    }\n");
+        writer.write("}\n");
     }
     
-    public void generateStructField(Writer writer) throws IOException {
-        writer.write("        \n");
+    public void generateStructField(SourceWriter writer) throws IOException {
+        writer.write("\n");
 
         // Generate javadoc
         if (doc != null) {
-            doc.generate(writer, 2, false);
+            doc.generate(writer, false);
         }
 
-        writer.write("        public Builder set" + Conversions.toCamelCase(this.name, true) + "(");
+        writer.write("public Builder set" + Conversions.toCamelCase(this.name, true) + "(");
 
         // Write the parameter
         writeTypeAndName(writer, false);
 
         // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
-        writer.write("            getMemoryLayout()\n");
-        writer.write("                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        writer.write("        getMemoryLayout()\n");
+        writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), SCOPE), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
         }
-
         // Convert the parameter to the C function argument
         marshalJavaToNative(writer, this.name, false, false);
-
         if (checkNull()) {
             writer.write(")");
         }
-
         writer.write(");\n");
-        writer.write("            return this;\n");
-        writer.write("        }\n");
+        writer.write("        return this;\n");
+        writer.write("    }\n");
+        writer.write("}\n");
     }
     
     /**

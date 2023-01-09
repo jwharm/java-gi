@@ -1,10 +1,10 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public abstract class RegisteredType extends GirElement {
 
@@ -48,14 +48,14 @@ public abstract class RegisteredType extends GirElement {
         return false;
     }
 
-    public abstract void generate(Writer writer) throws IOException;
+    public abstract void generate(SourceWriter writer) throws IOException;
 
-    protected void generatePackageDeclaration(Writer writer) throws IOException {
+    protected void generatePackageDeclaration(SourceWriter writer) throws IOException {
         writer.write("package " + getNamespace().packageName + ";\n");
         writer.write("\n");
     }
 
-    public static void generateImportStatements(Writer writer) throws IOException {
+    public static void generateImportStatements(SourceWriter writer) throws IOException {
         writer.write("import io.github.jwharm.javagi.*;\n");
         writer.write("import java.lang.foreign.*;\n");
         writer.write("import java.lang.invoke.*;\n");
@@ -63,16 +63,16 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
     }
 
-    protected void generateJavadoc(Writer writer) throws IOException {
+    protected void generateJavadoc(SourceWriter writer) throws IOException {
         if (doc != null) {
-            doc.generate(writer, 0, false);
+            doc.generate(writer, false);
         }
     }
     
-    protected void generateCType(Writer writer) throws IOException {
+    protected void generateCType(SourceWriter writer) throws IOException {
         String typeLiteral = Conversions.literal("java.lang.String", cType);
-        writer.write("    \n");
-        writer.write("    private static final java.lang.String C_TYPE_NAME = " + typeLiteral + ";\n");
+        writer.write("\n");
+        writer.write("private static final java.lang.String C_TYPE_NAME = " + typeLiteral + ";\n");
     }
     
     /**
@@ -95,27 +95,29 @@ public abstract class RegisteredType extends GirElement {
         this.functionList.add(getTypeFunc);
     }
     
-    protected void generateMemoryLayout(Writer writer) throws IOException {
+    protected void generateMemoryLayout(SourceWriter writer) throws IOException {
         if (this instanceof Bitfield || this instanceof Enumeration) {
             return;
         }
 
-        writer.write("    \n");
-        writer.write("    /**\n");
+        writer.write("\n");
+        writer.write("/**\n");
         if (fieldList.isEmpty()) {
-            writer.write("     * Memory layout of the native struct is unknown.\n");
-            writer.write("     * @return always {@code Interop.valueLayout.ADDRESS}\n");
+            writer.write(" * Memory layout of the native struct is unknown.\n");
+            writer.write(" * @return always {@code Interop.valueLayout.ADDRESS}\n");
         } else {
-            writer.write("     * The memory layout of the native struct.\n");
-            writer.write("     * @return the memory layout\n");
+            writer.write(" * The memory layout of the native struct.\n");
+            writer.write(" * @return the memory layout\n");
         }
-        writer.write("     */\n");
-        writer.write("    @ApiStatus.Internal\n");
-        writer.write("    public static MemoryLayout getMemoryLayout() {\n");
+        writer.write(" */\n");
+        writer.write("@ApiStatus.Internal\n");
+        writer.write("public static MemoryLayout getMemoryLayout() {\n");
+        writer.increaseIndent();
+
         if (fieldList.isEmpty()) {
-            writer.write("        return Interop.valueLayout.ADDRESS;\n");
+            writer.write("return Interop.valueLayout.ADDRESS;\n");
         } else {
-            writer.write("        return MemoryLayout.");
+            writer.write("return MemoryLayout.");
             if (this instanceof Union) {
                 writer.write("unionLayout(\n");
             } else {
@@ -141,76 +143,55 @@ public abstract class RegisteredType extends GirElement {
                     // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
                     if (size % s % 64 > 0) {
                         int padding = s - (size % s);
-                        writer.write("            MemoryLayout.paddingLayout(" + padding + "),\n");
+                        writer.write("    MemoryLayout.paddingLayout(" + padding + "),\n");
                         size += padding;
                     }
 
                 }
 
                 // Write the memory layout declaration
-                writer.write("            " + field.getMemoryLayoutString());
+                writer.write("    " + field.getMemoryLayoutString());
 
                 size += s;
             }
             // Write the name of the struct
-            writer.write("\n        ).withName(C_TYPE_NAME);\n");
+            writer.write("\n");
+            writer.write(").withName(C_TYPE_NAME);\n");
         }
-        writer.write("    }\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
     
-    protected void generateMemoryAddressConstructor(Writer writer) throws IOException {
-
-        // Find out if this class is instanceof InitiallyUnowned
-        boolean initiallyUnowned = isInstanceOf("org.gtk.gobject.InitiallyUnowned");
-
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Create a " + javaName + " proxy instance for the provided memory address.\n");
-        if (initiallyUnowned) {
-            writer.write("     * <p>\n");
-            writer.write("     * Because " +javaName + " is an {@code InitiallyUnowned} instance, when \n");
-            writer.write("     * {@code ownership == Ownership.NONE}, the ownership is set to {@code FULL} \n");
-            writer.write("     * and a call to {@code g_object_ref_sink()} is executed to sink the floating reference.\n");
-        }
-        writer.write("     * @param address   The memory address of the native object\n");
-        writer.write("     * @param ownership The ownership indicator used for ref-counted objects\n");
-        writer.write("     */\n");
-        writer.write("    protected " + javaName + "(Addressable address, Ownership ownership) {\n");
-
-        if (initiallyUnowned) {
-            writer.write("        super(address, Ownership.FULL);\n");
-            writer.write("        if (ownership == Ownership.NONE) {\n");
-            writer.write("            try {\n");
-            writer.write("                var RESULT = (MemoryAddress) Interop.g_object_ref_sink.invokeExact(address);\n");
-            writer.write("            } catch (Throwable ERR) {\n");
-            writer.write("                throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
-            writer.write("            }\n");
-            writer.write("        }\n");
-        } else {
-            writer.write("        super(address, ownership);\n");
-        }
-        writer.write("    }\n");
+    protected void generateMemoryAddressConstructor(SourceWriter writer) throws IOException {
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Create a " + javaName + " proxy instance for the provided memory address.\n");
+        writer.write(" * @param address   The memory address of the native object\n");
+        writer.write(" */\n");
+        writer.write("protected " + javaName + "(Addressable address) {\n");
+        writer.write("    super(address);\n");
+        writer.write("}\n");
     }
 
-    protected void generateMarshal(Writer writer) throws IOException {
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * The marshal function from a native memory address to a Java proxy instance\n");
-        writer.write("     */\n");
-        writer.write("    @ApiStatus.Internal\n");
+    protected void generateMarshal(SourceWriter writer) throws IOException {
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * The marshal function from a native memory address to a Java proxy instance\n");
+        writer.write(" */\n");
+        writer.write("@ApiStatus.Internal\n");
         String name = javaName + (this instanceof Interface ? "Impl" : "");
-        writer.write("    public static final Marshal<Addressable, " + name + "> fromAddress = (input, ownership) -> "
-                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input, ownership);\n"
+        writer.write("public static final Marshal<Addressable, " + name + "> fromAddress = (input, scope) -> "
+                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input);\n"
         );
     }
 
-    protected void generateIsAvailable(Writer writer) throws IOException {
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Check whether the type is available on the runtime platform.\n");
-        writer.write("     * @return {@code true} when the type is available on the runtime platform\n");
-        writer.write("     */\n");
-        writer.write("    public static boolean isAvailable() {\n");
+    protected void generateIsAvailable(SourceWriter writer) throws IOException {
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Check whether the type is available on the runtime platform.\n");
+        writer.write(" * @return {@code true} when the type is available on the runtime platform\n");
+        writer.write(" */\n");
+        writer.write("public static boolean isAvailable() {\n");
         String targetName = null;
         for (Method m : functionList) {
             if (m.name.equals("get_type") && m.getParameters() == null) {
@@ -218,23 +199,16 @@ public abstract class RegisteredType extends GirElement {
                 break;
             }
         }
-        if (targetName == null) throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
-        writer.write("        return DowncallHandles." + targetName + " != null;\n");
-        writer.write("    }\n");
+        if (targetName == null)
+            throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
+        writer.write("    return DowncallHandles." + targetName + " != null;\n");
+        writer.write("}\n");
     }
 
-    protected void generateEnsureInitialized(Writer writer) throws IOException {
-        generateEnsureInitialized(writer, "    ");
-    }
-
-    protected void generateEnsureInitialized(Writer writer, String indent) throws IOException {
-        writer.write(indent);
+    protected void generateEnsureInitialized(SourceWriter writer) throws IOException {
         writer.write("\n");
-        writer.write(indent);
         writer.write("static {\n");
-        writer.write(indent);
         writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
-        writer.write(indent);
         writer.write("}\n");
     }
 
@@ -244,7 +218,7 @@ public abstract class RegisteredType extends GirElement {
      * @param writer The writer for the source code
      * @throws IOException Thrown by {@code writer.write()}
      */
-    protected void generateConstructors(Writer writer) throws IOException {
+    protected void generateConstructors(SourceWriter writer) throws IOException {
         for (Constructor c : constructorList) {
             boolean isInterface = this instanceof Interface;
             if (c.name.equals("new")) {
@@ -260,12 +234,13 @@ public abstract class RegisteredType extends GirElement {
      * @param writer The writer for the source code
      * @throws IOException Thrown by {@code writer.write()}
      */
-    protected void generateDowncallHandles(Writer writer) throws IOException {
+    protected void generateDowncallHandles(SourceWriter writer) throws IOException {
         boolean isInterface = this instanceof Interface;
         if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
-            writer.write("    \n");
-            writer.write(isInterface ? "    @ApiStatus.Internal\n    " : "    private ");
+            writer.write("\n");
+            writer.write(isInterface ? "@ApiStatus.Internal\n" : "private ");
             writer.write("static class DowncallHandles {\n");
+            writer.increaseIndent();
             for (Constructor c : constructorList) {
                 c.generateMethodHandle(writer, isInterface);
             }
@@ -275,15 +250,16 @@ public abstract class RegisteredType extends GirElement {
             for (Function f : functionList) {
                 f.generateMethodHandle(writer, isInterface);
             }
-            writer.write("    }\n");
+            writer.decreaseIndent();
+            writer.write("}\n");
         }
     }
     
-    public String getInteropString(String paramName, boolean isPointer, String transferOwnership) {
+    public String getInteropString(String paramName, boolean isPointer) {
         return paramName + ".handle()";
     }
 
-    protected void generateInjected(Writer writer) throws IOException {
+    protected void generateInjected(SourceWriter writer) throws IOException {
         if (injected != null) writer.write(injected);
     }
 }

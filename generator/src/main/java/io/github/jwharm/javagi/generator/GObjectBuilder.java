@@ -17,7 +17,7 @@ public class GObjectBuilder {
      * @param c The outer class
      * @throws IOException Thrown when an error occurs while writing
      */
-    public static void generateBuilder(Writer writer, io.github.jwharm.javagi.model.Class c) throws IOException {
+    public static void generateBuilder(SourceWriter writer, io.github.jwharm.javagi.model.Class c) throws IOException {
 
         // Each Builder class extends the Builder class of the object's parent, to allow
         // setting the properties of the parent type. GObject does not have a parent, 
@@ -28,45 +28,47 @@ public class GObjectBuilder {
         }
 
         // Write the inner Build class definition
-        writer.write("    \n"
-                + "    /**\n"
-                + "     * A {@link " + c.javaName + ".Builder} object constructs a {@link " + c.javaName + "} \n"
-                + "     * using the <em>builder pattern</em> to set property values. \n"
-                + "     * Use the various {@code set...()} methods to set properties, \n"
-                + "     * and finish construction with {@link " + c.javaName + ".Builder#build()}. \n"
-                + "     */\n"
-                + "    public static Builder builder() {\n"
-                + "        return new Builder();\n"
-                + "    }\n"
-                + "    \n"
-                + "    /**\n"
-                + "     * Inner class implementing a builder pattern to construct \n"
-                + "     * a GObject with properties.\n"
-                + "     */\n"
-                + "    public static class Builder extends " + parent + " {\n"
-                + "        \n"
-                + "        /**\n"
-                + "         * Default constructor for a {@code Builder} object.\n"
-                + "         */\n"
-                + "        protected Builder() {\n"
-                + "        }\n"
-                + "        \n"
-                + "        /**\n"
-                + "         * Finish building the {@link " + c.javaName + "} object.\n"
-                + "         * Internally, a call to {@link org.gtk.gobject.GObjects#typeFromName} \n"
-                + "         * is executed to create a new GObject instance, which is then cast to \n"
-                + "         * {@link " + c.javaName + "}.\n"
-                + "         * @return A new instance of {@code " + c.javaName + "} with the properties \n"
-                + "         *         that were set in the Builder object.\n"
-                + "         */\n"
-                + "        public " + c.javaName + " build() {\n"
-                + "            return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n"
-                + "                " + c.javaName + ".getType(),\n"
-                + "                names.size(),\n"
-                + "                names.toArray(new String[names.size()]),\n"
-                + "                values.toArray(new org.gtk.gobject.Value[names.size()])\n"
-                + "            );\n"
-                + "        }\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * A {@link " + c.javaName + ".Builder} object constructs a {@link " + c.javaName + "} \n");
+        writer.write(" * using the <em>builder pattern</em> to set property values. \n");
+        writer.write(" * Use the various {@code set...()} methods to set properties, \n");
+        writer.write(" * and finish construction with {@link " + c.javaName + ".Builder#build()}. \n");
+        writer.write(" */\n");
+        writer.write("public static Builder builder() {\n");
+        writer.write("    return new Builder();\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Inner class implementing a builder pattern to construct \n");
+        writer.write(" * a GObject with properties.\n");
+        writer.write(" */\n");
+        writer.write("public static class Builder extends " + parent + " {\n");
+        writer.increaseIndent();
+
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Default constructor for a {@code Builder} object.\n");
+        writer.write(" */\n");
+        writer.write("protected Builder() {\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Finish building the {@link " + c.javaName + "} object.\n");
+        writer.write(" * Internally, a call to {@link org.gtk.gobject.GObjects#typeFromName} \n");
+        writer.write(" * is executed to create a new GObject instance, which is then cast to \n");
+        writer.write(" * {@link " + c.javaName + "}.\n");
+        writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
+        writer.write(" *         that were set in the Builder object.\n");
+        writer.write(" */\n");
+        writer.write("public " + c.javaName + " build() {\n");
+        writer.write("    return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n");
+        writer.write("        " + c.javaName + ".getType(),\n");
+        writer.write("        names.size(),\n");
+        writer.write("        names.toArray(new String[names.size()]),\n");
+        writer.write("        values.toArray(new org.gtk.gobject.Value[names.size()])\n");
+        writer.write("    );\n");
+        writer.write("}\n");
         
         // Generate setters for the properties
         for (Property p : c.propertyList) {
@@ -75,7 +77,8 @@ public class GObjectBuilder {
                 p.generate(writer);
             }
         }
-        
-        writer.write("    }\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }

@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Method extends GirElement implements CallableType {
 
@@ -31,14 +31,13 @@ public class Method extends GirElement implements CallableType {
         }
     }
     
-    public void generateMethodHandle(Writer writer, boolean isInterface) throws IOException {
+    public void generateMethodHandle(SourceWriter writer, boolean isInterface) throws IOException {
         boolean varargs = false;
-        writer.write("        \n");
-        writer.write("        ");
+        writer.write("\n");
         writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
         writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
-        writer.write("            \"" + cIdentifier + "\",\n");
-        writer.write("            FunctionDescriptor.");
+        writer.write("        \"" + cIdentifier + "\",\n");
+        writer.write("        FunctionDescriptor.");
         if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
             writer.write("ofVoid(");
         } else {
@@ -63,29 +62,29 @@ public class Method extends GirElement implements CallableType {
             writer.write(", Interop.valueLayout.ADDRESS");
         }
         writer.write("),\n");
-        writer.write(varargs ? "            true\n" : "            false\n");
-        writer.write("        );\n");
+        writer.write(varargs ? "        true\n" : "        false\n");
+        writer.write(");\n");
     }
 
-    public void generate(Writer writer, boolean isInterface, boolean isStatic) throws IOException {
-        writer.write("    \n");
+    public void generate(SourceWriter writer, boolean isInterface, boolean isStatic) throws IOException {
+        writer.write("\n");
         
         // Documentation
         if (doc != null) {
-            doc.generate(writer, 1, false);
+            doc.generate(writer, false);
         }
 
         // Deprecation
         if ("1".equals(deprecated)) {
-            writer.write("    @Deprecated\n");
+            writer.write("@Deprecated\n");
         }
 
         if (isInterface && !isStatic) {
             // Default interface methods
-            writer.write("    default ");
+            writer.write("default ");
         } else {
             // Visibility
-            writer.write("    public ");
+            writer.write("public ");
         }
 
         // Static methods (functions)
@@ -118,27 +117,35 @@ public class Method extends GirElement implements CallableType {
             writer.write(" throws io.github.jwharm.javagi.GErrorException");
         }
         writer.write(" {\n");
-        
+        writer.increaseIndent();
+
+        // Generate try-with-resources?
+        boolean hasScope = allocatesMemory();
+        if (hasScope) {
+            writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.increaseIndent();
+        }
+
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
-            parameters.generatePreprocessing(writer, 2);
+            parameters.generatePreprocessing(writer);
         }
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
         String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write("        " + panamaReturnType + " RESULT;\n");
+            writer.write(panamaReturnType + " RESULT;\n");
         }
         
         // The method call is wrapped in a try-catch block
-        writer.write("        try {\n");
-        writer.write("            ");
-        
+        writer.write("try {\n");
+        writer.increaseIndent();
+
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("RESULT = (");
@@ -160,26 +167,34 @@ public class Method extends GirElement implements CallableType {
         writer.write(";\n");
         
         // If something goes wrong in the invokeExact() call
-        writer.write("        } catch (Throwable ERR) {\n");
-        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
-        writer.write("        }\n");
+        writer.decreaseIndent();
+        writer.write("} catch (Throwable ERR) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("}\n");
 
         // Throw GErrorException
         if (throws_ != null) {
-            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("            throw new GErrorException(GERROR);\n");
-            writer.write("        }\n");
+            writer.write("if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("    throw new GErrorException(GERROR);\n");
+            writer.write("}\n");
         }
         
         // Generate post-processing actions for parameters
         if (parameters != null) {
-            parameters.generatePostprocessing(writer, 2);
+            parameters.generatePostprocessing(writer);
         }
         
         // Generate code to process and return the result value
-        returnValue.generate(writer, panamaReturnType, 2);
-        
-        writer.write("    }\n");
+        returnValue.generate(writer, panamaReturnType);
+
+        // End of memory allocation scope
+        if (hasScope) {
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 
     @Override
@@ -205,5 +220,10 @@ public class Method extends GirElement implements CallableType {
     @Override
     public Doc getDoc() {
         return doc;
+    }
+
+    @Override
+    public String getThrows() {
+        return throws_;
     }
 }

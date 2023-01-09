@@ -12,9 +12,6 @@ import java.util.*;
  */
 public class Interop {
 
-    private final static MemorySession session;
-    private final static SegmentAllocator implicitAllocator;
-    private final static SegmentAllocator sessionAllocator;
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
     private final static Map<Type, Marshal<Addressable, ? extends Proxy>> typeRegister;
@@ -33,11 +30,6 @@ public class Interop {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
         
-        // Initialize the memory session and an implicit allocator
-        session = MemorySession.openConfined();
-        implicitAllocator = SegmentAllocator.implicitAllocator();
-        sessionAllocator = SegmentAllocator.newNativeArena(session);
-
         // Ensure that the "gobject-2.0" library has been loaded.
         // This is required for the downcall handle to g_signal_connect.
         GObjects.javagi$ensureInitialized();
@@ -95,44 +87,6 @@ public class Interop {
     );
 
     /**
-     * The method handle for g_object_ref_sink is used to sink
-     * floating references of new GInitiallyUnowned instances.
-     */
-    public static final MethodHandle g_object_ref_sink = downcallHandle(
-            "g_object_ref_sink",
-            FunctionDescriptor.of(valueLayout.ADDRESS, valueLayout.ADDRESS),
-            false
-    );
-
-    /**
-     * Get the active memory session
-     * @return The memory session
-     */
-    public static MemorySession getScope() {
-        return session;
-    }
-
-    /**
-     * Get the memory allocator (ImplicitAllocator).
-     * @return An instance of SegmentAllocator.implicitAllocator(). Memory segments 
-     *         allocated by this allocator register a Cleaner, that automatically 
-     *         frees the native memory segment when it runs.
-     */
-    public static SegmentAllocator getAllocator() {
-        return implicitAllocator;
-    }
-    
-    /**
-     * Get a NativeArena memory allocator. This allocator allocates a new memory 
-     * segment in the current memory session every time it is called. The memory 
-     * segments are not released until the app is closed.
-     * @return The NativeArena memory allocator.
-     */
-    public static SegmentAllocator getSessionAllocator() {
-        return sessionAllocator;
-    }
-
-    /**
      * Creates a method handle that is used to call the native function with 
      * the provided name and function descriptor.
      * @param name Name of the native function
@@ -150,10 +104,11 @@ public class Interop {
     /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
+     * @param scope the segment scope for memory allocation
      * @return the allocated MemorySegment
      */
-    public static Addressable allocateNativeString(String string) {
-        return string == null ? MemoryAddress.NULL : implicitAllocator.allocateUtf8String(string);
+    public static Addressable allocateNativeString(String string, MemorySession scope) {
+        return string == null ? MemoryAddress.NULL : scope.allocateUtf8String(string);
     }
     
     /**
@@ -217,13 +172,14 @@ public class Interop {
      * of strings (NUL-terminated utf8 char*).
      * @param strings Array of Strings
      * @param zeroTerminated Whether to add a NUL at the end the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated, MemorySession scope) {
         int length = zeroTerminated ? strings.length : strings.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
+        var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
-            var cString = implicitAllocator.allocateUtf8String(strings[i]);
+            var cString = scope.allocateUtf8String(strings[i]);
             memorySegment.setAtIndex(valueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
@@ -233,95 +189,103 @@ public class Interop {
     }
 
     /**
-     * Converts the boolean[] array into an int[] array, and calls {@link #allocateNativeArray(int[], boolean)}.
+     * Converts the boolean[] array into an int[] array, and calls {@link #allocateNativeArray(int[], boolean, MemorySession)}.
      * Each boolean value "true" is converted 1, boolean value "false" to 0.
      * @param array Array of booleans
      * @param zeroTerminated When true, an (int) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(boolean[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(boolean[] array, boolean zeroTerminated, MemorySession scope) {
         int[] intArray = new int[array.length];
         for (int i = 0; i < array.length; i++) {
             intArray[i] = array[i] ? 1 : 0;
         }
-        return allocateNativeArray(intArray, zeroTerminated);
+        return allocateNativeArray(intArray, zeroTerminated, scope);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of bytes.
      * @param array The array of bytes
      * @param zeroTerminated When true, a (byte) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(byte[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(byte[] array, boolean zeroTerminated, MemorySession scope) {
         byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_BYTE, copy);
+        return scope.allocateArray(valueLayout.C_BYTE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of chars.
      * @param array The array of chars
      * @param zeroTerminated When true, a (char) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(char[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(char[] array, boolean zeroTerminated, MemorySession scope) {
         char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_CHAR, copy);
+        return scope.allocateArray(valueLayout.C_CHAR, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of doubles.
      * @param array The array of doubles
      * @param zeroTerminated When true, a (double) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(double[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(double[] array, boolean zeroTerminated, MemorySession scope) {
         double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_DOUBLE, copy);
+        return scope.allocateArray(valueLayout.C_DOUBLE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
      * @param array The array of floats
      * @param zeroTerminated When true, a (float) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(float[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(float[] array, boolean zeroTerminated, MemorySession scope) {
         float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_FLOAT, copy);
+        return scope.allocateArray(valueLayout.C_FLOAT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
      * @param array The array of floats
      * @param zeroTerminated When true, a (int) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(int[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(int[] array, boolean zeroTerminated, MemorySession scope) {
         int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_INT, copy);
+        return scope.allocateArray(valueLayout.C_INT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of longs.
      * @param array The array of longs
      * @param zeroTerminated When true, a (long) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(long[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(long[] array, boolean zeroTerminated, MemorySession scope) {
         long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_LONG, copy);
+        return scope.allocateArray(valueLayout.C_LONG, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of shorts.
      * @param array The array of shorts
      * @param zeroTerminated When true, a (short) 0 is appended to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(short[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(short[] array, boolean zeroTerminated, MemorySession scope) {
         short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return implicitAllocator.allocateArray(valueLayout.C_SHORT, copy);
+        return scope.allocateArray(valueLayout.C_SHORT, copy);
     }
 
     /**
@@ -329,14 +293,15 @@ public class Interop {
      * of pointers (from Proxy instances).
      * @param array The array of Proxy instances
      * @param zeroTerminated Whether to add an additional NUL to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(Proxy[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(Proxy[] array, boolean zeroTerminated, MemorySession scope) {
         Addressable[] addressArray = new Addressable[array.length];
         for (int i = 0; i < array.length; i++) {
             addressArray[i] = array[i].handle();
         }
-        return allocateNativeArray(addressArray, zeroTerminated);
+        return allocateNativeArray(addressArray, zeroTerminated, scope);
     }
     
     /**
@@ -346,13 +311,14 @@ public class Interop {
      * @param array The array of Proxy instances
      * @param layout The memory layout of the object type
      * @param zeroTerminated Whether to add an additional NUL to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, MemorySession scope) {
         int length = zeroTerminated ? array.length : array.length + 1;
-        MemorySegment memorySegment = implicitAllocator.allocateArray(layout, length);
+        MemorySegment memorySegment = scope.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
-            MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), getScope());
+            MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), scope);
             memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
         }
         if (zeroTerminated) {
@@ -366,11 +332,12 @@ public class Interop {
      * of memory addresses.
      * @param array The array of addresses
      * @param zeroTerminated Whether to add an additional NUL to the array
+     * @param scope the segment scope for memory allocation
      * @return The memory segment of the native array
      */
-    public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated) {
+    public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated, MemorySession scope) {
         int length = zeroTerminated ? array.length : array.length + 1;
-        var memorySegment = implicitAllocator.allocateArray(valueLayout.ADDRESS, length);
+        var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i]);
         }
@@ -553,7 +520,7 @@ public class Interop {
                 return enumeration.getValue();
             }
             if (o instanceof java.lang.String string) {
-                return getSessionAllocator().allocateUtf8String(string).address();
+                return MemorySession.openImplicit().allocateUtf8String(string).address();
             }
             return o;
         }
