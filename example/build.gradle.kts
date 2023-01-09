@@ -19,5 +19,6 @@ tasks.run.get().jvmArgs!!.addAll(listOf(
     "--enable-preview",
     "--enable-native-access=org.glib",
     "--enable-native-access=org.gtk",
-    "--enable-native-access=org.gstreamer"
+    "--enable-native-access=org.gstreamer",
+    "--enable-native-access=io.github.jwharm.javagi.example"
 ))

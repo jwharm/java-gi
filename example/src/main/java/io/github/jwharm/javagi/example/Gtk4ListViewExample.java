@@ -1,48 +1,53 @@
 package io.github.jwharm.javagi.example;
 
 import org.gtk.gio.ApplicationFlags;
-import org.gtk.glib.GLib;
 import org.gtk.gtk.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Gtk4ListViewExample {
 
-    private static final Queue<Runnable> SCHEDULED = new ArrayDeque<>();
-
-    public static void schedule(Runnable task) {
-        SCHEDULED.add(Objects.requireNonNull(task));
-    }
-
-
     private final Application app;
     private final List<String> list;
-    private final ListIndex listIndex;
+    private final ListIndexModel listIndexModel;
     private final Random rnd = new Random();
+    private SignalListItemFactory factory;
+    private ScrolledWindow scroll;
+    private ListView lv;
 
     public void activate() {
         var window = new ApplicationWindow(app);
         window.setTitle("Window");
-        window.setDefaultSize(300, 200);
+        window.setDefaultSize(300, 500);
 
         var box = new Box(Orientation.VERTICAL, 0);
-        box.setHalign(Align.CENTER);
-        box.setValign(Align.CENTER);
 
-        var button = Button.newWithLabel("Hello world! 30");
-        button.onClicked(() -> {
-            list.clear();
-            int len = rnd.nextInt(100, 1000);
-            for (int i = 0; i < len; i++) list.add(randomString());
-            listIndex.setSize(list.size());
+        factory = new SignalListItemFactory();
+        factory.onSetup(object -> {
+            ListItem listitem = (ListItem) object;
+            listitem.setChild(new Label(""));
+        });
+        factory.onBind(object -> {
+            ListItem listitem = (ListItem) object;
+            Label label = (Label) listitem.getChild();
+            ListIndexItem obj = (ListIndexItem) listitem.getItem();
+
+            int index = obj.getIntValue();
+            String text = list.get(index);
+            label.setLabel(text);
         });
 
-        box.append(button);
-
-        box.append(new ListView(listIndex.inSelectionModel(), new CListEntryFactory(list)));
+        scroll = new ScrolledWindow();
+        lv = new ListView(new SingleSelection(listIndexModel), factory);
+        scroll.setChild(lv);
+        scroll.setVexpand(true);
+        box.append(scroll);
 
         window.setChild(box);
         window.show();
+
     }
 
     private String randomString() {
@@ -53,39 +58,13 @@ public class Gtk4ListViewExample {
         return sb.toString();
     }
 
-    private static class CListEntryFactory extends SignalListItemFactory {
-        public CListEntryFactory(List<String> entries) {
-            onSetup(object -> {
-                ListItem item = (ListItem) object;
-                item.setChild(new Label(""));
-            });
-            onBind(object -> {
-                ListItem item = (ListItem) object;
-                String text = entries.get(ListIndex.toIndex(item));
-                Label label = (Label) Objects.requireNonNull(item.getChild());
-                label.setLabel(text);
-            });
-        }
-    }
-
     public Gtk4ListViewExample(String[] args) {
         app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
 
-        GLib.idleAdd(() -> {
-            Runnable r;
-            while ((r = SCHEDULED.poll()) != null) {
-                try {
-                    r.run();
-                } catch (Throwable t) {
-                    System.err.println("Could not run scheduled task");
-                    t.printStackTrace();
-                }
-            }
-            return true;
-        });
-
         list = new ArrayList<>();
-        listIndex = new ListIndex();
+        int len = rnd.nextInt(900, 1000);
+        for (int i = 0; i < len; i++) list.add(randomString());
+        listIndexModel = new ListIndexModel(list.size());
 
         app.onActivate(this::activate);
         app.run(args.length, args);
