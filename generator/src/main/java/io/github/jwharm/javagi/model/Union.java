@@ -15,7 +15,7 @@ public class Union extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends ObjectBase {\n");
+        writer.write("public class " + javaName + " extends Struct {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
         generateCType(writer);
