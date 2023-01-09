@@ -1,7 +1,8 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.SourceWriter;
+
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class Parameters extends GirElement {
         super(parent);
     }
 
-    public void generateJavaParameters(Writer writer, boolean pointerForArray) throws IOException {
+    public void generateJavaParameters(SourceWriter writer, boolean pointerForArray) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
             if (p.isInstanceParameter() || p.isUserDataParameter()) {
@@ -26,7 +27,7 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void generateJavaParameterNames(Writer writer) throws IOException {
+    public void generateJavaParameterNames(SourceWriter writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
             if (p.isInstanceParameter() || p.isUserDataParameter()) {
@@ -39,14 +40,21 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void marshalJavaToNative(Writer writer, String throws_) throws IOException {
+    public void marshalJavaToNative(SourceWriter writer, String throws_) throws IOException {
         int counter = 0;
+
+        boolean multipleParameters = parameterList.size() > 1;
 
         for (Parameter p : parameterList) {
             if (counter++ > 0) {
                 writer.write(",");
             }
-            writer.write("\n                    ");
+
+            // If there is more than one parameter, write each marshal call on its own line for readability
+            if (multipleParameters) {
+                writer.write("\n");
+                writer.write("        ");
+            }
 
             // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
@@ -87,11 +95,16 @@ public class Parameters extends GirElement {
 
         // GError
         if (throws_ != null) {
-            writer.write(",\n                    (Addressable) GERROR");
+            writer.write(",");
+            if (multipleParameters) {
+                writer.write("\n");
+                writer.write("        ");
+            }
+            writer.write("(Addressable) GERROR");
         }
     }
 
-    public void marshalNativeToJava(Writer writer) throws IOException {
+    public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
             if (p.isUserDataParameter() || p.signalSource) {
@@ -118,33 +131,31 @@ public class Parameters extends GirElement {
     /**
      * Generate preprocessing statements for all parameters
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generatePreprocessing(Writer writer, int indent) throws IOException {
+    public void generatePreprocessing(SourceWriter writer) throws IOException {
         for (Parameter p : parameterList) {
-            p.generatePreprocessing(writer, indent);
+            p.generatePreprocessing(writer);
         }
     }
     
     /**
      * Generate postprocessing statements for all parameters
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generatePostprocessing(Writer writer, int indent) throws IOException {
+    public void generatePostprocessing(SourceWriter writer) throws IOException {
         // First the regular (non-array) out-parameters. These could include an out-parameter with 
         // the length of an array out-parameter, so we have to process these first.
         for (Parameter p : parameterList) {
             if (p.array == null) {
-                p.generatePostprocessing(writer, indent);
+                p.generatePostprocessing(writer);
             }
         }
         // Secondly, process the array out parameters
         for (Parameter p : parameterList) {
             if (p.array != null) {
-                p.generatePostprocessing(writer, indent);
+                p.generatePostprocessing(writer);
             }
         }
     }
@@ -152,21 +163,20 @@ public class Parameters extends GirElement {
     /**
      * Generate preprocessing statements for all parameters in an upcall
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generateUpcallPreprocessing(Writer writer, int indent) throws IOException {
+    public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         // First the regular (non-array) out-parameters. These could include an out-parameter with
         // the length of an array out-parameter, so we have to process these first.
         for (Parameter p : parameterList) {
             if (p.array == null) {
-                p.generateUpcallPreprocessing(writer, indent);
+                p.generateUpcallPreprocessing(writer);
             }
         }
         // Secondly, process the array out parameters
         for (Parameter p : parameterList) {
             if (p.array != null) {
-                p.generateUpcallPreprocessing(writer, indent);
+                p.generateUpcallPreprocessing(writer);
             }
         }
     }
@@ -174,12 +184,11 @@ public class Parameters extends GirElement {
     /**
      * Generate postprocessing statements for all parameters in an upcall
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generateUpcallPostprocessing(Writer writer, int indent) throws IOException {
+    public void generateUpcallPostprocessing(SourceWriter writer) throws IOException {
         for (Parameter p : parameterList) {
-            p.generateUpcallPostprocessing(writer, indent);
+            p.generateUpcallPostprocessing(writer);
         }
     }
 }

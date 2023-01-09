@@ -4,7 +4,6 @@ import io.github.jwharm.javagi.model.Class;
 import io.github.jwharm.javagi.model.*;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -30,7 +29,7 @@ public class BindingsGenerator {
         // Create a java file for each RegisteredType (class, interface, ...)
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
             
-            try (Writer writer = Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java"))) {
+            try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java")))) {
                 rt.generate(writer);
             }
         }
@@ -44,7 +43,7 @@ public class BindingsGenerator {
      */
     public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
         String className = Conversions.convertToJavaType(gir.namespace.globalClassName, false, gir.namespace);
-        try (Writer writer = Files.newBufferedWriter(basePath.resolve(className + ".java"))) {
+        try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(className + ".java")))) {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             RegisteredType.generateImportStatements(writer);

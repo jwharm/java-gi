@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Property extends Variable {
 
@@ -22,17 +22,17 @@ public class Property extends Variable {
      * @param writer The writer to the class file
      * @throws IOException Thrown when an exception occurs during writing
      */
-    public void generate(Writer writer) throws IOException {
-        writer.write("        \n");
+    public void generate(SourceWriter writer) throws IOException {
+        writer.write("\n");
         if (doc != null) {
-            doc.generate(writer, 2, false);
+            doc.generate(writer, false);
         }
-        writer.write("        public Builder set" + Conversions.toCamelCase(name, true) + "(");
+        writer.write("public Builder set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("            names.add(\"" + propertyName + "\");\n");
-        writer.write("            values.add(org.gtk.gobject.Value.create(" + name + "));\n");
-        writer.write("            return this;\n");
-        writer.write("        }\n");
+        writer.write("    names.add(\"" + propertyName + "\");\n");
+        writer.write("    values.add(org.gtk.gobject.Value.create(" + name + "));\n");
+        writer.write("    return this;\n");
+        writer.write("}\n");
     }
 }

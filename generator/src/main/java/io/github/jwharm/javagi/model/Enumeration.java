@@ -1,7 +1,8 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.SourceWriter;
+
 import java.io.IOException;
-import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,12 +12,13 @@ public class Enumeration extends ValueWrapper {
         super(parent, name, null, cType, version);
     }
 
-    public void generate(Writer writer) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
 
         writer.write("public enum " + javaName + " implements io.github.jwharm.javagi.Enumeration {\n");
+        writer.increaseIndent();
 
         // Some enumerations contain duplicate members or members with invalid values
         // This filters them from inclusion as enum members.
@@ -31,12 +33,12 @@ public class Enumeration extends ValueWrapper {
         for (Member m : memberList) {
             if (usable.contains(m)) {
                 writer.write("\n");
-                if (m.doc != null) m.doc.generate(writer, 1, false);
-                writer.write("    " + m.name.toUpperCase() + "(" + m.value + ")");
+                if (m.doc != null) m.doc.generate(writer, false);
+                writer.write(m.name.toUpperCase() + "(" + m.value + ")");
                 if (m == lastUsable) writer.write(";\n");
                 else writer.write(",\n");
             } else if (!m.usable) {
-                writer.write("    // Skipped " + m.name.toUpperCase() + "(" + m.value + ")\n");
+                writer.write("// Skipped " + m.name.toUpperCase() + "(" + m.value + ")\n");
             }
         }
 
@@ -50,8 +52,8 @@ public class Enumeration extends ValueWrapper {
                 if (u == null) System.out.println("Could not get corresponding enum member for " + m.name.toUpperCase());
                 else {
                     writer.write("\n");
-                    if (m.doc != null) m.doc.generate(writer, 1, false);
-                    writer.write("    public static final " + javaName + " " + m.name.toUpperCase() + " = " + u.name.toUpperCase() + ";\n");
+                    if (m.doc != null) m.doc.generate(writer, false);
+                    writer.write("public static final " + javaName + " " + m.name.toUpperCase() + " = " + u.name.toUpperCase() + ";\n");
                 }
             }
         }
@@ -59,39 +61,39 @@ public class Enumeration extends ValueWrapper {
         generateCType(writer);
         generateMemoryLayout(writer);
 
-        writer.write("    \n");
-        writer.write("    private final int value;\n");
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Create a new " + javaName + " for the provided value\n");
-        writer.write("     * @param numeric value the enum value\n");
-        writer.write("     */\n");
-        writer.write("    " + javaName + "(int value) {\n");
-        writer.write("        this.value = value;\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Get the numeric value of this enum\n");
-        writer.write("     * @return the enum value\n");
-        writer.write("     */\n");
-        writer.write("    @Override\n");
-        writer.write("    public int getValue() {\n");
-        writer.write("        return value;\n");
-        writer.write("    }\n");
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Create a new " + javaName + " for the provided value\n");
-        writer.write("     * @param value the enum value\n");
-        writer.write("     * @return the enum for the provided value\n");
-        writer.write("     */\n");
-        writer.write("    public static " + javaName + " of(int value) {\n");
-        writer.write("        return switch (value) {\n");
+        writer.write("\n");
+        writer.write("private final int value;\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Create a new " + javaName + " for the provided value\n");
+        writer.write(" * @param numeric value the enum value\n");
+        writer.write(" */\n");
+        writer.write(javaName + "(int value) {\n");
+        writer.write("    this.value = value;\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Get the numeric value of this enum\n");
+        writer.write(" * @return the enum value\n");
+        writer.write(" */\n");
+        writer.write("@Override\n");
+        writer.write("public int getValue() {\n");
+        writer.write("    return value;\n");
+        writer.write("}\n");
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Create a new " + javaName + " for the provided value\n");
+        writer.write(" * @param value the enum value\n");
+        writer.write(" * @return the enum for the provided value\n");
+        writer.write(" */\n");
+        writer.write("public static " + javaName + " of(int value) {\n");
+        writer.write("    return switch (value) {\n");
         for (Member m : usable) {
-            writer.write("            case " + m.value + " -> " + m.name.toUpperCase() + ";\n");
+            writer.write("        case " + m.value + " -> " + m.name.toUpperCase() + ";\n");
         }
-        writer.write("            default -> throw new IllegalStateException(\"Unexpected value: \" + value);\n");
-        writer.write("        };\n");
-        writer.write("    }\n");
+        writer.write("        default -> throw new IllegalStateException(\"Unexpected value: \" + value);\n");
+        writer.write("    };\n");
+        writer.write("}\n");
         
         for (Function function : functionList) {
             function.generate(writer, false, true);
@@ -100,7 +102,8 @@ public class Enumeration extends ValueWrapper {
         generateDowncallHandles(writer);
 
         generateInjected(writer);
-        
+
+        writer.decreaseIndent();
         writer.write("}\n");
     }
     

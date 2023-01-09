@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.GtkDoc;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class Doc extends GirElement {
     public final String space;
@@ -14,22 +14,22 @@ public class Doc extends GirElement {
         this.space = space;
     }
 
-    public void generate(Writer writer, int indent, boolean signalDeclaration) throws IOException {
+    public void generate(SourceWriter writer, boolean signalDeclaration) throws IOException {
         if (contents == null || contents.length() == 0) {
             return;
         }
-        writer.write(" ".repeat(indent * 4) + "/**\n");
+        writer.write("/**\n");
         
         // Convert GtkDoc to javadoc
         String javadoc = GtkDoc.getInstance().convert(this);
         
         // Write docstring
-        writeDoc(writer, indent, javadoc, null);
+        writeDoc(writer, javadoc, null);
         
         // Version
         if (parent instanceof RegisteredType rt) {
             if (rt.version != null) {
-                writeDoc(writer, indent, rt.version, "@version");
+                writeDoc(writer, rt.version, "@version");
             }
         }
         
@@ -45,7 +45,7 @@ public class Doc extends GirElement {
                     }
                     if (p.doc != null) {
                         String pJavadoc = GtkDoc.getInstance().convert(p.doc);
-                        writeDoc(writer, indent, pJavadoc, "@param " + (p.varargs ? "varargs" : p.name));
+                        writeDoc(writer, pJavadoc, "@param " + (p.varargs ? "varargs" : p.name));
                     }
                 }
             }
@@ -55,14 +55,14 @@ public class Doc extends GirElement {
                 ReturnValue rv = ct.getReturnValue();
                 if (rv != null && rv.doc != null) {
                     String rvJavadoc = GtkDoc.getInstance().convert(rv.doc);
-                    writeDoc(writer, indent, rvJavadoc, "@return");
+                    writeDoc(writer, rvJavadoc, "@return");
                 }
             }
             
             // Exception
             if (parent instanceof Method m) {
                 if ("1".equals(m.throws_)) {
-                    writeDoc(writer, indent, "GErrorException See {@link org.gtk.glib.Error}", "@throws");
+                    writeDoc(writer, "GErrorException See {@link org.gtk.glib.Error}", "@throws");
                 }
             }
         }
@@ -70,36 +70,36 @@ public class Doc extends GirElement {
         // Signals
         if (signalDeclaration && parent instanceof Signal signal) {
             if (signal.detailed) {
-                writeDoc(writer, indent, "The signal detail", "@param detail");
+                writeDoc(writer, "The signal detail", "@param detail");
             }
-            writeDoc(writer, indent, "The signal handler", "@param handler");
-            writeDoc(writer, indent, "A {@link io.github.jwharm.javagi.Signal} object to keep track of the signal connection", "@return");
+            writeDoc(writer, "The signal handler", "@param handler");
+            writeDoc(writer, "A {@link io.github.jwharm.javagi.Signal} object to keep track of the signal connection", "@return");
         }
         
         // Deprecated
         if (parent instanceof Method m && "1".equals(m.deprecated)) {
             if (parent.docDeprecated != null) {
                 String deprecatedJavadoc = GtkDoc.getInstance().convert(parent.docDeprecated);
-                writeDoc(writer, indent, deprecatedJavadoc, "@deprecated");
+                writeDoc(writer, deprecatedJavadoc, "@deprecated");
             }
         }
         
         // Property setters
         if (parent instanceof Property p) {
-            writeDoc(writer, indent, p.name + " The value for the {@code " + p.propertyName + "} property", "@param");
-            writeDoc(writer, indent, "The {@code Build} instance is returned, to allow method chaining", "@return");
+            writeDoc(writer, p.name + " The value for the {@code " + p.propertyName + "} property", "@param");
+            writeDoc(writer, "The {@code Build} instance is returned, to allow method chaining", "@return");
         }
         
         // Field setters
         if (parent instanceof Field f) {
-            writeDoc(writer, indent, f.name + " The value for the {@code " + f.name + "} field", "@param");
-            writeDoc(writer, indent, "The {@code Build} instance is returned, to allow method chaining", "@return");
+            writeDoc(writer, f.name + " The value for the {@code " + f.name + "} field", "@param");
+            writeDoc(writer, "The {@code Build} instance is returned, to allow method chaining", "@return");
         }
         
-        writer.write(" ".repeat(indent * 4) + " */\n");
+        writer.write(" */\n");
     }
     
-    private void writeDoc(Writer writer, int indent, String javadoc, String tag) throws IOException {
+    private void writeDoc(SourceWriter writer, String javadoc, String tag) throws IOException {
         
         // Write the lines (starting each line with " * ")
         int count = 0;
@@ -110,7 +110,7 @@ public class Doc extends GirElement {
             if (count == 0 && tag != null) {
                 escapedLine = tag + " " + escapedLine;
             }
-            writer.write(" ".repeat(indent * 4) + " * " + escapedLine + "\n");
+            writer.write(" * " + escapedLine + "\n");
             count++;
         }
     }

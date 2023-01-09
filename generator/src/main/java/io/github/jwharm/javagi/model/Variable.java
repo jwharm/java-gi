@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Variable extends GirElement {
 
@@ -19,25 +19,25 @@ public class Variable extends GirElement {
         return ! (type != null && type.isPrimitive && (! type.isPointer()));
     }
 
-    public void writeType(Writer writer, boolean pointerForArray) throws IOException {
+    public void writeType(SourceWriter writer, boolean pointerForArray) throws IOException {
         writer.write(getType(pointerForArray));
     }
 
-    public void writeName(Writer writer) throws IOException {
+    public void writeName(SourceWriter writer) throws IOException {
         writer.write(getName());
     }
 
-    public void writeTypeAndName(Writer writer, boolean pointerForArray) throws IOException {
+    public void writeTypeAndName(SourceWriter writer, boolean pointerForArray) throws IOException {
         writeType(writer, pointerForArray);
         writer.write(" ");
         writeName(writer);
     }
 
-    public void marshalJavaToNative(Writer writer, String identifier, boolean pointerForArray, boolean upcall) throws IOException {
+    public void marshalJavaToNative(SourceWriter writer, String identifier, boolean pointerForArray, boolean upcall) throws IOException {
         writer.write(marshalJavaToNative(identifier, pointerForArray, upcall));
     }
 
-    public void marshalNativeToJava(Writer writer, String identifier, boolean upcall) throws IOException {
+    public void marshalNativeToJava(SourceWriter writer, String identifier, boolean upcall) throws IOException {
         writer.write(marshalNativeToJava(identifier, upcall));
     }
 

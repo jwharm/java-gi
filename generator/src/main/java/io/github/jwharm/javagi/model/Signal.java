@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class Signal extends Method implements Closure {
 
@@ -33,15 +33,15 @@ public class Signal extends Method implements Closure {
         parameters.parameterList.add(0, p);
     }
 
-    public void generate(Writer writer, boolean isDefault) throws IOException {
-        writer.write("    \n");
-        generateFunctionalInterface(writer, signalName, 1);
-        writer.write("    \n");
+    public void generate(SourceWriter writer, boolean isDefault) throws IOException {
+        writer.write("\n");
+        generateFunctionalInterface(writer, signalName);
+        writer.write("\n");
 
         if (doc != null) {
-            doc.generate(writer, 1, true);
+            doc.generate(writer, true);
         }
-        writer.write("    public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
+        writer.write("public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
         
         // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
         if (detailed) {
@@ -49,19 +49,22 @@ public class Signal extends Method implements Closure {
         }
         
         writer.write(qualifiedName + " handler) {\n");
+        writer.increaseIndent();
 
-        writer.write("        MemorySession SCOPE = MemorySession.openImplicit();\n");
-        writer.write("        try {\n");
-        writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
-        writer.write("                handle(), Interop.allocateNativeString(\"" + name + "\"");
+        writer.write("MemorySession SCOPE = MemorySession.openImplicit();\n");
+        writer.write("try {\n");
+        writer.write("    var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
+        writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
         if (detailed) {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
         writer.write(", SCOPE), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
-        writer.write("            return new Signal<>(handle(), RESULT);\n");
-        writer.write("        } catch (Throwable ERR) {\n");
-        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
-        writer.write("        }\n");
-        writer.write("    }\n");
+        writer.write("    return new Signal<>(handle(), RESULT);\n");
+        writer.write("} catch (Throwable ERR) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("}\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }

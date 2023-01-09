@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Parameter extends Variable {
 
@@ -133,34 +133,32 @@ public class Parameter extends Variable {
      * generate a null check for NotNull parameters, and generate pointer allocation logic for 
      * pointer parameters.
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing to the file
      */
-    public void generatePreprocessing(Writer writer, int indent) throws IOException {
+    public void generatePreprocessing(SourceWriter writer) throws IOException {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
         if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (notnull) {
-                writer.write(tab(indent) + "java.util.Objects.requireNonNull(" + name 
+                writer.write("java.util.Objects.requireNonNull(" + name
                         + ", \"" + "Parameter '" + name + "' must not be null\");\n");
             }
         }
         
         // Generate pointer allocation
         if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
-            writer.write(tab(indent) + "MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
+            writer.write("MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
         }
     }
     
     /**
      * Generate code to do post-processing of the parameter after the function call.
      * @param writer The source code file writer
-     * @param indent How many tabs to indent
      * @throws IOException Thrown when an error occurs while writing to the file
      */
-    public void generatePostprocessing(Writer writer, int indent) throws IOException {
+    public void generatePostprocessing(SourceWriter writer) throws IOException {
         if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             if (array == null) {
                 // First the regular (non-array) out-parameters. These could include an out-parameter with 
@@ -184,17 +182,17 @@ public class Parameter extends Variable {
                 String valuelayout = Conversions.getValueLayout(array.type);
                 if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write(tab(indent) + name + ".set(");
+                    writer.write(name + ".set(");
                     writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
-                    writer.write(tab(indent) + array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
-                    writer.write(tab(indent) + "for (int I = 0; I < " + len + "; I++) {\n");
-                    writer.write(tab(indent + 1) + "var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
-                    writer.write(tab(indent + 1) + name + "ARRAY[I] = ");
+                    writer.write(array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("for (int I = 0; I < " + len + "; I++) {\n");
+                    writer.write("    var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
+                    writer.write("    " + name + "ARRAY[I] = ");
                     writer.write(marshalNativeToJava(array.type, "OBJ", false) + ";\n");
-                    writer.write(tab(indent) + "}\n");
-                    writer.write(tab(indent) + name + ".set(" + name + "ARRAY);\n");
+                    writer.write("    }\n");
+                    writer.write(name + ".set(" + name + "ARRAY);\n");
                 }
             }
         }
@@ -205,19 +203,19 @@ public class Parameter extends Variable {
                 && "full".equals(transferOwnership) 
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
-            writer.write(tab(indent) + (isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
+            writer.write((isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
         }
     }
 
-    public void generateUpcallPreprocessing(Writer writer, int indent) throws IOException {
+    public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         if (isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
-            writer.write(tab(indent) + type.qualifiedJavaType + " " + name + "ALIAS = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
+            writer.write(type.qualifiedJavaType + " " + name + "ALIAS = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = type.qualifiedJavaType;
                 if (type.isPrimitive) typeStr = Conversions.primitiveClassName(typeStr);
-                writer.write(tab(indent) + "Out<" + typeStr + "> " + name + "OUT = new Out<>(");
+                writer.write("Out<" + typeStr + "> " + name + "OUT = new Out<>(");
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
                     String layout = Conversions.getValueLayout(type);
                     writer.write(name + ".get(" + layout + ", 0)");
@@ -232,7 +230,6 @@ public class Parameter extends Variable {
                 }
             }
             if (array != null) {
-                writer.write(tab(indent));
                 writeType(writer, false);
                 writer.write(" " + name + "OUT = new Out<>(");
                 marshalNativeToJava(writer, name, true);
@@ -241,10 +238,10 @@ public class Parameter extends Variable {
         }
     }
 
-    public void generateUpcallPostprocessing(Writer writer, int indent) throws IOException {
+    public void generateUpcallPostprocessing(SourceWriter writer) throws IOException {
         if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
-            writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + name + "ALIAS.getValue());\n");
+            writer.write(name + ".set(" + typeStr + ", 0, " + name + "ALIAS.getValue());\n");
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = Conversions.getValueLayout(type);
@@ -256,7 +253,7 @@ public class Parameter extends Variable {
                 if (type.isEnum() || type.isBitfield()) {
                     identifier = name + "OUT.get().getValue()";
                 }
-                writer.write(tab(indent) + name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
+                writer.write(name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
             }
             if (array != null) {
                 // TODO: Copy the array from the Out<> parameter to the provided memory address.

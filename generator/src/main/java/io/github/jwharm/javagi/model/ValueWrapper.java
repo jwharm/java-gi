@@ -1,8 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
+
 import java.io.IOException;
-import java.io.Writer;
 
 public abstract class ValueWrapper extends RegisteredType {
     
@@ -10,14 +11,14 @@ public abstract class ValueWrapper extends RegisteredType {
         super(parent, name, parentClass, cType, version);
     }
     
-    public void generateValueConstructor(Writer writer, String typeStr) throws IOException {
-        writer.write("    \n");
-        writer.write("    /**\n");
-        writer.write("     * Create a new " + javaName + " with the provided value\n");
-        writer.write("     */\n");
-        writer.write("    public " + javaName + "(" + typeStr + " value) {\n");
-        writer.write("        super(value);\n");
-        writer.write("    }\n");
+    public void generateValueConstructor(SourceWriter writer, String typeStr) throws IOException {
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Create a new " + javaName + " with the provided value\n");
+        writer.write(" */\n");
+        writer.write("public " + javaName + "(" + typeStr + " value) {\n");
+        writer.write("    super(value);\n");
+        writer.write("}\n");
     }
     
     @Override

@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class Constructor extends Method {
 
@@ -11,19 +11,19 @@ public class Constructor extends Method {
         super(parent, name, cIdentifier, deprecated, throws_, null, null);
     }
 
-    public void generate(Writer writer, boolean isInterface) throws IOException {
+    public void generate(SourceWriter writer, boolean isInterface) throws IOException {
         String privateMethodName = generateConstructorHelper(writer);
 
-        writer.write("    \n");
+        writer.write("\n");
         if (doc != null) {
-            doc.generate(writer, 1, false);
+            doc.generate(writer, false);
         }
         
         if ("1".equals(deprecated)) {
-            writer.write("    @Deprecated\n");
+            writer.write("@Deprecated\n");
         }
         
-        writer.write("    public ");
+        writer.write("public ");
         writer.write(((RegisteredType) parent).javaName);
         if (parameters != null) {
             writer.write("(");
@@ -36,8 +36,9 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        
-        writer.write("        super(" + privateMethodName);
+        writer.increaseIndent();
+
+        writer.write("super(" + privateMethodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameterNames(writer);
@@ -49,20 +50,21 @@ public class Constructor extends Method {
 
         // Ownership transfer
         if ("full".equals(returnValue.transferOwnership)) {
-            writer.write("        this.takeOwnership();\n");
+            writer.write("this.takeOwnership();\n");
         }
 
         // Ownership transfer for InitiallyUnowned instances
         boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
         if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
-            writer.write("        this.refSink();\n");
-            writer.write("        this.takeOwnership();\n");
+            writer.write("this.refSink();\n");
+            writer.write("this.takeOwnership();\n");
         }
 
-        writer.write("    }\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 
-    public void generateNamed(Writer writer, boolean isInterface) throws IOException {
+    public void generateNamed(SourceWriter writer, boolean isInterface) throws IOException {
         RegisteredType constructed = (RegisteredType) parent;
 
         // Return value should always be the constructed type, but it is often specified in the GIR as
@@ -77,14 +79,14 @@ public class Constructor extends Method {
 
         writer.write("    \n");
         if (doc != null) {
-            doc.generate(writer, 1, false);
+            doc.generate(writer, false);
         }
         
         if ("1".equals(deprecated)) {
-            writer.write("    @Deprecated\n");
+            writer.write("@Deprecated\n");
         }
         
-        writer.write("    public static " + constructed.javaName + " " + Conversions.toLowerCaseJavaName(name));
+        writer.write("public static " + constructed.javaName + " " + Conversions.toLowerCaseJavaName(name));
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameters(writer, false);
@@ -96,8 +98,9 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        writer.increaseIndent();
 
-        writer.write("        var RESULT = " + privateMethodName);
+        writer.write("var RESULT = " + privateMethodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameterNames(writer);
@@ -110,17 +113,18 @@ public class Constructor extends Method {
         // Ownership transfer for InitiallyUnowned instances
         boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
         if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
-            writer.write("        var OBJECT = ");
+            writer.write("var OBJECT = ");
             returnValue.marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
-            writer.write("        OBJECT.refSink();\n");
-            writer.write("        OBJECT.takeOwnership();\n");
-            writer.write("        return OBJECT;\n");
+            writer.write("OBJECT.refSink();\n");
+            writer.write("OBJECT.takeOwnership();\n");
+            writer.write("return OBJECT;\n");
         } else {
-            returnValue.generateReturnStatement(writer, 2);
+            returnValue.generateReturnStatement(writer);
         }
 
-        writer.write("    }\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 
     // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
@@ -128,12 +132,12 @@ public class Constructor extends Method {
     // be the first statement in the constructor. Therefore, we always generate a private method that
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
-    private String generateConstructorHelper(Writer writer) throws IOException {
+    private String generateConstructorHelper(SourceWriter writer) throws IOException {
 
         // Method name
         String methodName = "construct" + Conversions.toCamelCase(name, true);
-        writer.write("    \n");
-        writer.write("    private static MemoryAddress " + methodName);
+        writer.write("\n");
+        writer.write("private static MemoryAddress " + methodName);
 
         // Parameters
         if (parameters != null) {
@@ -149,31 +153,34 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+        writer.increaseIndent();
 
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.increaseIndent();
         }
 
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
-            parameters.generatePreprocessing(writer, 2);
+            parameters.generatePreprocessing(writer);
         }
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Generate the return type
-        writer.write("        MemoryAddress RESULT;\n");
+        writer.write("MemoryAddress RESULT;\n");
         
         // The method call is wrapped in a try-catch block
-        writer.write("        try {\n");
+        writer.write("try {\n");
+        writer.increaseIndent();
 
         // Invoke to the method handle
-        writer.write("            RESULT = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        writer.write("RESULT = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
         
         // Marshall the parameters to the native types
         if (parameters != null) {
@@ -186,29 +193,33 @@ public class Constructor extends Method {
         writer.write(";\n");
         
         // If something goes wrong in the invokeExact() call
-        writer.write("        } catch (Throwable ERR) {\n");
-        writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
-        writer.write("        }\n");
-        
+        writer.decreaseIndent();
+        writer.write("} catch (Throwable ERR) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("}\n");
+
         // Throw GErrorException
         if (throws_ != null) {
-            writer.write("        if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("            throw new GErrorException(GERROR);\n");
-            writer.write("        }\n");
+            writer.write("if (GErrorException.isErrorSet(GERROR)) {\n");
+            writer.write("    throw new GErrorException(GERROR);\n");
+            writer.write("}\n");
         }
-        
+
         // Generate post-processing actions for parameters
         if (parameters != null) {
-            parameters.generatePostprocessing(writer, 2);
+            parameters.generatePostprocessing(writer);
         }
         
-        writer.write("        return RESULT;\n");
+        writer.write("return RESULT;\n");
 
         // End of memory allocation scope
-        if (hasScope)
-            writer.write("      }\n");
+        if (hasScope) {
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
 
-        writer.write("    }\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
         return methodName;
     }
 }
