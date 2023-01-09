@@ -87,16 +87,6 @@ public class Interop {
     );
 
     /**
-     * The method handle for g_object_ref_sink is used to sink
-     * floating references of new GInitiallyUnowned instances.
-     */
-    public static final MethodHandle g_object_ref_sink = downcallHandle(
-            "g_object_ref_sink",
-            FunctionDescriptor.of(valueLayout.ADDRESS, valueLayout.ADDRESS),
-            false
-    );
-
-    /**
      * Creates a method handle that is used to call the native function with 
      * the provided name and function descriptor.
      * @param name Name of the native function
