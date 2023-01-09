@@ -49,14 +49,15 @@ public class Signal extends Method implements Closure {
         }
         
         writer.write(qualifiedName + " handler) {\n");
-        
+
+        writer.write("        MemorySession SCOPE = MemorySession.openImplicit();\n");
         writer.write("        try {\n");
         writer.write("            var RESULT = (long) Interop.g_signal_connect_data.invokeExact(\n");
         writer.write("                handle(), Interop.allocateNativeString(\"" + name + "\"");
         if (detailed) {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
-        writer.write("), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
+        writer.write(", SCOPE), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
         writer.write("            return new Signal<>(handle(), RESULT);\n");
         writer.write("        } catch (Throwable ERR) {\n");
         writer.write("            throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");

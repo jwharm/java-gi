@@ -118,7 +118,13 @@ public class Method extends GirElement implements CallableType {
             writer.write(" throws io.github.jwharm.javagi.GErrorException");
         }
         writer.write(" {\n");
-        
+
+        // Generate try-with-resources?
+        boolean hasScope = allocatesMemory();
+        if (hasScope) {
+            writer.write("      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        }
+
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
             parameters.generatePreprocessing(writer, 2);
@@ -126,7 +132,7 @@ public class Method extends GirElement implements CallableType {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("        MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
@@ -178,7 +184,11 @@ public class Method extends GirElement implements CallableType {
         
         // Generate code to process and return the result value
         returnValue.generate(writer, panamaReturnType, 2);
-        
+
+        // End of memory allocation scope
+        if (hasScope)
+            writer.write("      }\n");
+
         writer.write("    }\n");
     }
 
@@ -205,5 +215,10 @@ public class Method extends GirElement implements CallableType {
     @Override
     public Doc getDoc() {
         return doc;
+    }
+
+    @Override
+    public String getThrows() {
+        return throws_;
     }
 }

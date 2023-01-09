@@ -41,4 +41,9 @@ public class FunctionMacro extends GirElement implements CallableType {
     public Doc getDoc() {
         return doc;
     }
+
+    @Override
+    public String getThrows() {
+        return throws_;
+    }
 }

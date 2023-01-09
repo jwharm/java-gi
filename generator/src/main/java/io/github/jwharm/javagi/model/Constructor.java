@@ -149,7 +149,13 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-        
+
+        // Generate try-with-resources?
+        boolean hasScope = allocatesMemory();
+        if (hasScope) {
+            writer.write("      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        }
+
         // Generate preprocessing statements for all parameters
         if (parameters != null) {
             parameters.generatePreprocessing(writer, 2);
@@ -157,7 +163,7 @@ public class Constructor extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("        MemorySegment GERROR = Interop.getAllocator().allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("        MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Generate the return type
@@ -197,6 +203,11 @@ public class Constructor extends Method {
         }
         
         writer.write("        return RESULT;\n");
+
+        // End of memory allocation scope
+        if (hasScope)
+            writer.write("      }\n");
+
         writer.write("    }\n");
         return methodName;
     }

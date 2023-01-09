@@ -50,4 +50,9 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     public Doc getDoc() {
         return doc;
     }
+
+    @Override
+    public String getThrows() {
+        return null;
+    }
 }

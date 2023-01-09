@@ -53,6 +53,6 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
         );
         // Call the constructor of the proxy object and return the created instance.
         // TODO: What about ownership of the object?
-        return make.marshal(ref);
+        return make.marshal(ref, null);
     }
 }

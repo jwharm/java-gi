@@ -150,7 +150,7 @@ public class Parameter extends Variable {
         
         // Generate pointer allocation
         if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
-            writer.write(tab(indent) + "MemorySegment " + name + "POINTER = Interop.getAllocator().allocate(" + Conversions.getValueLayout(type) + ");\n");
+            writer.write(tab(indent) + "MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
         }
     }
     
@@ -185,7 +185,7 @@ public class Parameter extends Variable {
                 if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write(tab(indent) + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), Interop.getScope()).toArray(" + valuelayout + "));\n");
+                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write(tab(indent) + array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");

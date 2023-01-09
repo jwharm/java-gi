@@ -22,7 +22,7 @@ public class Signal<T> {
      * @param handlerId the handler ID of the signal
      */
     public Signal(Addressable instance, long handlerId) {
-        this.instance = GObject.fromAddress.marshal(instance);
+        this.instance = GObject.fromAddress.marshal(instance, null);
         this.handlerId = handlerId;
     }
 

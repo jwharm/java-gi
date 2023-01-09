@@ -79,14 +79,16 @@ public class Field extends Variable {
                 writer.write(";\n");
                 writer.write("    }\n");
             } else {
+                writer.write("      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
                 writer.write("        var RESULT = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()));\n");
+                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE));\n");
                 writer.write("        return ");
                 marshalNativeToJava(writer, "RESULT", false);
                 writer.write(";\n");
+                writer.write("      }\n");
                 writer.write("    }\n");
             }
         }
@@ -100,9 +102,10 @@ public class Field extends Variable {
         writer.write("    public void " + setter + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
+        writer.write("      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
         writer.write("        getMemoryLayout()\n");
         writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
@@ -115,6 +118,7 @@ public class Field extends Variable {
         }
 
         writer.write(");\n");
+        writer.write("      }\n");
         writer.write("    }\n");
     }
     
@@ -133,9 +137,10 @@ public class Field extends Variable {
 
         // Set the value in the struct using the generated memory layout
         writer.write(") {\n");
+        writer.write("          try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
         writer.write("            getMemoryLayout()\n");
         writer.write("                .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), Interop.getScope()), ");
+        writer.write("                .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), SCOPE), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
@@ -150,6 +155,7 @@ public class Field extends Variable {
 
         writer.write(");\n");
         writer.write("            return this;\n");
+        writer.write("          }\n");
         writer.write("        }\n");
     }
     

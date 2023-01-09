@@ -58,6 +58,12 @@ public interface Closure extends CallableType {
         }
         writer.write(") {\n");
 
+        // Is memory allocated?
+        boolean hasScope = allocatesMemory();
+        if (hasScope) {
+            writer.write(indent + "      try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        }
+
         // Generate preprocessing statements
         if (parameters != null) {
             parameters.generateUpcallPreprocessing(writer, tabs + 2);
@@ -90,6 +96,9 @@ public interface Closure extends CallableType {
             returnValue.marshalJavaToNative(writer, "RESULT", false, false);
             if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
+        }
+        if (hasScope) {
+            writer.write(indent + "      }\n");
         }
         writer.write(indent + "    }\n");
         writer.write(indent + "    \n");
@@ -130,7 +139,7 @@ public interface Closure extends CallableType {
         writer.write(indent + "     * @return the memory address of the callback function\n");
         writer.write(indent + "     */\n");
         writer.write(indent + "    default MemoryAddress toCallback() {\n");
-        writer.write(indent + "        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, Interop.getScope()).address();\n");
+        writer.write(indent + "        return Linker.nativeLinker().upcallStub(HANDLE.bindTo(this), DESCRIPTOR, MemorySession.global()).address();\n");
         writer.write(indent + "    }\n");
         writer.write(indent + "}\n");
     }
