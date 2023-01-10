@@ -16,7 +16,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
       - uses: actions/setup-java@v3
         with:
           java-version: '19'
@@ -30,6 +33,30 @@ jobs:
       - name: Publish package
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: publish --stacktrace
+          arguments: publish javadoc --stacktrace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create javadoc package
+        run: |
+          mkdir javadoc
+          mv generator/build/docs/javadoc javadoc/generator
+          mv glib/build/docs/javadoc javadoc/glib
+          mv gstreamer/build/docs/javadoc javadoc/gstreamer
+          mv gtk4/build/docs/javadoc javadoc/gtk4
+      - name: Create pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'javadoc'
+  pages:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
