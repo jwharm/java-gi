@@ -203,7 +203,9 @@ public class Parameter extends Variable {
                 && "full".equals(transferOwnership) 
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
-            writer.write((isInstanceParameter() ? "this" : name) + ".yieldOwnership();\n");
+            String param = isInstanceParameter() ? "this" : name;
+            if (nullable) writer.write("if (" + param + " != null) ");
+            writer.write(param + ".yieldOwnership();\n");
         }
     }
 

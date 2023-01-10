@@ -83,6 +83,14 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPostprocessing(writer);
         }
 
+        boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
+        boolean isNullable = isMemoryAddress && returnValue.nullable;
+
+        if (isNullable) {
+            writer.write("if (RESULT != null) {\n");
+            writer.increaseIndent();
+        }
+
         // If the return value is a proxy object with transfer-ownership="full", we don't need to unref it anymore.
         if (returnValue.isProxy() && "full".equals(returnValue.transferOwnership)) {
             writer.write("RESULT.yieldOwnership();\n");
@@ -91,11 +99,15 @@ public interface Closure extends CallableType {
         // Return statement
         if (!isVoid) {
             writer.write("return ");
-            boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
-            if (isMemoryAddress) writer.write("RESULT == null ? MemoryAddress.NULL.address() : (");
+
+            if (isMemoryAddress) writer.write("(");
             returnValue.marshalJavaToNative(writer, "RESULT", false, false);
             if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
+            if (isNullable) {
+                writer.decreaseIndent();
+                writer.write("} else return null;\n");
+            }
         }
         if (hasScope) {
             writer.decreaseIndent();
