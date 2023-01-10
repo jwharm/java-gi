@@ -83,7 +83,7 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPostprocessing(writer);
         }
 
-        boolean isMemoryAddress = Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
+        boolean isMemoryAddress = !isVoid && Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
         boolean isNullable = isMemoryAddress && returnValue.nullable;
 
         if (isNullable) {
