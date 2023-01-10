@@ -48,8 +48,9 @@ jobs:
         with:
           path: 'javadoc'
   pages:
-    needs: publish
     runs-on: ubuntu-latest
+    needs: publish
+    if: event_name == 'release'
     permissions:
       pages: write
       id-token: write
