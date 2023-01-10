@@ -38,7 +38,7 @@ public class BindingsGenerator {
     }
 
     /**
-     * Generate the contents for the class with the namespace-global declarations.
+     * Generate the contents for the class with the namespace-global declarations and a package-info.
      * The name of the class is the namespace identifier.
      */
     public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
@@ -101,6 +101,16 @@ public class BindingsGenerator {
 
             writer.write("    }\n");
             writer.write("}\n");
+        }
+
+        try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve("package-info.java")))) {
+            writer.write("/**\n");
+            writer.write(" * This package contains the generated bindings for " + gir.namespace.name + ".\n");
+            writer.write(" * The following natives are required and will be loaded:");
+            for (String libraryName : natives) writer.write(" \"" + libraryName + "\"");
+            writer.write(" * For namespace-global declarations, please view {@link " + className + "}\n");
+            writer.write(" */\n");
+            writer.write("package " + gir.namespace.packageName + ";\n");
         }
     }
 }
