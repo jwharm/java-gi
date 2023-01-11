@@ -84,7 +84,7 @@ public interface Closure extends CallableType {
         }
 
         boolean isMemoryAddress = !isVoid && Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
-        boolean isNullable = isMemoryAddress && returnValue.nullable;
+        boolean isNullable = isMemoryAddress && (!returnValue.notnull);
 
         if (isNullable) {
             writer.write("if (RESULT != null) {\n");
@@ -106,7 +106,9 @@ public interface Closure extends CallableType {
             writer.write(";\n");
             if (isNullable) {
                 writer.decreaseIndent();
-                writer.write("} else return null;\n");
+                writer.write("} else {\n");
+                writer.write("    return MemoryAddress.NULL;\n");
+                writer.write("}\n");
             }
         }
         if (hasScope) {
