@@ -63,9 +63,11 @@ public class ListIndexModel extends GObject implements ListModel {
     }
 
     public void setSize(int size) {
+        int oldSize = getNItems();
         getMemoryLayout()
                 .varHandle(MemoryLayout.PathElement.groupElement("size"))
                 .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()), size);
+        itemsChanged(0, oldSize, size);
     }
 
     @Override
