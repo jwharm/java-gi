@@ -163,7 +163,6 @@ public class Parameter extends Variable {
             if (array == null) {
                 // First the regular (non-array) out-parameters. These could include an out-parameter with 
                 // the length of an array out-parameter, so we have to process these first.
-                writer.write("        ");
                 if (checkNull()) {
                     writer.write("if (" + name + " != null) ");
                 }
