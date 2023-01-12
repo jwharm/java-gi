@@ -171,7 +171,12 @@ public class Variable extends GirElement {
 
     private String marshalJavaArrayToNative(Array array, String identifier) {
         Type type = array.type;
-        String zeroTerminated = "1".equals(array.zeroTerminated) ? "true" : "false";
+
+        // If zero-terminated is missing, there's no length, there's no fixed size,
+        // and the name attribute is unset, then zero-terminated is true.
+        String zeroTerminated =
+                ((! "0".equals(array.zeroTerminated)) && array.size(false) == null && array.name == null)
+                ? "true" : "false";
 
         if (type.isEnum() || type.isBitfield() || type.isAliasForPrimitive())
             return "Interop.allocateNativeArray("
