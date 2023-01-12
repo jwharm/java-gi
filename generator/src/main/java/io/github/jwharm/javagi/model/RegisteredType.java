@@ -166,7 +166,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Create a " + javaName + " proxy instance for the provided memory address.\n");
-        writer.write(" * @param address   The memory address of the native object\n");
+        writer.write(" * @param address the memory address of the native object\n");
         writer.write(" */\n");
         writer.write("protected " + javaName + "(Addressable address) {\n");
         writer.write("    super(address);\n");
@@ -220,11 +220,10 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateConstructors(SourceWriter writer) throws IOException {
         for (Constructor c : constructorList) {
-            boolean isInterface = this instanceof Interface;
             if (c.name.equals("new")) {
-                c.generate(writer, isInterface);
+                c.generate(writer);
             } else {
-                c.generateNamed(writer, isInterface);
+                c.generateNamed(writer);
             }
         }
     }

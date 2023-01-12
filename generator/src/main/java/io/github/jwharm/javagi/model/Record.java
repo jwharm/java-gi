@@ -70,8 +70,10 @@ public class Record extends Class {
         writer.write("private MemorySegment allocatedMemorySegment;\n");
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * Allocate a new {@link " + javaName + "}\n");
-        writer.write(" * @return A new, uninitialized @{link " + javaName + "}\n");
+        writer.write(" * Allocate a new {@link " + javaName + "}. A {@link java.lang.ref.Cleaner} \n");
+        writer.write(" * is assigned to the allocated memory segment that will release the \n");
+        writer.write(" * memory when the {@link " + javaName + "} instance is garbage-collected.\n");
+        writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
         writer.write(" */\n");
         writer.write("public static " + javaName + " allocate() {\n");
         writer.write("    MemorySegment segment = MemorySession.openImplicit().allocate(getMemoryLayout());\n");
