@@ -10,11 +10,11 @@ public class Builder {
     /**
      * List of all property names that are set
      */
-    protected ArrayList<String> names = new ArrayList<>();
+    protected ArrayList<String> builderPropertyNames = new ArrayList<>();
     
     /**
      * List of all property values that are set
      */
-    protected ArrayList<org.gtk.gobject.Value> values = new ArrayList<>();
+    protected ArrayList<org.gtk.gobject.Value> builderPropertyValues = new ArrayList<>();
     
 }

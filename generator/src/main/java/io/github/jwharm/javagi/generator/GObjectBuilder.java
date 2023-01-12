@@ -54,28 +54,24 @@ public class GObjectBuilder {
         writer.write("}\n");
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * Finish building the {@link " + c.javaName + "} object.\n");
-        writer.write(" * Internally, a call to {@link org.gtk.gobject.GObjects#typeFromName} \n");
-        writer.write(" * is executed to create a new GObject instance, which is then cast to \n");
-        writer.write(" * {@link " + c.javaName + "}.\n");
+        writer.write(" * Finish building the {@link " + c.javaName + "} object. This will call \n");
+        writer.write(" * {@link org.gtk.gobject.GObject#newWithProperties} to create a new \n");
+        writer.write(" * GObject instance, which is then cast to {@link " + c.javaName + "}.\n");
         writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
         writer.write(" *         that were set in the Builder object.\n");
         writer.write(" */\n");
         writer.write("public " + c.javaName + " build() {\n");
         writer.write("    return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n");
         writer.write("        " + c.javaName + ".getType(),\n");
-        writer.write("        names.size(),\n");
-        writer.write("        names.toArray(new String[names.size()]),\n");
-        writer.write("        values.toArray(new org.gtk.gobject.Value[names.size()])\n");
+        writer.write("        builderPropertyNames.size(),\n");
+        writer.write("        builderPropertyNames.toArray(new String[builderPropertyNames.size()]),\n");
+        writer.write("        builderPropertyValues.toArray(new org.gtk.gobject.Value[builderPropertyNames.size()])\n");
         writer.write("    );\n");
         writer.write("}\n");
         
         // Generate setters for the properties
         for (Property p : c.propertyList) {
-            // TODO: Don't know how to set array properties with gvalues
-            if (p.array == null) {
-                p.generate(writer);
-            }
+            p.generate(writer);
         }
 
         writer.decreaseIndent();

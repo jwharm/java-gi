@@ -65,9 +65,9 @@ setupGenSources {
         fun StringBuilder.template(javatype: String, gtype: String, method: String) = appendLine("""
                             
                     /**
-                     * Create a {@link Value} of with the provided {@code $javatype} value.
-                     * @param  arg The initial value to set
-                     * @return The new {@link Value}
+                     * Create a {@link Value} with the provided {@code $javatype} value.
+                     * @param  arg the initial value to set
+                     * @return the new {@link Value}
                      */
                     public static Value create($javatype arg) {
                         Value v = allocate();
@@ -93,6 +93,9 @@ setupGenSources {
             template("MemoryAddress", "org.gtk.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
             template("ParamSpec", "org.gtk.glib.Type.G_TYPE_PARAM", "setParam(arg)")
             template("Proxy", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject((org.gtk.gobject.GObject) arg)")
+            template("byte[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
+            template("String[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
+            template("MemoryAddress[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
         }.toString().replaceIndent("    ") + "\n")
     }
     source("Gio-2.0", "org.gtk.gio", true, "gio-2.0") { repo ->

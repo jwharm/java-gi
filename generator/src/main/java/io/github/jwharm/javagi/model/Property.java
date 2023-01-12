@@ -30,8 +30,8 @@ public class Property extends Variable {
         writer.write("public Builder set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("    names.add(\"" + propertyName + "\");\n");
-        writer.write("    values.add(org.gtk.gobject.Value.create(" + name + "));\n");
+        writer.write("    builderPropertyNames.add(\"" + propertyName + "\");\n");
+        writer.write("    builderPropertyValues.add(org.gtk.gobject.Value.create(" + name + "));\n");
         writer.write("    return this;\n");
         writer.write("}\n");
     }
