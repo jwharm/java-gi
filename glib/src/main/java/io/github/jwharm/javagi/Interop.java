@@ -54,6 +54,7 @@ public class Interop {
      * @return the marshal function
      */
     public static Marshal<Addressable, ? extends Proxy> register(MemoryAddress address, Marshal<Addressable, ? extends Proxy> fallback) {
+        if (address.equals(MemoryAddress.NULL)) return fallback;
         Type type = getType(address);
         typeRegister.putIfAbsent(type, fallback);
         return typeRegister.get(type);
