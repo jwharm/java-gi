@@ -11,8 +11,8 @@ public class Constructor extends Method {
         super(parent, name, cIdentifier, deprecated, throws_, null, null);
     }
 
-    public void generate(SourceWriter writer, boolean isInterface) throws IOException {
-        String privateMethodName = generateConstructorHelper(writer);
+    public void generate(SourceWriter writer) throws IOException {
+        String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
 
         writer.write("\n");
         if (doc != null) {
@@ -56,15 +56,18 @@ public class Constructor extends Method {
         // Ownership transfer for InitiallyUnowned instances
         boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
         if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
-            writer.write("this.refSink();\n");
-            writer.write("this.takeOwnership();\n");
+            writer.write("refSink();\n");
+            writer.write("takeOwnership();\n");
         }
 
         writer.decreaseIndent();
         writer.write("}\n");
+
+        generateConstructorHelper(writer, privateMethodName);
     }
 
-    public void generateNamed(SourceWriter writer, boolean isInterface) throws IOException {
+    public void generateNamed(SourceWriter writer) throws IOException {
+        String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         RegisteredType constructed = (RegisteredType) parent;
 
         // Return value should always be the constructed type, but it is often specified in the GIR as
@@ -74,8 +77,6 @@ public class Constructor extends Method {
         returnValue.type.init(constructed.name);
         returnValue.type.girElementInstance = constructed;
         returnValue.type.girElementType = constructed.getClass().getSimpleName();
-
-        String privateMethodName = generateConstructorHelper(writer);
 
         writer.write("    \n");
         if (doc != null) {
@@ -116,8 +117,10 @@ public class Constructor extends Method {
             writer.write("var OBJECT = ");
             returnValue.marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
-            writer.write("OBJECT.refSink();\n");
-            writer.write("OBJECT.takeOwnership();\n");
+            writer.write("if (OBJECT != null) {\n");
+            writer.write("    OBJECT.refSink();\n");
+            writer.write("    OBJECT.takeOwnership();\n");
+            writer.write("}\n");
             writer.write("return OBJECT;\n");
         } else {
             returnValue.generateReturnStatement(writer);
@@ -125,6 +128,8 @@ public class Constructor extends Method {
 
         writer.decreaseIndent();
         writer.write("}\n");
+
+        generateConstructorHelper(writer, privateMethodName);
     }
 
     // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
@@ -132,11 +137,12 @@ public class Constructor extends Method {
     // be the first statement in the constructor. Therefore, we always generate a private method that
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
-    private String generateConstructorHelper(SourceWriter writer) throws IOException {
+    private void generateConstructorHelper(SourceWriter writer, String methodName) throws IOException {
 
-        // Method name
-        String methodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Helper function for the (@code " + name + "} constructor\n");
+        writer.write(" */\n");
         writer.write("private static MemoryAddress " + methodName);
 
         // Parameters
@@ -220,6 +226,5 @@ public class Constructor extends Method {
 
         writer.decreaseIndent();
         writer.write("}\n");
-        return methodName;
     }
 }
