@@ -66,7 +66,7 @@ public class ReturnValue extends Parameter {
             writer.write("var OBJECT = ");
             marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
-            writer.write("OBJECT.takeOwnership();\n");
+            writer.write("if (OBJECT != null) OBJECT.takeOwnership();\n");
             writer.write("return OBJECT;\n");
 
         } else {
