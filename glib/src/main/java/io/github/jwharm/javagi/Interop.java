@@ -88,6 +88,16 @@ public class Interop {
     );
 
     /**
+     * The method handle for g_signal_emit_by_name is used by all
+     * generated signal methods.
+     */
+    public static final MethodHandle g_signal_emit_by_name = Interop.downcallHandle(
+            "g_signal_emit_by_name",
+            FunctionDescriptor.ofVoid(Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS),
+            true
+    );
+
+    /**
      * Creates a method handle that is used to call the native function with 
      * the provided name and function descriptor.
      * @param name Name of the native function

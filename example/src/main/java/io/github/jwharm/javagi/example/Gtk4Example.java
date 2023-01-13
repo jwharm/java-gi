@@ -53,6 +53,7 @@ public class Gtk4Example {
             if (sec > 30) {
                 button.setLabel("Hello world!");
                 System.out.println("Done counting");
+                button.emitClicked(button);
                 return GLib.SOURCE_REMOVE;
             }
             if (sec > state.second) {

@@ -66,5 +66,49 @@ public class Signal extends Method implements Closure {
 
         writer.decreaseIndent();
         writer.write("}\n");
+        writer.write("\n");
+
+        writer.write("/**\n");
+        writer.write(" * Emits the " + signalName + " signal. See {@link #on" + signalName + "}.\n");
+        writer.write(" */\n");
+        writer.write("public " + (isDefault ? "default " : "") + "void emit" + signalName + "(");
+        if (detailed) {
+            writer.write("@Nullable String detail");
+        }
+
+        if (parameters != null) {
+            if (detailed) writer.write(", ");
+            parameters.generateJavaParameters(writer, false);
+        }
+
+        writer.write(") {\n");
+        writer.increaseIndent();
+        writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        writer.increaseIndent();
+        if (parameters != null) {
+            parameters.generatePreprocessing(writer);
+        }
+        writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
+        writer.write("        handle(),\n");
+        writer.write("        Marshal.stringToAddress.marshal(\"" + name + "\"");
+        if (detailed) {
+            writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
+        }
+        writer.write(", SCOPE)");
+        if (parameters != null) {
+            writer.write(", new Object[] {\n");
+            parameters.marshalJavaToNative(writer, null);
+            writer.write("}");
+        }
+        writer.write(");\n");
+        if (parameters != null) {
+            parameters.generatePostprocessing(writer);
+        }
+        writer.decreaseIndent();
+        writer.write("} catch (Throwable ERR) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("}\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }
