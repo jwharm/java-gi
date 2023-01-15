@@ -177,7 +177,7 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated, MemorySession scope) {
-        int length = zeroTerminated ? strings.length : strings.length + 1;
+        int length = zeroTerminated ? strings.length + 1 : strings.length;
         var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
             var cString = scope.allocateUtf8String(strings[i]);
@@ -316,7 +316,7 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, MemorySession scope) {
-        int length = zeroTerminated ? array.length : array.length + 1;
+        int length = zeroTerminated ? array.length + 1 : array.length;
         MemorySegment memorySegment = scope.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
             MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), scope);
@@ -337,7 +337,7 @@ public class Interop {
      * @return The memory segment of the native array
      */
     public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated, MemorySession scope) {
-        int length = zeroTerminated ? array.length : array.length + 1;
+        int length = zeroTerminated ? array.length + 1 : array.length;
         var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i]);
