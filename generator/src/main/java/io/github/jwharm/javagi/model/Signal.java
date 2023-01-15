@@ -110,10 +110,10 @@ public class Signal extends Method implements Closure {
                     writer.write("\n");
                     writer.write("        ");
                 }
-                parameters.marshalJavaToNative(writer, null);
+                parameters.marshalJavaToNative(writer, null, true);
             }
             if (hasReturn) {
-                writer.write(parameters == null ? "\n" : ",\n");
+                writer.write((parameters == null || parameters.parameterList.size() == 1) ? "\n" : ",\n");
                 writer.write("        RESULT.address()");
             }
             writer.write("\n");

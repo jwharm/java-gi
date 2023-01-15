@@ -191,7 +191,7 @@ public class Constructor extends Method {
         // Marshall the parameters to the native types
         if (parameters != null) {
             writer.write("(");
-            parameters.marshalJavaToNative(writer, throws_);
+            parameters.marshalJavaToNative(writer, throws_, false);
             writer.write(")");
         } else {
             writer.write("()");

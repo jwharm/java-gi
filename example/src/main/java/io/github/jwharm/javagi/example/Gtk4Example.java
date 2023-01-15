@@ -66,7 +66,11 @@ public class Gtk4Example {
 
         box.append(button);
         window.setChild(box);
+
         window.show();
+
+        window.onCloseRequest(() -> false);
+        System.out.println(window.emitCloseRequest(window));
     }
 
     public Gtk4Example(String[] args) {
