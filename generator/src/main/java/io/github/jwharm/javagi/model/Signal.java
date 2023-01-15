@@ -96,9 +96,17 @@ public class Signal extends Method implements Closure {
         }
         writer.write(", SCOPE)");
         if (parameters != null) {
-            writer.write(", new Object[] {\n");
+            writer.increaseIndent();
+            writer.write(",\n");
+            writer.write("    new Object[] {");
+            if (parameters.parameterList.size() == 1) {
+                writer.write("\n");
+                writer.write("        ");
+            }
             parameters.marshalJavaToNative(writer, null);
-            writer.write("}");
+            writer.write("\n");
+            writer.write("    }\n");
+            writer.decreaseIndent();
         }
         writer.write(");\n");
         if (parameters != null) {
