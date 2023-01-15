@@ -92,7 +92,7 @@ public class Signal extends Method implements Closure {
         }
         boolean hasReturn = returnValue.type != null && !"void".equals(returnValue.type.simpleJavaType);
         if (hasReturn) {
-            writer.write("MemorySegment RESULT = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
+            writer.write("MemorySegment RESULT = SCOPE.allocate(" + Conversions.getValueLayout(returnValue.type) + ");\n");
         }
         writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
         writer.write("        handle(),\n");
