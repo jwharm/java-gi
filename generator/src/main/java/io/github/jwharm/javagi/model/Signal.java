@@ -71,7 +71,9 @@ public class Signal extends Method implements Closure {
         writer.write("/**\n");
         writer.write(" * Emits the " + signalName + " signal. See {@link #on" + signalName + "}.\n");
         writer.write(" */\n");
-        writer.write("public " + (isDefault ? "default " : "") + "void emit" + signalName + "(");
+        writer.write("public " + (isDefault ? "default " : ""));
+        returnValue.writeType(writer, true);
+        writer.write(" emit" + signalName + "(");
         if (detailed) {
             writer.write("@Nullable String detail");
         }
@@ -88,6 +90,10 @@ public class Signal extends Method implements Closure {
         if (parameters != null) {
             parameters.generatePreprocessing(writer);
         }
+        boolean hasReturn = returnValue.type != null && !"void".equals(returnValue.type.simpleJavaType);
+        if (hasReturn) {
+            writer.write("MemorySegment RESULT = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
+        }
         writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
         writer.write("        handle(),\n");
         writer.write("        Marshal.stringToAddress.marshal(\"" + name + "\"");
@@ -95,15 +101,21 @@ public class Signal extends Method implements Closure {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
         writer.write(", SCOPE)");
-        if (parameters != null) {
+        if (parameters != null || hasReturn) {
             writer.increaseIndent();
             writer.write(",\n");
             writer.write("    new Object[] {");
-            if (parameters.parameterList.size() == 1) {
-                writer.write("\n");
-                writer.write("        ");
+            if (parameters != null) {
+                if (parameters.parameterList.size() == 1) {
+                    writer.write("\n");
+                    writer.write("        ");
+                }
+                parameters.marshalJavaToNative(writer, null);
             }
-            parameters.marshalJavaToNative(writer, null);
+            if (hasReturn) {
+                writer.write(parameters == null ? "\n" : ",\n");
+                writer.write("        RESULT.address()");
+            }
             writer.write("\n");
             writer.write("    }\n");
             writer.decreaseIndent();
@@ -111,6 +123,11 @@ public class Signal extends Method implements Closure {
         writer.write(");\n");
         if (parameters != null) {
             parameters.generatePostprocessing(writer);
+        }
+        if (hasReturn) {
+            writer.write("return ");
+            returnValue.marshalNativeToJava(writer, "RESULT.get(" + Conversions.getValueLayout(returnValue.type) + ", 0)", false);
+            writer.write(";\n");
         }
         writer.decreaseIndent();
         writer.write("} catch (Throwable ERR) {\n");
