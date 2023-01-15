@@ -99,35 +99,31 @@ public class Parameter extends Variable {
         return (this instanceof InstanceParameter);
     }
 
-    public boolean isCallbackParameter() {
-        return (type != null) && type.isCallback();
-    }
-
     public boolean isUserDataParameter() {
         return (type != null)
                 && (name.toLowerCase().endsWith("data") || name.equalsIgnoreCase("userdata2"))
                 && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
     }
-//
-//    public boolean isDestroyNotify() {
-//        return isCallbackParameter() && "DestroyNotify".equals(type.simpleJavaType);
-//    }
 
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
     }
     
     /**
-     * We don't need to perform a null-check parameters that are not nullable, or not user-specified
-     * (instance param, gerror, user_data or destroy_notify for callbacks), or primitive values.
+     * We don't need to perform a null-check on parameters that are not nullable, or not user-specified
+     * (instance param, gerror or user_data), or varargs, bitfields, enums, or primitive values/aliases.
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
     public boolean checkNull() {
-        return nullable 
+        return (!notnull)
                 && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
-                        || (type != null && type.isPrimitive && (! type.isPointer()))));
+                        || varargs
+                        || (type != null && (! type.isPointer()) && (type.isPrimitive ||
+                                                                     type.isAliasForPrimitive() ||
+                                                                     type.isBitfield() ||
+                                                                     type.isEnum()))));
     }
-    
+
     /**
      * Generate code to do pre-processing of the parameter before the function call. This will 
      * generate a null check for NotNull parameters, and generate pointer allocation logic for 
