@@ -27,7 +27,7 @@ public class Signal extends Method implements Closure {
             parameters = new Parameters(this);
         }
         String paramName = "source" + className;
-        Parameter p = new Parameter(parameters, paramName, "none", "0", "0", "0", null);
+        Parameter p = new Parameter(parameters, paramName, "none", "0", "0", "0", null, null);
         p.type = new Type(p, className, ((RegisteredType) parent).cType);
         p.signalSource = true;
         parameters.parameterList.add(0, p);

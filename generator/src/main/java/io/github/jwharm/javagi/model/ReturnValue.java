@@ -8,7 +8,7 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 public class ReturnValue extends Parameter {
 
     public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
-        super(parent, null, transferOwnership, nullable, null, null, null);
+        super(parent, null, transferOwnership, nullable, null, null, null, null);
     }
 
     /**

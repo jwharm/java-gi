@@ -218,7 +218,7 @@ public class GirParser extends DefaultHandler {
                 Parameter newParameter = new Parameter(current, attr.getValue("name"),
                         attr.getValue("transfer-ownership"), attr.getValue("nullable"),
                         attr.getValue("allow-none"), attr.getValue("optional"),
-                        attr.getValue("direction"));
+                        attr.getValue("direction"), attr.getValue("closure"));
                 ((Parameters) current).parameterList.add(newParameter);
                 current = newParameter;
             }
