@@ -142,7 +142,7 @@ public abstract class RegisteredType extends GirElement {
 
                     // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
                     if (size % s % 64 > 0) {
-                        int padding = s - (size % s);
+                        int padding = (s - (size % s)) % 64;
                         writer.write("    MemoryLayout.paddingLayout(" + padding + "),\n");
                         size += padding;
                     }
