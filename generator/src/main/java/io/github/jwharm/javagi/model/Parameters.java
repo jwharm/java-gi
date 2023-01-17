@@ -40,15 +40,12 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void marshalJavaToNative(SourceWriter writer, String throws_, boolean omitSignalSource) throws IOException {
+    public void marshalJavaToNative(SourceWriter writer, String throws_) throws IOException {
         int counter = 0;
 
         boolean multipleParameters = parameterList.size() > 1;
 
         for (Parameter p : parameterList) {
-
-            if (omitSignalSource && p.signalSource)
-                continue;
 
             if (counter++ > 0) {
                 writer.write(",");
@@ -111,7 +108,7 @@ public class Parameters extends GirElement {
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
-            if (p.isUserDataParameter() || p.signalSource) {
+            if (p.isUserDataParameter()) {
                 continue;
             }
 
