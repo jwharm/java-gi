@@ -14,7 +14,6 @@ public class Parameter extends Variable {
     public final String closure;
 
     public boolean varargs = false;
-    public boolean signalSource = false;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable,
                      String allowNone, String optional, String direction, String closure) {
@@ -55,7 +54,7 @@ public class Parameter extends Variable {
         // Find the parameter that was specified in the value of the 'length' attribute.
         // Ignore the instance parameter.
         Parameter p0 = params.parameterList.get(0);
-        if (p0 instanceof InstanceParameter || p0.signalSource) {
+        if (p0 instanceof InstanceParameter) {
             return params.parameterList.get(index + 1);
         } else {
             return params.parameterList.get(index);

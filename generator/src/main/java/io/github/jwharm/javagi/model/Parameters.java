@@ -46,6 +46,7 @@ public class Parameters extends GirElement {
         boolean multipleParameters = parameterList.size() > 1;
 
         for (Parameter p : parameterList) {
+
             if (counter++ > 0) {
                 writer.write(",");
             }
@@ -107,7 +108,7 @@ public class Parameters extends GirElement {
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
-            if (p.isUserDataParameter() || p.signalSource) {
+            if (p.isUserDataParameter()) {
                 continue;
             }
 
