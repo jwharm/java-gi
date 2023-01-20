@@ -31,7 +31,7 @@ public interface Closure extends CallableType {
         if (parameters != null) {
             boolean first = true;
             for (Parameter p : parameters.parameterList) {
-                if (p.isUserDataParameter() || p.signalSource) {
+                if (p.isUserDataParameter()) {
                     continue;
                 }
                 if (!first) writer.write(", ");
@@ -47,8 +47,16 @@ public interface Closure extends CallableType {
         if ("MemoryAddress".equals(returnType))
             returnType = "Addressable";
         writer.write("@ApiStatus.Internal default " + returnType + " upcall(");
+
+        // For signals, the first parameter in the upcall is a pointer to the source.
+        // Add it to the upcall function signature.
+        boolean first = true;
+        if (this instanceof Signal signal) {
+            writer.write("MemoryAddress source" + ((RegisteredType) signal.parent).javaName);
+            first = false;
+        }
+
         if (parameters != null) {
-            boolean first = true;
             for (Parameter p : parameters.parameterList) {
                 if (!first) writer.write(", ");
                 first = false;
@@ -129,12 +137,19 @@ public interface Closure extends CallableType {
         } else {
             writer.write("of(");
             writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
+            if (parameters != null || this instanceof Signal) {
+                writer.write(", ");
+            }
+        }
+        // For signals, add the pointer to the source
+        if (this instanceof Signal) {
+            writer.write("Interop.valueLayout.ADDRESS");
             if (parameters != null) {
                 writer.write(", ");
             }
         }
         if (parameters != null) {
-            boolean first = true;
+            first = true;
             for (Parameter p : parameters.parameterList) {
                 if (!first) writer.write(", ");
                 first = false;
