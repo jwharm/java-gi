@@ -119,6 +119,8 @@ public class Signal extends Method implements Closure {
                 writer.write("\n");
                 writer.write("    }\n");
                 writer.decreaseIndent();
+            } else {
+                writer.write(", new Object[0]");
             }
             writer.write(");\n");
             if (parameters != null) {
