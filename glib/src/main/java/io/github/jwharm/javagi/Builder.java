@@ -7,31 +7,48 @@ import java.util.ArrayList;
 /**
  * Base class for all inner {@code Builder} classes inside GObject proxy classes.
  */
-public class Builder implements PropertyBuilder {
+public abstract class Builder<S extends Builder> implements PropertyBuilder {
 
     /**
      * List of all property names that are set
      */
-    private ArrayList<String> names = new ArrayList<>();
+    private final ArrayList<String> names = new ArrayList<>();
     
     /**
      * List of all property values that are set
      */
-    private ArrayList<org.gtk.gobject.Value> values = new ArrayList<>();
+    private final ArrayList<Value> values = new ArrayList<>();
 
+    /**
+     * Add the provided property name and value to the builder
+     * @param name name of the property
+     * @param value value of the property (a {@code GValue})
+     */
     public void addBuilderProperty(String name, Value value) {
         names.add(name);
         values.add(value);
     }
 
+    /**
+     * Get the number of properties set in the builder
+     * @return the number of properties set
+     */
     public int getSize() {
         return names.size();
     }
 
+    /**
+     * Get the property names
+     * @return a {@String} array of property names
+     */
     public String[] getNames() {
         return names.toArray(new String[getSize()]);
     }
 
+    /**
+     * Get the property values
+     * @return a {@code GValue} array of property names
+     */
     public Value[] getValues() {
         return values.toArray(new Value[getSize()]);
     }

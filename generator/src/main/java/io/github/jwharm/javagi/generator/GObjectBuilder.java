@@ -23,9 +23,9 @@ public class GObjectBuilder {
         // Each Builder class extends the Builder class of the object's parent, to allow
         // setting the properties of the parent type. GObject does not have a parent, 
         // so GObject.Builder extends from the base Builder class.
-        String parent = c.parentClass + ".Builder";
+        String parent = c.parentClass + ".Builder<S>";
         if (c.parentClass == null) {
-            parent = "io.github.jwharm.javagi.Builder";
+            parent = "io.github.jwharm.javagi.Builder<S>";
         }
 
         // Write the inner Build class definition
@@ -36,15 +36,15 @@ public class GObjectBuilder {
         writer.write(" * Use the various {@code set...()} methods to set properties, \n");
         writer.write(" * and finish construction with {@link " + c.javaName + ".Builder#build()}. \n");
         writer.write(" */\n");
-        writer.write("public static Builder builder() {\n");
-        writer.write("    return new Builder();\n");
+        writer.write("public static Builder<? extends Builder> builder() {\n");
+        writer.write("    return new Builder<>();\n");
         writer.write("}\n");
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Inner class implementing a builder pattern to construct \n");
         writer.write(" * a GObject with properties.\n");
         writer.write(" */\n");
-        writer.write("public static class Builder extends " + parent);
+        writer.write("public static class Builder<S extends Builder<S>> extends " + parent);
 
         // Interfaces can have builders too
         boolean first = true;
@@ -55,9 +55,10 @@ public class GObjectBuilder {
                 continue;
 
             if (first) {
-                writer.write(" implements " + implem.getQualifiedJavaName() + ".Builder");
+                writer.write("\n");
+                writer.write("        implements " + implem.getQualifiedJavaName() + ".Builder<S>");
             } else {
-                writer.write(", " + implem.getQualifiedJavaName() + ".Builder");
+                writer.write(", " + implem.getQualifiedJavaName() + ".Builder<S>");
             }
             first = false;
         }
@@ -111,7 +112,7 @@ public class GObjectBuilder {
         writer.write(" * Nested interface implemented by Builder classes to construct \n");
         writer.write(" * a GObject with properties of this interface.\n");
         writer.write(" */\n");
-        writer.write("interface Builder extends io.github.jwharm.javagi.PropertyBuilder {\n");
+        writer.write("interface Builder<S extends io.github.jwharm.javagi.Builder<S>> extends io.github.jwharm.javagi.PropertyBuilder {\n");
         writer.increaseIndent();
 
         // Generate setters for the properties
