@@ -33,13 +33,13 @@ public class ListIndexModel extends GObject implements ListModel {
                     GObject.getType(),
                     "ListIndexModel",
                     (short) ObjectClass.getMemoryLayout().byteSize(),
-                    gclass -> {},
+                    (gclass, data) -> {},
                     (short) getMemoryLayout().byteSize(),
                     (inst, gclass) -> {},
                     TypeFlags.NONE
             );
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), InterfaceInfo.builder()
-                    .setInterfaceInit(iface -> {
+                    .setInterfaceInit((iface, data) -> {
                         ListModelInterface lmi = ListModelInterface.fromAddress.marshal(iface.handle(), null);
                         lmi.setGetItemType(ListModel::getItemType);
                         lmi.setGetNItems(ListModel::getNItems);

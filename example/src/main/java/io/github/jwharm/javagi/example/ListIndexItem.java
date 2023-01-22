@@ -34,7 +34,7 @@ public class ListIndexItem extends GObject {
                     GObject.getType(),
                     "ListIndexItem",
                     (short) ObjectClass.getMemoryLayout().byteSize(),
-                    gclass -> {},
+                    (gclass, data) -> {},
                     (short) getMemoryLayout().byteSize(),
                     (inst, gclass) -> {},
                     TypeFlags.NONE

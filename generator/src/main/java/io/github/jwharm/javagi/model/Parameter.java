@@ -11,16 +11,20 @@ public class Parameter extends Variable {
     public final boolean nullable;
     public final boolean notnull;
     public final String direction;
+    public final String closure;
 
     public boolean varargs = false;
 
-    public Parameter(GirElement parent, String name, String transferOwnership, String nullable, String allowNone, String optional, String direction) {
+    public Parameter(GirElement parent, String name, String transferOwnership, String nullable,
+                     String allowNone, String optional, String direction, String closure) {
+
         super(parent);
         this.name = Conversions.toLowerCaseJavaName(name);
         this.transferOwnership = transferOwnership;
         this.nullable = "1".equals(nullable) || "1".equals(allowNone) || "1".equals(optional);
         this.notnull = "0".equals(nullable) || "0".equals(allowNone) || "0".equals(optional);
         this.direction = direction;
+        this.closure = closure;
     }
 
     /**
@@ -99,9 +103,37 @@ public class Parameter extends Variable {
     }
 
     public boolean isUserDataParameter() {
-        return (type != null)
-                && (name.toLowerCase().endsWith("data") || name.equalsIgnoreCase("userdata2"))
-                && ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType));
+        // Closure parameters: the user_data parameter has attribute "closure" set
+        if (parent.parent instanceof Closure) {
+            return (closure != null);
+        }
+
+        // Method parameters that pass a user_data pointer to a closure
+        else {
+            // A user_data parameter must have a type (pointer)
+            if (type == null)
+                return false;
+
+            // The c:type must be a gpointer or gconstpointer
+            if (! ("gpointer".equals(type.cType) || "gconstpointer".equals(type.cType)))
+                return false;
+
+            // Loop through the callback parameter(s)
+            Parameters parameters = (Parameters) parent;
+            for (Parameter p : parameters.parameterList) {
+                if (p.type != null && p.type.isCallback()) {
+
+                    // The closure attribute points to the user_data parameter
+                    if (p.closure != null) {
+                        Parameter userData = getParameterAt(p.closure);
+                        // Is this the user_data parameter that is referred to?
+                        return userData.name.equals(this.name);
+                    }
+
+                }
+            }
+            return false;
+        }
     }
 
     public boolean isErrorParameter() {
