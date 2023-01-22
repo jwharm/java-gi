@@ -43,6 +43,7 @@ public class GObjectBuilder {
         writer.write("/**\n");
         writer.write(" * Inner class implementing a builder pattern to construct \n");
         writer.write(" * a GObject with properties.\n");
+        writer.write(" * @param <S> the type of the Builder that is returned\n");
         writer.write(" */\n");
         writer.write("public static class Builder<S extends Builder<S>> extends " + parent);
 
@@ -111,6 +112,7 @@ public class GObjectBuilder {
         writer.write("/**\n");
         writer.write(" * Nested interface implemented by Builder classes to construct \n");
         writer.write(" * a GObject with properties of this interface.\n");
+        writer.write(" * @param <S> the type of the Builder that is returned\n");
         writer.write(" */\n");
         writer.write("interface Builder<S extends io.github.jwharm.javagi.Builder<S>> extends io.github.jwharm.javagi.PropertyBuilder {\n");
         writer.increaseIndent();
