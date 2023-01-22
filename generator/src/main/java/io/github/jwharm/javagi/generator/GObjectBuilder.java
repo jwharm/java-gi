@@ -1,8 +1,9 @@
 package io.github.jwharm.javagi.generator;
 
 import java.io.IOException;
-import java.io.Writer;
 
+import io.github.jwharm.javagi.model.Implements;
+import io.github.jwharm.javagi.model.Interface;
 import io.github.jwharm.javagi.model.Property;
 
 /**
@@ -13,9 +14,9 @@ public class GObjectBuilder {
 
     /**
      * Generate a public static inner class {@code Builder} to implement the <em>builder pattern</em>.
-     * @param writer The writer to the source file
-     * @param c The outer class
-     * @throws IOException Thrown when an error occurs while writing
+     * @param writer the writer to the source file
+     * @param c the outer class
+     * @throws IOException thrown when an error occurs while writing
      */
     public static void generateBuilder(SourceWriter writer, io.github.jwharm.javagi.model.Class c) throws IOException {
 
@@ -43,9 +44,26 @@ public class GObjectBuilder {
         writer.write(" * Inner class implementing a builder pattern to construct \n");
         writer.write(" * a GObject with properties.\n");
         writer.write(" */\n");
-        writer.write("public static class Builder extends " + parent + " {\n");
-        writer.increaseIndent();
+        writer.write("public static class Builder extends " + parent);
 
+        // Interfaces can have builders too
+        boolean first = true;
+        for (Implements implem : c.implementsList) {
+
+            // Skip interfaces without properties
+            if (implem.girElementInstance.propertyList.isEmpty())
+                continue;
+
+            if (first) {
+                writer.write(" implements " + implem.getQualifiedJavaName() + ".Builder");
+            } else {
+                writer.write(", " + implem.getQualifiedJavaName() + ".Builder");
+            }
+            first = false;
+        }
+
+        writer.increaseIndent();
+        writer.write(" {\n");
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Default constructor for a {@code Builder} object.\n");
@@ -62,15 +80,42 @@ public class GObjectBuilder {
         writer.write(" */\n");
         writer.write("public " + c.javaName + " build() {\n");
         writer.write("    return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n");
-        writer.write("        " + c.javaName + ".getType(),\n");
-        writer.write("        builderPropertyNames.size(),\n");
-        writer.write("        builderPropertyNames.toArray(new String[builderPropertyNames.size()]),\n");
-        writer.write("        builderPropertyValues.toArray(new org.gtk.gobject.Value[builderPropertyNames.size()])\n");
+        writer.write("            " + c.javaName + ".getType(), getSize(), getNames(), getValues()\n");
         writer.write("    );\n");
         writer.write("}\n");
         
         // Generate setters for the properties
         for (Property p : c.propertyList) {
+            p.generate(writer);
+        }
+
+        writer.decreaseIndent();
+        writer.write("}\n");
+    }
+
+    /**
+     * Generate a nested interface that extends {@code PropertyBuilder} and contains setters for
+     * the properties that the provided interface defines.
+     * @param writer the writer to the source file
+     * @param i the interface
+     * @throws IOException thrown when an error occurs while writing
+     */
+    public static void generateInterfaceBuilder(SourceWriter writer, Interface i) throws IOException {
+
+        // Don't generate empty Builders in interfaces
+        if (i.propertyList.isEmpty())
+            return;
+
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Nested interface implemented by Builder classes to construct \n");
+        writer.write(" * a GObject with properties of this interface.\n");
+        writer.write(" */\n");
+        writer.write("interface Builder extends io.github.jwharm.javagi.PropertyBuilder {\n");
+        writer.increaseIndent();
+
+        // Generate setters for the properties
+        for (Property p : i.propertyList) {
             p.generate(writer);
         }
 

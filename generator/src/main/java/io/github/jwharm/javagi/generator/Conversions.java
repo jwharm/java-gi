@@ -62,7 +62,7 @@ public class Conversions {
 
     /** 
      * Convert "Glib.type_name" to "org.gtk.glib.TypeName". 
-     * If the typeName does not contain a namespace, the currentPackage parameter
+     * If the typeName does not contain a namespace, the name of the provided namespace {@code ns}
      * is prepended to the result. For example, {@code toQualifiedJavaType("button", "org.gtk.gtk")}
      * returns {@code "org.gtk.gtk.Button"}.
      */

@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.GObjectBuilder;
-import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
@@ -52,9 +51,9 @@ public class Class extends RegisteredType {
         // Interfaces
         for (int i = 0; i < implementsList.size(); i++) {
             if (i == 0) {
-                writer.write(" implements " + Conversions.toQualifiedJavaType(implementsList.get(i).name, getNamespace()));
+                writer.write(" implements " + implementsList.get(i).getQualifiedJavaName());
             } else {
-                writer.write(", " + Conversions.toQualifiedJavaType(implementsList.get(i).name, getNamespace()));
+                writer.write(", " + implementsList.get(i).getQualifiedJavaName());
             }
         }
         writer.write(" {\n");

@@ -27,11 +27,11 @@ public class Property extends Variable {
         if (doc != null) {
             doc.generate(writer, false);
         }
-        writer.write("public Builder set" + Conversions.toCamelCase(name, true) + "(");
+        writer.write((parent instanceof Interface) ? "default " : "public ");
+        writer.write("Builder set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("    builderPropertyNames.add(\"" + propertyName + "\");\n");
-        writer.write("    builderPropertyValues.add(org.gtk.gobject.Value.create(" + name + "));\n");
+        writer.write("    addBuilderProperty(\"" + propertyName + "\", org.gtk.gobject.Value.create(" + name + "));\n");
         writer.write("    return this;\n");
         writer.write("}\n");
     }
