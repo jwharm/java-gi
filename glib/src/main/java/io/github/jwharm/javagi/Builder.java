@@ -31,19 +31,11 @@ public abstract class Builder<S extends Builder> implements PropertyBuilder {
     }
 
     /**
-     * Get the number of properties set in the builder
-     * @return the number of properties set
-     */
-    public int getSize() {
-        return names.size();
-    }
-
-    /**
      * Get the property names
      * @return a {@code String} array of property names
      */
     public String[] getNames() {
-        return names.toArray(new String[getSize()]);
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -51,7 +43,7 @@ public abstract class Builder<S extends Builder> implements PropertyBuilder {
      * @return a {@code GValue} array of property names
      */
     public Value[] getValues() {
-        return values.toArray(new Value[getSize()]);
+        return values.toArray(new Value[values.size()]);
     }
 
 }

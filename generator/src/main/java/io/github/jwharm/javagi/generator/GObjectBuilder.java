@@ -82,7 +82,7 @@ public class GObjectBuilder {
         writer.write(" */\n");
         writer.write("public " + c.javaName + " build() {\n");
         writer.write("    return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n");
-        writer.write("            " + c.javaName + ".getType(), getSize(), getNames(), getValues()\n");
+        writer.write("            " + c.javaName + ".getType(), getNames(), getValues()\n");
         writer.write("    );\n");
         writer.write("}\n");
         

@@ -47,7 +47,10 @@ setupGenSources {
         removeMethod(repo, "AsyncInitable", "new_finish")
     }
     source("GModule-2.0", "org.gtk.gmodule", false)
-    source("Gst-1.0", "org.gstreamer.gst", true, "gstreamer-1.0")
+    source("Gst-1.0", "org.gstreamer.gst", true, "gstreamer-1.0") { repo ->
+        // According to the gir file, the size parameter is an out parameter, but it isn't
+        removeMethod(repo, "TypeFind", "peek")
+    }
     source("GstBase-1.0", "org.gstreamer.base", true, "gstbase-1.0")
     source("GstAllocators-1.0", "org.gstreamer.allocators", true, "gstallocators-1.0")
     source("GstApp-1.0", "org.gstreamer.app", true, "gstapp-1.0") { repo ->
@@ -70,7 +73,10 @@ setupGenSources {
     source("GstPlayer-1.0", "org.gstreamer.player", true, "gstplayer-1.0")
     source("GstRtp-1.0", "org.gstreamer.rtp", true, "gstrtp-1.0")
     source("GstRtsp-1.0", "org.gstreamer.rtsp", true, "gstrtsp-1.0")
-    source("GstSdp-1.0", "org.gstreamer.sdp", true, "gstsdp-1.0")
+    source("GstSdp-1.0", "org.gstreamer.sdp", true, "gstsdp-1.0") { repo ->
+        // Reference to array length points to the wrong parameter index
+        removeMethod(repo, "MIKEYPayload", "key_data_set_interval")
+    }
     source("GstTag-1.0", "org.gstreamer.tag", true, "gsttag-1.0")
     source("GstTranscoder-1.0", "org.gstreamer.transcoder", true, "gsttranscoder-1.0")
     source("GstVideo-1.0", "org.gstreamer.video", true, "gstvideo-1.0")

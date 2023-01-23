@@ -40,7 +40,7 @@ public class Doc extends GirElement {
             Parameters parameters = ct.getParameters();
             if (parameters != null) {
                 for (Parameter p : parameters.parameterList) {
-                    if (p.isInstanceParameter() || p.isUserDataParameter()) {
+                    if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
                         continue;
                     }
                     if (p.doc != null) {

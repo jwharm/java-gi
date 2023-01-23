@@ -60,6 +60,15 @@ public class CrossReference {
                     // If the repositories were loaded in the correct order, this will not change anything.
                     t.init(t.qualifiedName);
                 }
+
+                // Link length-parameters to the corresponding arrays
+                if (element instanceof Array array) {
+                    if (array.length != null && array.parent instanceof Parameter p) {
+                        Parameter lp = p.getParameterAt(array.length);
+                        lp.linkedArray = array;
+                    }
+                }
+
                 element = element.next;
             }
         }

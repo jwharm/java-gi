@@ -15,6 +15,11 @@ public class Parameter extends Variable {
 
     public boolean varargs = false;
 
+    /**
+     * An array with a "length" attribute which refers to this parameter.
+     */
+    public Array linkedArray; // This field is initialized in the CrossReference class.
+
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable,
                      String allowNone, String optional, String direction, String closure) {
 
@@ -93,7 +98,7 @@ public class Parameter extends Variable {
             return false;
 
         return direction != null && direction.contains("out")
-                && (type == null || type.isPointer())
+                && (type == null || type.isPointer() || (type.cType != null && type.cType.endsWith("gsize")))
                 && (!isProxy())
                 && (!isAliasForPrimitive());
     }
@@ -139,15 +144,19 @@ public class Parameter extends Variable {
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
     }
+
+    public boolean isArrayLengthParameter() {
+        return linkedArray != null;
+    }
     
     /**
      * We don't need to perform a null-check on parameters that are not nullable, or not user-specified
-     * (instance param, gerror or user_data), or varargs, bitfields, enums, or primitive values/aliases.
+     * (instance param, gerror, user_data or array length), or varargs, bitfields, enums, or primitive values/aliases.
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
     public boolean checkNull() {
         return (!notnull)
-                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
+                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter()
                         || varargs
                         || (type != null && (! type.isPointer()) && (type.isPrimitive ||
                                                                      type.isAliasForPrimitive() ||
@@ -166,7 +175,7 @@ public class Parameter extends Variable {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
-        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || varargs
+        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (notnull) {
                 writer.write("java.util.Objects.requireNonNull(" + name
@@ -178,6 +187,35 @@ public class Parameter extends Variable {
         if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             writer.write("MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
         }
+
+        // Array length parameter: generate local variable that contains the length
+        // array length
+        if (isArrayLengthParameter()) {
+            writeTypeAndName(writer, false);
+            writer.write (" = ");
+            if (isOutParameter()) {
+                writer.write("new Out<>();\n");
+            } else {
+                Parameter arrayParam = (Parameter) linkedArray.parent;
+                String arrayLength = arrayParam.name + ".length";
+
+                // Force lossy conversion if needed
+                String cast = "";
+                if (type != null) {
+                    String javaType = type.qualifiedJavaType;
+                    if ("byte".equals(javaType) || "short".equals(javaType)) {
+                        cast = "(" + javaType + ") ";
+                    }
+                }
+
+                // For out parameter arrays, generate "arg.get().length", with null-checks for both arg and arg.get()
+                if (arrayParam.isOutParameter())
+                    arrayLength = arrayParam.name + ".get() == null ? 0 : " + cast + arrayParam.name + ".get().length";
+
+                writer.write(arrayParam.name + " == null ? 0 : " + cast + arrayLength + ";\n");
+            }
+        }
+
     }
     
     /**
@@ -212,6 +250,8 @@ public class Parameter extends Variable {
                     writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
+                    writer.write("if (" + name + " != null) {\n");
+                    writer.increaseIndent();
                     writer.write(array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
                     writer.write("for (int I = 0; I < " + len + "; I++) {\n");
                     writer.write("    var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
@@ -219,6 +259,8 @@ public class Parameter extends Variable {
                     writer.write(marshalNativeToJava(array.type, "OBJ", false) + ";\n");
                     writer.write("    }\n");
                     writer.write(name + ".set(" + name + "ARRAY);\n");
+                    writer.decreaseIndent();
+                    writer.write("}\n");
                 }
             }
         }

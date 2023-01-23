@@ -17,7 +17,7 @@ public class Parameters extends GirElement {
     public void generateJavaParameters(SourceWriter writer, boolean pointerForArray) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter() || p.isUserDataParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -30,7 +30,7 @@ public class Parameters extends GirElement {
     public void generateJavaParameterNames(SourceWriter writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter() || p.isUserDataParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -75,12 +75,7 @@ public class Parameters extends GirElement {
                 writer.write("varargs");
 
             // Preprocessing statement
-            } else if (p.type != null && p.type.isPointer()
-                    && (p.isOutParameter() || p.isAliasForPrimitive())) {
-                writer.write("(Addressable) " + p.name + "POINTER.address()");
-
-            // Preprocessing statement
-            } else if (p.array != null && p.isOutParameter()) {
+            } else if (p.isOutParameter() || (p.isAliasForPrimitive() && p.type.isPointer())) {
                 writer.write("(Addressable) " + p.name + "POINTER.address()");
 
             // Custom interop
@@ -108,7 +103,7 @@ public class Parameters extends GirElement {
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
-            if (p.isUserDataParameter()) {
+            if (p.isUserDataParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
 

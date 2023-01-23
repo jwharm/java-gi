@@ -66,6 +66,6 @@ public class Gtk4ListViewExample {
         listIndexModel = new ListIndexModel(list.size());
 
         app.onActivate(this::activate);
-        app.run(args.length, args);
+        app.run(args);
     }
 }

@@ -56,7 +56,7 @@ public class GStreamerExample {
     public GStreamerExample(String[] args) {
 
         // Initialisation
-        Gst.init(new Out<>(args.length), new Out<>(args));
+        Gst.init(new Out<>(args));
 
         loop = new MainLoop(null, false);
 

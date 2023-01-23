@@ -76,6 +76,6 @@ public class Gtk4Example {
     public Gtk4Example(String[] args) {
         app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
         app.onActivate(this::activate);
-        app.run(args.length, args);
+        app.run(args);
     }
 }
