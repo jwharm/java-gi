@@ -170,6 +170,15 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" */\n");
         writer.write("protected " + javaName + "(Addressable address) {\n");
         writer.write("    super(address);\n");
+
+        // If this class has a custom "unref" method, pass it to the Cleaner.
+        for (Method method : methodList) {
+            if (method.name.equals("unref")) {
+                writer.write("    setRefCleanerMethod(\"" + method.cIdentifier + "\");\n");
+                break;
+            }
+        }
+
         writer.write("}\n");
     }
 

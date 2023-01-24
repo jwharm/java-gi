@@ -11,11 +11,17 @@ import java.lang.ref.Cleaner;
  */
 class RefCleaner implements Runnable {
 
+    // The address of the object
     private final Addressable address;
+
+    // The method name that unrefs the object
+    String refCleanerMethod = "g_object_unref";
+
+    // Used to enable/disable the cleaner
     boolean registered;
 
-    // Method handle that is used for the g_object_unref native call
-    private static MethodHandle g_object_unref;
+    // Method handle that is used for the native call
+    MethodHandle unrefMethodHandle;
 
     /**
      * Create a new refCleaner instance that can be registered with a {@link Cleaner}.
@@ -28,20 +34,20 @@ class RefCleaner implements Runnable {
 
     /**
      * This function is run by the {@link Cleaner} when an {@link ObjectBase} instance has become unreachable.
-     * If the ownership is set, a call to {@code g_object_unref} is executed.
+     * If the ownership is set, a call to {@code g_object_unref} (or another method that has been setup) is executed.
      */
     public void run() {
         if (registered) {
             try {
 
-                if (g_object_unref == null)
-                    g_object_unref = Interop.downcallHandle(
-                            "g_object_unref",
+                if (unrefMethodHandle == null)
+                    unrefMethodHandle = Interop.downcallHandle(
+                            refCleanerMethod,
                             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
                             false
                     );
 
-                g_object_unref.invokeExact(address);
+                unrefMethodHandle.invokeExact(address);
 
             } catch (Throwable err) {
                 throw new AssertionError("Unexpected exception occured: ", err);

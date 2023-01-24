@@ -2,8 +2,6 @@ package io.github.jwharm.javagi;
 
 import java.lang.foreign.Addressable;
 
-import org.jetbrains.annotations.ApiStatus;
-
 /**
  * Represents an instance of a proxy object with a handle to an object 
  * in native memory.
@@ -14,22 +12,26 @@ public interface Proxy {
      * Get the native memory address of the object
      * @return the native memory address
      */
-    @ApiStatus.Internal
     Addressable handle();
 
     /**
-     * Disable the Cleaner that automatically calls {@code g_object_unref} 
+     * Disable the Cleaner that automatically calls {@code unref}
      * when this object is garbage collected.
      */
-    @ApiStatus.Internal
     void yieldOwnership();
 
     /**
-     * Enable the Cleaner that automatically calls {@code g_object_unref}
+     * Enable the Cleaner that automatically calls {@code unref}
      * when this object is garbage collected.
      */
-    @ApiStatus.Internal
     void takeOwnership();
+
+    /**
+     * Change the method name from the default {@code g_object_unref} to
+     * another method name.
+     * @param method the unref method name
+     */
+    void setRefCleanerMethod(String method);
     
     /**
      * Check if the memory address of this proxy instance is equal to the 

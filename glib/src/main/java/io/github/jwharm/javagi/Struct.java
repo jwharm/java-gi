@@ -39,4 +39,11 @@ public class Struct implements Proxy {
     @Override
     public void takeOwnership() {
     }
+
+    /**
+     * No op
+     */
+    @Override
+    public void setRefCleanerMethod(String method) {
+    }
 }

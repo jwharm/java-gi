@@ -1,7 +1,5 @@
 package io.github.jwharm.javagi;
 
-import org.jetbrains.annotations.ApiStatus;
-
 import java.lang.foreign.Addressable;
 import java.lang.ref.Cleaner;
 
@@ -13,6 +11,7 @@ import java.lang.ref.Cleaner;
 public abstract class ObjectBase implements Proxy {
 
     private static final Cleaner cleaner = Cleaner.create();
+
     private final Addressable address;
     private RefCleaner refCleaner;
     private Cleaner.Cleanable cleanable;
@@ -21,7 +20,6 @@ public abstract class ObjectBase implements Proxy {
      * Instantiate the ObjectBase class.
      * @param address the memory address of the object in native memory
      */
-    @ApiStatus.Internal
     protected ObjectBase(Addressable address) {
         this.address = address;
     }
@@ -35,25 +33,37 @@ public abstract class ObjectBase implements Proxy {
     }
     
     /**
-     * Disable the Cleaner that automatically calls {@code g_object_unref} 
-     * when this object is garbage collected.
+     * Disable the Cleaner that automatically calls {@code g_object_unref} (or
+     * another method that has been specified) when this object is garbage collected.
      */
     public void yieldOwnership() {
-        if (this.refCleaner != null && this.refCleaner.registered) {
-            this.refCleaner.registered = false;
+        if (refCleaner != null && refCleaner.registered) {
+            refCleaner.registered = false;
         }
     }
 
     /**
-     * Enable the Cleaner that automatically calls {@code g_object_unref}
-     * when this object is garbage collected.
+     * Enable the Cleaner that automatically calls {@code g_object_unref} (or
+     * another method that has been specified) when this object is garbage collected.
      */
     public void takeOwnership() {
         if (this.refCleaner == null) {
             refCleaner = new RefCleaner(address);
             cleanable = cleaner.register(this, refCleaner);
         } else {
-            this.refCleaner.registered = true;
+            refCleaner.registered = true;
+        }
+    }
+
+    /**
+     * Change the method name from the default {@code g_object_unref} to
+     * another method name.
+     * @param method the unref method name
+     */
+    public void setRefCleanerMethod(String method) {
+        if (refCleaner != null) {
+            refCleaner.refCleanerMethod = method;
+            refCleaner.unrefMethodHandle = null;
         }
     }
 }
