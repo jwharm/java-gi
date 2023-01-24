@@ -45,8 +45,10 @@ publishing {
 }
 
 // Temporarily needed until panama is out of preview
-tasks.compileJava.get().options.compilerArgs.add("--enable-preview")
-(tasks.javadoc.get().options as CoreJavadocOptions).run {
-    addStringOption("source", "19")
-    addBooleanOption("-enable-preview", true)
+tasks.compileJava { options.compilerArgs.add("--enable-preview") }
+tasks.javadoc {
+    (options as CoreJavadocOptions).run {
+        addStringOption("source", "19")
+        addBooleanOption("-enable-preview", true)
+    }
 }
