@@ -32,10 +32,14 @@ public class Record extends Class {
 
         generateEnsureInitialized(writer);
         generateCType(writer);
-        generateMemoryLayout(writer);
-        generateRecordAllocator(writer);
-        for (Field f : fieldList) {
-            f.generate(writer);
+
+        // Opaque structs have unknown memory layout and should not have an allocator
+        if (! (isOpaqueStruct() || hasOpaqueStructFields())) {
+            generateMemoryLayout(writer);
+            generateRecordAllocator(writer);
+            for (Field f : fieldList) {
+                f.generate(writer);
+            }
         }
 
         generateMemoryAddressConstructor(writer);
@@ -81,5 +85,13 @@ public class Record extends Class {
         writer.write("    newInstance.allocatedMemorySegment = segment;\n");
         writer.write("    return newInstance;\n");
         writer.write("}\n");
+    }
+
+    /**
+     * Opaque structs have unknown memory layout and should not have an allocator
+     * @return true if the struct has no fields specified in the GIR file
+     */
+    public boolean isOpaqueStruct() {
+        return fieldList.isEmpty();
     }
 }

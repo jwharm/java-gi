@@ -19,8 +19,8 @@ public class StructBuilder {
      */
     public static void generateBuilder(SourceWriter writer, io.github.jwharm.javagi.model.Record r) throws IOException {
 
-        // No builder for structs without field definitions
-        if (r.fieldList.isEmpty()) {
+        // No builder for opaque structs (without field definitions) or structs with fields that refer to opaque structs)
+        if (r.isOpaqueStruct() || r.hasOpaqueStructFields()) {
             return;
         }
 

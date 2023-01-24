@@ -94,70 +94,80 @@ public abstract class RegisteredType extends GirElement {
         // Add the function
         this.functionList.add(getTypeFunc);
     }
+
+    // If one of the fields directly refers to an opaque struct (recursively), we cannot
+    // generate the memory layout or allocate memory for this type
+    public boolean hasOpaqueStructFields() {
+        for (Field field : fieldList) {
+            if (field.type != null
+                    && (! field.type.isPointer())
+                    && field.type.girElementInstance instanceof Record rec
+                    && (rec.isOpaqueStruct() || rec.hasOpaqueStructFields())) {
+                return true;
+            }
+        }
+        return false;
+    }
     
     protected void generateMemoryLayout(SourceWriter writer) throws IOException {
         if (this instanceof Bitfield || this instanceof Enumeration) {
             return;
         }
 
+        // Opaque structs have unknown memory layout and should not have an allocator
+        if (hasOpaqueStructFields() || (this instanceof Record rec && rec.isOpaqueStruct())) {
+            return;
+        }
+
         writer.write("\n");
         writer.write("/**\n");
-        if (fieldList.isEmpty()) {
-            writer.write(" * Memory layout of the native struct is unknown.\n");
-            writer.write(" * @return always {@code Interop.valueLayout.ADDRESS}\n");
-        } else {
-            writer.write(" * The memory layout of the native struct.\n");
-            writer.write(" * @return the memory layout\n");
-        }
+        writer.write(" * The memory layout of the native struct.\n");
+        writer.write(" * @return the memory layout\n");
         writer.write(" */\n");
         writer.write("@ApiStatus.Internal\n");
         writer.write("public static MemoryLayout getMemoryLayout() {\n");
         writer.increaseIndent();
 
-        if (fieldList.isEmpty()) {
-            writer.write("return Interop.valueLayout.ADDRESS;\n");
+        writer.write("return MemoryLayout.");
+        if (this instanceof Union) {
+            writer.write("unionLayout(\n");
         } else {
-            writer.write("return MemoryLayout.");
-            if (this instanceof Union) {
-                writer.write("unionLayout(\n");
-            } else {
-                writer.write("structLayout(\n");
-            }
-
-            // How many bytes have we generated thus far
-            int size = 0;
-
-            for (int f = 0; f < fieldList.size(); f++) {
-                Field field = fieldList.get(f);
-
-                if (f > 0) {
-                    writer.write(",\n");
-                }
-
-                // Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
-                int s = field.getSize(field.getMemoryType());
-
-                // Calculate padding (except for union layouts)
-                if (! (this instanceof Union)) {
-
-                    // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
-                    if (size % s % 64 > 0) {
-                        int padding = (s - (size % s)) % 64;
-                        writer.write("    MemoryLayout.paddingLayout(" + padding + "),\n");
-                        size += padding;
-                    }
-
-                }
-
-                // Write the memory layout declaration
-                writer.write("    " + field.getMemoryLayoutString());
-
-                size += s;
-            }
-            // Write the name of the struct
-            writer.write("\n");
-            writer.write(").withName(C_TYPE_NAME);\n");
+            writer.write("structLayout(\n");
         }
+
+        // How many bytes have we generated thus far
+        int size = 0;
+
+        for (int f = 0; f < fieldList.size(); f++) {
+            Field field = fieldList.get(f);
+
+            if (f > 0) {
+                writer.write(",\n");
+            }
+
+            // Get the byte size of the field. For example: int = 32bit, pointer = 64bit, char = 8bit
+            int s = field.getSize(field.getMemoryType());
+
+            // Calculate padding (except for union layouts)
+            if (! (this instanceof Union)) {
+
+                // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
+                if (size % s % 64 > 0) {
+                    int padding = (s - (size % s)) % 64;
+                    writer.write("    MemoryLayout.paddingLayout(" + padding + "),\n");
+                    size += padding;
+                }
+
+            }
+
+            // Write the memory layout declaration
+            writer.write("    " + field.getMemoryLayoutString());
+
+            size += s;
+        }
+        // Write the name of the struct
+        writer.write("\n");
+        writer.write(").withName(C_TYPE_NAME);\n");
         writer.decreaseIndent();
         writer.write("}\n");
     }

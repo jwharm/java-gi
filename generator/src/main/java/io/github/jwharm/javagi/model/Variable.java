@@ -184,7 +184,7 @@ public class Variable extends GirElement {
                     + (type.isAliasForPrimitive() ? Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) : "")
                     + "Values(" + identifier + "), " + zeroTerminated + ", SCOPE)";
 
-        if (type.isRecord())
+        if (type.isRecord() && (!type.isPointer()))
             return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ", SCOPE)";
 
         return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", SCOPE)";
