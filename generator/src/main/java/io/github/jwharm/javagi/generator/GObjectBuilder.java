@@ -115,7 +115,7 @@ public class GObjectBuilder {
         writer.write(" * @param <S> the type of the Builder that is returned\n");
         writer.write(" */\n");
         writer.write("interface Builder<S extends io.github.jwharm.javagi.base.Builder<S>>\n");
-        writer.write("        extends io.github.jwharm.javagi.base.PropertyBuilder {\n");
+        writer.write("        extends io.github.jwharm.javagi.base.BuilderInterface {\n");
         writer.increaseIndent();
 
         // Generate setters for the properties

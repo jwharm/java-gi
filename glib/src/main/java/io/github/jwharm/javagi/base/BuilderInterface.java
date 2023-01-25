@@ -5,7 +5,7 @@ import org.gtk.gobject.Value;
 /**
  * Base interface for nested Builder types in interfaces.
  */
-public interface PropertyBuilder {
+public interface BuilderInterface {
 
     /**
      * Add the provided property name and value to the builder
