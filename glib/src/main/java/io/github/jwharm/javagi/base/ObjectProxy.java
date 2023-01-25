@@ -8,7 +8,7 @@ import java.lang.ref.Cleaner;
  * in native memory. The {@link #handle()} method returns the memory address
  * of the object.
  */
-public abstract class ObjectBase implements Proxy {
+public abstract class ObjectProxy implements Proxy {
 
     private static final Cleaner cleaner = Cleaner.create();
 
@@ -17,10 +17,10 @@ public abstract class ObjectBase implements Proxy {
     private Cleaner.Cleanable cleanable;
 
     /**
-     * Instantiate the ObjectBase class.
+     * Instantiate the ObjectProxy class.
      * @param address the memory address of the object in native memory
      */
-    protected ObjectBase(Addressable address) {
+    protected ObjectProxy(Addressable address) {
         this.address = address;
     }
 

@@ -18,7 +18,7 @@ public class Record extends Class {
     /**
      * A record in GI is a struct in C. Java doesn't have a struct type, and the java 'record'
      * functionality has a different purpose. So the generated API creates a class that
-     * extends Struct (instead of GObject).
+     * extends StructProxy (instead of GObject).
      * Structs are often initialized implicitly, which means they don't always have constructors.
      * To solve this, we generate a static allocate() function that allocates a memory segment.
      */
@@ -27,7 +27,7 @@ public class Record extends Class {
         generateImportStatements(writer);
         generateJavadoc(writer);
         
-        writer.write("public class " + javaName + " extends Struct {\n");
+        writer.write("public class " + javaName + " extends StructProxy {\n");
         writer.increaseIndent();
 
         generateEnsureInitialized(writer);

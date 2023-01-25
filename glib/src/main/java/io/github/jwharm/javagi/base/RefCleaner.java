@@ -35,7 +35,7 @@ class RefCleaner implements Runnable {
     }
 
     /**
-     * This function is run by the {@link Cleaner} when an {@link ObjectBase} instance has become unreachable.
+     * This function is run by the {@link Cleaner} when an {@link ObjectProxy} instance has become unreachable.
      * If the ownership is set, a call to {@code g_object_unref} (or another method that has been setup) is executed.
      */
     public void run() {

@@ -5,7 +5,7 @@ import java.lang.foreign.Addressable;
 /**
  * Base type for a Java proxy object to a {@code struct} in native memory.
  */
-public class Struct implements Proxy {
+public class StructProxy implements Proxy {
 
     private final Addressable address;
 
@@ -13,7 +13,7 @@ public class Struct implements Proxy {
      * Create a new {@code Struct} object for a struct in native memory.
      * @param address    the memory address of the struct
      */
-    public Struct(Addressable address) {
+    public StructProxy(Addressable address) {
         this.address = address;
     }
 
