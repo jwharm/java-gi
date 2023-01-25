@@ -8,18 +8,18 @@
 
 ## Quickstart
 - First, download and install [JDK 19](https://jdk.java.net/19/).
-- To create a Gtk application, add the `GLib` and `Gtk4` modules to your `pom.xml`:
+- To create a Gtk application, add the `glib` and `gtk4` modules to your `pom.xml`:
 ```xml
 <dependency>
   <groupId>io.github.jwharm.javagi</groupId>
   <artifactId>glib</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3</version>
 </dependency>
 
 <dependency>
   <groupId>io.github.jwharm.javagi</groupId>
   <artifactId>gtk4</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3</version>
 </dependency>
 ```
 or download the jar files manually from the packages section.
@@ -61,7 +61,7 @@ public class HelloWorld extends Application {
 ```
 
 - Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when running your application. To suppress warnings about native access, also add `--enable-native-access=org.glib,org.gtk`.
-- It is recommended to download the Javadoc documentation to assist during the development of your GTK application. Optionally, download the sources too. Both are available in the [Releases](https://github.com/jwharm/java-gi/releases) section.
+- It is recommended to download the Javadoc documentation to assist during the development of your GTK application. Optionally, download the sources too. Both are available in the Packages section.
 
 ## Background
 Project Panama allows for relatively easy interoperability with native code. To mechanically generate Java bindings from native library headers, the [jextract](https://github.com/openjdk/jextract) tool was developed by the Panama developers. It is possible to generate Java bindings from header files using jextract, but the resulting API is very difficult to use. All C functions, like `gtk_button_set_icon_name(GtkButton* button, const char* icon_name)`, are mapped by jextract to static Java methods:
