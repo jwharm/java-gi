@@ -19,9 +19,10 @@ public class GErrorException extends Exception {
     // Auto-generated
     @Serial
     private static final long serialVersionUID = -5219056090883059292L;
-    
-    // The GError proxy object
-    private final org.gtk.glib.Error gerror;
+
+    private final Quark domain;
+    private final int code;
+    private final String message;
 
     // Dereference the GError instance from the pointer
     private static org.gtk.glib.Error dereference(MemorySegment pointer) {
@@ -29,7 +30,7 @@ public class GErrorException extends Exception {
     }
     
     // Get the message from the GError instance (used by the GErrorException constructor)
-    private static String getMessage(MemorySegment pointer) {
+    private static String readMessage(MemorySegment pointer) {
         return dereference(pointer).readMessage();
     }
 
@@ -40,8 +41,12 @@ public class GErrorException extends Exception {
      */
     @ApiStatus.Internal
     public GErrorException(MemorySegment gerrorPtr) {
-        super(getMessage(gerrorPtr));
-        this.gerror = dereference(gerrorPtr);
+        super(readMessage(gerrorPtr));
+
+        org.gtk.glib.Error gerror = dereference(gerrorPtr);
+        this.domain = gerror.readDomain();
+        this.code = gerror.readCode();
+        this.message = gerror.readMessage();
     }
 
     /**
@@ -55,7 +60,9 @@ public class GErrorException extends Exception {
      */
     public GErrorException(Quark domain, int code, String message, java.lang.Object... args) {
         super(message);
-        this.gerror = new org.gtk.glib.Error(domain, code, message, args);
+        this.domain = domain;
+        this.code = code;
+        this.message = message;
     }
 
     /**
@@ -73,7 +80,7 @@ public class GErrorException extends Exception {
      * @return the code of the GError
      */
     public int getCode() {
-        return gerror.readCode();
+        return code;
     }
 
     /**
@@ -81,14 +88,14 @@ public class GErrorException extends Exception {
      * @return The domain of the GError
      */
     public Quark getDomain() {
-        return gerror.readDomain();
+        return domain;
     }
     
     /**
-     * Get the GError instance
-     * @return the GError instance
+     * Get a new GError instance with the domain, code and message of this GErrorException
+     * @return a new GError instance
      */
     public org.gtk.glib.Error getGError() {
-        return gerror;
+        return new org.gtk.glib.Error(domain, code, message);
     }
 }
