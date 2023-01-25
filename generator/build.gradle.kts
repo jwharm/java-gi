@@ -14,7 +14,7 @@ application {
 }
 
 group = "io.github.jwharm.javagi"
-version = "0.3"
+version = "0.4"
 
 publishing {
     repositories {
