@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi.example;
 
+import io.github.jwharm.javagi.util.ListIndexItem;
+import io.github.jwharm.javagi.util.ListIndexModel;
 import org.gtk.gio.ApplicationFlags;
 import org.gtk.gtk.*;
 

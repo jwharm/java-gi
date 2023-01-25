@@ -17,7 +17,7 @@ public class Enumeration extends ValueWrapper {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public enum " + javaName + " implements io.github.jwharm.javagi.Enumeration {\n");
+        writer.write("public enum " + javaName + " implements io.github.jwharm.javagi.base.Enumeration {\n");
         writer.increaseIndent();
 
         // Some enumerations contain duplicate members or members with invalid values

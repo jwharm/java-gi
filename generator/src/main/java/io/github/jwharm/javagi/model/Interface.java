@@ -24,7 +24,7 @@ public class Interface extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.Proxy {\n");
+        writer.write("public interface " + javaName + " extends io.github.jwharm.javagi.base.Proxy {\n");
         writer.increaseIndent();
 
         generateMarshal(writer);

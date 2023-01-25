@@ -71,7 +71,7 @@ public class Alias extends ValueWrapper {
                 } else if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)) {
                     genericType = type.qualifiedJavaType;
                 }
-                writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Alias<" + genericType + "> {\n");
+                writer.write("public class " + javaName + " extends io.github.jwharm.javagi.base.Alias<" + genericType + "> {\n");
                 writer.increaseIndent();
                 generateValueConstructor(writer, type.qualifiedJavaType);
                 generateArrayConstructor(writer);

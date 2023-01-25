@@ -43,7 +43,7 @@ public class Class extends RegisteredType {
         // Parent class
         writer.write(" extends ");
         if (parentClass == null) {
-            writer.write("io.github.jwharm.javagi.ObjectBase");
+            writer.write("io.github.jwharm.javagi.base.ObjectBase");
         } else {
             writer.write(parentClass);
         }

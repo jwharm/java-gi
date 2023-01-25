@@ -56,7 +56,9 @@ public abstract class RegisteredType extends GirElement {
     }
 
     public static void generateImportStatements(SourceWriter writer) throws IOException {
-        writer.write("import io.github.jwharm.javagi.*;\n");
+        writer.write("import io.github.jwharm.javagi.base.*;\n");
+        writer.write("import io.github.jwharm.javagi.interop.*;\n");
+        writer.write("import io.github.jwharm.javagi.pointer.*;\n");
         writer.write("import java.lang.foreign.*;\n");
         writer.write("import java.lang.invoke.*;\n");
         writer.write("import org.jetbrains.annotations.*;\n");

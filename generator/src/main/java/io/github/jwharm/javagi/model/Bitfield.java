@@ -18,7 +18,7 @@ public class Bitfield extends ValueWrapper {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.Bitfield {\n");
+        writer.write("public class " + javaName + " extends io.github.jwharm.javagi.base.Bitfield {\n");
         writer.increaseIndent();
 
         generateCType(writer);

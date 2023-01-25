@@ -114,7 +114,7 @@ public class Method extends GirElement implements CallableType {
 
         // Exceptions
         if (throws_ != null) {
-            writer.write(" throws io.github.jwharm.javagi.GErrorException");
+            writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
         writer.increaseIndent();

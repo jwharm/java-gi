@@ -9,7 +9,10 @@ setupGenSources {
     moduleInfo = """
         module org.glib {
             requires static org.jetbrains.annotations;
-            exports io.github.jwharm.javagi;
+            exports io.github.jwharm.javagi.base;
+            exports io.github.jwharm.javagi.interop;
+            exports io.github.jwharm.javagi.pointer;
+            exports io.github.jwharm.javagi.util;
             %s
         }
     """.trimIndent()
