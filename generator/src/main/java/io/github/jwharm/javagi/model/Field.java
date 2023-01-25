@@ -46,8 +46,8 @@ public class Field extends Variable {
         }
 
         String camelName = Conversions.toCamelCase(this.name, true);
-        String setter = "set" + camelName;
-        String getter = "get" + camelName;
+        String setter = (callback != null ? "override" : "write") + camelName;
+        String getter = "read" + camelName;
 
         for (Method method : Stream.concat(parent.methodList.stream(), parent.functionList.stream()).toList()) {
             String n = Conversions.toLowerCaseJavaName(method.name);
@@ -119,7 +119,7 @@ public class Field extends Variable {
         writer.write("}\n");
     }
     
-    public void generateStructField(SourceWriter writer) throws IOException {
+    public void generateStructBuilderSetter(SourceWriter writer) throws IOException {
         writer.write("\n");
 
         // Generate javadoc

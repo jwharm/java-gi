@@ -64,9 +64,9 @@ public class ListIndexModel extends GObject implements ListModel {
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), InterfaceInfo.builder()
                     .setInterfaceInit((iface, data) -> {
                         ListModelInterface lmi = ListModelInterface.fromAddress.marshal(iface.handle(), null);
-                        lmi.setGetItemType(ListModel::getItemType);
-                        lmi.setGetNItems(ListModel::getNItems);
-                        lmi.setGetItem(ListModel::getItem);
+                        lmi.overrideGetItemType(ListModel::getItemType);
+                        lmi.overrideGetNItems(ListModel::getNItems);
+                        lmi.overrideGetItem(ListModel::getItem);
                     })
                     .setInterfaceData(null)
                     .setInterfaceFinalize(null)

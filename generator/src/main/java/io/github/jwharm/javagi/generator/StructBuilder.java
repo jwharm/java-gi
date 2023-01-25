@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.generator;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import io.github.jwharm.javagi.model.Field;
 
@@ -61,7 +60,7 @@ public class StructBuilder {
         
         // Generate setters for the fields
         for (Field f : r.fieldList) {
-            f.generateStructField(writer);
+            f.generateStructBuilderSetter(writer);
         }
 
         writer.decreaseIndent();
