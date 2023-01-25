@@ -197,9 +197,14 @@ public abstract class RegisteredType extends GirElement {
         writer.write("/**\n");
         writer.write(" * The marshal function from a native memory address to a Java proxy instance\n");
         writer.write(" */\n");
-        writer.write("@ApiStatus.Internal\n");
-        String name = javaName + (this instanceof Interface ? "Impl" : "");
-        writer.write("public static final Marshal<Addressable, " + name + "> fromAddress = (input, scope) -> "
+
+        String name = javaName;
+        if (this instanceof Interface)
+            name += "Impl";
+        else if (this instanceof Class c && "1".equals(c.abstract_))
+            name += "Impl";
+
+        writer.write("public static final Marshal<Addressable, " + javaName + "> fromAddress = (input, scope) -> "
                 + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input);\n"
         );
     }
@@ -272,7 +277,38 @@ public abstract class RegisteredType extends GirElement {
             writer.write("}\n");
         }
     }
-    
+
+    public void generateImplClass(SourceWriter writer) throws IOException {
+        writer.write("\n");
+
+        if (this instanceof Interface) {
+            writer.write("/**\n");
+            writer.write(" * The " + javaName + "Impl type represents a native instance of the " + javaName + " interface.\n");
+            writer.write(" */\n");
+            writer.write("class " + javaName + "Impl extends org.gtk.gobject.GObject implements " + javaName + " {\n");
+        } else if (this instanceof Class) {
+            writer.write("/**\n");
+            writer.write(" * The " + javaName + "Impl type represents a native instance of the abstract " + javaName + " class.\n");
+            writer.write(" */\n");
+            writer.write("public static class " + javaName + "Impl extends " + javaName + " {\n");
+        }
+        writer.increaseIndent();
+
+        generateEnsureInitialized(writer);
+
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Creates a new instance of " + javaName + " for the provided memory address.\n");
+        writer.write(" * @param address the memory address of the instance\n");
+        writer.write(" */\n");
+        writer.write("public " + javaName + "Impl(Addressable address) {\n");
+        writer.write("    super(address);\n");
+        writer.write("}\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
+    }
+
     public String getInteropString(String paramName, boolean isPointer) {
         return paramName + ".handle()";
     }

@@ -52,27 +52,4 @@ public class Interface extends RegisteredType {
         writer.decreaseIndent();
         writer.write("}\n");
     }
-
-    public void generateImplClass(SourceWriter writer) throws IOException {
-        writer.write("\n");
-        writer.write("/**\n");
-        writer.write(" * The " + javaName + "Impl type represents a native instance of the " + javaName + " interface.\n");
-        writer.write(" */\n");
-        writer.write("class " + javaName + "Impl extends org.gtk.gobject.GObject implements " + javaName + " {\n");
-        writer.increaseIndent();
-
-        generateEnsureInitialized(writer);
-
-        writer.write("\n");
-        writer.write("/**\n");
-        writer.write(" * Creates a new instance of " + javaName + " for the provided memory address.\n");
-        writer.write(" * @param address the memory address of the instance\n");
-        writer.write(" */\n");
-        writer.write("public " + javaName + "Impl(Addressable address) {\n");
-        writer.write("    super(address);\n");
-        writer.write("}\n");
-
-        writer.decreaseIndent();
-        writer.write("}\n");
-    }
 }

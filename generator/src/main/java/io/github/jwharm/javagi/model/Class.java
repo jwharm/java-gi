@@ -33,10 +33,10 @@ public class Class extends RegisteredType {
 
         writer.write("public ");
 
-//        // Abstract classes - TODO: generate an Impl class to instantiate return values
-//        if ("1".equals(abstract_)) {
-//            writer.write("abstract ");
-//        }
+        // Abstract classes
+        if ("1".equals(abstract_)) {
+            writer.write("abstract ");
+        }
 
         writer.write("class " + javaName);
 
@@ -95,6 +95,11 @@ public class Class extends RegisteredType {
             writer.write("}\n");
         } else {
             generateIsAvailable(writer);
+        }
+
+        // Abstract classes
+        if ("1".equals(abstract_)) {
+            generateImplClass(writer);
         }
 
         generateInjected(writer);
