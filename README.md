@@ -22,7 +22,7 @@
   <version>0.3-SNAPSHOT</version>
 </dependency>
 ```
-or download the jar files manually from the [releases](https://github.com/jwharm/java-gi/releases) section.
+or download the jar files manually from the packages section.
 - Add `requires org.gtk;` to your `module-info.java` file.
 - Write, compile and run your GTK application:
 ```java
