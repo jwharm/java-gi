@@ -114,6 +114,30 @@ public abstract class PatchSet {
         else e.memberList.remove(found);
     }
 
+    public static void makeGeneric(Repository repo, String type) {
+        RegisteredType inst = repo.namespace.registeredTypeMap.get(type);
+        if (inst != null) {
+            inst.generic = true;
+            for (Method m : inst.methodList) {
+                if (m.parameters != null) {
+                    for (Parameter p : m.parameters.parameterList) {
+                        if (p.type != null && "org.gtk.gobject.GObject".equals(p.type.qualifiedJavaType)) {
+                            p.type.qualifiedJavaType = "T";
+                        }
+                    }
+                }
+                if (m.returnValue != null) {
+                    Type returnType = m.returnValue.type;
+                    if (returnType != null && "org.gtk.gobject.GObject".equals(returnType.qualifiedJavaType)) {
+                        returnType.qualifiedJavaType = "T";
+                    }
+                }
+            }
+        } else {
+            System.err.println("Did not make " + type + " generic: Type not found");
+        }
+    }
+
     public static void inject(Repository repo, String type, String code) {
         RegisteredType inst = repo.namespace.registeredTypeMap.get(type);
         if (inst == null) {

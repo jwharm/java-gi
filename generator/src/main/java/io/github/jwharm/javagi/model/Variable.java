@@ -49,6 +49,7 @@ public class Variable extends GirElement {
     }
 
     private String getType(boolean pointerForArray) {
+
         if (type != null)
             return getAnnotations(type) + getType(type);
 

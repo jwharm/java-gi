@@ -15,7 +15,10 @@ public class Union extends RegisteredType {
         generateImportStatements(writer);
         generateJavadoc(writer);
 
-        writer.write("public class " + javaName + " extends StructProxy {\n");
+        writer.write("public class " + javaName);
+        if (generic)
+            writer.write("<T extends org.gtk.gobject.GObject>");
+        writer.write(" extends StructProxy {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
         generateCType(writer);

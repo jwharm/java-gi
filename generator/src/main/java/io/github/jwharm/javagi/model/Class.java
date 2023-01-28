@@ -40,6 +40,11 @@ public class Class extends RegisteredType {
 
         writer.write("class " + javaName);
 
+        // Generic types
+        if (generic) {
+            writer.write("<T extends org.gtk.gobject.GObject>");
+        }
+
         // Parent class
         writer.write(" extends ");
         if (parentClass == null) {

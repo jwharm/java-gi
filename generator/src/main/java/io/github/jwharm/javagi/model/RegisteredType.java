@@ -14,6 +14,8 @@ public abstract class RegisteredType extends GirElement {
     public final String version;
     protected final String qualifiedName;
 
+    public boolean generic = false;
+
     public String injected = null;
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
@@ -206,9 +208,14 @@ public abstract class RegisteredType extends GirElement {
         else if (this instanceof Class c && "1".equals(c.abstract_))
             name += "Impl";
 
-        writer.write("public static final Marshal<Addressable, " + javaName + "> fromAddress = (input, scope) -> "
-                + "input.equals(MemoryAddress.NULL) ? null : new " + name + "(input);\n"
-        );
+        writer.write("public static final Marshal<Addressable, " + javaName);
+        if (generic)
+            writer.write("<org.gtk.gobject.GObject>");
+        writer.write("> fromAddress = (input, scope) -> \n");
+        writer.write("        input.equals(MemoryAddress.NULL) ? null : new " + name);
+        if (generic)
+            writer.write("<>");
+        writer.write("(input);\n");
     }
 
     protected void generateIsAvailable(SourceWriter writer) throws IOException {

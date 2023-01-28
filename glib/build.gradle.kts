@@ -96,6 +96,9 @@ setupGenSources {
         removeFunction(repo, "signal_new")
         removeFunction(repo, "signal_new_class_handler")
 
+        // Make GWeakRef a generic class
+        makeGeneric(repo, "WeakRef");
+
         fun StringBuilder.template(javatype: String, gtype: String, method: String) = appendLine("""
                             
                     /**

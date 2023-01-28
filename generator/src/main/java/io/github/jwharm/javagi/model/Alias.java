@@ -51,6 +51,8 @@ public class Alias extends ValueWrapper {
         switch (getTargetType()) {
             case CLASS, RECORD -> {
                 writer.write("public class " + javaName);
+                if (generic)
+                    writer.write("<T extends org.gtk.gobject.GObject>");
                 if (type.qualifiedJavaType.equals("void")) {
                     writer.write(" extends org.gtk.gobject.GObject {\n");
                 } else {
@@ -61,7 +63,10 @@ public class Alias extends ValueWrapper {
                 generateMarshal(writer);
             }
             case INTERFACE, CALLBACK -> {
-                writer.write("public interface " + javaName + " extends " + type.qualifiedJavaType + " {\n");
+                writer.write("public interface " + javaName);
+                if (generic)
+                    writer.write("<T extends org.gtk.gobject.GObject>");
+                writer.write(" extends " + type.qualifiedJavaType + " {\n");
                 writer.increaseIndent();
             }
             case VALUE -> {
