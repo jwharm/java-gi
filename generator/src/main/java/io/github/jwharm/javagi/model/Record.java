@@ -3,7 +3,6 @@ package io.github.jwharm.javagi.model;
 import java.io.IOException;
 
 import io.github.jwharm.javagi.generator.SourceWriter;
-import io.github.jwharm.javagi.generator.StructBuilder;
 
 public class Record extends Class {
 
@@ -59,10 +58,6 @@ public class Record extends Class {
         }
 
         generateDowncallHandles(writer);
-        
-        // Write builder class
-        StructBuilder.generateBuilder(writer, this);
-
         generateInjected(writer);
 
         writer.decreaseIndent();

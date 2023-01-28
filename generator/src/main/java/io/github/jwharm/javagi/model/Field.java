@@ -118,41 +118,7 @@ public class Field extends Variable {
         writer.write("    }\n");
         writer.write("}\n");
     }
-    
-    public void generateStructBuilderSetter(SourceWriter writer) throws IOException {
-        writer.write("\n");
 
-        // Generate javadoc
-        if (doc != null) {
-            doc.generate(writer, false);
-        }
-
-        writer.write("public Builder set" + Conversions.toCamelCase(this.name, true) + "(");
-
-        // Write the parameter
-        writeTypeAndName(writer, false);
-
-        // Set the value in the struct using the generated memory layout
-        writer.write(") {\n");
-        writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
-        writer.write("        getMemoryLayout()\n");
-        writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) struct.handle(), getMemoryLayout().byteSize(), SCOPE), ");
-        // Check for null values
-        if (checkNull()) {
-            writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
-        }
-        // Convert the parameter to the C function argument
-        marshalJavaToNative(writer, this.name, false, false);
-        if (checkNull()) {
-            writer.write(")");
-        }
-        writer.write(");\n");
-        writer.write("        return this;\n");
-        writer.write("    }\n");
-        writer.write("}\n");
-    }
-    
     /**
      * Generates a String containing the MemoryLayout definition for this field.
      * @return A String containing the MemoryLayout definition for this field
