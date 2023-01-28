@@ -7,8 +7,12 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class ReturnValue extends Parameter {
 
+    public boolean returnsFloatingReference;
+
     public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
         super(parent, null, transferOwnership, nullable, null, null, null, null);
+
+        returnsFloatingReference = false;
     }
 
     /**
@@ -61,12 +65,19 @@ public class ReturnValue extends Parameter {
         }
 
         // When transfer-ownership="full", we must take ownership.
-        if (isProxy() && "full".equals(transferOwnership)) {
+        if (isProxy() && "full".equals(transferOwnership) || returnsFloatingReference) {
 
             writer.write("var OBJECT = ");
             marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
-            writer.write("if (OBJECT != null) OBJECT.takeOwnership();\n");
+            writer.write("if (OBJECT != null) {\n");
+
+            // Sink floating reference
+            if (returnsFloatingReference)
+                writer.write("    OBJECT.refSink();\n");
+
+            writer.write("    OBJECT.takeOwnership();\n");
+            writer.write("}\n");
             writer.write("return OBJECT;\n");
 
         } else {

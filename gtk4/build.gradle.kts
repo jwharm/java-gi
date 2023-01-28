@@ -67,9 +67,16 @@ setupGenSources {
         renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
         renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
         renameMethod(repo, "PrintSettings", "get", "get_string")
+
         // This method returns void in interface ActionGroup, but returns boolean in class Widget.
         // Subclasses from Widget that implement ActionGroup throw a compile error.
         setReturnVoid(repo, "Widget", "activate_action")
+
+        // These calls return floating references
+        setReturnFloating(findMethod(repo, "FileFilter", "to_gvariant"))
+        setReturnFloating(findMethod(repo, "PageSetup", "to_gvariant"))
+        setReturnFloating(findMethod(repo, "PaperSize", "to_gvariant"))
+        setReturnFloating(findMethod(repo, "PrintSettings", "to_gvariant"))
     }
     source("Adw-1", "org.gnome.adw", true, "adwaita-1") { repo ->
         // Override with different return type

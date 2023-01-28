@@ -54,8 +54,7 @@ public class Constructor extends Method {
         }
 
         // Ownership transfer for InitiallyUnowned instances
-        boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
-        if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
+        if (returnsFloatingReference()) {
             writer.write("refSink();\n");
             writer.write("takeOwnership();\n");
         }
@@ -112,8 +111,7 @@ public class Constructor extends Method {
         writer.write(";\n");
 
         // Ownership transfer for InitiallyUnowned instances
-        boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
-        if (initiallyUnowned && "none".equals(returnValue.transferOwnership)) {
+        if (returnsFloatingReference()) {
             writer.write("var OBJECT = ");
             returnValue.marshalNativeToJava(writer, "RESULT", false);
             writer.write(";\n");
@@ -226,5 +224,18 @@ public class Constructor extends Method {
 
         writer.decreaseIndent();
         writer.write("}\n");
+    }
+    
+    /**
+     * Check if this constructor returns a floating reference
+     */
+    private boolean returnsFloatingReference() {
+        if (!returnValue.returnsFloatingReference) {
+            boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
+            if ((initiallyUnowned) && "none".equals(returnValue.transferOwnership)) {
+                returnValue.returnsFloatingReference = true;
+            }
+        }
+        return returnValue.returnsFloatingReference;
     }
 }

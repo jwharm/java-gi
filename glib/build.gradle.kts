@@ -25,6 +25,37 @@ setupGenSources {
         // Old typo
         removeEnumMember(repo, "UnicodeBreakType", "close_paranthesis")
 
+        // These calls return floating references
+        setReturnFloating(findConstructor(repo, "Variant", "new_array"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_boolean"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_byte"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_bytestring"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_bytestring_array"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_dict_entry"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_double"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_fixed_array"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_from_bytes"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_handle"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_int16"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_int32"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_int64"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_maybe"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_object_path"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_objv"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_parsed"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_parsed_va"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_printf"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_signature"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_string"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_strv"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_take_string"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_tuple"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_uint16"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_uint32"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_uint64"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_va"))
+        setReturnFloating(findConstructor(repo, "Variant", "new_variant"))
+
         inject(repo, "Type", """
                         
             public static final long G_TYPE_FUNDAMENTAL_SHIFT = 2;
@@ -108,6 +139,7 @@ setupGenSources {
         // It is meant to be implemented as a constructor (actually, a static factory method).
         // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
         // The current solution is to remove the method from the interface. It is still available in the implementing classes.
-        removeMethod(repo, "AsyncInitable", "new_finish")}
+        removeMethod(repo, "AsyncInitable", "new_finish")
+    }
     source("GModule-2.0", "org.gtk.gmodule", true)
 }

@@ -41,6 +41,46 @@ public abstract class PatchSet {
             System.err.println("Did not change return type of " + type + "." + name + ": Not found");
     }
 
+    public static void setReturnFloating(CallableType ct) {
+        try {
+            ReturnValue rv = ct.getReturnValue();
+            rv.returnsFloatingReference = true;
+        } catch (NullPointerException ignored) {
+            String name = (ct instanceof GirElement elem) ? elem.name : "[unknown]";
+            System.err.println("Did not flag return type as floating reference in " + name + ": Not found");
+        }
+    }
+
+    public static Constructor findConstructor(Repository repo, String type, String constructor) {
+        try {
+            for (Constructor c : repo.namespace.registeredTypeMap.get(type).constructorList) {
+                if (constructor.equals(c.name)) return c;
+            }
+            System.out.printf("Cannot find constructor %s.%s\n", type, constructor);
+            return null;
+        } catch (NullPointerException ignored) {
+            System.out.printf("Cannot find type %s\n", type);
+            return null;
+        }
+    }
+
+    public static Function findFunction(Repository repo, String type, String function) {
+        try {
+            if (type == null)
+                for (Function f : repo.namespace.functionList) {
+                    if (function.equals(f.name)) return f;
+                }
+            else
+                for (Function f : repo.namespace.registeredTypeMap.get(type).functionList) {
+                    if (function.equals(f.name)) return f;
+                }
+            return null;
+        } catch (NullPointerException ignored) {
+            System.out.printf("Cannot find type %s\n", type);
+            return null;
+        }
+    }
+
     public static Method findMethod(Repository repo, String type, String method) {
         try {
             for (Method m : repo.namespace.registeredTypeMap.get(type).methodList) {
@@ -48,6 +88,7 @@ public abstract class PatchSet {
             }
             return null;
         } catch (NullPointerException ignored) {
+            System.out.printf("Cannot find type %s\n", type);
             return null;
         }
     }
