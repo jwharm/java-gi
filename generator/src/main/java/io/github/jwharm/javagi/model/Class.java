@@ -64,11 +64,11 @@ public class Class extends RegisteredType {
         writer.write(" {\n");
         writer.increaseIndent();
 
+        generateMemoryAddressConstructor(writer);
+        generateMarshal(writer);
         generateEnsureInitialized(writer);
         generateCType(writer);
         generateMemoryLayout(writer);
-        generateMemoryAddressConstructor(writer);
-        generateMarshal(writer);
         generateConstructors(writer);
 
         for (Method m : methodList) {
