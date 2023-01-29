@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 import io.github.jwharm.javagi.generator.Conversions;
@@ -132,12 +133,19 @@ public abstract class RegisteredType extends GirElement {
         writer.write("public static MemoryLayout getMemoryLayout() {\n");
         writer.increaseIndent();
 
+        // Check if this type is either defined as a union, or has a union element
+        boolean isUnion = this instanceof Union || (! unionList.isEmpty());
+
         writer.write("return MemoryLayout.");
-        if (this instanceof Union) {
+        if (isUnion) {
             writer.write("unionLayout(\n");
         } else {
             writer.write("structLayout(\n");
         }
+
+        List<Field> fieldList = this.fieldList;
+        if (fieldList.isEmpty() && unionList.size() > 0 && unionList.get(0).fieldList.size() > 0)
+            fieldList = unionList.get(0).fieldList;
 
         // How many bytes have we generated thus far
         int size = 0;
@@ -153,7 +161,7 @@ public abstract class RegisteredType extends GirElement {
             int s = field.getSize(field.getMemoryType());
 
             // Calculate padding (except for union layouts)
-            if (! (this instanceof Union)) {
+            if (! (isUnion)) {
 
                 // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
                 if (size % s % 64 > 0) {

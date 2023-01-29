@@ -42,6 +42,12 @@ public class Record extends Class {
             for (Field f : fieldList) {
                 f.generate(writer);
             }
+            // Fields can be inside a <union> tag
+            if (! unionList.isEmpty()) {
+                for (Field f : unionList.get(0).fieldList) {
+                    f.generate(writer);
+                }
+            }
         }
 
         generateMemoryAddressConstructor(writer);
@@ -90,6 +96,6 @@ public class Record extends Class {
      * @return true if the struct has no fields specified in the GIR file
      */
     public boolean isOpaqueStruct() {
-        return fieldList.isEmpty();
+        return fieldList.isEmpty() && unionList.isEmpty();
     }
 }

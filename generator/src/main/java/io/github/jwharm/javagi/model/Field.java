@@ -65,7 +65,7 @@ public class Field extends Variable {
         if (callback == null) {
             writer.write("\n");
             writer.write("/**\n");
-            writer.write(" * Get the value of the field {@code " + this.fieldName + "}\n");
+            writer.write(" * Read the value of the field {@code " + this.fieldName + "}\n");
             writer.write(" * @return The value of the field {@code " + this.fieldName + "}\n");
             writer.write(" */\n");
             writer.write("public ");
@@ -96,8 +96,8 @@ public class Field extends Variable {
         // Generate setter method
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * Change the value of the field {@code " + this.fieldName + "}\n");
-        writer.write(" * @param " + this.name + " The new value of the field {@code " + this.fieldName + "}\n");
+        writer.write(" * Write a value in the field {@code " + this.fieldName + "}\n");
+        writer.write(" * @param " + this.name + " The new value for the field {@code " + this.fieldName + "}\n");
         writer.write(" */\n");
         writer.write("public void " + setter + "(");
         writeTypeAndName(writer, false);
