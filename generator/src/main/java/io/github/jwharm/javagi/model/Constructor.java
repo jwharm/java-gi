@@ -8,7 +8,7 @@ import java.io.IOException;
 public class Constructor extends Method {
 
     public Constructor(GirElement parent, String name, String cIdentifier, String deprecated, String throws_) {
-        super(parent, name, cIdentifier, deprecated, throws_, null, null);
+        super(parent, name, cIdentifier, deprecated, throws_, null, null, null);
     }
 
     public void generate(SourceWriter writer) throws IOException {

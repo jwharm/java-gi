@@ -14,7 +14,7 @@ public class Signal extends Method implements Closure {
     public boolean detailed;
 
     public Signal(GirElement parent, String name, String when, String detailed, String deprecated, String throws_) {
-        super(parent, name, null, deprecated, throws_, null, null);
+        super(parent, name, null, deprecated, throws_, null, null, null);
         this.when = when;
         this.detailed = "1".equals(detailed);
 

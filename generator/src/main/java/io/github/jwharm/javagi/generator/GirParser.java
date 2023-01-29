@@ -148,7 +148,7 @@ public class GirParser extends DefaultHandler {
             case "function" -> {
                 Function newFunction = new Function(current, attr.getValue("name"),
                         attr.getValue("c:identifier"), attr.getValue("deprecated"),
-                        attr.getValue("throws"));
+                        attr.getValue("throws"), attr.getValue("moved-to"));
                 if (current instanceof Namespace ns) {
                     ns.functionList.add(newFunction);
                 } else if (current instanceof RegisteredType c) {
@@ -197,7 +197,7 @@ public class GirParser extends DefaultHandler {
                     Method newMethod = new Method(current, attr.getValue("name"),
                             attr.getValue("c:identifier"), attr.getValue("deprecated"),
                             attr.getValue("throws"), attr.getValue("shadowed-by"),
-                            attr.getValue("shadows"));
+                            attr.getValue("shadows"), attr.getValue("moved-to"));
                     current.methodList.add(newMethod);
                     current = newMethod;
                 }

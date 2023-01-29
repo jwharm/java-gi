@@ -12,11 +12,12 @@ public class Method extends GirElement implements CallableType {
     public final String throws_;
     public final String shadowedBy;
     public final String shadows;
+    public final String movedTo;
     public ReturnValue returnValue;
     public Parameters parameters;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
-                  String throws_, String shadowedBy, String shadows) {
+                  String throws_, String shadowedBy, String shadows, String movedTo) {
         super(parent);
         this.name = shadows == null ? name : shadows; // Language bindings are expected to rename a function to the shadowed function
         this.cIdentifier = cIdentifier;
@@ -24,6 +25,7 @@ public class Method extends GirElement implements CallableType {
         this.throws_ = throws_;
         this.shadowedBy = shadowedBy;
         this.shadows = shadows;
+        this.movedTo = movedTo;
 
         // Handle empty names. (For example, GLib.g_iconv is named "".)
         if ("".equals(name)) {
