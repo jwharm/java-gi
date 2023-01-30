@@ -13,8 +13,11 @@ public class Method extends GirElement implements CallableType {
     public final String shadowedBy;
     public final String shadows;
     public final String movedTo;
+
     public ReturnValue returnValue;
     public Parameters parameters;
+
+    private boolean skip = false;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
                   String throws_, String shadowedBy, String shadows, String movedTo) {
@@ -27,13 +30,19 @@ public class Method extends GirElement implements CallableType {
         this.shadows = shadows;
         this.movedTo = movedTo;
 
-        // Handle empty names. (For example, GLib.g_iconv is named "".)
-        if ("".equals(name)) {
-            this.name = cIdentifier;
+        // Rename methods with "moved-to" attribute, but skip generation if the "moved-to" name has
+        // the form of "Type.new_name", because in that case it already exists under the new name.
+        if (movedTo != null) {
+            if (movedTo.contains("."))
+                this.skip = true;
+            else
+                this.name = movedTo;
         }
     }
     
     public void generateMethodHandle(SourceWriter writer, boolean isInterface) throws IOException {
+        if (skip) return;
+
         boolean varargs = false;
         writer.write("\n");
         writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
@@ -69,6 +78,8 @@ public class Method extends GirElement implements CallableType {
     }
 
     public void generate(SourceWriter writer, boolean isInterface, boolean isStatic) throws IOException {
+        if (skip) return;
+
         writer.write("\n");
         
         // Documentation
