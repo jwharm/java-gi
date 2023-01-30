@@ -13,7 +13,7 @@ setupGenSources {
     moduleInfo = """
         module org.gstreamer {
             requires static org.jetbrains.annotations;
-            requires transitive org.glib;
+            requires transitive org.gtk.glib;
             %s
         }
     """.trimIndent()

@@ -18,7 +18,7 @@ dependencies {
 tasks.run.configure {
     jvmArgs(
         "--enable-preview",
-        "--enable-native-access=org.glib",
+        "--enable-native-access=org.gtk.glib",
         "--enable-native-access=org.gtk",
         "--enable-native-access=org.gstreamer",
         "--enable-native-access=io.github.jwharm.javagi.example"
