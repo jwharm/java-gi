@@ -50,5 +50,6 @@ tasks.javadoc {
     (options as CoreJavadocOptions).run {
         addStringOption("source", "19")
         addBooleanOption("-enable-preview", true)
+        addStringOption("windowtitle", "java-gi ${project.version}")
     }
 }
