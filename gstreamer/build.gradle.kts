@@ -67,5 +67,6 @@ setupGenSources {
 }
 
 tasks.javadoc {
+    dependsOn(project(":glib").tasks.javadoc)
     options.linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
 }
