@@ -18,35 +18,11 @@ setupGenSources {
         }
     """.trimIndent()
 
-    source("GLib-2.0", "org.gtk.glib", false, "glib-2.0") { repo ->
-        // This method has parameters that jextract does not support
-        removeFunction(repo, "assertion_message_cmpnum")
-        // Incompletely defined
-        removeFunction(repo, "clear_error")
-    }
-    source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0") { repo ->
-        // This is an alias for Callback type
-        removeType(repo, "VaClosureMarshal")
-        removeType(repo, "SignalCVaMarshaller")
-        removeFunction(repo, "signal_set_va_marshaller")
-        // Override with different return type
-        renameMethod(repo, "TypeModule", "use", "use_type_module")
-        // These functions have two Callback parameters, this isn't supported yet
-        removeFunction(repo, "signal_new_valist")
-        removeFunction(repo, "signal_newv")
-        removeFunction(repo, "signal_new")
-        removeFunction(repo, "signal_new_class_handler")
-    }
-    source("Gio-2.0", "org.gtk.gio", false, "gio-2.0") { repo ->
-        // Override with different return type
-        renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
-        // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
-        // It is meant to be implemented as a constructor (actually, a static factory method).
-        // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
-        // The current solution is to remove the method from the interface. It is still available in the implementing classes.
-        removeMethod(repo, "AsyncInitable", "new_finish")
-    }
+    source("GLib-2.0", "org.gtk.glib", false, "glib-2.0")
+    source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0")
+    source("Gio-2.0", "org.gtk.gio", false, "gio-2.0")
     source("GModule-2.0", "org.gtk.gmodule", false)
+
     source("Gst-1.0", "org.gstreamer.gst", true, "gstreamer-1.0") { repo ->
         // According to the gir file, the size parameter is an out parameter, but it isn't
         removeMethod(repo, "TypeFind", "peek")

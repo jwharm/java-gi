@@ -18,12 +18,8 @@ setupGenSources {
     """.trimIndent()
 
     source("GLib-2.0", "org.gtk.glib", true, "glib-2.0") { repo ->
-        // This method has parameters that jextract does not support
-        removeFunction(repo, "assertion_message_cmpnum")
         // Incompletely defined
         removeFunction(repo, "clear_error")
-        // Old typo
-        removeEnumMember(repo, "UnicodeBreakType", "close_paranthesis")
 
         // These calls return floating references
         setReturnFloating(findConstructor(repo, "Variant", "new_array"))
@@ -88,13 +84,9 @@ setupGenSources {
         removeType(repo, "VaClosureMarshal")
         removeType(repo, "SignalCVaMarshaller")
         removeFunction(repo, "signal_set_va_marshaller")
+
         // Override with different return type
         renameMethod(repo, "TypeModule", "use", "use_type_module")
-        // These functions have two Callback parameters, this isn't supported yet
-        removeFunction(repo, "signal_new_valist")
-        removeFunction(repo, "signal_newv")
-        removeFunction(repo, "signal_new")
-        removeFunction(repo, "signal_new_class_handler")
 
         // Make GWeakRef a generic class
         makeGeneric(repo, "WeakRef");
@@ -138,6 +130,7 @@ setupGenSources {
     source("Gio-2.0", "org.gtk.gio", true, "gio-2.0") { repo ->
         // Override with different return type
         renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
+
         // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
         // It is meant to be implemented as a constructor (actually, a static factory method).
         // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
