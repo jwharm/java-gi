@@ -7,16 +7,21 @@ import java.io.IOException;
 
 public class Class extends RegisteredType {
     
-    public String typeName, getType, typeStruct, abstract_;
+    public String typeName;
+    public String getType;
+    public String typeStruct;
+    public String abstract_;
+    public String final_;
 
     public Class(GirElement parent, String name, String parentClass, String cType, String typeName, String getType,
-            String typeStruct, String version, String abstract_) {
+            String typeStruct, String version, String abstract_, String final_) {
         
         super(parent, name, parentClass, cType, version);
         this.typeName = typeName;
         this.getType = getType;
         this.typeStruct = typeStruct;
         this.abstract_ = abstract_;
+        this.final_ = final_;
 
         // Generate a function declaration to retrieve the type of this object.
         if (! (this instanceof Record)) {
@@ -36,6 +41,11 @@ public class Class extends RegisteredType {
         // Abstract classes
         if ("1".equals(abstract_)) {
             writer.write("abstract ");
+        }
+
+        // Final class classes
+        if ("1".equals(final_)) {
+            writer.write("final ");
         }
 
         writer.write("class " + javaName);

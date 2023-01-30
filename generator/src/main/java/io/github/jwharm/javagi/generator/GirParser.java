@@ -96,7 +96,7 @@ public class GirParser extends DefaultHandler {
                 io.github.jwharm.javagi.model.Class newClass = new Class(current, attr.getValue("name"),
                         attr.getValue("parent"), attr.getValue("c:type"), attr.getValue("glib:type-name"), 
                         attr.getValue("glib:get-type"), attr.getValue("glib:type-struct"), 
-                        attr.getValue("version"), attr.getValue("abstract"));
+                        attr.getValue("version"), attr.getValue("abstract"), attr.getValue("final"));
                 current.classList.add(newClass);
                 current = newClass;
             }
