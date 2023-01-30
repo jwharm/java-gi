@@ -96,10 +96,12 @@ public class BindingsGenerator {
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve("package-info.java")))) {
             writer.write("/**\n");
             writer.write(" * This package contains the generated bindings for " + gir.namespace.name + ".\n");
-            writer.write(" * The following natives are required and will be loaded:");
-            for (String libraryName : natives) writer.write(" \"" + libraryName + "\"");
+            writer.write(" * <p>\n");
+            writer.write(" * The following native libraries are required and will be loaded: ");
+            for (String libraryName : natives) writer.write(" {@code " + libraryName + "}");
             writer.write("\n");
-            writer.write(" * For namespace-global declarations, please view {@link " + className + "}\n");
+            writer.write(" * <p>\n");
+            writer.write(" * For namespace-global declarations, refer to the {@link " + className + "} class documentation.\n");
             writer.write(" */\n");
             writer.write("package " + gir.namespace.packageName + ";\n");
         }
