@@ -90,12 +90,4 @@ public class Record extends Class {
         writer.write("    return newInstance;\n");
         writer.write("}\n");
     }
-
-    /**
-     * Opaque structs have unknown memory layout and should not have an allocator
-     * @return true if the struct has no fields specified in the GIR file
-     */
-    public boolean isOpaqueStruct() {
-        return fieldList.isEmpty() && unionList.isEmpty();
-    }
 }

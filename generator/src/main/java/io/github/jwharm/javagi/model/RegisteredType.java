@@ -100,14 +100,25 @@ public abstract class RegisteredType extends GirElement {
         this.functionList.add(getTypeFunc);
     }
 
-    // If one of the fields directly refers to an opaque struct (recursively), we cannot
-    // generate the memory layout or allocate memory for this type
+    /**
+     * Opaque structs have unknown memory layout and should not have an allocator
+     * @return true if the struct has no fields specified in the GIR file
+     */
+    public boolean isOpaqueStruct() {
+        return fieldList.isEmpty() && unionList.isEmpty();
+    }
+
+    /**
+     * If one of the fields directly refers to an opaque struct (recursively), we cannot
+     * generate the memory layout or allocate memory for this type
+     * @return whether on of the fields refers (recursively) to an opaque struct
+     */
     public boolean hasOpaqueStructFields() {
         for (Field field : fieldList) {
             if (field.type != null
                     && (! field.type.isPointer())
-                    && field.type.girElementInstance instanceof Record rec
-                    && (rec.isOpaqueStruct() || rec.hasOpaqueStructFields())) {
+                    && field.type.girElementInstance instanceof Class cls
+                    && (cls.isOpaqueStruct() || cls.hasOpaqueStructFields())) {
                 return true;
             }
         }
@@ -120,7 +131,7 @@ public abstract class RegisteredType extends GirElement {
         }
 
         // Opaque structs have unknown memory layout and should not have an allocator
-        if (hasOpaqueStructFields() || (this instanceof Record rec && rec.isOpaqueStruct())) {
+        if (hasOpaqueStructFields() || (this instanceof Class cls && cls.isOpaqueStruct())) {
             return;
         }
 
