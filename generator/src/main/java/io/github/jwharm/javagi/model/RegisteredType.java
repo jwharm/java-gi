@@ -16,7 +16,7 @@ public abstract class RegisteredType extends GirElement {
     protected final String qualifiedName;
 
     public boolean generic = false;
-
+    public boolean autoCloseable = false;
     public String injected = null;
 
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {

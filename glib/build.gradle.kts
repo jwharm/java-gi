@@ -136,6 +136,11 @@ setupGenSources {
         // However, Java does not allow a (non-static) method to be implemented/overridden by a static method.
         // The current solution is to remove the method from the interface. It is still available in the implementing classes.
         removeMethod(repo, "AsyncInitable", "new_finish")
+
+        // Have these classes implement the AutoCloseable interface, so they can be used in try-with-resources blocks.
+        makeAutoCloseable(repo, "IOStream")
+        makeAutoCloseable(repo, "InputStream")
+        makeAutoCloseable(repo, "OutputStream")
     }
     source("GModule-2.0", "org.gtk.gmodule", true)
 }

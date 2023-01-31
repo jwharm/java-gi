@@ -4,6 +4,7 @@ import io.github.jwharm.javagi.generator.GObjectBuilder;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class Class extends RegisteredType {
     
@@ -57,11 +58,7 @@ public class Class extends RegisteredType {
 
         // Parent class
         writer.write(" extends ");
-        if (parentClass == null) {
-            writer.write("io.github.jwharm.javagi.base.ObjectProxy");
-        } else {
-            writer.write(parentClass);
-        }
+        writer.write(Objects.requireNonNullElse(parentClass, "io.github.jwharm.javagi.base.ObjectProxy"));
 
         // Interfaces
         for (int i = 0; i < implementsList.size(); i++) {
@@ -71,6 +68,16 @@ public class Class extends RegisteredType {
                 writer.write(", " + implementsList.get(i).getQualifiedJavaName());
             }
         }
+
+        // AutoCloseable
+        if (autoCloseable) {
+            if (implementsList.isEmpty()) {
+                writer.write(" implements io.github.jwharm.javagi.util.AutoCloseable");
+            } else {
+                writer.write(", io.github.jwharm.javagi.util.AutoCloseable");
+            }
+        }
+
         writer.write(" {\n");
         writer.increaseIndent();
 

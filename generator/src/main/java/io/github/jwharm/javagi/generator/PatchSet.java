@@ -138,6 +138,15 @@ public abstract class PatchSet {
         }
     }
 
+    public static void makeAutoCloseable(Repository repo, String type) {
+        RegisteredType inst = repo.namespace.registeredTypeMap.get(type);
+        if (inst == null) {
+            System.err.println("Did not make " + type + " AutoCloseable: Type not found");
+            return;
+        }
+        inst.autoCloseable = true;
+    }
+
     public static void inject(Repository repo, String type, String code) {
         RegisteredType inst = repo.namespace.registeredTypeMap.get(type);
         if (inst == null) {
