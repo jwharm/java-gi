@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.GtkDoc;
+import io.github.jwharm.javagi.generator.Javadoc;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class Doc extends GirElement {
         writer.write("/**\n");
         
         // Convert GtkDoc to javadoc
-        String javadoc = GtkDoc.getInstance().convert(this);
+        String javadoc = Javadoc.getInstance().convert(this);
         
         // Write docstring
         writeDoc(writer, javadoc, null);
@@ -44,7 +44,7 @@ public class Doc extends GirElement {
                         continue;
                     }
                     if (p.doc != null) {
-                        String pJavadoc = GtkDoc.getInstance().convert(p.doc);
+                        String pJavadoc = Javadoc.getInstance().convert(p.doc);
                         writeDoc(writer, pJavadoc, "@param " + (p.varargs ? "varargs" : p.name));
                     }
                 }
@@ -54,7 +54,7 @@ public class Doc extends GirElement {
             if (! (parent instanceof Constructor c && c.name.equals("new"))) {
                 ReturnValue rv = ct.getReturnValue();
                 if (rv != null && rv.doc != null) {
-                    String rvJavadoc = GtkDoc.getInstance().convert(rv.doc);
+                    String rvJavadoc = Javadoc.getInstance().convert(rv.doc);
                     writeDoc(writer, rvJavadoc, "@return");
                 }
             }
@@ -79,7 +79,7 @@ public class Doc extends GirElement {
         // Deprecated
         if (parent instanceof Method m && "1".equals(m.deprecated)) {
             if (parent.docDeprecated != null) {
-                String deprecatedJavadoc = GtkDoc.getInstance().convert(parent.docDeprecated);
+                String deprecatedJavadoc = Javadoc.getInstance().convert(parent.docDeprecated);
                 writeDoc(writer, deprecatedJavadoc, "@deprecated");
             }
         }

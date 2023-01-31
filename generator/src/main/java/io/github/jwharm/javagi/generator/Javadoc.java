@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 import io.github.jwharm.javagi.model.*;
 
-public class GtkDoc {
+public class Javadoc {
 
     // This regular expression matches a series of separate regex patterns, 
     // each with a named group, separated by an "or" ("|") operand.
@@ -77,16 +77,16 @@ public class GtkDoc {
             "blockquote"
     };
 
-    private static GtkDoc instance = null;
+    private static Javadoc instance = null;
     private Doc doc;
     private boolean ul;
 
     /**
-     * Return the singleton instance of the GtkDoc class.
+     * Return the singleton instance of the Javadoc class.
      */
-    public static GtkDoc getInstance() {
+    public static Javadoc getInstance() {
         if (instance == null) {
-            instance = new GtkDoc();
+            instance = new Javadoc();
         }
         return instance;
     }
@@ -95,13 +95,13 @@ public class GtkDoc {
     private final Pattern patternPass2;
 
     // This class is a singleton. The regex patterns are compiled only once.
-    private GtkDoc() {
+    private Javadoc() {
         this.patternPass1 = Pattern.compile(REGEX_PASS_1);
         this.patternPass2 = Pattern.compile(REGEX_PASS_2);
     }
 
     /**
-     * Convert the GtkDoc comments into Javadoc.
+     * Convert comments into Javadoc.
      */
     public String convert(Doc doc) {
         this.doc = doc;
