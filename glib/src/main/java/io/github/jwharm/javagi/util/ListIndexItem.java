@@ -37,7 +37,7 @@ public class ListIndexItem extends GObject {
         return MemoryLayout.structLayout(
                 GObject.getMemoryLayout().withName("parent_instance"),
                 Interop.valueLayout.C_INT.withName("int_value")
-        ).withName("ListIndexModel");
+        ).withName("ListIndexItem");
     }
 
     private static Type type;
@@ -65,20 +65,20 @@ public class ListIndexItem extends GObject {
     }
 
     /**
-     * Set the int_value field in the instance struct
-     * @param value the new value to set
+     * Set the index of the list model item
+     * @param index the new index that will be set in the int_value field in the instance struct
      */
-    public void setIntValue(int value) {
+    public void setIndex(int index) {
         getMemoryLayout()
                 .varHandle(MemoryLayout.PathElement.groupElement("int_value"))
-                .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()), value);
+                .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()), index);
     }
 
     /**
-     * Get the int_value field from the instance struct
-     * @return the requested value
+     * Get the index of the list model item
+     * @return the int_value field from the instance struct
      */
-    public int getIntValue() {
+    public int getIndex() {
         return (int) getMemoryLayout()
                 .varHandle(MemoryLayout.PathElement.groupElement("int_value"))
                 .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()));
@@ -91,6 +91,6 @@ public class ListIndexItem extends GObject {
      */
     public ListIndexItem(int value) {
         super(getType(), null);
-        setIntValue(value);
+        setIndex(value);
     }
 }

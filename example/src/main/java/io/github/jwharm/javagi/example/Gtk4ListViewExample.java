@@ -34,9 +34,9 @@ public class Gtk4ListViewExample {
         factory.onBind(object -> {
             ListItem listitem = (ListItem) object;
             Label label = (Label) listitem.getChild();
-            ListIndexItem obj = (ListIndexItem) listitem.getItem();
+            ListIndexItem item = (ListIndexItem) listitem.getItem();
 
-            int index = obj.getIntValue();
+            int index = item.getIndex();
             String text = list.get(index);
             label.setLabel(text);
         });
