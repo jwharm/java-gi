@@ -13,7 +13,7 @@ setupGenSources {
     moduleInfo = """
         module org.gstreamer {
             requires static org.jetbrains.annotations;
-            requires transitive org.glib;
+            requires transitive org.gtk.glib;
             %s
         }
     """.trimIndent()
@@ -67,5 +67,5 @@ setupGenSources {
 }
 
 tasks.javadoc {
-    options.linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
+    linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
 }

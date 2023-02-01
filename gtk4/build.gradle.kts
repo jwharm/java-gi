@@ -13,7 +13,7 @@ setupGenSources {
     moduleInfo = """
         module org.gtk {
             requires static org.jetbrains.annotations;
-            requires transitive org.glib;
+            requires transitive org.gtk.glib;
             %s
         }
     """.trimIndent()
@@ -54,13 +54,8 @@ setupGenSources {
         setReturnFloating(findMethod(repo, "PaperSize", "to_gvariant"))
         setReturnFloating(findMethod(repo, "PrintSettings", "to_gvariant"))
     }
-    source("Adw-1", "org.gnome.adw", true, "adwaita-1") { repo ->
-        // Override with different return type
-        renameMethod(repo, "ActionRow", "activate", "activate_row")
-        renameMethod(repo, "SplitButton", "get_direction", "get_arrow_direction")
-    }
 }
 
 tasks.javadoc {
-    options.linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
+    linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
 }

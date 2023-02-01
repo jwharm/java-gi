@@ -7,7 +7,7 @@ plugins {
 
 setupGenSources {
     moduleInfo = """
-        module org.glib {
+        module org.gtk.glib {
             requires static org.jetbrains.annotations;
             exports io.github.jwharm.javagi.base;
             exports io.github.jwharm.javagi.interop;
