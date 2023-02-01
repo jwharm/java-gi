@@ -161,7 +161,7 @@ public interface Closure extends CallableType {
         writer.write("/**\n");
         writer.write(" * The method handle for the callback.\n");
         writer.write(" */\n");
-        writer.write("@ApiStatus.Internal MethodHandle HANDLE = Interop.getHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
+        writer.write("@ApiStatus.Internal MethodHandle HANDLE = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, DESCRIPTOR);\n");
         writer.write("\n");
 
         // Generate toCallback()

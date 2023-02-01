@@ -118,6 +118,20 @@ public class Interop {
     }
 
     /**
+     * Produce a method handle for a {@code upcall} method in the provided class.
+     * @param klazz the callback class
+     * @param descriptor the function descriptor for the native function
+     * @return a method handle to use when creating an upcall stub
+     */
+    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
+        try {
+            return lookup.findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @param scope the segment scope for memory allocation
@@ -167,20 +181,6 @@ public class Interop {
         for (int i = 0; i < length; i++)
             result[i] = address.getAtIndex(Interop.valueLayout.ADDRESS, i);
         return result;
-    }
-
-    /**
-     * Produce a method handle for a {@code upcall} method in the provided class.
-     * @param klazz the callback class
-     * @param descriptor the function descriptor for the native function
-     * @return a method handle to use when creating an upcall stub
-     */
-    public static MethodHandle getHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
-        try {
-            return lookup.findVirtual(klazz, "upcall", Linker.upcallType(descriptor));
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
