@@ -130,8 +130,18 @@ public class Parameters extends GirElement {
      * @throws IOException Thrown when an error occurs while writing
      */
     public void generatePreprocessing(SourceWriter writer) throws IOException {
+        // First the regular (non-array) out-parameters. These could include an out-parameter with
+        // the length of an array out-parameter, so we have to process these first.
         for (Parameter p : parameterList) {
-            p.generatePreprocessing(writer);
+            if (p.array == null) {
+                p.generatePreprocessing(writer);
+            }
+        }
+        // Secondly, process the array out parameters
+        for (Parameter p : parameterList) {
+            if (p.array != null) {
+                p.generatePreprocessing(writer);
+            }
         }
     }
     

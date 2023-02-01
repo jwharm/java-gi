@@ -184,7 +184,11 @@ public class Parameter extends Variable {
         }
         
         // Generate pointer allocation
-        if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
+        if (isOutParameter() && array != null && array.size(false) != null) {
+            writer.write("MemorySegment " + name + "POINTER = (MemorySegment) ");
+            marshalJavaToNative(writer, name + ".get()", false, false);
+            writer.write(";\n");
+        } else if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             writer.write("MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
         }
 
@@ -244,9 +248,18 @@ public class Parameter extends Variable {
                 // Secondly, process the array out parameters
                 String len = array.size(false);
                 String valuelayout = Conversions.getValueLayout(array.type);
-                if (array.type.isPrimitive && (! array.type.isBoolean())) {
+                if (isOutParameter() && len != null) {
+                    writer.write("if (" + name + " != null) " + name + ".set(");
+                    // Out-parameter array
+                    if (array.type.isPrimitive) {
+                        writer.write(name + "POINTER.toArray(" + valuelayout + "));\n");
+                    } else {
+                        marshalNativeToJava(writer, name + "POINTER.address()", false);
+                        writer.write(");\n");
+                    }
+                } else if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write(name + ".set(");
+                    writer.write("if (" + name + " != null) " + name + ".set(");
                     writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
