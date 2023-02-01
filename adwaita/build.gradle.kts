@@ -42,7 +42,6 @@ setupGenSources {
 }
 
 tasks.javadoc {
-    dependsOn(project(":gtk4").tasks.javadoc)
-    options.linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
-    options.linksOffline("https://jwharm.github.io/java-gi/gtk4", project(":gtk4"))
+    linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
+    linksOffline("https://jwharm.github.io/java-gi/gtk4", project(":gtk4"))
 }
