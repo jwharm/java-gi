@@ -151,17 +151,13 @@ public class Parameter extends Variable {
     
     /**
      * We don't need to perform a null-check on parameters that are not nullable, or not user-specified
-     * (instance param, gerror, user_data or array length), or varargs, bitfields, enums, or primitive values/aliases.
+     * (instance param, gerror, user_data or array length), or primitive values.
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
     public boolean checkNull() {
-        return (!notnull)
-                && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter()
-                        || varargs
-                        || (type != null && (! type.isPointer()) && (type.isPrimitive ||
-                                                                     type.isAliasForPrimitive() ||
-                                                                     type.isBitfield() ||
-                                                                     type.isEnum()))));
+        return (! notnull)
+            && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter() || varargs))
+            && super.checkNull();
     }
 
     /**

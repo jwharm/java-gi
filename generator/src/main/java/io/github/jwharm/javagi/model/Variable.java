@@ -16,7 +16,10 @@ public class Variable extends GirElement {
      * @return true if this parameter is not a primitive value
      */
     public boolean checkNull() {
-        return ! (type != null && type.isPrimitive && (! type.isPointer()));
+        return ! (type != null && (! type.isPointer()) && (type.isPrimitive ||
+                type.isAliasForPrimitive() ||
+                type.isBitfield() ||
+                type.isEnum()));
     }
 
     public void writeType(SourceWriter writer, boolean pointerForArray) throws IOException {
