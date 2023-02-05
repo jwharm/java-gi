@@ -32,14 +32,6 @@ public class Field extends Variable {
                 && "1".equals(r.disguised)) {
             return;
         }
-        // Don't generate a getter/setter for a field that is marked as not readable
-        if ("0".equals(readable)) {
-            return;
-        }
-        // Don't generate a getter/setter for a private field
-        if ("1".equals(isPrivate)) {
-            return;
-        }
         // Don't generate a getter/setter for padding/reserved space
         if ("padding".equals(name) || "reserved".equals(name)) {
             return;
