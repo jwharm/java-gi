@@ -44,6 +44,7 @@ jobs:
           mv glib/build/docs/javadoc javadoc/glib
           mv gstreamer/build/docs/javadoc javadoc/gstreamer
           mv gtk4/build/docs/javadoc javadoc/gtk4
+          mv adwaita/build/docs/javadoc javadoc/adwaita
       - name: Upload Javadoc Artifact
         uses: actions/upload-pages-artifact@v1
         with:
