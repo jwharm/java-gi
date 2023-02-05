@@ -20,7 +20,7 @@ tasks.run.configure {
         "--enable-preview",
         "--enable-native-access=org.gtk.glib",
         "--enable-native-access=org.gtk",
-        "--enable-native-access=org.gstreamer",
+        "--enable-native-access=org.freedesktop.gstreamer",
         "--enable-native-access=io.github.jwharm.javagi.example"
     )
 }

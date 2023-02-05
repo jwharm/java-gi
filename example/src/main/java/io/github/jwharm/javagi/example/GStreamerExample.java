@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.example;
 
 import io.github.jwharm.javagi.base.Out;
-import org.gstreamer.gst.*;
+import org.freedesktop.gstreamer.gst.*;
 import org.gtk.glib.Error;
 import org.gtk.glib.GLib;
 import org.gtk.glib.MainLoop;
