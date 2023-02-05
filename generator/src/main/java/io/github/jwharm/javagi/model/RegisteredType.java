@@ -140,7 +140,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * The memory layout of the native struct.\n");
         writer.write(" * @return the memory layout\n");
         writer.write(" */\n");
-        writer.write("@ApiStatus.Internal\n");
         writer.write("public static MemoryLayout getMemoryLayout() {\n");
         writer.increaseIndent();
 
