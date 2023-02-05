@@ -11,7 +11,7 @@ public abstract class Bitfield {
      * Create a bitfield with the provided integer value
      * @param value the initial value of the bitfield
      */
-    protected Bitfield(int value) {
+    public Bitfield(int value) {
         this.value = value;
     }
 

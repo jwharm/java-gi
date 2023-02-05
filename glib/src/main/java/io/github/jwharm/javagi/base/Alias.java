@@ -12,7 +12,7 @@ public abstract class Alias<T> {
      * Create a new alias with the provided value
      * @param value the initial value of the alias
      */
-    protected Alias(T value) {
+    public Alias(T value) {
         this.value = value;
     }
 
