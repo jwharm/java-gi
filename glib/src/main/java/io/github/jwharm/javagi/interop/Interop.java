@@ -195,7 +195,7 @@ public class Interop {
         int length = zeroTerminated ? strings.length + 1 : strings.length;
         var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
-            var cString = scope.allocateUtf8String(strings[i]);
+            var cString = strings[i] == null ? MemoryAddress.NULL : scope.allocateUtf8String(strings[i]);
             memorySegment.setAtIndex(valueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
@@ -315,7 +315,7 @@ public class Interop {
     public static Addressable allocateNativeArray(Proxy[] array, boolean zeroTerminated, MemorySession scope) {
         Addressable[] addressArray = new Addressable[array.length];
         for (int i = 0; i < array.length; i++) {
-            addressArray[i] = array[i].handle();
+            addressArray[i] = array[i] == null ? MemoryAddress.NULL : array[i].handle();
         }
         return allocateNativeArray(addressArray, zeroTerminated, scope);
     }
@@ -334,8 +334,12 @@ public class Interop {
         int length = zeroTerminated ? array.length + 1 : array.length;
         MemorySegment memorySegment = scope.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
-            MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), scope);
-            memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
+            if (array[i] != null) {
+                MemorySegment element = MemorySegment.ofAddress((MemoryAddress) array[i].handle(), layout.byteSize(), scope);
+                memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
+            } else {
+                memorySegment.asSlice(i * layout.byteSize(), layout.byteSize()).fill((byte) 0);
+            }
         }
         if (zeroTerminated) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
@@ -355,7 +359,7 @@ public class Interop {
         int length = zeroTerminated ? array.length + 1 : array.length;
         var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i]);
+            memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i] == null ? MemoryAddress.NULL : array[i]);
         }
         if (zeroTerminated) {
             memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
