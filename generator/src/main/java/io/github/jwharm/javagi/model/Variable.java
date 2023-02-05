@@ -272,6 +272,11 @@ public class Variable extends GirElement {
             return "MemorySegment.ofAddress(" + identifier + ", " + array.size(upcall)
                     + ", SCOPE).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
+        if (type.girElementInstance instanceof Record && (! type.isPointer()))
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
+                    + ".toArrayOfStructs((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, "
+                    + type.qualifiedJavaType + ".getMemoryLayout())";
+
         return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
                 + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class)";
     }

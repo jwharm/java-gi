@@ -4,8 +4,9 @@ import io.github.jwharm.javagi.base.Marshal;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.Interop;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.*;
+import java.lang.reflect.Array;
+import java.util.List;
 
 /**
  * This type of Pointer object points to a GObject-derived object 
@@ -58,5 +59,21 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
         // Call the constructor of the proxy object and return the created instance.
         // TODO: What about ownership of the object?
         return make.marshal(ref, null);
+    }
+
+    /**
+     * Read an array of values from the pointer
+     * @param length length of the array
+     * @param clazz type of the array elements
+     * @return the array
+     */
+    public T[] toArrayOfStructs(int length, Class<T> clazz, MemoryLayout layout) {
+        T[] array = (T[]) Array.newInstance(clazz, length);
+        var segment = MemorySegment.ofAddress(address, length * layout.byteSize(), MemorySession.openImplicit());
+        List<MemorySegment> elements = segment.elements(layout).toList();
+        for (int i = 0; i < length; i++) {
+            array[i] = make.marshal(elements.get(i).address(), null);
+        }
+        return array;
     }
 }
