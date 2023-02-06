@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.base;
 
 import io.github.jwharm.javagi.interop.Interop;
-import org.gtk.gobject.GObject;
+import org.gnome.gobject.GObject;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;

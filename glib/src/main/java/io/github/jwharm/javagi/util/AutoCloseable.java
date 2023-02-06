@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.base.GErrorException;
-import org.gtk.gio.Cancellable;
+import org.gnome.gio.Cancellable;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -11,8 +11,8 @@ import java.io.IOException;
  * <p>
  * This interface extends {@link java.lang.AutoCloseable} and implements the {@link #close()}
  * with a {@code default} version that calls the {@link #close(Cancellable)} method. This method
- * is implemented by GIO streams ({@link org.gtk.gio.IOStream}, {@link org.gtk.gio.InputStream}
- * and {@link org.gtk.gio.OutputStream}) so they become {@code AutoCloseable} and can be used in
+ * is implemented by GIO streams ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream}
+ * and {@link org.gnome.gio.OutputStream}) so they become {@code AutoCloseable} and can be used in
  * a try-with-resources block.
  */
 public interface AutoCloseable extends java.lang.AutoCloseable {
@@ -32,11 +32,11 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
     }
 
     /**
-     * The {@code close} method that is implemented by GLib streams ({@link org.gtk.gio.IOStream},
-     * {@link org.gtk.gio.InputStream} and {@link org.gtk.gio.OutputStream}).
+     * The {@code close} method that is implemented by GLib streams ({@link org.gnome.gio.IOStream},
+     * {@link org.gnome.gio.InputStream} and {@link org.gnome.gio.OutputStream}).
      * @param cancellable optional {@link Cancellable} object, {@code null} to ignore
      * @return {@code true} on success, {@code false} on failure
-     * @throws GErrorException See {@link org.gtk.glib.Error}
+     * @throws GErrorException See {@link org.gnome.glib.Error}
      */
-    boolean close(@Nullable org.gtk.gio.Cancellable cancellable) throws GErrorException;
+    boolean close(@Nullable org.gnome.gio.Cancellable cancellable) throws GErrorException;
 }

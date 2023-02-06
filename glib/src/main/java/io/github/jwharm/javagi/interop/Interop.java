@@ -5,8 +5,8 @@ import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
 import io.github.jwharm.javagi.base.Marshal;
 import io.github.jwharm.javagi.base.Proxy;
-import org.gtk.glib.Type;
-import org.gtk.gobject.GObjects;
+import org.gnome.glib.Type;
+import org.gnome.gobject.GObjects;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;

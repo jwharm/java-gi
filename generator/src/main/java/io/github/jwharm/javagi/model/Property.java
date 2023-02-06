@@ -31,7 +31,7 @@ public class Property extends Variable {
         writer.write("S set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("    addBuilderProperty(\"" + propertyName + "\", org.gtk.gobject.Value.create(" + name + "));\n");
+        writer.write("    addBuilderProperty(\"" + propertyName + "\", org.gnome.gobject.Value.create(" + name + "));\n");
         writer.write("    return (S) this;\n");
         writer.write("}\n");
     }

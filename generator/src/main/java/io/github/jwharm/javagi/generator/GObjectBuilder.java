@@ -75,13 +75,13 @@ public class GObjectBuilder {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Finish building the {@link " + c.javaName + "} object. This will call \n");
-        writer.write(" * {@link org.gtk.gobject.GObject#newWithProperties} to create a new \n");
+        writer.write(" * {@link org.gnome.gobject.GObject#newWithProperties} to create a new \n");
         writer.write(" * GObject instance, which is then cast to {@link " + c.javaName + "}.\n");
         writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
         writer.write(" *         that were set in the Builder object.\n");
         writer.write(" */\n");
         writer.write("public " + c.javaName + " build() {\n");
-        writer.write("    return (" + c.javaName + ") org.gtk.gobject.GObject.newWithProperties(\n");
+        writer.write("    return (" + c.javaName + ") org.gnome.gobject.GObject.newWithProperties(\n");
         writer.write("            " + c.javaName + ".getType(), getNames(), getValues()\n");
         writer.write("    );\n");
         writer.write("}\n");

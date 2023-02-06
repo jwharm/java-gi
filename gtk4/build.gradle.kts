@@ -11,17 +11,17 @@ dependencies {
 
 setupGenSources {
     moduleInfo = """
-        module org.gtk {
+        module org.gnome.gtk {
             requires static org.jetbrains.annotations;
-            requires transitive org.gtk.glib;
+            requires transitive org.gnome.glib;
             %s
         }
     """.trimIndent()
 
-    source("GLib-2.0", "org.gtk.glib", false, "glib-2.0")
-    source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0")
-    source("Gio-2.0", "org.gtk.gio", false, "gio-2.0")
-    source("GModule-2.0", "org.gtk.gmodule", false)
+    source("GLib-2.0", "org.gnome.glib", false, "glib-2.0")
+    source("GObject-2.0", "org.gnome.gobject", false, "gobject-2.0")
+    source("Gio-2.0", "org.gnome.gio", false, "gio-2.0")
+    source("GModule-2.0", "org.gnome.gmodule", false)
 
     source("cairo-1.0", "org.cairographics", true, "cairo", "cairo-gobject") { repo ->
         // Incompletely defined
@@ -34,11 +34,11 @@ setupGenSources {
     }
     source("Pango-1.0", "org.pango", true, "pango-1.0")
     source("PangoCairo-1.0", "org.pango.cairo", true, "pangocairo-1.0")
-    source("GdkPixbuf-2.0", "org.gtk.gdkpixbuf", true, "gdk_pixbuf-2.0")
-    source("Gdk-4.0", "org.gtk.gdk", true)
-    source("Graphene-1.0", "org.gtk.graphene", true, "graphene-1.0")
-    source("Gsk-4.0", "org.gtk.gsk", true)
-    source("Gtk-4.0", "org.gtk.gtk", true, "gtk-4") { repo ->
+    source("GdkPixbuf-2.0", "org.gnome.gdkpixbuf", true, "gdk_pixbuf-2.0")
+    source("Gdk-4.0", "org.gnome.gdk", true)
+    source("Graphene-1.0", "org.gnome.graphene", true, "graphene-1.0")
+    source("Gsk-4.0", "org.gnome.gsk", true)
+    source("Gtk-4.0", "org.gnome.gtk", true, "gtk-4") { repo ->
         // Override with different return type
         renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
         renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")

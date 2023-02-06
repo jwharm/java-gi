@@ -28,7 +28,7 @@ public class Record extends Class {
         
         writer.write("public class " + javaName);
         if (generic)
-            writer.write("<T extends org.gtk.gobject.GObject>");
+            writer.write("<T extends org.gnome.gobject.GObject>");
         writer.write(" extends StructProxy {\n");
         writer.increaseIndent();
 

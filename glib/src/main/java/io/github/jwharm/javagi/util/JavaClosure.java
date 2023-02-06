@@ -2,8 +2,8 @@ package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
-import org.gtk.glib.Variant;
-import org.gtk.gobject.*;
+import org.gnome.glib.Variant;
+import org.gnome.gobject.*;
 
 import java.lang.foreign.MemoryAddress;
 import java.util.function.Function;

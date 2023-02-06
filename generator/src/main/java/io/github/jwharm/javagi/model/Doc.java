@@ -62,7 +62,7 @@ public class Doc extends GirElement {
             // Exception
             if (parent instanceof Method m) {
                 if ("1".equals(m.throws_)) {
-                    writeDoc(writer, "GErrorException See {@link org.gtk.glib.Error}", "@throws");
+                    writeDoc(writer, "GErrorException See {@link org.gnome.glib.Error}", "@throws");
                 }
             }
         }

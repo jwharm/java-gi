@@ -53,7 +53,7 @@ public class Class extends RegisteredType {
 
         // Generic types
         if (generic) {
-            writer.write("<T extends org.gtk.gobject.GObject>");
+            writer.write("<T extends org.gnome.gobject.GObject>");
         }
 
         // Parent class
@@ -100,16 +100,16 @@ public class Class extends RegisteredType {
             s.generate(writer, false);
         }
 
-        if (isInstanceOf("org.gtk.gobject.GObject")) {
+        if (isInstanceOf("org.gnome.gobject.GObject")) {
             GObjectBuilder.generateBuilder(writer, this);
         }
         generateDowncallHandles(writer);
 
         // Generate a custom getType() function for ParamSpec
-        if (isInstanceOf("org.gtk.gobject.ParamSpec") && "intern".equals(getType)) {
+        if (isInstanceOf("org.gnome.gobject.ParamSpec") && "intern".equals(getType)) {
             writer.write("\n");
-            writer.write("public static org.gtk.glib.Type getType() {\n");
-            writer.write("    return org.gtk.glib.Type.G_TYPE_PARAM;\n");
+            writer.write("public static org.gnome.glib.Type getType() {\n");
+            writer.write("    return org.gnome.glib.Type.G_TYPE_PARAM;\n");
             writer.write("}\n");
             writer.write("\n");
             writer.write("public static boolean isAvailable() {\n");

@@ -228,7 +228,7 @@ public abstract class RegisteredType extends GirElement {
 
         writer.write("public static final Marshal<Addressable, " + javaName);
         if (generic)
-            writer.write("<org.gtk.gobject.GObject>");
+            writer.write("<org.gnome.gobject.GObject>");
         writer.write("> fromAddress = (input, scope) -> \n");
         writer.write("        input.equals(MemoryAddress.NULL) ? null : new " + name);
         if (generic)
@@ -312,7 +312,7 @@ public abstract class RegisteredType extends GirElement {
             writer.write("/**\n");
             writer.write(" * The " + javaName + "Impl type represents a native instance of the " + javaName + " interface.\n");
             writer.write(" */\n");
-            writer.write("class " + javaName + "Impl extends org.gtk.gobject.GObject implements " + javaName + " {\n");
+            writer.write("class " + javaName + "Impl extends org.gnome.gobject.GObject implements " + javaName + " {\n");
         } else if (this instanceof Class) {
             writer.write("/**\n");
             writer.write(" * The " + javaName + "Impl type represents a native instance of the abstract " + javaName + " class.\n");

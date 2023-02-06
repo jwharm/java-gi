@@ -7,7 +7,7 @@ plugins {
 
 setupGenSources {
     moduleInfo = """
-        module org.gtk.glib {
+        module org.gnome.glib {
             requires static org.jetbrains.annotations;
             exports io.github.jwharm.javagi.base;
             exports io.github.jwharm.javagi.interop;
@@ -17,7 +17,7 @@ setupGenSources {
         }
     """.trimIndent()
 
-    source("GLib-2.0", "org.gtk.glib", true, "glib-2.0") { repo ->
+    source("GLib-2.0", "org.gnome.glib", true, "glib-2.0") { repo ->
         // Incompletely defined
         removeFunction(repo, "clear_error")
 
@@ -79,7 +79,7 @@ setupGenSources {
             public static final Type G_TYPE_VARIANT = new Type(21L << G_TYPE_FUNDAMENTAL_SHIFT);
         """.replaceIndent("    ") + "\n")
     }
-    source("GObject-2.0", "org.gtk.gobject", true, "gobject-2.0") { repo ->
+    source("GObject-2.0", "org.gnome.gobject", true, "gobject-2.0") { repo ->
         // This is an alias for Callback type
         removeType(repo, "VaClosureMarshal")
         removeType(repo, "SignalCVaMarshaller")
@@ -107,27 +107,27 @@ setupGenSources {
                 """.trimIndent())
 
         inject(repo, "Value", StringBuilder().run {
-            template("boolean", "org.gtk.glib.Type.G_TYPE_BOOLEAN", "setBoolean(arg)")
-            template("byte", "org.gtk.glib.Type.G_TYPE_CHAR", "setSchar(arg)")
-            template("double", "org.gtk.glib.Type.G_TYPE_DOUBLE", "setDouble(arg)")
-            template("float", "org.gtk.glib.Type.G_TYPE_FLOAT", "setFloat(arg)")
-            template("int", "org.gtk.glib.Type.G_TYPE_INT", "setInt(arg)")
-            template("long", "org.gtk.glib.Type.G_TYPE_LONG", "setLong(arg)")
-            template("String", "org.gtk.glib.Type.G_TYPE_STRING", "setString(arg)")
-            template("Enumeration", "org.gtk.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())")
-            template("Bitfield", "org.gtk.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")
-            template("org.gtk.gobject.GObject", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
-            template("org.gtk.glib.Type", "org.gtk.gobject.GObjects.gtypeGetType()", "setGtype(arg)")
-            template("StructProxy", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
-            template("MemoryAddress", "org.gtk.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
-            template("ParamSpec", "org.gtk.glib.Type.G_TYPE_PARAM", "setParam(arg)")
-            template("Proxy", "org.gtk.glib.Type.G_TYPE_OBJECT", "setObject((org.gtk.gobject.GObject) arg)")
-            template("byte[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
-            template("String[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
-            template("MemoryAddress[]", "org.gtk.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
+            template("boolean", "org.gnome.glib.Type.G_TYPE_BOOLEAN", "setBoolean(arg)")
+            template("byte", "org.gnome.glib.Type.G_TYPE_CHAR", "setSchar(arg)")
+            template("double", "org.gnome.glib.Type.G_TYPE_DOUBLE", "setDouble(arg)")
+            template("float", "org.gnome.glib.Type.G_TYPE_FLOAT", "setFloat(arg)")
+            template("int", "org.gnome.glib.Type.G_TYPE_INT", "setInt(arg)")
+            template("long", "org.gnome.glib.Type.G_TYPE_LONG", "setLong(arg)")
+            template("String", "org.gnome.glib.Type.G_TYPE_STRING", "setString(arg)")
+            template("Enumeration", "org.gnome.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())")
+            template("Bitfield", "org.gnome.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")
+            template("org.gnome.gobject.GObject", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
+            template("org.gnome.glib.Type", "org.gnome.gobject.GObjects.gtypeGetType()", "setGtype(arg)")
+            template("StructProxy", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
+            template("MemoryAddress", "org.gnome.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
+            template("ParamSpec", "org.gnome.glib.Type.G_TYPE_PARAM", "setParam(arg)")
+            template("Proxy", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject((org.gnome.gobject.GObject) arg)")
+            template("byte[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
+            template("String[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
+            template("MemoryAddress[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
         }.toString().replaceIndent("    ") + "\n")
     }
-    source("Gio-2.0", "org.gtk.gio", true, "gio-2.0") { repo ->
+    source("Gio-2.0", "org.gnome.gio", true, "gio-2.0") { repo ->
         // Override with different return type
         renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
 
@@ -142,5 +142,5 @@ setupGenSources {
         makeAutoCloseable(repo, "InputStream")
         makeAutoCloseable(repo, "OutputStream")
     }
-    source("GModule-2.0", "org.gtk.gmodule", true)
+    source("GModule-2.0", "org.gnome.gmodule", true)
 }

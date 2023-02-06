@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.base;
 
-import org.gtk.gobject.Value;
+import org.gnome.gobject.Value;
 
 import java.util.ArrayList;
 

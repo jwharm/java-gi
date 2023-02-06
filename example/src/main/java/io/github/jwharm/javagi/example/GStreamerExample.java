@@ -2,10 +2,10 @@ package io.github.jwharm.javagi.example;
 
 import io.github.jwharm.javagi.base.Out;
 import org.freedesktop.gstreamer.gst.*;
-import org.gtk.glib.Error;
-import org.gtk.glib.GLib;
-import org.gtk.glib.MainLoop;
-import org.gtk.glib.Source;
+import org.gnome.glib.Error;
+import org.gnome.glib.GLib;
+import org.gnome.glib.MainLoop;
+import org.gnome.glib.Source;
 
 import java.util.Objects;
 import java.util.stream.Stream;

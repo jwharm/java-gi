@@ -7,7 +7,7 @@ import java.lang.foreign.MemorySegment;
 import io.github.jwharm.javagi.interop.Interop;
 import org.jetbrains.annotations.ApiStatus;
 
-import org.gtk.glib.Quark;
+import org.gnome.glib.Quark;
 
 /**
  * A GErrorException is thrown when a GError is returned by native code.
@@ -25,8 +25,8 @@ public class GErrorException extends Exception {
     private final String message;
 
     // Dereference the GError instance from the pointer
-    private static org.gtk.glib.Error dereference(MemorySegment pointer) {
-        return (org.gtk.glib.Error) org.gtk.glib.Error.fromAddress.marshal(pointer.get(Interop.valueLayout.ADDRESS, 0), null);
+    private static org.gnome.glib.Error dereference(MemorySegment pointer) {
+        return (org.gnome.glib.Error) org.gnome.glib.Error.fromAddress.marshal(pointer.get(Interop.valueLayout.ADDRESS, 0), null);
     }
     
     // Get the message from the GError instance (used by the GErrorException constructor)
@@ -43,7 +43,7 @@ public class GErrorException extends Exception {
     public GErrorException(MemorySegment gerrorPtr) {
         super(readMessage(gerrorPtr));
 
-        org.gtk.glib.Error gerror = dereference(gerrorPtr);
+        org.gnome.glib.Error gerror = dereference(gerrorPtr);
         this.domain = gerror.readDomain();
         this.code = gerror.readCode();
         this.message = gerror.readMessage();
@@ -95,7 +95,7 @@ public class GErrorException extends Exception {
      * Get a new GError instance with the domain, code and message of this GErrorException
      * @return a new GError instance
      */
-    public org.gtk.glib.Error getGError() {
-        return new org.gtk.glib.Error(domain, code, message);
+    public org.gnome.glib.Error getGError() {
+        return new org.gnome.glib.Error(domain, code, message);
     }
 }

@@ -32,7 +32,7 @@ public class Conversions {
     public static final Map<String, String> superLookupTable = new HashMap<>();
 
     /**
-     * Convert "Gdk" to "org.gtk.gdk"
+     * Convert "Gdk" to "org.gnome.gdk"
      */
     public static String namespaceToJavaPackage(String ns) {
         return Objects.requireNonNullElse(nsLookupTable.get(ns.toLowerCase()), ns);
@@ -61,10 +61,10 @@ public class Conversions {
     }
 
     /** 
-     * Convert "Glib.type_name" to "org.gtk.glib.TypeName". 
+     * Convert "Glib.type_name" to "org.gnome.glib.TypeName".
      * If the typeName does not contain a namespace, the name of the provided namespace {@code ns}
-     * is prepended to the result. For example, {@code toQualifiedJavaType("button", "org.gtk.gtk")}
-     * returns {@code "org.gtk.gtk.Button"}.
+     * is prepended to the result. For example, {@code toQualifiedJavaType("button", "org.gnome.gtk")}
+     * returns {@code "org.gnome.gtk.Button"}.
      */
     public static String toQualifiedJavaType(String typeName, Namespace ns) {
         String currentPackage = ns.packageName;
@@ -86,20 +86,6 @@ public class Conversions {
         } else {
             return currentPackage + "." + replaceKnownType(toCamelCase(typeName, true), ns);
         }
-    }
-
-    /**
-     * Convert "GLib.TypeName" to "org.gtk.glib"
-     */
-    public static String getJavaPackageName(String typeName) {
-        if (typeName == null) {
-            return null;
-        }
-        int idx = typeName.indexOf('.');
-        if (idx > 0) {
-            return "org.gtk." + typeName.substring(0, idx).toLowerCase();
-        }
-        return null;
     }
 
     /**
