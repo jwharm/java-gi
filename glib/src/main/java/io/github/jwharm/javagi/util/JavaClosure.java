@@ -49,6 +49,20 @@ public class JavaClosure extends Closure {
     }
 
     @FunctionalInterface
+    public interface Bool__Void {
+        boolean run();
+    }
+
+    /**
+     * Construct a Closure that takes no parameters and returns boolean.
+     * @param callback a callback with signature {@code boolean run()}
+     */
+    public JavaClosure(Bool__Void callback) {
+        super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
+        setMarshal((closure, returnValue, args, hint) -> returnValue.setBoolean(callback.run()));
+    }
+
+    @FunctionalInterface
     public interface String__GObject_Pointer {
         String run(GObject gobject, MemoryAddress pointer);
     }
@@ -66,7 +80,7 @@ public class JavaClosure extends Closure {
     }
 
     @FunctionalInterface
-    public interface Void__Boolean {
+    public interface Void__Bool {
         void run(boolean arg);
     }
 
@@ -74,7 +88,7 @@ public class JavaClosure extends Closure {
      * Construct a Closure that takes a boolean parameter and returns void.
      * @param callback a callback with signature {@code void run(boolean arg)}
      */
-    public JavaClosure(Void__Boolean callback) {
+    public JavaClosure(Void__Bool callback) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, args, hint) -> callback.run(args[1].getBoolean()));
     }
@@ -264,6 +278,7 @@ public class JavaClosure extends Closure {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, args, hint) -> callback.run());
     }
+
     @FunctionalInterface
     public interface Generic {
         Value run(Value[] args);
