@@ -10,7 +10,7 @@ application {
 
 dependencies {
     implementation(project(":glib"))
-    implementation(project(":gtk4"))
+    implementation(project(":gtk"))
     implementation(project(":gstreamer"))
 }
 

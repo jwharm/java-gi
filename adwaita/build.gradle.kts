@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     api(project(":glib"))
-    api(project(":gtk4"))
+    api(project(":gtk"))
 }
 
 setupGenSources {
@@ -43,5 +43,5 @@ setupGenSources {
 
 tasks.javadoc {
     linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
-    linksOffline("https://jwharm.github.io/java-gi/gtk4", project(":gtk4"))
+    linksOffline("https://jwharm.github.io/java-gi/gtk", project(":gtk"))
 }
