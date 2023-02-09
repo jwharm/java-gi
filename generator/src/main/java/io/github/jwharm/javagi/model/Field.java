@@ -61,7 +61,7 @@ public class Field extends Variable {
             writer.write(" * @return The value of the field {@code " + this.fieldName + "}\n");
             writer.write(" */\n");
             writer.write("public ");
-            writeType(writer, true);
+            writeType(writer, true, true);
             writer.write(" " + getter + "() {\n");
 
             if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
@@ -120,17 +120,17 @@ public class Field extends Variable {
         // Regular types (not arrays or callbacks)
         if (type != null) {
             
-            // Bitfields and enumerations are integers
-            if (type.isBitfield() || type.isEnum()) {
-                return "Interop.valueLayout.C_INT.withName(\"" + this.fieldName + "\")";
-            }
-            
             // Pointers, strings and callbacks are memory addresses
             if (type.isPointer()
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
                 return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+            }
+            
+            // Bitfields and enumerations are integers
+            if (type.isBitfield() || type.isEnum()) {
+                return "Interop.valueLayout.C_INT.withName(\"" + this.fieldName + "\")";
             }
             
             // Primitive types and aliases

@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.GObjectBuilder;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
@@ -13,6 +14,8 @@ public class Class extends RegisteredType {
     public String typeStruct;
     public String abstract_;
     public String final_;
+    
+    public Record classStruct;
 
     public Class(GirElement parent, String name, String parentClass, String cType, String typeName, String getType,
             String typeStruct, String version, String abstract_, String final_) {
@@ -33,6 +36,8 @@ public class Class extends RegisteredType {
     }
 
     public void generate(SourceWriter writer) throws IOException {
+        classStruct = (Record) Conversions.cTypeLookupTable.get(getNamespace().cIdentifierPrefix + typeStruct);
+        
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
@@ -87,19 +92,12 @@ public class Class extends RegisteredType {
         generateCType(writer);
         generateMemoryLayout(writer);
         generateConstructors(writer);
+        generateMethodsAndSignals(writer);
 
-        for (Method m : methodList) {
-            m.generate(writer, false, false);
+        if (classStruct != null) {
+            classStruct.generate(writer);
         }
-
-        for (Function function : functionList) {
-            function.generate(writer, false, true);
-        }
-
-        for (Signal s : signalList) {
-            s.generate(writer, false);
-        }
-
+        
         if (isInstanceOf("org.gnome.gobject.GObject")) {
             GObjectBuilder.generateBuilder(writer, this);
         }

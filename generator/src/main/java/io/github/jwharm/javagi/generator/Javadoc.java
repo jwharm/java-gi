@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.github.jwharm.javagi.model.*;
+import io.github.jwharm.javagi.model.Record;
 
 public class Javadoc {
 
@@ -274,7 +275,15 @@ public class Javadoc {
         if (rt == null) {
             return "{@code " + ref.substring(1) + "}";
         } else {
-            return "{@link " + formatNS(rt.getNamespace().name) + rt.javaName + "}";
+            String typeName = rt.javaName;
+            // If the link refers to the typestruct for a class, find the enclosing class and add it to the link.
+            if (rt instanceof Record rec && rec.isGTypeStructFor != null) {
+                RegisteredType baseType = rt.getNamespace().registeredTypeMap.get(rec.isGTypeStructFor);
+                if (baseType != null) {
+                    typeName = baseType.javaName + "." + typeName;
+                }
+            }
+            return "{@link " + formatNS(rt.getNamespace().name) + typeName + "}";
         }
     }
 

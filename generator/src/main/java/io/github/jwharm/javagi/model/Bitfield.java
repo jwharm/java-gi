@@ -38,10 +38,7 @@ public class Bitfield extends ValueWrapper {
         }
         
         generateValueConstructor(writer, "int");
-        
-        for (Function function : functionList) {
-            function.generate(writer, false, true);
-        }
+        generateMethodsAndSignals(writer);
         
         writer.write("\n");
         writer.write("/**\n");

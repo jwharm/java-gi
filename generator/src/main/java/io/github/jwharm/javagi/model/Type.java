@@ -53,6 +53,11 @@ public class Type extends GirElement {
         this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace());
         this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace());
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
+        
+        if (girElementInstance != null && girElementInstance instanceof Record rec && rec.isGTypeStructFor != null) {
+            qualifiedJavaType = Conversions.convertToJavaType(rec.isGTypeStructFor, true, girElementInstance.getNamespace());
+            qualifiedJavaType += "." + simpleJavaType;
+        }
     }
 
     public boolean isAlias() {

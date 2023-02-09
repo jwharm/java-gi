@@ -79,10 +79,14 @@ public class JavaGI {
         
         // Parse the GI files into Repository objects
         for (Source source : sources) {
-            System.out.println("PARSE " + source.source());
-            Repository r = parser.parse(source.source(), source.pkg());
-            Conversions.repositoriesLookupTable.put(r.namespace.name, r);
-            parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.patches));
+            try {
+                System.out.println("PARSE " + source.source());
+                Repository r = parser.parse(source.source(), source.pkg());
+                Conversions.repositoriesLookupTable.put(r.namespace.name, r);
+                parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.patches));
+            } catch (IOException ioe) {
+                System.err.printf("PARSE %s: NOT FOUND\n", source.source());
+            }
         }
         
         // Link the type references to the GIR type definition across the GI repositories

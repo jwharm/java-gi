@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi.base;
 
+import java.lang.foreign.MemoryAddress;
+
 /**
  * Base class for type aliases of primitive values.
  * @param <T> The primitive value type
@@ -49,6 +51,20 @@ public abstract class Alias<T> {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    /**
+     * Convenience function to turn an array of MemoryAddress Aliases into an array
+     * of primitive MemoryAddress values
+     * @param array the array of Alias objects
+     * @return an array of MemoryAddress values
+     */
+    public static MemoryAddress[] getAddressValues(Alias<MemoryAddress>[] array) {
+        MemoryAddress[] values = new MemoryAddress[array.length];
+        for (int i = 0; i < array.length; i++) {
+            values[i] = array[i].getValue();
+        }
+        return values;
     }
 
     /**

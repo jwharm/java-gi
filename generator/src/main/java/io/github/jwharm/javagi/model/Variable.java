@@ -22,8 +22,8 @@ public class Variable extends GirElement {
                 type.isEnum()));
     }
 
-    public void writeType(SourceWriter writer, boolean pointerForArray) throws IOException {
-        writer.write(getType(pointerForArray));
+    public void writeType(SourceWriter writer, boolean pointerForArray, boolean writeAnnotations) throws IOException {
+        writer.write(getType(pointerForArray, writeAnnotations));
     }
 
     public void writeName(SourceWriter writer) throws IOException {
@@ -31,7 +31,7 @@ public class Variable extends GirElement {
     }
 
     public void writeTypeAndName(SourceWriter writer, boolean pointerForArray) throws IOException {
-        writeType(writer, pointerForArray);
+        writeType(writer, pointerForArray, true);
         writer.write(" ");
         writeName(writer);
     }
@@ -44,23 +44,23 @@ public class Variable extends GirElement {
         writer.write(marshalNativeToJava(identifier, upcall));
     }
 
-    private String getAnnotations(Type type) {
-        if ((! type.isPrimitive) && (!type.isVoid()) && (this instanceof Parameter p))
+    private String getAnnotations(Type type, boolean writeAnnotations) {
+        if (writeAnnotations && (! type.isPrimitive) && (!type.isVoid()) && (this instanceof Parameter p))
             return p.nullable ? "@Nullable " : p.notnull ? "@NotNull " : "";
 
         return "";
     }
 
-    private String getType(boolean pointerForArray) {
+    private String getType(boolean pointerForArray, boolean writeAnnotations) {
 
         if (type != null)
-            return getAnnotations(type) + getType(type);
+            return getAnnotations(type, writeAnnotations) + getType(type);
 
         if (array != null && array.array != null && "gchar***".equals(array.cType))
             return "java.lang.String[][]";
 
         if (array != null && array.type != null)
-            return getAnnotations(array.type)
+            return getAnnotations(array.type, writeAnnotations)
                     + ((array.size(false) != null)
                     ? getArrayType(array.type)
                     : (pointerForArray ? getPointerType(array.type) : getArrayType(array.type)));

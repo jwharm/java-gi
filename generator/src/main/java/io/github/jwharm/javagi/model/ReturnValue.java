@@ -8,11 +8,13 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 public class ReturnValue extends Parameter {
 
     public boolean returnsFloatingReference;
+    public String overrideReturnValue;
 
     public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
         super(parent, null, transferOwnership, nullable, null, null, null, null);
 
         returnsFloatingReference = false;
+        overrideReturnValue = null;
     }
 
     /**
@@ -61,6 +63,12 @@ public class ReturnValue extends Parameter {
      */
     public void generateReturnStatement(SourceWriter writer) throws IOException {
         if (type != null && type.isVoid()) {
+            return;
+        }
+        
+        // Return value hard-coded in PatchSet?
+        if (overrideReturnValue != null) {
+            writer.write("return " + overrideReturnValue + ";\n");
             return;
         }
 

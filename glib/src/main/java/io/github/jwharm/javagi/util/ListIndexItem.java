@@ -5,7 +5,6 @@ import io.github.jwharm.javagi.base.Marshal;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
-import org.gnome.gobject.ObjectClass;
 import org.gnome.gobject.TypeFlags;
 
 import java.lang.foreign.*;

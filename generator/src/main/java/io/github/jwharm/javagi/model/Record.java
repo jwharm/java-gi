@@ -22,17 +22,32 @@ public class Record extends Class {
      * To solve this, we generate a static allocate() function that allocates a memory segment.
      */
     public void generate(SourceWriter writer) throws IOException {
-        generatePackageDeclaration(writer);
-        generateImportStatements(writer);
-        generateJavadoc(writer);
+        if (isGTypeStructFor != null) {
+            writer.write("\n");
+        } else {
+            generatePackageDeclaration(writer);
+            generateImportStatements(writer);
+        }
         
-        writer.write("public class " + javaName);
+        generateJavadoc(writer);
+        writer.write("public ");
+        
+        if (isGTypeStructFor != null) {
+            writer.write("static ");
+        }
+        
+        writer.write("class " + javaName);
+        
         if (generic)
             writer.write("<T extends org.gnome.gobject.GObject>");
+        
         writer.write(" extends StructProxy {\n");
         writer.increaseIndent();
 
-        generateEnsureInitialized(writer);
+        if (isGTypeStructFor == null) {
+            generateEnsureInitialized(writer);
+        }
+        
         generateCType(writer);
 
         // Opaque structs have unknown memory layout and should not have an allocator
@@ -53,18 +68,7 @@ public class Record extends Class {
         generateMemoryAddressConstructor(writer);
         generateMarshal(writer);
         generateConstructors(writer);
-
-        for (Method m : methodList) {
-            m.generate(writer, false, false);
-        }
-
-        for (Function function : functionList) {
-            function.generate(writer, false, true);
-        }
-
-        for (Signal s : signalList) {
-            s.generate(writer, false);
-        }
+        generateMethodsAndSignals(writer);
 
         generateDowncallHandles(writer);
         generateInjected(writer);

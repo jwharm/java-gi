@@ -27,6 +27,19 @@ public class Parameters extends GirElement {
         }
     }
 
+    public void generateJavaParameterTypes(SourceWriter writer, boolean pointerForArray, boolean writeAnnotations) throws IOException {
+        int counter = 0;
+        for (Parameter p : parameterList) {
+            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
+                continue;
+            }
+            if (counter++ > 0) {
+                writer.write(", ");
+            }
+            p.writeType(writer, pointerForArray, writeAnnotations);
+        }
+    }
+
     public void generateJavaParameterNames(SourceWriter writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {

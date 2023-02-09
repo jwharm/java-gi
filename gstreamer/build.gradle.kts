@@ -33,7 +33,10 @@ setupGenSources {
         // Override with different return type
         renameMethod(repo, "AppSrc", "set_caps", "set_capabilities")
     }
-    source("GstAudio-1.0", "org.freedesktop.gstreamer.audio", true, "gstaudio-1.0")
+    source("GstAudio-1.0", "org.freedesktop.gstreamer.audio", true, "gstaudio-1.0") { repo ->
+        // Override with different return type
+        setReturnType(repo, "AudioSink", "stop", "gboolean", "gboolean", "true", "always %TRUE")
+    }
     source("GstBadAudio-1.0", "org.freedesktop.gstreamer.badaudio", true, "gstbadaudio-1.0")
     source("GstCheck-1.0", "org.freedesktop.gstreamer.check", true, "gstcheck-1.0")
     source("GstController-1.0", "org.freedesktop.gstreamer.controller", true, "gstcontroller-1.0")

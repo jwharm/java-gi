@@ -95,12 +95,8 @@ public class Enumeration extends ValueWrapper {
         writer.write("    };\n");
         writer.write("}\n");
         
-        for (Function function : functionList) {
-            function.generate(writer, false, true);
-        }
-
+        generateMethodsAndSignals(writer);
         generateDowncallHandles(writer);
-
         generateInjected(writer);
 
         writer.decreaseIndent();

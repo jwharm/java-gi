@@ -23,7 +23,7 @@ public class Signal extends Method implements Closure {
         qualifiedName = className + "." + signalName;
     }
 
-    public void generate(SourceWriter writer, boolean isDefault) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         writer.write("\n");
         generateFunctionalInterface(writer, signalName);
         writer.write("\n");
@@ -32,7 +32,7 @@ public class Signal extends Method implements Closure {
         if (doc != null) {
             doc.generate(writer, true);
         }
-        writer.write("public " + (isDefault ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
+        writer.write("public " + (parent instanceof Interface ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
         
         // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
         if (detailed) {
@@ -71,8 +71,8 @@ public class Signal extends Method implements Closure {
             writer.write("/**\n");
             writer.write(" * Emits the " + signalName + " signal. See {@link #on" + signalName + "}.\n");
             writer.write(" */\n");
-            writer.write("public " + (isDefault ? "default " : ""));
-            returnValue.writeType(writer, true);
+            writer.write("public " + (parent instanceof Interface ? "default " : ""));
+            returnValue.writeType(writer, true, true);
             writer.write(" emit" + signalName + "(");
             if (detailed) {
                 writer.write("@Nullable String detail");

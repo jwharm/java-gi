@@ -116,6 +116,10 @@ public class Interop {
             return variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc);
         }).orElse(null);
     }
+    
+    public static MethodHandle downcallHandle(Addressable symbol, FunctionDescriptor fdesc) {
+        return linker.downcallHandle(symbol, fdesc);
+    }
 
     /**
      * Produce a method handle for a {@code upcall} method in the provided class.
