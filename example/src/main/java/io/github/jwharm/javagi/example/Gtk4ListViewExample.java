@@ -2,8 +2,8 @@ package io.github.jwharm.javagi.example;
 
 import io.github.jwharm.javagi.util.ListIndexItem;
 import io.github.jwharm.javagi.util.ListIndexModel;
-import org.gtk.gio.ApplicationFlags;
-import org.gtk.gtk.*;
+import org.gnome.gio.ApplicationFlags;
+import org.gnome.gtk.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +61,7 @@ public class Gtk4ListViewExample {
     }
 
     public Gtk4ListViewExample(String[] args) {
-        app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
+        app = new Application("org.gnome.gtk.example", ApplicationFlags.FLAGS_NONE);
 
         list = new ArrayList<>();
         for (int i = 0, len = rnd.nextInt(900, 1000); i < len; i++) list.add(randomString());

@@ -2,10 +2,10 @@ package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.interop.Interop;
 import io.github.jwharm.javagi.base.Marshal;
-import org.gtk.gio.ListModel;
-import org.gtk.gio.ListModelInterface;
-import org.gtk.glib.Type;
-import org.gtk.gobject.*;
+import org.gnome.gio.ListModel;
+import org.gnome.gio.ListModelInterface;
+import org.gnome.glib.Type;
+import org.gnome.gobject.*;
 
 import java.lang.foreign.*;
 

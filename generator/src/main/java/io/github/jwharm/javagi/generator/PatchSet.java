@@ -121,14 +121,14 @@ public abstract class PatchSet {
             for (Method m : inst.methodList) {
                 if (m.parameters != null) {
                     for (Parameter p : m.parameters.parameterList) {
-                        if (p.type != null && "org.gtk.gobject.GObject".equals(p.type.qualifiedJavaType)) {
+                        if (p.type != null && "org.gnome.gobject.GObject".equals(p.type.qualifiedJavaType)) {
                             p.type.qualifiedJavaType = "T";
                         }
                     }
                 }
                 if (m.returnValue != null) {
                     Type returnType = m.returnValue.type;
-                    if (returnType != null && "org.gtk.gobject.GObject".equals(returnType.qualifiedJavaType)) {
+                    if (returnType != null && "org.gnome.gobject.GObject".equals(returnType.qualifiedJavaType)) {
                         returnType.qualifiedJavaType = "T";
                     }
                 }

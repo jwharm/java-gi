@@ -231,7 +231,7 @@ public class Constructor extends Method {
      */
     private boolean returnsFloatingReference() {
         if (!returnValue.returnsFloatingReference) {
-            boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gtk.gobject.InitiallyUnowned");
+            boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gnome.gobject.InitiallyUnowned");
             if ((initiallyUnowned) && "none".equals(returnValue.transferOwnership)) {
                 returnValue.returnsFloatingReference = true;
             }

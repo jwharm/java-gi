@@ -1,8 +1,8 @@
 package io.github.jwharm.javagi.example;
 
-import org.gtk.gio.ApplicationFlags;
-import org.gtk.glib.GLib;
-import org.gtk.gtk.*;
+import org.gnome.gio.ApplicationFlags;
+import org.gnome.glib.GLib;
+import org.gnome.gtk.*;
 
 public class Gtk4Example {
 
@@ -74,7 +74,7 @@ public class Gtk4Example {
     }
 
     public Gtk4Example(String[] args) {
-        app = new Application("org.gtk.example", ApplicationFlags.FLAGS_NONE);
+        app = new Application("org.gnome.gtk.example", ApplicationFlags.FLAGS_NONE);
         app.onActivate(this::activate);
         app.run(args);
     }

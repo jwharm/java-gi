@@ -10,7 +10,7 @@ application {
 
 dependencies {
     implementation(project(":glib"))
-    implementation(project(":gtk4"))
+    implementation(project(":gtk"))
     implementation(project(":gstreamer"))
 }
 
@@ -18,8 +18,8 @@ dependencies {
 tasks.run.configure {
     jvmArgs(
         "--enable-preview",
-        "--enable-native-access=org.gtk.glib",
-        "--enable-native-access=org.gtk",
+        "--enable-native-access=org.gnome.glib",
+        "--enable-native-access=org.gnome.gtk",
         "--enable-native-access=org.freedesktop.gstreamer",
         "--enable-native-access=io.github.jwharm.javagi.example"
     )

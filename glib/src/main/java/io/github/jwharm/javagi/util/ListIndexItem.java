@@ -2,11 +2,11 @@ package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.interop.Interop;
 import io.github.jwharm.javagi.base.Marshal;
-import org.gtk.glib.Type;
-import org.gtk.gobject.GObject;
-import org.gtk.gobject.GObjects;
-import org.gtk.gobject.ObjectClass;
-import org.gtk.gobject.TypeFlags;
+import org.gnome.glib.Type;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.GObjects;
+import org.gnome.gobject.ObjectClass;
+import org.gnome.gobject.TypeFlags;
 
 import java.lang.foreign.*;
 

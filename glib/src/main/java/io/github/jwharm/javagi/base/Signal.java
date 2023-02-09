@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.base;
 
-import org.gtk.gobject.GObject;
-import org.gtk.gobject.GObjects;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.GObjects;
 
 import java.lang.foreign.Addressable;
 
@@ -13,7 +13,7 @@ import java.lang.foreign.Addressable;
  */
 public class Signal<T> {
 
-    private final org.gtk.gobject.GObject instance;
+    private final org.gnome.gobject.GObject instance;
     private final long handlerId;
 
     /**

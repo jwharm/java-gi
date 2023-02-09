@@ -13,15 +13,15 @@ setupGenSources {
     moduleInfo = """
         module org.freedesktop.gstreamer {
             requires static org.jetbrains.annotations;
-            requires transitive org.gtk.glib;
+            requires transitive org.gnome.glib;
             %s
         }
     """.trimIndent()
 
-    source("GLib-2.0", "org.gtk.glib", false, "glib-2.0")
-    source("GObject-2.0", "org.gtk.gobject", false, "gobject-2.0")
-    source("Gio-2.0", "org.gtk.gio", false, "gio-2.0")
-    source("GModule-2.0", "org.gtk.gmodule", false)
+    source("GLib-2.0", "org.gnome.glib", false, "glib-2.0")
+    source("GObject-2.0", "org.gnome.gobject", false, "gobject-2.0")
+    source("Gio-2.0", "org.gnome.gio", false, "gio-2.0")
+    source("GModule-2.0", "org.gnome.gmodule", false)
 
     source("Gst-1.0", "org.freedesktop.gstreamer.gst", true, "gstreamer-1.0") { repo ->
         // According to the gir file, the size parameter is an out parameter, but it isn't

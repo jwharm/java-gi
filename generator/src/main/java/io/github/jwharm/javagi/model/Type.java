@@ -20,8 +20,7 @@ public class Type extends GirElement {
     /** This type is used on the Java side. Example: boolean, java.lang.String, org.gdk.gtk.Rectangle */
     public String qualifiedJavaType;
 
-    /** Used when this type refers to another namespace. Excluding the trailing dot. Example: org.gdk */
-    public String namespacePath;
+    /** Used when this type refers to another namespace. Excluding the trailing dot. Example: org.gnome.gdk */
     public String girNamespace;
 
     /** Only true if this type is represented by a primitive type on the Java side */
@@ -53,7 +52,6 @@ public class Type extends GirElement {
         this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace());
         this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace());
-        this.namespacePath = Conversions.getJavaPackageName(name);
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
     }
 
