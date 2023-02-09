@@ -66,6 +66,7 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find class struct for " + parent.name);
         }
+        writer.write("MemoryAddress _class = ((MemoryAddress) handle()).get(Interop.valueLayout.ADDRESS, 0);\n");
         writer.write("long _offset = " + classStruct.javaName);
         writer.write(".getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"");
         writer.write(name);
@@ -74,6 +75,8 @@ public class VirtualMethod extends Method {
         writer.write("FunctionDescriptor _fdesc = ");
         boolean varargs = generateFunctionDescriptor(writer);
         writer.write(";\n");
+
+        writer.write("MemoryAddress _func = _class.get(Interop.valueLayout.ADDRESS, _offset);\n");
         
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
@@ -83,7 +86,7 @@ public class VirtualMethod extends Method {
         }
 
         // Invoke to the method handle
-        writer.write("Interop.downcallHandle(((MemoryAddress) handle()).addOffset(_offset), _fdesc).invokeExact");
+        writer.write("Interop.downcallHandle(_func, _fdesc).invokeExact");
         
         // Marshall the parameters to the native types
         if (parameters != null) {

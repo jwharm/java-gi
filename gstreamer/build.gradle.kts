@@ -31,7 +31,8 @@ setupGenSources {
     source("GstAllocators-1.0", "org.freedesktop.gstreamer.allocators", true, "gstallocators-1.0")
     source("GstApp-1.0", "org.freedesktop.gstreamer.app", true, "gstapp-1.0") { repo ->
         // Override with different return type
-        renameMethod(repo, "AppSrc", "set_caps", "set_capabilities")
+        setReturnType(repo, "AppSrc", "set_caps", "gboolean", "gboolean", "true", "always %TRUE")
+        setReturnType(repo, "AppSink", "set_caps", "gboolean", "gboolean", "true", "always %TRUE")
     }
     source("GstAudio-1.0", "org.freedesktop.gstreamer.audio", true, "gstaudio-1.0") { repo ->
         // Override with different return type
