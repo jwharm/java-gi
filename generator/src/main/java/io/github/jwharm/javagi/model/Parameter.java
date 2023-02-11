@@ -12,6 +12,7 @@ public class Parameter extends Variable {
     public final boolean notnull;
     public final String direction;
     public final String closure;
+    public final String callerAllocates;
 
     public boolean varargs = false;
 
@@ -21,7 +22,8 @@ public class Parameter extends Variable {
     public Array linkedArray; // This field is initialized in the CrossReference class.
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable,
-                     String allowNone, String optional, String direction, String closure) {
+                     String allowNone, String optional, String direction, String closure,
+                     String callerAllocates) {
 
         super(parent);
         this.name = Conversions.toLowerCaseJavaName(name);
@@ -30,6 +32,7 @@ public class Parameter extends Variable {
         this.notnull = "0".equals(nullable) || "0".equals(allowNone) || "0".equals(optional);
         this.direction = direction;
         this.closure = closure;
+        this.callerAllocates = callerAllocates;
     }
 
     /**
@@ -180,7 +183,7 @@ public class Parameter extends Variable {
         }
         
         // Generate pointer allocation
-        if (isOutParameter() && array != null && array.size(false) != null) {
+        if (isOutParameter() && array != null && array.size(false) != null && "1".equals(callerAllocates)) {
             writer.write("MemorySegment " + name + "POINTER = (MemorySegment) ");
             marshalJavaToNative(writer, name + ".get()", false, false);
             writer.write(";\n");
@@ -244,7 +247,7 @@ public class Parameter extends Variable {
                 // Secondly, process the array out parameters
                 String len = array.size(false);
                 String valuelayout = Conversions.getValueLayout(array.type);
-                if (isOutParameter() && len != null) {
+                if (isOutParameter() && len != null && "1".equals(callerAllocates)) {
                     writer.write("if (" + name + " != null) " + name + ".set(");
                     // Out-parameter array
                     if (array.type.isPrimitive) {

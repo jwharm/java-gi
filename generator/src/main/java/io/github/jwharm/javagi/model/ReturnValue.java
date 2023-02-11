@@ -11,7 +11,8 @@ public class ReturnValue extends Parameter {
     public String overrideReturnValue;
 
     public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
-        super(parent, null, transferOwnership, nullable, null, null, null, null);
+        super(parent, null, transferOwnership, nullable,
+                null, null, null, null, null);
 
         returnsFloatingReference = false;
         overrideReturnValue = null;
