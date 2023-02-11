@@ -64,9 +64,12 @@ public class VirtualMethod extends Method {
             classStruct = i.classStruct;
         }
         if (classStruct == null) {
-            throw new IOException("Cannot find class struct for " + parent.name);
+            throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemoryAddress _class = ((MemoryAddress) handle()).get(Interop.valueLayout.ADDRESS, 0);\n");
+        writer.write("MemoryAddress _struct = ((MemoryAddress) handle()).get(Interop.valueLayout.ADDRESS, 0);\n");
+        if (parent instanceof Interface) {
+            writer.write("_struct = (MemoryAddress) Interop.g_type_interface_peek.invokeExact((Addressable) _struct, getType().getValue().longValue());\n");
+        }
         writer.write("long _offset = " + classStruct.javaName);
         writer.write(".getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"");
         writer.write(name);
@@ -76,7 +79,7 @@ public class VirtualMethod extends Method {
         boolean varargs = generateFunctionDescriptor(writer);
         writer.write(";\n");
 
-        writer.write("MemoryAddress _func = _class.get(Interop.valueLayout.ADDRESS, _offset);\n");
+        writer.write("MemoryAddress _func = _struct.get(Interop.valueLayout.ADDRESS, _offset);\n");
         
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
