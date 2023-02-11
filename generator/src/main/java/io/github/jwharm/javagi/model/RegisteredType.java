@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -235,6 +236,34 @@ public abstract class RegisteredType extends GirElement {
             writer.write("<>");
         writer.write("(input);\n");
     }
+    
+    protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {
+        HashSet<String> generatedMethods = new HashSet<>();
+        
+        // First, generate all virtual methods
+        for (VirtualMethod vm : virtualMethodList) {
+            vm.generate(writer);
+            generatedMethods.add(vm.name + " " + vm.getMethodSpecification());
+        }
+
+        // Next, generate the non-virtual instance methods
+        for (Method m : methodList) {
+            if (! generatedMethods.contains(m.name + " " + m.getMethodSpecification())) {
+                m.generate(writer);
+                generatedMethods.add(m.name + " " + m.getMethodSpecification());
+            }
+        }
+
+        // Generate all functions as static methods
+        for (Function function : functionList) {
+            function.generate(writer);
+        }
+
+        // Generate signals: functional interface, onSignal method and emitSignal method
+        for (Signal s : signalList) {
+            s.generate(writer);
+        }
+    }
 
     protected void generateIsAvailable(SourceWriter writer) throws IOException {
         writer.write("\n");
@@ -292,13 +321,13 @@ public abstract class RegisteredType extends GirElement {
             writer.write("static class DowncallHandles {\n");
             writer.increaseIndent();
             for (Constructor c : constructorList) {
-                c.generateMethodHandle(writer, isInterface);
+                c.generateMethodHandle(writer);
             }
             for (Method m : methodList) {
-                m.generateMethodHandle(writer, isInterface);
+                m.generateMethodHandle(writer);
             }
             for (Function f : functionList) {
-                f.generateMethodHandle(writer, isInterface);
+                f.generateMethodHandle(writer);
             }
             writer.decreaseIndent();
             writer.write("}\n");

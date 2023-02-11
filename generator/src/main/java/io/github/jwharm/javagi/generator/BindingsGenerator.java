@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.Class;
+import io.github.jwharm.javagi.model.Record;
 import io.github.jwharm.javagi.model.*;
 
 import java.io.IOException;
@@ -20,6 +21,12 @@ public class BindingsGenerator {
         // Create a java file for each RegisteredType (class, interface, ...)
         for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
             
+            // Class type structs are generated as inner classes
+            if (rt instanceof Record rec && rec.isGTypeStructFor != null) {
+                continue;
+            }
+            
+            // Generate the class
             try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java")))) {
                 rt.generate(writer);
             }
@@ -58,7 +65,7 @@ public class BindingsGenerator {
             }
 
             for (Function function : gir.namespace.functionList) {
-                function.generate(writer, function.parent instanceof Interface, true);
+                function.generate(writer);
             }
             
             if (! gir.namespace.functionList.isEmpty()) {
@@ -66,7 +73,7 @@ public class BindingsGenerator {
                 writer.write("private static class DowncallHandles {\n");
                 writer.increaseIndent();
                 for (Function f : gir.namespace.functionList) {
-                    f.generateMethodHandle(writer, false);
+                    f.generateMethodHandle(writer);
                 }
                 writer.decreaseIndent();
                 writer.write("}\n");

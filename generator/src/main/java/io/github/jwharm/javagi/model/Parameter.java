@@ -309,7 +309,7 @@ public class Parameter extends Variable {
                 }
             }
             if (array != null) {
-                writeType(writer, false);
+                writeType(writer, false, true);
                 writer.write(" " + name + "OUT = new Out<>(");
                 marshalNativeToJava(writer, name, true);
                 writer.write(");\n");

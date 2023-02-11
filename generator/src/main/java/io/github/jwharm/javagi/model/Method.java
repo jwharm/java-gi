@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
@@ -29,6 +30,10 @@ public class Method extends GirElement implements CallableType {
         this.shadowedBy = shadowedBy;
         this.shadows = shadows;
         this.movedTo = movedTo;
+        
+        // Generated under another name
+        if (shadowedBy != null)
+            this.skip = true;
 
         // Rename methods with "moved-to" attribute, but skip generation if the "moved-to" name has
         // the form of "Type.new_name", because in that case it already exists under the new name.
@@ -40,16 +45,11 @@ public class Method extends GirElement implements CallableType {
         }
     }
     
-    public void generateMethodHandle(SourceWriter writer, boolean isInterface) throws IOException {
-        if (skip) return;
-
+    protected boolean generateFunctionDescriptor(SourceWriter writer) throws IOException {
         boolean varargs = false;
-        writer.write("\n");
-        writer.write(isInterface ? "@ApiStatus.Internal\n        " : "private ");
-        writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
-        writer.write("        \"" + cIdentifier + "\",\n");
-        writer.write("        FunctionDescriptor.");
-        if (returnValue.type == null || "void".equals(returnValue.type.simpleJavaType)) {
+        
+        writer.write("FunctionDescriptor.");
+        if (returnValue.type != null && "void".equals(returnValue.type.simpleJavaType)) {
             writer.write("ofVoid(");
         } else {
             writer.write("of(" + Conversions.toPanamaMemoryLayout(returnValue.type));
@@ -72,27 +72,31 @@ public class Method extends GirElement implements CallableType {
         if (throws_ != null) {
             writer.write(", Interop.valueLayout.ADDRESS");
         }
-        writer.write("),\n");
+        
+        writer.write(")");
+        
+        return varargs;
+    }
+    
+    public void generateMethodHandle(SourceWriter writer) throws IOException {
+        if (skip) return;
+
+        boolean varargs = false;
+        writer.write("\n");
+        writer.write(parent instanceof Interface ? "@ApiStatus.Internal\n" : "private ");
+        writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
+        writer.write("        \"" + cIdentifier + "\",\n");
+        writer.write("        ");
+        varargs = generateFunctionDescriptor(writer);
+        writer.write(",\n");
         writer.write(varargs ? "        true\n" : "        false\n");
         writer.write(");\n");
     }
-
-    public void generate(SourceWriter writer, boolean isInterface, boolean isStatic) throws IOException {
-        if (skip) return;
-
-        writer.write("\n");
+    
+    protected String getMethodDeclaration() throws IOException {
+        SourceWriter writer = new SourceWriter(new StringWriter());
         
-        // Documentation
-        if (doc != null) {
-            doc.generate(writer, false);
-        }
-
-        // Deprecation
-        if ("1".equals(deprecated)) {
-            writer.write("@Deprecated\n");
-        }
-
-        if (isInterface && !isStatic) {
+        if ((parent instanceof Interface) && (! (this instanceof Function))) {
             // Default interface methods
             writer.write("default ");
         } else {
@@ -101,16 +105,16 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Static methods (functions)
-        if (isStatic) {
+        if (this instanceof Function) {
             writer.write("static ");
         }
 
         // Return type
-        getReturnValue().writeType(writer, true);
+        getReturnValue().writeType(writer, true, true);
 
         // Method name
         String methodName = Conversions.toLowerCaseJavaName(name);
-        if (isInterface) { // Overriding toString() in a default method is not allowed.
+        if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
             methodName = Conversions.replaceJavaObjectMethodNames(methodName);
         }
         writer.write(" ");
@@ -129,6 +133,55 @@ public class Method extends GirElement implements CallableType {
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
+        
+        return writer.toString();
+    }
+
+    protected String getMethodSpecification() throws IOException {
+        SourceWriter writer = new SourceWriter(new StringWriter());
+        
+        // Method name
+        String methodName = Conversions.toLowerCaseJavaName(name);
+        if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
+            methodName = Conversions.replaceJavaObjectMethodNames(methodName);
+        }
+        writer.write(methodName);
+
+        // Parameters
+        if (getParameters() != null) {
+            writer.write("(");
+            getParameters().generateJavaParameterTypes(writer, false, false);
+            writer.write(")");
+        } else {
+            writer.write("()");
+        }
+
+        // Exceptions
+        if (throws_ != null) {
+            writer.write(" throws GErrorException");
+        }
+        
+        return writer.toString();
+    }
+
+    public void generate(SourceWriter writer) throws IOException {
+        if (skip) return;
+
+        writer.write("\n");
+        
+        // Documentation
+        if (doc != null) {
+            doc.generate(writer, false);
+        }
+
+        // Deprecation
+        if ("1".equals(deprecated)) {
+            writer.write("@Deprecated\n");
+        }
+
+        // Declaration
+        writer.write(getMethodDeclaration());
+        
         writer.write(" {\n");
         writer.increaseIndent();
 
@@ -199,7 +252,7 @@ public class Method extends GirElement implements CallableType {
 
         // Generate a call to "yieldOwnership" to disable the Cleaner
         // when a user manually calls "unref"
-        if ((!isStatic) && name.equals("unref")) {
+        if ((! (this instanceof Function)) && name.equals("unref")) {
             writer.write("this.yieldOwnership();\n");
         }
         
@@ -215,7 +268,7 @@ public class Method extends GirElement implements CallableType {
         writer.decreaseIndent();
         writer.write("}\n");
     }
-
+    
     @Override
     public Parameters getParameters() {
         return parameters;

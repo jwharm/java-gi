@@ -51,5 +51,6 @@ tasks.javadoc {
         addStringOption("source", "19")
         addBooleanOption("-enable-preview", true)
         addStringOption("windowtitle", "java-gi ${project.version}")
+        addStringOption("Xdoclint:none", "-quiet")
     }
 }

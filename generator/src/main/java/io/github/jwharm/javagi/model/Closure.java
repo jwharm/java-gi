@@ -26,7 +26,7 @@ public interface Closure extends CallableType {
             doc.generate(writer, false);
 
         // Generate run(...) method
-        returnValue.writeType(writer, false);
+        returnValue.writeType(writer, false, true);
         writer.write(" run(");
         if (parameters != null) {
             boolean first = true;

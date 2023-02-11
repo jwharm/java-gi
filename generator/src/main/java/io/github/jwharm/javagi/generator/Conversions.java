@@ -130,7 +130,7 @@ public class Conversions {
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
-                "const", "float", "native", "super", "while", "wait"
+                "const", "float", "native", "super", "while", "wait", "finalize"
         };
         return Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? name + "_" : name;
     }
@@ -294,7 +294,7 @@ public class Conversions {
             case "int" -> Numbers.parseInt(value).toString();
             case "long" -> Numbers.parseLong(value) + "L";
             case "short" -> Numbers.parseShort(value).toString();
-            case "java.lang.String" -> '"' + value + '"';
+            case "java.lang.String" -> '"' + value.replace("\\", "\\\\") + '"';
             default -> value;
         };
     }

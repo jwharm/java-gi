@@ -37,12 +37,18 @@ public class SourceWriter implements AutoCloseable {
     }
 
     /**
-     * Write the provided String. When {@code str} ends with a newline ({@code \n}),
+     * Write the provided String, but when {@code str} ends with a newline ({@code \n}),
      * the next line will be indented with the current indentation level.
-     * @param str
-     * @throws IOException
+     * <p>
+     * If {@code str} is {@code null}, nothing is written.
+     * @param str the String to write
+     * @throws IOException thrown while calling {@link Writer#write(String)}
      */
     public void write(String str) throws IOException {
+        if (str == null) {
+            return;
+        }
+        
         if (writeIndent) {
             writer.write(indent);
             writeIndent = false;
@@ -62,5 +68,14 @@ public class SourceWriter implements AutoCloseable {
     @Override
     public void close() throws IOException {
         writer.close();
+    }
+    
+    /**
+     * Return the {@code toString} of the enclosed {@code Writer} instance
+     * @return the result of calling {@link Writer#toString()} on the enclosed {@code Writer} instance
+     */
+    @Override
+    public String toString() {
+        return writer.toString();
     }
 }

@@ -76,7 +76,7 @@ public class Interop {
 
     /**
      * The method handle for g_signal_connect_data is used by all
-     * generated signal methods.
+     * generated signal-connection methods.
      */
     public static final MethodHandle g_signal_connect_data = downcallHandle(
             "g_signal_connect_data",
@@ -94,12 +94,22 @@ public class Interop {
 
     /**
      * The method handle for g_signal_emit_by_name is used by all
-     * generated signal methods.
+     * generated signal-emission methods.
      */
     public static final MethodHandle g_signal_emit_by_name = Interop.downcallHandle(
             "g_signal_emit_by_name",
             FunctionDescriptor.ofVoid(Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS),
             true
+    );
+
+    /**
+     * The method handle for g_type_interface_peek is used by all virtual
+     * method bindings in interfaces to retrieve the interface typestruct.
+     */
+    public static final MethodHandle g_type_interface_peek = Interop.downcallHandle(
+            "g_type_interface_peek",
+            FunctionDescriptor.of(Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS, Interop.valueLayout.C_LONG),
+            false
     );
 
     /**
@@ -115,6 +125,10 @@ public class Interop {
         return symbolLookup.lookup(name).map(addr -> {
             return variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc);
         }).orElse(null);
+    }
+    
+    public static MethodHandle downcallHandle(Addressable symbol, FunctionDescriptor fdesc) {
+        return linker.downcallHandle(symbol, fdesc);
     }
 
     /**

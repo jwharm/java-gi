@@ -130,6 +130,12 @@ setupGenSources {
     source("Gio-2.0", "org.gnome.gio", true, "gio-2.0") { repo ->
         // Override with different return type
         renameMethod(repo, "BufferedInputStream", "read_byte", "read_int")
+        renameMethod(repo, "IOModule", "load", "load_module")
+        
+        setReturnType(repo, "ActionGroup", "activate_action", "gboolean", "gboolean", "true", "always %TRUE")
+        
+        // Override of static method
+        removeVirtualMethod(repo, "SocketControlMessage", "get_type")
 
         // g_async_initable_new_finish is a method declaration in the interface AsyncInitable.
         // It is meant to be implemented as a constructor (actually, a static factory method).
@@ -137,7 +143,7 @@ setupGenSources {
         // The current solution is to remove the method from the interface. It is still available in the implementing classes.
         removeMethod(repo, "AsyncInitable", "new_finish")
 
-        // Have these classes implement the AutoCloseable interface, so they can be used in try-with-resources blocks.
+        // Let these classes implement the AutoCloseable interface, so they can be used in try-with-resources blocks.
         makeAutoCloseable(repo, "IOStream")
         makeAutoCloseable(repo, "InputStream")
         makeAutoCloseable(repo, "OutputStream")

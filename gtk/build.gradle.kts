@@ -40,13 +40,11 @@ setupGenSources {
     source("Gsk-4.0", "org.gnome.gsk", true)
     source("Gtk-4.0", "org.gnome.gtk", true, "gtk-4") { repo ->
         // Override with different return type
+        renameMethod(repo, "ApplicationWindow", "get_id", "get_window_id")
         renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction")
-        renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
         renameMethod(repo, "PrintSettings", "get", "get_string")
-
-        // This method returns void in interface ActionGroup, but returns boolean in class Widget.
-        // Subclasses from Widget that implement ActionGroup throw a compile error.
-        setReturnVoid(repo, "Widget", "activate_action")
+        renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings")
+        renameMethod(repo, "Widget", "activate", "activate_widget")
 
         // These calls return floating references
         setReturnFloating(findMethod(repo, "FileFilter", "to_gvariant"))

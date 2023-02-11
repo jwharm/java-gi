@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.GObjectBuilder;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
@@ -7,19 +8,28 @@ import java.io.IOException;
 
 public class Interface extends RegisteredType {
 
-    public String typeName, getType, typeStruct;
+    public String typeName;
+    public String getType;
+    public String typeStruct;
     public Prerequisite prerequisite;
 
+    public Record classStruct;
+    
     public Interface(GirElement parent, String name, String cType, String typeName, String getType,
             String typeStruct, String version) {
         
         super(parent, name, null, cType, version);
+        this.typeName = typeName;
+        this.getType = getType;
+        this.typeStruct = typeStruct;
         
         // Generate a function declaration to retrieve the type of this object.
         registerGetTypeFunction(getType);
     }
 
     public void generate(SourceWriter writer) throws IOException {
+        classStruct = (Record) Conversions.cTypeLookupTable.get(getNamespace().cIdentifierPrefix + typeStruct);
+        
         generatePackageDeclaration(writer);
         generateImportStatements(writer);
         generateJavadoc(writer);
@@ -32,19 +42,12 @@ public class Interface extends RegisteredType {
         writer.increaseIndent();
 
         generateMarshal(writer);
+        generateMethodsAndSignals(writer);
 
-        for (Method m : methodList) {
-            m.generate(writer, true, false);
+        if (classStruct != null) {
+            classStruct.generate(writer);
         }
-
-        for (Function function : functionList) {
-            function.generate(writer, true, true);
-        }
-
-        for (Signal s : signalList) {
-            s.generate(writer, true);
-        }
-
+        
         GObjectBuilder.generateInterfaceBuilder(writer, this);
         generateDowncallHandles(writer);
         generateImplClass(writer);

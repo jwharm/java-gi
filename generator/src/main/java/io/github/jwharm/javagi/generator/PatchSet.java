@@ -27,16 +27,28 @@ public abstract class PatchSet {
         else System.err.println("Did not rename " + type + "." + oldName + ": Not found");
     }
 
+    public static void removeVirtualMethod(Repository repo, String type, String virtualMethod) {
+        VirtualMethod vm = findVirtualMethod(repo, type, virtualMethod);
+        if (vm != null) vm.parent.virtualMethodList.remove(vm);
+        else System.err.println("Did not remove " + type + "." + virtualMethod + ": Not found");
+    }
+
     public static void removeType(Repository repo, String type) {
         if (repo.namespace.registeredTypeMap.remove(type) == null) System.err.println("Did not remove " + type + ": Not found");
     }
 
-    public static void setReturnVoid(Repository repo, String type, String name) {
-        Method m = findMethod(repo, type, name);
+    public static void setReturnType(Repository repo, String type, String name, String typeName, String typeCType, String defaultReturnValue, String doc) {
+        Method m = findVirtualMethod(repo, type, name);
+        if (m == null)
+            m = findMethod(repo, type, name);
         if (m != null) {
             ReturnValue rv = m.returnValue;
-            rv.type = new Type(rv, "none", "void");
-            rv.doc = null;
+            rv.type = new Type(rv, typeName, typeCType);
+            rv.overrideReturnValue = defaultReturnValue;
+            if (doc != null) {
+                rv.doc = new Doc(rv, "1");
+                rv.doc.contents = doc;
+            }
         } else
             System.err.println("Did not change return type of " + type + "." + name + ": Not found");
     }
@@ -85,6 +97,18 @@ public abstract class PatchSet {
         try {
             for (Method m : repo.namespace.registeredTypeMap.get(type).methodList) {
                 if (method.equals(m.name)) return m;
+            }
+            return null;
+        } catch (NullPointerException ignored) {
+            System.out.printf("Cannot find type %s\n", type);
+            return null;
+        }
+    }
+
+    public static VirtualMethod findVirtualMethod(Repository repo, String type, String virtualMethod) {
+        try {
+            for (VirtualMethod vm : repo.namespace.registeredTypeMap.get(type).virtualMethodList) {
+                if (virtualMethod.equals(vm.name)) return vm;
             }
             return null;
         } catch (NullPointerException ignored) {
