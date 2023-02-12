@@ -48,7 +48,7 @@ public interface Marshal<In, Out> {
     /**
      * Marshal function that writes a String to the provided address
      */
-    Marshal<String, Addressable> stringToAddress       = Interop::allocateNativeString;
+    Marshal<String, Addressable> stringToAddress       = (input, scope) -> Interop.allocateNativeString(input, scope).address();
 
     /**
      * Marshal function to write an Enumeration to native memory
