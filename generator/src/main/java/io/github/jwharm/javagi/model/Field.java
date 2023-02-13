@@ -29,7 +29,7 @@ public class Field extends Variable {
         if (type != null
                 && type.girElementInstance != null
                 && type.girElementInstance instanceof Record r 
-                && "1".equals(r.disguised)) {
+                && ("1".equals(r.disguised) || r.name.endsWith("Private"))) {
             return;
         }
         // Don't generate a getter/setter for padding/reserved space

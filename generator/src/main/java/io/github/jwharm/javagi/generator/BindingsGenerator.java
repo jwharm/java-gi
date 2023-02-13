@@ -25,6 +25,11 @@ public class BindingsGenerator {
             if (rt instanceof Record rec && rec.isGTypeStructFor != null) {
                 continue;
             }
+
+            // Private inner structs can be omitted from language bindings
+            if (rt instanceof Record rec && rec.name.endsWith("Private")) {
+                continue;
+            }
             
             // Generate the class
             try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java")))) {
