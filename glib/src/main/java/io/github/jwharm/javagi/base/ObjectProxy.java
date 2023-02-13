@@ -1,18 +1,19 @@
 package io.github.jwharm.javagi.base;
 
+import org.gnome.gobject.TypeInstance;
+
 import java.lang.foreign.Addressable;
 import java.lang.ref.Cleaner;
 
 /**
- * Abastract base class for proxy objects that represent a GObject instance 
- * in native memory. The {@link #handle()} method returns the memory address
- * of the object.
+ * Abstract base class for proxy objects that represent an object instance
+ * in native memory. For ref-counted objects, a Cleaner is attached that
+ * will unref the instance when the proxy instance has ownership and is
+ * garbage-collected.
  */
-public abstract class ObjectProxy implements Proxy {
+public abstract class ObjectProxy extends TypeInstance {
 
     private static final Cleaner cleaner = Cleaner.create();
-
-    private final Addressable address;
     private RefCleaner refCleaner;
 
     /**
@@ -20,17 +21,9 @@ public abstract class ObjectProxy implements Proxy {
      * @param address the memory address of the object in native memory
      */
     protected ObjectProxy(Addressable address) {
-        this.address = address;
+        super(address);
     }
 
-    /**
-     * Return the memory address of the object in native memory
-     * @return The native memory address of the object
-     */
-    public Addressable handle() {
-        return this.address;
-    }
-    
     /**
      * Disable the Cleaner that automatically calls {@code g_object_unref} (or
      * another method that has been specified) when this object is garbage collected.
@@ -47,7 +40,7 @@ public abstract class ObjectProxy implements Proxy {
      */
     public void takeOwnership() {
         if (this.refCleaner == null) {
-            refCleaner = new RefCleaner(address);
+            refCleaner = new RefCleaner(handle());
             cleaner.register(this, refCleaner);
         } else {
             refCleaner.registered = true;

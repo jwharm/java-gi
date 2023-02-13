@@ -38,10 +38,16 @@ public class Record extends Class {
         
         writer.write("class " + javaName);
         
-        if (generic)
+        if (generic) {
             writer.write("<T extends org.gnome.gobject.GObject>");
-        
-        writer.write(" extends StructProxy {\n");
+        }
+
+        if (isGTypeStructFor != null) {
+            writer.write(" extends org.gnome.gobject.TypeClass {\n");
+        } else {
+            writer.write(" extends StructProxy {\n");
+        }
+
         writer.increaseIndent();
 
         if (isGTypeStructFor == null) {
