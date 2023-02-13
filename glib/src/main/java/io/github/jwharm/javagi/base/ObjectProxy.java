@@ -14,7 +14,6 @@ public abstract class ObjectProxy implements Proxy {
 
     private final Addressable address;
     private RefCleaner refCleaner;
-    private Cleaner.Cleanable cleanable;
 
     /**
      * Instantiate the ObjectProxy class.
@@ -49,7 +48,7 @@ public abstract class ObjectProxy implements Proxy {
     public void takeOwnership() {
         if (this.refCleaner == null) {
             refCleaner = new RefCleaner(address);
-            cleanable = cleaner.register(this, refCleaner);
+            cleaner.register(this, refCleaner);
         } else {
             refCleaner.registered = true;
         }

@@ -3,7 +3,6 @@ package io.github.jwharm.javagi.interop;
 import io.github.jwharm.javagi.base.Alias;
 import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
-import io.github.jwharm.javagi.base.Marshal;
 import io.github.jwharm.javagi.base.Proxy;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
@@ -11,6 +10,7 @@ import org.gnome.gobject.GObjects;
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * The Interop class contains functionality for interoperability with native code.
@@ -19,7 +19,7 @@ public class Interop {
 
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
-    private final static Map<Type, Marshal<Addressable, ? extends Proxy>> typeRegister;
+    private final static Map<Type, Function<Addressable, ? extends Proxy>> typeRegister;
 
     /**
      * Configure the layout of native data types here.<br>
@@ -58,7 +58,7 @@ public class Interop {
      * @param fallback Marshal function to use, if not found in the type register
      * @return the marshal function
      */
-    public static Marshal<Addressable, ? extends Proxy> register(MemoryAddress address, Marshal<Addressable, ? extends Proxy> fallback) {
+    public static Function<Addressable, ? extends Proxy> register(MemoryAddress address, Function<Addressable, ? extends Proxy> fallback) {
         if (address.equals(MemoryAddress.NULL)) return fallback;
         Type type = getType(address);
         typeRegister.putIfAbsent(type, fallback);
@@ -70,7 +70,7 @@ public class Interop {
      * @param type Type to use as key in the type register
      * @param marshal Marshal function for this type
      */
-    public static void register(Type type, Marshal<Addressable, ? extends Proxy> marshal) {
+    public static void register(Type type, Function<Addressable, ? extends Proxy> marshal) {
         typeRegister.put(type, marshal);
     }
 
@@ -418,9 +418,9 @@ public class Interop {
         }
 
         static Class<?> carrier(MemoryLayout layout, boolean ret) {
-            if (layout instanceof ValueLayout valueLayout) {
-                return (ret || valueLayout.carrier() != MemoryAddress.class) ?
-                        valueLayout.carrier() : Addressable.class;
+            if (layout instanceof ValueLayout valLayout) {
+                return (ret || valLayout.carrier() != MemoryAddress.class) ?
+                        valLayout.carrier() : Addressable.class;
             } else if (layout instanceof GroupLayout) {
                 return MemorySegment.class;
             } else {
@@ -539,7 +539,7 @@ public class Interop {
                 return MemoryAddress.NULL;
             }
             if (o instanceof Boolean bool) {
-                return bool.booleanValue() ? 1 : 0;
+                return bool ? 1 : 0;
             }
             if (o instanceof Proxy proxy) {
                 return proxy.handle();

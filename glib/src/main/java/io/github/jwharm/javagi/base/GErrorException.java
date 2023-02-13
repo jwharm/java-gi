@@ -26,7 +26,7 @@ public class GErrorException extends Exception {
 
     // Dereference the GError instance from the pointer
     private static org.gnome.glib.Error dereference(MemorySegment pointer) {
-        return (org.gnome.glib.Error) org.gnome.glib.Error.fromAddress.marshal(pointer.get(Interop.valueLayout.ADDRESS, 0), null);
+        return (org.gnome.glib.Error) org.gnome.glib.Error.fromAddress(pointer.get(Interop.valueLayout.ADDRESS, 0));
     }
     
     // Get the message from the GError instance (used by the GErrorException constructor)

@@ -219,6 +219,9 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * The marshal function from a native memory address to a Java proxy instance\n");
+        writer.write(" * @param address the native memory address of the object instance\n");
+        writer.write(" * @return an instance of {@code " + javaName + "}, or {@code null} if the ");
+        writer.write("address is a NULL pointer\n");
         writer.write(" */\n");
 
         String name = javaName;
@@ -227,14 +230,17 @@ public abstract class RegisteredType extends GirElement {
         else if (this instanceof Class c && "1".equals(c.abstract_))
             name += "Impl";
 
-        writer.write("public static final Marshal<Addressable, " + javaName);
+        writer.write("public static " + javaName);
         if (generic)
             writer.write("<org.gnome.gobject.GObject>");
-        writer.write("> fromAddress = (input, scope) -> \n");
-        writer.write("        input.equals(MemoryAddress.NULL) ? null : new " + name);
+        writer.write(" fromAddress(Addressable address) {\n");
+        writer.increaseIndent();
+        writer.write("return address.equals(MemoryAddress.NULL) ? null : new " + name);
         if (generic)
             writer.write("<>");
-        writer.write("(input);\n");
+        writer.write("(address);\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
     
     protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {

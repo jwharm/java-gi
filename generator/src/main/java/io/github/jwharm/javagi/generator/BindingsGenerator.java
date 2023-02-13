@@ -84,14 +84,14 @@ public class BindingsGenerator {
             writer.increaseIndent();
 
             for (Class c : gir.namespace.classList)
-                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
 
             for (Interface c : gir.namespace.interfaceList)
-                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
 
             for (Alias c : gir.namespace.aliasList)
                 if (c.getTargetType() == Alias.TargetType.CLASS || c.getTargetType() == Alias.TargetType.INTERFACE)
-                    writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + ".fromAddress);\n");
+                    writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
 
             writer.decreaseIndent();
             writer.write("}\n");

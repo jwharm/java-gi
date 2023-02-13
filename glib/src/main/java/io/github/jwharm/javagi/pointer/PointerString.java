@@ -42,7 +42,7 @@ public class PointerString extends Pointer<String> {
      * Allocate a native string and set the pointer to its address.
      * The native memory is released when the {@code PointerString} instance
      * becomes unreachable and is garbage collected.
-     * When {@link #set(String)} is called multiple times for the same
+     * When {@code set(String)} is called multiple times for the same
      * {@code PointerString} instance, the previously allocated memory
      * segment will also be released during garbage collection.
      * @param value the new string that is pointed to

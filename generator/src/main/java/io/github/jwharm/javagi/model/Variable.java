@@ -156,7 +156,7 @@ public class Variable extends GirElement {
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", SCOPE)";
+            return "Interop.allocateNativeString(" + identifier + ", SCOPE)";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -165,7 +165,7 @@ public class Variable extends GirElement {
             return identifier + ".handle()";
 
         if (type.isBoolean())
-            return "Marshal.booleanToInteger.marshal(" + identifier + ", null).intValue()";
+            return identifier + " ? 1 : 0";
 
         if (type.girElementInstance != null)
             return type.girElementInstance.getInteropString(identifier, type.isPointer());
@@ -196,7 +196,7 @@ public class Variable extends GirElement {
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Marshal.stringToAddress.marshal(" + identifier + ", SCOPE)";
+            return "Interop.allocateNativeString(" + identifier + ", SCOPE)";
 
         return identifier + ".handle()";
     }
@@ -224,7 +224,7 @@ public class Variable extends GirElement {
 
     protected String marshalNativeToJava(Type type, String identifier, boolean upcall) {
         if ("java.lang.String".equals(type.qualifiedJavaType))
-            return "Marshal.addressToString.marshal(" + identifier + ", null)";
+            return "Interop.getStringFrom(" + identifier + ")";
 
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
@@ -236,14 +236,14 @@ public class Variable extends GirElement {
             return "null /* Unsupported parameter type */";
 
         if (type.isRecord() || type.isUnion())
-            return type.qualifiedJavaType + ".fromAddress.marshal(" + identifier + ", null)";
+            return type.qualifiedJavaType + ".fromAddress(" + identifier + ")";
 
         if (type.isClass() || type.isInterface() || type.isAlias())
-            return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
-                    + ".marshal(" + identifier + ", null)";
+            return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier
+                    + ", " + type.qualifiedJavaType + "::fromAddress)" + ".apply(" + identifier + ")";
 
         if (type.isBoolean())
-            return "Marshal.integerToBoolean.marshal(" + identifier + ", null).booleanValue()";
+            return identifier + " != 0";
 
         return identifier;
     }
@@ -273,11 +273,11 @@ public class Variable extends GirElement {
                     + ", SCOPE).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)"
                     + ".toArrayOfStructs((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, "
                     + type.qualifiedJavaType + ".getMemoryLayout())";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)"
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)"
                 + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class)";
     }
 
@@ -303,6 +303,6 @@ public class Variable extends GirElement {
         if (type.isPrimitive)
             return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + ".fromAddress)";
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)";
     }
 }

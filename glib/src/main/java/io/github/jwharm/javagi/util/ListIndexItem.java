@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.base.Marshal;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
@@ -25,8 +24,9 @@ public class ListIndexItem extends GObject {
     /**
      * Marshaller from a memory address to a ListIndexItem instance.
      */
-    public static final Marshal<Addressable, ListIndexItem> fromAddress =
-            (input, scope) -> input.equals(MemoryAddress.NULL) ? null : new ListIndexItem(input);
+    public static ListIndexItem fromAddress(Addressable address) {
+        return address.equals(MemoryAddress.NULL) ? null : new ListIndexItem(address);
+    }
 
     /**
      * Get the {@link MemoryLayout} of the instance struct
@@ -59,7 +59,7 @@ public class ListIndexItem extends GObject {
                     TypeFlags.NONE
             );
         }
-        Interop.register(type, fromAddress);
+        Interop.register(type, ListIndexItem::fromAddress);
         return type;
     }
 
