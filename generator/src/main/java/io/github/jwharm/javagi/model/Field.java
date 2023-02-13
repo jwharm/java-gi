@@ -65,20 +65,20 @@ public class Field extends Variable {
             writer.write(" " + getter + "() {\n");
 
             if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
-                writer.write("    long OFFSET = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
+                writer.write("    long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("    return ");
-                marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(OFFSET)", false);
+                marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(_offset)", false);
                 writer.write(";\n");
                 writer.write("}\n");
             } else {
-                writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+                writer.write("    try (MemorySession _scope = MemorySession.openConfined()) {\n");
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
-                writer.write("        var RESULT = (" + memoryType + ") getMemoryLayout()\n");
+                writer.write("        var _result = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE));\n");
+                writer.write("            .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), _scope));\n");
                 writer.write("        return ");
-                marshalNativeToJava(writer, "RESULT", false);
+                marshalNativeToJava(writer, "_result", false);
                 writer.write(";\n");
                 writer.write("    }\n");
                 writer.write("}\n");
@@ -94,10 +94,10 @@ public class Field extends Variable {
         writer.write("public void " + setter + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("    try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+        writer.write("    try (MemorySession _scope = MemorySession.openConfined()) {\n");
         writer.write("        getMemoryLayout()\n");
         writer.write("            .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), SCOPE), ");
+        writer.write("            .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), _scope), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");

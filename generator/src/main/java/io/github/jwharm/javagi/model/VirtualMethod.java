@@ -33,7 +33,7 @@ public class VirtualMethod extends Method {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -44,13 +44,13 @@ public class VirtualMethod extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _scope.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
         String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write(panamaReturnType + " RESULT;\n");
+            writer.write(panamaReturnType + " _result;\n");
         }
         
         // The method call is wrapped in a try-catch block
@@ -83,7 +83,7 @@ public class VirtualMethod extends Method {
         
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write("RESULT = (");
+            writer.write("_result = (");
             writer.write(panamaReturnType);
             writer.write(") ");
         }
@@ -103,14 +103,14 @@ public class VirtualMethod extends Method {
         
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
-        writer.write("} catch (Throwable ERR) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("} catch (Throwable _err) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
         writer.write("}\n");
 
         // Throw GErrorException
         if (throws_ != null) {
-            writer.write("if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("    throw new GErrorException(GERROR);\n");
+            writer.write("if (GErrorException.isErrorSet(_gerror)) {\n");
+            writer.write("    throw new GErrorException(_gerror);\n");
             writer.write("}\n");
         }
         

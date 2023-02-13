@@ -184,11 +184,11 @@ public class Parameter extends Variable {
         
         // Generate pointer allocation
         if (isOutParameter() && array != null && array.size(false) != null && "1".equals(callerAllocates)) {
-            writer.write("MemorySegment " + name + "POINTER = (MemorySegment) ");
+            writer.write("MemorySegment _" + name + "Pointer = (MemorySegment) ");
             marshalJavaToNative(writer, name + ".get()", false, false);
             writer.write(";\n");
         } else if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
-            writer.write("MemorySegment " + name + "POINTER = SCOPE.allocate(" + Conversions.getValueLayout(type) + ");\n");
+            writer.write("MemorySegment _" + name + "Pointer = _scope.allocate(" + Conversions.getValueLayout(type) + ");\n");
         }
 
         // Array length parameter: generate local variable that contains the length
@@ -235,7 +235,7 @@ public class Parameter extends Variable {
                     writer.write("if (" + name + " != null) ");
                 }
                 writer.write(name + (isAliasForPrimitive() ? ".setValue(" : ".set("));
-                String identifier = name + "POINTER.get(" + Conversions.getValueLayout(type) + ", 0)";
+                String identifier = "_" + name + "Pointer.get(" + Conversions.getValueLayout(type) + ", 0)";
                 if (isAliasForPrimitive() || (type.isPrimitive && type.isPointer())) {
                     writer.write(identifier);
                     if (type.isBoolean()) writer.write(" != 0");
@@ -251,26 +251,26 @@ public class Parameter extends Variable {
                     writer.write("if (" + name + " != null) " + name + ".set(");
                     // Out-parameter array
                     if (array.type.isPrimitive) {
-                        writer.write(name + "POINTER.toArray(" + valuelayout + "));\n");
+                        writer.write("_" + name + "Pointer.toArray(" + valuelayout + "));\n");
                     } else {
-                        marshalNativeToJava(writer, name + "POINTER.address()", false);
+                        marshalNativeToJava(writer, "_" + name + "Pointer.address()", false);
                         writer.write(");\n");
                     }
                 } else if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write("if (" + name + " != null) " + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(" + name + "POINTER.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + "));\n");
+                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write("if (" + name + " != null) {\n");
                     writer.increaseIndent();
-                    writer.write(array.type.qualifiedJavaType + "[] " + name + "ARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
-                    writer.write("for (int I = 0; I < " + len + "; I++) {\n");
-                    writer.write("    var OBJ = " + name + "POINTER.get(" + valuelayout + ", I);\n");
-                    writer.write("    " + name + "ARRAY[I] = ");
-                    writer.write(marshalNativeToJava(array.type, "OBJ", false) + ";\n");
+                    writer.write(array.type.qualifiedJavaType + "[] _" + name + "Array = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("for (int _idx = 0; _idx < " + len + "; _idx++) {\n");
+                    writer.write("    var _object = _" + name + "Pointer.get(" + valuelayout + ", _idx);\n");
+                    writer.write("    _" + name + "Array[_idx] = ");
+                    writer.write(marshalNativeToJava(array.type, "_object", false) + ";\n");
                     writer.write("    }\n");
-                    writer.write(name + ".set(" + name + "ARRAY);\n");
+                    writer.write(name + ".set(_" + name + "Array);\n");
                     writer.decreaseIndent();
                     writer.write("}\n");
                 }
@@ -292,12 +292,12 @@ public class Parameter extends Variable {
     public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         if (isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
-            writer.write(type.qualifiedJavaType + " " + name + "ALIAS = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
+            writer.write(type.qualifiedJavaType + " _" + name + "Alias = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = type.qualifiedJavaType;
                 if (type.isPrimitive) typeStr = Conversions.primitiveClassName(typeStr);
-                writer.write("Out<" + typeStr + "> " + name + "OUT = new Out<>(");
+                writer.write("Out<" + typeStr + "> _" + name + "Out = new Out<>(");
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
                     String layout = Conversions.getValueLayout(type);
                     writer.write(name + ".get(" + layout + ", 0)");
@@ -313,7 +313,7 @@ public class Parameter extends Variable {
             }
             if (array != null) {
                 writeType(writer, false, true);
-                writer.write(" " + name + "OUT = new Out<>(");
+                writer.write(" _" + name + "Out = new Out<>(");
                 marshalNativeToJava(writer, name, true);
                 writer.write(");\n");
             }
@@ -323,17 +323,17 @@ public class Parameter extends Variable {
     public void generateUpcallPostprocessing(SourceWriter writer) throws IOException {
         if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayout(type.girElementInstance.type);
-            writer.write(name + ".set(" + typeStr + ", 0, " + name + "ALIAS.getValue());\n");
+            writer.write(name + ".set(" + typeStr + ", 0, _" + name + "Alias.getValue());\n");
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = Conversions.getValueLayout(type);
-                String identifier = marshalJavaToNative(type, name + "OUT.get()", true);
+                String identifier = marshalJavaToNative(type, "_" + name + "Out.get()", true);
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
-                    identifier = name + "OUT.get()";
+                    identifier = "_" + name + "Out.get()";
                     if (type.isBoolean()) identifier += " ? 1 : 0";
                 }
                 if (type.isEnum() || type.isBitfield()) {
-                    identifier = name + "OUT.get().getValue()";
+                    identifier = "_" + name + "Out.get().getValue()";
                 }
                 writer.write(name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
             }

@@ -100,7 +100,7 @@ public class Constructor extends Method {
         writer.write(" {\n");
         writer.increaseIndent();
 
-        writer.write("var RESULT = " + privateMethodName);
+        writer.write("var _result = " + privateMethodName);
         if (parameters != null) {
             writer.write("(");
             parameters.generateJavaParameterNames(writer);
@@ -112,14 +112,14 @@ public class Constructor extends Method {
 
         // Ownership transfer for InitiallyUnowned instances
         if (returnsFloatingReference()) {
-            writer.write("var OBJECT = ");
-            returnValue.marshalNativeToJava(writer, "RESULT", false);
+            writer.write("var _object = ");
+            returnValue.marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
-            writer.write("if (OBJECT != null) {\n");
-            writer.write("    OBJECT.refSink();\n");
-            writer.write("    OBJECT.takeOwnership();\n");
+            writer.write("if (_object != null) {\n");
+            writer.write("    _object.refSink();\n");
+            writer.write("    _object.takeOwnership();\n");
             writer.write("}\n");
-            writer.write("return OBJECT;\n");
+            writer.write("return _object;\n");
         } else {
             returnValue.generateReturnStatement(writer);
         }
@@ -131,7 +131,7 @@ public class Constructor extends Method {
     }
 
     // Because constructors sometimes throw exceptions, we need to allocate a GError segment before
-    // calling "super(..., GERROR)", which is not allowed - the super() call must
+    // calling "super(..., _gerror)", which is not allowed - the super() call must
     // be the first statement in the constructor. Therefore, we always generate a private method that
     // prepares a GError memorysegment if necessary, calls the C API and throws the GErrorException
     // (if necessary). The "real" constructor just calls super(private_method());
@@ -162,7 +162,7 @@ public class Constructor extends Method {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession SCOPE = MemorySession.openConfined()) {\n");
+            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -173,18 +173,18 @@ public class Constructor extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment GERROR = SCOPE.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _scope.allocate(Interop.valueLayout.ADDRESS);\n");
         }
         
         // Generate the return type
-        writer.write("MemoryAddress RESULT;\n");
+        writer.write("MemoryAddress _result;\n");
         
         // The method call is wrapped in a try-catch block
         writer.write("try {\n");
         writer.increaseIndent();
 
         // Invoke to the method handle
-        writer.write("RESULT = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        writer.write("_result = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
         
         // Marshall the parameters to the native types
         if (parameters != null) {
@@ -198,14 +198,14 @@ public class Constructor extends Method {
         
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
-        writer.write("} catch (Throwable ERR) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", ERR);\n");
+        writer.write("} catch (Throwable _err) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
         writer.write("}\n");
 
         // Throw GErrorException
         if (throws_ != null) {
-            writer.write("if (GErrorException.isErrorSet(GERROR)) {\n");
-            writer.write("    throw new GErrorException(GERROR);\n");
+            writer.write("if (GErrorException.isErrorSet(_gerror)) {\n");
+            writer.write("    throw new GErrorException(_gerror);\n");
             writer.write("}\n");
         }
 
@@ -214,7 +214,7 @@ public class Constructor extends Method {
             parameters.generatePostprocessing(writer);
         }
         
-        writer.write("return RESULT;\n");
+        writer.write("return _result;\n");
 
         // End of memory allocation scope
         if (hasScope) {

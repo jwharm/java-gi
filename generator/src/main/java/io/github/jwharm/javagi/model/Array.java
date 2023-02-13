@@ -27,7 +27,7 @@ public class Array extends GirElement {
                 Parameter lp = p.getParameterAt(length);
                 if (lp != null) {
                     if (upcall && lp.isOutParameter()) {
-                        return lp.name + "OUT.get()";
+                        return "_" + lp.name + "Out.get()";
                     }
                     if (lp.type != null && (lp.type.isPointer() || lp.isOutParameter())) {
                         return lp.name + ".get().intValue()";

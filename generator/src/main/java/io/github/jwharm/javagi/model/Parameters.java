@@ -89,7 +89,7 @@ public class Parameters extends GirElement {
 
             // Preprocessing statement
             } else if (p.isOutParameter() || (p.isAliasForPrimitive() && p.type.isPointer())) {
-                writer.write("(Addressable) " + p.name + "POINTER.address()");
+                writer.write("(Addressable) _" + p.name + "Pointer.address()");
 
             // Custom interop
             } else {
@@ -109,7 +109,7 @@ public class Parameters extends GirElement {
                 writer.write("\n");
                 writer.write("        ");
             }
-            writer.write("(Addressable) GERROR");
+            writer.write("(Addressable) _gerror");
         }
     }
 
@@ -124,12 +124,12 @@ public class Parameters extends GirElement {
             first = false;
 
             if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
-                writer.write(p.name + "ALIAS");
+                writer.write("_" + p.name + "Alias");
                 continue;
             }
 
             if (p.isOutParameter()) {
-                writer.write(p.name + "OUT");
+                writer.write("_" + p.name + "Out");
                 continue;
             }
 

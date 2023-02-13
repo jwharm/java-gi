@@ -156,7 +156,7 @@ public class Variable extends GirElement {
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Interop.allocateNativeString(" + identifier + ", SCOPE)";
+            return "Interop.allocateNativeString(" + identifier + ", _scope)";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -186,17 +186,17 @@ public class Variable extends GirElement {
             return "Interop.allocateNativeArray("
                     + (type.isEnum() ? "Enumeration" : type.isBitfield() ? "Bitfield" : type.qualifiedJavaType) + ".get"
                     + (type.isAliasForPrimitive() ? Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) : "")
-                    + "Values(" + identifier + "), " + zeroTerminated + ", SCOPE)";
+                    + "Values(" + identifier + "), " + zeroTerminated + ", _scope)";
 
         if (type.isRecord() && (!type.isPointer()))
-            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ", SCOPE)";
+            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ", _scope)";
 
-        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", SCOPE)";
+        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", _scope)";
     }
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Interop.allocateNativeString(" + identifier + ", SCOPE)";
+            return "Interop.allocateNativeString(" + identifier + ", _scope)";
 
         return identifier + ".handle()";
     }
@@ -270,7 +270,7 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive)
             return "MemorySegment.ofAddress(" + identifier + ", " + array.size(upcall)
-                    + ", SCOPE).toArray(" + Conversions.getValueLayout(array.type) + ")";
+                    + ", _scope).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
             return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)"

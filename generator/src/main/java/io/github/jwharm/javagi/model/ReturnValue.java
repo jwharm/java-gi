@@ -31,23 +31,23 @@ public class ReturnValue extends Parameter {
             if (len != null) {
                 if (nullable) {
                     switch (panamaReturnType) {
-                        case "MemoryAddress" -> writer.write("if (RESULT.equals(MemoryAddress.NULL)) return null;\n");
-                        case "MemorySegment" -> writer.write("if (RESULT.address().equals(MemoryAddress.NULL)) return null;\n");
+                        case "MemoryAddress" -> writer.write("if (_result.equals(MemoryAddress.NULL)) return null;\n");
+                        case "MemorySegment" -> writer.write("if (_result.address().equals(MemoryAddress.NULL)) return null;\n");
                         default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
                     }
                 }
                 String valuelayout = Conversions.getValueLayout(array.type);
                 if (array.type.isPrimitive && (!array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write("return MemorySegment.ofAddress(RESULT.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), SCOPE).toArray(" + valuelayout + ");\n");
+                    writer.write("return MemorySegment.ofAddress(_result.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + ");\n");
                 } else {
                     // Array of proxy objects
-                    writer.write(array.type.qualifiedJavaType + "[] resultARRAY = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
-                    writer.write("for (int I = 0; I < " + len + "; I++) {\n");
-                    writer.write("    var OBJ = RESULT.get(" + valuelayout + ", I);\n");
-                    writer.write("    resultARRAY[I] = " + marshalNativeToJava(array.type, "OBJ", false) + ";\n");
+                    writer.write(array.type.qualifiedJavaType + "[] _resultArray = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
+                    writer.write("for (int _idx = 0; _idx < " + len + "; _idx++) {\n");
+                    writer.write("    var _object = _result.get(" + valuelayout + ", _idx);\n");
+                    writer.write("    _resultArray[_idx] = " + marshalNativeToJava(array.type, "_object", false) + ";\n");
                     writer.write("}\n");
-                    writer.write("return resultARRAY;\n");
+                    writer.write("return _resultArray;\n");
                 }
             } else {
                 generateReturnStatement(writer);
@@ -76,23 +76,23 @@ public class ReturnValue extends Parameter {
         // When transfer-ownership="full", we must take ownership.
         if (isProxy() && "full".equals(transferOwnership) || returnsFloatingReference) {
 
-            writer.write("var OBJECT = ");
-            marshalNativeToJava(writer, "RESULT", false);
+            writer.write("var _object = ");
+            marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
-            writer.write("if (OBJECT != null) {\n");
+            writer.write("if (_object != null) {\n");
 
             // Sink floating reference
             if (returnsFloatingReference)
-                writer.write("    OBJECT.refSink();\n");
+                writer.write("    _object.refSink();\n");
 
-            writer.write("    OBJECT.takeOwnership();\n");
+            writer.write("    _object.takeOwnership();\n");
             writer.write("}\n");
-            writer.write("return OBJECT;\n");
+            writer.write("return _object;\n");
 
         } else {
 
             writer.write("return ");
-            marshalNativeToJava(writer, "RESULT", false);
+            marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
         }
     }
