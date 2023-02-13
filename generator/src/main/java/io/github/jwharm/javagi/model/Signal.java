@@ -96,7 +96,7 @@ public class Signal extends Method implements Closure {
             }
             writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
             writer.write("        handle(),\n");
-            writer.write("        Marshal.stringToAddress.marshal(\"" + name + "\"");
+            writer.write("        Interop.allocateNativeString(\"" + name + "\"");
             if (detailed) {
                 writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
             }

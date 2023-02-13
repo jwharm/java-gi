@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.base.Marshal;
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
@@ -27,8 +26,9 @@ public class ListIndexModel extends GObject implements ListModel {
     /**
      * Marshaller from a memory address to a ListIndexModel instance.
      */
-    public static final Marshal<Addressable, ListIndexModel> fromAddress =
-            (input, scope) -> input.equals(MemoryAddress.NULL) ? null : new ListIndexModel(input);
+    public static ListIndexModel fromAddress(Addressable address) {
+        return address.equals(MemoryAddress.NULL) ? null : new ListIndexModel(address);
+    }
 
     /**
      * Get the {@link MemoryLayout} of the instance struct
@@ -63,14 +63,14 @@ public class ListIndexModel extends GObject implements ListModel {
             // Implement the ListModel interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
             interfaceInfo.writeInterfaceInit((iface, data) -> {
-                ListModelInterface lmi = ListModelInterface.fromAddress.marshal(iface.handle(), null);
+                ListModelInterface lmi = ListModelInterface.fromAddress(iface.handle());
                 lmi.overrideGetItemType(ListModel::getItemType);
                 lmi.overrideGetNItems(ListModel::getNItems);
                 lmi.overrideGetItem(ListModel::getItem);
             });
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), interfaceInfo);
         }
-        Interop.register(type, fromAddress);
+        Interop.register(type, ListIndexModel::fromAddress);
         return type;
     }
 
