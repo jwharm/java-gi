@@ -1,6 +1,6 @@
 # java-gi
 
-**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama](https://openjdk.org/projects/panama/) Foreign Function & Memory API (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. The included Gradle build scripts generate bindings for:
+**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. The included Gradle build scripts generate bindings for:
 - GLib
 - GTK4
 - LibAdwaita
@@ -64,7 +64,7 @@ public class HelloWorld extends Application {
 - It is recommended to download the Javadoc documentation to assist during the development of your GTK application. Optionally, download the sources too. Both are available in the Packages section.
 
 ## Background
-Project Panama allows for relatively easy interoperability with native code. To mechanically generate Java bindings from native library headers, the [jextract](https://github.com/openjdk/jextract) tool was developed by the Panama developers. It is possible to generate Java bindings from header files using jextract, but the resulting API is very difficult to use. All C functions, like `gtk_button_set_icon_name(GtkButton* button, const char* icon_name)`, are mapped by jextract to static Java methods:
+Project Panama allows for relatively easy interoperability with native code. To mechanically generate Java bindings from native library headers, the [jextract](https://github.com/openjdk/jextract) tool was developed by the Panama developers. It is possible to generate Java bindings from header files using jextract, but the resulting API is very difficult to use. All C functions, like `gtk_button_set_icon_name(GtkButton* button, const char* icon_name)`, are mapped by jextract to static Java methods like:
 
 ```java
 gtk_button_set_icon_name(MemoryAddress button, MemoryAddress icon_name)
@@ -132,10 +132,10 @@ Constructors in GTK are often overloaded, and the name contains valuable informa
 var button1 = new Button();
 
 // gtk_button_new_with_label
-var button2 = Button.newWithLabel("Button2");
+var button2 = Button.newWithLabel("Open...");
 
 // gtk_button_new_from_icon_name
-var button3 = Button.newFromIconName("icon.png");
+var button3 = Button.newFromIconName("document-open");
 ```
 
 ### Automatic memory management
@@ -262,8 +262,8 @@ The Java API is generated as source code and then compiled into JAR files. The g
 ## Known issues
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 - Java does not support unsigned data types. Be extra careful when native code returns, for example, a `guint`.
-- A [closure marshaller](https://docs.gtk.org/gobject/struct.Closure.html) has not yet been implemented as part of java-gi. As a result, you cannot create custom signals yet, or use functions like `g_object_bind_property_with_closures`.
-- Reference-counted classes are automatically cleaned by java-gi, but for other types, like `GString`, you still need to manually call [`free`](https://docs.gtk.org/glib/method.String.free.html) when applicable. (GObject-Introspection [recently added](https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/365) annotations for copy and free functions that will help implement this in java-gi.)
+- A [closure marshaller](https://docs.gtk.org/gobject/struct.Closure.html) has not yet been implemented as part of java-gi 0.3. As a result, you cannot create custom signals yet, or use functions like `g_object_bind_property_with_closures`.
+- Reference-counted classes are automatically cleaned by java-gi, but for other types, like `GString`, you still need to manually call [`free`](https://docs.gtk.org/glib/method.String.free.html) when applicable. (GObject-Introspection [recently added](https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/365) annotations for copy and free functions, that will help implement this in a future java-gi release.)
 - The code is not yet completely portable. Specifically: When generating memory layouts for structs, the generator assumes a 64-bit Linux platform with regards to the size of data types.
 - While running the gradle build script, a large number of DocLint warnings occur during Javadoc generation. These are safe to ignore. The quality and completeness of the generated Javadoc is still a work in progress.
 - Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). These aren't supported yet.
