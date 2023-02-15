@@ -156,7 +156,7 @@ public class Variable extends GirElement {
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Interop.allocateNativeString(" + identifier + ", _scope)";
+            return "Interop.allocateNativeString(" + identifier + ", _scope).address()";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -196,7 +196,7 @@ public class Variable extends GirElement {
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Interop.allocateNativeString(" + identifier + ", _scope)";
+            return "Interop.allocateNativeString(" + identifier + ", _scope).address()";
 
         return identifier + ".handle()";
     }
