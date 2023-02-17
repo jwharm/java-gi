@@ -6,12 +6,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.helpers.DefaultHandler;
-
 import io.github.jwharm.javagi.generator.BindingsGenerator;
 import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.CrossReference;
@@ -20,50 +14,6 @@ import io.github.jwharm.javagi.generator.PatchSet;
 import io.github.jwharm.javagi.model.Repository;
 
 public class JavaGI {
-
-    /**
-     * Run the JavaGI bindings generator as a command-line application instead of a Gradle task.
-     * You will need to specify an XML file with the repository locations and package names, 
-     * and an output folder location as command-line parameters.
-     * See {@link #run(String, String)} for more information about the input file.
-     * @param args command-line parameters
-     * @throws Exception any exceptions that occur while parsing the GIR file and generating the bindings
-     */
-    public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            System.err.println("ERROR: No input file provided.");
-            return;
-        }
-        String inputFile = args[0];
-        
-        if (args.length == 1) {
-            System.err.println("ERROR: No output directory provided.");
-            return;
-        }
-        String outputDir = args[1];
-
-        run(inputFile, outputDir);
-    }
-
-    /**
-     * Run the JavaGI bindings generator with an XML input file.
-     * @param inputFile an XML file with &#60;repository&#62; elements with attributes "path" and "package".
-     * @param outputDir the directory in to write the Java files
-     * @throws Exception any exceptions that occur while parsing the GIR file and generating the bindings
-     */
-    public static void run(String inputFile, String outputDir) throws Exception {
-        List<Source> toGenerate = new ArrayList<>();
-        SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
-        parser.parse(inputFile, new DefaultHandler() {
-            @Override
-            public void startElement(String uri, String lName, String qName, Attributes attr) {
-                if ("repository".equals(qName)) {
-                    toGenerate.add(new Source(Path.of(attr.getValue("path")), attr.getValue("package"), true, Set.of(), PatchSet.EMPTY));
-                }
-            }
-        });
-        generate(Path.of(outputDir), toGenerate.toArray(Source[]::new));
-    }
 
     /**
      * Parse the provided GI source files, and generate the Java bindings
@@ -117,9 +67,19 @@ public class JavaGI {
         return new Generated(namespaces, outputDir);
     }
 
+    /**
+     * Source GIR file to parse
+     */
     public record Source(Path source, String pkg, boolean generate, Set<String> natives, PatchSet patches) {}
+    
+    /**
+     * Parsed GI repository
+     */
     private record Parsed(Repository repository, boolean generate, Set<String> natives, PatchSet patches) {}
 
+    /**
+     * Generated set of Namespace elements in an output directory
+     */
     public record Generated(Set<Element> elements, Path outputDir) {
         public record Element(String namespace) {}
 
