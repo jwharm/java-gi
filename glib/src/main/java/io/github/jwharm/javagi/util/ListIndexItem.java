@@ -1,12 +1,14 @@
 package io.github.jwharm.javagi.util;
 
-import io.github.jwharm.javagi.interop.Interop;
+import java.lang.foreign.*;
+
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeFlags;
 
-import java.lang.foreign.*;
+import io.github.jwharm.javagi.interop.Interop;
+import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * Represents an item in the {@link ListIndexModel}
@@ -17,15 +19,8 @@ public class ListIndexItem extends GObject {
      * Construct a ListIndexItem for the provided memory address.
      * @param address the memory address of the instance in native memory
      */
-    protected ListIndexItem(Addressable address) {
+    public ListIndexItem(Addressable address) {
         super(address);
-    }
-
-    /**
-     * Marshaller from a memory address to a ListIndexItem instance.
-     */
-    public static ListIndexItem fromAddress(Addressable address) {
-        return address.equals(MemoryAddress.NULL) ? null : new ListIndexItem(address);
     }
 
     /**
@@ -59,7 +54,7 @@ public class ListIndexItem extends GObject {
                     TypeFlags.NONE
             );
         }
-        Interop.register(type, ListIndexItem::fromAddress);
+        TypeCache.register(type, ListIndexItem::new);
         return type;
     }
 

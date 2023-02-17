@@ -87,9 +87,7 @@ public class Class extends RegisteredType {
         writer.increaseIndent();
 
         generateMemoryAddressConstructor(writer);
-        generateMarshal(writer);
         generateEnsureInitialized(writer);
-        generateCType(writer);
         generateMemoryLayout(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
@@ -126,5 +124,9 @@ public class Class extends RegisteredType {
 
         writer.decreaseIndent();
         writer.write("}\n");
+    }
+
+    public String getConstructorString() {
+        return ("1".equals(abstract_) ? this.javaName + "." + this.javaName + "Impl::new" : this.javaName + "::new");
     }
 }

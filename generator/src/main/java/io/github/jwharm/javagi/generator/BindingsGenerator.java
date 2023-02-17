@@ -88,15 +88,23 @@ public class BindingsGenerator {
             writer.write("private static void registerTypes() {\n");
             writer.increaseIndent();
 
-            for (Class c : gir.namespace.classList)
-                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
+            for (Class c : gir.namespace.classList) {
+                writer.write("if (" + c.javaName + ".isAvailable()) TypeCache.register(" + c.javaName + ".getType(), " + c.getConstructorString() + ");\n");
+            }
+            
+            for (Interface i : gir.namespace.interfaceList) {
+                writer.write("if (" + i.javaName + ".isAvailable()) TypeCache.register(" + i.javaName + ".getType(), " + i.getConstructorString() + ");\n");
+            }
 
-            for (Interface c : gir.namespace.interfaceList)
-                writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
-
-            for (Alias c : gir.namespace.aliasList)
-                if (c.getTargetType() == Alias.TargetType.CLASS || c.getTargetType() == Alias.TargetType.INTERFACE)
-                    writer.write("if (" + c.javaName + ".isAvailable()) Interop.register(" + c.javaName + ".getType(), " + c.javaName + "::fromAddress);\n");
+            for (Alias a : gir.namespace.aliasList) {
+                if (a.getTargetType() == Alias.TargetType.CLASS) {
+                    Class c = (Class) a.type.girElementInstance;
+                    writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + c.getConstructorString() + ");\n");
+                } else if (a.getTargetType() == Alias.TargetType.INTERFACE) {
+                    Interface i = (Interface) a.type.girElementInstance;
+                    writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + i.getConstructorString() + ");\n");
+                }
+            }
 
             writer.decreaseIndent();
             writer.write("}\n");

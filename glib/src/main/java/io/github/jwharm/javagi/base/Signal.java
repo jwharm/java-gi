@@ -3,6 +3,8 @@ package io.github.jwharm.javagi.base;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 
+import io.github.jwharm.javagi.interop.InstanceCache;
+
 import java.lang.foreign.Addressable;
 
 /**
@@ -22,7 +24,7 @@ public class Signal<T> {
      * @param handlerId the handler ID of the signal
      */
     public Signal(Addressable instance, long handlerId) {
-        this.instance = GObject.fromAddress(instance);
+        this.instance = (GObject) InstanceCache.get(instance);
         this.handlerId = handlerId;
     }
 

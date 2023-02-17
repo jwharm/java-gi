@@ -1,11 +1,16 @@
 package io.github.jwharm.javagi.util;
 
-import io.github.jwharm.javagi.interop.Interop;
+import java.lang.foreign.*;
+
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
-import org.gnome.gobject.*;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.GObjects;
+import org.gnome.gobject.InterfaceInfo;
+import org.gnome.gobject.TypeFlags;
 
-import java.lang.foreign.*;
+import io.github.jwharm.javagi.interop.Interop;
+import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * An implementation of the {@link ListModel} that returns the index of
@@ -19,15 +24,8 @@ public class ListIndexModel extends GObject implements ListModel {
      * Construct a ListIndexModel for the provided memory address.
      * @param address the memory address of the instance in native memory
      */
-    protected ListIndexModel(Addressable address) {
+    public ListIndexModel(Addressable address) {
         super(address);
-    }
-
-    /**
-     * Marshaller from a memory address to a ListIndexModel instance.
-     */
-    public static ListIndexModel fromAddress(Addressable address) {
-        return address.equals(MemoryAddress.NULL) ? null : new ListIndexModel(address);
     }
 
     /**
@@ -63,14 +61,14 @@ public class ListIndexModel extends GObject implements ListModel {
             // Implement the ListModel interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
             interfaceInfo.writeInterfaceInit((iface, data) -> {
-                ListModelInterface lmi = ListModelInterface.fromAddress(iface.handle());
+                ListModelInterface lmi = new ListModelInterface(iface.handle());
                 lmi.overrideGetItemType(ListModel::getItemType);
                 lmi.overrideGetNItems(ListModel::getNItems);
                 lmi.overrideGetItem(ListModel::getItem);
             });
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), interfaceInfo);
         }
-        Interop.register(type, ListIndexModel::fromAddress);
+        TypeCache.register(type, ListIndexModel::new);
         return type;
     }
 

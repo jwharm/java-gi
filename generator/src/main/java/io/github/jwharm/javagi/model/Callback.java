@@ -54,4 +54,8 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     public String getThrows() {
         return null;
     }
+    
+    public String getConstructorString() {
+        return this.javaName + "::new";
+    }
 }

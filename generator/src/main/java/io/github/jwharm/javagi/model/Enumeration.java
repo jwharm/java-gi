@@ -58,7 +58,6 @@ public class Enumeration extends ValueWrapper {
             }
         }
 
-        generateCType(writer);
         generateMemoryLayout(writer);
 
         writer.write("\n");
