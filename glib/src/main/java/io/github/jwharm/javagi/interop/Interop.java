@@ -1,16 +1,13 @@
 package io.github.jwharm.javagi.interop;
 
-import io.github.jwharm.javagi.base.Alias;
-import io.github.jwharm.javagi.base.Bitfield;
-import io.github.jwharm.javagi.base.Enumeration;
-import io.github.jwharm.javagi.base.Proxy;
+import java.lang.foreign.*;
+import java.lang.invoke.*;
+import java.util.Arrays;
+
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
 
-import java.lang.foreign.*;
-import java.lang.invoke.*;
-import java.util.*;
-import java.util.function.Function;
+import io.github.jwharm.javagi.base.*;
 
 /**
  * The Interop class contains functionality for interoperability with native code.
@@ -19,7 +16,6 @@ public class Interop {
 
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
-    private final static Map<Type, Function<Addressable, ? extends Proxy>> typeRegister;
 
     /**
      * Configure the layout of native data types here.<br>
@@ -31,7 +27,6 @@ public class Interop {
     public static final Layout_LP64 valueLayout = new Layout_LP64();
 
     static {
-        typeRegister = new HashMap<>();
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
         
@@ -49,29 +44,6 @@ public class Interop {
         MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
         long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
         return new Type(g_type);
-    }
-
-    /**
-     * Get the marshal function from the type registry. If it is not found, register the provided
-     * fallback marshal for this type, and return it.
-     * @param address Address of Proxy object to obtain the type from
-     * @param fallback Marshal function to use, if not found in the type register
-     * @return the marshal function
-     */
-    public static Function<Addressable, ? extends Proxy> register(MemoryAddress address, Function<Addressable, ? extends Proxy> fallback) {
-        if (address.equals(MemoryAddress.NULL)) return fallback;
-        Type type = getType(address);
-        typeRegister.putIfAbsent(type, fallback);
-        return typeRegister.get(type);
-    }
-
-    /**
-     * Register the provided marshal function for the provided type
-     * @param type Type to use as key in the type register
-     * @param marshal Marshal function for this type
-     */
-    public static void register(Type type, Function<Addressable, ? extends Proxy> marshal) {
-        typeRegister.put(type, marshal);
     }
 
     /**

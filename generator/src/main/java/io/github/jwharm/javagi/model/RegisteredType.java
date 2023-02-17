@@ -75,12 +75,6 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
-    protected void generateCType(SourceWriter writer) throws IOException {
-        String typeLiteral = Conversions.literal("java.lang.String", cType);
-        writer.write("\n");
-        writer.write("private static final java.lang.String C_TYPE_NAME = " + typeLiteral + ";\n");
-    }
-    
     /**
      * Generate a function declaration to retrieve the type of this object.
      * @param getType the name of the function
@@ -190,7 +184,7 @@ public abstract class RegisteredType extends GirElement {
         }
         // Write the name of the struct
         writer.write("\n");
-        writer.write(").withName(C_TYPE_NAME);\n");
+        writer.write(").withName(" + Conversions.literal("java.lang.String", cType) + ");\n");
         writer.decreaseIndent();
         writer.write("}\n");
     }
@@ -201,7 +195,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * Create a " + javaName + " proxy instance for the provided memory address.\n");
         writer.write(" * @param address the memory address of the native object\n");
         writer.write(" */\n");
-        writer.write("protected " + javaName + "(Addressable address) {\n");
+        writer.write("public " + javaName + "(Addressable address) {\n");
         writer.write("    super(address);\n");
 
         // If this class has a custom "unref" method, pass it to the Cleaner.
@@ -215,34 +209,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write("}\n");
     }
 
-    protected void generateMarshal(SourceWriter writer) throws IOException {
-        writer.write("\n");
-        writer.write("/**\n");
-        writer.write(" * The marshal function from a native memory address to a Java proxy instance\n");
-        writer.write(" * @param address the native memory address of the object instance\n");
-        writer.write(" * @return an instance of {@code " + javaName + "}, or {@code null} if the ");
-        writer.write("address is a NULL pointer\n");
-        writer.write(" */\n");
-
-        String name = javaName;
-        if (this instanceof Interface)
-            name += "Impl";
-        else if (this instanceof Class c && "1".equals(c.abstract_))
-            name += "Impl";
-
-        writer.write("public static " + javaName);
-        if (generic)
-            writer.write("<org.gnome.gobject.GObject>");
-        writer.write(" fromAddress(Addressable address) {\n");
-        writer.increaseIndent();
-        writer.write("return address.equals(MemoryAddress.NULL) ? null : new " + name);
-        if (generic)
-            writer.write("<>");
-        writer.write("(address);\n");
-        writer.decreaseIndent();
-        writer.write("}\n");
-    }
-    
     protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {
         HashSet<String> generatedMethods = new HashSet<>();
         

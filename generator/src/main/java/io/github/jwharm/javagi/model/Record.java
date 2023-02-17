@@ -53,8 +53,6 @@ public class Record extends Class {
         if (isGTypeStructFor == null) {
             generateEnsureInitialized(writer);
         }
-        
-        generateCType(writer);
 
         // Opaque structs have unknown memory layout and should not have an allocator
         if (! (isOpaqueStruct() || hasOpaqueStructFields())) {
@@ -72,7 +70,6 @@ public class Record extends Class {
         }
 
         generateMemoryAddressConstructor(writer);
-        generateMarshal(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
 
