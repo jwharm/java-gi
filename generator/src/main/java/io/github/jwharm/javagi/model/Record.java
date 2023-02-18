@@ -87,6 +87,14 @@ public class Record extends Class {
         writer.write("\n");
         writer.write("private MemorySegment allocatedMemorySegment;\n");
         writer.write("\n");
+        writer.write("private MemorySession getSegmentScope() {\n");
+        writer.write("    if (allocatedMemorySegment == null) {\n");
+        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(\n");
+        writer.write("                (MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit());\n");
+        writer.write("    }\n");
+        writer.write("    return allocatedMemorySegment.session();\n");
+        writer.write("}\n");
+        writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Allocate a new {@link " + javaName + "}. A {@link java.lang.ref.Cleaner} \n");
         writer.write(" * is assigned to the allocated memory segment that will release the \n");
