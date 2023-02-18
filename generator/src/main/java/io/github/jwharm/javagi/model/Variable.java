@@ -269,11 +269,11 @@ public class Variable extends GirElement {
                     + ", _scope).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ")"
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
                     + ".toArrayOfStructs((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, "
                     + type.qualifiedJavaType + ".getMemoryLayout())";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ")"
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
                 + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class)";
     }
 
@@ -299,6 +299,6 @@ public class Variable extends GirElement {
         if (type.isPrimitive)
             return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ")";
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")";
     }
 }

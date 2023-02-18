@@ -20,12 +20,15 @@ import io.github.jwharm.javagi.interop.TypeCache;
  */
 public class PointerProxy<T extends Proxy> extends Pointer<T> {
 
+    private final Function<Addressable, T> constructor;
+
     /**
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerProxy(MemoryAddress address) {
+    public PointerProxy(MemoryAddress address, Function<Addressable, T> constructor) {
         super(address);
+        this.constructor = constructor;
     }
 
     /**
@@ -82,7 +85,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     // The unchecked warning is suppressed because the constructors are explicitly registered for the correct type.
     @SuppressWarnings("unchecked")
     private T makeInstance(Addressable ref) {
-        Function<Addressable, T> ctor = (Function<Addressable, T>) TypeCache.getConstructor((MemoryAddress) ref, null);
+        Function<Addressable, T> ctor = (Function<Addressable, T>) TypeCache.getConstructor((MemoryAddress) ref, constructor);
         return ctor.apply(ref);
     }
 }
