@@ -60,6 +60,7 @@ public class Interface extends RegisteredType {
     }
 
     public String getConstructorString() {
-        return this.javaName + "." + this.javaName + "Impl::new";
+        String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
+        return qName + "." + this.javaName + "Impl::new";
     }
 }

@@ -82,7 +82,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     // The unchecked warning is suppressed because the constructors are explicitly registered for the correct type.
     @SuppressWarnings("unchecked")
     private T makeInstance(Addressable ref) {
-        Function<Addressable, T> ctor = (Function<Addressable, T>) TypeCache.getConstructor((MemoryAddress) ref);
+        Function<Addressable, T> ctor = (Function<Addressable, T>) TypeCache.getConstructor((MemoryAddress) ref, null);
         return ctor.apply(ref);
     }
 }

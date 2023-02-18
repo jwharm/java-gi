@@ -22,10 +22,11 @@ public class InstanceCache {
      * Get a {@link Proxy} object for the provided native memory address. If a Proxy object does  
      * not yet exist for this address, a new Proxy object is instantiated and added to the cache. 
      * Invalid references are removed from the cache using a GObject toggle reference.
-     * @param address memory address of the native object
-     * @return        a Proxy instance for the provided memory address
+     * @param address  memory address of the native object
+     * @param fallback fallback constructor to use when the type is not found in the TypeCache
+     * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy get(Addressable address) {
+    public static Proxy get(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
         // Null check on the memory address
         if (address == null || address.equals(MemoryAddress.NULL)) {
             return null;
@@ -38,8 +39,8 @@ public class InstanceCache {
         }
         
         // Get constructor from the type registry
-        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor((MemoryAddress) address);
-        
+        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor((MemoryAddress) address, fallback);
+
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
         

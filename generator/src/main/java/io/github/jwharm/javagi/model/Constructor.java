@@ -73,9 +73,9 @@ public class Constructor extends Method {
         // one of its parent types. For example, button#newWithLabel returns a Widget instead of a Button.
         // We override this for constructors, to always return the constructed type.
         returnValue.type = new Type(returnValue, constructed.name, constructed.cType + "*");
-        returnValue.type.init(constructed.name);
         returnValue.type.girElementInstance = constructed;
         returnValue.type.girElementType = constructed.getClass().getSimpleName();
+        returnValue.type.init(constructed.name);
 
         writer.write("    \n");
         if (doc != null) {

@@ -4,6 +4,7 @@ import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.gnome.glib.Type;
@@ -23,13 +24,31 @@ public class TypeCache {
      * Get the constructor from the type registry for the native object instance at the given 
      * memory address. The applicable constructor is determined based on the GType of the native 
      * object (as it was registered using {@link #register(Type, Function)}).
-     * @param address Address of Proxy object to obtain the type from
-     * @return the constructor, or {@code null} if address is {@null} or a null-pointer
+     * @param address  address of Proxy object to obtain the type from
+     * @param fallback if none was found, this constructor will be registered for the type, and returned
+     * @return         the constructor, or {@code null} if address is {@code null} or a null-pointer
      */
-    public static Function<Addressable, ? extends Proxy> getConstructor(MemoryAddress address) {
+    public static Function<Addressable, ? extends Proxy> getConstructor(MemoryAddress address, Function<Addressable, ? extends Proxy> fallback) {
+        // Null check on the memory address
         if (address == null || address.equals(MemoryAddress.NULL)) return null;
+
+        // Read the gtype from memory
         Type type = Interop.getType(address);
-        return typeRegister.get(type);
+
+        // Find the constructor in the typeRegister and return it
+        Function<Addressable, ? extends Proxy> ctor = typeRegister.get(type);
+        if (ctor != null) {
+            return ctor;
+        }
+
+        // Register the fallback constructor for this type. If another thread did this in the meantime, putIfAbsent()
+        // will return that constructor.
+        if (fallback != null) {
+            Function<Addressable, ? extends Proxy> ctorFromAnotherThread = typeRegister.putIfAbsent(type, fallback);
+            return Objects.requireNonNullElse(ctorFromAnotherThread, fallback);
+        }
+        // No constructor found in the typeRegister, and no fallback provided
+        return null;
     }
 
     /**

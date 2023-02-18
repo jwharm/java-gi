@@ -127,6 +127,9 @@ public class Class extends RegisteredType {
     }
 
     public String getConstructorString() {
-        return ("1".equals(abstract_) ? this.javaName + "." + this.javaName + "Impl::new" : this.javaName + "::new");
+        String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
+        return ("1".equals(abstract_)
+                ? qName + "." + this.javaName + "Impl::new"
+                : qName + "::new");
     }
 }
