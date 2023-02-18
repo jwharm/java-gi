@@ -41,7 +41,6 @@ public class Interface extends RegisteredType {
         writer.write(" extends io.github.jwharm.javagi.base.Proxy {\n");
         writer.increaseIndent();
 
-        generateMarshal(writer);
         generateMethodsAndSignals(writer);
 
         if (classStruct != null) {
@@ -58,5 +57,10 @@ public class Interface extends RegisteredType {
 
         writer.decreaseIndent();
         writer.write("}\n");
+    }
+
+    public String getConstructorString() {
+        String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
+        return qName + "." + this.javaName + "Impl::new";
     }
 }

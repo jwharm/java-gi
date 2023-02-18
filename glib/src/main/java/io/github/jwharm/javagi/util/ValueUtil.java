@@ -56,14 +56,13 @@ public class ValueUtil {
             return src.getObject();
         } else if (type.equals(GObjects.gtypeGetType())) {
             return src.getGtype();
-        } else if (type.equals(Type.G_TYPE_BOXED)) {
-            return src.getBoxed();
         } else if (type.equals(Type.G_TYPE_POINTER)) {
             return src.getPointer();
         } else if (type.equals(Type.G_TYPE_PARAM)) {
             return src.getParam();
         } else {
-            return null;
+            // Boxed value
+            return src.getBoxed();
         }
     }
     
@@ -107,12 +106,13 @@ public class ValueUtil {
             dest.setObject((GObject) src);
         } else if (type.equals(GObjects.gtypeGetType())) {
             dest.setGtype((Type) src);
-        } else if (type.equals(Type.G_TYPE_BOXED)) {
-            dest.setBoxed((MemoryAddress) src);
         } else if (type.equals(Type.G_TYPE_POINTER)) {
             dest.setPointer((MemoryAddress) src);
         } else if (type.equals(Type.G_TYPE_PARAM)) {
             dest.setParam((ParamSpec) src);
+        } else {
+            // Boxed value
+            dest.setBoxed((MemoryAddress) src);
         }
     }
 }

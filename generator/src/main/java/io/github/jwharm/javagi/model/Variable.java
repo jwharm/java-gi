@@ -229,18 +229,14 @@ public class Variable extends GirElement {
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
 
-        if (type.isBitfield() || type.isAliasForPrimitive())
+        if (type.isBitfield() || type.isAliasForPrimitive() || type.isRecord() || type.isUnion())
             return "new " + type.qualifiedJavaType + "(" + identifier + ")";
 
         if (type.isCallback())
             return "null /* Unsupported parameter type */";
 
-        if (type.isRecord() || type.isUnion())
-            return type.qualifiedJavaType + ".fromAddress(" + identifier + ")";
-
         if (type.isClass() || type.isInterface() || type.isAlias())
-            return "(" + type.qualifiedJavaType + ") Interop.register(" + identifier
-                    + ", " + type.qualifiedJavaType + "::fromAddress)" + ".apply(" + identifier + ")";
+            return "(" + type.qualifiedJavaType + ") InstanceCache.get(" + identifier + ", " + type.constructorName + ")";
 
         if (type.isBoolean())
             return identifier + " != 0";
@@ -273,11 +269,11 @@ public class Variable extends GirElement {
                     + ", _scope).toArray(" + Conversions.getValueLayout(array.type) + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)"
+            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
                     + ".toArrayOfStructs((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, "
                     + type.qualifiedJavaType + ".getMemoryLayout())";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)"
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
                 + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class)";
     }
 
@@ -303,6 +299,6 @@ public class Variable extends GirElement {
         if (type.isPrimitive)
             return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::fromAddress)";
+        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")";
     }
 }

@@ -60,7 +60,6 @@ public class Alias extends ValueWrapper {
                 }
                 writer.increaseIndent();
                 generateMemoryAddressConstructor(writer);
-                generateMarshal(writer);
             }
             case INTERFACE, CALLBACK -> {
                 writer.write("public interface " + javaName);

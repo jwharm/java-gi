@@ -21,10 +21,8 @@ public class Union extends RegisteredType {
         writer.write(" extends StructProxy {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
-        generateCType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
-        generateMarshal(writer);
         generateInjected(writer);
         writer.decreaseIndent();
         writer.write("}\n");

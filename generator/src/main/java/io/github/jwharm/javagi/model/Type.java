@@ -19,6 +19,8 @@ public class Type extends GirElement {
     public String simpleJavaType;
     /** This type is used on the Java side. Example: boolean, java.lang.String, org.gdk.gtk.Rectangle */
     public String qualifiedJavaType;
+    /** The name of the memory-address constructor. Example: Button.new, FileImpl.new */
+    public String constructorName;
 
     /** Used when this type refers to another namespace. Excluding the trailing dot. Example: org.gnome.gdk */
     public String girNamespace;
@@ -57,6 +59,24 @@ public class Type extends GirElement {
         if (girElementInstance != null && girElementInstance instanceof Record rec && rec.isGTypeStructFor != null) {
             qualifiedJavaType = Conversions.convertToJavaType(rec.isGTypeStructFor, true, girElementInstance.getNamespace());
             qualifiedJavaType += "." + simpleJavaType;
+        }
+
+        // Get constructor name from class, interface, and alias for class or interface
+        this.constructorName = qualifiedJavaType + "::new";
+        if (girElementInstance != null) {
+            if (girElementInstance instanceof Class cls) {
+                this.constructorName = cls.getConstructorString();
+            } else if (girElementInstance instanceof Interface iface) {
+                this.constructorName = iface.getConstructorString();
+            } else if (girElementInstance instanceof Alias alias) {
+                if (alias.getTargetType() == Alias.TargetType.CLASS) {
+                    Class cls = (Class) alias.type.girElementInstance;
+                    this.constructorName = cls.getConstructorString();
+                } else if (alias.getTargetType() == Alias.TargetType.INTERFACE) {
+                    Interface iface = (Interface) alias.type.girElementInstance;
+                    this.constructorName = iface.getConstructorString();
+                }
+            }
         }
     }
 
