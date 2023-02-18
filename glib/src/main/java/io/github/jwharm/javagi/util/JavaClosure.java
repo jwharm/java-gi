@@ -65,25 +65,29 @@ public class JavaClosure extends Closure {
         setMarshal(new ClosureMarshal() {
             public void run(Closure closure, Value returnValue, Value[] paramValues, MemoryAddress invocationHint) {
                 try {
-                    // Convert the parameter Values into Java Objects
-                    Object[] parameterObjects = new Object[paramValues.length];
-                    for (int v = 0; v < paramValues.length; v++) {
-                        parameterObjects[v] = ValueUtil.valueToObject(paramValues[v]);
+                    Object[] parameterObjects;
+                    if (paramValues == null || paramValues.length == 0) {
+                        parameterObjects = new Object[0];
+                    } else {
+                        // Convert the parameter Values into Java Objects
+                        parameterObjects = new Object[paramValues.length - 1];
+                        for (int v = 1; v < paramValues.length; v++) {
+                            parameterObjects[v - 1] = ValueUtil.valueToObject(paramValues[v]);
+                        }
                     }
-                    
                     // Invoke the method
                     Object result = method.invoke(instance, parameterObjects);
-                    
+
                     // Convert the returned Object to a GValue
                     ValueUtil.objectToValue(result, returnValue);
-                    
+
                 } catch (Exception e) {
                     GLib.log(
-                            LOG_DOMAIN, 
-                            LogLevelFlags.LEVEL_CRITICAL, 
-                            "JavaClosure: Cannot invoke method %s in class %s: %s\n", 
+                            LOG_DOMAIN,
+                            LogLevelFlags.LEVEL_CRITICAL,
+                            "JavaClosure: Cannot invoke method %s in class %s: %s\n",
                             method.getName(),
-                            instance.getClass().getName(), 
+                            instance.getClass().getName(),
                             e.getMessage()
                     );
                 }
