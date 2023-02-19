@@ -1,5 +1,8 @@
 package io.github.jwharm.javagi.base;
 
+import io.github.jwharm.javagi.annotations.ClassInitializer;
+import io.github.jwharm.javagi.annotations.CustomType;
+import io.github.jwharm.javagi.annotations.InstanceInitializer;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -14,6 +17,7 @@ import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryLayout;
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -85,10 +89,21 @@ public abstract class ObjectProxy extends TypeInstance {
      * initializer or instance initializer method or any typeflags.
      * @return the new registered GType
      */
-    public static Type registerType(Class<? extends GObject> cls) {
+    public static <T extends GObject> Type registerType(Class<T> cls) {
         try {
-            // Create type name. Replace all characters except a-z or A-Z with underscores.
-            String typeName = cls.getName().replaceAll("[^a-zA-Z]", "_");
+            // Default type name: fully qualified Java class name
+            String typeName = cls.getName();
+
+            // Check for an annotation that overrides the type name
+            if (cls.isAnnotationPresent(CustomType.class)) {
+                var annotation = cls.getAnnotation(CustomType.class);
+                if (annotation.name() != null) {
+                    typeName = annotation.name();
+                }
+            }
+
+            // Create type name. Replace all characters except a-z or A-Z with underscores
+            typeName = typeName.replaceAll("[^a-zA-Z]", "_");
 
             // Get parent class
             Class<?> parentClass = cls.getSuperclass();
@@ -129,10 +144,10 @@ public abstract class ObjectProxy extends TypeInstance {
             MemoryLayout classLayout = (MemoryLayout) getLayoutMethod.invoke(null);
 
             // Get memory address constructor
-            Constructor<? extends ObjectProxy> ctor = cls.getConstructor(Addressable.class);
+            Constructor<T> ctor = cls.getConstructor(Addressable.class);
 
             // Create a wrapper function that will run the constructor and catch exceptions
-            Function<Addressable, ? extends ObjectProxy> func = (addr) -> {
+            Function<Addressable, T> constructor = (addr) -> {
                 try {
                     return ctor.newInstance(addr);
                 } catch (Exception e) {
@@ -140,26 +155,44 @@ public abstract class ObjectProxy extends TypeInstance {
                 }
             };
 
+            // Find class initializer and instance initializer functions
+            Consumer<TypeClass> classInit = $ -> {};
+            Consumer<T> instanceInit = $ -> {};
+            for (Method method : cls.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(ClassInitializer.class)) {
+                    classInit = (gclass) -> {
+                        try {
+                            method.invoke(null, gclass);
+                        } catch (Exception e) {
+                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "Cannot invoke class init: %s", e.getMessage());
+                        }
+                    };
+                }
+                if (method.isAnnotationPresent(InstanceInitializer.class)) {
+                    instanceInit = (inst) -> {
+                        try {
+                            method.invoke(null, inst);
+                        } catch (Exception e) {
+                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "Cannot invoke instance init: %s", e.getMessage());
+                        }
+                    };
+                }
+            }
+
             // Register and return the GType
             return registerType(
                     parentType,
                     typeName,
                     classLayout,
-                    $ -> {},
+                    classInit,
                     instanceLayout,
-                    $ -> {},
-                    func,
+                    instanceInit,
+                    constructor,
                     TypeFlags.NONE
             );
 
         } catch (Exception e) {
-            // Log exception and return null
-            GLib.log(
-                    LOG_DOMAIN,
-                    LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type: %s",
-                    e.getMessage()
-            );
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "Cannot register type: %s", e.getMessage());
             return null;
         }
     }

@@ -9,6 +9,7 @@ setupGenSources {
     moduleInfo = """
         module org.gnome.glib {
             requires static org.jetbrains.annotations;
+            exports io.github.jwharm.javagi.annotations;
             exports io.github.jwharm.javagi.base;
             exports io.github.jwharm.javagi.interop;
             exports io.github.jwharm.javagi.pointer;
