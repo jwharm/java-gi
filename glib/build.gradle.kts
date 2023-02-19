@@ -92,6 +92,19 @@ setupGenSources {
         // Make GWeakRef a generic class
         makeGeneric(repo, "WeakRef");
 
+        // Add a static factory method for GObject
+        inject(repo, "Object", """
+            
+            public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
+                var _result = constructNew(objectType, null);
+                T _object = (T) InstanceCache.get(_result, org.gnome.gobject.GObject::new);
+                if (_object != null) {
+                    _object.takeOwnership();
+                }
+                return _object;
+            }
+        """.replaceIndent("    ") + "\n")
+        
         fun StringBuilder.template(javatype: String, gtype: String, method: String) = appendLine("""
                             
                     /**

@@ -2,17 +2,16 @@ package io.github.jwharm.javagi.util;
 
 import java.lang.foreign.*;
 
+import io.github.jwharm.javagi.annotations.CustomType;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.TypeFlags;
 
 import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * Represents an item in the {@link ListIndexModel}
  */
+@CustomType(name="ListIndexItem")
 public class ListIndexItem extends GObject {
 
     /**
@@ -43,18 +42,8 @@ public class ListIndexItem extends GObject {
      */
     public static Type getType() {
         if (type == null) {
-            // Register the new gtype
-            type = GObjects.typeRegisterStaticSimple(
-                    GObject.getType(),
-                    "ListIndexItem",
-                    (short) ObjectClass.getMemoryLayout().byteSize(),
-                    (gclass, data) -> {},
-                    (short) getMemoryLayout().byteSize(),
-                    (inst, gclass) -> {},
-                    TypeFlags.NONE
-            );
+            type = registerType(ListIndexItem.class);
         }
-        TypeCache.register(type, ListIndexItem::new);
         return type;
     }
 

@@ -2,15 +2,14 @@ package io.github.jwharm.javagi.util;
 
 import java.lang.foreign.*;
 
+import io.github.jwharm.javagi.annotations.CustomType;
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.InterfaceInfo;
-import org.gnome.gobject.TypeFlags;
 
 import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * An implementation of the {@link ListModel} that returns the index of
@@ -18,6 +17,7 @@ import io.github.jwharm.javagi.interop.TypeCache;
  * {@link java.util.List}, to work with Java objects in combination with
  * a {@link ListModel}.
  */
+@CustomType(name="ListIndexModel")
 public class ListIndexModel extends GObject implements ListModel {
 
     /**
@@ -48,16 +48,8 @@ public class ListIndexModel extends GObject implements ListModel {
      */
     public static Type getType() {
         if (type == null) {
-            // Register the new gtype
-            type = GObjects.typeRegisterStaticSimple(
-                    GObject.getType(),
-                    "ListIndexModel",
-                    (short) ObjectClass.getMemoryLayout().byteSize(),
-                    (gclass, data) -> {},
-                    (short) getMemoryLayout().byteSize(),
-                    (inst, gclass) -> {},
-                    TypeFlags.NONE
-            );
+            type = registerType(ListIndexModel.class);
+
             // Implement the ListModel interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
             interfaceInfo.writeInterfaceInit((iface, data) -> {
@@ -68,12 +60,7 @@ public class ListIndexModel extends GObject implements ListModel {
             });
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), interfaceInfo);
         }
-        TypeCache.register(type, ListIndexModel::new);
         return type;
-    }
-
-    private ListIndexModel() {
-        super(getType(), null);
     }
 
     /**
@@ -81,7 +68,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * @param size the initial size of the list model
      */
     public ListIndexModel(int size) {
-        this();
+        super(getType(), null);
         setSize(size);
     }
 
