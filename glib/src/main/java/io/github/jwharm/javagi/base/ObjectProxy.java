@@ -17,8 +17,8 @@ import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryLayout;
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -160,6 +160,7 @@ public abstract class ObjectProxy extends TypeInstance {
             Consumer<T> instanceInit = $ -> {};
             for (Method method : cls.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(ClassInitializer.class)) {
+                    // Create a wrapper function that calls the class initializer and logs exceptions
                     classInit = (gclass) -> {
                         try {
                             method.invoke(null, gclass);
@@ -169,6 +170,7 @@ public abstract class ObjectProxy extends TypeInstance {
                     };
                 }
                 if (method.isAnnotationPresent(InstanceInitializer.class)) {
+                    // Create a wrapper function that calls the instance initializer and logs exceptions
                     instanceInit = (inst) -> {
                         try {
                             method.invoke(null, inst);
@@ -177,6 +179,15 @@ public abstract class ObjectProxy extends TypeInstance {
                         }
                     };
                 }
+            }
+
+            // Set type flags
+            TypeFlags flags = TypeFlags.NONE;
+            if (Modifier.isAbstract(cls.getModifiers())) {
+                flags = flags.or(TypeFlags.ABSTRACT);
+            }
+            if (Modifier.isFinal(cls.getModifiers())) {
+                flags = flags.or(TypeFlags.FINAL);
             }
 
             // Register and return the GType
@@ -188,7 +199,7 @@ public abstract class ObjectProxy extends TypeInstance {
                     instanceLayout,
                     instanceInit,
                     constructor,
-                    TypeFlags.NONE
+                    flags
             );
 
         } catch (Exception e) {
