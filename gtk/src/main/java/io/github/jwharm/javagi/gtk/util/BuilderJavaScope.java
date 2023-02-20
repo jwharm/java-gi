@@ -47,7 +47,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
     public static Type getType() {
         if (type == null) {
             // Register the new gtype
-            type = io.github.jwharm.javagi.util.Types.register(BuilderJavaScope.class);
+            type = Types.register(BuilderJavaScope.class);
 
             // Implement the BuilderScope interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();

@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.gtk.util;
 
 import io.github.jwharm.javagi.base.ObjectProxy;
 import io.github.jwharm.javagi.base.Out;
+import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.gio.File;
 import org.gnome.glib.Bytes;
 import org.gnome.glib.GLib;
@@ -12,8 +13,9 @@ import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
 import org.gnome.gtk.Widget;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -23,7 +25,26 @@ public class Types {
 
     private static final String LOG_DOMAIN = "java-gi";
 
-    private static <T extends Widget> Consumer<TypeClass> generateTemplateClassInit(Class<T> cls) {
+    private static <T extends Widget> MemoryLayout getTemplateInstanceLayout(Class<T> cls, String typeName) {
+        MemoryLayout parentLayout = getLayout(cls.getSuperclass());
+
+        ArrayList<MemoryLayout> elements = new ArrayList<>();
+        elements.add(parentLayout.withName("parent_instance"));
+
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.isAnnotationPresent(GtkChild.class)) {
+                if (field.getClass().isPrimitive()) {
+                    System.out.println("Not supported yet");
+                }
+                elements.add(Interop.valueLayout.ADDRESS.withName(field.getName()));
+            }
+        }
+
+        MemoryLayout[] layouts = elements.toArray(new MemoryLayout[0]);
+        return MemoryLayout.structLayout(layouts).withName(typeName);
+    }
+
+    private static <T extends Widget> Consumer<TypeClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String ui = annotation.ui();
 
@@ -42,33 +63,54 @@ public class Types {
 
             // Install BuilderJavaScope to call Java signal handler methods
             widgetClass.setTemplateScope(new BuilderJavaScope());
+
+            for (Field field : cls.getDeclaredFields()) {
+                if (field.isAnnotationPresent(GtkChild.class)) {
+                    String name = field.getName();
+                    long offset = layout.byteOffset(MemoryLayout.PathElement.groupElement(name));
+                    widgetClass.bindTemplateChildFull(name, false, offset);
+                }
+            }
         };
     }
 
-    private static <T extends Widget> Consumer<T> generateTemplateInstanceInit(Class<T> cls) {
+    private static <T extends Widget> Consumer<T> getTemplateInstanceInit(Class<T> cls) {
         return (widget) -> {
             widget.initTemplate();
+
+            for (Field field : cls.getDeclaredFields()) {
+                if (field.isAnnotationPresent(GtkChild.class)) {
+                    GObject child = widget.getTemplateChild(widget.readGClass().readGType(), field.getName());
+                    try {
+                        field.set(widget, child);
+                    } catch (Exception e) {
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "Cannot get template child %s in class %s: %s",
+                                field.getName(), cls.getName(), e.getMessage());
+                    }
+                }
+            }
         };
     }
 
     public static <T extends Widget> Type registerTemplate(Class<T> cls) {
         try {
             String typeName = getName(cls);
-            MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
+            MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, typeName);
             Class<?> parentClass = cls.getSuperclass();
-            Type parentType = getParentGType(cls);
+            Type parentType = getGType(parentClass);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
             Function<Addressable, T> constructor = getAddressConstructor(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
-            Consumer<TypeClass> classInit = generateTemplateClassInit(cls);
+            Consumer<TypeClass> classInit = getTemplateClassInit(cls, instanceLayout);
             Consumer<TypeClass> userDefinedClassInit = getClassInit(cls);
             if (userDefinedClassInit != null)
                 classInit = classInit.andThen(userDefinedClassInit);
 
             // Chain template instance init with user-defined init function
-            Consumer<T> instanceInit = generateTemplateInstanceInit(cls);
+            Consumer<T> instanceInit = getTemplateInstanceInit(cls);
             Consumer<T> userDefinedInit = getInstanceInit(cls);
             if (userDefinedInit != null)
                 instanceInit = instanceInit.andThen(userDefinedInit);

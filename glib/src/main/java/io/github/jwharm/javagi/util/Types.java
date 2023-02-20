@@ -4,6 +4,7 @@ import io.github.jwharm.javagi.annotations.ClassInitializer;
 import io.github.jwharm.javagi.annotations.CustomType;
 import io.github.jwharm.javagi.annotations.InstanceInitializer;
 import io.github.jwharm.javagi.base.ObjectProxy;
+import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -44,20 +45,18 @@ public class Types {
     public static <T extends GObject> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
         try {
             // Get instance-memorylayout of this class
-            MemoryLayout instanceLayout;
-            Method getLayoutMethod;
-            try {
-                getLayoutMethod = cls.getDeclaredMethod("getMemoryLayout");
-                return (MemoryLayout) getLayoutMethod.invoke(null);
-            } catch (Exception e) {
-                // If no memory layout was defined, create a default memory layout
-                // that only has a pointer to the parent class' memory layout.
-                getLayoutMethod = cls.getSuperclass().getDeclaredMethod("getMemoryLayout");
-                MemoryLayout parentLayout = (MemoryLayout) getLayoutMethod.invoke(null);
-                return MemoryLayout.structLayout(
-                        parentLayout.withName("parent_instance")
-                ).withName(typeName);
-            }
+            MemoryLayout instanceLayout = getLayout(cls);
+            if (instanceLayout != null)
+                return instanceLayout;
+
+            // If no memory layout was defined, create a default memory layout
+            // that only has a pointer to the parent class' memory layout.
+            MemoryLayout parentLayout = getLayout(cls.getSuperclass());
+
+            return MemoryLayout.structLayout(
+                    parentLayout.withName("parent_instance")
+            ).withName(typeName);
+
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot get instance memory layout for type %s: %s",
@@ -87,8 +86,8 @@ public class Types {
             }
 
             // Get class-memorylayout
-            Method getLayoutMethod = typeClass.getDeclaredMethod("getMemoryLayout");
-            MemoryLayout parentLayout = (MemoryLayout) getLayoutMethod.invoke(null);
+            MemoryLayout parentLayout = getLayout(typeClass);
+
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_class")
             ).withName(typeName + "Class");
@@ -101,16 +100,27 @@ public class Types {
         }
     }
 
-    public static <T extends GObject> Type getParentGType(Class<T> cls) {
+    public static Type getGType(Class<?> cls) {
         try {
-            // Get GType of the parent class
-            Method getTypeMethod = cls.getSuperclass().getDeclaredMethod("getType");
+            // invoke getType() on the class
+            Method getTypeMethod = cls.getDeclaredMethod("getType");
             return (Type) getTypeMethod.invoke(null);
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get parent GType for type %s: %s",
+                    "Cannot get GType for class %s: %s",
                     cls == null ? "null" : cls.getName(), e.getMessage());
+            return null;
+        }
+    }
+
+    public static MemoryLayout getLayout(Class<?> cls) {
+        try {
+            // invoke getMemoryLayout() on the class
+            Method getLayoutMethod = cls.getDeclaredMethod("getMemoryLayout");
+            return (MemoryLayout) getLayoutMethod.invoke(null);
+
+        } catch (Exception notfound) {
             return null;
         }
     }
@@ -207,7 +217,7 @@ public class Types {
             String typeName = getName(cls);
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Class<?> parentClass = cls.getSuperclass();
-            Type parentType = getParentGType(cls);
+            Type parentType = getGType(parentClass);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
             Function<Addressable, T> constructor = getAddressConstructor(cls);
             Consumer<T> instanceInit = getInstanceInit(cls);
@@ -261,6 +271,7 @@ public class Types {
             Function<Addressable, T> constructor,
             TypeFlags flags
     ) {
+        @SuppressWarnings("unchecked")
         Type type = GObjects.typeRegisterStaticSimple(
                 parentType,
                 typeName,
@@ -270,7 +281,7 @@ public class Types {
                 (short) instanceLayout.byteSize(),
                 // The instance parameter is a type-instance of T, so construct a T proxy instance.
                 // The typeClass parameter is not used.
-                (instance, typeClass) -> instanceInit.accept(constructor.apply(instance.handle())),
+                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.get(instance.handle(), constructor)),
                 flags
         );
         // Register the type and constructor in the cache
