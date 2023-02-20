@@ -48,7 +48,7 @@ public class ListIndexModel extends GObject implements ListModel {
      */
     public static Type getType() {
         if (type == null) {
-            type = registerType(ListIndexModel.class);
+            type = Types.register(ListIndexModel.class);
 
             // Implement the ListModel interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();

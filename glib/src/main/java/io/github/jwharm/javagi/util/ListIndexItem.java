@@ -42,7 +42,7 @@ public class ListIndexItem extends GObject {
      */
     public static Type getType() {
         if (type == null) {
-            type = registerType(ListIndexItem.class);
+            type = Types.register(ListIndexItem.class);
         }
         return type;
     }
