@@ -74,9 +74,14 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
         // clazz is of type Class<T>, so the cast to T is safe
         @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
         var segment = MemorySegment.ofAddress(address, length * layout.byteSize(), MemorySession.openImplicit());
-        List<MemorySegment> elements = segment.elements(layout).toList();
-        for (int i = 0; i < length; i++) {
-            array[i] = makeInstance(elements.get(i).address());
+        // MemorySegment.elements() only works for >1 elements
+        if (length == 1) {
+            array[0] = makeInstance(segment.address());
+        } else {
+            List<MemorySegment> elements = segment.elements(layout).toList();
+            for (int i = 0; i < length; i++) {
+                array[i] = makeInstance(elements.get(i).address());
+            }
         }
         return array;
     }
