@@ -27,8 +27,8 @@ public class Types {
     private static final String LOG_DOMAIN = "java-gi";
 
     public static String getName(Class<?> cls) {
-        // Default type name: simple Java class name
-        String typeNameInput = cls.getSimpleName();
+        // Default type name: fully qualified Java class name
+        String typeNameInput = cls.getName();
 
         // Check for an annotation that overrides the type name
         if (cls.isAnnotationPresent(CustomType.class)) {
@@ -38,12 +38,11 @@ public class Types {
             }
         }
 
-        // Create type name. Replace all characters except a-z or A-Z with underscores
+        // Replace all characters except a-z or A-Z with underscores
         return typeNameInput.replaceAll("[^a-zA-Z]", "_");
     }
 
     public static <T extends GObject> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
-        try {
             // Get instance-memorylayout of this class
             MemoryLayout instanceLayout = getLayout(cls);
             if (instanceLayout != null)
@@ -53,51 +52,55 @@ public class Types {
             // that only has a pointer to the parent class' memory layout.
             MemoryLayout parentLayout = getLayout(cls.getSuperclass());
 
+            if (parentLayout == null) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                        "Cannot find memory layout definition for class %s\n", cls.getName());
+                return null;
+            }
+
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_instance")
             ).withName(typeName);
 
-        } catch (Exception e) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get instance memory layout for type %s: %s",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
-            return null;
-        }
     }
 
     public static <T extends GObject> MemoryLayout getClassLayout(Class<T> cls, String typeName) {
-        try {
-            // Get the typeclass. This is an inner class that extends TypeClass.
-            // If the typeclass is unavailable, get it from the parent class.
-            Class<?> typeClass = null;
-            for (Class<?> gclass : cls.getClasses()) {
+        // Get the typeclass. This is an inner class that extends TypeClass.
+        // If the typeclass is unavailable, get it from the parent class.
+        Class<?> typeClass = null;
+        for (Class<?> gclass : cls.getClasses()) {
+            if (TypeClass.class.isAssignableFrom(gclass)) {
+                typeClass = gclass;
+                break;
+            }
+        }
+        if (typeClass == null) {
+            for (Class<?> gclass : cls.getSuperclass().getClasses()) {
                 if (TypeClass.class.isAssignableFrom(gclass)) {
                     typeClass = gclass;
                     break;
                 }
             }
-            if (typeClass == null) {
-                for (Class<?> gclass : cls.getSuperclass().getClasses()) {
-                    if (TypeClass.class.isAssignableFrom(gclass)) {
-                        typeClass = gclass;
-                        break;
-                    }
-                }
-            }
+        }
 
-            // Get class-memorylayout
-            MemoryLayout parentLayout = getLayout(typeClass);
-
-            return MemoryLayout.structLayout(
-                    parentLayout.withName("parent_class")
-            ).withName(typeName + "Class");
-
-        } catch (Exception e) {
+        if (typeClass == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get class memory layout for type %s: %s",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
+                    "Cannot find TypeClass for class %s\n", cls.getName());
             return null;
         }
+
+        // Get class-memorylayout
+        MemoryLayout parentLayout = getLayout(typeClass);
+
+        if (parentLayout == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find class memory layout definition for class %s\n", cls.getName());
+            return null;
+        }
+
+        return MemoryLayout.structLayout(
+                parentLayout.withName("parent_class")
+        ).withName(typeName + "Class");
     }
 
     public static Type getGType(Class<?> cls) {
@@ -108,7 +111,7 @@ public class Types {
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get GType for class %s: %s",
+                    "Cannot get GType for class %s: %s\n",
                     cls == null ? "null" : cls.getName(), e.getMessage());
             return null;
         }
@@ -126,24 +129,28 @@ public class Types {
     }
 
     public static <T extends GObject> Function<Addressable, T> getAddressConstructor(Class<T> cls) {
+        Constructor<T> ctor;
         try {
             // Get memory address constructor
-            Constructor<T> ctor = cls.getConstructor(Addressable.class);
-
-            // Create a wrapper function that will run the constructor and catch exceptions
-            return (addr) -> {
-                try {
-                    return ctor.newInstance(addr);
-                } catch (Exception e) {
-                    return null;
-                }
-            };
-        } catch (Exception e) {
+            ctor = cls.getConstructor(Addressable.class);
+        } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get memory-address constructor for type %s: %s",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
+                    "Cannot find memory-address constructor definition for class %s: %s\n",
+                    cls.getName(), e.getMessage());
             return null;
         }
+
+        // Create a wrapper function that will run the constructor and catch exceptions
+        return (addr) -> {
+            try {
+                return ctor.newInstance(addr);
+            } catch (Exception e) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                        "Exception in constructor for class %s: %s\n",
+                        cls.getName(), e.getMessage());
+                return null;
+            }
+        };
     }
 
     public static <T extends GObject> Consumer<T> getInstanceInit(Class<T> cls) {
@@ -156,7 +163,7 @@ public class Types {
                         method.invoke(null, inst);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Error in %s instance init: %s", cls.getName(), e.getMessage());
+                                "Exception in %s instance init: %s\n", cls.getName(), e.getMessage());
                     }
                 };
             }
@@ -174,7 +181,7 @@ public class Types {
                         method.invoke(null, gclass);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Error in %s class init: %s", cls.getName(), e.getMessage());
+                                "Exception in %s class init: %s\n", cls.getName(), e.getMessage());
                     }
                 };
             }
@@ -213,6 +220,12 @@ public class Types {
      * @param <T> The class must be derived from GObject
      */
     public static <T extends GObject> Type register(Class<T> cls) {
+        if (cls == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Class is null\n");
+            return null;
+        }
+
         try {
             String typeName = getName(cls);
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
@@ -241,8 +254,7 @@ public class Types {
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
+                    "Cannot register type %s: %s", cls.getName(), e.getMessage());
             return null;
         }
     }
