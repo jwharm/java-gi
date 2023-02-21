@@ -61,6 +61,11 @@ public class Types {
 
             widgetClass.setTemplate(new Bytes(bytes.get()));
 
+            new GObject.ObjectClass(typeClass.handle()).overrideDispose((object) -> {
+                ((Widget) object).disposeTemplate(typeClass.readGType());
+                object.dispose(); // This should call the parent class dispose
+            });
+
             // Install BuilderJavaScope to call Java signal handler methods
             widgetClass.setTemplateScope(new BuilderJavaScope());
 
