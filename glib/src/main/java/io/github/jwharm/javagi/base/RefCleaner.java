@@ -1,59 +1,43 @@
 package io.github.jwharm.javagi.base;
 
-import io.github.jwharm.javagi.interop.Interop;
+import io.github.jwharm.javagi.interop.InstanceCache;
+import org.gnome.glib.GLib;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.ToggleNotify;
 
 import java.lang.foreign.Addressable;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
 
 /**
- * Runnable that is executed by a Cleaner to {@code unref} an object
+ * Runnable that is executed by a Cleaner to remove the toggle reference from an object.
+ * This will cause the native GObject to be disposed.
  */
-class RefCleaner implements Runnable {
+public class RefCleaner implements Runnable {
 
     // The address of the object
     private final Addressable address;
-
-    // The method name that unrefs the object
-    String refCleanerMethod = "g_object_unref";
-
-    // Used to enable/disable the cleaner
-    boolean registered;
-
-    // Method handle that is used for the native call
-    MethodHandle unrefMethodHandle;
+    private final ToggleNotify notify;
 
     /**
      * Create a new refCleaner instance that can be registered with a {@link Cleaner}.
      * @param address memory address of the object instance to be cleaned
+     * @param notify the same ToggleNotify callback that was passed to {@link GObject#addToggleRef(ToggleNotify)}
      */
-    RefCleaner(Addressable address) {
+    public RefCleaner(Addressable address, ToggleNotify notify) {
         this.address = address;
-        this.registered = true;
+        this.notify = notify;
     }
 
     /**
-     * This function is run by the {@link Cleaner} when an {@link ObjectProxy} instance has become unreachable.
-     * If the ownership is set, a call to {@code g_object_unref} (or another method that has been setup) is executed.
+     * This function is run by the {@link Cleaner} when a {@link org.gnome.gobject.GObject}
+     * instance has become unreachable, to remove the toggle reference.
      */
     public void run() {
-        if (registered) {
-            try {
 
-                if (unrefMethodHandle == null)
-                    unrefMethodHandle = Interop.downcallHandle(
-                            refCleanerMethod,
-                            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
-                            false
-                    );
+        GLib.printerr("Remove " + address + "\n");
+        new GObject(address).removeToggleRef(notify);
 
-                unrefMethodHandle.invokeExact(address);
-
-            } catch (Throwable err) {
-                throw new AssertionError("Unexpected exception occured: ", err);
-            }
-        }
+        // Remove the empty mapping of address->weakReference(null) from the instance cache
+        InstanceCache.weakReferences.remove(address);
     }
 }

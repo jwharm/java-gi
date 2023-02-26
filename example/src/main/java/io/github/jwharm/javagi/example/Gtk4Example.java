@@ -47,22 +47,22 @@ public class Gtk4Example {
             long second;
         };
 
-        button.addTickCallback((widget, frameClock) -> {
-            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
-            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
-            if (sec > 30) {
-                button.setLabel("Hello world!");
-                System.out.println("Done counting");
-                button.emitClicked();
-                return GLib.SOURCE_REMOVE;
-            }
-            if (sec > state.second) {
-                state.second = sec;
-                button.setLabel("Hello world! " + (30 - sec));
-                widget.queueDraw();
-            }
-            return GLib.SOURCE_CONTINUE;
-        }, null);
+//        button.addTickCallback((widget, frameClock) -> {
+//            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
+//            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
+//            if (sec > 30) {
+//                button.setLabel("Hello world!");
+//                System.out.println("Done counting");
+//                button.emitClicked();
+//                return GLib.SOURCE_REMOVE;
+//            }
+//            if (sec > state.second) {
+//                state.second = sec;
+//                button.setLabel("Hello world! " + (30 - sec));
+//                widget.queueDraw();
+//            }
+//            return GLib.SOURCE_CONTINUE;
+//        }, null);
 
         box.append(button);
         window.setChild(box);

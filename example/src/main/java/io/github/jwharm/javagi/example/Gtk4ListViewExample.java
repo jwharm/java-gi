@@ -65,7 +65,7 @@ public class Gtk4ListViewExample {
 
         list = new ArrayList<>();
         for (int i = 0, len = rnd.nextInt(900, 1000); i < len; i++) list.add(randomString());
-        listIndexModel = new ListIndexModel(list.size());
+        listIndexModel = ListIndexModel.withSize(list.size());
 
         app.onActivate(this::activate);
         app.run(args);

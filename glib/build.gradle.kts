@@ -99,7 +99,7 @@ setupGenSources {
                 var _result = constructNew(objectType, null);
                 T _object = (T) InstanceCache.get(_result, org.gnome.gobject.GObject::new);
                 if (_object != null) {
-                    _object.takeOwnership();
+                    _object.ref();
                 }
                 return _object;
             }

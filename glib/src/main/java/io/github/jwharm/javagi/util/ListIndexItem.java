@@ -72,8 +72,9 @@ public class ListIndexItem extends GObject {
      * to the provided value.
      * @param value the initial value for the int_value field
      */
-    public ListIndexItem(int value) {
-        super(getType(), null);
-        setIndex(value);
+    public static ListIndexItem of(int value) {
+        ListIndexItem item = GObject.newInstance(getType());
+        item.setIndex(value);
+        return item;
     }
 }

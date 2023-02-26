@@ -73,19 +73,15 @@ public class ReturnValue extends Parameter {
             return;
         }
 
-        // When transfer-ownership="full", we must take ownership.
-        if (isProxy() && "full".equals(transferOwnership) || returnsFloatingReference) {
+        // When transfer-ownership="full", we must take a reference. (except in ref() to avoid a recursive loop)
+        if (isGObject() && "full".equals(transferOwnership) && (! parent.name.equals("ref"))) {
 
             writer.write("var _object = ");
             marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
             writer.write("if (_object != null) {\n");
 
-            // Sink floating reference
-            if (returnsFloatingReference)
-                writer.write("    _object.refSink();\n");
-
-            writer.write("    _object.takeOwnership();\n");
+            writer.write("    _object.ref();\n");
             writer.write("}\n");
             writer.write("return _object;\n");
 

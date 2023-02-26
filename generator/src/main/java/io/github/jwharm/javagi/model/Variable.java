@@ -229,13 +229,13 @@ public class Variable extends GirElement {
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
 
-        if (type.isBitfield() || type.isAliasForPrimitive() || type.isRecord() || type.isUnion())
+        if (type.isBitfield() || type.isAliasForPrimitive())
             return "new " + type.qualifiedJavaType + "(" + identifier + ")";
 
         if (type.isCallback())
             return "null /* Unsupported parameter type */";
 
-        if (type.isClass() || type.isInterface() || type.isAlias())
+        if (type.isClass() || type.isInterface() || type.isAlias() || type.isRecord() || type.isUnion())
             return "(" + type.qualifiedJavaType + ") InstanceCache.get(" + identifier + ", " + type.constructorName + ")";
 
         if (type.isBoolean())

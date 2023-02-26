@@ -25,25 +25,4 @@ public class StructProxy implements Proxy {
     public Addressable handle() {
         return address;
     }
-
-    /**
-     * No op
-     */
-    @Override
-    public void yieldOwnership() {
-    }
-
-    /**
-     * No op
-     */
-    @Override
-    public void takeOwnership() {
-    }
-
-    /**
-     * No op
-     */
-    @Override
-    public void setRefCleanerMethod(String method) {
-    }
 }

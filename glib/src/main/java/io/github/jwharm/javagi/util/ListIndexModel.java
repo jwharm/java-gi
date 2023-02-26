@@ -67,9 +67,10 @@ public class ListIndexModel extends GObject implements ListModel {
      * Instantiate a new ListIndexModel with the provided size.
      * @param size the initial size of the list model
      */
-    public ListIndexModel(int size) {
-        super(getType(), null);
-        setSize(size);
+    public static ListIndexModel withSize(int size) {
+        ListIndexModel model = GObject.newInstance(getType());
+        model.setSize(size);
+        return model;
     }
 
     /**
@@ -112,6 +113,6 @@ public class ListIndexModel extends GObject implements ListModel {
     @Override
     public GObject getItem(int position) {
         if (position < 0 || position >= getNItems()) return null;
-        return new ListIndexItem(position);
+        return ListIndexItem.of(position);
     }
 }

@@ -103,9 +103,9 @@ public interface Closure extends CallableType {
             writer.increaseIndent();
         }
 
-        // If the return value is a proxy object with transfer-ownership="full", we don't need to unref it anymore.
-        if (returnValue.isProxy() && "full".equals(returnValue.transferOwnership)) {
-            writer.write("_result.yieldOwnership();\n");
+        // If the return value is a proxy object with transfer-ownership="full", the JVM must own a reference.
+        if (returnValue.isGObject() && "full".equals(returnValue.transferOwnership)) {
+            writer.write("_result.ref();\n");
         }
 
         // Return statement

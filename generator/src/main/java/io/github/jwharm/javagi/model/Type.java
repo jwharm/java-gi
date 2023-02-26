@@ -64,12 +64,16 @@ public class Type extends GirElement {
         // Get constructor name from class, interface, and alias for class or interface
         this.constructorName = qualifiedJavaType + "::new";
         if (girElementInstance != null) {
-            if (girElementInstance instanceof Class cls) {
+            if (girElementInstance instanceof Record) {
+                // no action needed
+            } else if (girElementInstance instanceof Class cls) {
                 this.constructorName = cls.getConstructorString();
             } else if (girElementInstance instanceof Interface iface) {
                 this.constructorName = iface.getConstructorString();
             } else if (girElementInstance instanceof Alias alias) {
-                if (alias.getTargetType() == Alias.TargetType.CLASS) {
+                if (alias.getTargetType() == Alias.TargetType.RECORD) {
+                    // no action needed
+                } else if (alias.getTargetType() == Alias.TargetType.CLASS) {
                     Class cls = (Class) alias.type.girElementInstance;
                     this.constructorName = cls.getConstructorString();
                 } else if (alias.getTargetType() == Alias.TargetType.INTERFACE) {

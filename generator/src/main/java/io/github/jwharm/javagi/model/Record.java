@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Record extends Class {

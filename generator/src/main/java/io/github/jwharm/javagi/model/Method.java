@@ -250,12 +250,6 @@ public class Method extends GirElement implements CallableType {
             parameters.generatePostprocessing(writer);
         }
 
-        // Generate a call to "yieldOwnership" to disable the Cleaner
-        // when a user manually calls "unref"
-        if ((! (this instanceof Function)) && name.equals("unref")) {
-            writer.write("this.yieldOwnership();\n");
-        }
-        
         // Generate code to process and return the result value
         returnValue.generate(writer, panamaReturnType);
 
