@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.base;
 
 import io.github.jwharm.javagi.interop.InstanceCache;
-import org.gnome.glib.GLib;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.ToggleNotify;
 
@@ -33,8 +32,6 @@ public class RefCleaner implements Runnable {
      * instance has become unreachable, to remove the toggle reference.
      */
     public void run() {
-
-        GLib.printerr("Remove " + address + "\n");
         new GObject(address).removeToggleRef(notify);
 
         // Remove the empty mapping of address->weakReference(null) from the instance cache

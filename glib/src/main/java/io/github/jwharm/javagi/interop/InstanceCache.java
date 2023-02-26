@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import io.github.jwharm.javagi.base.RefCleaner;
-import io.github.jwharm.javagi.util.ListIndexModel;
-import org.gnome.glib.GLib;
 import org.gnome.gobject.GObject;
 
 import io.github.jwharm.javagi.base.Proxy;
@@ -72,8 +70,6 @@ public class InstanceCache {
             return newInstance;
         }
 
-        GLib.printerr("Register " + address + " / " + newInstance + "\n");
-
         // Put the instance in the cache. If another thread did this (while we were creating a new
         // instance), putIfAbsent() will return that instance.
         Proxy existingInstance = strongReferences.putIfAbsent(address, newInstance);
@@ -112,11 +108,9 @@ public class InstanceCache {
         public void run(@Nullable MemoryAddress data, GObject object, boolean isLastRef) {
             var key = object.handle();
             if (isLastRef) {
-                GLib.printerr("Toggle " + object.handle() + " to strong\n");
                 strongReferences.remove(key);
                 weakReferences.put(key, new WeakReference<>(object));
             } else {
-                GLib.printerr("Toggle " + object.handle() + " to weak\n");
                 weakReferences.remove(key);
                 strongReferences.put(key, object);
             }
