@@ -4,6 +4,8 @@ import org.gnome.gio.ApplicationFlags;
 import org.gnome.glib.GLib;
 import org.gnome.gtk.*;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Gtk4Example {
 
     private final Application app;
@@ -27,7 +29,7 @@ public class Gtk4Example {
                     null
             );
             dialog.setTitle("Hello!");
-            dialog.setMarkup("This is some **content**");
+            dialog.setMarkup("This is some <b>content</b>");
             dialog.onResponse(responseId -> {
                 switch (ResponseType.of(responseId)) {
                     case OK -> {
@@ -42,27 +44,14 @@ public class Gtk4Example {
             dialog.show();
         });
 
-        var state = new Object() {
-            long tickStart;
-            long second;
-        };
-
-//        button.addTickCallback((widget, frameClock) -> {
-//            if (state.tickStart == 0) state.tickStart = frameClock.getFrameTime();
-//            long sec = (frameClock.getFrameTime() - state.tickStart) / 1000000;
-//            if (sec > 30) {
-//                button.setLabel("Hello world!");
-//                System.out.println("Done counting");
-//                button.emitClicked();
-//                return GLib.SOURCE_REMOVE;
-//            }
-//            if (sec > state.second) {
-//                state.second = sec;
-//                button.setLabel("Hello world! " + (30 - sec));
-//                widget.queueDraw();
-//            }
-//            return GLib.SOURCE_CONTINUE;
-//        }, null);
+        AtomicInteger sec = new AtomicInteger(29);
+        GLib.timeoutAddSeconds(1, () -> {
+            button.setLabel("Hello world! " + (sec.getAndDecrement()));
+            if (sec.get() == 0) {
+                button.emitClicked();
+            }
+            return sec.get() >= 0;
+        });
 
         box.append(button);
         window.setChild(box);
