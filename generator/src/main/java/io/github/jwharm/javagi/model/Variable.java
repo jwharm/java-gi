@@ -236,7 +236,8 @@ public class Variable extends GirElement {
             return "null /* Unsupported parameter type */";
 
         if (type.isClass() || type.isInterface() || type.isAlias() || type.isRecord() || type.isUnion())
-            return "(" + type.qualifiedJavaType + ") InstanceCache.get(" + identifier + ", " + type.constructorName + ")";
+            return "(" + type.qualifiedJavaType + ") InstanceCache.get(" + identifier + ", "
+                    + type.hasGType() + ", " + type.constructorName + ")";
 
         if (type.isBoolean())
             return identifier + " != 0";

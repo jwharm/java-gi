@@ -3,16 +3,12 @@ package io.github.jwharm.javagi.util;
 import io.github.jwharm.javagi.annotations.ClassInitializer;
 import io.github.jwharm.javagi.annotations.CustomType;
 import io.github.jwharm.javagi.annotations.InstanceInitializer;
-import io.github.jwharm.javagi.base.ObjectProxy;
 import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.TypeClass;
-import org.gnome.gobject.TypeFlags;
+import org.gnome.gobject.*;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryLayout;
@@ -273,7 +269,7 @@ public class Types {
      * @param <T> the instance initializer function must accept the
      *            result of the memory address constructor
      */
-    public static <T extends ObjectProxy> Type register(
+    public static <T extends TypeInstance> Type register(
             org.gnome.glib.Type parentType,
             String typeName,
             MemoryLayout classLayout,
@@ -293,7 +289,7 @@ public class Types {
                 (short) instanceLayout.byteSize(),
                 // The instance parameter is a type-instance of T, so construct a T proxy instance.
                 // The typeClass parameter is not used.
-                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.get(instance.handle(), constructor)),
+                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.get(instance.handle(), true, constructor)),
                 flags
         );
         // Register the type and constructor in the cache

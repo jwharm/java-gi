@@ -41,7 +41,14 @@ public class Interop {
      * @return the type (GType) of the object
      */
     public static Type getType(MemoryAddress address) {
+        if (address == null || address.equals(MemoryAddress.NULL))
+            return null;
+
         MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
+
+        if (g_class == null || g_class.equals(MemoryAddress.NULL))
+            return null;
+
         long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
         return new Type(g_type);
     }

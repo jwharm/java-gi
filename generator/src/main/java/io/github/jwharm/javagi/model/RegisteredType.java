@@ -52,6 +52,18 @@ public abstract class RegisteredType extends GirElement {
         return false;
     }
 
+    public boolean isFloating() {
+        if (isInstanceOf("org.gnome.gobject.InitiallyUnowned")) {
+            return true;
+        }
+        for (Method method : methodList) {
+            if ("ref_sink".equals(method.name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public abstract void generate(SourceWriter writer) throws IOException;
 
     protected void generatePackageDeclaration(SourceWriter writer) throws IOException {

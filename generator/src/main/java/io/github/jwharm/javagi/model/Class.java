@@ -66,20 +66,32 @@ public class Class extends RegisteredType {
         writer.write(Objects.requireNonNullElse(parentClass, "io.github.jwharm.javagi.base.ObjectProxy"));
 
         // Interfaces
-        for (int i = 0; i < implementsList.size(); i++) {
-            if (i == 0) {
-                writer.write(" implements " + implementsList.get(i).getQualifiedJavaName());
+        boolean first = true;
+        for (Implements impl : implementsList) {
+            if (first) {
+                writer.write(" implements " + impl.getQualifiedJavaName());
+                first = false;
             } else {
-                writer.write(", " + implementsList.get(i).getQualifiedJavaName());
+                writer.write(", " + impl.getQualifiedJavaName());
             }
         }
 
         // AutoCloseable
         if (autoCloseable) {
-            if (implementsList.isEmpty()) {
+            if (first) {
                 writer.write(" implements io.github.jwharm.javagi.util.AutoCloseable");
+                first = false;
             } else {
                 writer.write(", io.github.jwharm.javagi.util.AutoCloseable");
+            }
+        }
+
+        // Floating
+        if (isFloating()) {
+            if (first) {
+                writer.write(" implements io.github.jwharm.javagi.base.Floating");
+            } else {
+                writer.write(", io.github.jwharm.javagi.base.Floating");
             }
         }
 

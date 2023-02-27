@@ -36,9 +36,11 @@ public class TypeCache {
         Type type = Interop.getType(address);
 
         // Find the constructor in the typeRegister and return it
-        Function<Addressable, ? extends Proxy> ctor = typeRegister.get(type);
-        if (ctor != null) {
-            return ctor;
+        if (type != null) {
+            Function<Addressable, ? extends Proxy> ctor = typeRegister.get(type);
+            if (ctor != null) {
+                return ctor;
+            }
         }
 
         // Register the fallback constructor for this type. If another thread did this in the meantime, putIfAbsent()

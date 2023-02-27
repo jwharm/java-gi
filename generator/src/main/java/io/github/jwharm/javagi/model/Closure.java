@@ -12,9 +12,11 @@ public interface Closure extends CallableType {
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
-        writer.write("/**\n");
-        writer.write(" * Functional interface declaration of the {@code " + javaName + "} callback.\n");
-        writer.write(" */\n");
+        if (getDoc() == null) {
+            writer.write("/**\n");
+            writer.write(" * Functional interface declaration of the {@code " + javaName + "} callback.\n");
+            writer.write(" */\n");
+        }
         writer.write("@FunctionalInterface\n");
         writer.write("public interface " + javaName + " {\n");
         writer.write("\n");

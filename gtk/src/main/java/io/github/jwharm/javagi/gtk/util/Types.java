@@ -11,6 +11,7 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
+import org.gnome.gobject.TypeInstance;
 import org.gnome.gtk.Widget;
 
 import java.lang.foreign.*;
@@ -144,7 +145,7 @@ public class Types {
         return io.github.jwharm.javagi.util.Types.register(cls);
     }
 
-    public static <T extends ObjectProxy> Type register(
+    public static <T extends GObject> Type register(
             org.gnome.glib.Type parentType,
             String typeName,
             MemoryLayout classLayout,

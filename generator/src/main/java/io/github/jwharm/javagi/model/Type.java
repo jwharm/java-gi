@@ -131,4 +131,17 @@ public class Type extends GirElement {
     public boolean isPointer() {
         return cType != null && (cType.endsWith("*") || cType.endsWith("gpointer"));
     }
+
+    /**
+     * All classes and interfaces (and aliases for classes and interfaces) have a
+     * gtype, but GTypeInstance has too, and that is a record.
+     * @return whether it's possible to read a gtype for this type
+     */
+    public boolean hasGType() {
+        return (! isRecord() || isUnion() || isAliasForPrimitive()) &&
+                ("GTypeInstance".equals(cType) ||
+                (isAlias() && (
+                        ((Alias) girElementInstance).getTargetType() == Alias.TargetType.CLASS ||
+                        ((Alias) girElementInstance).getTargetType() == Alias.TargetType.INTERFACE)));
+    }
 }
