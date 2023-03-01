@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.util;
 import io.github.jwharm.javagi.annotations.ClassInit;
 import io.github.jwharm.javagi.annotations.CustomType;
 import io.github.jwharm.javagi.annotations.InstanceInit;
+import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
@@ -60,25 +61,27 @@ public class Types {
 
     }
 
+    public static <T extends GObject, TC extends TypeClass> Class<TC> getTypeClass(Class<T> cls) {
+        // Get the typeclass. This is an inner class that extends TypeClass.
+        // If the typeclass is unavailable, get it from the parent class.
+        Class<TC> typeClass = null;
+        for (Class<?> gclass : cls.getClasses()) {
+            if (TypeClass.class.isAssignableFrom(gclass)) {
+                return (Class<TC>) gclass;
+            }
+        }
+        for (Class<?> gclass : cls.getSuperclass().getClasses()) {
+            if (TypeClass.class.isAssignableFrom(gclass)) {
+                return (Class<TC>) gclass;
+            }
+        }
+        return null;
+    }
+
     public static <T extends GObject> MemoryLayout getClassLayout(Class<T> cls, String typeName) {
         // Get the typeclass. This is an inner class that extends TypeClass.
         // If the typeclass is unavailable, get it from the parent class.
-        Class<?> typeClass = null;
-        for (Class<?> gclass : cls.getClasses()) {
-            if (TypeClass.class.isAssignableFrom(gclass)) {
-                typeClass = gclass;
-                break;
-            }
-        }
-        if (typeClass == null) {
-            for (Class<?> gclass : cls.getSuperclass().getClasses()) {
-                if (TypeClass.class.isAssignableFrom(gclass)) {
-                    typeClass = gclass;
-                    break;
-                }
-            }
-        }
-
+        Class<?> typeClass = getTypeClass(cls);
         if (typeClass == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find TypeClass for class %s\n", cls.getName());
@@ -124,7 +127,7 @@ public class Types {
         }
     }
 
-    public static <T extends GObject> Function<Addressable, T> getAddressConstructor(Class<T> cls) {
+    public static <T extends Proxy> Function<Addressable, T> getAddressConstructor(Class<T> cls) {
         Constructor<T> ctor;
         try {
             // Get memory address constructor

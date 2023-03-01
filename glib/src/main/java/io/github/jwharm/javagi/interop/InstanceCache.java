@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.github.jwharm.javagi.util.Types;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.ToggleNotify;
@@ -95,17 +96,35 @@ public class InstanceCache {
 
         // Get constructor from the type registry
         Type type = new TypeClass(address).readGType();
-        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor(type, fallback);
+        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor(type, null);
+        if (ctor != null) {
 
-        // No instance in cache: Create a new instance
-        Proxy newInstance = ctor.apply(address);
+            // Create a new throw-away instance (without a memory address) so we can get the Java Class definition.
+            Proxy newInstance = ctor.apply(null);
+            if (newInstance != null) {
 
-        // Null check on the new instance
-        if (newInstance == null) {
-            return null;
+                // Get the Java proxy TypeClass definition
+                Class<? extends GObject> instanceClass = ((GObject) newInstance).getClass();
+                Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
+                if (typeClass != null) {
+
+                    // Use the memory address constructor to create a new instance of the TypeClass
+                    ctor = Types.getAddressConstructor(typeClass);
+                    if (ctor != null) {
+
+                        // Create the instance
+                        newInstance = ctor.apply(address);
+                        if (newInstance != null) {
+
+                            return put(address, newInstance);
+                        }
+                    }
+                }
+            }
         }
 
-        return put(address, newInstance);
+        // Use Fallback constructor
+        return fallback.apply(address);
     }
 
     /**
