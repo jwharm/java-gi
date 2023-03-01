@@ -97,7 +97,7 @@ setupGenSources {
             
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
                 var _result = constructNew(objectType, null);
-                T _object = (T) InstanceCache.get(_result, true, org.gnome.gobject.GObject::new);
+                T _object = (T) InstanceCache.getForType(_result, org.gnome.gobject.GObject::new);
                 if (_object != null) {
                     _object.ref();
                 }
@@ -132,7 +132,7 @@ setupGenSources {
             template("Bitfield", "org.gnome.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")
             template("org.gnome.gobject.GObject", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
             template("org.gnome.glib.Type", "org.gnome.gobject.GObjects.gtypeGetType()", "setGtype(arg)")
-            template("StructProxy", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
+            template("ProxyInstance", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
             template("MemoryAddress", "org.gnome.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
             template("ParamSpec", "org.gnome.glib.Type.G_TYPE_PARAM", "setParam(arg)")
             template("Proxy", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject((org.gnome.gobject.GObject) arg)")

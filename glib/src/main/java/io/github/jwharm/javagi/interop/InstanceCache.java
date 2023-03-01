@@ -8,11 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.github.jwharm.javagi.base.Floating;
+import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
+import org.gnome.gobject.ToggleNotify;
+import org.gnome.gobject.TypeClass;
 
+import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.Proxy;
-import org.gnome.gobject.InitiallyUnowned;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -28,13 +30,13 @@ public class InstanceCache {
     /**
      * Get a {@link Proxy} object for the provided native memory address. If a Proxy object does  
      * not yet exist for this address, a new Proxy object is instantiated and added to the cache. 
+     * The type of the Proxy object is read from the gtype field of the native instance.
      * Invalid references are removed from the cache using a GObject toggle reference.
      * @param address  memory address of the native object
-     * @param isObject whether the native object is a TypeInstance
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy get(Addressable address, boolean isObject, Function<Addressable, ? extends Proxy> fallback) {
+    public static Proxy getForType(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
 
         // Null check on the memory address
         if (address == null || address.equals(MemoryAddress.NULL)) {
@@ -52,9 +54,7 @@ public class InstanceCache {
         }
 
         // Get constructor from the type registry
-        Function<Addressable, ? extends Proxy> ctor = isObject
-                ? TypeCache.getConstructor((MemoryAddress) address, fallback)
-                : fallback;
+        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor((MemoryAddress) address, fallback);
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
@@ -67,14 +67,93 @@ public class InstanceCache {
         return put(address, newInstance);
     }
 
+    /**
+     * Get a {@link Proxy} object for the provided native memory address of a TypeClass. If a 
+     * Proxy object does not yet exist for this address, a new Proxy object is instantiated 
+     * and added to the cache. The type of the Proxy object is read from the gtype field of 
+     * the native TypeClass.
+     * @param address  memory address of the native object
+     * @param fallback fallback constructor to use when the type is not found in the TypeCache
+     * @return         a Proxy instance for the provided memory address
+     */
+    public static Proxy getForTypeClass(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+
+        // Null check on the memory address
+        if (address == null || address.equals(MemoryAddress.NULL)) {
+            return null;
+        }
+
+        // Get instance from cache
+        Proxy instance = strongReferences.get(address);
+        if (instance != null) {
+            return instance;
+        }
+        WeakReference<Proxy> weakRef = weakReferences.get(address);
+        if (weakRef != null && weakRef.get() != null) {
+            return weakRef.get();
+        }
+
+        // Get constructor from the type registry
+        Type type = new TypeClass(address).readGType();
+        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor(type, fallback);
+
+        // No instance in cache: Create a new instance
+        Proxy newInstance = ctor.apply(address);
+
+        // Null check on the new instance
+        if (newInstance == null) {
+            return null;
+        }
+
+        return put(address, newInstance);
+    }
+
+    /**
+     * Get a {@link Proxy} object for the provided native memory address. If a Proxy object does  
+     * not yet exist for this address, a new Proxy object is instantiated and added to the cache. 
+     * Invalid references are removed from the cache using a GObject toggle reference.
+     * @param address  memory address of the native object
+     * @param fallback fallback constructor to use when the type is not found in the TypeCache
+     * @return         a Proxy instance for the provided memory address
+     */
+    public static Proxy get(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+        
+        // Null check on the memory address
+        if (address == null || address.equals(MemoryAddress.NULL)) {
+            return null;
+        }
+
+        // Get instance from cache
+        Proxy instance = strongReferences.get(address);
+        if (instance != null) {
+            return instance;
+        }
+        WeakReference<Proxy> weakRef = weakReferences.get(address);
+        if (weakRef != null && weakRef.get() != null) {
+            return weakRef.get();
+        }
+
+        // No instance in cache: Create a new instance
+        Proxy newInstance = fallback.apply(address);
+
+        // Null check on the new instance
+        if (newInstance == null) {
+            return null;
+        }
+
+        return put(address, newInstance);
+    }
+    
+    /**
+     * Add the new Proxy instance to the cache. Floating references are sinked, and for GObjects 
+     * a toggle reference is installed.
+     * @param address the memory address of the native instance
+     * @param newInstance the Proxy instance
+     * @return the cached Proxy instance
+     */
     public static Proxy put(Addressable address, Proxy newInstance) {
         // Do not put a new instance if it already exists
         if (strongReferences.containsKey(address) || weakReferences.containsKey(address)) {
-            return newInstance;
-        }
-
-        // Do not cache floating references
-        if (newInstance instanceof InitiallyUnowned floating) {
             return newInstance;
         }
 
@@ -85,41 +164,36 @@ public class InstanceCache {
             return existingInstance;
         }
 
-        // If the Proxy is a GObject instance, replace the reference with a toggle reference
+        // Sink floating references
+        if (newInstance instanceof Floating floatingReference) {
+            floatingReference.refSink();
+        }
+        
+        // Setup a toggle ref on GObjects
         if (newInstance instanceof GObject gobject) {
-
-            ToggleNotify notify = new ToggleNotify();
+            ToggleNotify notify = new ToggleNotifyCallback();
             gobject.addToggleRef(notify);
             gobject.unref();
 
             // Register a cleaner that will remove the toggle reference
-            CLEANER.register(newInstance, new ToggleRefFinalizer(address, notify));
+            CLEANER.register(gobject, new ToggleRefFinalizer(address, notify));
         }
 
         // Return the new instance.
         return newInstance;
     }
 
-    public static void sink(Floating object) {
-        // Sink the floating reference
-        object.refSink();
-
-        // Register a cleaner that will call g_object_unref
-        Addressable address = object.handle();
-        CLEANER.register(object, new InitiallyUnownedFinalizer(address));
-    }
-
     /**
      * A ToggleNotify implementation that re-uses the created function pointer
      */
-    private static class ToggleNotify implements org.gnome.gobject.ToggleNotify {
+    private static class ToggleNotifyCallback implements ToggleNotify {
 
         private MemoryAddress callback;
 
         @Override
         public MemoryAddress toCallback() {
             if (callback == null) {
-                callback = org.gnome.gobject.ToggleNotify.super.toCallback();
+                callback = ToggleNotify.super.toCallback();
             }
             return callback;
         }
@@ -138,7 +212,7 @@ public class InstanceCache {
     }
 
     /**
-     * This toggleNotify is run by the {@link Cleaner} when a {@link org.gnome.gobject.GObject}
+     * This callback is run by the {@link Cleaner} when a {@link org.gnome.gobject.GObject}
      * instance has become unreachable, to remove the toggle reference.
      * @param address memory address of the object instance to be cleaned
      * @param toggleNotify the same ToggleNotify toggleNotify that was passed to
@@ -152,15 +226,4 @@ public class InstanceCache {
             InstanceCache.weakReferences.remove(address);
         }
     }
-
-    /**
-     * Run by a Cleaner to call unref() on objects
-     * @param address The address of the object
-     */
-    private record InitiallyUnownedFinalizer(Addressable address) implements Runnable {
-
-        public void run() {
-                new GObject(address).unref();
-            }
-        }
 }

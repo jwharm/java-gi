@@ -63,7 +63,7 @@ public class Class extends RegisteredType {
 
         // Parent class
         writer.write(" extends ");
-        writer.write(Objects.requireNonNullElse(parentClass, "io.github.jwharm.javagi.base.ObjectProxy"));
+        writer.write(Objects.requireNonNullElse(parentClass, "org.gnome.gobject.TypeInstance"));
 
         // Interfaces
         boolean first = true;

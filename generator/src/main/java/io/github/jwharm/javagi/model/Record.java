@@ -45,7 +45,7 @@ public class Record extends Class {
         if (isGTypeStructFor != null) {
             writer.write(" extends org.gnome.gobject.TypeClass");
         } else {
-            writer.write(" extends StructProxy");
+            writer.write(" extends ProxyInstance");
         }
 
         // Floating

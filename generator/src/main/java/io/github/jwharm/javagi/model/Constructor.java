@@ -48,11 +48,7 @@ public class Constructor extends Method {
         }
         writer.write(");\n");
 
-        if (returnsFloatingReference()) {
-            writer.write("InstanceCache.sink(this);\n");
-        } else {
-            writer.write("InstanceCache.put(handle(), this);\n");
-        }
+        writer.write("InstanceCache.put(handle(), this);\n");
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -105,17 +101,7 @@ public class Constructor extends Method {
         }
         writer.write(";\n");
 
-        if (returnsFloatingReference()) {
-            writer.write("var _object = ");
-            returnValue.marshalNativeToJava(writer, "_result", false);
-            writer.write(";\n");
-            writer.write("if (_object != null) {\n");
-            writer.write("    InstanceCache.sink(_object);\n");
-            writer.write("}\n");
-            writer.write("return _object;\n");
-        } else {
-            returnValue.generateReturnStatement(writer);
-        }
+        returnValue.generateReturnStatement(writer);
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -217,18 +203,5 @@ public class Constructor extends Method {
 
         writer.decreaseIndent();
         writer.write("}\n");
-    }
-
-    /**
-     * Check if this constructor returns a floating reference
-     */
-    private boolean returnsFloatingReference() {
-        if (!returnValue.returnsFloatingReference) {
-            boolean initiallyUnowned = ((RegisteredType) parent).isInstanceOf("org.gnome.gobject.InitiallyUnowned");
-            if ((initiallyUnowned) && "none".equals(returnValue.transferOwnership)) {
-                returnValue.returnsFloatingReference = true;
-            }
-        }
-        return returnValue.returnsFloatingReference;
     }
 }

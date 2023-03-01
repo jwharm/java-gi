@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi.gtk.util;
 
-import io.github.jwharm.javagi.base.ObjectProxy;
 import io.github.jwharm.javagi.base.Out;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.gio.File;

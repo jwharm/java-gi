@@ -144,4 +144,8 @@ public class Type extends GirElement {
                         ((Alias) girElementInstance).getTargetType() == Alias.TargetType.CLASS ||
                         ((Alias) girElementInstance).getTargetType() == Alias.TargetType.INTERFACE)));
     }
+    
+    public boolean isTypeClass() {
+        return isRecord() && "TypeClass".equals(name);
+    }
 }

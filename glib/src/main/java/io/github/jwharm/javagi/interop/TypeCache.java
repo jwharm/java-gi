@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.gnome.glib.Type;
+import org.gnome.gobject.TypeInstance;
 
 import io.github.jwharm.javagi.base.Proxy;
 
@@ -24,7 +25,7 @@ public class TypeCache {
      * Get the constructor from the type registry for the native object instance at the given 
      * memory address. The applicable constructor is determined based on the GType of the native 
      * object (as it was registered using {@link #register(Type, Function)}).
-     * @param address  address of Proxy object to obtain the type from
+     * @param address  address of TypeInstance object to obtain the type from
      * @param fallback if none was found, this constructor will be registered for the type, and returned
      * @return         the constructor, or {@code null} if address is {@code null} or a null-pointer
      */
@@ -33,8 +34,18 @@ public class TypeCache {
         if (address == null || address.equals(MemoryAddress.NULL)) return null;
 
         // Read the gtype from memory
-        Type type = Interop.getType(address);
-
+        Type type = new TypeInstance(address).readGClass().readGType();
+        
+        return getConstructor(type, fallback);
+    }
+    
+    /**
+     * Get the constructor from the type registry for the provided GType.
+     * @param type     the GType for which the constructor was registered
+     * @param fallback if none was found, this constructor will be registered for the type, and returned
+     * @return         the constructor, or {@code null} if address is {@code null} or a null-pointer
+     */
+    public static Function<Addressable, ? extends Proxy> getConstructor(Type type, Function<Addressable, ? extends Proxy> fallback) {
         // Find the constructor in the typeRegister and return it
         if (type != null) {
             Function<Addressable, ? extends Proxy> ctor = typeRegister.get(type);
@@ -61,7 +72,4 @@ public class TypeCache {
     public static void register(Type type, Function<Addressable, ? extends Proxy> marshal) {
         typeRegister.put(type, marshal);
     }
-    
-
-
 }

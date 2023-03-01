@@ -1,8 +1,8 @@
 package io.github.jwharm.javagi.util;
 
-import io.github.jwharm.javagi.annotations.ClassInitializer;
+import io.github.jwharm.javagi.annotations.ClassInit;
 import io.github.jwharm.javagi.annotations.CustomType;
-import io.github.jwharm.javagi.annotations.InstanceInitializer;
+import io.github.jwharm.javagi.annotations.InstanceInit;
 import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
@@ -152,11 +152,11 @@ public class Types {
     public static <T extends GObject> Consumer<T> getInstanceInit(Class<T> cls) {
         // Find instance initializer function
         for (Method method : cls.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(InstanceInitializer.class)) {
+            if (method.isAnnotationPresent(InstanceInit.class)) {
                 // Create a wrapper function that calls the instance initializer and logs exceptions
                 return (inst) -> {
                     try {
-                        method.invoke(null, inst);
+                        method.invoke(inst);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s instance init: %s\n", cls.getName(), e.getMessage());
@@ -167,14 +167,14 @@ public class Types {
         return null;
     }
 
-    public static <T extends GObject> Consumer<TypeClass> getClassInit(Class<T> cls) {
+    public static <T extends GObject, TC extends TypeClass> Consumer<TC> getClassInit(Class<T> cls) {
         // Find class initializer function
         for (Method method : cls.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(ClassInitializer.class)) {
+            if (method.isAnnotationPresent(ClassInit.class)) {
                 // Create a wrapper function that calls the class initializer and logs exceptions
                 return (gclass) -> {
                     try {
-                        method.invoke(null, gclass);
+                        method.invoke(null, (TC) gclass);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s class init: %s\n", cls.getName(), e.getMessage());
@@ -206,7 +206,7 @@ public class Types {
      * specified with the {@link CustomType} annotation. (All invalid characters, including '.',
      * are replaced with underscores.)
      * <p>
-     * Use {@link ClassInitializer} and {@link InstanceInitializer} annotations on static methods
+     * Use {@link ClassInit} and {@link InstanceInit} annotations on static methods
      * in the Java class to indicate that these are to be called during GObject class- and
      * instance initialization.
      * <p>
@@ -215,7 +215,7 @@ public class Types {
      * @return the new registered GType
      * @param <T> The class must be derived from GObject
      */
-    public static <T extends GObject> Type register(Class<T> cls) {
+    public static <T extends GObject, TC extends TypeClass> Type register(Class<T> cls) {
         if (cls == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Class is null\n");
@@ -230,7 +230,7 @@ public class Types {
             MemoryLayout classLayout = getClassLayout(cls, typeName);
             Function<Addressable, T> constructor = getAddressConstructor(cls);
             Consumer<T> instanceInit = getInstanceInit(cls);
-            Consumer<TypeClass> classInit = getClassInit(cls);
+            Consumer<TC> classInit = getClassInit(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             if (instanceInit == null) instanceInit = $ -> {};
@@ -266,14 +266,16 @@ public class Types {
      * @param constructor memory-address constructor
      * @param flags type flags
      * @return the new GType
-     * @param <T> the instance initializer function must accept the
-     *            result of the memory address constructor
+     * @param <T>  the instance initializer function must accept the
+     *             result of the memory address constructor
+     * @param <TC> the class initializer function must accept a
+     *            parameter that is a subclass of TypeClass
      */
-    public static <T extends TypeInstance> Type register(
+    public static <T extends GObject, TC extends TypeClass> Type register(
             org.gnome.glib.Type parentType,
             String typeName,
             MemoryLayout classLayout,
-            Consumer<TypeClass> classInit,
+            Consumer<TC> classInit,
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
             Function<Addressable, T> constructor,
@@ -285,11 +287,11 @@ public class Types {
                 typeName,
                 (short) classLayout.byteSize(),
                 // The data parameter is not used.
-                (typeClass, data) -> classInit.accept(typeClass),
+                (typeClass, data) -> classInit.accept((TC) typeClass),
                 (short) instanceLayout.byteSize(),
                 // The instance parameter is a type-instance of T, so construct a T proxy instance.
                 // The typeClass parameter is not used.
-                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.get(instance.handle(), true, constructor)),
+                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.getForType(instance.handle(), constructor)),
                 flags
         );
         // Register the type and constructor in the cache

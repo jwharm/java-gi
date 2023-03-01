@@ -235,9 +235,14 @@ public class Variable extends GirElement {
         if (type.isCallback())
             return "null /* Unsupported parameter type */";
 
-        if (type.isClass() || type.isInterface() || type.isAlias() || type.isRecord() || type.isUnion())
-            return "(" + type.qualifiedJavaType + ") InstanceCache.get(" + identifier + ", "
-                    + type.hasGType() + ", " + type.constructorName + ")";
+        if (type.isClass() || type.isInterface() || type.isAlias() || type.isRecord() || type.isUnion()) {
+            String cacheFunction = "InstanceCache.get";
+            if (type.hasGType())
+                cacheFunction = "InstanceCache.getForType";
+            else if (type.isTypeClass())
+                cacheFunction = "InstanceCache.getForTypeClass";
+            return "(" + type.qualifiedJavaType + ") " + cacheFunction + "(" + identifier + ", " + type.constructorName + ")";
+        }
 
         if (type.isBoolean())
             return identifier + " != 0";
