@@ -10,7 +10,6 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
-import org.gnome.gobject.TypeInstance;
 import org.gnome.gtk.Widget;
 
 import java.lang.foreign.*;
@@ -24,6 +23,16 @@ import static io.github.jwharm.javagi.util.Types.*;
 public class Types {
 
     private static final String LOG_DOMAIN = "java-gi";
+
+    public static String getTemplateName(Class<?> cls) {
+        var annotation = cls.getAnnotation(GtkTemplate.class);
+        String name = annotation.name();
+        if (name != null) {
+            return name;
+        }
+
+        return getName(cls);
+    }
 
     private static <T extends Widget> MemoryLayout getTemplateInstanceLayout(Class<T> cls, String typeName) {
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
@@ -100,7 +109,7 @@ public class Types {
 
     public static <T extends Widget> Type registerTemplate(Class<T> cls) {
         try {
-            String typeName = getName(cls);
+            String typeName = getTemplateName(cls);
             MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, typeName);
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = getGType(parentClass);

@@ -16,6 +16,7 @@ import org.gnome.gobject.TypeClass;
 
 import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.Proxy;
+import org.gnome.gobject.TypeInstance;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -136,7 +137,7 @@ public class InstanceCache {
      * @return         a Proxy instance for the provided memory address
      */
     public static Proxy get(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
-        
+
         // Null check on the memory address
         if (address == null || address.equals(MemoryAddress.NULL)) {
             return null;
@@ -171,6 +172,12 @@ public class InstanceCache {
      * @return the cached Proxy instance
      */
     public static Proxy put(Addressable address, Proxy newInstance) {
+        // Do not cache TypeInstance objects.
+        // They will be cached later with the actual type.
+        if (newInstance instanceof TypeInstance) {
+            return newInstance;
+        }
+
         // Do not put a new instance if it already exists
         if (strongReferences.containsKey(address) || weakReferences.containsKey(address)) {
             return newInstance;

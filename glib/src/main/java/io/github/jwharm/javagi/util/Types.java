@@ -294,7 +294,13 @@ public class Types {
                 (short) instanceLayout.byteSize(),
                 // The instance parameter is a type-instance of T, so construct a T proxy instance.
                 // The typeClass parameter is not used.
-                (instance, typeClass) -> instanceInit.accept((T) InstanceCache.getForType(instance.handle(), constructor)),
+                (instance, typeClass) -> {
+                    // The instance is initially cached as TypeInstance.
+                    // Overwrite it with a new T instance, and run init().
+                    T newInstance = constructor.apply(instance.handle());
+                    InstanceCache.put(newInstance.handle(), newInstance);
+                    instanceInit.accept(newInstance);
+                },
                 flags
         );
         // Register the type and constructor in the cache
