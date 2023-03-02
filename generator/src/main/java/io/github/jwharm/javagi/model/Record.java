@@ -43,11 +43,17 @@ public class Record extends Class {
         }
 
         if (isGTypeStructFor != null) {
-            writer.write(" extends org.gnome.gobject.TypeClass {\n");
+            writer.write(" extends org.gnome.gobject.TypeClass");
         } else {
-            writer.write(" extends StructProxy {\n");
+            writer.write(" extends ProxyInstance");
         }
 
+        // Floating
+        if (isFloating()) {
+            writer.write(" implements io.github.jwharm.javagi.base.Floating");
+        }
+
+        writer.write(" {\n");
         writer.increaseIndent();
 
         if (isGTypeStructFor == null) {

@@ -1,16 +1,13 @@
 package io.github.jwharm.javagi.util;
 
 import java.lang.foreign.*;
+import java.util.ArrayList;
 
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.InterfaceInfo;
-import org.gnome.gobject.TypeFlags;
-
-import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * An implementation of the {@link ListModel} that returns the index of
@@ -28,18 +25,8 @@ public class ListIndexModel extends GObject implements ListModel {
         super(address);
     }
 
-    /**
-     * Get the {@link MemoryLayout} of the instance struct
-     * @return the memory layout
-     */
-    public static MemoryLayout getMemoryLayout() {
-        return MemoryLayout.structLayout(
-                GObject.getMemoryLayout().withName("parent_instance"),
-                Interop.valueLayout.C_INT.withName("size")
-        ).withName("ListIndexModel");
-    }
-
     private static Type type;
+    private ArrayList<ListIndex> items = new ArrayList<>();
 
     /**
      * Get the gtype of {@link ListIndexModel}, or register it as a new gtype
@@ -48,16 +35,8 @@ public class ListIndexModel extends GObject implements ListModel {
      */
     public static Type getType() {
         if (type == null) {
-            // Register the new gtype
-            type = GObjects.typeRegisterStaticSimple(
-                    GObject.getType(),
-                    "ListIndexModel",
-                    (short) ObjectClass.getMemoryLayout().byteSize(),
-                    (gclass, data) -> {},
-                    (short) getMemoryLayout().byteSize(),
-                    (inst, gclass) -> {},
-                    TypeFlags.NONE
-            );
+            type = Types.register(ListIndexModel.class);
+
             // Implement the ListModel interface
             InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
             interfaceInfo.writeInterfaceInit((iface, data) -> {
@@ -68,21 +47,17 @@ public class ListIndexModel extends GObject implements ListModel {
             });
             GObjects.typeAddInterfaceStatic(type, ListModel.getType(), interfaceInfo);
         }
-        TypeCache.register(type, ListIndexModel::new);
         return type;
-    }
-
-    private ListIndexModel() {
-        super(getType(), null);
     }
 
     /**
      * Instantiate a new ListIndexModel with the provided size.
      * @param size the initial size of the list model
      */
-    public ListIndexModel(int size) {
-        this();
-        setSize(size);
+    public static ListIndexModel withSize(int size) {
+        ListIndexModel model = GObject.newInstance(getType());
+        model.setSize(size);
+        return model;
     }
 
     /**
@@ -90,20 +65,20 @@ public class ListIndexModel extends GObject implements ListModel {
      * @param size the new listmodel size
      */
     public void setSize(int size) {
-        int oldSize = getNItems();
-        getMemoryLayout()
-                .varHandle(MemoryLayout.PathElement.groupElement("size"))
-                .set(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()), size);
+        int oldSize = items.size();
+        items = new ArrayList<>(size);
+        for (int i = 0; i < size; i++)
+            items.add(ListIndex.of(i));
         itemsChanged(0, oldSize, size);
     }
 
     /**
-     * Returns the gtype of {@link ListIndexItem}
-     * @return always returns the value of {@link ListIndexItem#getType()}
+     * Returns the gtype of {@link ListIndex}
+     * @return always returns the value of {@link ListIndex#getType()}
      */
     @Override
     public Type getItemType() {
-        return ListIndexItem.getType();
+        return ListIndex.getType();
     }
 
     /**
@@ -112,19 +87,43 @@ public class ListIndexModel extends GObject implements ListModel {
      */
     @Override
     public int getNItems() {
-        return (int) getMemoryLayout()
-                .varHandle(MemoryLayout.PathElement.groupElement("size"))
-                .get(MemorySegment.ofAddress((MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit()));
+        return items.size();
     }
 
     /**
-     * Returns a {@link ListIndexItem} with the requested position as its value
+     * Returns a {@link ListIndex} with the requested position as its value
      * @param position the position of the item to fetch
-     * @return a {@link ListIndexItem} with the requested position as its value
+     * @return a {@link ListIndex} with the requested position as its value
      */
     @Override
     public GObject getItem(int position) {
         if (position < 0 || position >= getNItems()) return null;
-        return new ListIndexItem(position);
+        return items.get(position);
+    }
+
+    public static class ListIndex extends GObject {
+
+        private static Type type;
+        private int index;
+
+        public ListIndex(Addressable address) {
+            super(address);
+        }
+
+        public static Type getType() {
+            if (type == null)
+                type = Types.register(ListIndex.class);
+            return type;
+        }
+
+        public static ListIndex of(int value) {
+            ListIndex instance = GObject.newInstance(getType());
+            instance.index = value;
+            return instance;
+        }
+
+        public int getIndex() {
+            return index;
+        }
     }
 }

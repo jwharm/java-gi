@@ -18,7 +18,7 @@ public class Union extends RegisteredType {
         writer.write("public class " + javaName);
         if (generic)
             writer.write("<T extends org.gnome.gobject.GObject>");
-        writer.write(" extends StructProxy {\n");
+        writer.write(" extends ProxyInstance {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
         generateMemoryLayout(writer);

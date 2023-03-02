@@ -12,9 +12,11 @@ public interface Closure extends CallableType {
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
-        writer.write("/**\n");
-        writer.write(" * Functional interface declaration of the {@code " + javaName + "} callback.\n");
-        writer.write(" */\n");
+        if (getDoc() == null) {
+            writer.write("/**\n");
+            writer.write(" * Functional interface declaration of the {@code " + javaName + "} callback.\n");
+            writer.write(" */\n");
+        }
         writer.write("@FunctionalInterface\n");
         writer.write("public interface " + javaName + " {\n");
         writer.write("\n");
@@ -103,9 +105,9 @@ public interface Closure extends CallableType {
             writer.increaseIndent();
         }
 
-        // If the return value is a proxy object with transfer-ownership="full", we don't need to unref it anymore.
-        if (returnValue.isProxy() && "full".equals(returnValue.transferOwnership)) {
-            writer.write("_result.yieldOwnership();\n");
+        // If the return value is a proxy object with transfer-ownership="full", the JVM must own a reference.
+        if (returnValue.isGObject() && "full".equals(returnValue.transferOwnership)) {
+            writer.write("_result.ref();\n");
         }
 
         // Return statement

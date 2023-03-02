@@ -74,18 +74,21 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
         // clazz is of type Class<T>, so the cast to T is safe
         @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
         var segment = MemorySegment.ofAddress(address, length * layout.byteSize(), MemorySession.openImplicit());
-        List<MemorySegment> elements = segment.elements(layout).toList();
-        for (int i = 0; i < length; i++) {
-            array[i] = makeInstance(elements.get(i).address());
+        // MemorySegment.elements() only works for >1 elements
+        if (length == 1) {
+            array[0] = makeInstance(segment.address());
+        } else {
+            List<MemorySegment> elements = segment.elements(layout).toList();
+            for (int i = 0; i < length; i++) {
+                array[i] = makeInstance(elements.get(i).address());
+            }
         }
         return array;
     }
     
     // Get the constructor and create a new instance.
     // The unchecked warning is suppressed because the constructors are explicitly registered for the correct type.
-    @SuppressWarnings("unchecked")
     private T makeInstance(Addressable ref) {
-        Function<Addressable, T> ctor = (Function<Addressable, T>) TypeCache.getConstructor((MemoryAddress) ref, constructor);
-        return ctor.apply(ref);
+        return constructor.apply(ref);
     }
 }

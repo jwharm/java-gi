@@ -41,7 +41,14 @@ public class Interop {
      * @return the type (GType) of the object
      */
     public static Type getType(MemoryAddress address) {
+        if (address == null || address.equals(MemoryAddress.NULL))
+            return null;
+
         MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
+
+        if (g_class == null || g_class.equals(MemoryAddress.NULL))
+            return null;
+
         long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
         return new Type(g_type);
     }
@@ -506,15 +513,46 @@ public class Interop {
         }
         
         // Unwrap the java-gi types to their memory address or primitive value.
+        // Arrays are allocated to native memory as-is (no additional NUL is appended: the caller must do this)
         private Object unwrapJavagiTypes(Object o) {
             if (o == null) {
                 return MemoryAddress.NULL;
             }
+            if (o instanceof Addressable[] addresses) {
+                return Interop.allocateNativeArray(addresses, false, MemorySession.openImplicit()).address();
+            }
             if (o instanceof Boolean bool) {
                 return bool ? 1 : 0;
             }
+            if (o instanceof boolean[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof byte[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof char[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof double[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof float[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof int[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof long[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof short[] values) {
+                return Interop.allocateNativeArray(values, false, MemorySession.openImplicit()).address();
+            }
             if (o instanceof Proxy proxy) {
                 return proxy.handle();
+            }
+            if (o instanceof Proxy[] proxys) {
+                return Interop.allocateNativeArray(proxys, false, MemorySession.openImplicit()).address();
             }
             if (o instanceof Alias<?> alias) {
                 return alias.getValue();
@@ -522,11 +560,20 @@ public class Interop {
             if (o instanceof Bitfield bitfield) {
                 return bitfield.getValue();
             }
+            if (o instanceof Bitfield[] bitfields) {
+                return Bitfield.getValues(bitfields);
+            }
             if (o instanceof Enumeration enumeration) {
                 return enumeration.getValue();
             }
+            if (o instanceof Enumeration[] enumerations) {
+                return Enumeration.getValues(enumerations);
+            }
             if (o instanceof java.lang.String string) {
-                return MemorySession.openImplicit().allocateUtf8String(string).address();
+                return Interop.allocateNativeString(string, MemorySession.openImplicit()).address();
+            }
+            if (o instanceof java.lang.String[] strings) {
+                return Interop.allocateNativeArray(strings, false, MemorySession.openImplicit()).address();
             }
             return o;
         }

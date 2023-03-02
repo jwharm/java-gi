@@ -84,6 +84,29 @@ public class Parameter extends Variable {
         return type.isClass() || type.isRecord() || type.isInterface() || type.isUnion();
     }
 
+    public boolean isGObject() {
+        if (! isProxy())
+            return false;
+
+        if (type.girElementInstance == null)
+            return false;
+
+        if (type.isClass() || type.isInterface())
+            return type.girElementInstance.isInstanceOf("org.gnome.gobject.GObject");
+
+        if (type.isAliasForPrimitive())
+            return false;
+
+        if (type.isAlias()) {
+            Alias a = (Alias) type.girElementInstance;
+            if (a.getTargetType() == Alias.TargetType.CLASS || a.getTargetType() == Alias.TargetType.INTERFACE) {
+                return a.type.girElementInstance.isInstanceOf("org.gnome.gobject.GObject");
+            }
+        }
+
+        return false;
+    }
+
     public boolean isAliasForPrimitive() {
         return type != null && type.isAliasForPrimitive();
     }
@@ -277,15 +300,15 @@ public class Parameter extends Variable {
             }
         }
         
-        // If the parameter has attribute transfer-ownership="full", we don't need to unref it anymore.
-        // Only for proxy objects where ownership is fully transferred away, unless it's an out parameter or a pointer.
-        if (isProxy()
+        // If the parameter has attribute transfer-ownership="full", the JVM must own a reference.
+        // Only for GObjects where ownership is fully transferred away, unless it's an out parameter or a pointer.
+        if (isGObject()
                 && "full".equals(transferOwnership) 
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             String param = isInstanceParameter() ? "this" : name;
             if (nullable) writer.write("if (" + param + " != null) ");
-            writer.write(param + ".yieldOwnership();\n");
+            writer.write(param + ".ref();\n");
         }
     }
 

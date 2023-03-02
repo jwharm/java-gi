@@ -64,12 +64,16 @@ public class Type extends GirElement {
         // Get constructor name from class, interface, and alias for class or interface
         this.constructorName = qualifiedJavaType + "::new";
         if (girElementInstance != null) {
-            if (girElementInstance instanceof Class cls) {
+            if (girElementInstance instanceof Record) {
+                // no action needed
+            } else if (girElementInstance instanceof Class cls) {
                 this.constructorName = cls.getConstructorString();
             } else if (girElementInstance instanceof Interface iface) {
                 this.constructorName = iface.getConstructorString();
             } else if (girElementInstance instanceof Alias alias) {
-                if (alias.getTargetType() == Alias.TargetType.CLASS) {
+                if (alias.getTargetType() == Alias.TargetType.RECORD) {
+                    // no action needed
+                } else if (alias.getTargetType() == Alias.TargetType.CLASS) {
                     Class cls = (Class) alias.type.girElementInstance;
                     this.constructorName = cls.getConstructorString();
                 } else if (alias.getTargetType() == Alias.TargetType.INTERFACE) {
@@ -126,5 +130,21 @@ public class Type extends GirElement {
     
     public boolean isPointer() {
         return cType != null && (cType.endsWith("*") || cType.endsWith("gpointer"));
+    }
+
+    /**
+     * All classes and interfaces (and aliases for classes and interfaces) have a gtype
+     * @return whether it's possible to read a gtype for this type
+     */
+    public boolean hasGType() {
+        return (isClass() || isInterface() ||
+                (isAlias() && (
+                        ((Alias) girElementInstance).getTargetType() == Alias.TargetType.CLASS ||
+                        ((Alias) girElementInstance).getTargetType() == Alias.TargetType.INTERFACE)))
+                && (! isRecord() || isUnion() || isAliasForPrimitive());
+    }
+    
+    public boolean isTypeClass() {
+        return isRecord() && "TypeClass".equals(name);
     }
 }

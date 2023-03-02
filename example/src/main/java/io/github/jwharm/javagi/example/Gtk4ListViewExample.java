@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi.example;
 
-import io.github.jwharm.javagi.util.ListIndexItem;
 import io.github.jwharm.javagi.util.ListIndexModel;
 import org.gnome.gio.ApplicationFlags;
 import org.gnome.gtk.*;
@@ -9,24 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Gtk4ListViewExample {
+public class Gtk4ListViewExample extends Application {
 
-    private final Application app;
     private final List<String> list;
     private final ListIndexModel listIndexModel;
     private final Random rnd = new Random();
-    private SignalListItemFactory factory;
-    private ScrolledWindow scroll;
-    private ListView lv;
 
     public void activate() {
-        var window = new ApplicationWindow(app);
+        var window = new ApplicationWindow(this);
         window.setTitle("Window");
         window.setDefaultSize(300, 500);
 
         var box = new Box(Orientation.VERTICAL, 0);
 
-        factory = new SignalListItemFactory();
+        SignalListItemFactory factory = new SignalListItemFactory();
         factory.onSetup(object -> {
             ListItem listitem = (ListItem) object;
             listitem.setChild(new Label(""));
@@ -34,15 +29,17 @@ public class Gtk4ListViewExample {
         factory.onBind(object -> {
             ListItem listitem = (ListItem) object;
             Label label = (Label) listitem.getChild();
-            ListIndexItem item = (ListIndexItem) listitem.getItem();
+            ListIndexModel.ListIndex item = (ListIndexModel.ListIndex) listitem.getItem();
+            if (label == null || item == null)
+                return;
 
             int index = item.getIndex();
             String text = list.get(index);
             label.setLabel(text);
         });
 
-        scroll = new ScrolledWindow();
-        lv = new ListView(new SingleSelection(listIndexModel), factory);
+        ScrolledWindow scroll = new ScrolledWindow();
+        ListView lv = new ListView(new SingleSelection(listIndexModel), factory);
         scroll.setChild(lv);
         scroll.setVexpand(true);
         box.append(scroll);
@@ -61,13 +58,13 @@ public class Gtk4ListViewExample {
     }
 
     public Gtk4ListViewExample(String[] args) {
-        app = new Application("org.gnome.gtk.example", ApplicationFlags.FLAGS_NONE);
+        super("org.gnome.gtk.example", ApplicationFlags.FLAGS_NONE);
 
         list = new ArrayList<>();
-        for (int i = 0, len = rnd.nextInt(900, 1000); i < len; i++) list.add(randomString());
-        listIndexModel = new ListIndexModel(list.size());
+        for (int i = 0, len = rnd.nextInt(400, 500); i < len; i++) list.add(randomString());
+        listIndexModel = ListIndexModel.withSize(list.size());
 
-        app.onActivate(this::activate);
-        app.run(args);
+        onActivate(this::activate);
+        run(args);
     }
 }

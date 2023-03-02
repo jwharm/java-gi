@@ -14,6 +14,8 @@ setupGenSources {
         module org.gnome.gtk {
             requires static org.jetbrains.annotations;
             requires transitive org.gnome.glib;
+            exports io.github.jwharm.javagi.gtk.annotations;
+            exports io.github.jwharm.javagi.gtk.util;
             %s
         }
     """.trimIndent()
