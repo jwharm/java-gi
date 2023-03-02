@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.gtk.util;
+package io.github.jwharm.javagi.gtk.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface GtkChild {
+@Target(ElementType.TYPE)
+public @interface GtkTemplate {
+    String name() default "";
+    String ui();
 }

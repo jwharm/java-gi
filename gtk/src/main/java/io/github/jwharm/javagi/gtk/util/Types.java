@@ -1,8 +1,12 @@
 package io.github.jwharm.javagi.gtk.util;
 
 import io.github.jwharm.javagi.base.Out;
+import io.github.jwharm.javagi.base.Proxy;
+import io.github.jwharm.javagi.gtk.annotations.GtkChild;
+import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.gio.File;
+import org.gnome.gio.Resource;
 import org.gnome.glib.Bytes;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -27,7 +31,7 @@ public class Types {
     public static String getTemplateName(Class<?> cls) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String name = annotation.name();
-        if (name != null) {
+        if (! "".equals(name)) {
             return name;
         }
 
@@ -42,10 +46,35 @@ public class Types {
 
         for (Field field : cls.getDeclaredFields()) {
             if (field.isAnnotationPresent(GtkChild.class)) {
-                if (field.getClass().isPrimitive()) {
-                    System.out.println("Not supported yet");
+                // Determine the name of the struct field
+                String fieldName = field.getAnnotation(GtkChild.class).name();
+                if ("".equals(fieldName)) {
+                    fieldName = field.getName();
                 }
-                elements.add(Interop.valueLayout.ADDRESS.withName(field.getName()));
+
+                if (field.getType().equals(boolean.class)) {
+                    elements.add(Interop.valueLayout.C_BOOLEAN.withName(fieldName));
+                } else if (field.getType().equals(byte.class)) {
+                    elements.add(Interop.valueLayout.C_BYTE.withName(fieldName));
+                } else if (field.getType().equals(char.class)) {
+                    elements.add(Interop.valueLayout.C_CHAR.withName(fieldName));
+                } else if (field.getType().equals(double.class)) {
+                    elements.add(Interop.valueLayout.C_DOUBLE.withName(fieldName));
+                } else if (field.getType().equals(float.class)) {
+                    elements.add(Interop.valueLayout.C_FLOAT.withName(fieldName));
+                } else if (field.getType().equals(int.class)) {
+                    elements.add(Interop.valueLayout.C_INT.withName(fieldName));
+                } else if (field.getType().equals(long.class)) {
+                    elements.add(Interop.valueLayout.C_LONG.withName(fieldName));
+                } else if (field.getType().equals(short.class)) {
+                    elements.add(Interop.valueLayout.C_SHORT.withName(fieldName));
+                } else if (Proxy.class.isAssignableFrom(field.getType())) {
+                    elements.add(Interop.valueLayout.ADDRESS.withName(fieldName));
+                } else {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Unsupported type '%s' of field %s\n",
+                            field.getType().getSimpleName(), fieldName);
+                }
             }
         }
 
@@ -60,15 +89,8 @@ public class Types {
         return (typeClass) -> {
             Widget.WidgetClass widgetClass = new Widget.WidgetClass(typeClass.handle());
 
-            Out<byte[]> bytes = new Out<>();
-            File file = File.newForPath(ui);
-            try {
-                file.loadContents(null, bytes, null);
-            } catch (Exception gerror) {
-                throw new RuntimeException(gerror);
-            }
-
-            widgetClass.setTemplate(new Bytes(bytes.get()));
+            // The ui parameter must refer to a registered GResource
+            widgetClass.setTemplateFromResource(ui);
 
             new GObject.ObjectClass(typeClass.handle()).overrideDispose((object) -> {
                 ((Widget) object).disposeTemplate(typeClass.readGType());
@@ -99,7 +121,7 @@ public class Types {
                         field.set(widget, child);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Cannot get template child %s in class %s: %s",
+                                "Cannot get template child %s in class %s: %s\n",
                                 field.getName(), cls.getName(), e.getMessage());
                     }
                 }
@@ -143,7 +165,7 @@ public class Types {
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s",
+                    "Cannot register type %s: %s\n",
                     cls == null ? "null" : cls.getName(), e.getMessage());
             return null;
         }

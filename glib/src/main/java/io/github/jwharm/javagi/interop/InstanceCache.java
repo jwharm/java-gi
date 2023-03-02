@@ -16,7 +16,6 @@ import org.gnome.gobject.TypeClass;
 
 import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.Proxy;
-import org.gnome.gobject.TypeInstance;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -174,7 +173,7 @@ public class InstanceCache {
     public static Proxy put(Addressable address, Proxy newInstance) {
         // Do not cache TypeInstance objects.
         // They will be cached later with the actual type.
-        if (newInstance instanceof TypeInstance) {
+        if (newInstance.getClass().getSimpleName().equals("TypeInstance")) {
             return newInstance;
         }
 
@@ -185,9 +184,9 @@ public class InstanceCache {
 
         // Put the instance in the cache. If another thread did this (while we were creating a new
         // instance), putIfAbsent() will return that instance.
-        Proxy existingInstance = strongReferences.putIfAbsent(address, newInstance);
-        if (existingInstance != null) {
-            return existingInstance;
+        WeakReference<Proxy> existingInstance = weakReferences.putIfAbsent(address, new WeakReference<>(newInstance));
+        if (existingInstance != null && existingInstance.get() != null) {
+            return existingInstance.get();
         }
 
         // Sink floating references

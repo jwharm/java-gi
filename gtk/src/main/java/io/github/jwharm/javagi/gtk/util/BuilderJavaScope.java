@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.gtk.util;
 
 import io.github.jwharm.javagi.base.GErrorException;
+import io.github.jwharm.javagi.gtk.annotations.GtkCallback;
 import io.github.jwharm.javagi.util.JavaClosure;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -101,7 +102,9 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
         }
 
         try {
-            Method method = currentObject.getClass().getDeclaredMethod(functionName);
+            // Find method with the right name
+            Method method = getMethodForName(currentObject.getClass(), functionName);
+
             // Signal that returns boolean
             if (method.getReturnType().equals(Boolean.TYPE)) {
                 return new JavaClosure(() -> {
@@ -132,6 +135,27 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
                     functionName, currentObject.getClass().getName());
             return new BuilderCScope().createClosure(builder, functionName, flags, object);
         }
+    }
+
+    /**
+     * Return a method with annotation "@GtkCallback name=functionName", or else a method
+     * with the exact name "functionName()".
+     * @param cls The class to search in
+     * @param functionName the name to search for
+     * @return the method (if found)
+     * @throws NoSuchMethodException when the method cannot be found
+     */
+    private Method getMethodForName(Class<?> cls, String functionName) throws NoSuchMethodException {
+        // Find method with GtkCallback annotation
+        for (Method m : cls.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(GtkCallback.class)) {
+                if (functionName.equals(m.getAnnotation(GtkCallback.class).name())) {
+                    return m;
+                }
+            }
+        }
+        // Find method using reflection
+        return cls.getDeclaredMethod(functionName);
     }
 
     /**

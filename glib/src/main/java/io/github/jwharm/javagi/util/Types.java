@@ -30,7 +30,7 @@ public class Types {
         // Check for an annotation that overrides the type name
         if (cls.isAnnotationPresent(CustomType.class)) {
             var annotation = cls.getAnnotation(CustomType.class);
-            if (annotation.name() != null) {
+            if (! "".equals(annotation.name())) {
                 typeNameInput = annotation.name();
             }
         }

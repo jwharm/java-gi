@@ -19,8 +19,11 @@ public class Gtk4Example {
         box.setHalign(Align.CENTER);
         box.setValign(Align.CENTER);
 
+        AtomicInteger sec = new AtomicInteger(29);
+
         var button = Button.newWithLabel("Hello world! 30");
         button.onClicked(() -> {
+            sec.set(0); // stop the timer
             MessageDialog dialog = new MessageDialog(
                     window,
                     DialogFlags.MODAL.or(DialogFlags.DESTROY_WITH_PARENT),
@@ -44,7 +47,6 @@ public class Gtk4Example {
             dialog.show();
         });
 
-        AtomicInteger sec = new AtomicInteger(29);
         GLib.timeoutAddSeconds(1, () -> {
             button.setLabel("Hello world! " + (sec.getAndDecrement()));
             if (sec.get() == 0) {
