@@ -1,13 +1,9 @@
 package io.github.jwharm.javagi.gtk.util;
 
-import io.github.jwharm.javagi.base.Out;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.interop.Interop;
-import org.gnome.gio.File;
-import org.gnome.gio.Resource;
-import org.gnome.glib.Bytes;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -38,11 +34,23 @@ public class Types {
         return getName(cls);
     }
 
-    private static <T extends Widget> MemoryLayout getTemplateInstanceLayout(Class<T> cls, String typeName) {
+    /**
+     * Generate a memory layout for an instance struct
+     * @param cls the class from which the fields will be used to generate the memory layout
+     * @param typeName the name of the struct
+     * @return the generated memory layout
+     */
+    private static MemoryLayout getTemplateInstanceLayout(Class<?> cls, String typeName) {
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
+        if (parentLayout == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find memory layout of class %s\n",
+                    cls.getSimpleName());
+            return null;
+        }
 
         ArrayList<MemoryLayout> elements = new ArrayList<>();
-        elements.add(parentLayout.withName("parent_instance"));
+        long size = add(parentLayout.withName("parent_instance"), elements, 0);
 
         for (Field field : cls.getDeclaredFields()) {
             if (field.isAnnotationPresent(GtkChild.class)) {
@@ -53,23 +61,23 @@ public class Types {
                 }
 
                 if (field.getType().equals(boolean.class)) {
-                    elements.add(Interop.valueLayout.C_BOOLEAN.withName(fieldName));
+                    size = add(Interop.valueLayout.C_BOOLEAN.withName(fieldName), elements, size);
                 } else if (field.getType().equals(byte.class)) {
-                    elements.add(Interop.valueLayout.C_BYTE.withName(fieldName));
+                    size = add(Interop.valueLayout.C_BYTE.withName(fieldName), elements, size);
                 } else if (field.getType().equals(char.class)) {
-                    elements.add(Interop.valueLayout.C_CHAR.withName(fieldName));
+                    size = add(Interop.valueLayout.C_CHAR.withName(fieldName), elements, size);
                 } else if (field.getType().equals(double.class)) {
-                    elements.add(Interop.valueLayout.C_DOUBLE.withName(fieldName));
+                    size = add(Interop.valueLayout.C_DOUBLE.withName(fieldName), elements, size);
                 } else if (field.getType().equals(float.class)) {
-                    elements.add(Interop.valueLayout.C_FLOAT.withName(fieldName));
+                    size = add(Interop.valueLayout.C_FLOAT.withName(fieldName), elements, size);
                 } else if (field.getType().equals(int.class)) {
-                    elements.add(Interop.valueLayout.C_INT.withName(fieldName));
+                    size = add(Interop.valueLayout.C_INT.withName(fieldName), elements, size);
                 } else if (field.getType().equals(long.class)) {
-                    elements.add(Interop.valueLayout.C_LONG.withName(fieldName));
+                    size = add(Interop.valueLayout.C_LONG.withName(fieldName), elements, size);
                 } else if (field.getType().equals(short.class)) {
-                    elements.add(Interop.valueLayout.C_SHORT.withName(fieldName));
+                    size = add(Interop.valueLayout.C_SHORT.withName(fieldName), elements, size);
                 } else if (Proxy.class.isAssignableFrom(field.getType())) {
-                    elements.add(Interop.valueLayout.ADDRESS.withName(fieldName));
+                    size = add(Interop.valueLayout.ADDRESS.withName(fieldName), elements, size);
                 } else {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Unsupported type '%s' of field %s\n",
@@ -80,6 +88,25 @@ public class Types {
 
         MemoryLayout[] layouts = elements.toArray(new MemoryLayout[0]);
         return MemoryLayout.structLayout(layouts).withName(typeName);
+    }
+
+    /**
+     * Add a memory layout to the list, with padding if necessary
+     * @param layout the layout to add
+     * @param elements the list of layouts so far, to which the layout will be added
+     * @param oldSize the total length of the layouts so far
+     * @return the new length of the layouts
+     */
+    private static long add(MemoryLayout layout, ArrayList<MemoryLayout> elements, long oldSize) {
+        long size = oldSize;
+        long s = layout.byteSize();
+        if (size % s % 64 > 0) {
+            long padding = (s - (size % s)) % 64;
+            elements.add(MemoryLayout.paddingLayout(padding));
+            size += padding;
+        }
+        elements.add(layout);
+        return size + s;
     }
 
     private static <T extends Widget> Consumer<TypeClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
