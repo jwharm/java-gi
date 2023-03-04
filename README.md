@@ -2,10 +2,12 @@
 
 **java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. The included Gradle build scripts generate bindings for:
 
-- GLib 1.2.10
-- GTK4 4.8.3
-- LibAdwaita 1.2.0
-- GStreamer 1.20.5
+| Library | Version |
+|---------|---------|
+| GLib | 1.2.10 |
+| GTK | 4.8.3 |
+| LibAdwaita | 1.2.0 |
+| GStreamer | 1.20.5 |
 
 Please note that java-gi is still under active development. Feedback is welcome.
 
