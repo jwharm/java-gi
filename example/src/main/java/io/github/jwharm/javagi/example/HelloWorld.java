@@ -7,11 +7,14 @@ public class HelloWorld {
         // GTK4 simple example
         new Gtk4Example(args);
 
+        // GTK4 timer example
+        // new Gtk4TimerExample(args);
+
         // GTK4 ListView example
-        new Gtk4ListViewExample(args);
+        // new Gtk4ListViewExample(args);
 
         // GStreamer example
         // To run example, provide a valid path to an Ogg Vorbis file:
-        new GStreamerExample(new String[]{"Example.ogg"});
+        // new GStreamerExample(new String[]{"Example.ogg"});
     }
 }
