@@ -5,6 +5,9 @@ plugins {
     id("java-gi.library-conventions")
 }
 
+val pkgVersion = "pkg-config --modversion glib".runCommand(project)
+version = "$pkgVersion-$version"
+
 setupGenSources {
     moduleInfo = """
         module org.gnome.glib {

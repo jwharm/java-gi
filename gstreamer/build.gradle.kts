@@ -9,6 +9,9 @@ dependencies {
     api(project(":glib"))
 }
 
+val pkgVersion = "pkg-config --modversion gstreamer-1.0".runCommand(project)
+version = "$pkgVersion-$version"
+
 setupGenSources {
     moduleInfo = """
         module org.freedesktop.gstreamer {
