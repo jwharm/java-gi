@@ -92,7 +92,7 @@ public class Types {
             // The ui parameter must refer to a registered GResource
             widgetClass.setTemplateFromResource(ui);
 
-            new GObject.ObjectClass(typeClass.handle()).overrideDispose((object) -> {
+            widgetClass.overrideDispose((object) -> {
                 ((Widget) object).disposeTemplate(typeClass.readGType());
                 object.dispose(); // This should call the parent class dispose
             });
