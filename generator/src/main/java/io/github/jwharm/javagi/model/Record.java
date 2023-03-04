@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Record extends Class {
@@ -43,7 +44,21 @@ public class Record extends Class {
         }
 
         if (isGTypeStructFor != null) {
-            writer.write(" extends org.gnome.gobject.TypeClass");
+            // parent_class is always the first field, unless the struct is disguised
+            if (fieldList.isEmpty()) {
+                writer.write(" extends org.gnome.gobject.TypeClass");
+            } else {
+                String parentCType = fieldList.get(0).type.cType;
+                Record parentRec = (Record) Conversions.cTypeLookupTable.get(parentCType);
+                if (parentRec.isGTypeStructFor != null) {
+                    String parentClass = Conversions.toQualifiedJavaType(parentRec.isGTypeStructFor, parentRec.getNamespace());
+                    String parentStr = parentClass + "." + parentRec.javaName;
+                    writer.write(" extends " + parentStr);
+                } else {
+                    // Fallback to TypeClass
+                    writer.write(" extends org.gnome.gobject.TypeClass");
+                }
+            }
         } else {
             writer.write(" extends ProxyInstance");
         }
