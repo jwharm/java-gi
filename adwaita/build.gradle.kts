@@ -10,6 +10,9 @@ dependencies {
     api(project(":gtk"))
 }
 
+val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project)
+version = "$pkgVersion-$version"
+
 setupGenSources {
     moduleInfo = """
         module org.gnome.adwaita {

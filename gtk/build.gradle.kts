@@ -9,6 +9,9 @@ dependencies {
     api(project(":glib"))
 }
 
+val pkgVersion = "pkg-config --modversion gtk4".runCommand(project)
+version = "$pkgVersion-$version"
+
 setupGenSources {
     moduleInfo = """
         module org.gnome.gtk {
