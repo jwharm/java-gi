@@ -167,6 +167,10 @@ public class Parameter extends Variable {
         }
     }
 
+    public boolean isDestroyNotifyParameter() {
+        return (type != null) && "GDestroyNotify".equals(type.cType);
+    }
+
     public boolean isErrorParameter() {
         return (type != null) && "GError**".equals(type.cType);
     }
@@ -182,7 +186,9 @@ public class Parameter extends Variable {
      */
     public boolean checkNull() {
         return (! notnull)
-            && (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter() || varargs))
+            && (! (isInstanceParameter() || isErrorParameter()
+                || isUserDataParameter() || isDestroyNotifyParameter()
+                || isArrayLengthParameter() || varargs))
             && super.checkNull();
     }
 
@@ -197,7 +203,8 @@ public class Parameter extends Variable {
         
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
-        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter() || isArrayLengthParameter() || varargs
+        if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
+                || isDestroyNotifyParameter() || isArrayLengthParameter() || varargs
                 || (type != null && type.isPrimitive && (! type.isPointer())))) {
             if (notnull) {
                 writer.write("java.util.Objects.requireNonNull(" + name

@@ -33,7 +33,7 @@ public interface Closure extends CallableType {
         if (parameters != null) {
             boolean first = true;
             for (Parameter p : parameters.parameterList) {
-                if (p.isUserDataParameter() || p.isArrayLengthParameter()) {
+                if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                     continue;
                 }
                 if (!first) writer.write(", ");

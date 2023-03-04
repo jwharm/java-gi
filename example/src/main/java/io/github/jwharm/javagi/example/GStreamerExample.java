@@ -85,7 +85,7 @@ public class GStreamerExample {
 
         // We add a message handler
         bus = pipeline.getBus();
-        busWatchId = bus.addWatch(0, this::busCall, null);
+        busWatchId = bus.addWatch(0, this::busCall);
 
         // We add all elements into the pipeline
         // file-source | ogg-demuxer | vorbis-decoder | converter | alsa-output

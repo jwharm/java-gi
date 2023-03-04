@@ -17,7 +17,8 @@ public class Parameters extends GirElement {
     public void generateJavaParameters(SourceWriter writer, boolean pointerForArray) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -30,7 +31,8 @@ public class Parameters extends GirElement {
     public void generateJavaParameterTypes(SourceWriter writer, boolean pointerForArray, boolean writeAnnotations) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -43,7 +45,8 @@ public class Parameters extends GirElement {
     public void generateJavaParameterNames(SourceWriter writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
-            if (p.isInstanceParameter() || p.isUserDataParameter() || p.isArrayLengthParameter()) {
+            if (p.isInstanceParameter() || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
             if (counter++ > 0) {
@@ -80,7 +83,7 @@ public class Parameters extends GirElement {
                 writer.write("handle()");
 
             // user_data
-            } else if (p.isUserDataParameter()) {
+            } else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {
                 writer.write("(Addressable) MemoryAddress.NULL");
 
             // Varargs
@@ -116,7 +119,7 @@ public class Parameters extends GirElement {
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
         for (Parameter p : parameterList) {
-            if (p.isUserDataParameter() || p.isArrayLengthParameter()) {
+            if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
 
