@@ -1,6 +1,6 @@
 # java-gi
 
-**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. The included Gradle build scripts generate bindings for:
+**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. Java-gi version 0.4 generates bindings for the following libraries:
 
 | Library | Version |
 |---------|---------|
@@ -14,7 +14,7 @@ Please note that java-gi is still under active development. Feedback is welcome.
 ## Quickstart
 
 - First, download and install [JDK 19](https://jdk.java.net/19/).
-- To create a Gtk application, add the `glib` and `gtk4` modules to your `pom.xml`:
+- To create a Gtk application, add the `glib` and `gtk` modules to your `pom.xml`:
 
 ```xml
 <dependency>
@@ -25,12 +25,12 @@ Please note that java-gi is still under active development. Feedback is welcome.
 
 <dependency>
   <groupId>io.github.jwharm.javagi</groupId>
-  <artifactId>gtk4</artifactId>
+  <artifactId>gtk</artifactId>
   <version>4.8.3-0.4</version>
 </dependency>
 ```
 
-or download the jar files manually from the packages section.
+or download the jar files manually from the [packages section](https://github.com/jwharm?tab=packages&repo_name=java-gi).
 
 - Add `requires org.gnome.gtk;` to your `module-info.java` file.
 - Write, compile and run your GTK application:
@@ -93,7 +93,7 @@ Some interesting features of the bindings that java-gi generates:
 
 ### Coverage
 
-Almost all types, functions and parameters defined in the GIR files for GTK and GStreamer are supported by java-gi. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are handled correctly.
+Almost all types, functions and parameters defined in the GIR files for GTK and GStreamer are supported by java-gi. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
 
 ### Javadoc
 
@@ -116,10 +116,10 @@ public @Nullable java.lang.String getIconName() {
 
 The Javadoc is also published online:
 
-- [GLib] (https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
-- [Gtk] (https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
-- [Adwaita] (https://jwharm.github.io/java-gi/adwaita/org.gnome.adw/module-summary.html)
-- [GStreamer] (https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
+- [GLib](https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
+- [Gtk](https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
+- [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adw/module-summary.html)
+- [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
 
 ### Interfaces
 
@@ -165,9 +165,9 @@ button.onClicked(window::destroy);
 
 For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `Signal` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected.
 
-Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callbak functions to ensure type safety.
+Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callback functions to ensure type safety.
 
-Closures (see [GClosure](https://docs.gtk.org/gobject/struct.Closure.html)) are marshaled to Java methods using reflection.
+[Closures](https://docs.gtk.org/gobject/struct.Closure.html) are marshaled to Java methods using reflection.
 
 ### Registering new types
 
@@ -198,7 +198,7 @@ public class MyObject extends GObject {
 
     // Construct new instance
     public MyObject newInstance() {
-        return GObject.newInstance(getType();
+        return GObject.newInstance(getType());
     }
 
     public MyObject(Addressable address) {
@@ -207,9 +207,11 @@ public class MyObject extends GObject {
 }
 ```
 
+Because `Types.register(Class<?> cls)` uses reflection to determine the name and properties of the new type, you must add `exports [package name] to org.gnome.glib;` to your `module-info.java` file.
+
 ### Composite template classes
 
-A java-gi class with a `@GtkTemplate` annotation will be registered as a Gtk template class:
+A class with a `@GtkTemplate` annotation will be registered as a Gtk template class:
 
 ```java
 @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
@@ -231,13 +233,15 @@ public class HelloWindow extends ApplicationWindow {
     
     @GtkCallback
     public void buttonClicked() {
-        ....
+        ...
     }
 
     ...
 ```
 
-In the above example, the `header_bar` and `label` fields are defined in the UI file, and can be accessed from Java code without any further setup being necessary.
+In the above example, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file.
+
+Because the registration of composite template classes uses reflection, you must add `exports [package name] to org.gnome.glib,org.gnome.gtk;` to your `module-info.java` file.
 
 ### Null-checks
 
@@ -253,7 +257,7 @@ Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offe
 File file = ...
 Out<byte[]> contents = new Out<byte[]>();
 file.loadContents(null, contents, null));
-System.out.printf("Read %d bytes", contents.get().length);
+System.out.printf("Read %d bytes\n", contents.get().length);
 ```
 
 ### Arrays and pointers
@@ -368,6 +372,6 @@ The Java API is generated as source code and then compiled into JAR files. Snaps
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 
 - Java does not support unsigned data types. Be extra careful when native code returns, for example, a `guint`.
-- Reference-counted classes are automatically cleaned by java-gi, but for other types, like `GString`, you still need to manually call [`free`](https://docs.gtk.org/glib/method.String.free.html) when applicable. (GObject-Introspection [recently added](https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/365) annotations for copy and free functions, that will help implement this in a future java-gi release.)
+- There are still a number of memory leaks. Reference-counted classes are automatically cleaned by java-gi, but for other types, like when a function returns a `GString` and transfers ownership tot the user, you still need to manually call [`free`](https://docs.gtk.org/glib/method.String.free.html).
 - The code is not yet completely portable. Specifically: When generating memory layouts for structs, the generator assumes a 64-bit Linux platform with regards to the size of data types.
 - Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). These aren't supported yet.
