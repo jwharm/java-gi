@@ -13,9 +13,12 @@ import org.gnome.gobject.*;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryLayout;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -188,6 +191,54 @@ public class Types {
         return null;
     }
 
+    public static <T extends GObject, TC extends TypeClass> Consumer<TC> overrideVirtualMethods(Class<T> cls) {
+        Class<?> parentClass = cls.getSuperclass();
+        Class<?> typeClass = getTypeClass(cls);
+        if (typeClass == null) {
+            return null;
+        }
+
+        // Find all overridden methods
+        List<Method> methods = new ArrayList<>();
+        for (Method method : cls.getDeclaredMethods()) {
+            try {
+                Method virtual = parentClass.getMethod(method.getName(), method.getParameterTypes());
+                if (! Proxy.class.isAssignableFrom(virtual.getDeclaringClass())) {
+                    continue;
+                }
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+            String name = method.getName();
+            name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
+            try {
+                Method overrider = typeClass.getMethod(name, Method.class);
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+            methods.add(method);
+        }
+        if (methods.isEmpty()) {
+            return null;
+        }
+
+        // Register the overridden methods in the typeclass
+        return (gclass) -> {
+            for (Method method : methods) {
+                String name = method.getName();
+                name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
+                try {
+                    Method overrider = gclass.getClass().getMethod(name, Method.class);
+                    overrider.invoke(gclass, method);
+                } catch (Exception e) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Cannot override method %s in class %s: %s\n",
+                            method.getName(), cls.getName(), e.getMessage());
+                }
+            }
+        };
+    }
+
     public static TypeFlags getTypeFlags(Class<?> cls) {
         // Set type flags
         TypeFlags flags = TypeFlags.NONE;
@@ -234,10 +285,17 @@ public class Types {
             Function<Addressable, T> constructor = getAddressConstructor(cls);
             Consumer<T> instanceInit = getInstanceInit(cls);
             Consumer<TC> classInit = getClassInit(cls);
+            Consumer<TC> overridesInit = overrideVirtualMethods(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             if (instanceInit == null) instanceInit = $ -> {};
-            if (classInit == null) classInit = $ -> {};
+
+            if (classInit != null && overridesInit != null)
+                classInit = classInit.andThen(overridesInit);
+            else if (classInit == null && overridesInit != null)
+                classInit = overridesInit;
+            else if (classInit == null)
+                classInit = $ -> {};
 
             // Register and return the GType
             return register(
