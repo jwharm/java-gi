@@ -44,40 +44,7 @@ public class Method extends GirElement implements CallableType {
                 this.name = movedTo;
         }
     }
-    
-    protected boolean generateFunctionDescriptor(SourceWriter writer) throws IOException {
-        boolean varargs = false;
-        
-        writer.write("FunctionDescriptor.");
-        if (returnValue.type != null && "void".equals(returnValue.type.simpleJavaType)) {
-            writer.write("ofVoid(");
-        } else {
-            writer.write("of(" + Conversions.toPanamaMemoryLayout(returnValue.type));
-            if (parameters != null) {
-                writer.write(", ");
-            }
-        }
-        if (parameters != null) {
-            for (int i = 0; i < parameters.parameterList.size(); i++) {
-                if (parameters.parameterList.get(i).varargs) {
-                    varargs = true;
-                    break;
-                }
-                if (i > 0) {
-                    writer.write(", ");
-                }
-                writer.write(Conversions.toPanamaMemoryLayout(parameters.parameterList.get(i).type));
-            }
-        }
-        if (throws_ != null) {
-            writer.write(", Interop.valueLayout.ADDRESS");
-        }
-        
-        writer.write(")");
-        
-        return varargs;
-    }
-    
+
     public void generateMethodHandle(SourceWriter writer) throws IOException {
         if (skip) return;
 

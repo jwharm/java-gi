@@ -84,7 +84,7 @@ public class Field extends Variable {
             }
         }
 
-        // Generate setter method
+        // Generate override/setter method
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Write a value in the field {@code " + this.fieldName + "}\n");
@@ -107,6 +107,43 @@ public class Field extends Variable {
         }
         writer.write(");\n");
         writer.write("}\n");
+
+        // For callbacks, generate a second override method with java.lang.reflect.Method parameter
+        if (callback != null && callback.parameters != null) {
+            writer.write("\n");
+            writer.write("private java.lang.reflect.Method _" + this.name + "Method;\n");
+            writer.write("\n");
+            writer.write("/**\n");
+            writer.write(" * Override virtual method {@code " + this.fieldName + "}\n");
+            writer.write(" * @param method The method to invoke\n");
+            writer.write(" */\n");
+            writer.write("public void " + setter + "(java.lang.reflect.Method method) {\n");
+            writer.increaseIndent();
+            writer.write("this._" + this.name + "Method = method;\n");
+            writer.write("var _scope = getSegmentScope();\n");
+
+            // Generate function descriptor
+            writer.write("FunctionDescriptor _fdesc = ");
+            callback.generateFunctionDescriptor(writer);
+            writer.write(";\n");
+
+            // Generate method handle
+            String className = ((Record) parent).javaName;
+            String upcallName = this.name + "Upcall";
+            writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
+            writer.write("MemoryAddress _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
+            writer.write("getMemoryLayout()\n");
+            writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+            writer.write("    .set(allocatedMemorySegment, ");
+            writer.write("(Addressable) (method == null ? MemoryAddress.NULL : _address));\n");
+            writer.decreaseIndent();
+            writer.write("}\n");
+            writer.write("\n");
+
+            // Generate upcall method
+            String methodToInvoke = "this._" + this.name + "Method.invoke";
+            callback.generateUpcallMethod(writer, upcallName, methodToInvoke);
+        }
     }
 
     /**

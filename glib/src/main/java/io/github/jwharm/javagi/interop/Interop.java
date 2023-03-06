@@ -125,6 +125,21 @@ public class Interop {
     }
 
     /**
+     * Produce a method handle for a method in the provided class.
+     * @param klazz the callback class
+     * @param name the name of the callback method
+     * @param descriptor the function descriptor for the native function
+     * @return a method handle to use when creating an upcall stub
+     */
+    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup, Class<?> klazz, String name, FunctionDescriptor descriptor) {
+        try {
+            return lookup.findVirtual(klazz, name, Linker.upcallType(descriptor));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @param scope the segment scope for memory allocation

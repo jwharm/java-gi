@@ -10,7 +10,6 @@ public interface Closure extends CallableType {
     default void generateFunctionalInterface(SourceWriter writer, String javaName) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
-        boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
         if (getDoc() == null) {
             writer.write("/**\n");
@@ -49,10 +48,45 @@ public interface Closure extends CallableType {
         writer.write(" * The {@code upcall} method is called from native code. The parameters \n");
         writer.write(" * are marshalled and {@link #run} is executed.\n");
         writer.write(" */\n");
+        generateUpcallMethod(writer, "upcall","run");
+
+        // Generate toCallback()
+        writer.write("/**\n");
+        writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
+        writer.write(" * @return the memory address of the callback function\n");
+        writer.write(" */\n");
+        writer.write("default MemoryAddress toCallback() {\n");
+        writer.increaseIndent();
+
+        // Generate function descriptor
+        writer.write("FunctionDescriptor _fdesc = ");
+        generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
+        // Generate method handle
+        writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
+
+        // Create and return upcall stub
+        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
+
+        writer.decreaseIndent();
+        writer.write("}\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
+    }
+
+    default void generateUpcallMethod(SourceWriter writer, String name, String methodToInvoke) throws IOException {
+        ReturnValue returnValue = getReturnValue();
+        Parameters parameters = getParameters();
+        boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
+
         String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
         if ("MemoryAddress".equals(returnType))
             returnType = "Addressable";
-        writer.write("@ApiStatus.Internal default " + returnType + " upcall(");
+
+        writer.write((methodToInvoke.equals("run") ? "@ApiStatus.Internal default " : "private ") + returnType + " ");
+        writer.write(name);
+        writer.write("(");
 
         // For signals, the first parameter in the upcall is a pointer to the source.
         // Add it to the upcall function signature.
@@ -72,6 +106,12 @@ public interface Closure extends CallableType {
         writer.write(") {\n");
         writer.increaseIndent();
 
+        // Generate try-catch block for reflection calls
+        if (methodToInvoke.endsWith("invoke")) {
+            writer.write("try {\n");
+            writer.increaseIndent();
+        }
+
         // Is memory allocated?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
@@ -84,9 +124,19 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPreprocessing(writer);
         }
 
+        if (!isVoid) {
+            writer.write("var _result = ");
+
+            // Add cast to reflection call
+            if (methodToInvoke.endsWith("invoke")) {
+                writer.write("(");
+                returnValue.writeType(writer, false, false);
+                writer.write(") ");
+            }
+        }
+
         // Call run()
-        if (!isVoid) writer.write("var _result = ");
-        writer.write("run(");
+        writer.write(methodToInvoke + "(");
         if (parameters != null) {
             parameters.marshalNativeToJava(writer);
         }
@@ -129,55 +179,16 @@ public interface Closure extends CallableType {
             writer.decreaseIndent();
             writer.write("}\n");
         }
+
+        // Close try-catch block for reflection calls
+        if (methodToInvoke.endsWith("invoke")) {
+            writer.decreaseIndent();
+            writer.write("} catch (Exception e) {\n");
+            writer.write("    throw new RuntimeException(e);\n");
+            writer.write("}\n");
+        }
         writer.decreaseIndent();
         writer.write("}\n");
         writer.write("\n");
-
-        // Generate toCallback()
-        writer.write("/**\n");
-        writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
-        writer.write(" * @return the memory address of the callback function\n");
-        writer.write(" */\n");
-        writer.write("default MemoryAddress toCallback() {\n");
-        writer.increaseIndent();
-
-        // Generate function descriptor
-        writer.write("FunctionDescriptor _fdesc = FunctionDescriptor.");
-        if (isVoid) {
-            writer.write("ofVoid(");
-        } else {
-            writer.write("of(");
-            writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
-            if (parameters != null || this instanceof Signal) {
-                writer.write(", ");
-            }
-        }
-        // For signals, add the pointer to the source
-        if (this instanceof Signal) {
-            writer.write("Interop.valueLayout.ADDRESS");
-            if (parameters != null) {
-                writer.write(", ");
-            }
-        }
-        if (parameters != null) {
-            first = true;
-            for (Parameter p : parameters.parameterList) {
-                if (!first) writer.write(", ");
-                first = false;
-                writer.write(Conversions.toPanamaMemoryLayout(p.type));
-            }
-        }
-        writer.write(");\n");
-
-        // Generate method handle
-        writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
-
-        // Create and return upcall stub
-        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
-
-        writer.decreaseIndent();
-        writer.write("}\n");
-        writer.decreaseIndent();
-        writer.write("}\n");
     }
 }

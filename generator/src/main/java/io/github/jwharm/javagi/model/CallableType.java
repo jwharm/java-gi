@@ -1,5 +1,10 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.SourceWriter;
+
+import java.io.IOException;
+
 public interface CallableType {
 
     Parameters getParameters();
@@ -33,5 +38,49 @@ public interface CallableType {
         return getThrows() != null
                 || rv.array != null
                 || (this instanceof Closure && rv.type != null && "java.lang.String".equals(rv.type.qualifiedJavaType));
+    }
+
+
+    default boolean generateFunctionDescriptor(SourceWriter writer) throws IOException {
+        ReturnValue returnValue = getReturnValue();
+        Parameters parameters = getParameters();
+        boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
+
+        boolean first;
+        boolean varargs = false;
+        writer.write("FunctionDescriptor.");
+        if (isVoid) {
+            writer.write("ofVoid(");
+        } else {
+            writer.write("of(");
+            writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
+            if (parameters != null || this instanceof Signal) {
+                writer.write(", ");
+            }
+        }
+        // For signals, add the pointer to the source
+        if (this instanceof Signal) {
+            writer.write("Interop.valueLayout.ADDRESS");
+            if (parameters != null) {
+                writer.write(", ");
+            }
+        }
+        if (parameters != null) {
+            first = true;
+            for (Parameter p : parameters.parameterList) {
+                if (p.varargs) {
+                    varargs = true;
+                    break;
+                }
+                if (!first) writer.write(", ");
+                first = false;
+                writer.write(Conversions.toPanamaMemoryLayout(p.type));
+            }
+        }
+        if (getThrows() != null) {
+            writer.write(", Interop.valueLayout.ADDRESS");
+        }
+        writer.write(")");
+        return varargs;
     }
 }
