@@ -139,7 +139,7 @@ public class Conversions {
      * For types that conflict with common Java classes, prefix with Gi
      */
     public static String replaceKnownType(String name, Namespace ns) {
-        final String[] types = {"String", "Object", "Builder"};
+        final String[] types = {"String", "Object", "Error", "Builder"};
         return Arrays.stream(types).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? ns.cIdentifierPrefix + name : name;
     }
 

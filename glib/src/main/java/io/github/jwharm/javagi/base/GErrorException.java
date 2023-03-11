@@ -5,6 +5,7 @@ import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
 
 import io.github.jwharm.javagi.interop.Interop;
+import org.gnome.glib.GError;
 import org.jetbrains.annotations.ApiStatus;
 
 import org.gnome.glib.Quark;
@@ -25,8 +26,8 @@ public class GErrorException extends Exception {
     private final String message;
 
     // Dereference the GError instance from the pointer
-    private static org.gnome.glib.Error dereference(MemorySegment pointer) {
-        return new org.gnome.glib.Error(pointer.get(Interop.valueLayout.ADDRESS, 0));
+    private static GError dereference(MemorySegment pointer) {
+        return new GError(pointer.get(Interop.valueLayout.ADDRESS, 0));
     }
     
     // Get the message from the GError instance (used by the GErrorException constructor)
@@ -43,7 +44,7 @@ public class GErrorException extends Exception {
     public GErrorException(MemorySegment gerrorPtr) {
         super(readMessage(gerrorPtr));
 
-        org.gnome.glib.Error gerror = dereference(gerrorPtr);
+        GError gerror = dereference(gerrorPtr);
         this.domain = gerror.readDomain();
         this.code = gerror.readCode();
         this.message = gerror.readMessage();
@@ -95,7 +96,7 @@ public class GErrorException extends Exception {
      * Get a new GError instance with the domain, code and message of this GErrorException
      * @return a new GError instance
      */
-    public org.gnome.glib.Error getGError() {
-        return new org.gnome.glib.Error(domain, code, message);
+    public GError getGError() {
+        return new GError(domain, code, message);
     }
 }

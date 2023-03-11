@@ -2,7 +2,7 @@ package io.github.jwharm.javagi.example;
 
 import io.github.jwharm.javagi.base.Out;
 import org.freedesktop.gstreamer.gst.*;
-import org.gnome.glib.Error;
+import org.gnome.glib.GError;
 import org.gnome.glib.GLib;
 import org.gnome.glib.MainLoop;
 import org.gnome.glib.Source;
@@ -26,7 +26,7 @@ public class GStreamerExample {
         }
 
         else if (msg.readType().equals(MessageType.ERROR)) {
-            Out<Error> error = new Out<>();
+            Out<GError> error = new Out<>();
             Out<String> debug = new Out<>();
             msg.parseError(error, debug);
 
