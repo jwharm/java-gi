@@ -360,6 +360,7 @@ A small number of types have been renamed in the Java API to avoid confusion:
 
 - [`GObject.Object`](https://docs.gtk.org/gobject/class.Object.html) is named `GObject` (instead of `Object`) to avoid confusion with `java.lang.Object`
 - As a result, the namespace-global functions and constants in the `GObject` namespace can be found in `org.gnome.gobject.GObjects` (notice the trailing 's').
+- [`GLib.Error`](https://docs.gtk.org/glib/struct.Error.html) is named `GError` (instead of `Error`) to avoid confusion with `java.lang.Error`
 - [`GLib.String`](https://docs.gtk.org/glib/struct.String.html) is named `GString` (instead of `String`) to avoid confusion with `java.lang.String`
 - [`Gtk.Builder`](https://docs.gtk.org/gtk4/class.Builder.html) is named `GtkBuilder` (instead of `Builder`) to avoid confusion with the `Builder` that java-gi generates for every class.
 
