@@ -13,7 +13,6 @@ import org.gnome.gobject.*;
 
 import java.lang.foreign.Addressable;
 import java.lang.foreign.MemoryLayout;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
