@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.util;
 import io.github.jwharm.javagi.annotations.ClassInit;
 import io.github.jwharm.javagi.annotations.CustomType;
 import io.github.jwharm.javagi.annotations.InstanceInit;
+import io.github.jwharm.javagi.annotations.InterfaceInit;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.TypeCache;
@@ -63,9 +64,10 @@ public class Types {
 
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends GObject, TC extends TypeClass> Class<TC> getTypeClass(Class<T> cls) {
-        // Get the typeclass. This is an inner class that extends TypeClass.
-        // If the typeclass is unavailable, get it from the parent class.
+        // Get the type-struct. This is an inner class that extends TypeClass.
+        // If the type-struct is unavailable, get it from the parent class.
         Class<TC> typeClass = null;
         for (Class<?> gclass : cls.getClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
@@ -80,9 +82,24 @@ public class Types {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    public static <TI extends TypeInterface> Class<TI> getTypeInterface(Class<?> iface) {
+        // Get the type-struct. This is an inner class that extends TypeInterface.
+        Class<TI> typeStruct = null;
+        for (Class<?> giface : iface.getClasses()) {
+            if (TypeInterface.class.isAssignableFrom(giface)) {
+                return (Class<TI>) giface;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Generate a MemoryLayout struct with one member: the memorylayout of the parent's TypeClass
+     */
     public static <T extends GObject> MemoryLayout getClassLayout(Class<T> cls, String typeName) {
-        // Get the typeclass. This is an inner class that extends TypeClass.
-        // If the typeclass is unavailable, get it from the parent class.
+        // Get the type-struct. This is an inner class that extends TypeClass.
+        // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
         if (typeClass == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -118,6 +135,9 @@ public class Types {
         }
     }
 
+    /**
+     * Get the MemoryLayout that is returned by invoking {@code cls.getMemoryLayout()}
+     */
     public static MemoryLayout getLayout(Class<?> cls) {
         try {
             // invoke getMemoryLayout() on the class
@@ -179,7 +199,7 @@ public class Types {
                 // Create a wrapper function that calls the class initializer and logs exceptions
                 return (gclass) -> {
                     try {
-                        method.invoke(null, (TC) gclass);
+                        method.invoke(null, gclass);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s class init: %s\n", cls.getName(), e.getMessage());
@@ -190,12 +210,38 @@ public class Types {
         return null;
     }
 
-    public static <T extends GObject, TC extends TypeClass> Consumer<TC> overrideVirtualMethods(Class<T> cls) {
-        Class<?> parentClass = cls.getSuperclass();
-        Class<?> typeClass = getTypeClass(cls);
-        if (typeClass == null) {
+    public static <T extends GObject, TI extends TypeInterface> Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
+        // Find interface initializer function
+        for (Method method : cls.getDeclaredMethods()) {
+            if (! method.isAnnotationPresent(InterfaceInit.class)) {
+                continue;
+            }
+            if (! (method.getParameterTypes().length == 1)) {
+                continue;
+            }
+            Class<?> param = method.getParameterTypes()[0];
+            if (! param.equals(iface)) {
+                continue;
+            }
+            // Create a wrapper function that calls the interface initializer and logs exceptions
+            return (giface) -> {
+                try {
+                    method.invoke(null, giface);
+                } catch (Exception e) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Exception in %s interface init: %s\n", cls.getName(), e.getMessage());
+                }
+            };
+        }
+        return null;
+    }
+
+    public static <T extends GObject, TC extends TypeClass> Consumer<TC> overrideClassMethods(Class<T> cls) {
+        Class<?> typeStruct = getTypeClass(cls);
+        if (typeStruct == null) {
             return null;
         }
+        Class<?> parentClass = cls.getSuperclass();
 
         // Find all overridden methods
         List<Method> methods = new ArrayList<>();
@@ -211,10 +257,11 @@ public class Types {
             String name = method.getName();
             name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
             try {
-                Method overrider = typeClass.getMethod(name, Method.class);
+                Method overrider = typeStruct.getMethod(name, Method.class);
             } catch (NoSuchMethodException e) {
                 continue;
             }
+            System.out.println("Override superclass method " + method.getName());
             methods.add(method);
         }
         if (methods.isEmpty()) {
@@ -233,6 +280,60 @@ public class Types {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s in class %s: %s\n",
                             method.getName(), cls.getName(), e.getMessage());
+                }
+            }
+        };
+    }
+
+    public static <T extends GObject, TI extends TypeInterface> Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
+        // Find all overridden methods
+        Class<TI> typeStruct = getTypeInterface(iface);
+        if (typeStruct == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find TypeInterface class for interface %s\n", iface);
+            return null;
+        }
+        var constructor = getAddressConstructor(typeStruct);
+        if (constructor == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find constructor in TypeInterface %s\n", typeStruct);
+            return null;
+        }
+
+        // Find all overridden methods
+        List<Method> methods = new ArrayList<>();
+        for (Method method : cls.getDeclaredMethods()) {
+            try {
+                Method virtual = iface.getMethod(method.getName(), method.getParameterTypes());
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+            String name = method.getName();
+            name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
+            try {
+                Method overrider = typeStruct.getMethod(name, Method.class);
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+            methods.add(method);
+        }
+        if (methods.isEmpty()) {
+            return null;
+        }
+
+        // Register the overridden methods in the typeinterface
+        return (giface) -> {
+            for (Method method : methods) {
+                String name = method.getName();
+                name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
+                try {
+                    TI ifaceInstance = constructor.apply(giface.handle()); // upcast to the actual type
+                    Method overrider = typeStruct.getMethod(name, Method.class);
+                    overrider.invoke(ifaceInstance, method);
+                } catch (Exception e) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Cannot override method %s from interface %s in class %s: %s\n",
+                            method.getName(), iface.getName(), cls.getName(), e.getMessage());
                 }
             }
         };
@@ -276,28 +377,37 @@ public class Types {
         }
 
         try {
-            String typeName = getName(cls);
-            MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = getGType(parentClass);
+            String typeName = getName(cls);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
-            Function<Addressable, T> constructor = getAddressConstructor(cls);
-            Consumer<T> instanceInit = getInstanceInit(cls);
+            Consumer<TC> overridesInit = overrideClassMethods(cls);
             Consumer<TC> classInit = getClassInit(cls);
-            Consumer<TC> overridesInit = overrideVirtualMethods(cls);
+            MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
+            Consumer<T> instanceInit = getInstanceInit(cls);
+            Function<Addressable, T> constructor = getAddressConstructor(cls);
             TypeFlags flags = getTypeFlags(cls);
 
+            if (parentType == null || classLayout == null || instanceLayout == null
+                    || constructor == null || flags == null) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                        "Cannot register type %s\n", cls.getName());
+                return null;
+            }
+
+            // Generate default init function
             if (instanceInit == null) instanceInit = $ -> {};
 
+            // Override virtual methods before running a user-defined class init
             if (classInit != null && overridesInit != null)
-                classInit = classInit.andThen(overridesInit);
+                classInit = overridesInit.andThen(classInit);
             else if (classInit == null && overridesInit != null)
                 classInit = overridesInit;
             else if (classInit == null)
-                classInit = $ -> {};
+                classInit = $ -> {}; // default class init function
 
-            // Register and return the GType
-            return register(
+            // Register the GType
+            Type type = register(
                     parentType,
                     typeName,
                     classLayout,
@@ -308,9 +418,40 @@ public class Types {
                     flags
             );
 
+            // Add interfaces
+            for (Class<?> iface : cls.getInterfaces()) {
+                if (Proxy.class.isAssignableFrom(iface)) {
+                    Type ifaceType = getGType(iface);
+                    if (ifaceType == null) {
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "Cannot implement interface %s on class %s: No GType\n",
+                                iface.getName(), cls.getName());
+                        continue;
+                    }
+
+                    InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
+                    Consumer<TypeInterface> ifaceOverridesInit = overrideInterfaceMethods(cls, iface);
+                    Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
+
+                    // Override virtual methods before running a user-defined interface init
+                    if (ifaceInit != null && ifaceOverridesInit != null)
+                        ifaceInit = ifaceOverridesInit.andThen(ifaceInit);
+                    else if (ifaceInit == null && ifaceOverridesInit != null)
+                        ifaceInit = ifaceOverridesInit;
+                    else if (ifaceInit == null)
+                        ifaceInit = $ -> {}; // default interface init function
+
+                    Consumer<TypeInterface> finalIfaceInit = ifaceInit;
+                    interfaceInfo.writeInterfaceInit((ti, data) -> finalIfaceInit.accept(ti));
+                    GObjects.typeAddInterfaceStatic(type, ifaceType, interfaceInfo);
+                }
+            }
+
+            return type;
+
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s", cls.getName(), e.getMessage());
+                    "Cannot register type %s: %s\n", cls.getName(), e.getMessage());
             return null;
         }
     }
