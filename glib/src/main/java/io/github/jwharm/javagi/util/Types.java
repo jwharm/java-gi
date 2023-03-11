@@ -211,6 +211,20 @@ public class Types {
     }
 
     public static <T extends GObject, TI extends TypeInterface> Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
+        // Find all overridden methods
+        Class<TI> typeStruct = getTypeInterface(iface);
+        if (typeStruct == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find TypeInterface class for interface %s\n", iface);
+            return null;
+        }
+        var constructor = getAddressConstructor(typeStruct);
+        if (constructor == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find constructor in TypeInterface %s\n", typeStruct);
+            return null;
+        }
+
         // Find interface initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (! method.isAnnotationPresent(InterfaceInit.class)) {
@@ -220,13 +234,14 @@ public class Types {
                 continue;
             }
             Class<?> param = method.getParameterTypes()[0];
-            if (! param.equals(iface)) {
+            if (! param.equals(typeStruct)) {
                 continue;
             }
             // Create a wrapper function that calls the interface initializer and logs exceptions
             return (giface) -> {
                 try {
-                    method.invoke(null, giface);
+                    TI ifaceInstance = constructor.apply(giface.handle());
+                    method.invoke(null, ifaceInstance);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception in %s interface init: %s\n", cls.getName(), e.getMessage());
