@@ -261,7 +261,6 @@ public class Types {
             } catch (NoSuchMethodException e) {
                 continue;
             }
-            System.out.println("Override superclass method " + method.getName());
             methods.add(method);
         }
         if (methods.isEmpty()) {
