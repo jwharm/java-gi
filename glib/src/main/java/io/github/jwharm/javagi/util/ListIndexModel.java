@@ -42,16 +42,6 @@ public class ListIndexModel extends GObject implements ListModel {
     public static Type getType() {
         if (type == null) {
             type = Types.register(ListIndexModel.class);
-
-            // Implement the ListModel interface
-            InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
-            interfaceInfo.writeInterfaceInit((iface, data) -> {
-                ListModelInterface lmi = new ListModelInterface(iface.handle());
-                lmi.overrideGetItemType(ListModel::getItemType);
-                lmi.overrideGetNItems(ListModel::getNItems);
-                lmi.overrideGetItem(ListModel::getItem);
-            });
-            GObjects.typeAddInterfaceStatic(type, ListModel.getType(), interfaceInfo);
         }
         return type;
     }
@@ -64,8 +54,6 @@ public class ListIndexModel extends GObject implements ListModel {
                 ParamFlags.CONSTRUCT_ONLY.or(ParamFlags.READWRITE, ParamFlags.STATIC_NAME, ParamFlags.STATIC_BLURB, ParamFlags.STATIC_NICK));
         pspecs[PROP_N_ITEMS] = GObjects.paramSpecUint("n-items", "", "", 0, GLib.MAXUINT32, 0,
                 ParamFlags.READABLE.or(ParamFlags.STATIC_NAME, ParamFlags.STATIC_BLURB, ParamFlags.STATIC_NICK));
-        objectClass.overrideGetProperty(GObject::getProperty);
-        objectClass.overrideSetProperty(GObject::setProperty);
         objectClass.installProperties(pspecs);
     }
 
