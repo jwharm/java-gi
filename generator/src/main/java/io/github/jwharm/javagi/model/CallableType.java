@@ -60,7 +60,7 @@ public interface CallableType {
         }
         // For signals, add the pointer to the source
         if (this instanceof Signal) {
-            writer.write("Interop.valueLayout.ADDRESS");
+            writer.write("ValueLayout.ADDRESS");
             if (parameters != null) {
                 writer.write(", ");
             }
@@ -78,7 +78,7 @@ public interface CallableType {
             }
         }
         if (getThrows() != null) {
-            writer.write(", Interop.valueLayout.ADDRESS");
+            writer.write(", ValueLayout.ADDRESS");
         }
         writer.write(")");
         return varargs;

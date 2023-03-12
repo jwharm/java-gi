@@ -1,17 +1,11 @@
 package io.github.jwharm.javagi.pointer;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
+import java.lang.foreign.*;
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.function.Function;
 
 import io.github.jwharm.javagi.base.Proxy;
-import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.TypeCache;
 
 /**
  * This type of Pointer object points to a GObject-derived object 
@@ -36,7 +30,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(Interop.valueLayout.ADDRESS, 0, value.handle());
+        address.set(ValueLayout.ADDRESS, 0, value.handle());
     }
 
     /**
@@ -56,10 +50,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      */
     public T get(int index) {
         // Get the memory address of the native object.
-        Addressable ref = address.get(
-                Interop.valueLayout.ADDRESS,
-                Interop.valueLayout.ADDRESS.byteSize() * index
-        );
+        Addressable ref = address.getAtIndex(ValueLayout.ADDRESS, index);
         // Call the constructor of the proxy object and return the created instance.
         return makeInstance(ref);
     }

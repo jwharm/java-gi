@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to an int value.
@@ -15,7 +14,7 @@ public class PointerInteger extends Pointer<Integer> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerInteger() {
-        super(Interop.valueLayout.C_INT);
+        super(ValueLayout.JAVA_INT);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerInteger extends Pointer<Integer> {
      */
     public PointerInteger(int initialValue) {
         this();
-        address.set(Interop.valueLayout.C_INT, 0, initialValue);
+        address.set(ValueLayout.JAVA_INT, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerInteger extends Pointer<Integer> {
      * @param value the new value that is pointed to
      */
     public void set(Integer value) {
-        address.set(Interop.valueLayout.C_INT, 0, value);
+        address.set(ValueLayout.JAVA_INT, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerInteger extends Pointer<Integer> {
      * @return the value stored at the given index
      */
     public Integer get(int index) {
-        return address.get(
-                Interop.valueLayout.C_INT,
-                Interop.valueLayout.C_INT.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.JAVA_INT, index);
     }
 }

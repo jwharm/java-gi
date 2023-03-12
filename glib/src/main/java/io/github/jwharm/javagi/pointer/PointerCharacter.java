@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a char value.
@@ -15,7 +14,7 @@ public class PointerCharacter extends Pointer<Character> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerCharacter() {
-        super(Interop.valueLayout.C_CHAR);
+        super(ValueLayout.JAVA_CHAR);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerCharacter extends Pointer<Character> {
      */
     public PointerCharacter(char initialValue) {
         this();
-        address.set(Interop.valueLayout.C_CHAR, 0, initialValue);
+        address.set(ValueLayout.JAVA_CHAR, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerCharacter extends Pointer<Character> {
      * @param value the new value that is pointed to
      */
     public void set(Character value) {
-        address.set(Interop.valueLayout.C_CHAR, 0, value);
+        address.set(ValueLayout.JAVA_CHAR, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerCharacter extends Pointer<Character> {
      * @return the value stored at the given index
      */
     public Character get(int index) {
-        return address.get(
-                Interop.valueLayout.C_CHAR,
-                Interop.valueLayout.C_CHAR.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.JAVA_CHAR, index);
     }
 }

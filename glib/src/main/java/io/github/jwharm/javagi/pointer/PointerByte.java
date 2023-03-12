@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a byte value.
@@ -15,7 +14,7 @@ public class PointerByte extends Pointer<Byte> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerByte() {
-        super(Interop.valueLayout.C_BYTE);
+        super(ValueLayout.JAVA_BYTE);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerByte extends Pointer<Byte> {
      */
     public PointerByte(byte initialValue) {
         this();
-        address.set(Interop.valueLayout.C_BYTE, 0, initialValue);
+        address.set(ValueLayout.JAVA_BYTE, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerByte extends Pointer<Byte> {
      * @param value the new value that is pointed to
      */
     public void set(Byte value) {
-        address.set(Interop.valueLayout.C_BYTE, 0, value);
+        address.set(ValueLayout.JAVA_BYTE, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerByte extends Pointer<Byte> {
      * @return the value stored at the given index
      */
     public Byte get(int index) {
-        return address.get(
-                Interop.valueLayout.C_BYTE,
-                Interop.valueLayout.C_BYTE.byteSize() * index
-        );
+        return address.get(ValueLayout.JAVA_BYTE, index);
     }
 }

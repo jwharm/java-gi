@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.pointer;
 
 import io.github.jwharm.javagi.base.Bitfield;
-import io.github.jwharm.javagi.interop.Interop;
 
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 import java.util.function.Function;
 
 /**
@@ -29,7 +29,7 @@ public class PointerBitfield<T extends Bitfield> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(Interop.valueLayout.C_INT, 0, value.getValue());
+        address.set(ValueLayout.JAVA_INT, 0, value.getValue());
     }
 
     /**
@@ -47,10 +47,7 @@ public class PointerBitfield<T extends Bitfield> extends Pointer<T> {
      * @return the value stored at the given index
      */
     public T get(int index) {
-        int value = address.get(
-                Interop.valueLayout.C_INT,
-                Interop.valueLayout.C_INT.byteSize() * index
-        );
+        int value = address.getAtIndex(ValueLayout.JAVA_INT, index);
         return make.apply(value);
     }
 }

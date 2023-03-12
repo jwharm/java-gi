@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.base;
 import java.io.Serial;
 import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GError;
@@ -27,7 +28,7 @@ public class GErrorException extends Exception {
 
     // Dereference the GError instance from the pointer
     private static GError dereference(MemorySegment pointer) {
-        return new GError(pointer.get(Interop.valueLayout.ADDRESS, 0));
+        return new GError(pointer.get(ValueLayout.ADDRESS, 0));
     }
     
     // Get the message from the GError instance (used by the GErrorException constructor)
@@ -72,7 +73,7 @@ public class GErrorException extends Exception {
      * @return true when an error was set on this pointer
      */
     public static boolean isErrorSet(MemorySegment gerrorPtr) {
-        MemoryAddress gerror = gerrorPtr.get(Interop.valueLayout.ADDRESS, 0);
+        MemoryAddress gerror = gerrorPtr.get(ValueLayout.ADDRESS, 0);
         return (! gerror.equals(MemoryAddress.NULL));
     }
 

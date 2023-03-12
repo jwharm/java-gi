@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a double value.
@@ -15,7 +14,7 @@ public class PointerDouble extends Pointer<Double> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerDouble() {
-        super(Interop.valueLayout.C_DOUBLE);
+        super(ValueLayout.JAVA_DOUBLE);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerDouble extends Pointer<Double> {
      */
     public PointerDouble(double initialValue) {
         this();
-        address.set(Interop.valueLayout.C_DOUBLE, 0, initialValue);
+        address.set(ValueLayout.JAVA_DOUBLE, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerDouble extends Pointer<Double> {
      * @param value the new value that is pointed to
      */
     public void set(Double value) {
-        address.set(Interop.valueLayout.C_DOUBLE, 0, value);
+        address.set(ValueLayout.JAVA_DOUBLE, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerDouble extends Pointer<Double> {
      * @return the value stored at the given index
      */
     public Double get(int index) {
-        return address.get(
-                Interop.valueLayout.C_DOUBLE,
-                Interop.valueLayout.C_DOUBLE.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.JAVA_DOUBLE, index);
     }
 }

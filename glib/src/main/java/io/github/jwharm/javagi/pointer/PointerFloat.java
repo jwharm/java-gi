@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a float value.
@@ -15,7 +14,7 @@ public class PointerFloat extends Pointer<Float> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerFloat() {
-        super(Interop.valueLayout.C_FLOAT);
+        super(ValueLayout.JAVA_FLOAT);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerFloat extends Pointer<Float> {
      */
     public PointerFloat(float initialValue) {
         this();
-        address.set(Interop.valueLayout.C_FLOAT, 0, initialValue);
+        address.set(ValueLayout.JAVA_FLOAT, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerFloat extends Pointer<Float> {
      * @param value the new value that is pointed to
      */
     public void set(Float value) {
-        address.set(Interop.valueLayout.C_FLOAT, 0, value);
+        address.set(ValueLayout.JAVA_FLOAT, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerFloat extends Pointer<Float> {
      * @return the value stored at the given index
      */
     public Float get(int index) {
-        return address.get(
-                Interop.valueLayout.C_FLOAT,
-                Interop.valueLayout.C_FLOAT.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.JAVA_FLOAT, index);
     }
 }

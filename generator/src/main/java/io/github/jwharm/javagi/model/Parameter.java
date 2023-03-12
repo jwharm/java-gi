@@ -289,7 +289,7 @@ public class Parameter extends Variable {
                 } else if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write("if (" + name + " != null) " + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + "));\n");
+                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write("if (" + name + " != null) {\n");
@@ -336,7 +336,7 @@ public class Parameter extends Variable {
                 } else {
                     String identifier = name;
                     if (type.isEnum() || type.isBitfield()) {
-                        identifier = name + ".get(Interop.valueLayout.C_INT, 0)";
+                        identifier = name + ".get(ValueLayout.JAVA_INT, 0)";
                     }
                     writer.write(marshalNativeToJava(type, identifier, true) + ");\n");
                 }

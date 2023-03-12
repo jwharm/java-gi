@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a boolean value.
@@ -15,7 +14,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerBoolean() {
-        super(Interop.valueLayout.C_INT);
+        super(ValueLayout.JAVA_INT);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      */
     public PointerBoolean(boolean initialValue) {
         this();
-        address.set(Interop.valueLayout.C_INT, 0, initialValue ? 1 : 0);
+        address.set(ValueLayout.JAVA_INT, 0, initialValue ? 1 : 0);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerBoolean extends Pointer<Boolean> {
      * @param value the new value that is pointed to
      */
     public void set(Boolean value) {
-        address.set(Interop.valueLayout.C_INT, 0, value ? 1 : 0);
+        address.set(ValueLayout.JAVA_INT, 0, value ? 1 : 0);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerBoolean extends Pointer<Boolean> {
      * @return the value stored at the given index
      */
     public Boolean get(int index) {
-        return address.get(
-                Interop.valueLayout.C_INT,
-                Interop.valueLayout.C_INT.byteSize() * index
-        ) != 0;
+        return address.getAtIndex(ValueLayout.JAVA_INT, index) != 0;
     }
 }
