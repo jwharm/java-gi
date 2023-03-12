@@ -53,7 +53,7 @@ public interface CallableType {
             writer.write("ofVoid(");
         } else {
             writer.write("of(");
-            writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
+            writer.write(Conversions.getValueLayout(returnValue.type));
             if (parameters != null || this instanceof Signal) {
                 writer.write(", ");
             }
@@ -74,7 +74,7 @@ public interface CallableType {
                 }
                 if (!first) writer.write(", ");
                 first = false;
-                writer.write(Conversions.toPanamaMemoryLayout(p.type));
+                writer.write(Conversions.getValueLayout(p.type));
             }
         }
         if (getThrows() != null) {

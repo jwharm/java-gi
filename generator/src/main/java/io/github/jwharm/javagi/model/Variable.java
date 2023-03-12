@@ -272,7 +272,7 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive)
             return "MemorySegment.ofAddress(" + identifier + ", " + array.size(upcall)
-                    + ", _scope).toArray(" + Conversions.getValueLayout(array.type) + ")";
+                    + ", _scope).toArray(" + Conversions.getValueLayoutPlain(array.type) + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
             return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"

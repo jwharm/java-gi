@@ -187,26 +187,18 @@ public class Conversions {
     /**
      * Get the memory layout of this type. Pointer types are returned as ValueLayout.ADDRESS.
      */
-    public static String toPanamaMemoryLayout(Type t) {
-        if (t == null) {
+    public static String getValueLayout(Type t) {
+        if (t == null || t.isPointer()) {
             return "ValueLayout.ADDRESS";
-        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "ValueLayout.JAVA_INT";
-        } else if (t.isPointer()) {
-            return "ValueLayout.ADDRESS";
-        } else if (t.isPrimitive) {
-            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
-        } else if (t.isAliasForPrimitive()) {
-            return toPanamaMemoryLayout(t.girElementInstance.type);
         } else {
-            return "ValueLayout.ADDRESS";
+            return getValueLayoutPlain(t);
         }
     }
 
     /**
-     * Get the memory layout of this type. Pointer types are treated as the actual type.
+     * Get the memory layout of this type. Pointers to primitive types are treated as the actual type.
      */
-    public static String getValueLayout(Type t) {
+    public static String getValueLayoutPlain(Type t) {
         if (t == null) {
             return "ValueLayout.ADDRESS";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
@@ -214,7 +206,7 @@ public class Conversions {
         } else if (t.isPrimitive) {
             return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
         } else if (t.isAliasForPrimitive()) {
-            return getValueLayout(t.girElementInstance.type);
+            return getValueLayoutPlain(t.girElementInstance.type);
         } else {
             return "ValueLayout.ADDRESS";
         }

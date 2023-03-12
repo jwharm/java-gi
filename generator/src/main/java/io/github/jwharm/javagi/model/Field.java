@@ -193,7 +193,7 @@ public class Field extends Variable {
                     || "java.lang.String".equals(array.type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(array.type.qualifiedJavaType)) {
                 
-                valueLayout = Conversions.toPanamaMemoryLayout(array.type);
+                valueLayout = Conversions.getValueLayout(array.type);
                 
             // Proxy objects
             } else {

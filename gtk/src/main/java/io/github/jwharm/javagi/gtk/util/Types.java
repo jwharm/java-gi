@@ -61,23 +61,23 @@ public class Types {
                 }
 
                 if (field.getType().equals(boolean.class)) {
-                    size = add(Interop.valueLayout.C_BOOLEAN.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_BOOLEAN.withName(fieldName), elements, size);
                 } else if (field.getType().equals(byte.class)) {
-                    size = add(Interop.valueLayout.C_BYTE.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_BYTE.withName(fieldName), elements, size);
                 } else if (field.getType().equals(char.class)) {
-                    size = add(Interop.valueLayout.C_CHAR.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_CHAR.withName(fieldName), elements, size);
                 } else if (field.getType().equals(double.class)) {
-                    size = add(Interop.valueLayout.C_DOUBLE.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_DOUBLE.withName(fieldName), elements, size);
                 } else if (field.getType().equals(float.class)) {
-                    size = add(Interop.valueLayout.C_FLOAT.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_FLOAT.withName(fieldName), elements, size);
                 } else if (field.getType().equals(int.class)) {
-                    size = add(Interop.valueLayout.C_INT.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_INT.withName(fieldName), elements, size);
                 } else if (field.getType().equals(long.class)) {
-                    size = add(Interop.valueLayout.C_LONG.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_LONG.withName(fieldName), elements, size);
                 } else if (field.getType().equals(short.class)) {
-                    size = add(Interop.valueLayout.C_SHORT.withName(fieldName), elements, size);
+                    size = add(ValueLayout.JAVA_SHORT.withName(fieldName), elements, size);
                 } else if (Proxy.class.isAssignableFrom(field.getType())) {
-                    size = add(Interop.valueLayout.ADDRESS.withName(fieldName), elements, size);
+                    size = add(ValueLayout.ADDRESS.withName(fieldName), elements, size);
                 } else {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Unsupported type '%s' of field %s\n",
