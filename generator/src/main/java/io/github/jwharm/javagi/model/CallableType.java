@@ -53,14 +53,14 @@ public interface CallableType {
             writer.write("ofVoid(");
         } else {
             writer.write("of(");
-            writer.write(Conversions.toPanamaMemoryLayout(returnValue.type));
+            writer.write(Conversions.getValueLayout(returnValue.type));
             if (parameters != null || this instanceof Signal) {
                 writer.write(", ");
             }
         }
         // For signals, add the pointer to the source
         if (this instanceof Signal) {
-            writer.write("Interop.valueLayout.ADDRESS");
+            writer.write("ValueLayout.ADDRESS");
             if (parameters != null) {
                 writer.write(", ");
             }
@@ -74,11 +74,11 @@ public interface CallableType {
                 }
                 if (!first) writer.write(", ");
                 first = false;
-                writer.write(Conversions.toPanamaMemoryLayout(p.type));
+                writer.write(Conversions.getValueLayout(p.type));
             }
         }
         if (getThrows() != null) {
-            writer.write(", Interop.valueLayout.ADDRESS");
+            writer.write(", ValueLayout.ADDRESS");
         }
         writer.write(")");
         return varargs;

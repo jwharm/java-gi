@@ -160,22 +160,9 @@ public class Conversions {
      * Convert C type declaration into Java type declaration.
      */
     public static String convertToJavaType(String name, boolean qualified, Namespace ns) {
-        return name == null ? null : switch (name.toLowerCase()) {
-            case "gboolean" -> "boolean";
-            case "gchar", "guchar", "gint8", "guint8" -> "byte";
-            case "gshort", "gushort", "gint16", "guint16" -> "short";
-            case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
-            case "glong", "gulong", "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr" -> "long";
-            case "gdouble" -> "double";
-            case "gfloat" -> "float";
-            case "none" -> "void";
-            case "utf8", "filename" -> "java.lang.String";
-            case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
-            case "gtype" -> qualified ? toQualifiedJavaType("GLib.Type", ns) : toSimpleJavaType("GLib.Type", ns);
-            case "valist", "va_list" -> "VaList";
-            case "long double" -> "double"; // unsupported data type
-            default -> qualified ? toQualifiedJavaType(name, ns) : toSimpleJavaType(name, ns);
-        };
+        return Platform.isWindows()
+                ? Platform.convertWindowsToJavaType(name, qualified, ns)
+                : Platform.convertLinuxToJavaType(name, qualified, ns);
     }
 
     /**
@@ -197,65 +184,31 @@ public class Conversions {
         }
     }
 
-    public static String getMarshal(Type t) {
-        if (t == null) {
-            return "Marshal.passthrough";
-        } else if ("java.lang.foreign.MemoryAddress".equals(t.qualifiedJavaType)) {
-            return "Marshal.passthrough";
-        } else if ("java.lang.String".equals(t.qualifiedJavaType)) {
-            return "Marshal.stringToAddress";
-        } else if (t.cType != null && t.cType.endsWith("*")) {
-            return "Marshal.passthrough";
-        } else if (t.isBoolean()) {
-            return "Marshal.booleanToInteger";
-        } else if (t.isEnum()) {
-            return "Marshal.enumerationToInteger";
-        } else if (t.isBitfield()) {
-            return "Marshal.bitfieldToInteger";
-        } else if (t.isPrimitive || "void".equals(t.simpleJavaType)) {
-            return "Marshal.passthrough";
-        } else if (t.isAliasForPrimitive()) {
-            return "Marshal.aliasToPrimitive";
-        } else if (t.isCallback()) {
-            return "Marshal.callbackToAddress";
-        } else {
-            return t.qualifiedJavaType + ".fromAddress";
-        }
-    }
-
     /**
-     * Get the memory layout of this type. Pointer types are returned as Interop.valueLayout.ADDRESS.
-     */
-    public static String toPanamaMemoryLayout(Type t) {
-        if (t == null) {
-            return "Interop.valueLayout.ADDRESS";
-        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "Interop.valueLayout.C_INT";
-        } else if (t.isPointer()) {
-            return "Interop.valueLayout.ADDRESS";
-        } else if (t.isPrimitive) {
-            return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
-        } else if (t.isAliasForPrimitive()) {
-            return toPanamaMemoryLayout(t.girElementInstance.type);
-        } else {
-            return "Interop.valueLayout.ADDRESS";
-        }
-    }
-
-    /**
-     * Get the memory layout of this type. Pointer types are treated as the actual type.
+     * Get the memory layout of this type. Pointer types are returned as ValueLayout.ADDRESS.
      */
     public static String getValueLayout(Type t) {
-        if (t == null) {
-            return "Interop.valueLayout.ADDRESS";
-        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "Interop.valueLayout.C_INT";
-        } else if (t.isPrimitive) {
-            return "Interop.valueLayout.C_" + t.simpleJavaType.toUpperCase();
-        } else if (t.isAliasForPrimitive()) {
-            return getValueLayout(t.girElementInstance.type);
+        if (t == null || t.isPointer()) {
+            return "ValueLayout.ADDRESS";
         } else {
-            return "Interop.valueLayout.ADDRESS";
+            return getValueLayoutPlain(t);
+        }
+    }
+
+    /**
+     * Get the memory layout of this type. Pointers to primitive types are treated as the actual type.
+     */
+    public static String getValueLayoutPlain(Type t) {
+        if (t == null) {
+            return "ValueLayout.ADDRESS";
+        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
+            return "ValueLayout.JAVA_INT";
+        } else if (t.isPrimitive) {
+            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+        } else if (t.isAliasForPrimitive()) {
+            return getValueLayoutPlain(t.girElementInstance.type);
+        } else {
+            return "ValueLayout.ADDRESS";
         }
     }
 

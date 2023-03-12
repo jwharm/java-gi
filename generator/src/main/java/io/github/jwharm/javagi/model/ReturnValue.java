@@ -36,10 +36,10 @@ public class ReturnValue extends Parameter {
                         default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
                     }
                 }
-                String valuelayout = Conversions.getValueLayout(array.type);
+                String valuelayout = Conversions.getValueLayoutPlain(array.type);
                 if (array.type.isPrimitive && (!array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write("return MemorySegment.ofAddress(_result.get(Interop.valueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + ");\n");
+                    writer.write("return MemorySegment.ofAddress(_result.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + ");\n");
                 } else {
                     // Array of proxy objects
                     writer.write(array.type.qualifiedJavaType + "[] _resultArray = new " + array.type.qualifiedJavaType + "[" + len + "];\n");

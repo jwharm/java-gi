@@ -49,7 +49,7 @@ public class PointerString extends Pointer<String> {
      */
     public void set(String value) {
         this.allocatedString = (MemorySegment) Interop.allocateNativeString(value, MemorySession.global());
-        address.set(Interop.valueLayout.ADDRESS, 0, this.allocatedString);
+        address.set(ValueLayout.ADDRESS, 0, this.allocatedString);
     }
 
     /**
@@ -58,7 +58,7 @@ public class PointerString extends Pointer<String> {
      * @param scope the memory allocator for the native string
      */
     public void set(String value, MemorySession scope) {
-        address.set(Interop.valueLayout.ADDRESS, 0, Interop.allocateNativeString(value, scope));
+        address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value, scope));
     }
 
     /**
@@ -77,8 +77,8 @@ public class PointerString extends Pointer<String> {
      */
     public String get(int index) {
         return address.get(
-                Interop.valueLayout.ADDRESS,
-                Interop.valueLayout.ADDRESS.byteSize() * index
+                ValueLayout.ADDRESS,
+                ValueLayout.ADDRESS.byteSize() * index
         ).getUtf8String(0);
     }
 }

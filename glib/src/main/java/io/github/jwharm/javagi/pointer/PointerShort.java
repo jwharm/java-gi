@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a short value.
@@ -15,7 +14,7 @@ public class PointerShort extends Pointer<Short> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerShort() {
-        super(Interop.valueLayout.C_SHORT);
+        super(ValueLayout.JAVA_SHORT);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerShort extends Pointer<Short> {
      */
     public PointerShort(short initialValue) {
         this();
-        address.set(Interop.valueLayout.C_SHORT, 0, initialValue);
+        address.set(ValueLayout.JAVA_SHORT, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerShort extends Pointer<Short> {
      * @param value the new value that is pointed to
      */
     public void set(Short value) {
-        address.set(Interop.valueLayout.C_SHORT, 0, value);
+        address.set(ValueLayout.JAVA_SHORT, 0, value);
     }
 
     /**
@@ -59,8 +58,8 @@ public class PointerShort extends Pointer<Short> {
      */
     public Short get(int index) {
         return address.get(
-                Interop.valueLayout.C_SHORT,
-                Interop.valueLayout.C_SHORT.byteSize() * index
+                ValueLayout.JAVA_SHORT,
+                ValueLayout.JAVA_SHORT.byteSize() * index
         );
     }
 }

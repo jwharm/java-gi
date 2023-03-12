@@ -17,15 +17,6 @@ public class Interop {
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
-    /**
-     * Configure the layout of native data types here.<br>
-     * On Linux, this should be set to {@link Layout_LP64}.<br>
-     * On Windows, this should be set to {@link Layout_LLP64}.
-     * @see <a href="https://en.wikipedia.org/wiki/64-bit_computing#64-bit_data_models">
-     *     this Wikipedia text</a> about the difference between 64-bit data models.
-     */
-    public static final Layout_LP64 valueLayout = new Layout_LP64();
-
     static {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
         symbolLookup = name -> loaderLookup.lookup(name).or(() -> linker.defaultLookup().lookup(name));
@@ -44,12 +35,12 @@ public class Interop {
         if (address == null || address.equals(MemoryAddress.NULL))
             return null;
 
-        MemoryAddress g_class = address.get(Interop.valueLayout.ADDRESS, 0);
+        MemoryAddress g_class = address.get(ValueLayout.ADDRESS, 0);
 
         if (g_class == null || g_class.equals(MemoryAddress.NULL))
             return null;
 
-        long g_type = g_class.get(Interop.valueLayout.C_LONG, 0);
+        long g_type = g_class.get(ValueLayout.JAVA_LONG, 0);
         return new Type(g_type);
     }
 
@@ -60,13 +51,13 @@ public class Interop {
     public static final MethodHandle g_signal_connect_data = downcallHandle(
             "g_signal_connect_data",
             FunctionDescriptor.of(
-                    valueLayout.C_LONG,
-                    valueLayout.ADDRESS,
-                    valueLayout.ADDRESS,
-                    valueLayout.ADDRESS,
-                    valueLayout.ADDRESS,
-                    valueLayout.ADDRESS,
-                    valueLayout.C_INT
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT
             ),
             false
     );
@@ -77,7 +68,7 @@ public class Interop {
      */
     public static final MethodHandle g_signal_emit_by_name = Interop.downcallHandle(
             "g_signal_emit_by_name",
-            FunctionDescriptor.ofVoid(Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS),
+            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
             true
     );
 
@@ -87,7 +78,7 @@ public class Interop {
      */
     public static final MethodHandle g_type_interface_peek = Interop.downcallHandle(
             "g_type_interface_peek",
-            FunctionDescriptor.of(Interop.valueLayout.ADDRESS, Interop.valueLayout.ADDRESS, Interop.valueLayout.C_LONG),
+            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG),
             false
     );
 
@@ -174,7 +165,7 @@ public class Interop {
     public static String[] getStringArrayFrom(MemoryAddress address, int length) {
         String[] result = new String[length];
         for (int i = 0; i < length; i++)
-            result[i] = address.getUtf8String(i * valueLayout.ADDRESS.byteSize());
+            result[i] = address.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
         return result;
     }
 
@@ -187,7 +178,7 @@ public class Interop {
     public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
         MemoryAddress[] result = new MemoryAddress[length];
         for (int i = 0; i < length; i++)
-            result[i] = address.getAtIndex(Interop.valueLayout.ADDRESS, i);
+            result[i] = address.getAtIndex(ValueLayout.ADDRESS, i);
         return result;
     }
 
@@ -201,13 +192,13 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(String[] strings, boolean zeroTerminated, MemorySession scope) {
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
+        var memorySegment = scope.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
             var cString = strings[i] == null ? MemoryAddress.NULL : scope.allocateUtf8String(strings[i]);
-            memorySegment.setAtIndex(valueLayout.ADDRESS, i, cString);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, strings.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -237,7 +228,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(byte[] array, boolean zeroTerminated, MemorySession scope) {
         byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_BYTE, copy);
+        return scope.allocateArray(ValueLayout.JAVA_BYTE, copy);
     }
 
     /**
@@ -249,7 +240,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(char[] array, boolean zeroTerminated, MemorySession scope) {
         char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_CHAR, copy);
+        return scope.allocateArray(ValueLayout.JAVA_CHAR, copy);
     }
 
     /**
@@ -261,7 +252,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(double[] array, boolean zeroTerminated, MemorySession scope) {
         double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_DOUBLE, copy);
+        return scope.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
     }
 
     /**
@@ -273,7 +264,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(float[] array, boolean zeroTerminated, MemorySession scope) {
         float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_FLOAT, copy);
+        return scope.allocateArray(ValueLayout.JAVA_FLOAT, copy);
     }
 
     /**
@@ -285,7 +276,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(int[] array, boolean zeroTerminated, MemorySession scope) {
         int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_INT, copy);
+        return scope.allocateArray(ValueLayout.JAVA_INT, copy);
     }
 
     /**
@@ -297,7 +288,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(long[] array, boolean zeroTerminated, MemorySession scope) {
         long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_LONG, copy);
+        return scope.allocateArray(ValueLayout.JAVA_LONG, copy);
     }
 
     /**
@@ -309,7 +300,7 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(short[] array, boolean zeroTerminated, MemorySession scope) {
         short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return scope.allocateArray(valueLayout.C_SHORT, copy);
+        return scope.allocateArray(ValueLayout.JAVA_SHORT, copy);
     }
 
     /**
@@ -350,7 +341,7 @@ public class Interop {
             }
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -365,12 +356,12 @@ public class Interop {
      */
     public static Addressable allocateNativeArray(Addressable[] array, boolean zeroTerminated, MemorySession scope) {
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = scope.allocateArray(valueLayout.ADDRESS, length);
+        var memorySegment = scope.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, i, array[i] == null ? MemoryAddress.NULL : array[i]);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, array[i] == null ? MemoryAddress.NULL : array[i]);
         }
         if (zeroTerminated) {
-            memorySegment.setAtIndex(valueLayout.ADDRESS, array.length, MemoryAddress.NULL);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemoryAddress.NULL);
         }
         return memorySegment;
     }
@@ -517,11 +508,11 @@ public class Interop {
 
         private MemoryLayout variadicLayout(Class<?> c) {
             if (c == long.class) {
-                return valueLayout.C_LONG;
+                return ValueLayout.JAVA_LONG;
             } else if (c == double.class) {
-                return valueLayout.C_DOUBLE;
+                return ValueLayout.JAVA_DOUBLE;
             } else if (MemoryAddress.class.isAssignableFrom(c)) {
-                return valueLayout.ADDRESS;
+                return ValueLayout.ADDRESS;
             } else {
                 throw new IllegalArgumentException("Unhandled variadic argument class: " + c);
             }

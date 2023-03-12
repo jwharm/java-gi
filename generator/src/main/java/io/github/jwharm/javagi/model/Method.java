@@ -166,7 +166,7 @@ public class Method extends GirElement implements CallableType {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value

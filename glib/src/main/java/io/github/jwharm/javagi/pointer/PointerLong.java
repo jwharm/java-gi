@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer to a long value.
@@ -15,7 +14,7 @@ public class PointerLong extends Pointer<Long> {
      * Create the pointer. It does not point to a specific value.
      */
     public PointerLong() {
-        super(Interop.valueLayout.C_LONG);
+        super(ValueLayout.JAVA_LONG);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PointerLong extends Pointer<Long> {
      */
     public PointerLong(long initialValue) {
         this();
-        address.set(Interop.valueLayout.C_LONG, 0, initialValue);
+        address.set(ValueLayout.JAVA_LONG, 0, initialValue);
     }
 
     /**
@@ -40,7 +39,7 @@ public class PointerLong extends Pointer<Long> {
      * @param value the new value that is pointed to
      */
     public void set(Long value) {
-        address.set(Interop.valueLayout.C_LONG, 0, value);
+        address.set(ValueLayout.JAVA_LONG, 0, value);
     }
 
     /**
@@ -58,9 +57,6 @@ public class PointerLong extends Pointer<Long> {
      * @return the value stored at the given index
      */
     public Long get(int index) {
-        return address.get(
-                Interop.valueLayout.C_LONG,
-                Interop.valueLayout.C_LONG.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.JAVA_LONG, index);
     }
 }

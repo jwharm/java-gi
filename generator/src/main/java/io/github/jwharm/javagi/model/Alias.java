@@ -94,7 +94,7 @@ public class Alias extends ValueWrapper {
     }
 
     protected void generateArrayConstructor(SourceWriter writer) throws IOException {
-        String layout = Conversions.getValueLayout(type);
+        String layout = Conversions.getValueLayoutPlain(type);
         writer.write("\n");
         writer.write("@ApiStatus.Internal\n");
         writer.write("public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length) {\n");

@@ -1,8 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
-import io.github.jwharm.javagi.interop.Interop;
-
 import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer that points to a raw memory address
@@ -13,7 +12,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * Create the pointer. It does not point to a specific address.
      */
     public PointerAddress() {
-        super(Interop.valueLayout.ADDRESS);
+        super(ValueLayout.ADDRESS);
     }
     
     /**
@@ -29,7 +28,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * @param value the new value that is pointed to
      */
     public void set(MemoryAddress value) {
-        address.set(Interop.valueLayout.ADDRESS, 0, value);
+        address.set(ValueLayout.ADDRESS, 0, value);
     }
 
     /**
@@ -48,9 +47,6 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * @return the value stored at the given index
      */
     public MemoryAddress get(int index) {
-        return address.get(
-                Interop.valueLayout.ADDRESS,
-                Interop.valueLayout.ADDRESS.byteSize() * index
-        );
+        return address.getAtIndex(ValueLayout.ADDRESS, index);
     }
 }

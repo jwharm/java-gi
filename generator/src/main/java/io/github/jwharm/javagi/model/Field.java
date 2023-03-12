@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Field extends Variable {
@@ -160,12 +161,12 @@ public class Field extends Variable {
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
-                return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+                return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
             }
             
             // Bitfields and enumerations are integers
             if (type.isBitfield() || type.isEnum()) {
-                return "Interop.valueLayout.C_INT.withName(\"" + this.fieldName + "\")";
+                return "ValueLayout.JAVA_INT.withName(\"" + this.fieldName + "\")";
             }
             
             // Primitive types and aliases
@@ -192,7 +193,7 @@ public class Field extends Variable {
                     || "java.lang.String".equals(array.type.qualifiedJavaType)
                     || "java.lang.foreign.MemoryAddress".equals(array.type.qualifiedJavaType)) {
                 
-                valueLayout = Conversions.toPanamaMemoryLayout(array.type);
+                valueLayout = Conversions.getValueLayout(array.type);
                 
             // Proxy objects
             } else {
@@ -204,16 +205,16 @@ public class Field extends Variable {
         
         // Arrays with non-fixed size
         if (array != null) {
-            return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+            return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
         }
         
         // Callbacks
         if (callback != null) {
-            return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+            return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
         }
         
         System.out.printf("Error: Field %s.%s has unknown type\n", parent.name, fieldName);
-        return "Interop.valueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+        return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
     }
     
     /**
@@ -264,7 +265,7 @@ public class Field extends Variable {
             case "char" -> 8;
             case "short" -> 16;
             case "int" -> 32;
-            case "long" -> 64; // On Windows this is 32, on Linux this is 64
+            case "long" -> Platform.isWindows() ? 32 : 64; // On Windows this is 32, on Linux this is 64
             case "float" -> 32;
             case "double" -> 64;
             case "MemoryAddress" -> 64; // 64-bits pointer

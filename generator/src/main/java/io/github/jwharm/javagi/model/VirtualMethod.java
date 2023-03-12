@@ -44,7 +44,7 @@ public class VirtualMethod extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
@@ -66,7 +66,7 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemoryAddress _struct = ((MemoryAddress) handle()).get(Interop.valueLayout.ADDRESS, 0);\n");
+        writer.write("MemoryAddress _struct = ((MemoryAddress) handle()).get(ValueLayout.ADDRESS, 0);\n");
         if (parent instanceof Interface) {
             writer.write("_struct = (MemoryAddress) Interop.g_type_interface_peek.invokeExact((Addressable) _struct, getType().getValue().longValue());\n");
         }
@@ -79,7 +79,7 @@ public class VirtualMethod extends Method {
         boolean varargs = generateFunctionDescriptor(writer);
         writer.write(";\n");
 
-        writer.write("MemoryAddress _func = _struct.get(Interop.valueLayout.ADDRESS, _offset);\n");
+        writer.write("MemoryAddress _func = _struct.get(ValueLayout.ADDRESS, _offset);\n");
         
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {

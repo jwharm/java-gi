@@ -152,7 +152,7 @@ public class Constructor extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(Interop.valueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Generate the return type
