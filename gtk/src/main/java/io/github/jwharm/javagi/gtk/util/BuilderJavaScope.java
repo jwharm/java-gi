@@ -49,24 +49,6 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
         if (type == null) {
             // Register the new gtype
             type = Types.register(BuilderJavaScope.class);
-
-            // Implement the BuilderScope interface
-            InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
-            interfaceInfo.writeInterfaceInit((iface, data) -> {
-                BuilderScopeInterface bsi = new BuilderScopeInterface(iface.handle());
-                bsi.overrideCreateClosure((self, builder, functionName, flags, object) -> {
-                    try {
-                        return self.createClosure(builder, functionName, flags, object);
-                    } catch (GErrorException gerror) {
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Error while creating closure: %s\n", gerror.getMessage());
-                        return null;
-                    }
-                });
-                bsi.overrideGetTypeFromName(BuilderScope::getTypeFromName);
-                bsi.overrideGetTypeFromFunction(BuilderScope::getTypeFromFunction);
-            });
-            GObjects.typeAddInterfaceStatic(type, BuilderScope.getType(), interfaceInfo);
         }
         return type;
     }
