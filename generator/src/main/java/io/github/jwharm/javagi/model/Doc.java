@@ -20,7 +20,7 @@ public class Doc extends GirElement {
         }
         writer.write("/**\n");
         
-        // Convert GtkDoc to javadoc
+        // Convert docstring to javadoc
         String javadoc = Javadoc.getInstance().convert(this);
         
         // Write docstring
@@ -33,6 +33,7 @@ public class Doc extends GirElement {
             }
         }
         
+        // Methods and functions
         if (parent instanceof CallableType ct
                 && (! (parent instanceof Callback || parent instanceof Signal))) {
             
@@ -63,7 +64,7 @@ public class Doc extends GirElement {
             // Exception
             if (parent instanceof Method m) {
                 if ("1".equals(m.throws_)) {
-                    writeDoc(writer, "GErrorException See {@link org.gnome.glib.Error}", "@throws");
+                    writeDoc(writer, "GErrorException see {@link org.gnome.glib.GError}", "@throws");
                 }
             }
         }
@@ -71,10 +72,10 @@ public class Doc extends GirElement {
         // Signals
         if (signalDeclaration && parent instanceof Signal signal) {
             if (signal.detailed) {
-                writeDoc(writer, "The signal detail", "@param detail");
+                writeDoc(writer, "the signal detail", "@param detail");
             }
-            writeDoc(writer, "The signal handler", "@param handler");
-            writeDoc(writer, "A {@link io.github.jwharm.javagi.base.Signal} object to keep track of the signal connection", "@return");
+            writeDoc(writer, "the signal handler", "@param handler");
+            writeDoc(writer, "a {@link io.github.jwharm.javagi.base.Signal} object to keep track of the signal connection", "@return");
         }
         
         // Deprecated
@@ -87,14 +88,14 @@ public class Doc extends GirElement {
         
         // Property setters
         if (parent instanceof Property p) {
-            writeDoc(writer, p.name + " The value for the {@code " + p.propertyName + "} property", "@param");
-            writeDoc(writer, "The {@code Build} instance is returned, to allow method chaining", "@return");
+            writeDoc(writer, p.name + " the value for the {@code " + p.propertyName + "} property", "@param");
+            writeDoc(writer, "the {@code Build} instance is returned, to allow method chaining", "@return");
         }
         
         // Field setters
         if (parent instanceof Field f) {
-            writeDoc(writer, f.name + " The value for the {@code " + f.name + "} field", "@param");
-            writeDoc(writer, "The {@code Build} instance is returned, to allow method chaining", "@return");
+            writeDoc(writer, f.name + " the value for the {@code " + f.name + "} field", "@param");
+            writeDoc(writer, "the {@code Build} instance is returned, to allow method chaining", "@return");
         }
         
         writer.write(" */\n");

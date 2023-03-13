@@ -36,7 +36,7 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
      * {@link org.gnome.gio.InputStream} and {@link org.gnome.gio.OutputStream}).
      * @param cancellable optional {@link Cancellable} object, {@code null} to ignore
      * @return {@code true} on success, {@code false} on failure
-     * @throws GErrorException See {@link org.gnome.glib.Error}
+     * @throws GErrorException See {@link org.gnome.glib.GError}
      */
     boolean close(@Nullable org.gnome.gio.Cancellable cancellable) throws GErrorException;
 }
