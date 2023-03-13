@@ -118,6 +118,9 @@ public class Parameters extends GirElement {
 
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
+
+        boolean multipleParameters = parameterList.size() > 1;
+
         for (Parameter p : parameterList) {
             if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
@@ -125,6 +128,12 @@ public class Parameters extends GirElement {
 
             if (!first) writer.write(", ");
             first = false;
+
+            // If there is more than one parameter, write each marshal call on its own line for readability
+            if (multipleParameters) {
+                writer.write("\n");
+                writer.write("        ");
+            }
 
             if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                 writer.write("_" + p.name + "Alias");

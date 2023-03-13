@@ -216,7 +216,7 @@ public interface Closure extends CallableType {
                         && (! type.isPointer())) {
                     writer.write("return 0;\n");
                 } else {
-                    writer.write("return null;\n");
+                    writer.write("return MemoryAddress.NULL;\n");
                 }
             }
             if (methodToInvoke.endsWith("invoke")) {
