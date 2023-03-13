@@ -10,6 +10,7 @@ public interface Closure extends CallableType {
     default void generateFunctionalInterface(SourceWriter writer, String javaName) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
+        String throws_ = getThrows();
 
         if (getDoc() == null) {
             writer.write("/**\n");
@@ -40,7 +41,11 @@ public interface Closure extends CallableType {
                 p.writeTypeAndName(writer, true);
             }
         }
-        writer.write(");\n");
+        writer.write(")");
+        if (throws_ != null) {
+            writer.write(" throws GErrorException");
+        }
+        writer.write(";\n");
         writer.write("\n");
 
         // Generate upcall(...)
@@ -79,6 +84,7 @@ public interface Closure extends CallableType {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
+        String throws_ = getThrows();
 
         String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
         if ("MemoryAddress".equals(returnType))
@@ -103,6 +109,12 @@ public interface Closure extends CallableType {
                 writer.write(Conversions.toPanamaJavaType(p.type) + " " + p.name);
             }
         }
+        // Add a parameter to write the GError
+        if (throws_ != null) {
+            if (!first) writer.write(", ");
+            writer.write("MemoryAddress _gerrorPointer");
+        }
+
         writer.write(") {\n");
         writer.increaseIndent();
 
@@ -122,6 +134,12 @@ public interface Closure extends CallableType {
         // Generate preprocessing statements
         if (parameters != null) {
             parameters.generateUpcallPreprocessing(writer);
+        }
+
+        // Generate try-catch block for exceptions thrown from inside the callback
+        if (throws_ != null) {
+            writer.write("try {\n");
+            writer.increaseIndent();
         }
 
         if (!isVoid) {
@@ -175,6 +193,42 @@ public interface Closure extends CallableType {
                 writer.write("}\n");
             }
         }
+
+        if (throws_ != null) {
+            writer.decreaseIndent();
+            if (methodToInvoke.endsWith("invoke")) {
+                writer.write("} catch (java.lang.reflect.InvocationTargetException _ite) {\n");
+                writer.increaseIndent();
+                writer.write("if (_ite.getCause() instanceof GErrorException _ge) {\n");
+            } else {
+                writer.write("} catch (GErrorException _ge) {\n");
+            }
+            writer.increaseIndent();
+            writer.write("org.gnome.glib.GError _gerror = (org.gnome.glib.GError) InstanceCache.getForType(_gerrorPointer, org.gnome.glib.GError::new);\n");
+            writer.write("_gerror.writeCode(_ge.getCode());\n");
+            writer.write("_gerror.writeDomain(_ge.getDomain());\n");
+            writer.write("_gerror.writeMessage(_ge.getMessage());\n");
+            // Return null
+            if (! isVoid) {
+                Type type = returnValue.type;
+                if (type != null
+                        && (type.isPrimitive || type.isEnum() || type.isBitfield() || type.isAliasForPrimitive())
+                        && (! type.isPointer())) {
+                    writer.write("return 0;\n");
+                } else {
+                    writer.write("return null;\n");
+                }
+            }
+            if (methodToInvoke.endsWith("invoke")) {
+                writer.decreaseIndent();
+                writer.write("} else {\n");
+                writer.write("    throw _ite;\n");
+                writer.write("}\n");
+            }
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+
         if (hasScope) {
             writer.decreaseIndent();
             writer.write("}\n");

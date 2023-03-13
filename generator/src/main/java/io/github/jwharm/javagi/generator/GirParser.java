@@ -84,7 +84,7 @@ public class GirParser extends DefaultHandler {
             }
             case "callback" -> {
                 Callback newCallback = new Callback(current, attr.getValue("name"), 
-                        attr.getValue("c:type"), attr.getValue("version"));
+                        attr.getValue("c:type"), attr.getValue("throws"), attr.getValue("version"));
                 if (current instanceof Namespace ns) {
                     ns.callbackList.add(newCallback);
                 } else if (current instanceof Field f) {

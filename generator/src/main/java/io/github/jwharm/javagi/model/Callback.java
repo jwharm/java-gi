@@ -8,9 +8,11 @@ public class Callback extends RegisteredType implements CallableType, Closure {
 
     public ReturnValue returnValue;
     public Parameters parameters;
+    public String throws_;
 
-    public Callback(GirElement parent, String name, String cType, String version) {
+    public Callback(GirElement parent, String name, String cType, String throws_, String version) {
         super(parent, name, null, cType, version);
+        this.throws_ = throws_;
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -52,7 +54,7 @@ public class Callback extends RegisteredType implements CallableType, Closure {
 
     @Override
     public String getThrows() {
-        return null;
+        return throws_;
     }
     
     public String getConstructorString() {
