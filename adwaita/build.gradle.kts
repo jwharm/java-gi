@@ -10,7 +10,7 @@ dependencies {
     api(project(":gtk"))
 }
 
-val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project)
+val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project, "1.0")
 version = "$pkgVersion-$version"
 
 setupGenSources {

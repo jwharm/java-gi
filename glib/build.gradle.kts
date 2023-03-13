@@ -1,11 +1,12 @@
 import ext.*
 import io.github.jwharm.javagi.generator.PatchSet.*
+import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     id("java-gi.library-conventions")
 }
 
-val pkgVersion = "pkg-config --modversion glib".runCommand(project)
+val pkgVersion = "pkg-config --modversion glib".runCommand(project, "2.0")
 version = "$pkgVersion-$version"
 
 setupGenSources {
@@ -129,7 +130,9 @@ setupGenSources {
             template("double", "org.gnome.glib.Type.G_TYPE_DOUBLE", "setDouble(arg)")
             template("float", "org.gnome.glib.Type.G_TYPE_FLOAT", "setFloat(arg)")
             template("int", "org.gnome.glib.Type.G_TYPE_INT", "setInt(arg)")
-            template("long", "org.gnome.glib.Type.G_TYPE_LONG", "setLong(arg)")
+            if (! Os.isFamily(Os.FAMILY_WINDOWS)) {
+                template("long", "org.gnome.glib.Type.G_TYPE_LONG", "setLong(arg)")
+            }
             template("String", "org.gnome.glib.Type.G_TYPE_STRING", "setString(arg)")
             template("Enumeration", "org.gnome.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())")
             template("Bitfield", "org.gnome.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")

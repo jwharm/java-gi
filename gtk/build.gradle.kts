@@ -9,7 +9,7 @@ dependencies {
     api(project(":glib"))
 }
 
-val pkgVersion = "pkg-config --modversion gtk4".runCommand(project)
+val pkgVersion = "pkg-config --modversion gtk4".runCommand(project, "4.0")
 version = "$pkgVersion-$version"
 
 setupGenSources {

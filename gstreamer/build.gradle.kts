@@ -9,7 +9,7 @@ dependencies {
     api(project(":glib"))
 }
 
-val pkgVersion = "pkg-config --modversion gstreamer-1.0".runCommand(project)
+val pkgVersion = "pkg-config --modversion gstreamer-1.0".runCommand(project, "1.0")
 version = "$pkgVersion-$version"
 
 setupGenSources {

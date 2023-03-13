@@ -1,7 +1,10 @@
 package io.github.jwharm.javagi.util;
 
 import java.lang.foreign.MemoryAddress;
+import java.lang.reflect.Method;
 
+import org.gnome.glib.GLib;
+import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
@@ -16,6 +19,8 @@ import io.github.jwharm.javagi.base.Enumeration;
  */
 public class ValueUtil {
     
+    private static final String LOG_DOMAIN = "java-gi";
+
     /**
      * Read the GType from the GValue, call the corresponding getter (using the methods defined 
      * in the {@link Value} proxy class), and return the result.
@@ -84,35 +89,53 @@ public class ValueUtil {
             return;
         }
         
-        if (type.equals(Type.G_TYPE_BOOLEAN)) {
-            dest.setBoolean((Boolean) src);
-        } else if (type.equals(Type.G_TYPE_CHAR)) {
-            dest.setSchar((Byte) src);
-        } else if (type.equals(Type.G_TYPE_DOUBLE)) {
-            dest.setDouble((Double) src);
-        } else if (type.equals(Type.G_TYPE_FLOAT)) {
-            dest.setFloat((Float) src);
-        } else if (type.equals(Type.G_TYPE_INT)) {
-            dest.setInt((Integer) src);
-        } else if (type.equals(Type.G_TYPE_LONG)) {
-            dest.setLong((Long) src);
-        } else if (type.equals(Type.G_TYPE_STRING)) {
-            dest.setString((String) src);
-        } else if (type.equals(Type.G_TYPE_ENUM)) {
-            dest.setEnum(((Enumeration) src).getValue());
-        } else if (type.equals(Type.G_TYPE_FLAGS)) {
-            dest.setFlags(((Bitfield) src).getValue());
-        } else if (type.equals(Type.G_TYPE_OBJECT)) {
-            dest.setObject((GObject) src);
-        } else if (type.equals(GObjects.gtypeGetType())) {
-            dest.setGtype((Type) src);
-        } else if (type.equals(Type.G_TYPE_POINTER)) {
-            dest.setPointer((MemoryAddress) src);
-        } else if (type.equals(Type.G_TYPE_PARAM)) {
-            dest.setParam((ParamSpec) src);
-        } else {
-            // Boxed value
-            dest.setBoxed((MemoryAddress) src);
+        try {
+            if (type.equals(Type.G_TYPE_BOOLEAN)) {
+                dest.setBoolean((Boolean) src);
+            } else if (type.equals(Type.G_TYPE_CHAR)) {
+                dest.setSchar((Byte) src);
+            } else if (type.equals(Type.G_TYPE_DOUBLE)) {
+                dest.setDouble((Double) src);
+            } else if (type.equals(Type.G_TYPE_FLOAT)) {
+                dest.setFloat((Float) src);
+            } else if (type.equals(Type.G_TYPE_INT)) {
+                dest.setInt((Integer) src);
+            } else if (type.equals(Type.G_TYPE_LONG)) {
+                // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
+                // Use reflection to bypass the type checker
+                for (Method m : Value.class.getDeclaredMethods()) {
+                    if ("setLong".equals(m.getName())) {
+                        m.invoke(dest, src);
+                        break;
+                    }
+                }
+            } else if (type.equals(Type.G_TYPE_STRING)) {
+                dest.setString((String) src);
+            } else if (type.equals(Type.G_TYPE_ENUM)) {
+                dest.setEnum(((Enumeration) src).getValue());
+            } else if (type.equals(Type.G_TYPE_FLAGS)) {
+                dest.setFlags(((Bitfield) src).getValue());
+            } else if (type.equals(Type.G_TYPE_OBJECT)) {
+                dest.setObject((GObject) src);
+            } else if (type.equals(GObjects.gtypeGetType())) {
+                dest.setGtype((Type) src);
+            } else if (type.equals(Type.G_TYPE_POINTER)) {
+                dest.setPointer((MemoryAddress) src);
+            } else if (type.equals(Type.G_TYPE_PARAM)) {
+                dest.setParam((ParamSpec) src);
+            } else {
+                // Boxed value
+                dest.setBoxed((MemoryAddress) src);
+            }
+        } catch (Exception e) {
+            GLib.log(
+                    LOG_DOMAIN,
+                    LogLevelFlags.LEVEL_CRITICAL,
+                    "ValueUtil: Cannot set Object with Class %s to GValue with GType %s: %s\n",
+                    src.getClass().getSimpleName(),
+                    GObjects.typeName(type),
+                    e.toString()
+            );
         }
     }
 }

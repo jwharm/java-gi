@@ -88,7 +88,7 @@ public class JavaClosure extends Closure {
                             "JavaClosure: Cannot invoke method %s in class %s: %s\n",
                             method.getName(),
                             instance.getClass().getName(),
-                            e.getMessage()
+                            e.toString()
                     );
                 }
             }
