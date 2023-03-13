@@ -204,10 +204,8 @@ public interface Closure extends CallableType {
                 writer.write("} catch (GErrorException _ge) {\n");
             }
             writer.increaseIndent();
-            writer.write("org.gnome.glib.GError _gerror = (org.gnome.glib.GError) InstanceCache.getForType(_gerrorPointer, org.gnome.glib.GError::new);\n");
-            writer.write("_gerror.writeCode(_ge.getCode());\n");
-            writer.write("_gerror.writeDomain(_ge.getDomain());\n");
-            writer.write("_gerror.writeMessage(_ge.getMessage());\n");
+            writer.write("org.gnome.glib.GError _gerror = new org.gnome.glib.GError(_ge.getDomain(), _ge.getCode(), _ge.getMessage());\n");
+            writer.write("_gerrorPointer.set(ValueLayout.ADDRESS, 0, _gerror.handle());\n");
             // Return null
             if (! isVoid) {
                 Type type = returnValue.type;
