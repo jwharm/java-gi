@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Field extends Variable {
@@ -254,7 +253,7 @@ public class Field extends Variable {
     }
     
     /**
-     * Get the byte-size of the native types. This is obviously architecture- and platform-specific.
+     * Get the byte-size of the types.
      * @param memoryType The result of getMemoryType(). For example: int, byte, ...
      * @return the native byte-size of the provided type
      */
@@ -265,7 +264,7 @@ public class Field extends Variable {
             case "char" -> 8;
             case "short" -> 16;
             case "int" -> 32;
-            case "long" -> Platform.isWindows() ? 32 : 64; // On Windows this is 32, on Linux this is 64
+            case "long" -> 64; // java long is 64-bits
             case "float" -> 32;
             case "double" -> 64;
             case "MemoryAddress" -> 64; // 64-bits pointer
