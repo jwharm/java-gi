@@ -108,44 +108,6 @@ setupGenSources {
                 return _object;
             }
         """.replaceIndent("    ") + "\n")
-        
-        fun StringBuilder.template(javatype: String, gtype: String, method: String) = appendLine("""
-                            
-                    /**
-                     * Create a {@link Value} with the provided {@code $javatype} value.
-                     * @param  arg the initial value to set
-                     * @return the new {@link Value}
-                     */
-                    public static Value create($javatype arg) {
-                        Value v = allocate();
-                        v.init($gtype);
-                        v.$method;
-                        return v;
-                    }
-                """.trimIndent())
-
-        inject(repo, "Value", StringBuilder().run {
-            template("boolean", "org.gnome.glib.Type.G_TYPE_BOOLEAN", "setBoolean(arg)")
-            template("byte", "org.gnome.glib.Type.G_TYPE_CHAR", "setSchar(arg)")
-            template("double", "org.gnome.glib.Type.G_TYPE_DOUBLE", "setDouble(arg)")
-            template("float", "org.gnome.glib.Type.G_TYPE_FLOAT", "setFloat(arg)")
-            template("int", "org.gnome.glib.Type.G_TYPE_INT", "setInt(arg)")
-            if (! Os.isFamily(Os.FAMILY_WINDOWS)) {
-                template("long", "org.gnome.glib.Type.G_TYPE_LONG", "setLong(arg)")
-            }
-            template("String", "org.gnome.glib.Type.G_TYPE_STRING", "setString(arg)")
-            template("Enumeration", "org.gnome.glib.Type.G_TYPE_ENUM", "setEnum(arg.getValue())")
-            template("Bitfield", "org.gnome.glib.Type.G_TYPE_FLAGS", "setFlags(arg.getValue())")
-            template("org.gnome.gobject.GObject", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject(arg)")
-            template("org.gnome.glib.Type", "org.gnome.gobject.GObjects.gtypeGetType()", "setGtype(arg)")
-            template("ProxyInstance", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) arg.handle())")
-            template("MemoryAddress", "org.gnome.glib.Type.G_TYPE_POINTER", "setPointer(arg)")
-            template("ParamSpec", "org.gnome.glib.Type.G_TYPE_PARAM", "setParam(arg)")
-            template("Proxy", "org.gnome.glib.Type.G_TYPE_OBJECT", "setObject((org.gnome.gobject.GObject) arg)")
-            template("byte[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
-            template("String[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
-            template("MemoryAddress[]", "org.gnome.glib.Type.G_TYPE_BOXED", "setBoxed((MemoryAddress) Interop.allocateNativeArray(arg, true, MemorySession.openImplicit()))")
-        }.toString().replaceIndent("    ") + "\n")
     }
     source("Gio-2.0", "org.gnome.gio", true, "gio-2.0") { repo ->
         // Override with different return type
