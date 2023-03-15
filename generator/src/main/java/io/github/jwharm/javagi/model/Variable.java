@@ -307,4 +307,94 @@ public class Variable extends GirElement {
 
         return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")";
     }
+    
+    public String getGTypeDeclaration() {
+        if (array != null) {
+            return "org.gnome.glib.Type.G_TYPE_BOXED";
+        }
+        if (type == null) {
+            return "org.gnome.glib.Type.G_TYPE_BOXED";
+        }
+        if (type.isPrimitive) {
+            return switch(type.cType) {
+                case "gboolean" -> "org.gnome.glib.Type.G_TYPE_BOOLEAN";
+                case "gchar", "gint8" -> "org.gnome.glib.Type.G_TYPE_CHAR";
+                case "guchar", "guint8" -> "org.gnome.glib.Type.G_TYPE_UCHAR";
+                case "gint", "gint32" -> "org.gnome.glib.Type.G_TYPE_INT";
+                case "guint", "guint32", "gunichar" -> "org.gnome.glib.Type.G_TYPE_UINT";
+                case "glong" -> "org.gnome.glib.Type.G_TYPE_LONG";
+                case "gulong" -> "org.gnome.glib.Type.G_TYPE_ULONG";
+                case "gint64" -> "org.gnome.glib.Type.G_TYPE_INT64";
+                case "guint64" -> "org.gnome.glib.Type.G_TYPE_UINT64";
+                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "org.gnome.glib.Type.G_TYPE_POINTER";
+                case "gdouble" -> "org.gnome.glib.Type.G_TYPE_DOUBLE";
+                case "gfloat" -> "org.gnome.glib.Type.G_TYPE_FLOAT";
+                case "none" -> "org.gnome.glib.Type.G_TYPE_NONE";
+                case "utf8", "filename" -> "org.gnome.glib.Type.G_TYPE_STRING";
+                default -> "UNKNOWN: " + type.cType;
+            };
+        }
+        if (type.qualifiedJavaType.equals("java.lang.String")) {
+            return "org.gnome.glib.Type.G_TYPE_STRING";
+        }
+        if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress")) {
+            return "org.gnome.glib.Type.G_TYPE_POINTER";
+        }
+        if (type.qualifiedJavaType.equals("org.gnome.gobject.GObject")) {
+            return "org.gnome.glib.Type.G_TYPE_OBJECT";
+        }
+        RegisteredType rt = (type.isAlias() && (! type.isAliasForPrimitive())) ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
+        if (rt != null) {
+            for (Function function : rt.functionList) {
+                if (function.name.equals("get_type")) {
+                    return type.qualifiedJavaType + ".getType()";
+                }
+            }
+        }
+        if (type.qualifiedJavaType.equals("org.gnome.glib.Type")) {
+            return "org.gnome.gobject.GObjects.gtypeGetType()";
+        }
+        return "org.gnome.glib.Type.G_TYPE_BOXED";
+    }
+    
+    public String getValueSetter(String gvalueIdentifier, String gTypeDeclaration, String payloadIdentifier) {
+        // First, check for fundamental classes with their own GValue setters
+        if (type != null) {
+            RegisteredType rt = 
+                    (type.isAlias() && (type.girElementInstance != null && type.girElementInstance.type != null)) 
+                    ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
+            if (rt instanceof Class cls && cls.setValueFunc != null) {
+                GirElement setter = Conversions.cIdentifierLookupTable.get(cls.setValueFunc);
+                if (setter instanceof Method method) {
+                    String setValueFunc = Conversions.toLowerCaseJavaName(method.name);
+                    return rt.getNamespace().globalClassName + "." + setValueFunc + "(" + gvalueIdentifier + ", " + payloadIdentifier + ")";
+                }
+            }
+        }
+        // Other, known types
+        String setValue = switch (gTypeDeclaration) {
+            case "org.gnome.glib.Type.G_TYPE_BOOLEAN" -> "setBoolean";
+            case "org.gnome.glib.Type.G_TYPE_CHAR" -> "setSchar";
+            case "org.gnome.glib.Type.G_TYPE_DOUBLE" -> "setDouble";
+            case "org.gnome.glib.Type.G_TYPE_FLOAT" -> "setFloat";
+            case "org.gnome.glib.Type.G_TYPE_INT" -> "setInt";
+            case "org.gnome.glib.Type.G_TYPE_UINT" -> "setUint";
+            case "org.gnome.glib.Type.G_TYPE_LONG" -> "setLong";
+            case "org.gnome.glib.Type.G_TYPE_ULONG" -> "setUlong";
+            case "org.gnome.glib.Type.G_TYPE_INT64" -> "setInt64";
+            case "org.gnome.glib.Type.G_TYPE_UINT64" -> "setUint64";
+            case "org.gnome.glib.Type.G_TYPE_STRING" -> "setString";
+            case "org.gnome.glib.Type.G_TYPE_POINTER" -> "setPointer";
+            case "org.gnome.glib.Type.G_TYPE_BOXED" -> "setBoxed";
+            case "org.gnome.glib.Type.G_TYPE_PARAM" -> "setParam";
+            case "org.gnome.gobject.GObjects.gtypeGetType()" -> "setGtype";
+            default -> type.isEnum() ? "setEnum" : type.isBitfield() ? "setFlags" : "setObject";
+        };
+        return gvalueIdentifier + "." + switch(setValue) {
+            case "setEnum", "setFlags" -> setValue + "(" + payloadIdentifier + ".getValue())";
+            case "setBoxed" -> setValue + "((MemoryAddress) " + marshalJavaToNative(payloadIdentifier, false, false) + ")";
+            case "setObject" -> setValue + "((org.gnome.gobject.GObject) " + payloadIdentifier + ")";
+            default -> setValue + "(" + payloadIdentifier + ")";
+        };
+    }
 }

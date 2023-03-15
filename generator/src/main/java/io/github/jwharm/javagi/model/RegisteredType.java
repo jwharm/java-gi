@@ -98,6 +98,10 @@ public abstract class RegisteredType extends GirElement {
      * @param getType the name of the function
      */
     protected void registerGetTypeFunction(String getType) {
+        if (getType == null) {
+            return;
+        }
+        
         // Function
         Function getTypeFunc = new Function(this, "get_type", getType, null, null, null);
         getTypeFunc.returnValue = new ReturnValue(getTypeFunc, "none", null);

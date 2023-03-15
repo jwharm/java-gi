@@ -23,6 +23,7 @@ public class Property extends Variable {
      * @throws IOException Thrown when an exception occurs during writing
      */
     public void generate(SourceWriter writer) throws IOException {
+        String gTypeDeclaration = getGTypeDeclaration();
         writer.write("\n");
         if (doc != null) {
             doc.generate(writer, false);
@@ -31,8 +32,16 @@ public class Property extends Variable {
         writer.write("S set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        writer.write("    addBuilderProperty(\"" + propertyName + "\", org.gnome.gobject.Value.create(" + name + "));\n");
-        writer.write("    return (S) this;\n");
+        writer.increaseIndent();
+        writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
+        writer.write("_value.init(" + gTypeDeclaration + ");\n");
+        if (array != null) {
+            writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
+        }
+        writer.write(getValueSetter("_value", gTypeDeclaration, name) + ";\n");
+        writer.write("addBuilderProperty(\"" + propertyName + "\", _value);\n");
+        writer.write("return (S) this;\n");
+        writer.decreaseIndent();
         writer.write("}\n");
     }
 }

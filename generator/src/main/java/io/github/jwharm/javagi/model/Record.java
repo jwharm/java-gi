@@ -10,7 +10,7 @@ public class Record extends Class {
     public final String disguised, isGTypeStructFor;
 
     public Record(GirElement parent, String name, String cType, String version, String disguised, String isGTypeStructFor) {
-        super(parent, name, null, cType, null, null, null, version, null, null);
+        super(parent, name, null, cType, null, null, null, null, null, version, null, null);
         this.disguised = disguised;
         this.isGTypeStructFor = isGTypeStructFor;
     }

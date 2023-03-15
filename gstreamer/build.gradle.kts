@@ -40,6 +40,9 @@ setupGenSources {
     source("GstAudio-1.0", "org.freedesktop.gstreamer.audio", true, "gstaudio-1.0") { repo ->
         // Override with different return type
         setReturnType(repo, "AudioSink", "stop", "gboolean", "gboolean", "true", "always %TRUE")
+        
+        // This is a Fraction property, but I don't know how to put a Fraction object in a GValue
+        removeProperty(repo, "AudioAggregator", "output-buffer-duration-fraction")
     }
     source("GstBadAudio-1.0", "org.freedesktop.gstreamer.badaudio", true, "gstbadaudio-1.0")
     source("GstCheck-1.0", "org.freedesktop.gstreamer.check", true, "gstcheck-1.0")

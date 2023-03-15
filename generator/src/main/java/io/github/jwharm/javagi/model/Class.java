@@ -12,18 +12,22 @@ public class Class extends RegisteredType {
     public String typeName;
     public String getType;
     public String typeStruct;
+    public String getValueFunc;
+    public String setValueFunc;
     public String abstract_;
     public String final_;
     
     public Record classStruct;
 
     public Class(GirElement parent, String name, String parentClass, String cType, String typeName, String getType,
-            String typeStruct, String version, String abstract_, String final_) {
+            String typeStruct, String getValueFunc, String setValueFunc, String version, String abstract_, String final_) {
         
         super(parent, name, parentClass, cType, version);
         this.typeName = typeName;
         this.getType = getType;
         this.typeStruct = typeStruct;
+        this.getValueFunc = getValueFunc;
+        this.setValueFunc = setValueFunc;
         this.abstract_ = abstract_;
         this.final_ = final_;
 

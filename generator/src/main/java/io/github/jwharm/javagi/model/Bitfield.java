@@ -9,8 +9,14 @@ import java.util.List;
 
 public class Bitfield extends ValueWrapper {
 
-    public Bitfield(GirElement parent, String name, String cType, String version) {
+    public String getType;
+    
+    public Bitfield(GirElement parent, String name, String cType, String getType, String version) {
         super(parent, name, null, cType, version);
+        this.getType = getType;
+        
+        // Generate a function declaration to retrieve the type of this bitfield.
+        registerGetTypeFunction(getType);
     }
 
     public void generate(SourceWriter writer) throws IOException {

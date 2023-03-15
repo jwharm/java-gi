@@ -18,6 +18,7 @@ public class CrossReference {
      * </ul>
      */
     public static void link() {
+        
         // Create the registeredTypeMap of all registered types of all GI repositories
         for (Repository r : Conversions.repositoriesLookupTable.values()) {
             Namespace ns = r.namespace;

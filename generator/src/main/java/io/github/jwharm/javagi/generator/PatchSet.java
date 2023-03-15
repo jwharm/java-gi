@@ -32,6 +32,12 @@ public abstract class PatchSet {
         if (vm != null) vm.parent.virtualMethodList.remove(vm);
         else System.err.println("Did not remove " + type + "." + virtualMethod + ": Not found");
     }
+    
+    public static void removeProperty(Repository repo, String type, String property) {
+        Property p = findProperty(repo, type, property);
+        if (p != null) p.parent.propertyList.remove(p);
+        else System.err.println("Did not remove " + type + "." + property + ": Not found");
+    }
 
     public static void removeType(Repository repo, String type) {
         if (repo.namespace.registeredTypeMap.remove(type) == null) System.err.println("Did not remove " + type + ": Not found");
@@ -109,6 +115,18 @@ public abstract class PatchSet {
         try {
             for (VirtualMethod vm : repo.namespace.registeredTypeMap.get(type).virtualMethodList) {
                 if (virtualMethod.equals(vm.name)) return vm;
+            }
+            return null;
+        } catch (NullPointerException ignored) {
+            System.out.printf("Cannot find type %s\n", type);
+            return null;
+        }
+    }
+
+    public static Property findProperty(Repository repo, String type, String property) {
+        try {
+            for (Property p : repo.namespace.registeredTypeMap.get(type).propertyList) {
+                if (property.equals(p.propertyName)) return p;
             }
             return null;
         } catch (NullPointerException ignored) {
