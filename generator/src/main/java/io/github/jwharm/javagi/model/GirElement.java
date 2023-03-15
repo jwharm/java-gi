@@ -19,6 +19,7 @@ public abstract class GirElement {
     public final List<Attribute> attributeList = new ArrayList<>();
     public final List<Field> fieldList = new ArrayList<>();
     public final List<Function> functionList = new ArrayList<>();
+    public final List<Include> includeList = new ArrayList<>();
     public final List<Implements> implementsList = new ArrayList<>();
     public final List<Method> methodList = new ArrayList<>();
     public final List<Property> propertyList = new ArrayList<>();

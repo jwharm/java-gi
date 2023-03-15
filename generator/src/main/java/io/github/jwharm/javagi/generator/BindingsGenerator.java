@@ -47,9 +47,11 @@ public class BindingsGenerator {
     public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
         String className = Conversions.convertToJavaType(gir.namespace.globalClassName, false, gir.namespace);
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(className + ".java")))) {
+            
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             RegisteredType.generateImportStatements(writer);
+            
             writer.write("/**\n");
             writer.write(" * Constants and functions that are declared in the global " + className + " namespace.\n");
             writer.write(" */\n");
@@ -57,22 +59,36 @@ public class BindingsGenerator {
             writer.increaseIndent();
             writer.write("\n");
             writer.write("static {\n");
+
+            // Load dependencies first
+            for (Include incl : gir.includeList) {
+                Repository dep = Conversions.repositoriesLookupTable.get(incl.name);
+                writer.write("    " + dep.namespace.globalClassPackage + "." + dep.namespace.globalClassName + ".javagi$ensureInitialized();\n");
+            }
+
+            // Load libraries
             for (String libraryName : natives) {
                 writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
             }
+            
+            // Register types
             writer.write("    registerTypes();\n");
+            
             writer.write("}\n");
             writer.write("\n");
             writer.write("@ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
-
+            
+            // Generate constants
             for (Constant constant : gir.namespace.constantList) {
                 constant.generate(writer);
             }
 
+            // Generate global functions
             for (Function function : gir.namespace.functionList) {
                 function.generate(writer);
             }
             
+            // Generate downcallhandles
             if (! gir.namespace.functionList.isEmpty()) {
                 writer.write("\n");
                 writer.write("private static class DowncallHandles {\n");
@@ -84,18 +100,22 @@ public class BindingsGenerator {
                 writer.write("}\n");
             }
             
+            // Generate registerTypes function
             writer.write("\n");
             writer.write("private static void registerTypes() {\n");
             writer.increaseIndent();
 
+            // Classes
             for (Class c : gir.namespace.classList) {
                 writer.write("if (" + c.javaName + ".isAvailable()) TypeCache.register(" + c.javaName + ".getType(), " + c.getConstructorString() + ");\n");
             }
             
+            // Interfaces
             for (Interface i : gir.namespace.interfaceList) {
                 writer.write("if (" + i.javaName + ".isAvailable()) TypeCache.register(" + i.javaName + ".getType(), " + i.getConstructorString() + ");\n");
             }
 
+            // Aliases
             for (Alias a : gir.namespace.aliasList) {
                 if (a.getTargetType() == Alias.TargetType.CLASS) {
                     Class c = (Class) a.type.girElementInstance;
@@ -113,6 +133,7 @@ public class BindingsGenerator {
             writer.write("}\n");
         }
 
+        // Generate package-info.java file
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve("package-info.java")))) {
             writer.write("/**\n");
             writer.write(" * This package contains the generated bindings for " + gir.namespace.name + ".\n");

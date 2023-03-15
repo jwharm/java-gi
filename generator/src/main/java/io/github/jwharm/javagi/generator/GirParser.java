@@ -169,6 +169,11 @@ public class GirParser extends DefaultHandler {
                 current.implementsList.add(newImplements);
                 current = newImplements;
             }
+            case "include" -> {
+                Include newInclude = new Include(current, attr.getValue("name"));
+                current.includeList.add(newInclude);
+                current = newInclude;
+            }
             case "instance-parameter" -> {
                 InstanceParameter newInstanceParameter = new InstanceParameter(current, attr.getValue("name"),
                         attr.getValue("transfer-ownership"), attr.getValue("nullable"),
@@ -283,7 +288,7 @@ public class GirParser extends DefaultHandler {
                 current.virtualMethodList.add(newVirtualMethod);
                 current = newVirtualMethod;
             }
-            case "glib:boxed", "include", "c:include", "source-position" -> {
+            case "glib:boxed", "c:include", "source-position" -> {
                 // Ignored
                 skip = qName;
             }
