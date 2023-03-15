@@ -63,7 +63,8 @@ public class BindingsGenerator {
             // Load dependencies first
             for (Include incl : gir.includeList) {
                 Repository dep = Conversions.repositoriesLookupTable.get(incl.name);
-                writer.write("    " + dep.namespace.globalClassPackage + "." + dep.namespace.globalClassName + ".javagi$ensureInitialized();\n");
+                String clsName = Conversions.convertToJavaType(dep.namespace.globalClassName, false, dep.namespace);
+                writer.write("    " + dep.namespace.globalClassPackage + "." + clsName + ".javagi$ensureInitialized();\n");
             }
 
             // Load libraries
