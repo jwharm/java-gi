@@ -27,18 +27,9 @@ public class InstanceCache {
     public final static Map<Addressable, WeakReference<Proxy>> weakReferences = new HashMap<>();
 
     private static final Cleaner CLEANER = Cleaner.create();
-
-    /**
-     * Get a {@link Proxy} object for the provided native memory address. If a Proxy object does  
-     * not yet exist for this address, a new Proxy object is instantiated and added to the cache. 
-     * The type of the Proxy object is read from the gtype field of the native instance.
-     * Invalid references are removed from the cache using a GObject toggle reference.
-     * @param address  memory address of the native object
-     * @param fallback fallback constructor to use when the type is not found in the TypeCache
-     * @return         a Proxy instance for the provided memory address
-     */
-    public static Proxy getForType(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
-
+    
+    private static Proxy get(Addressable address) {
+        
         // Null check on the memory address
         if (address == null || address.equals(MemoryAddress.NULL)) {
             return null;
@@ -52,6 +43,27 @@ public class InstanceCache {
         WeakReference<Proxy> weakRef = weakReferences.get(address);
         if (weakRef != null && weakRef.get() != null) {
             return weakRef.get();
+        }
+        
+        // Not found
+        return null;
+    }
+
+    /**
+     * Get a {@link Proxy} object for the provided native memory address. If a Proxy object does  
+     * not yet exist for this address, a new Proxy object is instantiated and added to the cache. 
+     * The type of the Proxy object is read from the gtype field of the native instance.
+     * Invalid references are removed from the cache using a GObject toggle reference.
+     * @param address  memory address of the native object
+     * @param fallback fallback constructor to use when the type is not found in the TypeCache
+     * @return         a Proxy instance for the provided memory address
+     */
+    public static Proxy getForType(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+        
+        // Get instance from the cache
+        Proxy instance = get(address);
+        if (instance != null) {
+            return instance;
         }
 
         // Get constructor from the type registry
@@ -79,52 +91,45 @@ public class InstanceCache {
      */
     public static Proxy getForTypeClass(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
 
-        // Null check on the memory address
-        if (address == null || address.equals(MemoryAddress.NULL)) {
-            return null;
-        }
-
-        // Get instance from cache
-        Proxy instance = strongReferences.get(address);
+        // Get instance from the cache
+        Proxy instance = get(address);
         if (instance != null) {
             return instance;
         }
-        WeakReference<Proxy> weakRef = weakReferences.get(address);
-        if (weakRef != null && weakRef.get() != null) {
-            return weakRef.get();
-        }
-
+        
         // Get constructor from the type registry
         Type type = new TypeClass(address).readGType();
         Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor(type, null);
-        if (ctor != null) {
-
-            // Create a new throw-away instance (without a memory address) so we can get the Java Class definition.
-            Proxy newInstance = ctor.apply(null);
-            if (newInstance != null) {
-
-                // Get the Java proxy TypeClass definition
-                Class<? extends GObject> instanceClass = ((GObject) newInstance).getClass();
-                Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
-                if (typeClass != null) {
-
-                    // Use the memory address constructor to create a new instance of the TypeClass
-                    ctor = Types.getAddressConstructor(typeClass);
-                    if (ctor != null) {
-
-                        // Create the instance
-                        newInstance = ctor.apply(address);
-                        if (newInstance != null) {
-
-                            return put(address, newInstance);
-                        }
-                    }
-                }
-            }
+        if (ctor == null) {
+            return fallback.apply(address);
         }
 
-        // Use Fallback constructor
-        return fallback.apply(address);
+        // Create a new throw-away instance (without a memory address) so we can get the Java Class definition.
+        Proxy newInstance = ctor.apply(null);
+        if (newInstance == null) {
+            return fallback.apply(address);
+        }
+
+        // Get the Java proxy TypeClass definition
+        Class<? extends GObject> instanceClass = ((GObject) newInstance).getClass();
+        Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
+        if (typeClass == null) {
+            return fallback.apply(address);
+        }
+
+        // Use the memory address constructor to create a new instance of the TypeClass
+        ctor = Types.getAddressConstructor(typeClass);
+        if (ctor == null) {
+            return fallback.apply(address);
+        }
+
+        // Create the instance
+        newInstance = ctor.apply(address);
+        if (newInstance == null) {
+            return fallback.apply(address);
+        }
+
+        return put(address, newInstance);
     }
 
     /**
@@ -137,19 +142,10 @@ public class InstanceCache {
      */
     public static Proxy get(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
 
-        // Null check on the memory address
-        if (address == null || address.equals(MemoryAddress.NULL)) {
-            return null;
-        }
-
-        // Get instance from cache
-        Proxy instance = strongReferences.get(address);
+        // Get instance from the cache
+        Proxy instance = get(address);
         if (instance != null) {
             return instance;
-        }
-        WeakReference<Proxy> weakRef = weakReferences.get(address);
-        if (weakRef != null && weakRef.get() != null) {
-            return weakRef.get();
         }
 
         // No instance in cache: Create a new instance
@@ -227,11 +223,11 @@ public class InstanceCache {
         public void run(@Nullable MemoryAddress data, GObject object, boolean isLastRef) {
             var key = object.handle();
             if (isLastRef) {
-                strongReferences.remove(key);
                 weakReferences.put(key, new WeakReference<>(object));
+                strongReferences.remove(key);
             } else {
-                weakReferences.remove(key);
                 strongReferences.put(key, object);
+                weakReferences.remove(key);
             }
         }
     }
