@@ -30,21 +30,18 @@ public class JavaGI {
         // Parse the GI files into Repository objects
         for (Source source : sources) {
             try {
-                System.out.println("PARSE " + source.source());
                 Repository r = parser.parse(source.source(), source.pkg());
                 Conversions.repositoriesLookupTable.put(r.namespace.name, r);
                 parsed.put(r.namespace.name, new Parsed(r, source.generate, source.natives, source.patches));
             } catch (IOException ioe) {
-                System.err.printf("PARSE %s: NOT FOUND\n", source.source());
+                System.out.println("Not found: " + source.source());
             }
         }
         
         // Link the type references to the GIR type definition across the GI repositories
-        System.out.println("LINK " + parsed.size() + " REPOSITORIES");
         CrossReference.link();
 
         // Patches are specified in build.gradle.kts
-        System.out.println("APPLY PATCHES");
         for (Parsed p : parsed.values()) {
             p.patches.patch(p.repository);
         }
@@ -58,7 +55,6 @@ public class JavaGI {
         for (Parsed p : parsed.values()) {
             if (p.generate) {
                 Path basePath = outputDir.resolve(p.repository.namespace.pathName);
-                System.out.println("GENERATE " + p.repository.namespace.name + " to " + basePath);
                 BindingsGenerator.generate(p.repository, p.natives, basePath);
                 namespaces.add(new Generated.Element(p.repository.namespace.packageName));
             }
