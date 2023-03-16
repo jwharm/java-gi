@@ -40,8 +40,7 @@ setupGenSources {
     source("GstAudio-1.0", "org.freedesktop.gstreamer.audio", true, "gstaudio-1.0") { repo ->
         // Override with different return type
         setReturnType(repo, "AudioSink", "stop", "gboolean", "gboolean", "true", "always %TRUE")
-        
-        // This is a Fraction property, but I don't know how to put a Fraction object in a GValue
+        // A GstFraction cannot automatically be put into a GValue
         removeProperty(repo, "AudioAggregator", "output-buffer-duration-fraction")
     }
     source("GstBadAudio-1.0", "org.freedesktop.gstreamer.badaudio", true, "gstbadaudio-1.0")
@@ -70,6 +69,8 @@ setupGenSources {
     source("GstVulkan-1.0", "org.freedesktop.gstreamer.vulkan", true, "gstvulkan-1.0") { repo ->
         // Override with different return type
         renameMethod(repo, "VulkanDescriptorCache", "acquire", "acquireDescriptorSet")
+        // A GstFraction cannot automatically be put into a GValue
+        removeProperty(repo, "VulkanSwapper", "pixel-aspect-ratio")
     }
     source("GstVulkanWayland-1.0", "org.freedesktop.gstreamer.vulkan.wayland", true)
     source("GstWebRTC-1.0", "org.freedesktop.gstreamer.webrtc", true, "gstwebrtc-1.0")
