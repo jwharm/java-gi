@@ -4,6 +4,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.Arrays;
 
+import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
 
@@ -144,14 +145,19 @@ public class Interop {
      * Returns a Java string from native memory using {@code MemoryAddress.getUtf8String()}.
      * If an error occurs or when the native address is NULL, null is returned.
      * @param address The memory address of the native String (\0-terminated char*).
+     * @param free if the address must be freed
      * @return A String or null
      */
-    public static String getStringFrom(MemoryAddress address) {
+    public static String getStringFrom(MemoryAddress address, boolean free) {
         try {
             if (!MemoryAddress.NULL.equals(address)) {
                 return address.getUtf8String(0);
             }
         } catch (Throwable ignored) {
+        } finally {
+            if (free) {
+                GLib.free(address);
+            }
         }
         return null;
     }
@@ -160,12 +166,20 @@ public class Interop {
      * Read an array of Strings with the given length from native memory
      * @param address address of the memory segment
      * @param length length of the array
+     * @param free if the strings and the array must be freed
      * @return Array of Strings
      */
-    public static String[] getStringArrayFrom(MemoryAddress address, int length) {
+    public static String[] getStringArrayFrom(MemoryAddress address, int length, boolean free) {
         String[] result = new String[length];
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < length; i++) {
             result[i] = address.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
+            if (free) {
+                GLib.free(address.getAtIndex(ValueLayout.ADDRESS, i));
+            }
+        }
+        if (free) {
+            GLib.free(address);
+        }
         return result;
     }
 
@@ -173,13 +187,151 @@ public class Interop {
      * Read an array of pointers with the given length from native memory
      * @param address address of the memory segment
      * @param length length of the array
+     * @param free if the addresses and the array must be freed
      * @return Array of pointers
      */
-    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length) {
+    public static MemoryAddress[] getAddressArrayFrom(MemoryAddress address, int length, boolean free) {
         MemoryAddress[] result = new MemoryAddress[length];
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < length; i++) {
             result[i] = address.getAtIndex(ValueLayout.ADDRESS, i);
+            if (free) {
+                GLib.free(address.getAtIndex(ValueLayout.ADDRESS, i));
+            }
+        }
+        if (free) {
+            GLib.free(address);
+        }
         return result;
+    }
+
+    /**
+     * Read an array of booleans with the given length from native memory
+     * The array is read from native memory as an array of integers with value 1 or 0,
+     * and converted to booleans with 1 = true and 0 = false.
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of booleans
+     */
+    public static boolean[] getBooleanArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        int[] intArray = getIntegerArrayFrom(address, length, scope, free);
+        boolean[] array = new boolean[intArray.length];
+        for (int c = 0; c < intArray.length; c++)
+            array[c] = (intArray[c] != 0);
+        return array;
+    }
+
+    /**
+     * Read an array of bytes with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of bytes
+     */
+    public static byte[] getByteArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        byte[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_BYTE);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of chars with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of chars
+     */
+    public static char[] getCharacterArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        char[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_CHAR);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of doubles with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of doubles
+     */
+    public static double[] getDoubleArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        double[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_DOUBLE);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of floats with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of floats
+     */
+    public static float[] getFloatArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        float[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_FLOAT);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of integers with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of integers
+     */
+    public static int[] getIntegerArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        int[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_INT);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of longs with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of longs
+     */
+    public static long[] getLongArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        long[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_LONG);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of shorts with the given length from native memory
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of shorts
+     */
+    public static short[] getShortArrayFrom(MemoryAddress address, long length, MemorySession scope, boolean free) {
+        short[] array = MemorySegment.ofAddress(address, length, scope).toArray(ValueLayout.JAVA_SHORT);
+        if (free) {
+            GLib.free(address);
+        }
+        return array;
     }
 
     /**

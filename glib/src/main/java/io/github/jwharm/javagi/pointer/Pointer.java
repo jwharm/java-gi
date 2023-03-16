@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi.pointer;
 
+import org.gnome.glib.GLib;
+
 import java.lang.foreign.*;
 import java.lang.reflect.Array;
 
@@ -76,15 +78,27 @@ public abstract class Pointer<T> implements Iterable<T> {
     }
 
     /**
+     * Release the pointer. This will run {@link GLib#free(MemoryAddress)}
+     * on the native memory address.
+     */
+    public void free() {
+        GLib.free(address);
+    }
+
+    /**
      * Read an array of values from the pointer
      * @param length length of the array
      * @param clazz type of the array elements
+     * @param free if the pointer must be freed
      * @return the array
      */
-    public T[] toArray(int length, Class<T> clazz) {
+    public T[] toArray(int length, Class<T> clazz, boolean free) {
         T[] array = (T[]) Array.newInstance(clazz, length);
         for (int i = 0; i < length; i++) {
             array[i] = get(i);
+        }
+        if (free) {
+            GLib.free(address);
         }
         return array;
     }
