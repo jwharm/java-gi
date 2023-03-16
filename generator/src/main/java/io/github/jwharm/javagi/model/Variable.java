@@ -345,6 +345,9 @@ public class Variable extends GirElement {
         }
         RegisteredType rt = (type.isAlias() && (! type.isAliasForPrimitive())) ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
         if (rt != null) {
+            if (rt.isInstanceOf("org.gnome.gobject.ParamSpec")) {
+                return "org.gnome.glib.Type.G_TYPE_PARAM";
+            }
             for (Function function : rt.functionList) {
                 if (function.name.equals("get_type")) {
                     return type.qualifiedJavaType + ".getType()";
@@ -365,9 +368,11 @@ public class Variable extends GirElement {
                     ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
             if (rt instanceof Class cls && cls.setValueFunc != null) {
                 GirElement setter = Conversions.cIdentifierLookupTable.get(cls.setValueFunc);
-                if (setter instanceof Method method) {
-                    String setValueFunc = Conversions.toLowerCaseJavaName(method.name);
-                    return rt.getNamespace().globalClassName + "." + setValueFunc + "(" + gvalueIdentifier + ", " + payloadIdentifier + ")";
+                if (setter instanceof Function function) {
+                    String setValueFunc = Conversions.toLowerCaseJavaName(function.name);
+                    String clsName = Conversions.convertToJavaType(rt.getNamespace().globalClassName, false, rt.getNamespace());
+                    return rt.getNamespace().globalClassPackage + "." + clsName 
+                            + "." + setValueFunc + "(" + gvalueIdentifier + ", " + payloadIdentifier + ")";
                 }
             }
         }
