@@ -104,6 +104,12 @@ public class Record extends Class {
     }
 
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
+        if (isApi()) {
+            writer.write("public static " + javaName + " allocate() {\n");
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
         writer.write("\n");
         writer.write("private MemorySegment allocatedMemorySegment;\n");
         writer.write("\n");

@@ -8,4 +8,8 @@ public class Repository extends GirElement {
     public Repository() {
         super(null);
     }
+
+    public boolean isApi() {
+        return namespace.isApi();
+    }
 }

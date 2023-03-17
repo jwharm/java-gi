@@ -1,3 +1,9 @@
+import de.undercouch.gradle.tasks.download.Download
+
+plugins {
+    id("de.undercouch.download")
+}
+
 tasks.register("build") {
     dependsOn(gradle.includedBuild("generator").task(":build"))
 }
@@ -16,4 +22,9 @@ tasks.register("javadoc") {
 
 tasks.register("example") {
     dependsOn(project(":example").tasks["run"])
+}
+
+val downloadGir by tasks.registering(Download::class) {
+    src("https://github.com/gircore/gir-files/archive/refs/heads/main.zip")
+    dest(buildDir.resolve("gir.zip"))
 }

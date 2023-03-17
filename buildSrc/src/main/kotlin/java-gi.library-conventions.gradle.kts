@@ -7,8 +7,6 @@ group = "io.github.jwharm.javagi"
 version = "0.5"
 
 java {
-    withJavadocJar()
-    withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(19))
     }
@@ -38,18 +36,18 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             if (System.getenv("GITHUB_REF_TYPE") != "tag") version = "${project.version}-SNAPSHOT"
-
-            from(components["java"])
         }
     }
 }
 
 // Temporarily needed until panama is out of preview
-tasks.compileJava { options.compilerArgs.add("--enable-preview") }
-tasks.javadoc {
-    (options as CoreJavadocOptions).run {
-        addStringOption("source", "19")
-        addBooleanOption("-enable-preview", true)
-        addStringOption("Xdoclint:none", "-quiet")
+afterEvaluate {
+    tasks.withType(JavaCompile::class) { options.compilerArgs.add("--enable-preview") }
+    tasks.withType(Javadoc::class) {
+        (options as CoreJavadocOptions).run {
+            addStringOption("source", "19")
+            addBooleanOption("-enable-preview", true)
+            addStringOption("Xdoclint:none", "-quiet")
+        }
     }
 }

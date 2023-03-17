@@ -150,6 +150,13 @@ public class Method extends GirElement implements CallableType {
         writer.write(getMethodDeclaration());
         
         writer.write(" {\n");
+
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+
         writer.increaseIndent();
 
         // Generate try-with-resources?

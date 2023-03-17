@@ -5,11 +5,6 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-dependencies {
-    api(project(":glib"))
-    api(project(":gtk"))
-}
-
 val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project, "1.0")
 version = "$pkgVersion-$version"
 
@@ -44,7 +39,13 @@ setupGenSources {
     }
 }
 
-tasks.javadoc {
-    linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
-    linksOffline("https://jwharm.github.io/java-gi/gtk", project(":gtk"))
+dependencies {
+    platformDependency(":glib")
+    platformDependency(":gtk")
 }
+
+// This broke, somehow
+//tasks.javadoc {
+//    linksOffline("https://jwharm.github.io/java-gi/glib", project(":glib"))
+//    linksOffline("https://jwharm.github.io/java-gi/gtk", project(":gtk"))
+//}

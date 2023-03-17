@@ -1,7 +1,16 @@
 plugins {
-    id("java-gi.library-conventions")
+    java
     application
 }
+
+val flavor = System.getProperty("os.name").toLowerCase().let { name ->
+    when {
+        name.contains("nux") -> "linux"
+        name.contains("windows") -> "windows"
+        name.contains("mac") || name.contains("darwin") -> "macos"
+        else -> throw Error("Unrecognized or unsupported platform")
+    }
+} + "Flavor" // Because we use the project directly
 
 application {
     mainClass.set("io.github.jwharm.javagi.example.HelloWorld")
@@ -9,10 +18,12 @@ application {
 }
 
 dependencies {
-    implementation(project(":glib"))
-    implementation(project(":gtk"))
-    implementation(project(":gstreamer"))
+    implementation(project(":glib", flavor))
+    implementation(project(":gtk", flavor))
+    implementation(project(":gstreamer", flavor))
 }
+
+tasks.compileJava.configure { options.compilerArgs.add("--enable-preview") }
 
 // Temporarily needed until panama is out of preview
 tasks.run.configure {

@@ -158,6 +158,13 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @return the memory layout\n");
         writer.write(" */\n");
         writer.write("public static MemoryLayout getMemoryLayout() {\n");
+
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+
         writer.increaseIndent();
 
         // Check if this type is either defined as a union, or has a union element
@@ -257,23 +264,25 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @return {@code true} when the type is available on the runtime platform\n");
         writer.write(" */\n");
         writer.write("public static boolean isAvailable() {\n");
-        String targetName = null;
-        for (Method m : functionList) {
-            if (m.name.equals("get_type") && m.getParameters() == null) {
-                targetName = m.cIdentifier;
-                break;
+        if (!isApi()) {String targetName = null;
+            for (Method m : functionList) {
+                if (m.name.equals("get_type") && m.getParameters() == null) {
+                    targetName = m.cIdentifier;
+                    break;
+                }
             }
-        }
-        if (targetName == null)
-            throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
-        writer.write("    return DowncallHandles." + targetName + " != null;\n");
+            if (targetName == null)
+                throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
+            writer.write("    return DowncallHandles." + targetName + " != null;\n");
+        } else writer.write("    throw Interop.apiError();\n");
         writer.write("}\n");
     }
 
     protected void generateEnsureInitialized(SourceWriter writer) throws IOException {
         writer.write("\n");
         writer.write("static {\n");
-        writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
+        if (!isApi()) writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
+        else writer.write("    Interop.throwApiError();\n");
         writer.write("}\n");
     }
 
@@ -300,7 +309,7 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateDowncallHandles(SourceWriter writer) throws IOException {
         boolean isInterface = this instanceof Interface;
-        if (! (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
+        if (!isApi() && !(constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
             writer.write("\n");
             writer.write(isInterface ? "@ApiStatus.Internal\n" : "private ");
             writer.write("static class DowncallHandles {\n");

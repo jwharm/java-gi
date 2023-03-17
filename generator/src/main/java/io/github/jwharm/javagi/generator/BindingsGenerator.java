@@ -51,7 +51,7 @@ public class BindingsGenerator {
             writer.write("package " + gir.namespace.packageName + ";\n");
             writer.write("\n");
             RegisteredType.generateImportStatements(writer);
-            
+
             writer.write("/**\n");
             writer.write(" * Constants and functions that are declared in the global " + className + " namespace.\n");
             writer.write(" */\n");
@@ -59,22 +59,23 @@ public class BindingsGenerator {
             writer.increaseIndent();
             writer.write("\n");
             writer.write("static {\n");
+            if (!gir.isApi()) {
+                // Load dependencies first
+                for (Include incl : gir.includeList) {
+                    Repository dep = Conversions.repositoriesLookupTable.get(incl.name);
+                    String clsName = Conversions.convertToJavaType(dep.namespace.globalClassName, false, dep.namespace);
+                    writer.write("    " + dep.namespace.globalClassPackage + "." + clsName + ".javagi$ensureInitialized();\n");
+                }
 
-            // Load dependencies first
-            for (Include incl : gir.includeList) {
-                Repository dep = Conversions.repositoriesLookupTable.get(incl.name);
-                String clsName = Conversions.convertToJavaType(dep.namespace.globalClassName, false, dep.namespace);
-                writer.write("    " + dep.namespace.globalClassPackage + "." + clsName + ".javagi$ensureInitialized();\n");
-            }
+                // Load libraries
+                for (String libraryName : natives) {
+                    writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
+                }
 
-            // Load libraries
-            for (String libraryName : natives) {
-                writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
-            }
-            
-            // Register types
-            writer.write("    registerTypes();\n");
-            
+                // Register types
+                writer.write("    registerTypes();\n");
+
+            } else writer.write("    Interop.throwApiError();\n");
             writer.write("}\n");
             writer.write("\n");
             writer.write("@ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
@@ -90,7 +91,7 @@ public class BindingsGenerator {
             }
             
             // Generate downcallhandles
-            if (! gir.namespace.functionList.isEmpty()) {
+            if (!gir.isApi() && !gir.namespace.functionList.isEmpty()) {
                 writer.write("\n");
                 writer.write("private static class DowncallHandles {\n");
                 writer.increaseIndent();
@@ -102,33 +103,35 @@ public class BindingsGenerator {
             }
             
             // Generate registerTypes function
-            writer.write("\n");
-            writer.write("private static void registerTypes() {\n");
-            writer.increaseIndent();
+            if (!gir.isApi()) {
+                writer.write("\n");
+                writer.write("private static void registerTypes() {\n");
+                writer.increaseIndent();
 
-            // Classes
-            for (Class c : gir.namespace.classList) {
-                writer.write("if (" + c.javaName + ".isAvailable()) TypeCache.register(" + c.javaName + ".getType(), " + c.getConstructorString() + ");\n");
-            }
-            
-            // Interfaces
-            for (Interface i : gir.namespace.interfaceList) {
-                writer.write("if (" + i.javaName + ".isAvailable()) TypeCache.register(" + i.javaName + ".getType(), " + i.getConstructorString() + ");\n");
-            }
-
-            // Aliases
-            for (Alias a : gir.namespace.aliasList) {
-                if (a.getTargetType() == Alias.TargetType.CLASS) {
-                    Class c = (Class) a.type.girElementInstance;
-                    writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + c.getConstructorString() + ");\n");
-                } else if (a.getTargetType() == Alias.TargetType.INTERFACE) {
-                    Interface i = (Interface) a.type.girElementInstance;
-                    writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + i.getConstructorString() + ");\n");
+                // Classes
+                for (Class c : gir.namespace.classList) {
+                    writer.write("if (" + c.javaName + ".isAvailable()) TypeCache.register(" + c.javaName + ".getType(), " + c.getConstructorString() + ");\n");
                 }
-            }
 
-            writer.decreaseIndent();
-            writer.write("}\n");
+                // Interfaces
+                for (Interface i : gir.namespace.interfaceList) {
+                    writer.write("if (" + i.javaName + ".isAvailable()) TypeCache.register(" + i.javaName + ".getType(), " + i.getConstructorString() + ");\n");
+                }
+
+                // Aliases
+                for (Alias a : gir.namespace.aliasList) {
+                    if (a.getTargetType() == Alias.TargetType.CLASS) {
+                        Class c = (Class) a.type.girElementInstance;
+                        writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + c.getConstructorString() + ");\n");
+                    } else if (a.getTargetType() == Alias.TargetType.INTERFACE) {
+                        Interface i = (Interface) a.type.girElementInstance;
+                        writer.write("if (" + a.javaName + ".isAvailable()) TypeCache.register(" + a.javaName + ".getType(), " + i.getConstructorString() + ");\n");
+                    }
+                }
+
+                writer.decreaseIndent();
+                writer.write("}\n");
+            }
 
             writer.decreaseIndent();
             writer.write("}\n");

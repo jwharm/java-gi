@@ -27,6 +27,14 @@ public class Interop {
         GObjects.javagi$ensureInitialized();
     }
 
+    public static InteropException apiError() {
+        return new InteropException("Attempted to use API jar in prod. Don't do that!");
+    }
+
+    public static void throwApiError() {
+        throw apiError();
+    }
+
     /**
      * Get the type of a GObject instance. Comparable to the G_TYPE_FROM_INSTANCE macro in C.
      * @param address the memory address of a GObject instance
