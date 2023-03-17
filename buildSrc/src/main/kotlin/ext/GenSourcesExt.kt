@@ -125,24 +125,8 @@ fun Project.setupGenSources(setup: Action<Model>) {
         add("compileOnly", flavor.sourceSet.output)
     }
 
-    val javadoc = tasks.named("javadoc", Javadoc::class).get()
-    javadoc.source(generatedPath)
-
-    val sourcesJar by tasks.registering(Jar::class) {
-        archiveClassifier.set("sources")
-        from(flavor.sourceSet.allSource)
-    }
-
-    val javadocJar by tasks.registering(Jar::class) {
-        dependsOn(javadoc)
-        archiveClassifier.set("javadoc")
-        from(javadoc)
-    }
-
-    artifacts {
-        maven.artifact(archives(javadocJar))
-        maven.artifact(archives(sourcesJar))
-    }
+    tasks.named("javadoc", Javadoc::class).get().source(generatedPath)
+    tasks.named("sourcesJar", Jar::class).get().from(flavor.sourceSet.allSource)
 }
 
 private fun Path.openZip(): FileSystem {

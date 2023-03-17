@@ -7,6 +7,8 @@ group = "io.github.jwharm.javagi"
 version = "0.5"
 
 java {
+    withJavadocJar()
+    withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(19))
     }
