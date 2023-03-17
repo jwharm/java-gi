@@ -68,6 +68,9 @@ public class InstanceCache {
 
         // Get constructor from the type registry
         Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor((MemoryAddress) address, fallback);
+        if (ctor == null) {
+            return null;
+        }
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
