@@ -152,11 +152,15 @@ public class Variable extends GirElement {
     }
 
     protected String marshalJavaToNative(Type type, String identifier, boolean upcall) {
+        // When ownership is transferred, we must not free the allocated memory -> use global scope
+        String scope = (this instanceof Parameter p && "full".equals(p.transferOwnership))
+                ? "MemorySession.global()" : "_scope";
+
         if (type.cType != null && type.cType.endsWith("**"))
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Interop.allocateNativeString(" + identifier + ", _scope).address()";
+            return "Interop.allocateNativeString(" + identifier + ", " + scope + ").address()";
 
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
             return "(Addressable) " + identifier;
@@ -174,6 +178,10 @@ public class Variable extends GirElement {
     }
 
     private String marshalJavaArrayToNative(Array array, String identifier) {
+        // When ownership is transferred, we must not free the allocated memory -> use global scope
+        String scope = (this instanceof Parameter p && "full".equals(p.transferOwnership))
+                ? "MemorySession.global()" : "_scope";
+
         Type type = array.type;
 
         // If zero-terminated is missing, there's no length, there's no fixed size,
@@ -186,12 +194,13 @@ public class Variable extends GirElement {
             return "Interop.allocateNativeArray("
                     + (type.isEnum() ? "Enumeration" : type.isBitfield() ? "Bitfield" : type.qualifiedJavaType) + ".get"
                     + (type.isAliasForPrimitive() ? Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) : "")
-                    + "Values(" + identifier + "), " + zeroTerminated + ", _scope)";
+                    + "Values(" + identifier + "), " + zeroTerminated + ", " + scope + ")";
 
         if (type.isRecord() && (!type.isPointer()))
-            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType + ".getMemoryLayout(), " + zeroTerminated + ", _scope)";
+            return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType
+                    + ".getMemoryLayout(), " + zeroTerminated + ", " + scope + ")";
 
-        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", _scope)";
+        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", " + scope + ")";
     }
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
