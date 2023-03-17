@@ -125,8 +125,14 @@ fun Project.setupGenSources(setup: Action<Model>) {
         add("compileOnly", flavor.sourceSet.output)
     }
 
+    // Add generated sources to javadoc/sourcesJar
     tasks.named("javadoc", Javadoc::class).get().source(generatedPath)
     tasks.named("sourcesJar", Jar::class).get().from(flavor.sourceSet.allSource)
+
+    // Remove default jars
+    val javaComponent = components["java"] as AdhocComponentWithVariants
+    javaComponent.withVariantsFromConfiguration(configurations["apiElements"]) { skip() }
+    javaComponent.withVariantsFromConfiguration(configurations["runtimeElements"]) { skip() }
 }
 
 private fun Path.openZip(): FileSystem {
