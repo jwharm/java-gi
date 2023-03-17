@@ -40,8 +40,8 @@ setupGenSources {
 }
 
 dependencies {
-    platformDependency(":glib")
-    platformDependency(":gtk")
+    platformDependency(projects.glib)
+    platformDependency(projects.gtk)
 }
 
 // This broke, somehow

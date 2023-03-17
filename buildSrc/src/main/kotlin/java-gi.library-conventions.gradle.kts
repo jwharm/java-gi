@@ -36,6 +36,8 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             if (System.getenv("GITHUB_REF_TYPE") != "tag") version = "${project.version}-SNAPSHOT"
+
+            from(components["java"])
         }
     }
 }

@@ -10,7 +10,7 @@ val flavor = System.getProperty("os.name").toLowerCase().let { name ->
         name.contains("mac") || name.contains("darwin") -> "macos"
         else -> throw Error("Unrecognized or unsupported platform")
     }
-} + "Flavor" // Because we use the project directly
+} // Because we use the project directly
 
 application {
     mainClass.set("io.github.jwharm.javagi.example.HelloWorld")
@@ -18,9 +18,22 @@ application {
 }
 
 dependencies {
-    implementation(project(":glib", flavor))
-    implementation(project(":gtk", flavor))
-    implementation(project(":gstreamer", flavor))
+    projects.glib
+    implementation(projects.glib) {
+        capabilities {
+            requireCapability("io.github.jwharm.javagi:glib-$flavor")
+        }
+    }
+    implementation(projects.gtk) {
+        capabilities {
+            requireCapability("io.github.jwharm.javagi:gtk-$flavor")
+        }
+    }
+    implementation(projects.gstreamer) {
+        capabilities {
+            requireCapability("io.github.jwharm.javagi:gstreamer-$flavor")
+        }
+    }
 }
 
 tasks.compileJava.configure { options.compilerArgs.add("--enable-preview") }

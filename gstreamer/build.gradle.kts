@@ -74,7 +74,7 @@ setupGenSources {
 }
 
 dependencies {
-    platformDependency(":glib")
+    platformDependency(projects.glib)
 }
 
 tasks.javadoc {

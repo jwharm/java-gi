@@ -9,6 +9,8 @@ import io.github.jwharm.javagi.model.Repository
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.PublishArtifact
 import org.gradle.api.artifacts.dsl.ArtifactHandler
 import org.gradle.api.artifacts.dsl.DependencyHandler
@@ -33,15 +35,36 @@ import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.util.*
 
-private fun DependencyHandler.compileOnly(dependencyNotation: Any) = add("compileOnly", dependencyNotation)
 private val Project.publishing get() = extensions.getByName("publishing") as PublishingExtension
+private fun ArtifactHandler.archives(artifactNotation: Any): PublishArtifact = add("archives", artifactNotation)
 
-fun DependencyHandlerScope.platformDependency(proj: String) {
-    compileOnly(project(proj, "apiFlavor"))
-    add("windowsImplementation", project(proj, "windowsFlavor"))
-    add("linuxImplementation", project(proj, "linuxFlavor"))
-    add("macosImplementation", project(proj, "macosFlavor"))
-    add("apiImplementation", project(proj, "apiFlavor"))
+fun DependencyHandlerScope.platformDependency(proj: ProjectDependency) {
+    val pre = "io.github.jwharm.javagi:" + proj.dependencyProject.name
+    add("compileOnly", proj.copy()) {
+        capabilities {
+            requireCapability("$pre-api")
+        }
+    }
+    add("apiApi", proj.copy()) {
+        capabilities {
+            requireCapability("$pre-api")
+        }
+    }
+    add("windowsApi", proj.copy()) {
+        capabilities {
+            requireCapability("$pre-windows")
+        }
+    }
+    add("linuxApi", proj.copy()) {
+        capabilities {
+            requireCapability("$pre-linux")
+        }
+    }
+    add("macosApi", proj.copy()) {
+        capabilities {
+            requireCapability("$pre-macos")
+        }
+    }
 }
 
 fun Project.setupGenSources(setup: Action<Model>) {
@@ -69,10 +92,7 @@ fun Project.setupGenSources(setup: Action<Model>) {
             }
         }
 
-        flavor.jarTask.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         flavor.compileTask.dependsOn(genSources)
-
-        maven.artifact(flavor.jarArtifact)
 
         model
     }
@@ -99,13 +119,10 @@ fun Project.setupGenSources(setup: Action<Model>) {
         }
     }
 
-    flavor.jarTask.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     flavor.compileTask.dependsOn(apiGenSources)
 
-    maven.artifact(flavor.jarArtifact)
-
     dependencies {
-        compileOnly(flavor.sourceSet.output)
+        add("compileOnly", flavor.sourceSet.output)
     }
 
     val javadoc = tasks.named("javadoc", Javadoc::class).get()
