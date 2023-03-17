@@ -93,6 +93,7 @@ fun Project.setupGenSources(setup: Action<Model>) {
         }
 
         flavor.compileTask.dependsOn(genSources)
+        tasks.named<DefaultTask>("assemble").get().dependsOn(flavor.jarTask)
 
         model
     }
@@ -120,6 +121,7 @@ fun Project.setupGenSources(setup: Action<Model>) {
     }
 
     flavor.compileTask.dependsOn(apiGenSources)
+    tasks.named<DefaultTask>("assemble").get().dependsOn(flavor.jarTask)
 
     dependencies {
         add("compileOnly", flavor.sourceSet.output)

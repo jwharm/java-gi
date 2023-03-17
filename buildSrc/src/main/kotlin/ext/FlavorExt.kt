@@ -43,7 +43,11 @@ fun Project.flavor(flavor: String, linkMain: Boolean = true): Flavor {
         add("${flavor}CompileOnly", "org.jetbrains:annotations:24.0.0")
     }
 
-    return Flavor(sourceSet, tasks.named<JavaCompile>("compile${flavor.capitalized()}Java").get())
+    return Flavor(
+        sourceSet,
+        tasks.named<JavaCompile>("compile${flavor.capitalized()}Java").get(),
+        tasks.named<Jar>("${flavor}Jar").get()
+    )
 }
 
-data class Flavor(val sourceSet: SourceSet, val compileTask: JavaCompile)
+data class Flavor(val sourceSet: SourceSet, val compileTask: JavaCompile, val jarTask: Jar)
