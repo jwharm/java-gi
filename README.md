@@ -118,7 +118,7 @@ The Javadoc is also published online:
 
 - [GLib](https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
 - [Gtk](https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
-- [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adw/module-summary.html)
+- [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adwaita/module-summary.html)
 - [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
 
 ### Interfaces
@@ -335,21 +335,6 @@ With a `Builder` you can set the properties of the class, its parents, and all i
 
 Struct definitions (in contrast to GObjects) in native code are mapped to Java classes. Because structs don't necessarily have a constructor method, the Java classes offer an `allocate()` method to allocate a new uninitialized struct. To determine the size of the struct and its members, the memory layouts have been generated from the field definitions in the gir files. The allocated memory is automatically released when the Java object is garbage-collected.
 
-### GValues
-
-You can create GValues with a series of overloaded `Value.create()` methods. These methods allocate a new GValue and initialize the data type.
-
-In the following example, `value1` is created with this method, while `value2` is manually allocated and initialized:
-
-```java
-Value value1 = Value.create("string value");
-Value value2 = Value.allocate();
-value2.init(Type.G_TYPE_STRING);
-value1.copy(value2);
-System.out.printf("Value 1: %s, Value 2: %s\n", value1.getString(), value2.getString());
-// Output: Value 1: string value, Value 2: string value
-```
-
 ### Naming conventions
 
 All Java types and methods are named according to Java naming conventions. Namespaces are converted into package names (reverse-domain-name style), for example `org.cairographics` for the `Cairo` namespace.
@@ -358,10 +343,8 @@ Namespace-global functions and constants are exposed in one class, for example t
 
 A small number of types have been renamed in the Java API to avoid confusion:
 
-- [`GObject.Object`](https://docs.gtk.org/gobject/class.Object.html) is named `GObject` (instead of `Object`) to avoid confusion with `java.lang.Object`
+- [`GObject.Object`](https://docs.gtk.org/gobject/class.Object.html), [`GLib.String`](https://docs.gtk.org/glib/struct.String.html) and [`GLib.Error`](https://docs.gtk.org/glib/struct.Error.html) are named `GObject`, `GString` and `GError` (instead of `Object`, `String` and `Error`) to avoid confusion with `java.lang.Object`
 - As a result, the namespace-global functions and constants in the `GObject` namespace can be found in `org.gnome.gobject.GObjects` (notice the trailing 's').
-- [`GLib.Error`](https://docs.gtk.org/glib/struct.Error.html) is named `GError` (instead of `Error`) to avoid confusion with `java.lang.Error`
-- [`GLib.String`](https://docs.gtk.org/glib/struct.String.html) is named `GString` (instead of `String`) to avoid confusion with `java.lang.String`
 - [`Gtk.Builder`](https://docs.gtk.org/gtk4/class.Builder.html) is named `GtkBuilder` (instead of `Builder`) to avoid confusion with the `Builder` that java-gi generates for every class.
 
 ### Source code

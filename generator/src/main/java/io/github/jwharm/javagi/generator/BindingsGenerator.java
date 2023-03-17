@@ -60,13 +60,6 @@ public class BindingsGenerator {
             writer.write("\n");
             writer.write("static {\n");
             if (!gir.isApi()) {
-                // Load dependencies first
-                for (Include incl : gir.includeList) {
-                    Repository dep = Conversions.repositoriesLookupTable.get(incl.name);
-                    String clsName = Conversions.convertToJavaType(dep.namespace.globalClassName, false, dep.namespace);
-                    writer.write("    " + dep.namespace.globalClassPackage + "." + clsName + ".javagi$ensureInitialized();\n");
-                }
-
                 // Load libraries
                 for (String libraryName : natives) {
                     writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
