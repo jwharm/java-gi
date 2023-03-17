@@ -127,7 +127,10 @@ fun Project.setupGenSources(setup: Action<Model>) {
 
     // Add generated sources to javadoc/sourcesJar
     tasks.named("javadoc", Javadoc::class).get().source(generatedPath)
-    tasks.named("sourcesJar", Jar::class).get().from(flavor.sourceSet.allSource)
+    tasks.named("sourcesJar", Jar::class) {
+        from(flavor.sourceSet.allSource)
+        this.duplicatesStrategy = DuplicatesStrategy.EXCLUDE // Ignore duplicate source files (src/main/java is here twice)
+    }
 
     // Remove default jars
     val javaComponent = components["java"] as AdhocComponentWithVariants
