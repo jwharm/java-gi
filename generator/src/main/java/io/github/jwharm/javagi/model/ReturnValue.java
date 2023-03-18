@@ -85,6 +85,17 @@ public class ReturnValue extends Parameter {
             writer.write("}\n");
             writer.write("return _object;\n");
 
+        } else if (type != null && (type.isUnion() || type.isRecord())) {
+
+            writer.write("var _instance = ");
+            marshalNativeToJava(writer, "_result", false);
+            writer.write(";\n");
+            writer.write("if (_instance != null) {\n");
+
+            writer.write("    _instance.takeOwnership();\n");
+            writer.write("}\n");
+            writer.write("return _instance;\n");
+
         } else {
 
             writer.write("return ");

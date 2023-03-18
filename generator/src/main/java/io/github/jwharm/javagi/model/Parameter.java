@@ -314,8 +314,18 @@ public class Parameter extends Variable {
                 && (! isOutParameter()) 
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             String param = isInstanceParameter() ? "this" : name;
-            if (nullable) writer.write("if (" + param + " != null) ");
+            if (checkNull()) writer.write("if (" + param + " != null) ");
             writer.write(param + ".ref();\n");
+        }
+
+        // Same, but for structs/unions: Disable the cleaner
+        if (type != null && (type.isUnion() || type.isRecord())
+                && "full".equals(transferOwnership)
+                && (! isOutParameter())
+                && (type.cType == null || (! type.cType.endsWith("**")))) {
+            String param = isInstanceParameter() ? "this" : name;
+            if (checkNull()) writer.write("if (" + param + " != null) ");
+            writer.write(param + ".yieldOwnership();\n");
         }
     }
 

@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.github.jwharm.javagi.base.FreeFunc;
+import io.github.jwharm.javagi.base.ProxyInstanceCleanable;
 import io.github.jwharm.javagi.util.Types;
+import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.ToggleNotify;
@@ -16,6 +19,7 @@ import org.gnome.gobject.TypeClass;
 
 import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.Proxy;
+import org.gnome.gobject.TypeInstance;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -201,6 +205,11 @@ public class InstanceCache {
 
             // Register a cleaner that will remove the toggle reference
             CLEANER.register(gobject, new ToggleRefFinalizer(address, notify));
+        }
+
+        // Setup a cleaner on structs/unions
+        if (newInstance instanceof ProxyInstanceCleanable struct) {
+            CLEANER.register(newInstance, struct.getFinalizer());
         }
 
         // Return the new instance.
