@@ -135,6 +135,7 @@ fun Project.setupGenSources(setup: Action<Model>) {
     }
 
     // Remove default jars
+    tasks.named<Jar>("jar").get().enabled = false
     val javaComponent = components["java"] as AdhocComponentWithVariants
     javaComponent.withVariantsFromConfiguration(configurations["apiElements"]) { skip() }
     javaComponent.withVariantsFromConfiguration(configurations["runtimeElements"]) { skip() }
