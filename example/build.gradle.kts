@@ -39,6 +39,13 @@ dependencies {
 tasks.compileJava.configure { options.compilerArgs.add("--enable-preview") }
 
 // Temporarily needed until panama is out of preview
+tasks.withType(Javadoc::class) {
+    (options as CoreJavadocOptions).run {
+        addStringOption("source", "19")
+        addBooleanOption("-enable-preview", true)
+        addStringOption("Xdoclint:none", "-quiet")
+    }
+}
 tasks.run.configure {
     jvmArgs(
         "--enable-preview",
