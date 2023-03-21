@@ -2,12 +2,12 @@
 
 **java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. Java-gi version 0.4 generates bindings for the following libraries:
 
-| Library | Version |
-|---------|---------|
-| GLib | 1.2.10 |
-| GTK | 4.8.3 |
-| LibAdwaita | 1.2.0 |
-| GStreamer | 1.20.5 |
+| Library    | Version |
+|------------|---------|
+| GLib       | 2.74    |
+| GTK        | 4.8     |
+| LibAdwaita | 1.2     |
+| GStreamer  | 1.20    |
 
 Please note that java-gi is still under active development. Feedback is welcome.
 
@@ -346,10 +346,6 @@ A small number of types have been renamed in the Java API to avoid confusion:
 - [`GObject.Object`](https://docs.gtk.org/gobject/class.Object.html), [`GLib.String`](https://docs.gtk.org/glib/struct.String.html) and [`GLib.Error`](https://docs.gtk.org/glib/struct.Error.html) are named `GObject`, `GString` and `GError` (instead of `Object`, `String` and `Error`) to avoid confusion with `java.lang.Object`
 - As a result, the namespace-global functions and constants in the `GObject` namespace can be found in `org.gnome.gobject.GObjects` (notice the trailing 's').
 - [`Gtk.Builder`](https://docs.gtk.org/gtk4/class.Builder.html) is named `GtkBuilder` (instead of `Builder`) to avoid confusion with the `Builder` that java-gi generates for every class.
-
-### Source code
-
-The Java API is generated as source code and then compiled into JAR files. Snapshots of the generated code are [available online](https://github.com/jwharm/java-gi-generated-sources) for reference.
 
 ## Known issues
 
