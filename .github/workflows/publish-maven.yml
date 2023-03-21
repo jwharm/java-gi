@@ -49,13 +49,14 @@ jobs:
         working-directory: website/
         run: mkdocs build
       - name: Create Site Artifact
+        working-directory: /__w/java-gi/java-gi
         run: |
           mkdir site
           mv glib/build/docs/javadoc site/glib
           mv gstreamer/build/docs/javadoc site/gstreamer
           mv gtk/build/docs/javadoc site/gtk
           mv adwaita/build/docs/javadoc site/adwaita
-          mv website/site site/
+          mv website/site/* site/
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
