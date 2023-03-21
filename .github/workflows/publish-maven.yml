@@ -29,7 +29,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: Install Dependencies
         run: |
-          dnf install -y python3
+          dnf install -y python3-pip
           python3 -m pip install --upgrade pip
           pip install mkdocs
           dnf install -y gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel
