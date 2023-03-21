@@ -5,10 +5,6 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-dependencies {
-    api(project(":glib"))
-}
-
 val pkgVersion = "pkg-config --modversion gtk4".runCommand(project, "4.0")
 version = "$pkgVersion-$version"
 
@@ -57,6 +53,10 @@ setupGenSources {
         setReturnFloating(findMethod(repo, "PaperSize", "to_gvariant"))
         setReturnFloating(findMethod(repo, "PrintSettings", "to_gvariant"))
     }
+}
+
+dependencies {
+    platformDependency(projects.glib)
 }
 
 tasks.javadoc {

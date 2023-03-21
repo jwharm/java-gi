@@ -160,9 +160,7 @@ public class Conversions {
      * Convert C type declaration into Java type declaration.
      */
     public static String convertToJavaType(String name, boolean qualified, Namespace ns) {
-        return Platform.isWindows()
-                ? Platform.convertWindowsToJavaType(name, qualified, ns)
-                : Platform.convertLinuxToJavaType(name, qualified, ns);
+        return Objects.requireNonNullElse(ns.platform, Platform.LINUX).convertToJavaType(name, qualified, ns);
     }
 
     /**

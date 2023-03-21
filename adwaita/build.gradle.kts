@@ -5,10 +5,8 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-dependencies {
-    api(project(":glib"))
-    api(project(":gtk"))
-}
+evaluationDependsOn(":glib")
+evaluationDependsOn(":gtk")
 
 val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project, "1.0")
 version = "$pkgVersion-$version"
@@ -42,6 +40,11 @@ setupGenSources {
         renameMethod(repo, "ActionRow", "activate", "activate_row")
         renameMethod(repo, "SplitButton", "get_direction", "get_arrow_direction")
     }
+}
+
+dependencies {
+    platformDependency(projects.glib)
+    platformDependency(projects.gtk)
 }
 
 tasks.javadoc {

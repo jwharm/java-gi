@@ -48,7 +48,7 @@ public class Constructor extends Method {
         }
         writer.write(");\n");
 
-        writer.write("InstanceCache.put(handle(), this);\n");
+        if (!isApi()) writer.write("InstanceCache.put(handle(), this);\n");
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -89,6 +89,13 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+
         writer.increaseIndent();
 
         writer.write("var _result = " + privateMethodName);
@@ -136,6 +143,13 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
+
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+
         writer.increaseIndent();
 
         // Generate try-with-resources?

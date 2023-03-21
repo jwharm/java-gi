@@ -24,10 +24,13 @@ import java.nio.file.Path;
 public class GirParser extends DefaultHandler {
 
     private final SAXParser parser;
+    private final Platform platform;
+
     private String pkg;
     private StringBuilder chars;
     private GirElement current;
     private String skip;
+
 
     /**
      * Reset the parser
@@ -211,7 +214,7 @@ public class GirParser extends DefaultHandler {
             case "namespace" -> {
                 Namespace newNamespace = new Namespace(current, attr.getValue("name"), attr.getValue("version"),
                         attr.getValue("shared-library"), attr.getValue("c:identifier-prefixes"),
-                        attr.getValue("c:symbol-prefixes"), pkg);
+                        attr.getValue("c:symbol-prefixes"), pkg, platform);
                 ((Repository) current).namespace = newNamespace;
                 current = newNamespace;
             }
@@ -333,8 +336,9 @@ public class GirParser extends DefaultHandler {
      * @throws ParserConfigurationException Indicates a serious SAX configuration error. Should not happen.
      * @throws SAXException Generic SAX error. Should not happen here.
      */
-    public GirParser() throws ParserConfigurationException, SAXException {
+    public GirParser(Platform platform) throws ParserConfigurationException, SAXException {
         parser = SAXParserFactory.newInstance().newSAXParser();
+        this.platform = platform;
     }
 
     /**
