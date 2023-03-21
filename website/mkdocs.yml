@@ -1,0 +1,10 @@
+site_name: Java-GI
+site_url: https://jwharm.github.io/java-gi/
+nav:
+    - Home: index.md
+    - Basic usage: usage.md
+    - Advanced usage: advanced.md
+    - Registering new types: register.md
+    - Composite template classes: templates.md
+    - Generating bindings: generate.md
+theme: readthedocs

@@ -37,18 +37,30 @@ jobs:
           arguments: publish javadoc --stacktrace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create Javadoc Artifact
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install dependencies
         run: |
-          mkdir javadoc
-          mv generator/build/docs/javadoc javadoc/generator
-          mv glib/build/docs/javadoc javadoc/glib
-          mv gstreamer/build/docs/javadoc javadoc/gstreamer
-          mv gtk/build/docs/javadoc javadoc/gtk
-          mv adwaita/build/docs/javadoc javadoc/adwaita
-      - name: Upload Javadoc Artifact
+          python -m pip install --upgrade pip
+          pip install mkdocs
+      - name: Run Build site
+        working-directory: website/
+        run: mkdocs build
+      - name: Create Site Artifact
+        run: |
+          mkdir site
+          mv glib/build/docs/javadoc site/glib
+          mv gstreamer/build/docs/javadoc site/gstreamer
+          mv gtk/build/docs/javadoc site/gtk
+          mv adwaita/build/docs/javadoc site/adwaita
+          mv website/site site/
+      - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: 'javadoc'
+          path: 'site'
   pages:
     runs-on: ubuntu-latest
     needs: publish
