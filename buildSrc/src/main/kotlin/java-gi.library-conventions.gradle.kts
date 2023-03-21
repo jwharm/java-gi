@@ -45,11 +45,13 @@ publishing {
 }
 
 // Temporarily needed until panama is out of preview
-tasks.compileJava { options.compilerArgs.add("--enable-preview") }
-tasks.javadoc {
-    (options as CoreJavadocOptions).run {
-        addStringOption("source", "19")
-        addBooleanOption("-enable-preview", true)
-        addStringOption("Xdoclint:none", "-quiet")
+afterEvaluate {
+    tasks.withType(JavaCompile::class) { options.compilerArgs.add("--enable-preview") }
+    tasks.withType(Javadoc::class) {
+        (options as CoreJavadocOptions).run {
+            addStringOption("source", "19")
+            addBooleanOption("-enable-preview", true)
+            addStringOption("Xdoclint:none", "-quiet")
+        }
     }
 }

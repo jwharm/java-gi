@@ -28,6 +28,13 @@ public class VirtualMethod extends Method {
         writer.write(getMethodDeclaration());
         
         writer.write(" {\n");
+
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+
         writer.increaseIndent();
 
         // Generate try-with-resources?

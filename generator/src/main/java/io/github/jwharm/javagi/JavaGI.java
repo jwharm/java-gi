@@ -6,12 +6,11 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import io.github.jwharm.javagi.generator.BindingsGenerator;
-import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.CrossReference;
-import io.github.jwharm.javagi.generator.GirParser;
-import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.*;
 import io.github.jwharm.javagi.model.Repository;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 public class JavaGI {
 
@@ -19,14 +18,46 @@ public class JavaGI {
      * Parse the provided GI source files, and generate the Java bindings
      * @param sources JavaGI.Source records with the GIR file path and name, Java package name, output location
      *                and patches to be applied
-     * @throws Exception any exceptions that occur while parsing the GIR file and generating the bindings
      */
-    public static Generated generate(Path outputDir, Source... sources) throws Exception {
-        GirParser parser = new GirParser();
+    public static Generated generate(Platform platform, Path outputDir, Source... sources) throws ParserConfigurationException, SAXException, IOException {
+        // Generate the Java class files
+        Set<Generated.Element> namespaces = new LinkedHashSet<>();
+        for (Parsed p : parse(platform, outputDir, sources).values()) {
+            if (p.generate) {
+                Path basePath = outputDir.resolve(p.repository.namespace.pathName);
+                BindingsGenerator.generate(p.repository, p.natives, basePath);
+                namespaces.add(new Generated.Element(p.repository.namespace.packageName));
+            }
+        }
+
+        return new Generated(namespaces, outputDir);
+    }
+
+    /**
+     * Parse the provided GI source files, and generate noop-java bindings to compile dependent libraries against
+     * @param sources JavaGI.Source records with the GIR file path and name, Java package name, output location
+     *                and patches to be applied
+     */
+    public static Generated generateApi(Path outputDir, Map<Platform, Source[]> sources) throws ParserConfigurationException, SAXException, IOException {
+        //TODO merge sources to generate API jar (exclude incompatible methods)
+        Set<Generated.Element> namespaces = new LinkedHashSet<>();
+        for(Parsed p : parse(null, outputDir, sources.get(Platform.LINUX)).values()) {
+            if (p.generate) {
+                Path basePath = outputDir.resolve(p.repository.namespace.pathName);
+                BindingsGenerator.generate(p.repository, p.natives, basePath);
+                namespaces.add(new Generated.Element(p.repository.namespace.packageName));
+            }
+        }
+
+        return new Generated(namespaces, outputDir);
+    }
+
+    private static Map<String, Parsed> parse(Platform platform, Path outputDir, Source... sources) throws ParserConfigurationException, SAXException {
+        GirParser parser = new GirParser(platform);
 
         Conversions.repositoriesLookupTable.clear();
         Map<String, Parsed> parsed = new HashMap<>();
-        
+
         // Parse the GI files into Repository objects
         for (Source source : sources) {
             try {
@@ -37,7 +68,7 @@ public class JavaGI {
                 System.out.println("Not found: " + source.source());
             }
         }
-        
+
         // Link the type references to the GIR type definition across the GI repositories
         CrossReference.link();
 
@@ -45,22 +76,12 @@ public class JavaGI {
         for (Parsed p : parsed.values()) {
             p.patches.patch(p.repository);
         }
-        
+
         // Create lookup tables
         CrossReference.createIdLookupTable();
         CrossReference.createCTypeLookupTable();
-        
-        // Generate the Java class files
-        Set<Generated.Element> namespaces = new LinkedHashSet<>();
-        for (Parsed p : parsed.values()) {
-            if (p.generate) {
-                Path basePath = outputDir.resolve(p.repository.namespace.pathName);
-                BindingsGenerator.generate(p.repository, p.natives, basePath);
-                namespaces.add(new Generated.Element(p.repository.namespace.packageName));
-            }
-        }
 
-        return new Generated(namespaces, outputDir);
+        return parsed;
     }
 
     /**

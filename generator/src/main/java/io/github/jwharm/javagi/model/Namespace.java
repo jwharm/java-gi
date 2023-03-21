@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.Platform;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +18,11 @@ public class Namespace extends GirElement {
     public final String pathName;
     public final Map<String, RegisteredType> registeredTypeMap = new HashMap<>();
 
+    public final Platform platform;
+
     public Namespace(GirElement parent, String name, String version, String sharedLibrary,
-                     String cIdentifierPrefix, String cSymbolPrefix, String pkg) {
+                     String cIdentifierPrefix, String cSymbolPrefix, String pkg,
+                     Platform platform) {
         super(parent);
         this.name = name;
         this.version = version;
@@ -30,5 +34,10 @@ public class Namespace extends GirElement {
         this.globalClassName = (name.equals("GObject") ? "GObjects" : name);
         Conversions.nsLookupTable.put(name.toLowerCase(), pkg);
         this.pathName = packageName.replace('.', '/') + '/';
+        this.platform = platform;
+    }
+
+    public boolean isApi() {
+        return platform == null;
     }
 }

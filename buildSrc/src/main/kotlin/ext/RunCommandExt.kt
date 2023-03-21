@@ -12,6 +12,8 @@ fun String.runCommand(project: Project, fallback: String): String {
     project.exec {
         commandLine = this@runCommand.split("\\s".toRegex())
         standardOutput = byteOut
+        isIgnoreExitValue = true
     }
-    return String(byteOut.toByteArray()).trim()
+    val b = byteOut.toByteArray()
+    return if (b.isNotEmpty()) String(b).trim() else fallback
 }

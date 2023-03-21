@@ -1,6 +1,5 @@
 import ext.*
 import io.github.jwharm.javagi.generator.PatchSet.*
-import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     id("java-gi.library-conventions")

@@ -5,10 +5,6 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-dependencies {
-    api(project(":glib"))
-}
-
 val pkgVersion = "pkg-config --modversion gstreamer-1.0".runCommand(project, "1.0")
 version = "$pkgVersion-$version"
 
@@ -75,6 +71,10 @@ setupGenSources {
     source("GstVulkanWayland-1.0", "org.freedesktop.gstreamer.vulkan.wayland", true)
     source("GstWebRTC-1.0", "org.freedesktop.gstreamer.webrtc", true, "gstwebrtc-1.0")
     source("GstCodecs-1.0", "org.freedesktop.gstreamer.codecs", true, "gstcodecs-1.0")
+}
+
+dependencies {
+    platformDependency(projects.glib)
 }
 
 tasks.javadoc {

@@ -40,22 +40,24 @@ public class Signal extends Method implements Closure {
         }
         
         writer.write(qualifiedName + " handler) {\n");
-        writer.increaseIndent();
+        if (!isApi()) {
+            writer.increaseIndent();
 
-        writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
-        writer.write("try {\n");
-        writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
-        writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
-        if (detailed) {
-            writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
-        }
-        writer.write(", _scope), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
-        writer.write("    return new Signal<>(handle(), _result);\n");
-        writer.write("} catch (Throwable _err) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
-        writer.write("}\n");
+            writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
+            writer.write("try {\n");
+            writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
+            writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
+            if (detailed) {
+                writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
+            }
+            writer.write(", _scope), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
+            writer.write("    return new Signal<>(handle(), _result);\n");
+            writer.write("} catch (Throwable _err) {\n");
+            writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+            writer.write("}\n");
 
-        writer.decreaseIndent();
+            writer.decreaseIndent();
+        } else writer.write("    throw Interop.apiError();\n");
         writer.write("}\n");
 
         // Check if an emit function already is defined in the GIR file
@@ -84,6 +86,13 @@ public class Signal extends Method implements Closure {
             }
 
             writer.write(") {\n");
+
+            if (isApi()) {
+                writer.write("    throw Interop.apiError();\n");
+                writer.write("}\n");
+                return;
+            }
+
             writer.increaseIndent();
             writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
             writer.increaseIndent();
