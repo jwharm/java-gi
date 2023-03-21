@@ -29,10 +29,11 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: Install Dependencies
         run: |
+          dnf install -y python3
+          python3 -m pip install --upgrade pip
+          pip install mkdocs
           dnf install -y gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel
           dnf install -y gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel
-          python -m pip install --upgrade pip
-          pip install mkdocs
       - name: Publish Maven Packages
         uses: gradle/gradle-build-action@v2
         with:
