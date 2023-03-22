@@ -11,38 +11,34 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '19'
-          distribution: 'temurin'
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
-      - name: Publish Maven Packages
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publish javadoc --stacktrace
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v3
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Install MkDocs
         run: pip3 install mkdocs
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '19'
+          distribution: 'temurin'
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build Project and Publish Maven Packages
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publish javadoc --stacktrace
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Site
         working-directory: website/
         run: mkdocs build
       - name: Create Site Artifact
         run: |
-          pwd
-          ls
-          ls glib/build/docs/
           mkdir site
           mv glib/build/docs/javadoc site/glib
           mv gstreamer/build/docs/javadoc site/gstreamer
