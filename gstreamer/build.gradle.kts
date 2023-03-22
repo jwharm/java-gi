@@ -5,7 +5,7 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-val pkgVersion = "pkg-config --modversion gstreamer-1.0".runCommand(project, "1.0")
+val pkgVersion = "1.20"
 version = "$pkgVersion-$version"
 
 setupGenSources {

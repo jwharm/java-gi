@@ -5,7 +5,7 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-val pkgVersion = "pkg-config --modversion gtk4".runCommand(project, "4.0")
+val pkgVersion = "4.8"
 version = "$pkgVersion-$version"
 
 setupGenSources {

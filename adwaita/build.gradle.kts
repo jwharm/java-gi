@@ -8,7 +8,7 @@ plugins {
 evaluationDependsOn(":glib")
 evaluationDependsOn(":gtk")
 
-val pkgVersion = "pkg-config --modversion libadwaita-1".runCommand(project, "1.0")
+val pkgVersion = "1.2"
 version = "$pkgVersion-$version"
 
 setupGenSources {

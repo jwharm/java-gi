@@ -10,11 +10,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    container:
-      image: fedora:latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,13 +22,6 @@ jobs:
           distribution: 'temurin'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
-      - name: Install Dependencies
-        run: |
-          dnf install -y python3-pip
-          python3 -m pip install --upgrade pip
-          pip install mkdocs
-          dnf install -y gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel
-          dnf install -y gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel
       - name: Publish Maven Packages
         uses: gradle/gradle-build-action@v2
         with:
@@ -45,12 +33,17 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      - name: Install MkDocs
+        run: pip3 install mkdocs
       - name: Build Site
         working-directory: website/
         run: mkdocs build
       - name: Create Site Artifact
         working-directory: /__w/java-gi/java-gi
         run: |
+          pwd
+          ls
+          ls glib/build/docs/
           mkdir site
           mv glib/build/docs/javadoc site/glib
           mv gstreamer/build/docs/javadoc site/gstreamer

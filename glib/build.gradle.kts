@@ -5,7 +5,7 @@ plugins {
     id("java-gi.library-conventions")
 }
 
-val pkgVersion = "pkg-config --modversion glib".runCommand(project, "2.0")
+val pkgVersion = "2.74"
 version = "$pkgVersion-$version"
 
 setupGenSources {
