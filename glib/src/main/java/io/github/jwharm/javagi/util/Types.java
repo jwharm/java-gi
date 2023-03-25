@@ -68,7 +68,6 @@ public class Types {
     public static <T extends GObject, TC extends TypeClass> Class<TC> getTypeClass(Class<T> cls) {
         // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
-        Class<TC> typeClass = null;
         for (Class<?> gclass : cls.getClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
                 return (Class<TC>) gclass;
@@ -85,7 +84,6 @@ public class Types {
     @SuppressWarnings("unchecked")
     public static <TI extends TypeInterface> Class<TI> getTypeInterface(Class<?> iface) {
         // Get the type-struct. This is an inner class that extends TypeInterface.
-        Class<TI> typeStruct = null;
         for (Class<?> giface : iface.getClasses()) {
             if (TypeInterface.class.isAssignableFrom(giface)) {
                 return (Class<TI>) giface;
@@ -272,7 +270,7 @@ public class Types {
             String name = method.getName();
             name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
             try {
-                Method overrider = typeStruct.getMethod(name, Method.class);
+                typeStruct.getMethod(name, Method.class);
             } catch (NoSuchMethodException e) {
                 continue;
             }
@@ -318,14 +316,14 @@ public class Types {
         List<Method> methods = new ArrayList<>();
         for (Method method : cls.getDeclaredMethods()) {
             try {
-                Method virtual = iface.getMethod(method.getName(), method.getParameterTypes());
+                iface.getMethod(method.getName(), method.getParameterTypes());
             } catch (NoSuchMethodException e) {
                 continue;
             }
             String name = method.getName();
             name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
             try {
-                Method overrider = typeStruct.getMethod(name, Method.class);
+                typeStruct.getMethod(name, Method.class);
             } catch (NoSuchMethodException e) {
                 continue;
             }

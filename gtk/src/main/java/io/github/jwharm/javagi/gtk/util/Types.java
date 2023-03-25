@@ -3,7 +3,6 @@ package io.github.jwharm.javagi.gtk.util;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
-import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;

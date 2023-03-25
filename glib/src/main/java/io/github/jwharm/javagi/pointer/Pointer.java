@@ -93,6 +93,7 @@ public abstract class Pointer<T> implements Iterable<T> {
      * @return the array
      */
     public T[] toArray(int length, Class<T> clazz, boolean free) {
+        @SuppressWarnings("unchecked")
         T[] array = (T[]) Array.newInstance(clazz, length);
         for (int i = 0; i < length; i++) {
             array[i] = get(i);

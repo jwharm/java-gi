@@ -574,6 +574,7 @@ public class Interop {
         }
 
         // This method is used from a MethodHandle (INVOKE_MH).
+        @SuppressWarnings("unused")
         private Object invoke(SegmentAllocator allocator, Object[] args) throws Throwable {
             // one trailing Object[]
             int nNamedArgs = function.argumentLayouts().size();
@@ -582,7 +583,6 @@ public class Interop {
             Object[] unnamedArgs = (Object[]) args[args.length - 1];
 
             int argsCount = nNamedArgs + unnamedArgs.length;
-            Class<?>[] argTypes = new Class<?>[argsCount];
             MemoryLayout[] argLayouts = new MemoryLayout[nNamedArgs + unnamedArgs.length];
 
             int pos = 0;

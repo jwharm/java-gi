@@ -5,7 +5,6 @@ import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GError;
 import org.jetbrains.annotations.ApiStatus;
 

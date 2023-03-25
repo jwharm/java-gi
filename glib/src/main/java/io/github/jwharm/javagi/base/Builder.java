@@ -8,6 +8,7 @@ import java.util.ArrayList;
  * Base class for all inner {@code Builder} classes inside GObject proxy classes.
  * @param <S> the type of the Builder that is returned
  */
+@SuppressWarnings("rawtypes")
 public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
