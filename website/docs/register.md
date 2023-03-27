@@ -41,7 +41,7 @@ This constructor exists in all Java-GI Proxy objects. It enables a Proxy class t
 
 ## Specifying the name of the GType
 
-All GTypes have a unique name, like 'GtkLabel', 'GstObject' or 'GtkListModel'. You can query the name of a GType using `GObjects.typeName`. When a Java class is registered as a GType, the package and class name are used to generate a unique GType name. You can override this with a specific name using the `@CustomType` attribute:
+All GTypes have a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. You can query the name of a GType using `GObjects.typeName`. When a Java class is registered as a GType, the package and class name are used to generate a unique GType name. You can override this with a specific name using the `@CustomType` attribute:
 
 ```java
 @CustomType(name="MyExampleObject")

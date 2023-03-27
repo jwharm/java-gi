@@ -10,25 +10,9 @@ Please be aware that the Panama API is still under development. The current vers
 
 First of all, make sure that the native GLib, Gtk and/or GStreamer libraries are installed on your operating system.
 
-To create a Gtk application, add the `io.github.jwharm.javagi:glib` and `gtk` module version for your target operating system ("linux", "windows" or "macos") as dependencies in your project build configuration.
+Next, download the jar files with the Java bindings from [Github Packages](https://github.com/jwharm?tab=packages&repo_name=java-gi). At a minimum, you will need to download the GLib bindings jar. Additionally, download the Gtk, Adwaita and/or GStreamer bindings, and add the jars to the classpath of your project.
 
-For example, for a Linux application, when using Maven, add the dependencies to your pom.xml file:
-
-```xml
-<dependency>
-  <groupId>io.github.jwharm.javagi</groupId>
-  <artifactId>glib-linux</artifactId>
-  <version>1.2-0.5</version>
-</dependency>
-
-<dependency>
-  <groupId>io.github.jwharm.javagi</groupId>
-  <artifactId>gtk-linux</artifactId>
-  <version>4.8-0.5</version>
-</dependency>
-```
-
-To manually download the JAR files, visit [Github Packages](https://github.com/jwharm?tab=packages&repo_name=java-gi).
+It is recommended to download the Javadoc documentation and sources, to assist during the development of your GTK application. They are available for download from Github Packages.
 
 ## Modules
 
@@ -85,7 +69,3 @@ public class HelloWorld extends Application {
 Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter both when **compiling** and **running** your application.
 
 To suppress warnings about native access, add a command-line parameter `--enable-native-access=org.gnome.glib` (and all other modules that you use).
-
-## Javadoc
-
-It is recommended to download the Javadoc documentation and sources to assist during the development of your GTK application. Both are available on GitHub in the [packages section](https://github.com/jwharm?tab=packages&repo_name=java-gi).
