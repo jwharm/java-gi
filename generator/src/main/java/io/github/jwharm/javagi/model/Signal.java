@@ -71,7 +71,7 @@ public class Signal extends Method implements Closure {
         if (!emitFunctionExists) {
             writer.write("\n");
             writer.write("/**\n");
-            writer.write(" * Emits the " + signalName + " signal. See {@link #on" + signalName + "}.\n");
+            writer.write(" * Emits the \"" + name + "\" signal. See {@link #on" + signalName + "}.\n");
             writer.write(" */\n");
             writer.write("public " + (parent instanceof Interface ? "default " : ""));
             returnValue.writeType(writer, true, true);
