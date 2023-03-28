@@ -208,7 +208,7 @@ public class InstanceCache {
         }
 
         // Setup a cleaner on structs/unions
-        if (newInstance instanceof ProxyInstanceCleanable struct) {
+        if (newInstance instanceof ProxyInstanceCleanable struct && struct.getFinalizer() != null) {
             CLEANER.register(newInstance, struct.getFinalizer());
         }
 

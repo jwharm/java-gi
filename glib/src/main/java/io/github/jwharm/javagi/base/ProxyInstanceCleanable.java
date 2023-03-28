@@ -22,6 +22,13 @@ public class ProxyInstanceCleanable extends ProxyInstance {
     public ProxyInstanceCleanable(Addressable address) {
         super(address);
 
+        // Null check the address
+        if (address == null || address.equals(MemoryAddress.NULL)) {
+            this.finalizer = null;
+            return;
+        }
+
+        // Use free() method (if any)
         Method freeFunc = null;
         if (this instanceof FreeFunc) {
             try {
