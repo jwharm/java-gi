@@ -61,13 +61,24 @@ public class Record extends Class {
                     writer.write(" extends " + parentClass);
                 }
             }
-        } else {
+        } else if ("TypeInstance".equals(javaName) && "org.gnome.gobject".equals(getNamespace().packageName)) {
             writer.write(" extends ProxyInstance");
+        } else {
+            writer.write(" extends ProxyInstanceCleanable");
         }
+
+        boolean impl = false;
 
         // Floating
         if (isFloating()) {
             writer.write(" implements io.github.jwharm.javagi.base.Floating");
+            impl = true;
+        }
+
+        // Has free()
+        if (hasFreeFunc()) {
+            writer.write(impl ? ", " : " implements ");
+            writer.write("io.github.jwharm.javagi.base.FreeFunc");
         }
 
         writer.write(" {\n");

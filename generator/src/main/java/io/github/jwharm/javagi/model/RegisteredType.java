@@ -64,6 +64,18 @@ public abstract class RegisteredType extends GirElement {
         return false;
     }
 
+    public boolean hasFreeFunc() {
+        for (Method method : methodList) {
+            if ("free".equals(method.name)
+                    && method.parameters.parameterList.size() == 1
+                    && method.parameters.parameterList.get(0) instanceof InstanceParameter
+                    && (method.returnValue.type == null || method.returnValue.type.isVoid())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public abstract void generate(SourceWriter writer) throws IOException;
 
     protected void generatePackageDeclaration(SourceWriter writer) throws IOException {
