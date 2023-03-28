@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.annotations.ClassInit;
-import io.github.jwharm.javagi.annotations.CustomType;
+import io.github.jwharm.javagi.annotations.RegisteredType;
 import io.github.jwharm.javagi.annotations.InstanceInit;
 import io.github.jwharm.javagi.annotations.InterfaceInit;
 import io.github.jwharm.javagi.base.Proxy;
@@ -31,8 +31,8 @@ public class Types {
         String typeNameInput = cls.getName();
 
         // Check for an annotation that overrides the type name
-        if (cls.isAnnotationPresent(CustomType.class)) {
-            var annotation = cls.getAnnotation(CustomType.class);
+        if (cls.isAnnotationPresent(RegisteredType.class)) {
+            var annotation = cls.getAnnotation(RegisteredType.class);
             if (! "".equals(annotation.name())) {
                 typeNameInput = annotation.name();
             }
@@ -369,7 +369,7 @@ public class Types {
      * {@code getMemoryLayout()} using reflection).
      * <p>
      * The name of the new GType will be the simple name of the Java class, but can also be
-     * specified with the {@link CustomType} annotation. (All invalid characters, including '.',
+     * specified with the {@link RegisteredType} annotation. (All invalid characters, including '.',
      * are replaced with underscores.)
      * <p>
      * Use {@link ClassInit} and {@link InstanceInit} annotations on static methods
