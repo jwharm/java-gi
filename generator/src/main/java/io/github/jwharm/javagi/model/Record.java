@@ -61,6 +61,8 @@ public class Record extends Class {
                     writer.write(" extends " + parentClass);
                 }
             }
+        } else if ("TypeInstance".equals(javaName) && "org.gnome.gobject".equals(getNamespace().packageName)) {
+            writer.write(" extends ProxyInstance");
         } else {
             writer.write(" extends ProxyInstanceCleanable");
         }
