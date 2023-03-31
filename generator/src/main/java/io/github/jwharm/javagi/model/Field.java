@@ -33,7 +33,7 @@ public class Field extends Variable {
             return;
         }
         // Don't generate a getter/setter for padding/reserved space
-        if ("padding".equals(name) || "reserved".equals(name)) {
+        if ("padding".equals(name) || name.contains("reserved") || name.contains("Reserved")) {
             return;
         }
 
