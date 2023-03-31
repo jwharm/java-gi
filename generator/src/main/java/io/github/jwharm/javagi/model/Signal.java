@@ -40,9 +40,11 @@ public class Signal extends Method implements Closure {
         }
         
         writer.write(qualifiedName + " handler) {\n");
-        if (!isApi()) {
-            writer.increaseIndent();
-
+        writer.increaseIndent();
+        
+        if (isApi()) {
+            writer.write("throw Interop.apiError();\n");
+        } else {
             writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
             writer.write("try {\n");
             writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
@@ -55,9 +57,9 @@ public class Signal extends Method implements Closure {
             writer.write("} catch (Throwable _err) {\n");
             writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
             writer.write("}\n");
-
-            writer.decreaseIndent();
-        } else writer.write("    throw Interop.apiError();\n");
+        }
+        
+        writer.decreaseIndent();
         writer.write("}\n");
 
         // Check if an emit function already is defined in the GIR file

@@ -61,29 +61,42 @@ public interface Closure extends CallableType {
         writer.write(" * @return the memory address of the callback function\n");
         writer.write(" */\n");
         writer.write("default MemoryAddress toCallback() {\n");
-        if (!isApi()) {
-            writer.increaseIndent();
-
-            // Generate function descriptor
-            writer.write("FunctionDescriptor _fdesc = ");
-            generateFunctionDescriptor(writer);
-            writer.write(";\n");
-
-            // Generate method handle
-            writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
-
-            // Create and return upcall stub
-            writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
-
+        
+        // Don't allocate upcall stubs in common-api jar
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
             writer.decreaseIndent();
-        } else writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+        
+        writer.increaseIndent();
+
+        // Generate function descriptor
+        writer.write("FunctionDescriptor _fdesc = ");
+        generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
+        // Generate method handle
+        writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
+
+        // Create and return upcall stub
+        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
+
+        writer.decreaseIndent();
         writer.write("}\n");
         writer.decreaseIndent();
         writer.write("}\n");
     }
 
     default void generateUpcallMethod(SourceWriter writer, String name, String methodToInvoke) throws IOException {
-        if (isApi()) return;
+        
+        // No upcall method needed in common-api jar
+        if (isApi()) {
+            return;
+        }
+        
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);

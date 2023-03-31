@@ -22,7 +22,7 @@ public class JavaGI {
     public static Generated generate(Platform platform, Path outputDir, Source... sources) throws ParserConfigurationException, SAXException, IOException {
         // Generate the Java class files
         Set<Generated.Element> namespaces = new LinkedHashSet<>();
-        for (Parsed p : parse(platform, outputDir, sources).values()) {
+        for (Parsed p : parse(platform, sources).values()) {
             if (p.generate) {
                 Path basePath = outputDir.resolve(p.repository.namespace.pathName);
                 BindingsGenerator.generate(p.repository, p.natives, basePath);
@@ -39,9 +39,11 @@ public class JavaGI {
      *                and patches to be applied
      */
     public static Generated generateApi(Path outputDir, Map<Platform, Source[]> sources) throws ParserConfigurationException, SAXException, IOException {
-        //TODO merge sources to generate API jar (exclude incompatible methods)
         Set<Generated.Element> namespaces = new LinkedHashSet<>();
-        for(Parsed p : parse(null, outputDir, sources.get(Platform.LINUX)).values()) {
+        
+        // Merge sources to generate API jar (exclude incompatible methods)
+        Map<String, Parsed> commonApi = CrossReference.getCommonApi(sources);
+        for (Parsed p : commonApi.values()) {
             if (p.generate) {
                 Path basePath = outputDir.resolve(p.repository.namespace.pathName);
                 BindingsGenerator.generate(p.repository, p.natives, basePath);
@@ -52,7 +54,7 @@ public class JavaGI {
         return new Generated(namespaces, outputDir);
     }
 
-    private static Map<String, Parsed> parse(Platform platform, Path outputDir, Source... sources) throws ParserConfigurationException, SAXException {
+    public static Map<String, Parsed> parse(Platform platform, Source... sources) throws ParserConfigurationException, SAXException {
         GirParser parser = new GirParser(platform);
 
         Conversions.repositoriesLookupTable.clear();
@@ -92,7 +94,7 @@ public class JavaGI {
     /**
      * Parsed GI repository
      */
-    private record Parsed(Repository repository, boolean generate, Set<String> natives, PatchSet patches) {}
+    public record Parsed(Repository repository, boolean generate, Set<String> natives, PatchSet patches) {}
 
     /**
      * Generated set of Namespace elements in an output directory

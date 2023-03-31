@@ -49,6 +49,7 @@ public class Doc extends GirElement {
                         String pJavadoc = Javadoc.getInstance().convert(p.doc);
                         writeDoc(writer, pJavadoc, "@param " + (p.varargs ? "varargs" : p.name));
                     }
+                    writePortabilityWarning(writer, p);
                 }
             }
             
@@ -59,6 +60,7 @@ public class Doc extends GirElement {
                     String rvJavadoc = Javadoc.getInstance().convert(rv.doc);
                     writeDoc(writer, rvJavadoc, "@return");
                 }
+                writePortabilityWarning(writer, rv);
             }
             
             // Exception
@@ -101,6 +103,23 @@ public class Doc extends GirElement {
         writer.write(" */\n");
     }
     
+    // When applicable, write a warning about long vs int values on Windows
+    private void writePortabilityWarning(SourceWriter writer, Parameter p) throws IOException {
+        if (p.type != null && ("glong".equals(p.type.cType) || "gulong".equals(p.type.cType))) {
+            if (p.doc != null) {
+                writer.write(" * . \n");
+            } else if (p instanceof ReturnValue) {
+                writer.write("@return ");
+            } else {
+                writer.write("@param " + p.name + " ");
+            }
+            writer.write(" * In Windows native code, this is a 32-bit value, while on Linux and MacOS, \n");
+            writer.write(" * the value is 64 bits. Therefore, the Java parameter type is {@code int} on Windows, \n");
+            writer.write(" * but a {@code long} on Linux and MacOS.\n");
+        }
+    }
+    
+    // Write documentation, with an optional tag, starting each line with a " * ", and escape backslashes
     private void writeDoc(SourceWriter writer, String javadoc, String tag) throws IOException {
         
         // Write the lines (starting each line with " * ")

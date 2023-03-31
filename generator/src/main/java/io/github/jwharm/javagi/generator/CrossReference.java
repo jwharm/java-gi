@@ -1,8 +1,26 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.model.*;
-
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
+import io.github.jwharm.javagi.JavaGI;
+import io.github.jwharm.javagi.JavaGI.Source;
+import io.github.jwharm.javagi.model.Array;
+import io.github.jwharm.javagi.model.Function;
+import io.github.jwharm.javagi.model.GirElement;
+import io.github.jwharm.javagi.model.Member;
+import io.github.jwharm.javagi.model.Method;
+import io.github.jwharm.javagi.model.Namespace;
+import io.github.jwharm.javagi.model.Parameter;
+import io.github.jwharm.javagi.model.RegisteredType;
+import io.github.jwharm.javagi.model.Repository;
+import io.github.jwharm.javagi.model.Type;
 
 public class CrossReference {
 
@@ -73,6 +91,75 @@ public class CrossReference {
                 element = element.next;
             }
         }
+    }
+    
+    /**
+     * This method will parse the sources for each platform, and filter out all platform-specific sources, 
+     * global types and global functions. The result will only contain sources and types that exist on all 
+     * platforms (lowest common denominator). This is used to create the common-api jar.
+     * @param  sources Map of all sources for all platforms
+     * @return a map of parsed sources that only contains sources and global types and functions that exist 
+     *         on all platforms
+     * @throws ParserConfigurationException if an error occurs while parsing the sources
+     * @throws SAXException if an error occurs while parsing the sources
+     */
+    public static Map<String, JavaGI.Parsed> getCommonApi(Map<Platform, Source[]> sources) throws ParserConfigurationException, SAXException {
+        
+        Map<String, JavaGI.Parsed> sourcesLin = JavaGI.parse(null, sources.get(Platform.LINUX));
+        Map<String, JavaGI.Parsed> sourcesWin = JavaGI.parse(null, sources.get(Platform.WINDOWS));
+        Map<String, JavaGI.Parsed> sourcesMac = JavaGI.parse(null, sources.get(Platform.MAC));
+
+        // Remove platform-specific sources
+        sourcesLin.entrySet().removeIf(entry -> {
+            var name = entry.getKey();
+            var parsed = entry.getValue();
+            
+            // Skip sources that are only included as dependencies, and are not generated
+            if (! parsed.generate()) {
+                return false;
+            }
+            
+            // Check if the source exists on all platforms
+            return (sourcesWin.get(name) == null || sourcesMac.get(name) == null);
+        });
+        
+        // Remove platform-specific types and functions
+        sourcesLin.forEach((name, parsed) -> {
+            // Skip sources that are only included as dependencies, and are not generated
+            if (parsed.generate()) {
+                
+                // Get the namespaces of all platforms
+                var nsLin = parsed.repository().getNamespace();
+                var nsWin = sourcesWin.get(name).repository().getNamespace();
+                var nsMac = sourcesMac.get(name).repository().getNamespace();
+                
+                // Get the type dictionary for all platforms
+                var typesLin = nsLin.registeredTypeMap;
+                var typesWin = nsWin.registeredTypeMap;
+                var typesMac = nsMac.registeredTypeMap;
+                
+                // Remove types that don't exist on all platforms
+                typesLin.keySet().removeIf(typeName -> typesWin.get(typeName) == null || typesMac.get(typeName) == null);
+                
+                // Generate list of function specifications for the other platforms
+                Set<String> funcsWin = new HashSet<>();
+                for (Function function : nsWin.functionList) {
+                    funcsWin.add(function.getMethodDeclaration());
+                }
+                Set<String> funcsMac = new HashSet<>();
+                for (Function function : nsMac.functionList) {
+                    funcsMac.add(function.getMethodDeclaration());
+                }
+
+                // Compare function specifications and remove the ones that don't exist on the other platforms
+                nsLin.functionList.removeIf(function -> {
+                    String spec = function.getMethodDeclaration();
+                    return ! (funcsWin.contains(spec) && funcsMac.contains(spec));
+                });
+            }
+        });
+        
+        return sourcesLin;
     }
 
     /**

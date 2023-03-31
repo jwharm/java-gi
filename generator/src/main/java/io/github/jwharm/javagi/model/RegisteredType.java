@@ -276,25 +276,37 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @return {@code true} when the type is available on the runtime platform\n");
         writer.write(" */\n");
         writer.write("public static boolean isAvailable() {\n");
-        if (!isApi()) {String targetName = null;
-            for (Method m : functionList) {
-                if (m.name.equals("get_type") && m.getParameters() == null) {
-                    targetName = m.cIdentifier;
-                    break;
-                }
+        
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+            writer.write("}\n");
+            return;
+        }
+        
+        String targetName = null;
+        for (Method m : functionList) {
+            if (m.name.equals("get_type") && m.getParameters() == null) {
+                targetName = m.cIdentifier;
+                break;
             }
-            if (targetName == null)
-                throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
-            writer.write("    return DowncallHandles." + targetName + " != null;\n");
-        } else writer.write("    throw Interop.apiError();\n");
+        }
+        if (targetName == null)
+            throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
+        writer.write("    return DowncallHandles." + targetName + " != null;\n");
         writer.write("}\n");
     }
 
     protected void generateEnsureInitialized(SourceWriter writer) throws IOException {
         writer.write("\n");
         writer.write("static {\n");
-        if (!isApi()) writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
-        else writer.write("    Interop.throwApiError();\n");
+        
+        if (isApi()) {
+            writer.write("    Interop.throwApiError();\n");
+            writer.write("}\n");
+            return;
+        }
+        
+        writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
         writer.write("}\n");
     }
 
@@ -320,24 +332,31 @@ public abstract class RegisteredType extends GirElement {
      * @throws IOException Thrown by {@code writer.write()}
      */
     protected void generateDowncallHandles(SourceWriter writer) throws IOException {
-        boolean isInterface = this instanceof Interface;
-        if (!isApi() && !(constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty())) {
-            writer.write("\n");
-            writer.write(isInterface ? "@ApiStatus.Internal\n" : "private ");
-            writer.write("static class DowncallHandles {\n");
-            writer.increaseIndent();
-            for (Constructor c : constructorList) {
-                c.generateMethodHandle(writer);
-            }
-            for (Method m : methodList) {
-                m.generateMethodHandle(writer);
-            }
-            for (Function f : functionList) {
-                f.generateMethodHandle(writer);
-            }
-            writer.decreaseIndent();
-            writer.write("}\n");
+        // No downcall handles in common-api jar
+        if (isApi()) {
+            return;
         }
+        
+        // Don't generate empty class
+        if (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty()) {
+            return;
+        }
+        
+        writer.write("\n");
+        writer.write(this instanceof Interface ? "@ApiStatus.Internal\n" : "private ");
+        writer.write("static class DowncallHandles {\n");
+        writer.increaseIndent();
+        for (Constructor c : constructorList) {
+            c.generateMethodHandle(writer);
+        }
+        for (Method m : methodList) {
+            m.generateMethodHandle(writer);
+        }
+        for (Function f : functionList) {
+            f.generateMethodHandle(writer);
+        }
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 
     public void generateImplClass(SourceWriter writer) throws IOException {

@@ -83,7 +83,7 @@ public class VirtualMethod extends Method {
         writer.write("\"));\n");
         
         writer.write("FunctionDescriptor _fdesc = ");
-        boolean varargs = generateFunctionDescriptor(writer);
+        generateFunctionDescriptor(writer);
         writer.write(";\n");
 
         writer.write("MemoryAddress _func = _struct.get(ValueLayout.ADDRESS, _offset);\n");

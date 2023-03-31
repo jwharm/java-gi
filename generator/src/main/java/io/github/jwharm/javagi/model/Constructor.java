@@ -48,7 +48,9 @@ public class Constructor extends Method {
         }
         writer.write(");\n");
 
-        if (!isApi()) writer.write("InstanceCache.put(handle(), this);\n");
+        if (! isApi()) {
+            writer.write("InstanceCache.put(handle(), this);\n");
+        }
 
         writer.decreaseIndent();
         writer.write("}\n");

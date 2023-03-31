@@ -60,45 +60,49 @@ public class Method extends GirElement implements CallableType {
         writer.write(");\n");
     }
     
-    protected String getMethodDeclaration() throws IOException {
+    public String getMethodDeclaration() {
         SourceWriter writer = new SourceWriter(new StringWriter());
         
-        if ((parent instanceof Interface) && (! (this instanceof Function))) {
-            // Default interface methods
-            writer.write("default ");
-        } else {
-            // Visibility
-            writer.write("public ");
-        }
+        try {
+            if ((parent instanceof Interface) && (! (this instanceof Function))) {
+                // Default interface methods
+                writer.write("default ");
+            } else {
+                // Visibility
+                writer.write("public ");
+            }
 
-        // Static methods (functions)
-        if (this instanceof Function) {
-            writer.write("static ");
-        }
+            // Static methods (functions)
+            if (this instanceof Function) {
+                writer.write("static ");
+            }
 
-        // Return type
-        getReturnValue().writeType(writer, true, true);
+            // Return type
+            getReturnValue().writeType(writer, true, true);
 
-        // Method name
-        String methodName = Conversions.toLowerCaseJavaName(name);
-        if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
-            methodName = Conversions.replaceJavaObjectMethodNames(methodName);
-        }
-        writer.write(" ");
-        writer.write(methodName);
+            // Method name
+            String methodName = Conversions.toLowerCaseJavaName(name);
+            if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
+                methodName = Conversions.replaceJavaObjectMethodNames(methodName);
+            }
+            writer.write(" ");
+            writer.write(methodName);
 
-        // Parameters
-        if (getParameters() != null) {
-            writer.write("(");
-            getParameters().generateJavaParameters(writer, false);
-            writer.write(")");
-        } else {
-            writer.write("()");
-        }
+            // Parameters
+            if (getParameters() != null) {
+                writer.write("(");
+                getParameters().generateJavaParameters(writer, false);
+                writer.write(")");
+            } else {
+                writer.write("()");
+            }
 
-        // Exceptions
-        if (throws_ != null) {
-            writer.write(" throws GErrorException");
+            // Exceptions
+            if (throws_ != null) {
+                writer.write(" throws GErrorException");
+            }
+        } catch (IOException ignored) {
+            // StringWriter will never throw IOException
         }
         
         return writer.toString();

@@ -38,6 +38,7 @@ public class Field extends Variable {
         }
 
         String camelName = Conversions.toCamelCase(this.name, true);
+        String upcallName = this.name + "Upcall";
         String setter = (callback != null ? "override" : "write") + camelName;
         String getter = "read" + camelName;
 
@@ -64,12 +65,17 @@ public class Field extends Variable {
             writeType(writer, true, true);
             writer.write(" " + getter + "() {\n");
 
-            if (isApi()) writer.write("    throw Interop.apiError();\n");
-            else if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
+            if (isApi()) {
+                writer.write("    throw Interop.apiError();\n");
+            
+            // Read the memory segment of an embedded field from the struct (not a pointer)
+            } else if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
                 writer.write("    long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("    return ");
                 marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(_offset)", false);
                 writer.write(";\n");
+             
+            // Read a pointer or primitive value from the struct
             } else {
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
@@ -93,7 +99,10 @@ public class Field extends Variable {
         writer.write("public void " + setter + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        if (!isApi()) {
+        
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+        } else {
             writer.write("    var _scope = getSegmentScope();\n");
             writer.write("    getMemoryLayout()\n");
             writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
@@ -107,7 +116,7 @@ public class Field extends Variable {
                 writer.write(")");
             }
             writer.write(");\n");
-        } else writer.write("    throw Interop.apiError();\n");
+        }
         writer.write("}\n");
 
         // For callbacks, generate a second override method with java.lang.reflect.Method parameter
@@ -120,9 +129,11 @@ public class Field extends Variable {
             writer.write(" * @param method The method to invoke\n");
             writer.write(" */\n");
             writer.write("public void " + setter + "(java.lang.reflect.Method method) {\n");
-            String upcallName = this.name + "Upcall";
-            if (!isApi()) {
-                writer.increaseIndent();
+            writer.increaseIndent();
+            
+            if (isApi()) {
+                writer.write("throw Interop.apiError();\n");                
+            } else {
                 writer.write("this._" + this.name + "Method = method;\n");
                 writer.write("var _scope = getSegmentScope();\n");
 
@@ -139,8 +150,9 @@ public class Field extends Variable {
                 writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
                 writer.write("    .set(allocatedMemorySegment, ");
                 writer.write("(Addressable) (method == null ? MemoryAddress.NULL : _address));\n");
-                writer.decreaseIndent();
-            } else writer.write("    throw Interop.apiError();\n");
+            }
+            
+            writer.decreaseIndent();
             writer.write("}\n");
             writer.write("\n");
 

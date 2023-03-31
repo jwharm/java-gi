@@ -27,10 +27,17 @@ public class Interop {
         GObjects.javagi$ensureInitialized();
     }
 
+    /**
+     * Returns a runtime exception in case when the API jar is used at runtime.
+     * @return an InteropException
+     */
     public static InteropException apiError() {
-        return new InteropException("Attempted to use API jar in prod. Don't do that!");
+        return new InteropException("Attempted to use API jar at runtime. Configure a platform-specific jar file.");
     }
 
+    /**
+     * Throws a runtime exception in case when the API jar is used at runtime.
+     */
     public static void throwApiError() {
         throw apiError();
     }

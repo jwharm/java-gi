@@ -32,18 +32,23 @@ public class Property extends Variable {
         writer.write("S set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        if (!isApi()) {
-            writer.increaseIndent();
-            writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
-            writer.write("_value.init(" + gTypeDeclaration + ");\n");
-            if (array != null) {
-                writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
-            }
-            writer.write(getValueSetter("_value", gTypeDeclaration, name) + ";\n");
-            writer.write("addBuilderProperty(\"" + propertyName + "\", _value);\n");
-            writer.write("return (S) this;\n");
-            writer.decreaseIndent();
-        } else writer.write("    throw Interop.apiError();");
+        
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();");
+            writer.write("}\n");
+            return;
+        }
+        
+        writer.increaseIndent();
+        writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
+        writer.write("_value.init(" + gTypeDeclaration + ");\n");
+        if (array != null) {
+            writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
+        }
+        writer.write(getValueSetter("_value", gTypeDeclaration, name) + ";\n");
+        writer.write("addBuilderProperty(\"" + propertyName + "\", _value);\n");
+        writer.write("return (S) this;\n");
+        writer.decreaseIndent();
         writer.write("}\n");
     }
 }

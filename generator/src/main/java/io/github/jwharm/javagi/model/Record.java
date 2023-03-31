@@ -115,14 +115,20 @@ public class Record extends Class {
     }
 
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
+        
+        // Don't allocate memory in common-api jar
         if (isApi()) {
             writer.write("public static " + javaName + " allocate() {\n");
             writer.write("    throw Interop.apiError();\n");
             writer.write("}\n");
             return;
         }
+        
+        // Cache the memory segment
         writer.write("\n");
         writer.write("private MemorySegment allocatedMemorySegment;\n");
+        
+        // Accessor function for the segment scope, to enable co-allocation of other segments with the same lifetime
         writer.write("\n");
         writer.write("private MemorySession getSegmentScope() {\n");
         writer.write("    if (allocatedMemorySegment == null) {\n");
@@ -131,6 +137,8 @@ public class Record extends Class {
         writer.write("    }\n");
         writer.write("    return allocatedMemorySegment.session();\n");
         writer.write("}\n");
+        
+        // Allocator function
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Allocate a new {@link " + javaName + "}. A {@link java.lang.ref.Cleaner} \n");
