@@ -52,7 +52,6 @@ generated/
 !src/**/build/
 
 # Local configurations
-gradle.properties
 !gradle/wrapper/gradle-wrapper.jar
 
 # Site files from mkdocs
