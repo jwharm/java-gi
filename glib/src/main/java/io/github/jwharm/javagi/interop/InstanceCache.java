@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.interop;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -27,15 +26,15 @@ import org.jetbrains.annotations.Nullable;
  */
 public class InstanceCache {
 
-    public final static Map<Addressable, Proxy> strongReferences = new HashMap<>();
-    public final static Map<Addressable, WeakReference<Proxy>> weakReferences = new HashMap<>();
+    public final static Map<MemorySegment, Proxy> strongReferences = new HashMap<>();
+    public final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new HashMap<>();
 
     private static final Cleaner CLEANER = Cleaner.create();
     
-    private static Proxy get(Addressable address) {
+    private static Proxy get(MemorySegment address) {
         
         // Null check on the memory address
-        if (address == null || address.equals(MemoryAddress.NULL)) {
+        if (address == null || address.equals(MemorySegment.NULL)) {
             return null;
         }
 
@@ -62,7 +61,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy getForType(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+    public static Proxy getForType(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
         
         // Get instance from the cache
         Proxy instance = get(address);
@@ -71,7 +70,7 @@ public class InstanceCache {
         }
 
         // Get constructor from the type registry
-        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor((MemoryAddress) address, fallback);
+        Function<MemorySegment, ? extends Proxy> ctor = TypeCache.getConstructor(address, fallback);
         if (ctor == null) {
             return null;
         }
@@ -96,7 +95,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy getForTypeClass(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+    public static Proxy getForTypeClass(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
 
         // Get instance from the cache
         Proxy instance = get(address);
@@ -106,7 +105,7 @@ public class InstanceCache {
         
         // Get constructor from the type registry
         Type type = new TypeClass(address).readGType();
-        Function<Addressable, ? extends Proxy> ctor = TypeCache.getConstructor(type, null);
+        Function<MemorySegment, ? extends Proxy> ctor = TypeCache.getConstructor(type, null);
         if (ctor == null) {
             return fallback.apply(address);
         }
@@ -147,7 +146,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy get(Addressable address, Function<Addressable, ? extends Proxy> fallback) {
+    public static Proxy get(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
 
         // Get instance from the cache
         Proxy instance = get(address);
@@ -173,7 +172,7 @@ public class InstanceCache {
      * @param newInstance the Proxy instance
      * @return the cached Proxy instance
      */
-    public static Proxy put(Addressable address, Proxy newInstance) {
+    public static Proxy put(MemorySegment address, Proxy newInstance) {
         // Do not cache TypeInstance objects.
         // They will be cached later with the actual type.
         if (newInstance.getClass().getSimpleName().equals("TypeInstance")) {
@@ -221,10 +220,10 @@ public class InstanceCache {
      */
     private static class ToggleNotifyCallback implements ToggleNotify {
 
-        private MemoryAddress callback;
+        private MemorySegment callback;
 
         @Override
-        public MemoryAddress toCallback() {
+        public MemorySegment toCallback() {
             if (callback == null) {
                 callback = ToggleNotify.super.toCallback();
             }
@@ -232,7 +231,7 @@ public class InstanceCache {
         }
 
         @Override
-        public void run(@Nullable MemoryAddress data, GObject object, boolean isLastRef) {
+        public void run(@Nullable MemorySegment data, GObject object, boolean isLastRef) {
             var key = object.handle();
             if (isLastRef) {
                 weakReferences.put(key, new WeakReference<>(object));
@@ -251,7 +250,7 @@ public class InstanceCache {
      * @param toggleNotify the same ToggleNotify toggleNotify that was passed to
      *                     {@link GObject#addToggleRef(org.gnome.gobject.ToggleNotify)}
      */
-    private record ToggleRefFinalizer(Addressable address, org.gnome.gobject.ToggleNotify toggleNotify)
+    private record ToggleRefFinalizer(MemorySegment address, ToggleNotify toggleNotify)
             implements Runnable {
 
         public void run() {

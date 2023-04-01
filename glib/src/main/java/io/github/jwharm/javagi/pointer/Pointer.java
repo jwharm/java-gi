@@ -13,37 +13,33 @@ import java.lang.reflect.Array;
  */
 public abstract class Pointer<T> implements Iterable<T> {
 
-    private final MemorySegment segment;
-
     /**
      * The memory address of the pointer
      */
-    protected final MemoryAddress address;
+    protected final MemorySegment segment;
 
     /**
      * Allocate a new memory segment with the provided memory layout.
      * @param layout the memory layout
      */
     protected Pointer(ValueLayout layout) {
-        this.segment = MemorySession.openImplicit().allocate(layout);
-        this.address = segment.address();
+        this.segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(layout);
     }
 
     /**
      * Instantiate a Pointer object that points to the provided address.
      * @param address The memory address
      */
-    protected Pointer(MemoryAddress address) {
-        this.segment = null;
-        this.address = address;
+    protected Pointer(MemorySegment address) {
+        this.segment = address;
     }
 
     /**
      * Return the memory address of the pointer
      * @return the memory address
      */
-    public Addressable handle() {
-        return address;
+    public MemorySegment handle() {
+        return segment;
     }
 
     /**
@@ -78,11 +74,11 @@ public abstract class Pointer<T> implements Iterable<T> {
     }
 
     /**
-     * Release the pointer. This will run {@link GLib#free(MemoryAddress)}
+     * Release the pointer. This will run {@link GLib#free(MemorySegment)}
      * on the native memory address.
      */
     public void free() {
-        GLib.free(address);
+        GLib.free(segment);
     }
 
     /**
@@ -99,7 +95,7 @@ public abstract class Pointer<T> implements Iterable<T> {
             array[i] = get(i);
         }
         if (free) {
-            GLib.free(address);
+            GLib.free(segment);
         }
         return array;
     }

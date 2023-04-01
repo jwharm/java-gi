@@ -2,7 +2,7 @@ package io.github.jwharm.javagi.pointer;
 
 import io.github.jwharm.javagi.base.Enumeration;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.function.Function;
 
@@ -19,7 +19,7 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
      * @param address the memory address
      * @param make a function to create an enumeration instance of an int
      */
-    public PointerEnumeration(MemoryAddress address, Function<Integer, T> make) {
+    public PointerEnumeration(MemorySegment address, Function<Integer, T> make) {
         super(address);
         this.make = make;
     }
@@ -29,7 +29,7 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(ValueLayout.JAVA_INT, 0, value.getValue());
+        segment.set(ValueLayout.JAVA_INT, 0, value.getValue());
     }
 
     /**
@@ -48,7 +48,7 @@ public class PointerEnumeration<T extends Enumeration> extends Pointer<T> {
      * @return the value stored at the given index
      */
     public T get(int index) {
-        int value = address.getAtIndex(ValueLayout.JAVA_INT, index);
+        int value = segment.getAtIndex(ValueLayout.JAVA_INT, index);
         return make.apply(value);
     }
 }

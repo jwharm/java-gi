@@ -2,8 +2,7 @@ package io.github.jwharm.javagi.base;
 
 import org.gnome.glib.GLib;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Method;
 
@@ -19,11 +18,11 @@ public class ProxyInstanceCleanable extends ProxyInstance {
      * Create a new {@code ProxyInstanceCleanable} object for an instance in native memory.
      * @param address the memory address of the instance
      */
-    public ProxyInstanceCleanable(Addressable address) {
+    public ProxyInstanceCleanable(MemorySegment address) {
         super(address);
 
         // Null check the address
-        if (address == null || address.equals(MemoryAddress.NULL)) {
+        if (address == null || address.equals(MemorySegment.NULL)) {
             this.finalizer = null;
             return;
         }
@@ -36,7 +35,7 @@ public class ProxyInstanceCleanable extends ProxyInstance {
             } catch (NoSuchMethodException ignored) {}
         }
 
-        this.finalizer = new StructFinalizer((MemoryAddress) address, freeFunc);
+        this.finalizer = new StructFinalizer(address, freeFunc);
     }
 
     /**
@@ -62,15 +61,15 @@ public class ProxyInstanceCleanable extends ProxyInstance {
 
     /**
      * This callback is run by the {@link Cleaner} when a struct or union instance
-     * has become unreachable, to free the native memory using {@link GLib#free(MemoryAddress)}.
+     * has become unreachable, to free the native memory using {@link GLib#free(MemorySegment)}.
      */
     private static class StructFinalizer implements Runnable {
 
-        private final MemoryAddress address;
+        private final MemorySegment address;
         private final Method freeFunc;
         private boolean enabled;
 
-        public StructFinalizer(MemoryAddress address, Method freeFunc) {
+        public StructFinalizer(MemorySegment address, Method freeFunc) {
             this.address = address;
             this.freeFunc = freeFunc;
             this.enabled = false;

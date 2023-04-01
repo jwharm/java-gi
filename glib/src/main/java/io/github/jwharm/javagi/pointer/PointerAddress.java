@@ -1,12 +1,12 @@
 package io.github.jwharm.javagi.pointer;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 /**
  * A pointer that points to a raw memory address
  */
-public class PointerAddress extends Pointer<MemoryAddress> {
+public class PointerAddress extends Pointer<MemorySegment> {
 
     /**
      * Create the pointer. It does not point to a specific address.
@@ -19,7 +19,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerAddress(MemoryAddress address) {
+    public PointerAddress(MemorySegment address) {
         super(address);
     }
 
@@ -27,15 +27,15 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * Use this method to set the value that the pointer points to.
      * @param value the new value that is pointed to
      */
-    public void set(MemoryAddress value) {
-        address.set(ValueLayout.ADDRESS, 0, value);
+    public void set(MemorySegment value) {
+        segment.set(ValueLayout.ADDRESS, 0, value);
     }
 
     /**
      * Use this method to retrieve the value of the pointer.
      * @return the value of the pointer
      */
-    public MemoryAddress get() {
+    public MemorySegment get() {
         return get(0);
     }
 
@@ -46,7 +46,7 @@ public class PointerAddress extends Pointer<MemoryAddress> {
      * @param index the array index
      * @return the value stored at the given index
      */
-    public MemoryAddress get(int index) {
-        return address.getAtIndex(ValueLayout.ADDRESS, index);
+    public MemorySegment get(int index) {
+        return segment.getAtIndex(ValueLayout.ADDRESS, index);
     }
 }

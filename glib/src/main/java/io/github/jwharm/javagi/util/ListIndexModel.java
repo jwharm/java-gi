@@ -27,7 +27,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Construct a ListIndexModel for the provided memory address.
      * @param address the memory address of the instance in native memory
      */
-    public ListIndexModel(Addressable address) {
+    public ListIndexModel(MemorySegment address) {
         super(address);
     }
 
@@ -130,7 +130,7 @@ public class ListIndexModel extends GObject implements ListModel {
         private static Type type;
         private int index;
 
-        public ListIndex(Addressable address) {
+        public ListIndex(MemorySegment address) {
             super(address);
         }
 

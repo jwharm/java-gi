@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.pointer;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 /**
@@ -21,7 +21,7 @@ public class PointerLong extends Pointer<Long> {
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerLong(MemoryAddress address) {
+    public PointerLong(MemorySegment address) {
         super(address);
     }
 
@@ -31,7 +31,7 @@ public class PointerLong extends Pointer<Long> {
      */
     public PointerLong(long initialValue) {
         this();
-        address.set(ValueLayout.JAVA_LONG, 0, initialValue);
+        segment.set(ValueLayout.JAVA_LONG, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerLong extends Pointer<Long> {
      * @param value the new value that is pointed to
      */
     public void set(Long value) {
-        address.set(ValueLayout.JAVA_LONG, 0, value);
+        segment.set(ValueLayout.JAVA_LONG, 0, value);
     }
 
     /**
@@ -57,6 +57,6 @@ public class PointerLong extends Pointer<Long> {
      * @return the value stored at the given index
      */
     public Long get(int index) {
-        return address.getAtIndex(ValueLayout.JAVA_LONG, index);
+        return segment.getAtIndex(ValueLayout.JAVA_LONG, index);
     }
 }

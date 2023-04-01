@@ -10,7 +10,7 @@ java {
     withJavadocJar()
     withSourcesJar()
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(19))
+        languageVersion.set(JavaLanguageVersion.of(20))
     }
 }
 
@@ -49,7 +49,7 @@ afterEvaluate {
     tasks.withType(JavaCompile::class) { options.compilerArgs.add("--enable-preview") }
     tasks.withType(Javadoc::class) {
         (options as CoreJavadocOptions).run {
-            addStringOption("source", "19")
+            addStringOption("source", "20")
             addBooleanOption("-enable-preview", true)
             addStringOption("Xdoclint:none", "-quiet")
         }

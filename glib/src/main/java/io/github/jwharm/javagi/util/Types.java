@@ -12,7 +12,7 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
-import java.lang.foreign.Addressable;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -147,11 +147,11 @@ public class Types {
         }
     }
 
-    public static <T extends Proxy> Function<Addressable, T> getAddressConstructor(Class<T> cls) {
+    public static <T extends Proxy> Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
         Constructor<T> ctor;
         try {
             // Get memory address constructor
-            ctor = cls.getConstructor(Addressable.class);
+            ctor = cls.getConstructor(MemorySegment.class);
         } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find memory-address constructor definition for class %s: %s\n",
@@ -397,7 +397,7 @@ public class Types {
             Consumer<TC> classInit = getClassInit(cls);
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Consumer<T> instanceInit = getInstanceInit(cls);
-            Function<Addressable, T> constructor = getAddressConstructor(cls);
+            Function<MemorySegment, T> constructor = getAddressConstructor(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             if (parentType == null || classLayout == null || instanceLayout == null
@@ -491,7 +491,7 @@ public class Types {
             Consumer<TC> classInit,
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
-            Function<Addressable, T> constructor,
+            Function<MemorySegment, T> constructor,
             TypeFlags flags
     ) {
         @SuppressWarnings("unchecked")

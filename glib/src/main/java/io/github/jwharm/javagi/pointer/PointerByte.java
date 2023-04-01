@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.pointer;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 /**
@@ -21,7 +21,7 @@ public class PointerByte extends Pointer<Byte> {
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerByte(MemoryAddress address) {
+    public PointerByte(MemorySegment address) {
         super(address);
     }
 
@@ -31,7 +31,7 @@ public class PointerByte extends Pointer<Byte> {
      */
     public PointerByte(byte initialValue) {
         this();
-        address.set(ValueLayout.JAVA_BYTE, 0, initialValue);
+        segment.set(ValueLayout.JAVA_BYTE, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerByte extends Pointer<Byte> {
      * @param value the new value that is pointed to
      */
     public void set(Byte value) {
-        address.set(ValueLayout.JAVA_BYTE, 0, value);
+        segment.set(ValueLayout.JAVA_BYTE, 0, value);
     }
 
     /**
@@ -57,6 +57,6 @@ public class PointerByte extends Pointer<Byte> {
      * @return the value stored at the given index
      */
     public Byte get(int index) {
-        return address.get(ValueLayout.JAVA_BYTE, index);
+        return segment.get(ValueLayout.JAVA_BYTE, index);
     }
 }

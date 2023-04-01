@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.base;
 
-import java.lang.foreign.Addressable;
+import java.lang.foreign.MemorySegment;
 
 /**
  * Represents an instance of a proxy object with a handle to an object 
@@ -12,5 +12,5 @@ public interface Proxy {
      * Get the native memory address of the object
      * @return the native memory address
      */
-    Addressable handle();
+    MemorySegment handle();
 }

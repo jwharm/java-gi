@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.interop;
 
-import java.lang.foreign.Addressable;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -19,7 +18,7 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class TypeCache {
     
-    private final static Map<Type, Function<Addressable, ? extends Proxy>> typeRegister = new HashMap<>();
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister = new HashMap<>();
 
     /**
      * Get the constructor from the type registry for the native object instance at the given 
@@ -29,9 +28,9 @@ public class TypeCache {
      * @param fallback if none was found, this constructor will be registered for the type, and returned
      * @return         the constructor, or {@code null} if address is {@code null} or a null-pointer
      */
-    public static Function<Addressable, ? extends Proxy> getConstructor(MemoryAddress address, Function<Addressable, ? extends Proxy> fallback) {
+    public static Function<MemorySegment, ? extends Proxy> getConstructor(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check on the memory address
-        if (address == null || address.equals(MemoryAddress.NULL)) return null;
+        if (address == null || address.equals(MemorySegment.NULL)) return null;
 
         // Read the gtype from memory
         Type type = new TypeInstance(address).readGClass().readGType();
@@ -45,10 +44,10 @@ public class TypeCache {
      * @param fallback if none was found, this constructor will be registered for the type, and returned
      * @return         the constructor, or {@code null} if address is {@code null} or a null-pointer
      */
-    public static Function<Addressable, ? extends Proxy> getConstructor(Type type, Function<Addressable, ? extends Proxy> fallback) {
+    public static Function<MemorySegment, ? extends Proxy> getConstructor(Type type, Function<MemorySegment, ? extends Proxy> fallback) {
         // Find the constructor in the typeRegister and return it
         if (type != null) {
-            Function<Addressable, ? extends Proxy> ctor = typeRegister.get(type);
+            Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
             if (ctor != null) {
                 return ctor;
             }
@@ -57,7 +56,7 @@ public class TypeCache {
         // Register the fallback constructor for this type. If another thread did this in the meantime, putIfAbsent()
         // will return that constructor.
         if (fallback != null) {
-            Function<Addressable, ? extends Proxy> ctorFromAnotherThread = typeRegister.putIfAbsent(type, fallback);
+            Function<MemorySegment, ? extends Proxy> ctorFromAnotherThread = typeRegister.putIfAbsent(type, fallback);
             return Objects.requireNonNullElse(ctorFromAnotherThread, fallback);
         }
         // No constructor found in the typeRegister, and no fallback provided
@@ -69,7 +68,7 @@ public class TypeCache {
      * @param type Type to use as key in the type register
      * @param marshal Marshal function for this type
      */
-    public static void register(Type type, Function<Addressable, ? extends Proxy> marshal) {
+    public static void register(Type type, Function<MemorySegment, ? extends Proxy> marshal) {
         typeRegister.put(type, marshal);
     }
 }

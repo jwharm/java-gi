@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.util;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
 
@@ -63,7 +63,7 @@ public class JavaClosure extends Closure {
     public JavaClosure(Object instance, Method method) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal(new ClosureMarshal() {
-            public void run(Closure closure, Value returnValue, Value[] paramValues, MemoryAddress invocationHint) {
+            public void run(Closure closure, Value returnValue, Value[] paramValues, MemorySegment invocationHint) {
                 try {
                     Object[] parameterObjects;
                     if (paramValues == null || paramValues.length == 0) {
