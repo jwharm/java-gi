@@ -144,16 +144,16 @@ public class CrossReference {
                 // Generate list of function specifications for the other platforms
                 Set<String> funcsWin = new HashSet<>();
                 for (Function function : nsWin.functionList) {
-                    funcsWin.add(function.getMethodDeclaration());
+                    funcsWin.add(function.getMethodSpecification());
                 }
                 Set<String> funcsMac = new HashSet<>();
                 for (Function function : nsMac.functionList) {
-                    funcsMac.add(function.getMethodDeclaration());
+                    funcsMac.add(function.getMethodSpecification());
                 }
 
                 // Compare function specifications and remove the ones that don't exist on the other platforms
                 nsLin.functionList.removeIf(function -> {
-                    String spec = function.getMethodDeclaration();
+                    String spec = function.getMethodSpecification();
                     return ! (funcsWin.contains(spec) && funcsMac.contains(spec));
                 });
             }

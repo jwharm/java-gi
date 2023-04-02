@@ -32,21 +32,25 @@ public class Method extends GirElement implements CallableType {
         this.movedTo = movedTo;
         
         // Generated under another name
-        if (shadowedBy != null)
+        if (shadowedBy != null) {
             this.skip = true;
+        }
 
         // Rename methods with "moved-to" attribute, but skip generation if the "moved-to" name has
         // the form of "Type.new_name", because in that case it already exists under the new name.
         if (movedTo != null) {
-            if (movedTo.contains("."))
+            if (movedTo.contains(".")) {
                 this.skip = true;
-            else
+            } else {
                 this.name = movedTo;
+            }
         }
     }
 
     public void generateMethodHandle(SourceWriter writer) throws IOException {
-        if (skip) return;
+        if (skip) {
+            return;
+        }
 
         boolean varargs = false;
         writer.write("\n");
@@ -85,17 +89,13 @@ public class Method extends GirElement implements CallableType {
             if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
                 methodName = Conversions.replaceJavaObjectMethodNames(methodName);
             }
-            writer.write(" ");
-            writer.write(methodName);
+            writer.write(" " + methodName + "(");
 
             // Parameters
             if (getParameters() != null) {
-                writer.write("(");
                 getParameters().generateJavaParameters(writer, false);
-                writer.write(")");
-            } else {
-                writer.write("()");
             }
+            writer.write(")");
 
             // Exceptions
             if (throws_ != null) {
@@ -108,35 +108,38 @@ public class Method extends GirElement implements CallableType {
         return writer.toString();
     }
 
-    protected String getMethodSpecification() throws IOException {
+    public String getMethodSpecification() {
         SourceWriter writer = new SourceWriter(new StringWriter());
-        
-        // Method name
-        String methodName = Conversions.toLowerCaseJavaName(name);
-        if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
-            methodName = Conversions.replaceJavaObjectMethodNames(methodName);
-        }
-        writer.write(methodName);
 
-        // Parameters
-        if (getParameters() != null) {
-            writer.write("(");
-            getParameters().generateJavaParameterTypes(writer, false, false);
+        try {
+            // Method name
+            String methodName = Conversions.toLowerCaseJavaName(name);
+            if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
+                methodName = Conversions.replaceJavaObjectMethodNames(methodName);
+            }
+            writer.write(methodName + "(");
+
+            // Parameters
+            if (getParameters() != null) {
+                getParameters().generateJavaParameterTypes(writer, false, false);
+            }
             writer.write(")");
-        } else {
-            writer.write("()");
+
+            // Exceptions
+            if (throws_ != null) {
+                writer.write(" throws GErrorException");
+            }
+        } catch (IOException ignored) {
+            // StringWriter will never throw IOException
         }
 
-        // Exceptions
-        if (throws_ != null) {
-            writer.write(" throws GErrorException");
-        }
-        
         return writer.toString();
     }
 
     public void generate(SourceWriter writer) throws IOException {
-        if (skip) return;
+        if (skip) {
+            return;
+        }
 
         writer.write("\n");
         
@@ -166,7 +169,7 @@ public class Method extends GirElement implements CallableType {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -177,7 +180,7 @@ public class Method extends GirElement implements CallableType {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _arena.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
@@ -198,17 +201,13 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Invoke to the method handle
-        writer.write("DowncallHandles." + cIdentifier + ".invokeExact");
+        writer.write("DowncallHandles." + cIdentifier + ".invokeExact(");
         
         // Marshall the parameters to the native types
         if (parameters != null) {
-            writer.write("(");
             parameters.marshalJavaToNative(writer, throws_);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
-        writer.write(";\n");
+        writer.write(");\n");
         
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();

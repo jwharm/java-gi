@@ -33,7 +33,7 @@ public class Field extends Variable {
             return;
         }
         // Don't generate a getter/setter for padding/reserved space
-        if ("padding".equals(name) || name.contains("reserved") || name.contains("Reserved")) {
+        if ("padding".equals(name) || name.toLowerCase().contains("reserved")) {
             return;
         }
 
@@ -72,13 +72,13 @@ public class Field extends Variable {
             } else if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
                 writer.write("    long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("    return ");
-                marshalNativeToJava(writer, "((MemoryAddress) handle()).addOffset(_offset)", false);
+                marshalNativeToJava(writer, "handle().asSlice(_offset)", false);
                 writer.write(";\n");
              
             // Read a pointer or primitive value from the struct
             } else {
                 String memoryType = getMemoryType();
-                if ("ARRAY".equals(memoryType)) memoryType = "MemoryAddress";
+                if ("ARRAY".equals(memoryType)) memoryType = "MemorySegment";
                 writer.write("    var _scope = getSegmentScope();\n");
                 writer.write("    var _result = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
@@ -103,13 +103,13 @@ public class Field extends Variable {
         if (isApi()) {
             writer.write("    throw Interop.apiError();\n");
         } else {
-            writer.write("    var _scope = getSegmentScope();\n");
+            writer.write("    var _arena = SegmentAllocator.nativeAllocator(getSegmentScope());\n");
             writer.write("    getMemoryLayout()\n");
             writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
             writer.write("        .set(allocatedMemorySegment, ");
             // Check for null values
             if (checkNull()) {
-                writer.write("(Addressable) (" + this.name + " == null ? MemoryAddress.NULL : ");
+                writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
             }
             marshalJavaToNative(writer, this.name, false, false);
             if (checkNull()) {
@@ -135,7 +135,6 @@ public class Field extends Variable {
                 writer.write("throw Interop.apiError();\n");                
             } else {
                 writer.write("this._" + this.name + "Method = method;\n");
-                writer.write("var _scope = getSegmentScope();\n");
 
                 // Generate function descriptor
                 writer.write("FunctionDescriptor _fdesc = ");
@@ -145,11 +144,11 @@ public class Field extends Variable {
                 // Generate method handle
                 String className = ((Record) parent).javaName;
                 writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
-                writer.write("MemoryAddress _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
+                writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
                 writer.write("getMemoryLayout()\n");
                 writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
                 writer.write("    .set(allocatedMemorySegment, ");
-                writer.write("(Addressable) (method == null ? MemoryAddress.NULL : _address));\n");
+                writer.write("(method == null ? MemorySegment.NULL : _address));\n");
             }
             
             writer.decreaseIndent();
@@ -174,7 +173,7 @@ public class Field extends Variable {
             // Pointers, strings and callbacks are memory addresses
             if (type.isPointer()
                     || "java.lang.String".equals(type.qualifiedJavaType)
-                    || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)
+                    || "java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
                 return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
             }
@@ -206,7 +205,7 @@ public class Field extends Variable {
                     || array.type.isPointer()
                     || array.type.isCallback()
                     || "java.lang.String".equals(array.type.qualifiedJavaType)
-                    || "java.lang.foreign.MemoryAddress".equals(array.type.qualifiedJavaType)) {
+                    || "java.lang.foreign.MemorySegment".equals(array.type.qualifiedJavaType)) {
                 
                 valueLayout = Conversions.getValueLayout(array.type);
                 
@@ -234,7 +233,7 @@ public class Field extends Variable {
     
     /**
      * Get the native type of this field. For example "int", "char".
-     * An array with fixed size is returned as "ARRAY", a pointer is returned as "MemoryAddress".
+     * An array with fixed size is returned as "ARRAY", a pointer is returned as "MemorySegment".
      * @return the native type of this field
      */
     public String getMemoryType() {
@@ -243,7 +242,7 @@ public class Field extends Variable {
         } else if (array != null && array.fixedSize != null) {
             return "ARRAY";
         } else {
-            return "MemoryAddress";
+            return "MemorySegment";
         }
     }
     
@@ -254,7 +253,7 @@ public class Field extends Variable {
      */
     public String getMemoryType(Type type) {
         if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum())) {
-            return "MemoryAddress";
+            return "MemorySegment";
         }
         if (type.isBoolean() || type.isBitfield() || type.isEnum()) {
             return "int";
@@ -265,7 +264,7 @@ public class Field extends Variable {
         if (type.isAliasForPrimitive()) {
             return type.girElementInstance.type.simpleJavaType;
         }
-        return "MemoryAddress";
+        return "MemorySegment";
     }
     
     /**
@@ -283,7 +282,7 @@ public class Field extends Variable {
             case "long" -> 64; // java long is 64-bits
             case "float" -> 32;
             case "double" -> 64;
-            case "MemoryAddress" -> 64; // 64-bits pointer
+            case "MemorySegment" -> 64; // 64-bits pointer
             case "ARRAY" -> Integer.parseInt(array.fixedSize) * getSize(getMemoryType(array.type));
             default -> 64;
         };

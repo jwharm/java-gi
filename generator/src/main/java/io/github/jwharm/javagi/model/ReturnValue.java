@@ -30,16 +30,14 @@ public class ReturnValue extends Parameter {
             String len = array.size(false);
             if (len != null) {
                 if (nullable) {
-                    switch (panamaReturnType) {
-                        case "MemoryAddress" -> writer.write("if (_result.equals(MemoryAddress.NULL)) return null;\n");
-                        case "MemorySegment" -> writer.write("if (_result.address().equals(MemoryAddress.NULL)) return null;\n");
-                        default -> System.err.println("Unexpected nullable return type: " + panamaReturnType);
-                    }
+                    writer.write("if (_result.equals(MemorySegment.NULL)) {\n");
+                    writer.write("    return null;\n");
+                    writer.write("}\n");
                 }
                 String valuelayout = Conversions.getValueLayoutPlain(array.type);
                 if (array.type.isPrimitive && (!array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write("return MemorySegment.ofAddress(_result.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + ");\n");
+                    writer.write("return MemorySegment.ofAddress(_result.get(ValueLayout.ADDRESS, 0).address(), " + len + " * " + valuelayout + ".byteSize(), _arena.scope()).toArray(" + valuelayout + ");\n");
                 } else {
                     // Array of proxy objects
                     writer.write(array.type.qualifiedJavaType + "[] _resultArray = new " + array.type.qualifiedJavaType + "[" + len + "];\n");

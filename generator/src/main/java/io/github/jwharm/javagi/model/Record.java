@@ -130,12 +130,11 @@ public class Record extends Class {
         
         // Accessor function for the segment scope, to enable co-allocation of other segments with the same lifetime
         writer.write("\n");
-        writer.write("private MemorySession getSegmentScope() {\n");
+        writer.write("private SegmentScope getSegmentScope() {\n");
         writer.write("    if (allocatedMemorySegment == null) {\n");
-        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(\n");
-        writer.write("                (MemoryAddress) handle(), getMemoryLayout().byteSize(), MemorySession.openImplicit());\n");
+        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
         writer.write("    }\n");
-        writer.write("    return allocatedMemorySegment.session();\n");
+        writer.write("    return allocatedMemorySegment.scope();\n");
         writer.write("}\n");
         
         // Allocator function
@@ -147,8 +146,8 @@ public class Record extends Class {
         writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
         writer.write(" */\n");
         writer.write("public static " + javaName + " allocate() {\n");
-        writer.write("    MemorySegment segment = MemorySession.openImplicit().allocate(getMemoryLayout());\n");
-        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment.address());\n");
+        writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
+        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
         writer.write("    newInstance.allocatedMemorySegment = segment;\n");
         writer.write("    return newInstance;\n");
         writer.write("}\n");

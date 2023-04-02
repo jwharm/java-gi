@@ -218,7 +218,7 @@ public class Parameter extends Variable {
             marshalJavaToNative(writer, name + ".get()", false, false);
             writer.write(";\n");
         } else if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
-            writer.write("MemorySegment _" + name + "Pointer = _scope.allocate(" + Conversions.getValueLayoutPlain(type) + ");\n");
+            writer.write("MemorySegment _" + name + "Pointer = _arena.allocate(" + Conversions.getValueLayoutPlain(type) + ");\n");
         }
 
         // Array length parameter: generate local variable that contains the length
@@ -283,13 +283,13 @@ public class Parameter extends Variable {
                     if (array.type.isPrimitive) {
                         writer.write("_" + name + "Pointer.toArray(" + valuelayout + "));\n");
                     } else {
-                        marshalNativeToJava(writer, "_" + name + "Pointer.address()", false);
+                        marshalNativeToJava(writer, "_" + name + "Pointer", false);
                         writer.write(");\n");
                     }
                 } else if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write("if (" + name + " != null) " + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(ValueLayout.ADDRESS, 0), " + len + " * " + valuelayout + ".byteSize(), _scope).toArray(" + valuelayout + "));\n");
+                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(ValueLayout.ADDRESS, 0).address(), " + len + " * " + valuelayout + ".byteSize(), _arena.scope()).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write("if (" + name + " != null) {\n");

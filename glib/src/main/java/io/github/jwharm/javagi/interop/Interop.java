@@ -493,15 +493,15 @@ public class Interop {
      * @param array The array of Proxy instances
      * @param layout The memory layout of the object type
      * @param zeroTerminated Whether to add an additional NUL to the array
-     * @param arena the arena for memory allocation
+     * @param allocator the allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, Arena arena) {
+    public static MemorySegment allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, SegmentAllocator allocator) {
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment memorySegment = arena.allocateArray(layout, length);
+        MemorySegment memorySegment = allocator.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
             if (array[i] != null) {
-                MemorySegment element = MemorySegment.ofAddress(array[i].handle().address(), layout.byteSize(), arena.scope());
+                MemorySegment element = MemorySegment.ofAddress(array[i].handle().address(), layout.byteSize(), memorySegment.scope());
                 memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
             } else {
                 memorySegment.asSlice(i * layout.byteSize(), layout.byteSize()).fill((byte) 0);

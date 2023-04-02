@@ -122,7 +122,7 @@ public class Variable extends GirElement {
         if (type.qualifiedJavaType.equals("java.lang.String"))
             return "PointerString";
 
-        if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
+        if (type.qualifiedJavaType.equals("java.lang.foreign.MemorySegment"))
             return "PointerAddress";
 
         return "PointerProxy<" + type.qualifiedJavaType + ">";
@@ -137,7 +137,7 @@ public class Variable extends GirElement {
             return marshalJavaToNative(type, identifier, upcall);
 
         if (array != null && array.array != null)
-            return "(Addressable) MemoryAddress.NULL /* unsupported */";
+            return "MemorySegment.NULL /* unsupported */";
 
         if (array != null && array.type != null)
             return (array.size(upcall) != null)
@@ -148,22 +148,22 @@ public class Variable extends GirElement {
         if (this instanceof Field f && f.callback != null)
             return identifier + ".toCallback()";
 
-        return "(Addressable) MemoryAddress.NULL /* unsupported */";
+        return "MemorySegment.NULL /* unsupported */";
     }
 
     protected String marshalJavaToNative(Type type, String identifier, boolean upcall) {
         // When ownership is transferred, we must not free the allocated memory -> use global scope
-        String scope = (this instanceof Parameter p && "full".equals(p.transferOwnership))
-                ? "MemorySession.global()" : "_scope";
+        String allocator = (this instanceof Parameter p && "full".equals(p.transferOwnership))
+                ? "SegmentAllocator.nativeAllocator(SegmentScope.global())" : "_arena";
 
         if (type.cType != null && type.cType.endsWith("**"))
             return marshalJavaPointerToNative(type, identifier, upcall);
 
         if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "Interop.allocateNativeString(" + identifier + ", " + scope + ").address()";
+            return "Interop.allocateNativeString(" + identifier + ", _arena)";
 
-        if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress"))
-            return "(Addressable) " + identifier;
+        if (type.qualifiedJavaType.equals("java.lang.foreign.MemorySegment"))
+            return identifier;
 
         if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum()))
             return identifier + ".handle()";
@@ -179,8 +179,8 @@ public class Variable extends GirElement {
 
     private String marshalJavaArrayToNative(Array array, String identifier) {
         // When ownership is transferred, we must not free the allocated memory -> use global scope
-        String scope = (this instanceof Parameter p && "full".equals(p.transferOwnership))
-                ? "MemorySession.global()" : "_scope";
+        String allocator = (this instanceof Parameter p && "full".equals(p.transferOwnership))
+                ? "SegmentAllocator.nativeAllocator(SegmentScope.global())" : "_arena";
 
         Type type = array.type;
 
@@ -194,18 +194,18 @@ public class Variable extends GirElement {
             return "Interop.allocateNativeArray("
                     + (type.isEnum() ? "Enumeration" : type.isBitfield() ? "Bitfield" : type.qualifiedJavaType) + ".get"
                     + (type.isAliasForPrimitive() ? Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) : "")
-                    + "Values(" + identifier + "), " + zeroTerminated + ", " + scope + ")";
+                    + "Values(" + identifier + "), " + zeroTerminated + ", " + allocator + ")";
 
         if (type.isRecord() && (!type.isPointer()))
             return "Interop.allocateNativeArray(" + identifier + ", " + type.qualifiedJavaType
-                    + ".getMemoryLayout(), " + zeroTerminated + ", " + scope + ")";
+                    + ".getMemoryLayout(), " + zeroTerminated + ", " + allocator + ")";
 
-        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", " + scope + ")";
+        return "Interop.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", " + allocator + ")";
     }
 
     private String marshalJavaPointerToNative(Type type, String identifier, boolean upcall) {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
-            return "Interop.allocateNativeString(" + identifier + ", _scope).address()";
+            return "Interop.allocateNativeString(" + identifier + ", _arena)";
 
         return identifier + ".handle()";
     }
@@ -268,7 +268,7 @@ public class Variable extends GirElement {
         if ("java.lang.String".equals(type.qualifiedJavaType))
             return "Interop.getStringArrayFrom(" + identifier + ", " + array.size(upcall) + ", " + free + ")";
 
-        if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType))
+        if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType))
             return "Interop.getAddressArrayFrom(" + identifier + ", " + array.size(upcall) + ", " + free + ")";
 
         if (type.isEnum())
@@ -284,7 +284,7 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive)
             return "Interop.get" + Conversions.primitiveClassName(array.type.simpleJavaType) + "ArrayFrom("
-                    + identifier + ", " + array.size(upcall) + ", _scope, " + free + ")";
+                    + identifier + ", " + array.size(upcall) + ", " + identifier + ".scope(), " + free + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
             return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
@@ -299,7 +299,7 @@ public class Variable extends GirElement {
         if ("java.lang.String".equals(type.qualifiedJavaType))
             return "new PointerString(" + identifier + ")";
 
-        if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType))
+        if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType))
             return "new PointerAddress(" + identifier + ")";
 
         if (type.isEnum())
@@ -349,7 +349,7 @@ public class Variable extends GirElement {
         if (type.qualifiedJavaType.equals("java.lang.String")) {
             return "org.gnome.glib.Type.G_TYPE_STRING";
         }
-        if (type.qualifiedJavaType.equals("java.lang.foreign.MemoryAddress")) {
+        if (type.qualifiedJavaType.equals("java.lang.foreign.MemorySegment")) {
             return "org.gnome.glib.Type.G_TYPE_POINTER";
         }
         if (type.qualifiedJavaType.equals("org.gnome.gobject.GObject")) {
@@ -409,7 +409,7 @@ public class Variable extends GirElement {
         };
         return gvalueIdentifier + "." + switch(setValue) {
             case "setEnum", "setFlags" -> setValue + "(" + payloadIdentifier + ".getValue())";
-            case "setBoxed" -> setValue + "((MemoryAddress) " + marshalJavaToNative(payloadIdentifier, false, false) + ")";
+            case "setBoxed" -> setValue + "(" + marshalJavaToNative(payloadIdentifier, false, false) + ")";
             case "setObject" -> setValue + "((org.gnome.gobject.GObject) " + payloadIdentifier + ")";
             default -> setValue + "(" + payloadIdentifier + ")";
         };

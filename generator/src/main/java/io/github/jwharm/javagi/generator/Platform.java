@@ -30,7 +30,7 @@ public enum Platform {
             case "gfloat" -> "float";
             case "none" -> "void";
             case "utf8", "filename" -> "java.lang.String";
-            case "gpointer", "gconstpointer" -> "java.lang.foreign.MemoryAddress";
+            case "gpointer", "gconstpointer" -> "java.lang.foreign.MemorySegment";
             case "gtype" -> qualified ? Conversions.toQualifiedJavaType("GLib.Type", ns) : Conversions.toSimpleJavaType("GLib.Type", ns);
             case "valist", "va_list" -> "VaList";
             case "long double" -> "double"; // unsupported data type

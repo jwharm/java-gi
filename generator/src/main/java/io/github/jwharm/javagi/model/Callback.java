@@ -24,7 +24,7 @@ public class Callback extends RegisteredType implements CallableType, Closure {
 
     @Override
     public String getInteropString(String paramName, boolean isPointer) {
-        return "(Addressable) " + paramName + ".toCallback()";
+        return paramName + ".toCallback()";
     }
 
     @Override

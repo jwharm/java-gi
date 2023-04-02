@@ -13,41 +13,45 @@ public class Constructor extends Method {
 
     public void generate(SourceWriter writer) throws IOException {
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
-
         writer.write("\n");
+
+        // Docs
         if (doc != null) {
             doc.generate(writer, false);
         }
-        
+
+        // @Deprecated
         if ("1".equals(deprecated)) {
             writer.write("@Deprecated\n");
         }
-        
+
+        // Name
         writer.write("public ");
         writer.write(((RegisteredType) parent).javaName);
+
+        // Parameters
+        writer.write("(");
         if (parameters != null) {
-            writer.write("(");
             parameters.generateJavaParameters(writer, false);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
+        writer.write(")");
+
+        // Throws
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
+
         writer.write(" {\n");
         writer.increaseIndent();
 
-        writer.write("super(" + privateMethodName);
+        // Call super(constructNew())
+        writer.write("super(" + privateMethodName + "(");
         if (parameters != null) {
-            writer.write("(");
             parameters.generateJavaParameterNames(writer);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
-        writer.write(");\n");
+        writer.write("));\n");
 
+        // Add instance to cache
         if (! isApi()) {
             writer.write("InstanceCache.put(handle(), this);\n");
         }
@@ -55,6 +59,7 @@ public class Constructor extends Method {
         writer.decreaseIndent();
         writer.write("}\n");
 
+        // Generate constructor helper
         generateConstructorHelper(writer, privateMethodName);
     }
 
@@ -70,23 +75,29 @@ public class Constructor extends Method {
         returnValue.type.girElementType = constructed.getClass().getSimpleName();
         returnValue.type.init(constructed.name);
 
-        writer.write("    \n");
+        writer.write("\n");
+
+        // Docs
         if (doc != null) {
             doc.generate(writer, false);
         }
-        
+
+        // @Deprecated
         if ("1".equals(deprecated)) {
             writer.write("@Deprecated\n");
         }
-        
+
+        // Name
         writer.write("public static " + constructed.javaName + " " + Conversions.toLowerCaseJavaName(name));
+
+        // Parameters
+        writer.write("(");
         if (parameters != null) {
-            writer.write("(");
             parameters.generateJavaParameters(writer, false);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
+        writer.write(")");
+
+        // Throws
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
@@ -100,21 +111,20 @@ public class Constructor extends Method {
 
         writer.increaseIndent();
 
-        writer.write("var _result = " + privateMethodName);
+        // Call native constructor function
+        writer.write("var _result = " + privateMethodName + "(");
         if (parameters != null) {
-            writer.write("(");
             parameters.generateJavaParameterNames(writer);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
-        writer.write(";\n");
+        writer.write(");\n");
 
+        // Return statement
         returnValue.generateReturnStatement(writer);
 
         writer.decreaseIndent();
         writer.write("}\n");
 
+        // Constructor helper
         generateConstructorHelper(writer, privateMethodName);
     }
 
@@ -129,16 +139,14 @@ public class Constructor extends Method {
         writer.write("/**\n");
         writer.write(" * Helper function for the (@code " + name + "} constructor\n");
         writer.write(" */\n");
-        writer.write("private static MemoryAddress " + methodName);
+        writer.write("private static MemorySegment " + methodName);
 
         // Parameters
+        writer.write("(");
         if (parameters != null) {
-            writer.write("(");
             parameters.generateJavaParameters(writer, false);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
+        writer.write(")");
 
         // Exceptions
         if (throws_ != null) {
@@ -157,7 +165,7 @@ public class Constructor extends Method {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -168,28 +176,24 @@ public class Constructor extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _arena.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Generate the return type
-        writer.write("MemoryAddress _result;\n");
+        writer.write("MemorySegment _result;\n");
         
         // The method call is wrapped in a try-catch block
         writer.write("try {\n");
         writer.increaseIndent();
 
-        // Invoke to the method handle
-        writer.write("_result = (MemoryAddress) DowncallHandles." + cIdentifier + ".invokeExact");
+        // Invoke the method handle
+        writer.write("_result = (MemorySegment) DowncallHandles." + cIdentifier + ".invokeExact(");
         
         // Marshall the parameters to the native types
         if (parameters != null) {
-            writer.write("(");
             parameters.marshalJavaToNative(writer, throws_);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
-        writer.write(";\n");
+        writer.write(");\n");
         
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
