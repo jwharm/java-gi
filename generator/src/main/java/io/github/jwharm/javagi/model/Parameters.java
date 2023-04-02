@@ -75,7 +75,7 @@ public class Parameters extends GirElement {
 
             // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
-                writer.write("(" + (p.varargs ? "varargs" : p.name) + " == null ? MemorySegment.NULL : ");
+                writer.write("(MemorySegment) (" + (p.varargs ? "varargs" : p.name) + " == null ? MemorySegment.NULL : ");
             }
 
             // this
