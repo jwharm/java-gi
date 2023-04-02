@@ -73,7 +73,8 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemorySegment _struct = handle().get(ValueLayout.ADDRESS, 0);\n");
+        writer.write("MemorySegment _instance = MemorySegment.ofAddress(handle().address(), ValueLayout.ADDRESS.byteSize(), handle().scope());\n");
+        writer.write("MemorySegment _struct = _instance.get(ValueLayout.ADDRESS.asUnbounded(), 0);\n");
         if (parent instanceof Interface) {
             writer.write("_struct = (MemorySegment) Interop.g_type_interface_peek.invokeExact(_struct, getType().getValue().longValue());\n");
         }
