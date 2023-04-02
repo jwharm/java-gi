@@ -225,7 +225,7 @@ public class Conversions {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
-            case "java.lang.foreign.MemorySegment" -> "MemorySegment";
+            case "java.lang.foreign.MemorySegment" -> "Address";
             case "java.lang.String" -> "String";
             default -> toCamelCase(primitive, true);
         };
