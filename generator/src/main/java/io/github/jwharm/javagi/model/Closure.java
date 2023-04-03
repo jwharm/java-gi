@@ -60,7 +60,7 @@ public interface Closure extends CallableType {
         writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
         writer.write(" * @return the memory address of the callback function\n");
         writer.write(" */\n");
-        writer.write("default MemoryAddress toCallback() {\n");
+        writer.write("default MemorySegment toCallback() {\n");
         
         // Don't allocate upcall stubs in common-api jar
         if (isApi()) {
@@ -82,7 +82,7 @@ public interface Closure extends CallableType {
         writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
 
         // Create and return upcall stub
-        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, MemorySession.global()).address();\n");
+        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -103,8 +103,6 @@ public interface Closure extends CallableType {
         String throws_ = getThrows();
 
         String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
-        if ("MemoryAddress".equals(returnType))
-            returnType = "Addressable";
 
         writer.write((methodToInvoke.equals("run") ? "@ApiStatus.Internal default " : "private ") + returnType + " ");
         writer.write(name);
@@ -114,7 +112,7 @@ public interface Closure extends CallableType {
         // Add it to the upcall function signature.
         boolean first = true;
         if (this instanceof Signal signal) {
-            writer.write("MemoryAddress source" + ((RegisteredType) signal.parent).javaName);
+            writer.write("MemorySegment source" + ((RegisteredType) signal.parent).javaName);
             first = false;
         }
 
@@ -128,7 +126,7 @@ public interface Closure extends CallableType {
         // Add a parameter to write the GError
         if (throws_ != null) {
             if (!first) writer.write(", ");
-            writer.write("MemoryAddress _gerrorPointer");
+            writer.write("MemorySegment _gerrorPointer");
         }
 
         writer.write(") {\n");
@@ -143,7 +141,7 @@ public interface Closure extends CallableType {
         // Is memory allocated?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -181,8 +179,8 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPostprocessing(writer);
         }
 
-        boolean isMemoryAddress = !isVoid && Conversions.toPanamaJavaType(returnValue.type).equals("MemoryAddress");
-        boolean isNullable = isMemoryAddress && (!returnValue.notnull);
+        boolean isMemorySegment = !isVoid && Conversions.toPanamaJavaType(returnValue.type).equals("MemorySegment");
+        boolean isNullable = isMemorySegment && (!returnValue.notnull);
 
         if (isNullable) {
             writer.write("if (_result != null) {\n");
@@ -197,15 +195,12 @@ public interface Closure extends CallableType {
         // Return statement
         if (!isVoid) {
             writer.write("return ");
-
-            if (isMemoryAddress) writer.write("(");
             returnValue.marshalJavaToNative(writer, "_result", false, false);
-            if (isMemoryAddress) writer.write(").address()");
             writer.write(";\n");
             if (isNullable) {
                 writer.decreaseIndent();
                 writer.write("} else {\n");
-                writer.write("    return MemoryAddress.NULL;\n");
+                writer.write("    return MemorySegment.NULL;\n");
                 writer.write("}\n");
             }
         }
@@ -230,7 +225,7 @@ public interface Closure extends CallableType {
                         && (! type.isPointer())) {
                     writer.write("return 0;\n");
                 } else {
-                    writer.write("return MemoryAddress.NULL;\n");
+                    writer.write("return MemorySegment.NULL;\n");
                 }
             }
             if (methodToInvoke.endsWith("invoke")) {

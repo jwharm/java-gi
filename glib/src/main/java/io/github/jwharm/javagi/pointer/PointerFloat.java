@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.pointer;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 /**
@@ -21,7 +21,7 @@ public class PointerFloat extends Pointer<Float> {
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerFloat(MemoryAddress address) {
+    public PointerFloat(MemorySegment address) {
         super(address);
     }
 
@@ -31,7 +31,7 @@ public class PointerFloat extends Pointer<Float> {
      */
     public PointerFloat(float initialValue) {
         this();
-        address.set(ValueLayout.JAVA_FLOAT, 0, initialValue);
+        segment.set(ValueLayout.JAVA_FLOAT, 0, initialValue);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PointerFloat extends Pointer<Float> {
      * @param value the new value that is pointed to
      */
     public void set(Float value) {
-        address.set(ValueLayout.JAVA_FLOAT, 0, value);
+        segment.set(ValueLayout.JAVA_FLOAT, 0, value);
     }
 
     /**
@@ -57,6 +57,6 @@ public class PointerFloat extends Pointer<Float> {
      * @return the value stored at the given index
      */
     public Float get(int index) {
-        return address.getAtIndex(ValueLayout.JAVA_FLOAT, index);
+        return segment.getAtIndex(ValueLayout.JAVA_FLOAT, index);
     }
 }

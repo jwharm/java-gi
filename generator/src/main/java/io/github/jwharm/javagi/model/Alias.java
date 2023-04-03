@@ -23,7 +23,7 @@ public class Alias extends ValueWrapper {
     public TargetType getTargetType() {
         if (type.isPrimitive
                 || "java.lang.String".equals(type.qualifiedJavaType)
-                || "java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)) {
+                || "java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)) {
             return TargetType.VALUE;
         } else if (type.girElementInstance instanceof Callback) {
             return TargetType.CALLBACK;
@@ -72,7 +72,7 @@ public class Alias extends ValueWrapper {
                 String genericType = Conversions.primitiveClassName(type.qualifiedJavaType);
                 if ("utf8".equals(type.name)) {
                     genericType = "java.lang.String";
-                } else if ("java.lang.foreign.MemoryAddress".equals(type.qualifiedJavaType)) {
+                } else if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)) {
                     genericType = type.qualifiedJavaType;
                 }
                 writer.write("public class " + javaName + " extends io.github.jwharm.javagi.base.Alias<" + genericType + "> {\n");
@@ -97,7 +97,7 @@ public class Alias extends ValueWrapper {
         String layout = Conversions.getValueLayoutPlain(type);
         writer.write("\n");
         writer.write("@ApiStatus.Internal\n");
-        writer.write("public static " + javaName + "[] fromNativeArray(MemoryAddress address, long length, boolean free) {\n");
+        writer.write("public static " + javaName + "[] fromNativeArray(MemorySegment address, long length, boolean free) {\n");
         
         if (isApi()) {
             writer.write("    throw Interop.apiError();\n");

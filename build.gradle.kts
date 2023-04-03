@@ -20,10 +20,6 @@ tasks.register("javadoc") {
     dependsOn(gradle.includedBuild("generator").task(":javadoc"))
 }
 
-tasks.register("example") {
-    dependsOn(project(":example").tasks["run"])
-}
-
 val downloadGir by tasks.registering(Download::class) {
     src("https://github.com/gircore/gir-files/archive/refs/heads/main.zip")
     dest(buildDir.resolve("gir.zip"))

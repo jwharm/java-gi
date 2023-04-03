@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi.base;
 
 import java.io.Serial;
-import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
@@ -72,8 +71,8 @@ public class GErrorException extends Exception {
      * @return true when an error was set on this pointer
      */
     public static boolean isErrorSet(MemorySegment gerrorPtr) {
-        MemoryAddress gerror = gerrorPtr.get(ValueLayout.ADDRESS, 0);
-        return (! gerror.equals(MemoryAddress.NULL));
+        MemorySegment gerror = gerrorPtr.get(ValueLayout.ADDRESS, 0);
+        return (! gerror.equals(MemorySegment.NULL));
     }
 
     /**

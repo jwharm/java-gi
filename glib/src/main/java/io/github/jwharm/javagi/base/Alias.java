@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.base;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 
 /**
  * Base class for type aliases of primitive values.
@@ -54,13 +54,13 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of MemoryAddress Aliases into an array
-     * of primitive MemoryAddress values
+     * Convenience function to turn an array of MemorySegment Aliases into an array
+     * of primitive MemorySegment values
      * @param array the array of Alias objects
-     * @return an array of MemoryAddress values
+     * @return an array of MemorySegment values
      */
-    public static MemoryAddress[] getAddressValues(Alias<MemoryAddress>[] array) {
-        MemoryAddress[] values = new MemoryAddress[array.length];
+    public static MemorySegment[] getAddressValues(Alias<MemorySegment>[] array) {
+        MemorySegment[] values = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
             values[i] = array[i].getValue();
         }

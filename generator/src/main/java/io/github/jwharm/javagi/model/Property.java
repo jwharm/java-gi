@@ -43,7 +43,7 @@ public class Property extends Variable {
         writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
         writer.write("_value.init(" + gTypeDeclaration + ");\n");
         if (array != null) {
-            writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
+            writer.write("SegmentAllocator _arena = SegmentAllocator.nativeAllocator(SegmentScope.auto());\n");
         }
         writer.write(getValueSetter("_value", gTypeDeclaration, name) + ";\n");
         writer.write("addBuilderProperty(\"" + propertyName + "\", _value);\n");

@@ -168,9 +168,9 @@ public class Conversions {
      */
     public static String toPanamaJavaType(Type t) {
         if (t == null) {
-            return "MemoryAddress";
+            return "MemorySegment";
         } else if (t.isPointer()) {
-            return "MemoryAddress";
+            return "MemorySegment";
         } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
             return "int";
         } else if (t.isPrimitive || "void".equals(t.simpleJavaType)) {
@@ -178,7 +178,7 @@ public class Conversions {
         } else if (t.isAliasForPrimitive()) {
             return t.girElementInstance.type.simpleJavaType;
         } else {
-            return "MemoryAddress";
+            return "MemorySegment";
         }
     }
 
@@ -225,7 +225,7 @@ public class Conversions {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
-            case "java.lang.foreign.MemoryAddress" -> "Address";
+            case "java.lang.foreign.MemorySegment" -> "Address";
             case "java.lang.String" -> "String";
             default -> toCamelCase(primitive, true);
         };

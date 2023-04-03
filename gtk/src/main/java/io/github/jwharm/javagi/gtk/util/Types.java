@@ -162,7 +162,7 @@ public class Types {
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = getGType(parentClass);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
-            Function<Addressable, T> constructor = getAddressConstructor(cls);
+            Function<MemorySegment, T> constructor = getAddressConstructor(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
@@ -208,7 +208,7 @@ public class Types {
             Consumer<TypeClass> classInit,
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
-            Function<Addressable, T> constructor,
+            Function<MemorySegment, T> constructor,
             TypeFlags flags
     ) {
         return io.github.jwharm.javagi.util.Types.register(

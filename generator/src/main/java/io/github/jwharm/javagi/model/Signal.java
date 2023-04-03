@@ -45,17 +45,20 @@ public class Signal extends Method implements Closure {
         if (isApi()) {
             writer.write("throw Interop.apiError();\n");
         } else {
-            writer.write("MemorySession _scope = MemorySession.openImplicit();\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+            writer.increaseIndent();
             writer.write("try {\n");
             writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
             writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
             if (detailed) {
                 writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
             }
-            writer.write(", _scope), (Addressable) handler.toCallback(), (Addressable) MemoryAddress.NULL, (Addressable) MemoryAddress.NULL, 0);\n");
+            writer.write(", _arena), handler.toCallback(), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
             writer.write("    return new Signal<>(handle(), _result);\n");
             writer.write("} catch (Throwable _err) {\n");
             writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+            writer.write("}\n");
+            writer.decreaseIndent();
             writer.write("}\n");
         }
         
@@ -83,7 +86,9 @@ public class Signal extends Method implements Closure {
             }
 
             if (parameters != null) {
-                if (detailed) writer.write(", ");
+                if (detailed) {
+                    writer.write(", ");
+                }
                 parameters.generateJavaParameters(writer, false);
             }
 
@@ -96,14 +101,14 @@ public class Signal extends Method implements Closure {
             }
 
             writer.increaseIndent();
-            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();
             if (parameters != null) {
                 parameters.generatePreprocessing(writer);
             }
             boolean hasReturn = returnValue.type != null && !"void".equals(returnValue.type.simpleJavaType);
             if (hasReturn) {
-                writer.write("MemorySegment _result = _scope.allocate(" + Conversions.getValueLayout(returnValue.type) + ");\n");
+                writer.write("MemorySegment _result = _arena.allocate(" + Conversions.getValueLayout(returnValue.type) + ");\n");
             }
             writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
             writer.write("        handle(),\n");
@@ -111,7 +116,7 @@ public class Signal extends Method implements Closure {
             if (detailed) {
                 writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
             }
-            writer.write(", _scope)");
+            writer.write(", _arena)");
             if (parameters != null || hasReturn) {
                 writer.increaseIndent();
                 writer.write(",\n");
@@ -125,7 +130,7 @@ public class Signal extends Method implements Closure {
                 }
                 if (hasReturn) {
                     writer.write(parameters == null ? "\n" : ",\n");
-                    writer.write("        _result.address()");
+                    writer.write("        _result");
                 }
                 writer.write("\n");
                 writer.write("    }\n");

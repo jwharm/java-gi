@@ -236,7 +236,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * Create a " + javaName + " proxy instance for the provided memory address.\n");
         writer.write(" * @param address the memory address of the native object\n");
         writer.write(" */\n");
-        writer.write("public " + javaName + "(Addressable address) {\n");
+        writer.write("public " + javaName + "(MemorySegment address) {\n");
         writer.write("    super(address);\n");
         writer.write("}\n");
     }
@@ -382,7 +382,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * Creates a new instance of " + javaName + " for the provided memory address.\n");
         writer.write(" * @param address the memory address of the instance\n");
         writer.write(" */\n");
-        writer.write("public " + javaName + "Impl(Addressable address) {\n");
+        writer.write("public " + javaName + "Impl(MemorySegment address) {\n");
         writer.write("    super(address);\n");
         writer.write("}\n");
 

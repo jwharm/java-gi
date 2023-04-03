@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.util;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
 import org.gnome.glib.GLib;
@@ -120,12 +120,12 @@ public class ValueUtil {
             } else if (type.equals(GObjects.gtypeGetType())) {
                 dest.setGtype((Type) src);
             } else if (type.equals(Type.G_TYPE_POINTER)) {
-                dest.setPointer((MemoryAddress) src);
+                dest.setPointer((MemorySegment) src);
             } else if (type.equals(Type.G_TYPE_PARAM)) {
                 dest.setParam((ParamSpec) src);
             } else {
                 // Boxed value
-                dest.setBoxed((MemoryAddress) src);
+                dest.setBoxed((MemorySegment) src);
             }
         } catch (Exception e) {
             GLib.log(

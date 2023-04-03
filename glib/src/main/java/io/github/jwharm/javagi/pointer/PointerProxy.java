@@ -14,13 +14,13 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class PointerProxy<T extends Proxy> extends Pointer<T> {
 
-    private final Function<Addressable, T> constructor;
+    private final Function<MemorySegment, T> constructor;
 
     /**
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerProxy(MemoryAddress address, Function<Addressable, T> constructor) {
+    public PointerProxy(MemorySegment address, Function<MemorySegment, T> constructor) {
         super(address);
         this.constructor = constructor;
     }
@@ -30,7 +30,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      * @param value the new value that is pointed to
      */
     public void set(T value) {
-        address.set(ValueLayout.ADDRESS, 0, value.handle());
+        segment.set(ValueLayout.ADDRESS, 0, value.handle());
     }
 
     /**
@@ -50,13 +50,13 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
      */
     public T get(int index) {
         // Get the memory address of the native object.
-        Addressable ref = address.getAtIndex(ValueLayout.ADDRESS, index);
+        MemorySegment ref = segment.getAtIndex(ValueLayout.ADDRESS, index);
         // Call the constructor of the proxy object and return the created instance.
         return makeInstance(ref);
     }
 
     /**
-     * Read an array of values from the pointer
+     * Read an array of flat struct values from the pointer
      * @param length length of the array
      * @param clazz type of the array elements
      * @return the array
@@ -64,14 +64,14 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     public T[] toArrayOfStructs(int length, Class<T> clazz, MemoryLayout layout) {
         // clazz is of type Class<T>, so the cast to T is safe
         @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
-        var segment = MemorySegment.ofAddress(address, length * layout.byteSize(), MemorySession.openImplicit());
+        var seg = MemorySegment.ofAddress(segment.address(), length * layout.byteSize(), SegmentScope.auto());
         // MemorySegment.elements() only works for >1 elements
         if (length == 1) {
-            array[0] = makeInstance(segment.address());
+            array[0] = makeInstance(seg);
         } else {
-            List<MemorySegment> elements = segment.elements(layout).toList();
+            List<MemorySegment> elements = seg.elements(layout).toList();
             for (int i = 0; i < length; i++) {
-                array[i] = makeInstance(elements.get(i).address());
+                array[i] = makeInstance(elements.get(i));
             }
         }
         return array;
@@ -79,7 +79,7 @@ public class PointerProxy<T extends Proxy> extends Pointer<T> {
     
     // Get the constructor and create a new instance.
     // The unchecked warning is suppressed because the constructors are explicitly registered for the correct type.
-    private T makeInstance(Addressable ref) {
+    private T makeInstance(MemorySegment ref) {
         return constructor.apply(ref);
     }
 }

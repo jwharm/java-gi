@@ -39,11 +39,12 @@ public class Enumeration extends ValueWrapper {
         for (Member m : memberList) {
             if (usable.contains(m)) {
                 writer.write("\n");
-                if (m.doc != null) m.doc.generate(writer, false);
+                if (m.doc != null) {
+                    m.doc.generate(writer, false);
+                }
                 writer.write(m.name.toUpperCase() + "(" + m.value + ")");
-                if (m == lastUsable) writer.write(";\n");
-                else writer.write(",\n");
-            } else if (!m.usable) {
+                writer.write(m == lastUsable ? ";\n" : ",\n");
+            } else if (! m.usable) {
                 writer.write("// Skipped " + m.name.toUpperCase() + "(" + m.value + ")\n");
             }
         }
@@ -58,7 +59,9 @@ public class Enumeration extends ValueWrapper {
                 if (u == null) System.out.println("Could not get corresponding enum member for " + m.name.toUpperCase());
                 else {
                     writer.write("\n");
-                    if (m.doc != null) m.doc.generate(writer, false);
+                    if (m.doc != null) {
+                        m.doc.generate(writer, false);
+                    }
                     writer.write("public static final " + javaName + " " + m.name.toUpperCase() + " = " + u.name.toUpperCase() + ";\n");
                 }
             }

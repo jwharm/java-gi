@@ -75,7 +75,7 @@ public class Parameters extends GirElement {
 
             // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
-                writer.write("(Addressable) (" + (p.varargs ? "varargs" : p.name) + " == null ? MemoryAddress.NULL : ");
+                writer.write("(MemorySegment) (" + (p.varargs ? "varargs" : p.name) + " == null ? MemorySegment.NULL : ");
             }
 
             // this
@@ -84,7 +84,7 @@ public class Parameters extends GirElement {
 
             // user_data
             } else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {
-                writer.write("(Addressable) MemoryAddress.NULL");
+                writer.write("MemorySegment.NULL");
 
             // Varargs
             } else if (p.varargs) {
@@ -92,7 +92,7 @@ public class Parameters extends GirElement {
 
             // Preprocessing statement
             } else if (p.isOutParameter() || (p.isAliasForPrimitive() && p.type.isPointer())) {
-                writer.write("(Addressable) _" + p.name + "Pointer.address()");
+                writer.write("_" + p.name + "Pointer");
 
             // Custom interop
             } else {
@@ -112,7 +112,7 @@ public class Parameters extends GirElement {
                 writer.write("\n");
                 writer.write("        ");
             }
-            writer.write("(Addressable) _gerror");
+            writer.write("_gerror");
         }
     }
 

@@ -5,7 +5,7 @@ import org.gnome.gobject.GObjects;
 
 import io.github.jwharm.javagi.interop.InstanceCache;
 
-import java.lang.foreign.Addressable;
+import java.lang.foreign.MemorySegment;
 
 /**
  * Represents a signal connection. With a {@code Signal} object, a signal connection
@@ -15,7 +15,7 @@ import java.lang.foreign.Addressable;
  */
 public class Signal<T> {
 
-    private final org.gnome.gobject.GObject instance;
+    private final GObject instance;
     private final int handlerId;
 
     /**
@@ -23,7 +23,7 @@ public class Signal<T> {
      * @param instance the native memory address of the GObject instance
      * @param handlerId the handler ID of the signal
      */
-    public Signal(Addressable instance, long handlerId) {
+    public Signal(MemorySegment instance, long handlerId) {
         this.instance = (GObject) InstanceCache.getForType(instance, GObject::new);
         this.handlerId = (int) handlerId;
     }

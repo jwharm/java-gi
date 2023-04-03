@@ -2,10 +2,8 @@ package io.github.jwharm.javagi.pointer;
 
 import io.github.jwharm.javagi.interop.Interop;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.*;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
-import java.lang.foreign.ValueLayout;
 
 /**
  * This class implements a pointer to a String in native memory.
@@ -34,7 +32,7 @@ public class PointerString extends Pointer<String> {
      * Create a pointer to an existing memory address.
      * @param address the memory address
      */
-    public PointerString(MemoryAddress address) {
+    public PointerString(MemorySegment address) {
         super(address);
     }
 
@@ -48,17 +46,17 @@ public class PointerString extends Pointer<String> {
      * @param value the new string that is pointed to
      */
     public void set(String value) {
-        this.allocatedString = (MemorySegment) Interop.allocateNativeString(value, MemorySession.global());
-        address.set(ValueLayout.ADDRESS, 0, this.allocatedString);
+        this.allocatedString = Interop.allocateNativeString(value, SegmentAllocator.nativeAllocator(SegmentScope.global()));
+        segment.set(ValueLayout.ADDRESS, 0, this.allocatedString);
     }
 
     /**
      * Allocate a native string and set the pointer to its address.
      * @param value the new string that is pointed to
-     * @param scope the memory allocator for the native string
+     * @param allocator the memory allocator for the native string
      */
-    public void set(String value, MemorySession scope) {
-        address.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value, scope));
+    public void set(String value, SegmentAllocator allocator) {
+        segment.set(ValueLayout.ADDRESS, 0, Interop.allocateNativeString(value, allocator));
     }
 
     /**
@@ -76,7 +74,7 @@ public class PointerString extends Pointer<String> {
      * @return the value stored at the given index
      */
     public String get(int index) {
-        return address.get(
+        return segment.get(
                 ValueLayout.ADDRESS,
                 ValueLayout.ADDRESS.byteSize() * index
         ).getUtf8String(0);

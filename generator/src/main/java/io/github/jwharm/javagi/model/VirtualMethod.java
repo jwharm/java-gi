@@ -40,7 +40,7 @@ public class VirtualMethod extends Method {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (MemorySession _scope = MemorySession.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();
         }
 
@@ -51,7 +51,7 @@ public class VirtualMethod extends Method {
 
         // Allocate GError pointer
         if (throws_ != null) {
-            writer.write("MemorySegment _gerror = _scope.allocate(ValueLayout.ADDRESS);\n");
+            writer.write("MemorySegment _gerror = _arena.allocate(ValueLayout.ADDRESS);\n");
         }
         
         // Variable declaration for return value
@@ -73,12 +73,14 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemoryAddress _struct = ((MemoryAddress) handle()).get(ValueLayout.ADDRESS, 0);\n");
+        writer.write("MemorySegment _struct = MemorySegment.ofAddress(handle().address(), ValueLayout.ADDRESS.byteSize(), handle().scope());\n");
+        writer.write("_struct = _struct.get(ValueLayout.ADDRESS.asUnbounded(), 0);\n");
+        String memoryLayoutStr = classStruct.javaName + ".getMemoryLayout()";
         if (parent instanceof Interface) {
-            writer.write("_struct = (MemoryAddress) Interop.g_type_interface_peek.invokeExact((Addressable) _struct, getType().getValue().longValue());\n");
+            writer.write("_struct = (MemorySegment) Interop.g_type_interface_peek.invokeExact(_struct, getType().getValue().longValue());\n");
+            writer.write("_struct = MemorySegment.ofAddress(_struct.address(), " + memoryLayoutStr + ".byteSize(), _struct.scope());\n");
         }
-        writer.write("long _offset = " + classStruct.javaName);
-        writer.write(".getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"");
+        writer.write("long _offset = " + memoryLayoutStr + ".byteOffset(MemoryLayout.PathElement.groupElement(\"");
         writer.write(name);
         writer.write("\"));\n");
         
@@ -86,7 +88,7 @@ public class VirtualMethod extends Method {
         generateFunctionDescriptor(writer);
         writer.write(";\n");
 
-        writer.write("MemoryAddress _func = _struct.get(ValueLayout.ADDRESS, _offset);\n");
+        writer.write("MemorySegment _func = _struct.get(ValueLayout.ADDRESS, _offset);\n");
         
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
@@ -96,17 +98,13 @@ public class VirtualMethod extends Method {
         }
 
         // Invoke to the method handle
-        writer.write("Interop.downcallHandle(_func, _fdesc).invokeExact");
+        writer.write("Interop.downcallHandle(_func, _fdesc).invokeExact(");
         
         // Marshall the parameters to the native types
         if (parameters != null) {
-            writer.write("(");
             parameters.marshalJavaToNative(writer, throws_);
-            writer.write(")");
-        } else {
-            writer.write("()");
         }
-        writer.write(";\n");
+        writer.write(");\n");
         
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();

@@ -9,7 +9,7 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 import org.gnome.gtk.*;
 
-import java.lang.foreign.Addressable;
+import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
 /**
@@ -36,7 +36,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
      * Memory address constructor for instantiating a Java proxy object
      * @param address the memory address of the native object
      */
-    public BuilderJavaScope(Addressable address) {
+    public BuilderJavaScope(MemorySegment address) {
         super(address);
     }
 
