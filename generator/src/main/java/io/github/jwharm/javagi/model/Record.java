@@ -128,13 +128,13 @@ public class Record extends Class {
         writer.write("\n");
         writer.write("private MemorySegment allocatedMemorySegment;\n");
         
-        // Accessor function for the segment scope, to enable co-allocation of other segments with the same lifetime
+        // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
         writer.write("\n");
-        writer.write("private SegmentScope getSegmentScope() {\n");
+        writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
         writer.write("    if (allocatedMemorySegment == null) {\n");
         writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
         writer.write("    }\n");
-        writer.write("    return allocatedMemorySegment.scope();\n");
+        writer.write("    return allocatedMemorySegment;\n");
         writer.write("}\n");
         
         // Allocator function

@@ -79,10 +79,10 @@ public class Field extends Variable {
             } else {
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemorySegment";
-                writer.write("    var _scope = getSegmentScope();\n");
+                writer.write("    var _scope = getAllocatedMemorySegment().scope();\n");
                 writer.write("    var _result = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("        .get(allocatedMemorySegment);\n");
+                writer.write("        .get(getAllocatedMemorySegment());\n");
                 writer.write("    return ");
                 marshalNativeToJava(writer, "_result", false);
                 writer.write(";\n");
@@ -103,10 +103,10 @@ public class Field extends Variable {
         if (isApi()) {
             writer.write("    throw Interop.apiError();\n");
         } else {
-            writer.write("    var _arena = SegmentAllocator.nativeAllocator(getSegmentScope());\n");
+            writer.write("    var _arena = SegmentAllocator.nativeAllocator(getAllocatedMemorySegment().scope());\n");
             writer.write("    getMemoryLayout()\n");
             writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-            writer.write("        .set(allocatedMemorySegment, ");
+            writer.write("        .set(getAllocatedMemorySegment(), ");
             // Check for null values
             if (checkNull()) {
                 writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
@@ -147,7 +147,7 @@ public class Field extends Variable {
                 writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
                 writer.write("getMemoryLayout()\n");
                 writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("    .set(allocatedMemorySegment, ");
+                writer.write("    .set(getAllocatedMemorySegment(), ");
                 writer.write("(method == null ? MemorySegment.NULL : _address));\n");
             }
             
