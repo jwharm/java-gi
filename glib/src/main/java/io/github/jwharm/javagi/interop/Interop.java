@@ -561,7 +561,9 @@ public class Interop {
                 mtype = mtype.appendParameterTypes(carrier(layout, false));
             }
             mtype = mtype.appendParameterTypes(Object[].class);
-            if (mtype.returnType().equals(MemorySegment.class)) {
+            boolean needsAllocator = function.returnLayout().isPresent() &&
+                    function.returnLayout().get() instanceof GroupLayout;
+            if (needsAllocator) {
                 mtype = mtype.insertParameterTypes(0, SegmentAllocator.class);
             } else {
                 handle = MethodHandles.insertArguments(handle, 0, THROWING_ALLOCATOR);
@@ -614,7 +616,9 @@ public class Interop {
                     FunctionDescriptor.ofVoid(argLayouts) :
                     FunctionDescriptor.of(function.returnLayout().get(), argLayouts);
             MethodHandle mh = linker.downcallHandle(symbol, f);
-            if (mh.type().returnType() == MemorySegment.class) {
+            boolean needsAllocator = function.returnLayout().isPresent() &&
+                    function.returnLayout().get() instanceof GroupLayout;
+            if (needsAllocator) {
                 mh = mh.bindTo(allocator);
             }
             // flatten argument list so that it can be passed to an asSpreader MH
