@@ -64,18 +64,6 @@ public abstract class RegisteredType extends GirElement {
         return false;
     }
 
-    public boolean hasFreeFunc() {
-        for (Method method : methodList) {
-            if ("free".equals(method.name)
-                    && method.parameters.parameterList.size() == 1
-                    && method.parameters.parameterList.get(0) instanceof InstanceParameter
-                    && (method.returnValue.type == null || method.returnValue.type.isVoid())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public abstract void generate(SourceWriter writer) throws IOException;
 
     protected void generatePackageDeclaration(SourceWriter writer) throws IOException {
@@ -237,8 +225,35 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @param address the memory address of the native object\n");
         writer.write(" */\n");
         writer.write("public " + javaName + "(MemorySegment address) {\n");
-        writer.write("    super(address);\n");
+        writer.increaseIndent();
+        writer.write("super(address);\n");
+        generateSetFreeFunc(writer, "this");
+        writer.decreaseIndent();
         writer.write("}\n");
+    }
+
+    public void generateSetFreeFunc(SourceWriter writer, String identifier) throws IOException {
+        if (! (this instanceof Record || this instanceof Union)) {
+            return;
+        }
+        if ("TypeInstance".equals(this.javaName) || "TypeClass".equals(this.javaName) || "TypeInterface".equals(this.javaName)) {
+            return;
+        }
+        if (isApi()) {
+            return;
+        }
+
+        // Look for instance methods named "free()" and "unref()"
+        for (Method method : methodList) {
+            if (("free".equals(method.name) || "unref".equals(method.name))
+                    && method.parameters.parameterList.size() == 1
+                    && method.parameters.parameterList.get(0) instanceof InstanceParameter
+                    && (method.returnValue.type == null || method.returnValue.type.isVoid())) {
+
+                String cIdentifier = Conversions.literal("java.lang.String", method.cIdentifier);
+                writer.write("MemoryCleaner.setFreeFunc(" + identifier + ".handle(), " + cIdentifier + ");\n");
+            }
+        }
     }
 
     protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {
