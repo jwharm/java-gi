@@ -161,7 +161,12 @@ public class InstanceCache {
             return null;
         }
 
-        return put(address, newInstance);
+        // Cache GTypeInstance, GTypeClass and GTypeInterface
+        if (newInstance instanceof TypeInstance || newInstance instanceof TypeClass || newInstance instanceof TypeInterface) {
+            return put(address, newInstance);
+        }
+
+        return newInstance;
     }
     
     /**
