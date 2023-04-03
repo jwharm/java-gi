@@ -15,6 +15,7 @@ import org.gnome.gobject.*;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class Types {
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot get GType for class %s: %s\n",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
+                    cls == null ? "null" : cls.getName(), e.toString());
             return null;
         }
     }
@@ -155,7 +156,7 @@ public class Types {
         } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find memory-address constructor definition for class %s: %s\n",
-                    cls.getName(), e.getMessage());
+                    cls.getName(), e.toString());
             return null;
         }
 
@@ -166,7 +167,7 @@ public class Types {
             } catch (Exception e) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Exception in constructor for class %s: %s\n",
-                        cls.getName(), e.getMessage());
+                        cls.getName(), e.toString());
                 return null;
             }
         };
@@ -182,7 +183,7 @@ public class Types {
                         method.invoke(inst);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception in %s instance init: %s\n", cls.getName(), e.getMessage());
+                                "Exception in %s instance init: %s\n", cls.getName(), e.toString());
                     }
                 };
             }
@@ -200,7 +201,7 @@ public class Types {
                         method.invoke(null, gclass);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception in %s class init: %s\n", cls.getName(), e.getMessage());
+                                "Exception in %s class init: %s\n", cls.getName(), e.toString());
                     }
                 };
             }
@@ -242,7 +243,7 @@ public class Types {
                     method.invoke(null, ifaceInstance);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Exception in %s interface init: %s\n", cls.getName(), e.getMessage());
+                            "Exception in %s interface init: %s\n", cls.getName(), e.toString());
                 }
             };
         }
@@ -288,10 +289,14 @@ public class Types {
                 try {
                     Method overrider = gclass.getClass().getMethod(name, Method.class);
                     overrider.invoke(gclass, method);
+                } catch (InvocationTargetException ite) {
+                    System.err.printf("Cannot override method %s in class %s: %s\n",
+                            method.getName(), cls.getName(), ite.getTargetException().toString());
+                    ite.printStackTrace();
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s in class %s: %s\n",
-                            method.getName(), cls.getName(), e.getMessage());
+                            method.getName(), cls.getName(), e.toString());
                 }
             }
         };
@@ -345,7 +350,7 @@ public class Types {
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s from interface %s in class %s: %s\n",
-                            method.getName(), iface.getName(), cls.getName(), e.getMessage());
+                            method.getName(), iface.getName(), cls.getName(), e.toString());
                 }
             }
         };
@@ -463,7 +468,7 @@ public class Types {
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s\n", cls.getName(), e.getMessage());
+                    "Cannot register type %s: %s\n", cls.getName(), e.toString());
             return null;
         }
     }
