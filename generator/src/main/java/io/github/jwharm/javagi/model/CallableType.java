@@ -42,7 +42,6 @@ public interface CallableType {
                 || (this instanceof Closure && rv.type != null && "java.lang.String".equals(rv.type.qualifiedJavaType));
     }
 
-
     default boolean generateFunctionDescriptor(SourceWriter writer) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
@@ -51,15 +50,24 @@ public interface CallableType {
         boolean first;
         boolean varargs = false;
         writer.write("FunctionDescriptor.");
+
+        // Return value
         if (isVoid) {
             writer.write("ofVoid(");
         } else {
             writer.write("of(");
             writer.write(Conversions.getValueLayout(returnValue.type));
+
+            // Unbounded valuelayout for Strings, otherwise we cannot read an utf8 string from the returned pointer
+            if (returnValue.type != null && "java.lang.String".equals(returnValue.type.qualifiedJavaType)) {
+                writer.write(".asUnbounded()");
+            }
+
             if (parameters != null || this instanceof Signal) {
                 writer.write(", ");
             }
         }
+
         // For signals, add the pointer to the source
         if (this instanceof Signal) {
             writer.write("ValueLayout.ADDRESS");
@@ -67,6 +75,8 @@ public interface CallableType {
                 writer.write(", ");
             }
         }
+
+        // Parameters
         if (parameters != null) {
             first = true;
             for (Parameter p : parameters.parameterList) {
@@ -79,9 +89,12 @@ public interface CallableType {
                 writer.write(Conversions.getValueLayout(p.type));
             }
         }
+
+        // **GError parameter
         if (getThrows() != null) {
             writer.write(", ValueLayout.ADDRESS");
         }
+
         writer.write(")");
         return varargs;
     }

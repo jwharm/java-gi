@@ -73,13 +73,14 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemorySegment _instance = MemorySegment.ofAddress(handle().address(), ValueLayout.ADDRESS.byteSize(), handle().scope());\n");
-        writer.write("MemorySegment _struct = _instance.get(ValueLayout.ADDRESS.asUnbounded(), 0);\n");
+        writer.write("MemorySegment _struct = MemorySegment.ofAddress(handle().address(), ValueLayout.ADDRESS.byteSize(), handle().scope());\n");
+        writer.write("_struct = _struct.get(ValueLayout.ADDRESS.asUnbounded(), 0);\n");
+        String memoryLayoutStr = classStruct.javaName + ".getMemoryLayout()";
         if (parent instanceof Interface) {
             writer.write("_struct = (MemorySegment) Interop.g_type_interface_peek.invokeExact(_struct, getType().getValue().longValue());\n");
+            writer.write("_struct = MemorySegment.ofAddress(_struct.address(), " + memoryLayoutStr + ".byteSize(), _struct.scope());\n");
         }
-        writer.write("long _offset = " + classStruct.javaName);
-        writer.write(".getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"");
+        writer.write("long _offset = " + memoryLayoutStr + ".byteOffset(MemoryLayout.PathElement.groupElement(\"");
         writer.write(name);
         writer.write("\"));\n");
         
