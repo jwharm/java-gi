@@ -88,9 +88,11 @@ public interface CallableType {
                 first = false;
                 writer.write(Conversions.getValueLayout(p.type));
 
-                // Unbounded valuelayout for String callback parameters,
-                // otherwise we cannot read the utf8 string that is passed to the callback
-                if (this instanceof Closure && p.type != null && "java.lang.String".equals(p.type.qualifiedJavaType)) {
+                // Unbounded valuelayout for String callback/out parameters,
+                // otherwise we cannot read the utf8 string to create a Java String
+                if ((this instanceof Closure || p.isOutParameter())
+                        && p.type != null
+                        && "java.lang.String".equals(p.type.qualifiedJavaType)) {
                     writer.write(".asUnbounded()");
                 }
             }
