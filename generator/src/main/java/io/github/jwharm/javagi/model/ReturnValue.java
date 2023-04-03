@@ -91,8 +91,15 @@ public class ReturnValue extends Parameter {
             marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
             writer.write("if (_instance != null) {\n");
+            writer.increaseIndent();
+            writer.write("MemoryCleaner.takeOwnership(_instance.handle());\n");
 
-            writer.write("    _instance.takeOwnership();\n");
+            RegisteredType rt = type.girElementInstance;
+            if (rt != null) {
+                rt.generateSetFreeFunc(writer, "_instance");
+            }
+
+            writer.decreaseIndent();
             writer.write("}\n");
             writer.write("return _instance;\n");
 

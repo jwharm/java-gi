@@ -7,18 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.github.jwharm.javagi.base.FreeFunc;
-import io.github.jwharm.javagi.base.ProxyInstanceCleanable;
 import io.github.jwharm.javagi.util.Types;
-import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.ToggleNotify;
-import org.gnome.gobject.TypeClass;
+import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.Proxy;
-import org.gnome.gobject.TypeInstance;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -30,7 +24,12 @@ public class InstanceCache {
     public final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new HashMap<>();
 
     private static final Cleaner CLEANER = Cleaner.create();
-    
+
+    /**
+     * Internal helper function to retrieve a Proxy object from the Strong/WeakReferences caches.
+     * @param address get the Proxy object for this address from the cache
+     * @return the instance (if found), or null (if not found)
+     */
     private static Proxy get(MemorySegment address) {
         
         // Null check on the memory address
@@ -162,7 +161,12 @@ public class InstanceCache {
             return null;
         }
 
-        return put(address, newInstance);
+        // Cache GTypeInstance, GTypeClass and GTypeInterface
+        if (newInstance instanceof TypeInstance || newInstance instanceof TypeClass || newInstance instanceof TypeInterface) {
+            return put(address, newInstance);
+        }
+
+        return newInstance;
     }
     
     /**
@@ -204,11 +208,6 @@ public class InstanceCache {
 
             // Register a cleaner that will remove the toggle reference
             CLEANER.register(gobject, new ToggleRefFinalizer(address, notify));
-        }
-
-        // Setup a cleaner on structs/unions
-        if (newInstance instanceof ProxyInstanceCleanable struct && struct.getFinalizer() != null) {
-            CLEANER.register(newInstance, struct.getFinalizer());
         }
 
         // Return the new instance.

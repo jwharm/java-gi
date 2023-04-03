@@ -1,5 +1,7 @@
 package io.github.jwharm.javagi.base;
 
+import io.github.jwharm.javagi.interop.MemoryCleaner;
+
 import java.lang.foreign.MemorySegment;
 
 /**
@@ -15,6 +17,7 @@ public class ProxyInstance implements Proxy {
      */
     public ProxyInstance(MemorySegment address) {
         this.address = address;
+        MemoryCleaner.register(this);
     }
 
     /**

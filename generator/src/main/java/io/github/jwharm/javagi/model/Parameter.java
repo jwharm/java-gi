@@ -325,7 +325,7 @@ public class Parameter extends Variable {
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             String param = isInstanceParameter() ? "this" : name;
             if (checkNull()) writer.write("if (" + param + " != null) ");
-            writer.write(param + ".yieldOwnership();\n");
+            writer.write("MemoryCleaner.yieldOwnership(" + param + ".handle());\n");
         }
     }
 

@@ -16,16 +16,10 @@ public class Union extends RegisteredType {
         generateJavadoc(writer);
 
         writer.write("public class " + javaName);
-        if (generic)
+        if (generic) {
             writer.write("<T extends org.gnome.gobject.GObject>");
-        writer.write(" extends ProxyInstanceCleanable");
-
-        // Has free()
-        if (hasFreeFunc()) {
-            writer.write(" implements io.github.jwharm.javagi.base.FreeFunc");
         }
-
-        writer.write(" {\n");
+        writer.write(" extends ProxyInstance {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
         generateMemoryLayout(writer);
