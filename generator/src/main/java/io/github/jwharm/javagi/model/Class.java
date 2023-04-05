@@ -6,6 +6,7 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public class Class extends RegisteredType {
     
@@ -53,7 +54,7 @@ public class Class extends RegisteredType {
             writer.write("abstract ");
         }
 
-        // Final class classes
+        // Final classes
         if ("1".equals(final_)) {
             writer.write("final ");
         }
@@ -70,36 +71,15 @@ public class Class extends RegisteredType {
         writer.write(Objects.requireNonNullElse(parentClass, "org.gnome.gobject.TypeInstance"));
 
         // Interfaces
-        boolean first = true;
-        for (Implements impl : implementsList) {
-            if (first) {
-                writer.write(" implements " + impl.getQualifiedJavaName());
-                first = false;
-            } else {
-                writer.write(", " + impl.getQualifiedJavaName());
-            }
-        }
-
-        // AutoCloseable
+        StringJoiner interfaces = new StringJoiner(", ", " implements ", "").setEmptyValue("");
+        implementsList.forEach(impl -> interfaces.add(impl.getQualifiedJavaName()));
         if (autoCloseable) {
-            if (first) {
-                writer.write(" implements io.github.jwharm.javagi.util.AutoCloseable");
-                first = false;
-            } else {
-                writer.write(", io.github.jwharm.javagi.util.AutoCloseable");
-            }
+            interfaces.add("io.github.jwharm.javagi.util.AutoCloseable");
         }
-
-        // Floating
         if (isFloating()) {
-            if (first) {
-                writer.write(" implements io.github.jwharm.javagi.base.Floating");
-            } else {
-                writer.write(", io.github.jwharm.javagi.base.Floating");
-            }
+            interfaces.add("io.github.jwharm.javagi.base.Floating");
         }
-
-        writer.write(" {\n");
+        writer.write(interfaces + " {\n");
         writer.increaseIndent();
 
         generateMemoryAddressConstructor(writer);
