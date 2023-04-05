@@ -57,21 +57,14 @@ public class Parameters extends GirElement {
     }
 
     public void marshalJavaToNative(SourceWriter writer, String throws_) throws IOException {
-        int counter = 0;
-
-        boolean multipleParameters = parameterList.size() > 1;
+        boolean first = true;
 
         for (Parameter p : parameterList) {
-
-            if (counter++ > 0) {
-                writer.write(",");
-            }
-
-            // If there is more than one parameter, write each marshal call on its own line for readability
-            if (multipleParameters) {
-                writer.write("\n");
+            if (! first) {
+                writer.write(",\n");
                 writer.write("        ");
             }
+            first = false;
 
             // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
             if (p.checkNull()) {
@@ -107,33 +100,24 @@ public class Parameters extends GirElement {
 
         // GError
         if (throws_ != null) {
-            writer.write(",");
-            if (multipleParameters) {
-                writer.write("\n");
-                writer.write("        ");
-            }
-            writer.write("_gerror");
+            writer.write(",\n");
+            writer.write("        _gerror");
         }
     }
 
     public void marshalNativeToJava(SourceWriter writer) throws IOException {
         boolean first = true;
 
-        boolean multipleParameters = parameterList.size() > 1;
-
         for (Parameter p : parameterList) {
             if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
 
-            if (!first) writer.write(", ");
-            first = false;
-
-            // If there is more than one parameter, write each marshal call on its own line for readability
-            if (multipleParameters) {
-                writer.write("\n");
+            if (! first) {
+                writer.write(",\n");
                 writer.write("        ");
             }
+            first = false;
 
             if (p.type != null && p.type.isAliasForPrimitive() && p.type.isPointer()) {
                 writer.write("_" + p.name + "Alias");
