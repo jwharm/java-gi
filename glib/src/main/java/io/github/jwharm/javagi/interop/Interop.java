@@ -147,6 +147,39 @@ public class Interop {
     }
 
     /**
+     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeClass.
+     * @param address the memory address of the object instance
+     * @param classLayout the memory layout of the object's TypeClass
+     * @param name the name of the virtual method (as defined in the TypeClass)
+     * @return a function pointer to the requested virtual method
+     */
+    public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name) {
+        return MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
+                .get(ValueLayout.ADDRESS.asUnbounded(), 0)
+                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+    }
+
+    /**
+     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeInterface
+     * with the specified GType.
+     * @param address the memory address of the object instance
+     * @param classLayout the memory layout of the object's TypeClass
+     * @param name the name of the virtual method (as defined in the TypeInterface)
+     * @param ifaceType the GType of the interface that declares the virtual method
+     * @return a function pointer to the requested virtual method
+     */
+    public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType)
+            throws Throwable {
+        MemorySegment struct = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
+                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+
+        struct = (MemorySegment) g_type_interface_peek.invokeExact(struct, ifaceType.getValue().longValue());
+
+        return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
+                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+    }
+
+    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @param allocator the segment allocator to use
