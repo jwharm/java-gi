@@ -19,7 +19,7 @@ public class Type extends GirElement {
     public String simpleJavaType;
     /** This type is used on the Java side. Example: boolean, java.lang.String, org.gdk.gtk.Rectangle */
     public String qualifiedJavaType;
-    /** The name of the memory-address constructor. Example: Button.new, FileImpl.new */
+    /** The name of the memory-address constructor. Example: Button::new, FileImpl::new */
     public String constructorName;
 
     /** Used when this type refers to another namespace. Excluding the trailing dot. Example: org.gnome.gdk */
