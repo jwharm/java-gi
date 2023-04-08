@@ -3,10 +3,8 @@ package io.github.jwharm.javagi.util;
 import java.lang.foreign.*;
 import java.util.ArrayList;
 
-import io.github.jwharm.javagi.annotations.ClassInit;
+import io.github.jwharm.javagi.annotations.Property;
 import org.gnome.gio.ListModel;
-import org.gnome.glib.GLib;
-import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
@@ -19,9 +17,6 @@ import org.gnome.gobject.*;
 public class ListIndexModel extends GObject implements ListModel {
 
     private static final String LOG_DOMAIN = "java-gi";
-
-    private static final int PROP_ITEM_TYPE = 1;
-    private static final int PROP_N_ITEMS = 2;
 
     /**
      * Construct a ListIndexModel for the provided memory address.
@@ -44,31 +39,6 @@ public class ListIndexModel extends GObject implements ListModel {
             type = Types.register(ListIndexModel.class);
         }
         return type;
-    }
-
-    @ClassInit
-    public static void classInit(GObject.ObjectClass objectClass) {
-        // Install properties "item-type" and "n-items"
-        ParamSpec[] pspecs = new ParamSpec[3];
-        pspecs[PROP_ITEM_TYPE] = GObjects.paramSpecGtype("item-type", "", "", Type.G_TYPE_OBJECT,
-                ParamFlags.CONSTRUCT_ONLY.or(ParamFlags.READWRITE, ParamFlags.STATIC_NAME, ParamFlags.STATIC_BLURB, ParamFlags.STATIC_NICK));
-        pspecs[PROP_N_ITEMS] = GObjects.paramSpecUint("n-items", "", "", 0, GLib.MAXUINT32, 0,
-                ParamFlags.READABLE.or(ParamFlags.STATIC_NAME, ParamFlags.STATIC_BLURB, ParamFlags.STATIC_NICK));
-        objectClass.installProperties(pspecs);
-    }
-
-    @Override
-    public void getProperty(int propertyId, org.gnome.gobject.Value value, org.gnome.gobject.ParamSpec pspec) {
-        switch(propertyId) {
-            case PROP_ITEM_TYPE -> value.setGtype(ListIndex.getType());
-            case PROP_N_ITEMS -> value.setUint(getNItems());
-            default -> GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Invalid property id %d\n", propertyId);
-        }
-    }
-
-    @Override
-    public void setProperty(int propertyId, org.gnome.gobject.Value value, org.gnome.gobject.ParamSpec pspec) {
-        // Ignore
     }
 
     /**
@@ -97,6 +67,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Returns the gtype of {@link ListIndex}
      * @return always returns the value of {@link ListIndex#getType()}
      */
+    @Property(name = "item-type", type = ParamSpecGType.class, constructOnly = true)
     @Override
     public Type getItemType() {
         return ListIndex.getType();
@@ -106,6 +77,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Returns the size of the list model
      * @return the value of the size field
      */
+    @Property(name = "n-items", type = ParamSpecUInt.class, writable = false)
     @Override
     public int getNItems() {
         return items.size();
