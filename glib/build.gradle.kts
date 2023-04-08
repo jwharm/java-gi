@@ -1,5 +1,6 @@
 import ext.*
 import io.github.jwharm.javagi.generator.PatchSet.*
+import io.github.jwharm.javagi.model.*
 
 plugins {
     id("java-gi.library-conventions")
@@ -94,6 +95,21 @@ setupGenSources {
 
         // Make GWeakRef a generic class
         makeGeneric(repo, "WeakRef");
+
+        // Change GInitiallyUnownedClass struct to refer to GObjectClass. Both structs
+        // are identical, so this has no practical consequences, besides
+        // convincing the bindings generator that GObject.InitiallyUnownedClass
+        // is not a fundamental type class, but extends GObject.ObjectClass.
+        val iuc = repo.namespace.registeredTypeMap.get("InitiallyUnownedClass")
+        if (iuc != null) {
+            iuc.fieldList.clear()
+            val parent_class = Field(iuc, "parent_class", null, null);
+            parent_class.type = Type(parent_class, "GObject.ObjectClass", "GObjectClass")
+            parent_class.type.girElementType = "Record"
+            parent_class.type.girElementInstance = repo.namespace.registeredTypeMap.get("ObjectClass")
+            parent_class.type.init("GObject.ObjectClass")
+            iuc.fieldList.add(parent_class)
+        }
 
         // Add a static factory method for GObject
         inject(repo, "Object", """

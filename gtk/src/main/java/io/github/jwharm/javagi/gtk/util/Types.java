@@ -7,7 +7,6 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
-import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
 import org.gnome.gtk.Widget;
 
@@ -108,7 +107,7 @@ public class Types {
         return size + s;
     }
 
-    private static <T extends Widget> Consumer<TypeClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
+    private static <T extends Widget> Consumer<GObject.ObjectClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String ui = annotation.ui();
 
@@ -166,8 +165,8 @@ public class Types {
             TypeFlags flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
-            Consumer<TypeClass> classInit = getTemplateClassInit(cls, instanceLayout);
-            Consumer<TypeClass> userDefinedClassInit = getClassInit(cls);
+            Consumer<GObject.ObjectClass> classInit = getTemplateClassInit(cls, instanceLayout);
+            Consumer<GObject.ObjectClass> userDefinedClassInit = getClassInit(cls);
             if (userDefinedClassInit != null)
                 classInit = classInit.andThen(userDefinedClassInit);
 
@@ -205,7 +204,7 @@ public class Types {
             org.gnome.glib.Type parentType,
             String typeName,
             MemoryLayout classLayout,
-            Consumer<TypeClass> classInit,
+            Consumer<GObject.ObjectClass> classInit,
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
             Function<MemorySegment, T> constructor,

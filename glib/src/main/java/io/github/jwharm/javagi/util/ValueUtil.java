@@ -6,10 +6,8 @@ import java.lang.reflect.Method;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.ParamSpec;
-import org.gnome.gobject.Value;
+import org.gnome.glib.Variant;
+import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
@@ -25,8 +23,8 @@ public class ValueUtil {
      * Read the GType from the GValue, call the corresponding getter (using the methods defined 
      * in the {@link Value} proxy class), and return the result.
      * @param  src a GValue instance.
-     * @return a Java object (or boxed primitive value) that has been marshaled from the GValue, 
-     *         or {@code null} if {@code src} is null.
+     * @return     a Java object (or boxed primitive value) that has been marshaled from the
+     *             GValue, or {@code null} if {@code src} is null.
      */
     public static Object valueToObject(Value src) {
         if (src == null) {
@@ -70,13 +68,68 @@ public class ValueUtil {
             return src.getBoxed();
         }
     }
-    
+
+    /**
+     * Call the getter of the GValue that corresponds to the type of the GParamSpec, and return
+     * the result.
+     * @param src   a GValue instance.
+     * @param pspec the GParamSpec that specifies the type of the GValue. Should not be {@code null}
+     * @return      a Java object (or boxed primitive value) that has been marshaled from the GValue,
+     *              or {@code null} if {@code src} is null.
+     */
+    public static Object valueToObject(Value src, ParamSpec pspec) {
+        if (pspec instanceof ParamSpecBoolean) {
+            return src.getBoolean();
+        } else if (pspec instanceof ParamSpecBoxed) {
+            return src.getBoxed();
+        } else if (pspec instanceof ParamSpecChar) {
+            return src.getSchar();
+        } else if (pspec instanceof ParamSpecUChar) {
+            return src.getUchar();
+        } else if (pspec instanceof ParamSpecDouble) {
+            return src.getDouble();
+        } else if (pspec instanceof ParamSpecEnum) {
+            return src.getEnum();
+        } else if (pspec instanceof ParamSpecFlags) {
+            return src.getFlags();
+        } else if (pspec instanceof ParamSpecFloat) {
+            return src.getFloat();
+        } else if (pspec instanceof ParamSpecGType) {
+            return src.getGtype();
+        } else if (pspec instanceof ParamSpecInt) {
+            return src.getInt();
+        } else if (pspec instanceof ParamSpecUInt) {
+            return src.getUint();
+        } else if (pspec instanceof ParamSpecUnichar) {
+            return src.getUint();
+        } else if (pspec instanceof ParamSpecInt64) {
+            return src.getInt64();
+        } else if (pspec instanceof ParamSpecUInt64) {
+            return src.getUint64();
+        } else if (pspec instanceof ParamSpecLong) {
+            return src.getLong();
+        } else if (pspec instanceof ParamSpecULong) {
+            return src.getUlong();
+        } else if (pspec instanceof ParamSpecObject) {
+            return src.getObject();
+        } else if (pspec instanceof ParamSpecParam) {
+            return src.getParam();
+        } else if (pspec instanceof ParamSpecPointer) {
+            return src.getPointer();
+        } else if (pspec instanceof ParamSpecString) {
+            return src.getString();
+        } else if (pspec instanceof ParamSpecVariant) {
+            return src.getVariant();
+        }
+        return null;
+    }
+
     /**
      * Read the GType of the {@code dest} GValue and set the {@code src} object (or boxed primitive 
      * value) as its value using the corresponding setter in the {@link Value} proxy class.
      * @param src  the Java Object (or boxed primitive value) to put in the GValue. Should not be 
      *             {@code null}
-     * @param dest the GValue to write to. Should not be {@code null}.
+     * @param dest the GValue to write to. Should not be {@code null}
      */
     public static void objectToValue(Object src, Value dest) {
         if (src == null || dest == null) {
@@ -136,6 +189,60 @@ public class ValueUtil {
                     GObjects.typeName(type),
                     e.toString()
             );
+        }
+    }
+
+    /**
+     * Set the {@code src} object (or boxed primitive value) to the GValue using the setter that
+     * corresponds to the type of ParamSpec.
+     * @param src   the Java Object (or boxed primitive value) to put in the GValue. Should not be
+     *              {@code null}
+     * @param dest  the GValue to write to. Should not be {@code null}
+     * @param pspec the GParamSpec that specifies the type of the GValue. Should not be {@code null}
+     */
+    public static void objectToValue(Object src, Value dest, ParamSpec pspec) {
+        if (pspec instanceof ParamSpecBoolean) {
+            dest.setBoolean((Boolean) src);
+        } else if (pspec instanceof ParamSpecBoxed) {
+            dest.setBoxed((MemorySegment) src);
+        } else if (pspec instanceof ParamSpecChar) {
+            dest.setSchar((Byte) src);
+        } else if (pspec instanceof ParamSpecUChar) {
+            dest.setUchar((Byte) src);
+        } else if (pspec instanceof ParamSpecDouble) {
+            dest.setDouble((Double) src);
+        } else if (pspec instanceof ParamSpecEnum) {
+            dest.setEnum(((Enumeration) src).getValue());
+        } else if (pspec instanceof ParamSpecFlags) {
+            dest.setFlags(((Bitfield) src).getValue());
+        } else if (pspec instanceof ParamSpecFloat) {
+            dest.setFloat((Float) src);
+        } else if (pspec instanceof ParamSpecGType) {
+            dest.setGtype((Type) src);
+        } else if (pspec instanceof ParamSpecInt) {
+            dest.setInt((Integer) src);
+        } else if (pspec instanceof ParamSpecUInt) {
+            dest.setUint((Integer) src);
+        } else if (pspec instanceof ParamSpecUnichar) {
+            dest.setUint((Integer) src);
+        } else if (pspec instanceof ParamSpecInt64) {
+            dest.setLong((Long) src);
+        } else if (pspec instanceof ParamSpecUInt64) {
+            dest.setUint64((Long) src);
+        } else if (pspec instanceof ParamSpecLong) {
+            dest.setLong((Long) src);
+        } else if (pspec instanceof ParamSpecULong) {
+            dest.setLong((Long) src);
+        } else if (pspec instanceof ParamSpecObject) {
+            dest.setObject((GObject) src);
+        } else if (pspec instanceof ParamSpecParam) {
+            dest.setParam((ParamSpec) src);
+        } else if (pspec instanceof ParamSpecPointer) {
+            dest.setPointer((MemorySegment) src);
+        } else if (pspec instanceof ParamSpecString) {
+            dest.setString((String) src);
+        } else if (pspec instanceof ParamSpecVariant) {
+            dest.setVariant((Variant) src);
         }
     }
 }
