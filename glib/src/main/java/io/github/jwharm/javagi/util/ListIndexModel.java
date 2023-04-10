@@ -9,14 +9,11 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 /**
- * An implementation of the {@link ListModel} that returns the index of
- * a list item instead of an actual item. The index can be used with a
- * {@link java.util.List}, to work with Java objects in combination with
- * a {@link ListModel}.
+ * An implementation of the {@link ListModel} interface that returns the
+ * index of a list item instead of an actual item. The index can be used
+ * to retrieve Java objects from a regular {@link java.util.List}.
  */
 public class ListIndexModel extends GObject implements ListModel {
-
-    private static final String LOG_DOMAIN = "java-gi";
 
     /**
      * Construct a ListIndexModel for the provided memory address.
@@ -67,7 +64,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Returns the gtype of {@link ListIndex}
      * @return always returns the value of {@link ListIndex#getType()}
      */
-    @Property(name = "item-type", type = ParamSpecGType.class, constructOnly = true)
+    @Property(name="item-type", type=ParamSpecGType.class, constructOnly=true)
     @Override
     public Type getItemType() {
         return ListIndex.getType();
@@ -77,7 +74,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Returns the size of the list model
      * @return the value of the size field
      */
-    @Property(name = "n-items", type = ParamSpecUInt.class, writable = false)
+    @Property(name="n-items", type=ParamSpecUInt.class, writable=false)
     @Override
     public int getNItems() {
         return items.size();
@@ -102,22 +99,40 @@ public class ListIndexModel extends GObject implements ListModel {
         private static Type type;
         private int index;
 
+        /**
+         * Construct a new ListIndex Proxy instance
+         * @param address the memory address of the native object instance
+         */
         public ListIndex(MemorySegment address) {
             super(address);
         }
 
+        /**
+         * Get the gtype of the ListIndex class. The gtype will be
+         * registered on the first call to this method.
+         * @return the gtype of the ListIndex class
+         */
         public static Type getType() {
             if (type == null)
                 type = Types.register(ListIndex.class);
             return type;
         }
 
+        /**
+         * Construct a new ListIndex with the provided value
+         * @param value the value of the ListIndex instance
+         * @return a new ListIndex instance
+         */
         public static ListIndex newInstance(int value) {
             ListIndex instance = GObject.newInstance(getType());
             instance.index = value;
             return instance;
         }
 
+        /**
+         * Get the index of this ListIndex object
+         * @return the index of this ListIndex object
+         */
         public int getIndex() {
             return index;
         }
