@@ -1,6 +1,6 @@
-# java-gi
+# Java-GI
 
-**java-gi** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. Java-gi version 0.4 generates bindings for the following libraries:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 424 in JDK 19, JEP 434 in JDK 20, both in preview status) to directly access native resources from inside the JVM, and add wrapper classes based on GObject-Introspection to offer an elegant API. Java-gi version 0.4 generates bindings for the following libraries:
 
 | Library    | Version |
 |------------|---------|
@@ -9,28 +9,12 @@
 | LibAdwaita | 1.2     |
 | GStreamer  | 1.20    |
 
-Please note that java-gi is still under active development. Feedback is welcome.
+Please note that Java-GI is still under active development. The bindings cannot be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
 ## Quickstart
 
 - First, download and install [JDK 19](https://jdk.java.net/19/).
-- To create a Gtk application, add the `glib` and `gtk` modules to your `pom.xml`:
-
-```xml
-<dependency>
-  <groupId>io.github.jwharm.javagi</groupId>
-  <artifactId>glib</artifactId>
-  <version>1.2.10-0.4</version>
-</dependency>
-
-<dependency>
-  <groupId>io.github.jwharm.javagi</groupId>
-  <artifactId>gtk</artifactId>
-  <version>4.8.3-0.4</version>
-</dependency>
-```
-
-or download the jar files manually from the [packages section](https://github.com/jwharm?tab=packages&repo_name=java-gi).
+- To create a Gtk application, download the GLib and Gtk jars from the [packages section](https://github.com/jwharm?tab=packages&repo_name=java-gi). Make sure to download the versions that end with '-0.4', and not an older release or a snapshot build.
 
 - Add `requires org.gnome.gtk;` to your `module-info.java` file.
 - Write, compile and run your GTK application:
@@ -73,23 +57,24 @@ public class HelloWorld extends Application {
 - Because the Panama foreign function API is still in preview status, add the `--enable-preview` command-line parameter when compiling and running your application. To suppress warnings about native access, also add `--enable-native-access=org.gnome.glib,org.gnome.gtk`.
 - It is recommended to download the Javadoc documentation and sources to assist during the development of your GTK application. Both are available in the Packages section.
 
-## Generating java-gi bindings
+## Generating Java-GI bindings
 
 The instructions above link to pre-built bindings for the entire GTK4 library stack and LibAdwaita.
 
 If you want to generate bindings for other versions, platforms or libraries, follow these steps:
-- First, download and install [JDK 19](https://jdk.java.net/19/) and [Gradle](https://gradle.org/) version 7.6 or newer.
-- Install the GObject-introspection (gir) files of the library you want to generate bindings for. 
-  For example, in Fedora, to install the gir files for GTK4 and LibAdwaita, execute: `sudo dnf install gtk4-devel glib-devel libadwaita-devel gobject-introspection-devel`
-- Running `gradle build` is enough to generate and build gtk4 bindings.
+- Clone the Java-GI project, either the latest release 0.4 (based on OpenJDK 19) or the latest version from the main branch (unstable, and based on OpenJDK 20).
+- First, download and install [JDK 19](https://jdk.java.net/19/) or JDK 20.
+- Running `./gradlew build` is enough to generate and build GLib, Gtk, Adwaita and GStreamer bindings.
+
+The GIR files are downloaded from [gircore/gir-files](https://github.com/gircore/gir-files) repository by the Gradle build script, so you don't need to install any development packages.
 
 The resulting jar files are located in the `[module]/build/libs` folders.
 
-If you encounter errors about an unsupported class file version, make sure that Gradle is at least version 7.6.
+If you run Java-GI from the main branch, you might encounter errors about an unsupported class file version. Gradle does not support JDK 20 yet. It works for me, but YMMV.
 
 ## Features
 
-Some interesting features of the bindings that java-gi generates:
+Some interesting features of the bindings that Java-GI generates:
 
 ### Coverage
 
@@ -135,7 +120,7 @@ Enumeration types are represented as Java `enum` types.
 
 ### Named constructors
 
-Constructors in GTK are often overloaded, and the name contains valuable information for the user. Therefore, java-gi maps constructors named "new" to regular Java constructors, and generates static factory methods for all other constructors:
+Constructors in GTK are often overloaded, and the name contains valuable information for the user. Therefore, Java-GI maps constructors named "new" to regular Java constructors, and generates static factory methods for all other constructors:
 
 ```java
 // gtk_button_new
@@ -150,7 +135,7 @@ var button3 = Button.newFromIconName("document-open");
 
 ### Automatic memory management
 
-Memory management of `GObject`s is automatically taken care of. The java-gi bindings will call `g_object_unref` when an object is not used anymore. Floating references (`GInitiallyUnowned` for example) are automatically `ref_sink`ed after construction.
+Memory management of `GObject`s is automatically taken care of. The Java-GI bindings will call `g_object_unref` when an object is not used anymore. Floating references (`GInitiallyUnowned` for example) are automatically `ref_sink`ed after construction.
 
 Memory that is allocated when calling native functions (for string and array parameters) or when allocating a struct type, is released after use; either using `try-with-resources` statements or by a `Cleaner` during garbage collection.
 
@@ -209,6 +194,15 @@ public class MyObject extends GObject {
 
 Because `Types.register(Class<?> cls)` uses reflection to determine the name and properties of the new type, you must add `exports [package name] to org.gnome.glib;` to your `module-info.java` file.
 
+The next Java-GI release will also allow a `@Property` annotation, that you can use on getter/setter methods. Java-GI will automatically register GObject properties for these methods:
+
+```java
+@Property(name="n-items", type=ParamSpecInt.class, writable=false)
+public int getNItems() {
+    return items.size();
+}
+```
+
 ### Composite template classes
 
 A class with a `@GtkTemplate` annotation will be registered as a Gtk template class:
@@ -262,7 +256,7 @@ System.out.printf("Read %d bytes\n", contents.get().length);
 
 ### Arrays and pointers
 
-Arrays with a known length (specified as gobject-introspection annotations) are mapped to Java arrays. java-gi generates code to automatically copy native array contents from and to a Java array, marshaling the contents to the correct types along the way. A `null` terminator is added where applicable. You also don't need to specify the array length as a separate parameter (even though many C functions need this) because java-gi will insert it for you automatically.
+Arrays with a known length (specified as gobject-introspection annotations) are mapped to Java arrays. Java-GI generates code to automatically copy native array contents from and to a Java array, marshaling the contents to the correct types along the way. A `null` terminator is added where applicable. You also don't need to specify the array length as a separate parameter (even though many C functions need this) because Java-GI will insert it for you automatically.
 
 As an example:
 
@@ -280,7 +274,7 @@ class Application {
 
 The `String[]` argument is automatically marshaled to a `char**` array, and `argc` is omitted from the Java API. The allocated `char**` memory is immediately released afterwards.
 
-In some cases, the length of an array is impossible to determine from the GObject-Introspection attributes, or a raw pointer is expected/returned. java-gi marshals these values to a `Pointer` class (with typed subclasses) that can dereference the value of a pointer, or iterate through an unbounded sequence of memory locations. Needless to say that this is extremely unsafe.
+In some cases, the length of an array is impossible to determine from the GObject-Introspection attributes, or a raw pointer is expected/returned. Java-GI marshals these values to a `Pointer` class (with typed subclasses) that can dereference the value of a pointer, or iterate through an unbounded sequence of memory locations. Needless to say that this is extremely unsafe.
 
 ### Exceptions
 
@@ -345,13 +339,13 @@ A small number of types have been renamed in the Java API to avoid confusion:
 
 - [`GObject.Object`](https://docs.gtk.org/gobject/class.Object.html), [`GLib.String`](https://docs.gtk.org/glib/struct.String.html) and [`GLib.Error`](https://docs.gtk.org/glib/struct.Error.html) are named `GObject`, `GString` and `GError` (instead of `Object`, `String` and `Error`) to avoid confusion with `java.lang.Object`
 - As a result, the namespace-global functions and constants in the `GObject` namespace can be found in `org.gnome.gobject.GObjects` (notice the trailing 's').
-- [`Gtk.Builder`](https://docs.gtk.org/gtk4/class.Builder.html) is named `GtkBuilder` (instead of `Builder`) to avoid confusion with the `Builder` that java-gi generates for every class.
+- [`Gtk.Builder`](https://docs.gtk.org/gtk4/class.Builder.html) is named `GtkBuilder` (instead of `Builder`) to avoid confusion with the `Builder` that Java-GI generates for every class.
 
 ## Known issues
 
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 
 - Java does not support unsigned data types. Be extra careful when native code returns, for example, a `guint`.
-- There are still a number of memory leaks. Reference-counted classes are automatically cleaned by java-gi, but for other types, like when a function returns a `GString` and transfers ownership tot the user, you still need to manually call [`free`](https://docs.gtk.org/glib/method.String.free.html).
-- The code is not yet completely portable. Specifically: When generating memory layouts for structs, the generator assumes a 64-bit Linux platform with regards to the size of data types.
+- There are still a number of memory leaks.
+- Release 0.4 is not yet completely portable. Specifically: When generating memory layouts for structs, the generator assumes a 64-bit Linux platform with regards to the size of data types. This will be fixed in the next release.
 - Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). These aren't supported yet.
