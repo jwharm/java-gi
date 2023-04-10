@@ -8,6 +8,7 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 import org.gnome.gtk.*;
+import io.github.jwharm.javagi.gtk.types.Types;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;

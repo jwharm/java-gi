@@ -4,6 +4,7 @@ import java.lang.foreign.*;
 import java.util.ArrayList;
 
 import io.github.jwharm.javagi.annotations.Property;
+import io.github.jwharm.javagi.types.Types;
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;

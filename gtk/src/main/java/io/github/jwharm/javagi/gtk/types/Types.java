@@ -1,8 +1,9 @@
-package io.github.jwharm.javagi.gtk.util;
+package io.github.jwharm.javagi.gtk.types;
 
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
+import io.github.jwharm.javagi.gtk.util.BuilderJavaScope;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -16,8 +17,15 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.github.jwharm.javagi.util.Types.*;
+import static io.github.jwharm.javagi.types.Types.*;
 
+/**
+ * This class contains functionality to register a Java class 
+ * as a Gtk composite template class.
+ * <p>
+ * To register a Java class as a "regular" GObject class, see 
+ * {@link io.github.jwharm.javagi.types.Types#register(Class)}
+ */
 public class Types {
 
     private static final String LOG_DOMAIN = "java-gi";
@@ -107,6 +115,13 @@ public class Types {
         return size + s;
     }
 
+    /* Returns a lambda that will:
+     * - load the ui file, and set it as template,
+     * - override the dispose() method to dispose the template,
+     * - install a JavaBuilderScope for signal handling
+     * - bind @GtkChild-annotated fields to the template.
+     * The lambda will be run during class initialization.
+     */
     private static <T extends Widget> Consumer<GObject.ObjectClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String ui = annotation.ui();
@@ -135,6 +150,11 @@ public class Types {
         };
     }
 
+    /* Return a lambda that will:
+     * - call gtk_widget_init_template
+     * - for all @GtkChild-annotated fields, get the template child object, and assign it to the field.
+     * The lambda will be run during instance initialization.
+     */
     private static <T extends Widget> Consumer<T> getTemplateInstanceInit(Class<T> cls) {
         return (widget) -> {
             widget.initTemplate();
@@ -154,6 +174,15 @@ public class Types {
         };
     }
 
+    /**
+     * Register a class as a Gtk composite template class.
+     * <p>
+     * To register a Java class as a "regular" GObject class, see
+     * {@link io.github.jwharm.javagi.types.Types#register(Class)}
+     * @param cls a @GtkTemplate-annotated class
+     * @return the new GType that has been registered
+     * @param <T> the class must extend GtkWidget
+     */
     public static <T extends Widget> Type registerTemplate(Class<T> cls) {
         try {
             String typeName = getTemplateName(cls);
@@ -196,21 +225,44 @@ public class Types {
         }
     }
 
+    /**
+     * Convenience function that redirects to {@link io.github.jwharm.javagi.types.Types#register(Class)}
+     * @param cls the class to register as a new GType
+     * @return the new GType
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
+     */
     public static <T extends GObject> Type register(Class<T> cls) {
-        return io.github.jwharm.javagi.util.Types.register(cls);
+        return io.github.jwharm.javagi.types.Types.register(cls);
     }
 
-    public static <T extends GObject> Type register(
+    /**
+     * Convenience function that redirects to
+     * {@link io.github.jwharm.javagi.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, TypeFlags)}
+     * @param parentType Parent GType
+     * @param typeName name of the GType
+     * @param classLayout memory layout of the typeclass
+     * @param classInit static class initializer function
+     * @param instanceLayout memmory layout of the typeinstance
+     * @param instanceInit static instance initializer function
+     * @param constructor memory-address constructor
+     * @param flags type flags
+     * @return the new GType
+     * @param <T>  the instance initializer function must accept the
+     *             result of the memory address constructor
+     * @param <TC> the class initializer function must accept a
+     *            parameter that is a subclass of TypeClass
+     */
+    public static <T extends GObject, TC extends GObject.ObjectClass> Type register(
             org.gnome.glib.Type parentType,
             String typeName,
             MemoryLayout classLayout,
-            Consumer<GObject.ObjectClass> classInit,
+            Consumer<TC> classInit,
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
             Function<MemorySegment, T> constructor,
             TypeFlags flags
     ) {
-        return io.github.jwharm.javagi.util.Types.register(
+        return io.github.jwharm.javagi.types.Types.register(
                 parentType, typeName, classLayout, classInit, instanceLayout, instanceInit, constructor, flags);
     }
 }

@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.util;
+package io.github.jwharm.javagi.types;
 
 import io.github.jwharm.javagi.annotations.*;
 import io.github.jwharm.javagi.base.Proxy;
@@ -15,15 +15,28 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * The Types class contains static methods to register a Java class as a new GObject type.
+ */
 public class Types {
 
-    private static final String LOG_DOMAIN = "java-gi";
+    /**
+     * The domain to use for GLib error logging
+     */
+    static final String LOG_DOMAIN = "java-gi";
 
+    /**
+     * Convert the name of a class to the name for a new GType. When the
+     * {@link RegisteredType} annotation is present, and the name parameter of
+     * the annotation is not empty, it will be returned. Otherwise, the
+     * package and class name will be used as the new GType name (with all
+     * characters except a-z and A-Z converted to underscores).
+     * @param cls the class for which a GType name is returned
+     * @return the GType name
+     */
     public static String getName(Class<?> cls) {
         // Default type name: fully qualified Java class name
         String typeNameInput = cls.getName();
@@ -40,6 +53,16 @@ public class Types {
         return typeNameInput.replaceAll("[^a-zA-Z]", "_");
     }
 
+    /**
+     * Return the memory layout defined in the provided class, or if not found,
+     * a new {@code MemoryLayout.structLayout} with one field that points to the
+     * memory layout defined in the direct superclass.
+     * @param cls the class to provide a memory layout for
+     * @param typeName the name given tot the generated memory layout
+     * @return the declared memory layout, or if not found, a generated memory layout
+     * that copies the memory layout declared in the direct superclass.
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
+     */
     public static <T extends GObject> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
             // Get instance-memorylayout of this class
             MemoryLayout instanceLayout = getLayout(cls);
@@ -59,18 +82,24 @@ public class Types {
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_instance")
             ).withName(typeName);
-
     }
 
+    /**
+     * Return the inner TypeClass class, or the inner TypeClass from the superclass, or null if not found.
+     * @param cls the class that contains (or whose superclass contains) an inner TypeClass class
+     * @return the TypeClass class, or null if not found
+     * @param <T> the parameter must extend {@link org.gnome.gobject.GObject}
+     * @param <TC> the returned class extends {@link org.gnome.gobject.TypeClass}
+     */
     @SuppressWarnings("unchecked")
     public static <T extends GObject, TC extends GObject.ObjectClass> Class<TC> getTypeClass(Class<T> cls) {
         // Get the type-struct. This is an inner class that extends ObjectClass.
-        // If the type-struct is unavailable, get it from the parent class.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
                 return (Class<TC>) gclass;
             }
         }
+        // If the type-struct is unavailable, get it from the parent class.
         for (Class<?> gclass : cls.getSuperclass().getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
                 return (Class<TC>) gclass;
@@ -79,6 +108,12 @@ public class Types {
         return null;
     }
 
+    /**
+     * Return the inner TypeInterface class, or null if not found.
+     * @param iface the interface that contains an inner TypeInterface class
+     * @return the TypeInterface class, or null if not found
+     * @param <TI> the returned class extends {@link org.gnome.gobject.TypeInterface}
+     */
     @SuppressWarnings("unchecked")
     public static <TI extends TypeInterface> Class<TI> getTypeInterface(Class<?> iface) {
         // Get the type-struct. This is an inner class that extends TypeInterface.
@@ -92,6 +127,10 @@ public class Types {
 
     /**
      * Generate a MemoryLayout struct with one member: the memorylayout of the parent's TypeClass
+     * @param cls the class to get a memory layout for
+     * @param typeName the name of the new memory layout
+     * @return the requested memory layout
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
      */
     public static <T extends GObject> MemoryLayout getClassLayout(Class<T> cls, String typeName) {
         // Get the type-struct. This is an inner class that extends GObject.ObjectClass.
@@ -117,7 +156,45 @@ public class Types {
         ).withName(typeName + "Class");
     }
 
+    /**
+     * Return the {@link org.gnome.glib.Type} that is returned by a method with @GType
+     * annotation, or if that annotation is not found, by invoking
+     * {@code cls.getType()} if such method exists, or else, return null.
+     * @param cls the class for which to return the declared GType
+     * @return the declared GType
+     */
     public static Type getGType(Class<?> cls) {
+        // Find a method that is annotated with @GType and execute it
+        for (Method method : cls.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(GType.class)) {
+                // Check method signature
+                if ((method.getParameterTypes().length != 0)
+                        || (! method.getReturnType().equals(org.gnome.glib.Type.class))) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Method %s.%s does not have expected signature () -> org.gnome.glib.Type\n",
+                            cls.getName(), method.getName());
+                    return null;
+                }
+                // Invoke the @GType-annotated method and return the result
+                try {
+                    return (Type) method.invoke(null);
+                } catch (IllegalAccessException e) {
+                    // Method is not public
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "IllegalAccessException when calling %s.%s\n",
+                            cls.getName(), method.getName());
+                    return null;
+                } catch (InvocationTargetException e) {
+                    // Method throws an exception
+                    Throwable t = e.getTargetException();
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Exception when calling %s.%s: %s\n",
+                            cls.getName(), method.getName(), t.toString());
+                    return null;
+                }
+            }
+        }
+
         try {
             // invoke getType() on the class
             Method getTypeMethod = cls.getDeclaredMethod("getType");
@@ -126,15 +203,51 @@ public class Types {
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot get GType for class %s: %s\n",
-                    cls == null ? "null" : cls.getName(), e.toString());
+                    cls.getName(), e.toString());
             return null;
         }
     }
 
     /**
-     * Get the MemoryLayout that is returned by invoking {@code cls.getMemoryLayout()}
+     * Return the MemoryLayout that is returned by a method with @MemoryLayout annotation,
+     * or if that annotation is not found, by invoking {@code cls.getMemoryLayout()} if
+     * such method exists, or else, return null.
+     * @param cls the class for which to return the declared MemoryLayout
+     * @return the declared MemoryLayout
      */
     public static MemoryLayout getLayout(Class<?> cls) {
+        // Find a method that is annotated with @MemoryLayout and execute it
+        for (Method method : cls.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Layout.class)) {
+                // Check method signature
+                if ((method.getParameterTypes().length != 0)
+                        || (! method.getReturnType().equals(MemoryLayout.class))) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Method %s.%s does not have expected signature () -> MemoryLayout\n",
+                            cls.getName(), method.getName());
+                    return null;
+                }
+                // Invoke the @MemoryLayout-annotated method and return the result
+                try {
+                    return (MemoryLayout) method.invoke(null);
+                } catch (IllegalAccessException e) {
+                    // Method is not public
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "IllegalAccessException when calling %s.%s\n",
+                            cls.getName(), method.getName());
+                    return null;
+                } catch (InvocationTargetException e) {
+                    // Method throws an exception
+                    Throwable t = e.getTargetException();
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Exception when calling %s.%s: %s\n",
+                            cls.getName(), method.getName(), t.toString());
+                    return null;
+                }
+            }
+        }
+
+        // Find a method {@code public static MemoryLayout getMemoryLayout()} and execute it
         try {
             // invoke getMemoryLayout() on the class
             Method getLayoutMethod = cls.getDeclaredMethod("getMemoryLayout");
@@ -145,6 +258,13 @@ public class Types {
         }
     }
 
+    /**
+     * Return the memory address constructor for the provided class. This is a constructor
+     * for a new Proxy instance for a native memory address
+     * @param cls the class that declares a constructor with a single {@link MemorySegment} parameter
+     * @return the memory address constructor for this class, or null if not found
+     * @param <T> the class must implement the {@link Proxy} interface
+     */
     public static <T extends Proxy> Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
         Constructor<T> ctor;
         try {
@@ -170,6 +290,14 @@ public class Types {
         };
     }
 
+    /**
+     * Return a lambda that invokes the instance initializer, with is a method
+     * that is annotated with {@link InstanceInit} and takes a single parameter
+     * of type {@link GObject}.
+     * @param cls the class that declares the instance init method
+     * @return the instance initializer, or null if not found
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
+     */
     public static <T extends GObject> Consumer<T> getInstanceInit(Class<T> cls) {
         // Find instance initializer function
         for (Method method : cls.getDeclaredMethods()) {
@@ -188,6 +316,15 @@ public class Types {
         return null;
     }
 
+    /**
+     * Return a lambda that invokes the class initializer, with is a method
+     * that is annotated with {@link ClassInit} and takes a single parameter
+     * of type {@link GObject.ObjectClass}.
+     * @param cls the class that declares the class init method
+     * @return the class initializer, or null if not found
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
+     * @param <TC> the class initializer must accept a {@link GObject.ObjectClass} parameter
+     */
     public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> getClassInit(Class<T> cls) {
         // Find class initializer function
         for (Method method : cls.getDeclaredMethods()) {
@@ -206,6 +343,15 @@ public class Types {
         return null;
     }
 
+    /**
+     * Return a lambda that invokes the interface initializer, with is a method
+     * that is annotated with {@link InterfaceInit} and takes a single parameter
+     * of the type that is specified with {@code iface}.
+     * @param cls the class that declares the interface init method
+     * @return the interface initializer, or null if not found
+     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
+     * @param <TI> the iface parameter must extend {@link TypeInterface}
+     */
     public static <T extends GObject, TI extends TypeInterface> Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
         // Find all overridden methods
         Class<TI> typeStruct = getTypeInterface(iface);
@@ -247,112 +393,12 @@ public class Types {
         return null;
     }
 
-    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> overrideClassMethods(Class<T> cls) {
-        Class<?> typeStruct = getTypeClass(cls);
-        if (typeStruct == null) {
-            return null;
-        }
-        Class<?> parentClass = cls.getSuperclass();
-
-        // Find all overridden methods
-        List<Method> methods = new ArrayList<>();
-        for (Method method : cls.getDeclaredMethods()) {
-            try {
-                Method virtual = parentClass.getMethod(method.getName(), method.getParameterTypes());
-                if (! Proxy.class.isAssignableFrom(virtual.getDeclaringClass())) {
-                    continue;
-                }
-            } catch (NoSuchMethodException e) {
-                continue;
-            }
-            String name = method.getName();
-            name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
-            try {
-                typeStruct.getMethod(name, Method.class);
-            } catch (NoSuchMethodException e) {
-                continue;
-            }
-            methods.add(method);
-        }
-        if (methods.isEmpty()) {
-            return null;
-        }
-
-        // Register the overridden methods in the typeclass
-        return (gclass) -> {
-            for (Method method : methods) {
-                String name = method.getName();
-                name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
-                try {
-                    Method overrider = gclass.getClass().getMethod(name, Method.class);
-                    overrider.invoke(gclass, method);
-                } catch (InvocationTargetException ite) {
-                    System.err.printf("Cannot override method %s in class %s: %s\n",
-                            method.getName(), cls.getName(), ite.getTargetException().toString());
-                    ite.printStackTrace();
-                } catch (Exception e) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Cannot override method %s in class %s: %s\n",
-                            method.getName(), cls.getName(), e.toString());
-                }
-            }
-        };
-    }
-
-    public static <T extends GObject, TI extends TypeInterface> Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
-        // Find all overridden methods
-        Class<TI> typeStruct = getTypeInterface(iface);
-        if (typeStruct == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeInterface class for interface %s\n", iface);
-            return null;
-        }
-        var constructor = getAddressConstructor(typeStruct);
-        if (constructor == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find constructor in TypeInterface %s\n", typeStruct);
-            return null;
-        }
-
-        // Find all overridden methods
-        List<Method> methods = new ArrayList<>();
-        for (Method method : cls.getDeclaredMethods()) {
-            try {
-                iface.getMethod(method.getName(), method.getParameterTypes());
-            } catch (NoSuchMethodException e) {
-                continue;
-            }
-            String name = method.getName();
-            name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
-            try {
-                typeStruct.getMethod(name, Method.class);
-            } catch (NoSuchMethodException e) {
-                continue;
-            }
-            methods.add(method);
-        }
-        if (methods.isEmpty()) {
-            return null;
-        }
-
-        // Register the overridden methods in the typeinterface
-        return (giface) -> {
-            for (Method method : methods) {
-                String name = method.getName();
-                name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
-                try {
-                    TI ifaceInstance = constructor.apply(giface.handle()); // upcast to the actual type
-                    Method overrider = typeStruct.getMethod(name, Method.class);
-                    overrider.invoke(ifaceInstance, method);
-                } catch (Exception e) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Cannot override method %s from interface %s in class %s: %s\n",
-                            method.getName(), iface.getName(), cls.getName(), e.toString());
-                }
-            }
-        };
-    }
-
+    /**
+     * Construct a {@link TypeFlags} bitfield that specifies
+     * whether the provided class is abstract and/or final.
+     * @param cls the class for which to generate typeflags
+     * @return the generated typeflags
+     */
     public static TypeFlags getTypeFlags(Class<?> cls) {
         // Set type flags
         TypeFlags flags = TypeFlags.NONE;
@@ -363,172 +409,6 @@ public class Types {
             flags = flags.or(TypeFlags.FINAL);
         }
         return flags;
-    }
-
-    private static ParamFlags getFlags(Property property) {
-        ParamFlags flags = new ParamFlags(0);
-        if (property.readable()) flags = flags.or(ParamFlags.READABLE);
-        if (property.writable()) flags = flags.or(ParamFlags.WRITABLE);
-        if (property.construct()) flags = flags.or(ParamFlags.CONSTRUCT);
-        if (property.constructOnly()) flags = flags.or(ParamFlags.CONSTRUCT_ONLY);
-        if (property.explicitNotify()) flags = flags.or(ParamFlags.EXPLICIT_NOTIFY);
-        if (property.deprecated()) flags = flags.or(ParamFlags.DEPRECATED);
-        return flags;
-    }
-
-    private static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> installProperties(Class<T> cls) {
-        List<ParamSpec> propertySpecs = new ArrayList<>();
-        propertySpecs.add(null); // Index 0 is reserved
-
-        // Create an index of property names.
-        // The list is used to obtain a property id using `list.indexOf(property.name())`
-        List<String> propertyNames = new ArrayList<>();
-        propertyNames.add(null); // index 0 is reserved
-
-        for (Method method : cls.getDeclaredMethods()) {
-
-            // Look for methods with annotation @Property
-            Property p = method.getAnnotation(Property.class);
-            if (p == null) {
-                continue;
-            }
-
-            // Check if the type is set on this method. It can be set on either the getter or setter.
-            // If the type is not set, it defaults to ParamSpec.class
-            if (p.type().equals(ParamSpec.class)) {
-                continue;
-            }
-
-            ParamSpec ps;
-            if (p.type().equals(ParamSpecBoolean.class)) {
-                ps = GObjects.paramSpecBoolean(p.name(), p.name(), p.name(), false, getFlags(p));
-            } else if (p.type().equals(ParamSpecChar.class)) {
-                ps = GObjects.paramSpecChar(p.name(), p.name(), p.name(), Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecDouble.class)) {
-                ps = GObjects.paramSpecDouble(p.name(), p.name(), p.name(), Double.MIN_VALUE, Double.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecFloat.class)) {
-                ps = GObjects.paramSpecFloat(p.name(), p.name(), p.name(), Float.MIN_VALUE, Float.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecGType.class)) {
-                ps = GObjects.paramSpecGtype(p.name(), p.name(), p.name(), Type.G_TYPE_NONE, getFlags(p));
-            } else if (p.type().equals(ParamSpecInt.class)) {
-                ps = GObjects.paramSpecInt(p.name(), p.name(), p.name(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecInt64.class)) {
-                ps = GObjects.paramSpecInt64(p.name(), p.name(), p.name(), Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecLong.class)) {
-                ps = GObjects.paramSpecLong(p.name(), p.name(), p.name(), Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecPointer.class)) {
-                ps = GObjects.paramSpecPointer(p.name(), p.name(), p.name(), getFlags(p));
-            } else if (p.type().equals(ParamSpecString.class)) {
-                ps = GObjects.paramSpecString(p.name(), p.name(), p.name(), null, getFlags(p));
-            } else if (p.type().equals(ParamSpecUChar.class)) {
-                ps = GObjects.paramSpecUchar(p.name(), p.name(), p.name(), (byte) 0, Byte.MAX_VALUE, (byte) 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecUInt.class)) {
-                ps = GObjects.paramSpecUint(p.name(), p.name(), p.name(), 0, Integer.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecUInt64.class)) {
-                ps = GObjects.paramSpecUint64(p.name(), p.name(), p.name(), 0, Long.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecULong.class)) {
-                ps = GObjects.paramSpecUlong(p.name(), p.name(), p.name(), 0, Long.MAX_VALUE, 0, getFlags(p));
-            } else if (p.type().equals(ParamSpecUnichar.class)) {
-                ps = GObjects.paramSpecUnichar(p.name(), p.name(), p.name(), 0, getFlags(p));
-            } else {
-                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Unsupported ParamSpec %s in class %s:\n",
-                        p.type().getName(), cls.getName());
-                return null;
-            }
-            propertySpecs.add(ps);
-            propertyNames.add(p.name());
-        }
-
-        // No properties found?
-        if (propertySpecs.size() == 1) {
-            return null;
-        }
-
-        // Create arrays of getter and setter methods.
-        Method[] getters = new Method[propertySpecs.size()];
-        Method[] setters = new Method[propertySpecs.size()];
-
-        for (Method method : cls.getDeclaredMethods()) {
-            if (! method.isAnnotationPresent(Property.class)) {
-                continue;
-            }
-            Property property = method.getDeclaredAnnotation(Property.class);
-            int idx = propertyNames.indexOf(property.name());
-
-            // Returns void -> setter, else -> getter
-            if (method.getReturnType().equals(void.class)) {
-                setters[idx] = method;
-            } else {
-                getters[idx] = method;
-            }
-        }
-
-        // Create GParamSpec array. Index 0 is reserved.
-        final ParamSpec[] pspecs = new ParamSpec[propertySpecs.size()];
-        for (int i = 1; i < propertySpecs.size(); i++) {
-            pspecs[i] = propertySpecs.get(i);
-        }
-        // Return class initializer method that installs the properties.
-        return (gclass) -> {
-            gclass.overrideGetProperty((object, propertyId, value, pspec) -> {
-                if (propertyId < 1 || propertyId >= getters.length) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Invalid property id %d in %s.getProperty:\n",
-                            propertyId, cls.getName());
-                    return;
-                }
-                if (getters[propertyId] == null) {
-                    return;
-                }
-                Object output;
-                try {
-                    output = getters[propertyId].invoke(object);
-                } catch (InvocationTargetException e) {
-                    Throwable t = e.getTargetException();
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Exception %s thrown by %s.getProperty('%s'):\n",
-                            t.toString(), cls.getName(), propertyNames.get(propertyId));
-                    return;
-                } catch (IllegalAccessException e) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Exception %s in %s.getProperty('%s'):\n",
-                            e.toString(), cls.getName(), propertyNames.get(propertyId));
-                    return;
-                }
-                if (output != null) {
-                    ValueUtil.objectToValue(output, value, pspec);
-                }
-            });
-
-            gclass.overrideSetProperty((object, propertyId, value, pspec) -> {
-                if (propertyId < 1 || propertyId >= setters.length) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Invalid property id %d in %s.setProperty:\n",
-                            propertyId, cls.getName());
-                    return;
-                }
-                if (setters[propertyId] == null) {
-                    return;
-                }
-                Object input = ValueUtil.valueToObject(value, pspec);
-                if (input != null) {
-                    try {
-                        setters[propertyId].invoke(object, input);
-                    } catch (InvocationTargetException e) {
-                        Throwable t = e.getTargetException();
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception %s thrown by %s.setProperty('%s'):\n",
-                                t.toString(), cls.getName(), propertyNames.get(propertyId));
-                    } catch (IllegalAccessException e) {
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception %s in %s.setProperty('%s'):\n",
-                                e.toString(), cls.getName(), propertyNames.get(propertyId));
-                    }
-                }
-            });
-            gclass.installProperties(pspecs);
-        };
     }
 
     /**
@@ -561,8 +441,8 @@ public class Types {
             Type parentType = getGType(parentClass);
             String typeName = getName(cls);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
-            Consumer<TC> overridesInit = overrideClassMethods(cls);
-            Consumer<TC> propertiesInit = installProperties(cls);
+            Consumer<TC> overridesInit = Overrides.overrideClassMethods(cls);
+            Consumer<TC> propertiesInit = Properties.installProperties(cls);
             Consumer<TC> classInit = getClassInit(cls);
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Consumer<T> instanceInit = getInstanceInit(cls);
@@ -610,7 +490,7 @@ public class Types {
                     }
 
                     InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
-                    Consumer<TypeInterface> ifaceOverridesInit = overrideInterfaceMethods(cls, iface);
+                    Consumer<TypeInterface> ifaceOverridesInit = Overrides.overrideInterfaceMethods(cls, iface);
                     Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
 
                     // Override virtual methods before running a user-defined interface init
@@ -684,11 +564,15 @@ public class Types {
         return type;
     }
 
-    // Chain two methods (if not null)
-    private static <Z> Consumer<Z> chain(Consumer<Z> orig, Consumer<Z> other) {
-        if (orig != null && other != null) {
-            return orig.andThen(other);
+    /* When both lambdas are not null: Return first.andThen(second)
+     * When only first is not null: Return first
+     * When only second is not null: Return second
+     * When both lambdas are null: Return null
+     */
+    private static <Z> Consumer<Z> chain(Consumer<Z> first, Consumer<Z> second) {
+        if (first != null && second != null) {
+            return first.andThen(second);
         }
-        return orig != null ? orig : other;
+        return first != null ? first : second;
     }
 }

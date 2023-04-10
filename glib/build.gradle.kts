@@ -17,6 +17,7 @@ setupGenSources {
             exports io.github.jwharm.javagi.base;
             exports io.github.jwharm.javagi.interop;
             exports io.github.jwharm.javagi.pointer;
+            exports io.github.jwharm.javagi.types;
             exports io.github.jwharm.javagi.util;
             %s
         }

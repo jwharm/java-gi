@@ -14,6 +14,7 @@ setupGenSources {
             requires static org.jetbrains.annotations;
             requires transitive org.gnome.glib;
             exports io.github.jwharm.javagi.gtk.annotations;
+            exports io.github.jwharm.javagi.gtk.types;
             exports io.github.jwharm.javagi.gtk.util;
             %s
         }
