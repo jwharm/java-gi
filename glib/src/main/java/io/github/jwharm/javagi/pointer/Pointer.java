@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.pointer;
 
+import io.github.jwharm.javagi.base.Proxy;
 import org.gnome.glib.GLib;
 
 import java.lang.foreign.*;
@@ -11,7 +12,7 @@ import java.lang.reflect.Array;
  * For example, use {@code PointerInteger} for an {@code *int} pointer.
  * @param <T> The type of the value that the pointer refers to
  */
-public abstract class Pointer<T> implements Iterable<T> {
+public abstract class Pointer<T> implements Proxy, Iterable<T> {
 
     /**
      * The memory address of the pointer
