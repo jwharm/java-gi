@@ -81,7 +81,7 @@ class Properties {
             } else if (p.type().equals(ParamSpecInt64.class)) {
                 ps = GObjects.paramSpecInt64(p.name(), p.name(), p.name(), Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecLong.class)) {
-                ps = GObjects.paramSpecLong(p.name(), p.name(), p.name(), Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecLong(p.name(), p.name(), p.name(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecPointer.class)) {
                 ps = GObjects.paramSpecPointer(p.name(), p.name(), p.name(), getFlags(p));
             } else if (p.type().equals(ParamSpecString.class)) {
@@ -93,7 +93,7 @@ class Properties {
             } else if (p.type().equals(ParamSpecUInt64.class)) {
                 ps = GObjects.paramSpecUint64(p.name(), p.name(), p.name(), 0, Long.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecULong.class)) {
-                ps = GObjects.paramSpecUlong(p.name(), p.name(), p.name(), 0, Long.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecUlong(p.name(), p.name(), p.name(), 0, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecUnichar.class)) {
                 ps = GObjects.paramSpecUnichar(p.name(), p.name(), p.name(), 0, getFlags(p));
             } else {

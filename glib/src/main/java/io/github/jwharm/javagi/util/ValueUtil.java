@@ -201,48 +201,73 @@ public class ValueUtil {
      * @param pspec the GParamSpec that specifies the type of the GValue. Should not be {@code null}
      */
     public static void objectToValue(Object src, Value dest, ParamSpec pspec) {
-        if (pspec instanceof ParamSpecBoolean) {
-            dest.setBoolean((Boolean) src);
-        } else if (pspec instanceof ParamSpecBoxed) {
-            dest.setBoxed((MemorySegment) src);
-        } else if (pspec instanceof ParamSpecChar) {
-            dest.setSchar((Byte) src);
-        } else if (pspec instanceof ParamSpecUChar) {
-            dest.setUchar((Byte) src);
-        } else if (pspec instanceof ParamSpecDouble) {
-            dest.setDouble((Double) src);
-        } else if (pspec instanceof ParamSpecEnum) {
-            dest.setEnum(((Enumeration) src).getValue());
-        } else if (pspec instanceof ParamSpecFlags) {
-            dest.setFlags(((Bitfield) src).getValue());
-        } else if (pspec instanceof ParamSpecFloat) {
-            dest.setFloat((Float) src);
-        } else if (pspec instanceof ParamSpecGType) {
-            dest.setGtype((Type) src);
-        } else if (pspec instanceof ParamSpecInt) {
-            dest.setInt((Integer) src);
-        } else if (pspec instanceof ParamSpecUInt) {
-            dest.setUint((Integer) src);
-        } else if (pspec instanceof ParamSpecUnichar) {
-            dest.setUint((Integer) src);
-        } else if (pspec instanceof ParamSpecInt64) {
-            dest.setLong((Long) src);
-        } else if (pspec instanceof ParamSpecUInt64) {
-            dest.setUint64((Long) src);
-        } else if (pspec instanceof ParamSpecLong) {
-            dest.setLong((Long) src);
-        } else if (pspec instanceof ParamSpecULong) {
-            dest.setLong((Long) src);
-        } else if (pspec instanceof ParamSpecObject) {
-            dest.setObject((GObject) src);
-        } else if (pspec instanceof ParamSpecParam) {
-            dest.setParam((ParamSpec) src);
-        } else if (pspec instanceof ParamSpecPointer) {
-            dest.setPointer((MemorySegment) src);
-        } else if (pspec instanceof ParamSpecString) {
-            dest.setString((String) src);
-        } else if (pspec instanceof ParamSpecVariant) {
-            dest.setVariant((Variant) src);
+        try {
+            if (pspec instanceof ParamSpecBoolean) {
+                dest.setBoolean((Boolean) src);
+            } else if (pspec instanceof ParamSpecBoxed) {
+                dest.setBoxed((MemorySegment) src);
+            } else if (pspec instanceof ParamSpecChar) {
+                dest.setSchar((Byte) src);
+            } else if (pspec instanceof ParamSpecUChar) {
+                dest.setUchar((Byte) src);
+            } else if (pspec instanceof ParamSpecDouble) {
+                dest.setDouble((Double) src);
+            } else if (pspec instanceof ParamSpecEnum) {
+                dest.setEnum(((Enumeration) src).getValue());
+            } else if (pspec instanceof ParamSpecFlags) {
+                dest.setFlags(((Bitfield) src).getValue());
+            } else if (pspec instanceof ParamSpecFloat) {
+                dest.setFloat((Float) src);
+            } else if (pspec instanceof ParamSpecGType) {
+                dest.setGtype((Type) src);
+            } else if (pspec instanceof ParamSpecInt) {
+                dest.setInt((Integer) src);
+            } else if (pspec instanceof ParamSpecUInt) {
+                dest.setUint((Integer) src);
+            } else if (pspec instanceof ParamSpecUnichar) {
+                dest.setUint((Integer) src);
+            } else if (pspec instanceof ParamSpecInt64) {
+                dest.setInt64((Long) src);
+            } else if (pspec instanceof ParamSpecUInt64) {
+                dest.setUint64((Long) src);
+            } else if (pspec instanceof ParamSpecLong) {
+                // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
+                // Use reflection to bypass the type checker
+                for (Method m : Value.class.getDeclaredMethods()) {
+                    if ("setLong".equals(m.getName())) {
+                        m.invoke(dest, src);
+                        break;
+                    }
+                }
+            } else if (pspec instanceof ParamSpecULong) {
+                // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
+                // Use reflection to bypass the type checker
+                for (Method m : Value.class.getDeclaredMethods()) {
+                    if ("setULong".equals(m.getName())) {
+                        m.invoke(dest, src);
+                        break;
+                    }
+                }
+            } else if (pspec instanceof ParamSpecObject) {
+                dest.setObject((GObject) src);
+            } else if (pspec instanceof ParamSpecParam) {
+                dest.setParam((ParamSpec) src);
+            } else if (pspec instanceof ParamSpecPointer) {
+                dest.setPointer((MemorySegment) src);
+            } else if (pspec instanceof ParamSpecString) {
+                dest.setString((String) src);
+            } else if (pspec instanceof ParamSpecVariant) {
+                dest.setVariant((Variant) src);
+            }
+        } catch (Exception e) {
+            GLib.log(
+                    LOG_DOMAIN,
+                    LogLevelFlags.LEVEL_CRITICAL,
+                    "ValueUtil: Cannot set Object with Class %s to GValue with ParamSpec %s: %s\n",
+                    src.getClass().getSimpleName(),
+                    pspec.getName(),
+                    e.toString()
+            );
         }
     }
 }
