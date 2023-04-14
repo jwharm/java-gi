@@ -19,12 +19,16 @@ public abstract class Pointer<T> implements Proxy, Iterable<T> {
      */
     protected final MemorySegment segment;
 
+    // If the segment is managed by the garbage collector
+    private final boolean managedScope;
+
     /**
      * Allocate a new memory segment with the provided memory layout.
      * @param layout the memory layout
      */
     protected Pointer(ValueLayout layout) {
         this.segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(layout);
+        this.managedScope = true;
     }
 
     /**
@@ -33,6 +37,7 @@ public abstract class Pointer<T> implements Proxy, Iterable<T> {
      */
     protected Pointer(MemorySegment address) {
         this.segment = address;
+        this.managedScope = false;
     }
 
     /**
@@ -79,7 +84,9 @@ public abstract class Pointer<T> implements Proxy, Iterable<T> {
      * on the native memory address.
      */
     public void free() {
-        GLib.free(segment);
+        if (! managedScope) {
+            GLib.free(segment);
+        }
     }
 
     /**
@@ -96,7 +103,7 @@ public abstract class Pointer<T> implements Proxy, Iterable<T> {
             array[i] = get(i);
         }
         if (free) {
-            GLib.free(segment);
+            this.free();
         }
         return array;
     }
