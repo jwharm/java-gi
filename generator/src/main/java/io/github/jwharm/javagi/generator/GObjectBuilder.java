@@ -81,9 +81,17 @@ public class GObjectBuilder {
         writer.write(" *         that were set in the Builder object.\n");
         writer.write(" */\n");
         writer.write("public " + c.javaName + " build() {\n");
+        writer.increaseIndent();
+        writer.write("try {\n");
         writer.write("    return (" + c.javaName + ") org.gnome.gobject.GObject.newWithProperties(\n");
         writer.write("            " + c.javaName + ".getType(), getNames(), getValues()\n");
         writer.write("    );\n");
+        writer.write("} finally {\n");
+        writer.write("    for (var _value : getValues()) {\n");
+        writer.write("        _value.unset();\n");
+        writer.write("    }\n");
+        writer.write("}\n");
+        writer.decreaseIndent();
         writer.write("}\n");
         
         // Generate setters for the properties
