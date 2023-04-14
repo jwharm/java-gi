@@ -69,7 +69,6 @@ fun DependencyHandlerScope.platformDependency(proj: ProjectDependency) {
 
 fun Project.setupGenSources(setup: Action<Model>) {
     val girTask = rootProject.tasks.named("downloadGir", Download::class)
-    val maven = publishing.publications.named<MavenPublication>("maven").get()
 
     val models = Platform.values().map { platform ->
         val generatedPath = buildDir.resolve("generated/sources/javagi/$platform")
