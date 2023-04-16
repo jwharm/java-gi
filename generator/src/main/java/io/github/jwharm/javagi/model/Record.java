@@ -104,27 +104,22 @@ public class Record extends Class {
     }
 
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
-        
+
         // Don't allocate memory in common-api jar
-        if (isApi()) {
-            writer.write("public static " + javaName + " allocate() {\n");
-            writer.write("    throw Interop.apiError();\n");
+        if (! isApi()) {
+            // Cache the memory segment
+            writer.write("\n");
+            writer.write("private MemorySegment allocatedMemorySegment;\n");
+
+            // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
+            writer.write("\n");
+            writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
+            writer.write("    if (allocatedMemorySegment == null) {\n");
+            writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
+            writer.write("    }\n");
+            writer.write("    return allocatedMemorySegment;\n");
             writer.write("}\n");
-            return;
         }
-        
-        // Cache the memory segment
-        writer.write("\n");
-        writer.write("private MemorySegment allocatedMemorySegment;\n");
-        
-        // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
-        writer.write("\n");
-        writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
-        writer.write("    if (allocatedMemorySegment == null) {\n");
-        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
-        writer.write("    }\n");
-        writer.write("    return allocatedMemorySegment;\n");
-        writer.write("}\n");
         
         // Allocator function
         writer.write("\n");
@@ -135,10 +130,98 @@ public class Record extends Class {
         writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
         writer.write(" */\n");
         writer.write("public static " + javaName + " allocate() {\n");
-        writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
-        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
-        writer.write("    newInstance.allocatedMemorySegment = segment;\n");
-        writer.write("    return newInstance;\n");
+        if (isApi()) {
+            writer.write("    throw Interop.apiError();\n");
+        } else {
+            writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
+            writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
+            writer.write("    newInstance.allocatedMemorySegment = segment;\n");
+            writer.write("    return newInstance;\n");
+        }
         writer.write("}\n");
+
+        // For regular structs (not typeclasses), generate a second allocator function
+        // that takes values for all fields, so it becomes possible to quicly allocate
+        // a struct. For example: var color = RGBA.allocate(0.6F, 0.5F, 0.9F, 1.0F);
+        if (isGTypeStructFor == null) {
+
+            // First, determine if this struct has field setters
+            boolean hasSetters = false;
+            for (Field field : fieldList) {
+                if (field.disguised()) {
+                    continue;
+                }
+                if (field.callback != null) {
+                    continue;
+                }
+                hasSetters = true;
+                break;
+            }
+            if (! hasSetters) {
+                return;
+            }
+
+            writer.write("\n");
+            writer.write("/**\n");
+            writer.write(" * Allocate a new {@link " + javaName + "} with the fields set to the provided values. \n");
+            writer.write(" * A {@link java.lang.ref.Cleaner} is assigned to the allocated memory segment that will \n");
+            writer.write(" * release the memory when the {@link " + javaName + "} instance is garbage-collected.\n");
+            // Write javadoc for parameters
+            for (Field field : fieldList) {
+                if (field.disguised() || (field.callback != null)) {
+                    continue;
+                }
+                writer.write(" * @param ");
+                field.writeName(writer);
+                writer.write(" value for the field {@code ");
+                field.writeName(writer);
+                writer.write("}\n");
+            }
+            writer.write(" * @return A new {@link " + javaName + "} with the fields set to the provided values\n");
+            writer.write(" */\n");
+            writer.write("public static " + javaName + " allocate(");
+
+            // Write parameters
+            boolean first = true;
+            for (Field field : fieldList) {
+                // Ignore disguised fields and callbacks
+                if (field.disguised() || (field.callback != null)) {
+                    continue;
+                }
+                if (! first) {
+                    writer.write(", ");
+                }
+                field.writeTypeAndName(writer, false);
+                first = false;
+            }
+            writer.write(") {\n");
+
+            if (isApi()) {
+                writer.write("    throw Interop.apiError();\n");
+                writer.write("}\n");
+                return;
+            }
+
+            writer.increaseIndent();
+
+            // Call the allocate() method
+            writer.write(javaName + " _instance = allocate();\n");
+
+            // Call the field setters
+            for (Field field : fieldList) {
+                // Ignore disguised fields and callbacks
+                if (field.disguised() || (field.callback != null)) {
+                    continue;
+                }
+                writer.write("_instance.write" + Conversions.toCamelCase(field.name, true) + "(");
+                field.writeName(writer);
+                writer.write(");\n");
+            }
+
+            // Return the new instance
+            writer.write("return _instance;\n");
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
     }
 }

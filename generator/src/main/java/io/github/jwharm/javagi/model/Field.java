@@ -20,20 +20,35 @@ public class Field extends Variable {
         this.isPrivate = isPrivate;
         this.callbackType = Conversions.toCamelCase(this.name, true) + "Callback";
     }
-    
-    /*
-     * Generates a getter and setter method for a field in (the MemoryLayout of) a C struct.
+
+    /**
+     * Check whether this field should not be exposed
      */
-    public void generate(SourceWriter writer) throws IOException {
-        // Don't generate a getter/setter for a "disguised" record (often private data)
+    public boolean disguised() {
+        // Don't generate a getter/setter for a "disguised" record or private data
         if (type != null
                 && type.girElementInstance != null
-                && type.girElementInstance instanceof Record r 
+                && type.girElementInstance instanceof Record r
                 && ("1".equals(r.disguised) || r.name.endsWith("Private"))) {
-            return;
+            return true;
         }
-        // Don't generate a getter/setter for padding/reserved space
-        if ("padding".equals(name) || name.toLowerCase().contains("reserved")) {
+        // Don't generate a getter/setter for padding
+        if ("padding".equals(name)) {
+            return true;
+        }
+        // Don't generate a getter/setter for reserved space
+        if (name.toLowerCase().contains("reserved")) {
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Generates a read...() and write...() method for a field in (the MemoryLayout of) a C struct,
+     * or an override...() method for a function pointer.
+     */
+    public void generate(SourceWriter writer) throws IOException {
+        if (disguised()) {
             return;
         }
 
