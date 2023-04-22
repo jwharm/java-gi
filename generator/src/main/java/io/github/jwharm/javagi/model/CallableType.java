@@ -47,7 +47,7 @@ public interface CallableType {
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
 
-        boolean first;
+        boolean first = true;
         boolean varargs = false;
         writer.write("FunctionDescriptor.");
 
@@ -78,13 +78,14 @@ public interface CallableType {
 
         // Parameters
         if (parameters != null) {
-            first = true;
             for (Parameter p : parameters.parameterList) {
                 if (p.varargs) {
                     varargs = true;
                     break;
                 }
-                if (!first) writer.write(", ");
+                if (! first) {
+                    writer.write(", ");
+                }
                 first = false;
                 writer.write(Conversions.getValueLayout(p.type));
 
@@ -100,7 +101,10 @@ public interface CallableType {
 
         // **GError parameter
         if (getThrows() != null) {
-            writer.write(", ValueLayout.ADDRESS");
+            if (! first) {
+                writer.write(", ");
+            }
+            writer.write("ValueLayout.ADDRESS");
         }
 
         writer.write(")");
