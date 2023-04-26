@@ -20,9 +20,9 @@ Java-GI version 0.5 has been tested with the following libraries:
 
 | Library    | Version |
 |------------|---------|
-| GLib       | 2.74    |
-| GTK        | 4.8     |
-| LibAdwaita | 1.2     |
+| GLib       | 2.76    |
+| GTK        | 4.10    |
+| LibAdwaita | 1.3     |
 | GStreamer  | 1.20    |
 
 For these libraries, pre-built Java bindings are available from Maven Central, in separate flavors for Linux, Windows and MacOS. Consult the [usage guide](usage.md) for more information.
