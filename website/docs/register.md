@@ -53,6 +53,41 @@ public class MyObject extends GObject {
 
 When you override virtual methods from parent GObject classes (or implemented interfaces), the override will automatically be registered. You don't need to do this manually.
 
+## Properties
+
+You can define GObject properties with the `@Property` annotation on the getter and setter methods. Annotate both the getter and setter methods. The `@Property` annotation must always specify the `name` parameter; all other parameters need only be specified once (either on the getter or setter method).
+
+Example definition of an `int` property with name `size`:
+
+```java
+    private int size;
+
+    @Property(name="n-items", type=ParamSpecInt.class)
+    public int getNItems() {
+        return size;
+    }
+
+    @Property(name="n-items")
+    public void setNItems(int nItems) {
+        size = nItems;
+    }
+```
+
+The `@Property` annotation accepts the following parameters:
+
+| Parameter      | Type      | Default value |
+|----------------|-----------|---------------|
+| name           | Mandatory | n/a           |
+| type           | ParamSpec | n/a           |
+| readable       | Boolean   | true          |
+| writable       | Boolean   | true          |
+| construct      | Boolean   | false         |
+| constructOnly  | Boolean   | false         |
+| explicitNotify | Boolean   | false         |
+| deprecated     | Boolean   | false         |
+
+The type must be one of the subclasses of `GParamSpec`.  The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
+
 ## Class and instance init functions
 
 To implement a custom class initializer or instance initializer function, use the `@ClassInit` and `@InstanceInit` attributes:
