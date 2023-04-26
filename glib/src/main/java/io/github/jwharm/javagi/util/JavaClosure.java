@@ -23,7 +23,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(Runnable callback) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, args, hint) -> callback.run());
+        setMarshal((closure, returnValue, args, hint, marshalData) -> callback.run());
     }
     
     /**
@@ -32,7 +32,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(BooleanSupplier callback) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, args, hint) -> returnValue.setBoolean(callback.getAsBoolean()));
+        setMarshal((closure, returnValue, args, hint, marshalData) -> returnValue.setBoolean(callback.getAsBoolean()));
     }
 
     @FunctionalInterface
@@ -49,7 +49,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(UnmarshalledClosureCallback callback) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, args, hint) -> callback.run(args).copy(returnValue));
+        setMarshal((closure, returnValue, args, hint, marshalData) -> callback.run(args).copy(returnValue));
     }
     
     /**
@@ -63,7 +63,7 @@ public class JavaClosure extends Closure {
     public JavaClosure(Object instance, Method method) {
         super(Closure.newSimple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal(new ClosureMarshal() {
-            public void run(Closure closure, Value returnValue, Value[] paramValues, MemorySegment invocationHint) {
+            public void run(Closure closure, Value returnValue, Value[] paramValues, MemorySegment invocationHint, MemorySegment marshalData) {
                 try {
                     Object[] parameterObjects;
                     if (paramValues == null || paramValues.length == 0) {
