@@ -39,7 +39,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         Module module = linux;
 
         // Generate bindings classes
-        for (Repository repository : module.repositoriesLookupTable.values()) {
+        for (Repository repository : module.repositories.values()) {
             if (repository.generate) {
                 Path basePath = outputDirectory().resolve(repository.namespace.pathName);
                 BindingsGenerator.generate(repository, basePath);
@@ -74,7 +74,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                 r.natives = source.natives;
 
                 // Add the repository to the module
-                module.repositoriesLookupTable.put(r.namespace.name, r);
+                module.repositories.put(r.namespace.name, r);
 
                 // Flag unsupported va_list methods so they will not be generated
                 module.flagVaListFunctions();

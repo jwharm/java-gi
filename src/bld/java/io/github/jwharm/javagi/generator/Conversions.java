@@ -58,7 +58,7 @@ public class Conversions {
             String packageName = Conversions.namespaceToJavaPackage(nsPrefix, ns.module());
             if (packageName == null) System.err.println("Could not get namespace for " + typeName);
             Namespace namespace = ns;
-            Repository repo = ns.module().repositoriesLookupTable.get(nsPrefix);
+            Repository repo = ns.module().repositories.get(nsPrefix);
             if (repo != null) namespace = repo.namespace;
             return packageName + "." + replaceKnownType(toCamelCase(typeName.substring(idx + 1), true), namespace);
         } else {

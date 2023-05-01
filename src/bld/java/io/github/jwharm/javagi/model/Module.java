@@ -9,7 +9,7 @@ public class Module {
     /**
      * Map to find repositories by their name
      */
-    public final Map<String, Repository> repositoriesLookupTable = new HashMap<>();
+    public final Map<String, Repository> repositories = new HashMap<>();
 
     /**
      * Map to find java packages by namespaces
@@ -45,7 +45,7 @@ public class Module {
     public void link() {
 
         // Link all type references to the accompanying types
-        for (Repository repository : repositoriesLookupTable.values()) {
+        for (Repository repository : repositories.values()) {
             GirElement element = repository;
             while (element != null) {
 
@@ -57,7 +57,7 @@ public class Module {
                         && (! t.name.equals("gpointer")
                         && (! t.name.equals("gconstpointer")))) {
 
-                    Repository r = repositoriesLookupTable.get(t.girNamespace);
+                    Repository r = repositories.get(t.girNamespace);
                     if (r != null) {
                         t.girElementInstance = r.namespace.registeredTypeMap.get(t.name);
                         if (t.girElementInstance != null) {
@@ -91,7 +91,7 @@ public class Module {
      * As of JDK 21, va_list arguments will be unsupported.
      */
     public void flagVaListFunctions() {
-        for (Repository repository : repositoriesLookupTable.values()) {
+        for (Repository repository : repositories.values()) {
             // Methods, virtual methods and functions
             for (RegisteredType rt : repository.namespace.registeredTypeMap.values()) {
                 for (Method method : rt.methodList) {
@@ -127,7 +127,7 @@ public class Module {
      */
     public void createIdLookupTable() {
         cIdentifierLookupTable.clear();
-        for (Repository repository : repositoriesLookupTable.values()) {
+        for (Repository repository : repositories.values()) {
             GirElement element = repository;
             while (element != null) {
                 if (element instanceof Method m) {
@@ -145,7 +145,7 @@ public class Module {
      */
     public void createCTypeLookupTable() {
         cTypeLookupTable.clear();
-        for (Repository gir : repositoriesLookupTable.values()) {
+        for (Repository gir : repositories.values()) {
             for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {
                 cTypeLookupTable.put(rt.cType, rt);
             }

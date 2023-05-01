@@ -395,7 +395,7 @@ public class Javadoc {
 
     // Get the Namespace node for the provided namespace prefix
     private Namespace getNamespace(String ns) {
-        Repository gir = doc.module().repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositories.get(ns);
         return gir == null ? null : gir.namespace;
     }
     
@@ -408,7 +408,7 @@ public class Javadoc {
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String identifier) {
-        Repository gir = doc.module().repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositories.get(ns);
         if (gir == null || gir.namespace == null) {
             return "{@code ";
         }
@@ -427,7 +427,7 @@ public class Javadoc {
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String type, String identifier) {
-        Repository gir = doc.module().repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositories.get(ns);
         if (gir == null || gir.namespace == null) {
             return "{@code ";
         }
