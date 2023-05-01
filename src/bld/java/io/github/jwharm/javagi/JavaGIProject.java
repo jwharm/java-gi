@@ -33,7 +33,7 @@ public class JavaGIProject extends Project {
         compileOperation()
             .mainSourceDirectories(generateSourcesOperation().outputDirectory().toFile())
             .compileOptions()
-                .modulePath(libCompileDirectory())
+                .modulePath(libCompileDirectory(), buildDistDirectory())
                 .enablePreview();
 
         javadocOperation()
@@ -41,7 +41,7 @@ public class JavaGIProject extends Project {
             .javadocOptions(List.of("--module-path", libCompileDirectory().getAbsolutePath()))
             .javadocOptions()
                 .enablePreview()
-                .docLint(JavadocOptions.DocLinkOption.NO_MISSING) // ignore lint errors
+                .docLint(JavadocOptions.DocLinkOption.NO_MISSING)
                 .quiet();
 
         jarSourcesOperation()

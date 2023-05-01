@@ -2,8 +2,6 @@ package io.github.jwharm.javagi;
 
 import rife.bld.Project;
 
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,13 +67,6 @@ public class ModularProject extends Project {
     public void jar() throws Exception {
         for (var project : modules_) {
             project.jar();
-
-            // bld does not support multiple directories in the module path
-            // Copy the jar to the lib/compile folder so it is in the module path
-            Files.copy(
-                    project.jarOperation().destinationFile().toPath(),
-                    libCompileDirectory().toPath().resolve(project.jarOperation().destinationFileName()),
-                    StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
