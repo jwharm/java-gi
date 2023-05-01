@@ -16,7 +16,7 @@ public class GtkBuild extends JavaGIProject {
             exports io.github.jwharm.javagi.gtk.util;
             %s
         }
-    """;
+        """;
 
     public GtkBuild(JavaGIBuild bld) {
         super(bld, "gtk");

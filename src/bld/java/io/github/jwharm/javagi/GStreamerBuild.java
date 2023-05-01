@@ -13,7 +13,7 @@ public class GStreamerBuild extends JavaGIProject {
             requires transitive org.gnome.glib;
             %s
         }
-    """;
+        """;
 
     public GStreamerBuild(JavaGIBuild bld) {
         super(bld, "gstreamer");

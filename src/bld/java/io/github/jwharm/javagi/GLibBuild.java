@@ -18,7 +18,7 @@ public class GLibBuild extends JavaGIProject {
             exports io.github.jwharm.javagi.util;
             %s
         }
-    """;
+        """;
 
     public GLibBuild(JavaGIBuild bld) {
         super(bld, "glib");

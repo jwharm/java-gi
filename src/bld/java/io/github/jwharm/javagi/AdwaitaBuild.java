@@ -13,7 +13,7 @@ public class AdwaitaBuild extends JavaGIProject {
             requires transitive org.gnome.gtk;
             %s
         }
-    """;
+        """;
 
     public AdwaitaBuild(JavaGIBuild bld) {
         super(bld, "adwaita");
