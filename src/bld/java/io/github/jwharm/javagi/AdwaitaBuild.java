@@ -1,7 +1,6 @@
 package io.github.jwharm.javagi;
 
 import io.github.jwharm.javagi.patches.*;
-import rife.bld.Project;
 
 import java.io.File;
 import java.util.Set;
@@ -23,7 +22,7 @@ public class AdwaitaBuild extends JavaGIProject {
         name = "adwaita";
         version = version(1, 3).withQualifier(bld.version().toString());
 
-        javaGIOperation()
+        generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", false, Set.of("glib-2.0"), new GLibPatch())
             .source("GObject-2.0.gir", "org.gnome.gobject", false, Set.of("gobject-2.0"), new GObjectPatch())
             .source("Gio-2.0.gir", "org.gnome.gio", false, Set.of("gio-2.0"), new GioPatch())

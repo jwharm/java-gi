@@ -73,6 +73,10 @@ public class Module {
                 element = element.next;
             }
         }
+
+        // Create lookup tables
+        createIdLookupTable();
+        createCTypeLookupTable();
     }
 
     /**

@@ -29,7 +29,7 @@ public class GLibBuild extends JavaGIProject {
 
         srcDirectory = new File(workDirectory(), "glib");
 
-        javaGIOperation()
+        generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", true, Set.of("glib-2.0"), new GLibPatch())
             .source("GObject-2.0.gir", "org.gnome.gobject", true, Set.of("gobject-2.0"), new GObjectPatch())
             .source("Gio-2.0.gir", "org.gnome.gio", true, Set.of("gio-2.0"), new GioPatch())

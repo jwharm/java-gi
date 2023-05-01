@@ -13,31 +13,31 @@ import static rife.bld.dependencies.Scope.compile;
 
 public class JavaGIProject extends Project {
 
-    private final JavaGIOperation javaGIOperation_;
+    private final GenerateSourcesOperation generateSourcesOperation_;
 
     public JavaGIProject(JavaGIBuild bld, String name) {
         javaRelease = 20;
         repositories = List.of(MAVEN_CENTRAL);
         buildMainDirectory = new File(bld.buildMainDirectory(), name);
         buildJavadocDirectory = new File(bld.buildJavadocDirectory(), name);
-        javaGIOperation_ = new JavaGIOperation();
+        generateSourcesOperation_ = new GenerateSourcesOperation();
 
         scope(compile)
             .include(dependency("org.jetbrains", "annotations", version(24,0,1)));
 
-        javaGIOperation()
+        generateSourcesOperation()
             .sourceDirectory(bld.girDirectory())
             .outputDirectory(bld.buildDirectory().toPath().resolve("generated").resolve(name))
             .platform(Platform.LINUX);
 
         compileOperation()
-            .mainSourceDirectories(javaGIOperation().outputDirectory().toFile())
+            .mainSourceDirectories(generateSourcesOperation().outputDirectory().toFile())
             .compileOptions()
                 .modulePath(libCompileDirectory())
                 .enablePreview();
 
         javadocOperation()
-            .sourceDirectories(javaGIOperation().outputDirectory().toFile())
+            .sourceDirectories(generateSourcesOperation().outputDirectory().toFile())
             .javadocOptions(List.of("--module-path", libCompileDirectory().getAbsolutePath()))
             .javadocOptions()
                 .enablePreview()
@@ -45,16 +45,16 @@ public class JavaGIProject extends Project {
                 .quiet();
 
         jarSourcesOperation()
-            .sourceDirectories(javaGIOperation().outputDirectory().toFile());
+            .sourceDirectories(generateSourcesOperation().outputDirectory().toFile());
     }
 
-    public JavaGIOperation javaGIOperation() {
-        return javaGIOperation_;
+    public GenerateSourcesOperation generateSourcesOperation() {
+        return generateSourcesOperation_;
     }
 
     @BuildCommand(value="generate-sources", summary="Generates Java sources from gir files")
     public void generateSources() throws Exception {
-        javaGIOperation().executeOnce();
+        generateSourcesOperation().executeOnce();
     }
 
     @Override

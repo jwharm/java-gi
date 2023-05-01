@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  *
  * @since 0.5
  */
-public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
+public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesOperation> {
     private Path sourceDirectory_ = null;
     private Path outputDirectory_ = null;
     private final List<Source> sources_ = new ArrayList<>();
@@ -36,9 +36,9 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         // Parse gir files
         Module module = parse();
 
+        // Generate bindings classes
         for (Repository repository : module.repositoriesLookupTable.values()) {
             if (repository.generate) {
-                // Generate bindings classes
                 Path basePath = outputDirectory().resolve(repository.namespace.pathName);
                 BindingsGenerator.generate(repository, basePath);
                 namespaces.add(repository.namespace.packageName);
@@ -90,10 +90,6 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         // Link the type references to the GIR type definition across the GI repositories
         module.link();
 
-        // Create lookup tables
-        module.createIdLookupTable();
-        module.createCTypeLookupTable();
-
         return module;
     }
 
@@ -108,7 +104,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation sourceDirectory(Path directory) {
+    public GenerateSourcesOperation sourceDirectory(Path directory) {
         sourceDirectory_ = directory;
         return this;
     }
@@ -119,7 +115,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation outputDirectory(Path directory) {
+    public GenerateSourcesOperation outputDirectory(Path directory) {
         outputDirectory_ = directory;
         return this;
     }
@@ -130,7 +126,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation platform(Platform platform) {
+    public GenerateSourcesOperation platform(Platform platform) {
         platform_ = platform;
         return this;
     }
@@ -141,7 +137,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation moduleInfo(String moduleInfo) {
+    public GenerateSourcesOperation moduleInfo(String moduleInfo) {
         moduleInfo_ = moduleInfo;
         return this;
     }
@@ -152,7 +148,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation sources(Source... sources) {
+    public GenerateSourcesOperation sources(Source... sources) {
         return sources(Arrays.asList(sources));
     }
 
@@ -162,7 +158,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @return this operation instance
      * @since 0.5
      */
-    public JavaGIOperation sources(List<Source> sources) {
+    public GenerateSourcesOperation sources(List<Source> sources) {
         sources_.addAll(sources);
         return this;
     }
@@ -175,7 +171,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
      * @param natives the names of native libraries
      * @param patches patches to apply before generating bindings
      */
-    public JavaGIOperation source(String file, String pkg, boolean generate, Set<String> natives, PatchSet patches) {
+    public GenerateSourcesOperation source(String file, String pkg, boolean generate, Set<String> natives, PatchSet patches) {
         sources(new Source(file, pkg, generate, natives, patches));
         return this;
     }
