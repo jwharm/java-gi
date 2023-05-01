@@ -41,7 +41,7 @@ public class Class extends RegisteredType {
     }
 
     public void generate(SourceWriter writer) throws IOException {
-        classStruct = (Record) Conversions.cTypeLookupTable.get(getNamespace().cIdentifierPrefix + typeStruct);
+        classStruct = (Record) module().cTypeLookupTable.get(getNamespace().cIdentifierPrefix + typeStruct);
         
         generatePackageDeclaration(writer);
         generateImportStatements(writer);

@@ -34,7 +34,7 @@ public abstract class RegisteredType extends GirElement {
         this.version = version;
 
         // Register the full names of this class and the parent class
-        Conversions.superLookupTable.put(this.qualifiedName, this.parentClass);
+        module().superLookupTable.put(this.qualifiedName, this.parentClass);
     }
 
     // Find out if this tyjpe is a subclass of the provided classname
@@ -44,7 +44,7 @@ public abstract class RegisteredType extends GirElement {
         }
         String current = this.qualifiedName;
         while (current != null) {
-            current = Conversions.superLookupTable.get(current);
+            current = module().superLookupTable.get(current);
             if (classname.equals(current)) {
                 return true;
             }

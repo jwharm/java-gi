@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.Class;
+import io.github.jwharm.javagi.model.Module;
 import io.github.jwharm.javagi.model.Package;
 import io.github.jwharm.javagi.model.Record;
 import io.github.jwharm.javagi.model.*;
@@ -27,6 +28,7 @@ public class GirParser extends DefaultHandler {
     private final Platform platform;
 
     private String pkg;
+    private Module module;
     private StringBuilder chars;
     private GirElement current;
     private String skip;
@@ -256,7 +258,7 @@ public class GirParser extends DefaultHandler {
                 current = newRecord;
             }
             case "repository" -> {
-                current = new Repository();
+                current = new Repository(module);
             }
             case "return-value" -> {
                 ReturnValue newReturnValue = new ReturnValue(current, attr.getValue("transfer-ownership"),
@@ -351,11 +353,12 @@ public class GirParser extends DefaultHandler {
      * @throws IOException  If an error is encountered while reading the GIR file
      * @throws SAXException If an error is encountered while parsing the XML in the GIR file
      */
-    public Repository parse(Path source, String pkg) throws IOException, SAXException {
+    public Repository parse(Path source, String pkg, Module module) throws IOException, SAXException {
         if (!Files.exists(source)) {
             throw new IOException("Specified GIR file does not exist: " + source);
         }
         this.pkg = pkg;
+        this.module = module;
         try (InputStream is = Files.newInputStream(source)) {
             parser.parse(is, this);
         }

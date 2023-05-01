@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi;
 
 import io.github.jwharm.javagi.generator.*;
+import io.github.jwharm.javagi.model.Module;
 import io.github.jwharm.javagi.model.Repository;
 import org.xml.sax.SAXException;
 import rife.bld.operations.AbstractOperation;
@@ -58,15 +59,14 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
 
     public Map<String, Parsed> parse() throws ParserConfigurationException, SAXException {
         GirParser parser = new GirParser(platform());
-
-        Conversions.repositoriesLookupTable.clear();
+        Module module = new Module();
         Map<String, Parsed> parsed = new HashMap<>();
 
         // Parse the GI files into Repository objects
         for (Source source : sources()) {
             try {
-                Repository r = parser.parse(sourceDirectory().resolve(source.fileName()), source.pkg());
-                Conversions.repositoriesLookupTable.put(r.namespace.name, r);
+                Repository r = parser.parse(sourceDirectory().resolve(source.fileName()), source.pkg(), module);
+                module.repositoriesLookupTable.put(r.namespace.name, r);
                 parsed.put(r.namespace.name, new Parsed(r, source.generate(), source.natives(), source.patches()));
             } catch (IOException ioe) {
                 System.out.println("Not found: " + source.fileName());
@@ -74,7 +74,7 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         }
 
         // Link the type references to the GIR type definition across the GI repositories
-        CrossReference.link();
+        module.link();
 
         // Patches are specified in build.gradle.kts
         for (Parsed p : parsed.values()) {
@@ -84,8 +84,8 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         }
 
         // Create lookup tables
-        CrossReference.createIdLookupTable();
-        CrossReference.createCTypeLookupTable();
+        module.createIdLookupTable();
+        module.createCTypeLookupTable();
 
         return parsed;
     }

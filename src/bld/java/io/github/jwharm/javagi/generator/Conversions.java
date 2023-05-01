@@ -1,41 +1,19 @@
 package io.github.jwharm.javagi.generator;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import io.github.jwharm.javagi.model.*;
+import io.github.jwharm.javagi.model.Module;
 
 public class Conversions {
 
     /**
-     * Map to find java packages by namespaces
-     */
-    public static final Map<String, String> nsLookupTable = new HashMap<>();
-    /**
-     * Map to find elements by their {@code c:identifier} attribute
-     */
-    public static final Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();
-    /**
-     * Map to find types by their {@code c:type} attribute
-     */
-    public static final Map<String, RegisteredType> cTypeLookupTable = new HashMap<>();
-    /**
-     * Map to find repositories by their name
-     */
-    public static final Map<String, Repository> repositoriesLookupTable = new HashMap<>();
-    /**
-     * Map to find parent types by a types qualified name
-     */
-    public static final Map<String, String> superLookupTable = new HashMap<>();
-
-    /**
      * Convert "Gdk" to "org.gnome.gdk"
      */
-    public static String namespaceToJavaPackage(String ns) {
-        return Objects.requireNonNullElse(nsLookupTable.get(ns.toLowerCase()), ns);
+    public static String namespaceToJavaPackage(String ns, Module module) {
+        return Objects.requireNonNullElse(module.nsLookupTable.get(ns.toLowerCase()), ns);
     }
 
     /** 
@@ -77,10 +55,10 @@ public class Conversions {
         int idx = typeName.indexOf('.');
         if (idx > 0) {
             String nsPrefix = typeName.substring(0, idx);
-            String packageName = Conversions.namespaceToJavaPackage(nsPrefix);
+            String packageName = Conversions.namespaceToJavaPackage(nsPrefix, ns.module());
             if (packageName == null) System.err.println("Could not get namespace for " + typeName);
             Namespace namespace = ns;
-            Repository repo = repositoriesLookupTable.get(nsPrefix);
+            Repository repo = ns.module().repositoriesLookupTable.get(nsPrefix);
             if (repo != null) namespace = repo.namespace;
             return packageName + "." + replaceKnownType(toCamelCase(typeName.substring(idx + 1), true), namespace);
         } else {

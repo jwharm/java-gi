@@ -245,7 +245,7 @@ public class Javadoc {
                     return checkLink(part1, part2) + formatNS(part1) + Conversions.replaceKnownType(part2, ns) + "}";
                 }
             case "id":
-                GirElement girElement = Conversions.cIdentifierLookupTable.get(part1);
+                GirElement girElement = doc.module().cIdentifierLookupTable.get(part1);
                 name = girElementToString(girElement, false);
                 return (name == null) ? ("{@code " + path + "}") : ("{@link " + name + "}");
             default:
@@ -260,7 +260,7 @@ public class Javadoc {
             case "%TRUE":   return "{@code true}";
             case "%FALSE":  return "{@code false}";
         }
-        GirElement girElement = Conversions.cIdentifierLookupTable.get(ref.substring(1));
+        GirElement girElement = doc.module().cIdentifierLookupTable.get(ref.substring(1));
         String name = girElementToString(girElement, true);
         if (name == null) {
             return "{@code " + ref.substring(1) + "}";
@@ -271,7 +271,7 @@ public class Javadoc {
 
     // Replace #text with {@link text}
     private String convertTyperef(String ref) {
-        RegisteredType rt = Conversions.cTypeLookupTable.get(ref.substring(1));
+        RegisteredType rt = doc.module().cTypeLookupTable.get(ref.substring(1));
         if (rt == null) {
             return "{@code " + ref.substring(1) + "}";
         } else {
@@ -368,7 +368,7 @@ public class Javadoc {
 
     // Return the Java package name followed by "." for another (not our own) namespace
     private String formatNS(String ns) {
-        return doc.getNamespace().name.equals(ns) ? "" : (Conversions.namespaceToJavaPackage(ns) + ".");
+        return doc.getNamespace().name.equals(ns) ? "" : (Conversions.namespaceToJavaPackage(ns, doc.module()) + ".");
     }
 
     // Change method name to camel case Java style and prepend a "#"
@@ -395,7 +395,7 @@ public class Javadoc {
 
     // Get the Namespace node for the provided namespace prefix
     private Namespace getNamespace(String ns) {
-        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositoriesLookupTable.get(ns);
         return gir == null ? null : gir.namespace;
     }
     
@@ -408,7 +408,7 @@ public class Javadoc {
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String identifier) {
-        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositoriesLookupTable.get(ns);
         if (gir == null || gir.namespace == null) {
             return "{@code ";
         }
@@ -427,7 +427,7 @@ public class Javadoc {
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String type, String identifier) {
-        Repository gir = Conversions.repositoriesLookupTable.get(ns);
+        Repository gir = doc.module().repositoriesLookupTable.get(ns);
         if (gir == null || gir.namespace == null) {
             return "{@code ";
         }

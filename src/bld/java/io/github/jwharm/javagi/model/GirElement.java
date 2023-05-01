@@ -60,6 +60,10 @@ public abstract class GirElement {
         }
     }
 
+    public Module module() {
+        return ((Repository) getNamespace().parent).module;
+    }
+
     public boolean isApi() {
         return getNamespace().isApi();
     }

@@ -379,7 +379,7 @@ public class Variable extends GirElement {
                     (type.isAlias() && (type.girElementInstance != null && type.girElementInstance.type != null)) 
                     ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
             if (rt instanceof Class cls && cls.setValueFunc != null) {
-                GirElement setter = Conversions.cIdentifierLookupTable.get(cls.setValueFunc);
+                GirElement setter = module().cIdentifierLookupTable.get(cls.setValueFunc);
                 if (setter instanceof Function function) {
                     String setValueFunc = Conversions.toLowerCaseJavaName(function.name);
                     String clsName = Conversions.convertToJavaType(rt.getNamespace().globalClassName, false, rt.getNamespace());

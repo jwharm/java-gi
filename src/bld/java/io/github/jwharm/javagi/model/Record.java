@@ -46,12 +46,12 @@ public class Record extends Class {
         if (isGTypeStructFor != null) {
             // parent_class is always the first field, unless the struct is disguised
             if (fieldList.isEmpty()) {
-                RegisteredType outerClass = Conversions.cTypeLookupTable.get(isGTypeStructFor);
+                RegisteredType outerClass = module().cTypeLookupTable.get(isGTypeStructFor);
                 writer.write(" extends org.gnome.gobject."
                         + (outerClass instanceof Interface ? "TypeInterface" : "TypeClass"));
             } else {
                 String parentCType = fieldList.get(0).type.cType;
-                Record parentRec = (Record) Conversions.cTypeLookupTable.get(parentCType);
+                Record parentRec = (Record) module().cTypeLookupTable.get(parentCType);
                 if (parentRec.isGTypeStructFor != null) {
                     String parentClass = Conversions.toQualifiedJavaType(parentRec.isGTypeStructFor, parentRec.getNamespace());
                     String parentStr = parentClass + "." + parentRec.javaName;

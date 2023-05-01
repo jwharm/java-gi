@@ -32,7 +32,7 @@ public class Namespace extends GirElement {
         this.packageName = pkg;
         this.globalClassPackage = pkg;
         this.globalClassName = (name.equals("GObject") ? "GObjects" : name);
-        Conversions.nsLookupTable.put(name.toLowerCase(), pkg);
+        module().nsLookupTable.put(name.toLowerCase(), pkg);
         this.pathName = packageName.replace('.', '/') + '/';
         this.platform = platform;
     }
