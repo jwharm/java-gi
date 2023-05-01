@@ -35,7 +35,11 @@ public abstract class RegisteredType extends GirElement {
 
         // Register the full names of this class and the parent class
         module().superLookupTable.put(this.qualifiedName, this.parentClass);
-        getNamespace().registeredTypeMap.put(this.name, this);
+
+        // Register globally-declared types
+        if (parent instanceof Namespace ns) {
+            ns.registeredTypeMap.put(this.name, this);
+        }
     }
 
     // Find out if this tyjpe is a subclass of the provided classname
