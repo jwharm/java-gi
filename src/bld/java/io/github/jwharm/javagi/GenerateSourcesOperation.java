@@ -22,7 +22,6 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
     private Path sourceDirectory_ = null;
     private Path outputDirectory_ = null;
     private final List<Source> sources_ = new ArrayList<>();
-    private Platform platform_;
     private String moduleInfo_;
 
     /**
@@ -34,7 +33,10 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         boolean generated = false;
 
         // Parse gir files
-        Module module = parse();
+        Module linux = parse(Platform.LINUX);
+        Module windows = parse(Platform.WINDOWS);
+        Module macos = parse(Platform.MAC);
+        Module module = linux;
 
         // Generate bindings classes
         for (Repository repository : module.repositoriesLookupTable.values()) {
@@ -59,9 +61,9 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         }
     }
 
-    public Module parse() throws ParserConfigurationException, SAXException {
-        Module module = new Module();
-        GirParser parser = new GirParser(module, platform());
+    public Module parse(Platform platform) throws ParserConfigurationException, SAXException {
+        Module module = new Module(platform);
+        GirParser parser = new GirParser(module);
 
         // Parse the GI files into Repository objects
         for (Source source : sources()) {
@@ -117,17 +119,6 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      */
     public GenerateSourcesOperation outputDirectory(Path directory) {
         outputDirectory_ = directory;
-        return this;
-    }
-
-    /**
-     * Provides the platform for which bindings are generated.
-     * @param platform the platform
-     * @return this operation instance
-     * @since 0.5
-     */
-    public GenerateSourcesOperation platform(Platform platform) {
-        platform_ = platform;
         return this;
     }
 
@@ -207,15 +198,6 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      */
     public Path outputDirectory() {
         return outputDirectory_;
-    }
-
-    /**
-     * Retrieves the platform for which bindings are generated.
-     * @return the platform
-     * @since 0.5
-     */
-    public Platform platform() {
-        return platform_;
     }
 
     /**

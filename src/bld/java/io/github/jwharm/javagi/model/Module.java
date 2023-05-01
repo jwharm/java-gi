@@ -1,8 +1,9 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Platform;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 public class Module {
     /**
@@ -29,6 +30,12 @@ public class Module {
      * Map to find parent types by a types qualified name
      */
     public final Map<String, String> superLookupTable = new HashMap<>();
+
+    public final Platform platform;
+
+    public Module(Platform platform) {
+        this.platform = platform;
+    }
 
     /**
      * Loop through all type references in all repositories, find the
@@ -95,9 +102,6 @@ public class Module {
                 }
                 for (Method method : rt.functionList) {
                     flagVaListFunction(method);
-                }
-                for (Signal signal : rt.signalList) {
-
                 }
             }
             // Global functions

@@ -65,7 +65,7 @@ public abstract class GirElement {
     }
 
     public boolean isApi() {
-        return getNamespace().isApi();
+        return false;
     }
 
     public String toString() {

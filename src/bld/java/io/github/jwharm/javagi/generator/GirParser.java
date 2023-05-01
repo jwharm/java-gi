@@ -26,7 +26,6 @@ public class GirParser extends DefaultHandler {
 
     private final SAXParser parser;
     private final Module module;
-    private final Platform platform;
 
     private String pkg;
     private StringBuilder chars;
@@ -215,7 +214,7 @@ public class GirParser extends DefaultHandler {
             case "namespace" -> {
                 Namespace newNamespace = new Namespace(current, attr.getValue("name"), attr.getValue("version"),
                         attr.getValue("shared-library"), attr.getValue("c:identifier-prefixes"),
-                        attr.getValue("c:symbol-prefixes"), pkg, platform);
+                        attr.getValue("c:symbol-prefixes"), pkg);
                 ((Repository) current).namespace = newNamespace;
                 current = newNamespace;
             }
@@ -337,9 +336,8 @@ public class GirParser extends DefaultHandler {
      * @throws ParserConfigurationException Indicates a serious SAX configuration error. Should not happen.
      * @throws SAXException Generic SAX error. Should not happen here.
      */
-    public GirParser(Module module, Platform platform) throws ParserConfigurationException, SAXException {
+    public GirParser(Module module) throws ParserConfigurationException, SAXException {
         parser = SAXParserFactory.newInstance().newSAXParser();
-        this.platform = platform;
         this.module = module;
     }
 

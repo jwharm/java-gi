@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi;
 
-import io.github.jwharm.javagi.generator.Platform;
 import rife.bld.BuildCommand;
 import rife.bld.Project;
 import rife.bld.operations.JavadocOptions;
@@ -27,8 +26,7 @@ public class JavaGIProject extends Project {
 
         generateSourcesOperation()
             .sourceDirectory(bld.girDirectory())
-            .outputDirectory(bld.buildDirectory().toPath().resolve("generated").resolve(name))
-            .platform(Platform.LINUX);
+            .outputDirectory(bld.buildDirectory().toPath().resolve("generated").resolve(name));
 
         compileOperation()
             .mainSourceDirectories(generateSourcesOperation().outputDirectory().toFile())

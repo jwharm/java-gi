@@ -138,7 +138,23 @@ public class Conversions {
      * Convert C type declaration into Java type declaration.
      */
     public static String convertToJavaType(String name, boolean qualified, Namespace ns) {
-        return Objects.requireNonNullElse(ns.platform, Platform.LINUX).convertToJavaType(name, qualified, ns);
+        return name == null ? null : switch (name.toLowerCase()) {
+            case "gboolean" -> "boolean";
+            case "gchar", "guchar", "gint8", "guint8" -> "byte";
+            case "gshort", "gushort", "gint16", "guint16" -> "short";
+            case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
+            case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr" -> "long";
+            case "glong", "gulong" -> ns.module().platform == Platform.WINDOWS ? "int" : "long";
+            case "gdouble" -> "double";
+            case "gfloat" -> "float";
+            case "none" -> "void";
+            case "utf8", "filename" -> "java.lang.String";
+            case "gpointer", "gconstpointer" -> "java.lang.foreign.MemorySegment";
+            case "gtype" -> qualified ? Conversions.toQualifiedJavaType("GLib.Type", ns) : Conversions.toSimpleJavaType("GLib.Type", ns);
+            case "valist", "va_list" -> "VaList";
+            case "long double" -> "double"; // unsupported data type
+            default -> qualified ? Conversions.toQualifiedJavaType(name, ns) : Conversions.toSimpleJavaType(name, ns);
+        };
     }
 
     /**
