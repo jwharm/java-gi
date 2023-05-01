@@ -38,7 +38,7 @@ public class JavaGIProject extends Project {
 
         javadocOperation()
             .sourceDirectories(generateSourcesOperation().outputDirectory().toFile())
-            .javadocOptions(List.of("--module-path", libCompileDirectory().getAbsolutePath()))
+            .javadocOptions(List.of("--module-path", libCompileDirectory() + ":" + buildDistDirectory()))
             .javadocOptions()
                 .enablePreview()
                 .docLint(JavadocOptions.DocLinkOption.NO_MISSING)
