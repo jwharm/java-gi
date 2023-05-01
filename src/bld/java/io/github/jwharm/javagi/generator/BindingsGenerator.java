@@ -14,7 +14,7 @@ public class BindingsGenerator {
     /**
      * Generate Java bindings for the provided GI repository
      */
-    public static void generate(Repository gir, Set<String> natives, Path basePath) throws IOException {
+    public static void generate(Repository gir, Path basePath) throws IOException {
 
         Files.createDirectories(basePath);
 
@@ -30,21 +30,21 @@ public class BindingsGenerator {
             if (rt instanceof Record rec && rec.name.endsWith("Private")) {
                 continue;
             }
-            
+
             // Generate the class
             try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(rt.javaName + ".java")))) {
                 rt.generate(writer);
             }
         }
         // Create a class file for global declarations
-        generateGlobals(gir, natives, basePath);
+        generateGlobals(gir, basePath);
     }
 
     /**
      * Generate the contents for the class with the namespace-global declarations and a package-info.
      * The name of the class is the namespace identifier.
      */
-    public static void generateGlobals(Repository gir, Set<String> natives, Path basePath) throws IOException {
+    public static void generateGlobals(Repository gir, Path basePath) throws IOException {
         String className = Conversions.convertToJavaType(gir.namespace.globalClassName, false, gir.namespace);
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(className + ".java")))) {
             
@@ -64,8 +64,8 @@ public class BindingsGenerator {
                 writer.write("    Interop.throwApiError();\n");
             } else {
                 // Load libraries
-                if (natives != null) {
-                    for (String libraryName : natives) {
+                if (gir.natives != null) {
+                    for (String libraryName : gir.natives) {
                         writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
                     }
                 }
@@ -144,9 +144,9 @@ public class BindingsGenerator {
             writer.write("/**\n");
             writer.write(" * This package contains the generated bindings for " + gir.namespace.name + ".\n");
             writer.write(" * <p>\n");
-            if (natives != null) {
+            if (gir.natives != null) {
                 writer.write(" * The following native libraries are required and will be loaded: ");
-                for (String libraryName : natives) {
+                for (String libraryName : gir.natives) {
                     writer.write(" {@code " + libraryName + "}");
                 }
                 writer.write("\n");

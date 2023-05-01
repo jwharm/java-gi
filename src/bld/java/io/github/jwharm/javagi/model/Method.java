@@ -18,7 +18,7 @@ public class Method extends GirElement implements CallableType {
     public ReturnValue returnValue;
     public Parameters parameters;
 
-    private boolean skip = false;
+    public boolean skip = false;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
                   String throws_, String shadowedBy, String shadows, String movedTo) {

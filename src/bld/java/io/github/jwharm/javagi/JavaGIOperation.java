@@ -34,12 +34,14 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         boolean generated = false;
 
         // Parse gir files
-        for (Parsed p : parse().values()) {
-            if (p.generate) {
+        Module module = parse();
+
+        for (Repository repository : module.repositoriesLookupTable.values()) {
+            if (repository.generate) {
                 // Generate bindings classes
-                Path basePath = outputDirectory().resolve(p.repository.namespace.pathName);
-                BindingsGenerator.generate(p.repository, p.natives, basePath);
-                namespaces.add(p.repository.namespace.packageName);
+                Path basePath = outputDirectory().resolve(repository.namespace.pathName);
+                BindingsGenerator.generate(repository, basePath);
+                namespaces.add(repository.namespace.packageName);
                 generated = true;
             }
         }
@@ -57,17 +59,29 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         }
     }
 
-    public Map<String, Parsed> parse() throws ParserConfigurationException, SAXException {
-        GirParser parser = new GirParser(platform());
+    public Module parse() throws ParserConfigurationException, SAXException {
         Module module = new Module();
-        Map<String, Parsed> parsed = new HashMap<>();
+        GirParser parser = new GirParser(module, platform());
 
         // Parse the GI files into Repository objects
         for (Source source : sources()) {
             try {
-                Repository r = parser.parse(sourceDirectory().resolve(source.fileName()), source.pkg(), module);
+                // Parse the file
+                Repository r = parser.parse(sourceDirectory().resolve(source.fileName()), source.pkg());
+                r.generate = source.generate;
+                r.natives = source.natives;
+
+                // Add the repository to the module
                 module.repositoriesLookupTable.put(r.namespace.name, r);
-                parsed.put(r.namespace.name, new Parsed(r, source.generate(), source.natives(), source.patches()));
+
+                // Flag unsupported va_list methods so they will not be generated
+                module.flagVaListFunctions();
+
+                // Apply patches
+                if (source.patches() != null) {
+                    source.patches().patch(r);
+                }
+
             } catch (IOException ioe) {
                 System.out.println("Not found: " + source.fileName());
             }
@@ -76,29 +90,17 @@ public class JavaGIOperation extends AbstractOperation<JavaGIOperation> {
         // Link the type references to the GIR type definition across the GI repositories
         module.link();
 
-        // Patches are specified in build.gradle.kts
-        for (Parsed p : parsed.values()) {
-            if (p.patches != null) {
-                p.patches.patch(p.repository);
-            }
-        }
-
         // Create lookup tables
         module.createIdLookupTable();
         module.createCTypeLookupTable();
 
-        return parsed;
+        return module;
     }
 
     /**
      * Source GIR file to parse
      */
     public record Source(String fileName, String pkg, boolean generate, Set<String> natives, PatchSet patches) {}
-
-    /**
-     * Parsed GI repository
-     */
-    public record Parsed(Repository repository, boolean generate, Set<String> natives, PatchSet patches) {}
 
     /**
      * Provides the source directory that will be used for the JavaGI operation.

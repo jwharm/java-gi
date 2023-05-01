@@ -9,7 +9,7 @@ public class GObjectPatch implements PatchSet {
 
     @Override
     public void patch(Repository repo) {
-        // This is an alias for Callback type
+        // Remove va_list marshaller. va_list parameters are unsupported
         removeType(repo, "VaClosureMarshal");
         removeType(repo, "SignalCVaMarshaller");
         removeFunction(repo, "signal_set_va_marshaller");

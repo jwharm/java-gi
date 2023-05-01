@@ -7,7 +7,12 @@ import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.gobject.*;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.GObjects;
+import org.gnome.gobject.InterfaceInfo;
+import org.gnome.gobject.TypeClass;
+import org.gnome.gobject.TypeInterface;
+import org.gnome.gobject.TypeFlags;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;

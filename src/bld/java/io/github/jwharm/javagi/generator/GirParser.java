@@ -25,14 +25,13 @@ import java.nio.file.Path;
 public class GirParser extends DefaultHandler {
 
     private final SAXParser parser;
+    private final Module module;
     private final Platform platform;
 
     private String pkg;
-    private Module module;
     private StringBuilder chars;
     private GirElement current;
     private String skip;
-
 
     /**
      * Reset the parser
@@ -338,9 +337,10 @@ public class GirParser extends DefaultHandler {
      * @throws ParserConfigurationException Indicates a serious SAX configuration error. Should not happen.
      * @throws SAXException Generic SAX error. Should not happen here.
      */
-    public GirParser(Platform platform) throws ParserConfigurationException, SAXException {
+    public GirParser(Module module, Platform platform) throws ParserConfigurationException, SAXException {
         parser = SAXParserFactory.newInstance().newSAXParser();
         this.platform = platform;
+        this.module = module;
     }
 
     /**
@@ -353,12 +353,11 @@ public class GirParser extends DefaultHandler {
      * @throws IOException  If an error is encountered while reading the GIR file
      * @throws SAXException If an error is encountered while parsing the XML in the GIR file
      */
-    public Repository parse(Path source, String pkg, Module module) throws IOException, SAXException {
+    public Repository parse(Path source, String pkg) throws IOException, SAXException {
         if (!Files.exists(source)) {
             throw new IOException("Specified GIR file does not exist: " + source);
         }
         this.pkg = pkg;
-        this.module = module;
         try (InputStream is = Files.newInputStream(source)) {
             parser.parse(is, this);
         }
