@@ -20,12 +20,8 @@ public class GtkBuild extends JavaGIProject {
 
     public GtkBuild(JavaGIBuild bld) {
         super(bld, "gtk");
-
-        pkg = "org.gnome.gtk";
-        name = "gtk";
         version = version(4, 10).withQualifier(bld.version().toString());
-
-        srcDirectory = new File(workDirectory(), "gtk");
+        srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", false, Set.of("glib-2.0"), new GLibPatch())

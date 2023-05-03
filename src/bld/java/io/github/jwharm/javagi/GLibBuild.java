@@ -22,12 +22,8 @@ public class GLibBuild extends JavaGIProject {
 
     public GLibBuild(JavaGIBuild bld) {
         super(bld, "glib");
-
-        pkg = "io.jwharm.javagi.glib";
-        name = "glib";
         version = version(2,74).withQualifier(bld.version().toString());
-
-        srcDirectory = new File(workDirectory(), "glib");
+        srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", true, Set.of("glib-2.0"), new GLibPatch())

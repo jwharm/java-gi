@@ -15,6 +15,7 @@ public class JavaGIProject extends Project {
     private final GenerateSourcesOperation generateSourcesOperation_;
 
     public JavaGIProject(JavaGIBuild bld, String name) {
+        this.name = name;
         javaRelease = 20;
         repositories = List.of(MAVEN_CENTRAL);
         buildMainDirectory = new File(bld.buildMainDirectory(), name);

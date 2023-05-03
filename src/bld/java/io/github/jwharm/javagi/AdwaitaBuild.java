@@ -17,9 +17,6 @@ public class AdwaitaBuild extends JavaGIProject {
 
     public AdwaitaBuild(JavaGIBuild bld) {
         super(bld, "adwaita");
-
-        pkg = "org.gnome.adwaita";
-        name = "adwaita";
         version = version(1, 3).withQualifier(bld.version().toString());
 
         generateSourcesOperation()

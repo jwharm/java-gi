@@ -17,9 +17,6 @@ public class GStreamerBuild extends JavaGIProject {
 
     public GStreamerBuild(JavaGIBuild bld) {
         super(bld, "gstreamer");
-
-        pkg = "org.freedesktop.gstreamer";
-        name = "gstreamer";
         version = version(1, 22).withQualifier(bld.version().toString());
 
         generateSourcesOperation()
