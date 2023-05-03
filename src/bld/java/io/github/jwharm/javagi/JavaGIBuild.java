@@ -28,11 +28,12 @@ public class JavaGIBuild extends ModularProject {
         pkg = "io.github.jwharm.javagi";
         name = "javagi";
         version = version(0, 5).withQualifier("SNAPSHOT");
+        showStacktrace = true;
 
         gitPullOperation_ = new GitPullOperation()
             .uri(URI)
             .directory(buildDirectory().toPath().resolve("gir-files"));
-        girDirectory(gitPullOperation_.directory().resolve("linux"));
+        girDirectory(gitPullOperation_.directory());
 
         publishOperation()
             .repository(repository("https://maven.pkg.github.com/jwharm/javagi"))

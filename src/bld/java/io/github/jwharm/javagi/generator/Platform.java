@@ -1,10 +1,7 @@
 package io.github.jwharm.javagi.generator;
 
-import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.model.Namespace;
-
 public enum Platform {
-    WINDOWS("windows"), MAC("macos"), LINUX("linux");
+    WINDOWS("windows"), MACOS("macos"), LINUX("linux");
 
     public final String name;
 

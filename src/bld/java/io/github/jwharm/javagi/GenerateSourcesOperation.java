@@ -35,8 +35,8 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         // Parse gir files
         Module windows = parse(Platform.WINDOWS);
         Module linux = parse(Platform.LINUX);
-        Module mac = parse(Platform.MAC);
-        Module module = new Merge().merge(windows, linux, mac);
+        Module macos = parse(Platform.MACOS);
+        Module module = new Merge().merge(windows, linux, macos);
 
         // Generate bindings classes
         for (Repository repository : module.repositories.values()) {
@@ -64,12 +64,17 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
     public Module parse(Platform platform) throws ParserConfigurationException, SAXException {
         Module module = new Module(platform);
         GirParser parser = new GirParser(module);
+        Path girPath = sourceDirectory().resolve(platform.name().toLowerCase());
+        if (! girPath.toFile().exists()) {
+            System.out.println("Not found: " + girPath);
+            return null;
+        }
 
         // Parse the GI files into Repository objects
         for (Source source : sources()) {
             try {
                 // Parse the file
-                Repository r = parser.parse(sourceDirectory().resolve(source.fileName()), source.pkg());
+                Repository r = parser.parse(girPath.resolve(source.fileName()), source.pkg());
                 r.generate = source.generate;
                 r.natives = source.natives;
 

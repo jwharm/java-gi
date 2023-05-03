@@ -41,6 +41,11 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
 
+        // Unsupported platforms
+        if (platforms.size() < 3 || parent.platforms.size() < 3) {
+            writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
+        }
+
         writer.write(" {\n");
         writer.increaseIndent();
 
@@ -101,6 +106,12 @@ public class Constructor extends Method {
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
+
+        // Unsupported platforms
+        if (platforms.size() < 3 || parent.platforms.size() < 3) {
+            writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
+        }
+
         writer.write(" {\n");
 
         if (isApi()) {

@@ -31,4 +31,8 @@ public class Namespace extends GirElement {
         module().nsLookupTable.put(name.toLowerCase(), pkg);
         this.pathName = packageName.replace('.', '/') + '/';
     }
+
+    public Namespace copy() {
+        return new Namespace(parent, name, version, sharedLibrary, cIdentifierPrefix, cSymbolPrefix, packageName);
+    }
 }

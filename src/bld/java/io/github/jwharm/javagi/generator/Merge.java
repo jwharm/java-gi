@@ -30,25 +30,27 @@ public class Merge {
     public Module merge(List<Module> platformModules) {
         Module merged = new Module(null);
 
+        // Filter empty modules
+        List<Module> modules = platformModules.stream().filter(Objects::nonNull).toList();
+
         // Merge repositories
-        mergeRepositories(merged, platformModules);
+        mergeRepositories(merged, modules);
 
         // Merge registered types
         merged.repositories.forEach((name, repository) -> mergeRegisteredTypes(repository.namespace,
-                platformModules.stream().map(module -> module.repositories.get(name).namespace).toList()));
+                modules.stream().map(module -> module.repositories.get(name).namespace).toList()));
 
         // Loop through the repositories, and merge globally defined methods
         merged.repositories.forEach((name, repository) -> mergeMethods(repository.namespace,
-                platformModules.stream().map(module -> module.repositories.get(name).namespace).toList()));
+                modules.stream().map(module -> module.repositories.get(name).namespace).toList()));
 
         // Loop through the repositories, loop through the registered types, and merge methods
         merged.repositories.forEach((name, repository) -> {
-            List<Map<String, RegisteredType>> typeMaps = platformModules.stream().map(module ->
+            List<Map<String, RegisteredType>> typeMaps = modules.stream().map(module ->
                     module.repositories.get(name).namespace.registeredTypeMap).toList();
 
-            repository.namespace.registeredTypeMap.forEach((typeName, registeredType) -> {
-                mergeMethods(registeredType, typeMaps.stream().map(tm -> tm.get(typeName)).toList());
-            });
+            repository.namespace.registeredTypeMap.forEach((typeName, registeredType) ->
+                    mergeMethods(registeredType, typeMaps.stream().map(tm -> tm.get(typeName)).toList()));
         });
 
         return merged;
@@ -60,7 +62,7 @@ public class Merge {
      */
     private void mergeRepositories(Module merged, List<Module> platformModules) {
         for (var module : platformModules) {
-            merged.repositories.putAll(module.repositories);
+            module.repositories.forEach((name, repository) -> merged.repositories.put(name, repository.copy()));
         }
         for (String name : merged.repositories.keySet()) {
             for (var module : platformModules) {
@@ -103,6 +105,9 @@ public class Merge {
      */
     private void mergeMethods(GirElement multi, List<? extends GirElement> registeredTypes) {
         for (var rt : registeredTypes) {
+            if (rt == null) {
+                continue;
+            }
             mergeMethods(multi.methodList, rt.methodList);
             mergeMethods(multi.virtualMethodList, rt.virtualMethodList);
             mergeMethods(multi.functionList, rt.functionList);
@@ -138,6 +143,9 @@ public class Merge {
         for (Method method : methods) {
             String signature = method.getMethodSpecification();
             for (var rt : registeredTypes) {
+                if (rt == null) {
+                    continue;
+                }
                 if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                     if (rt.module().platform == Platform.WINDOWS) {
@@ -148,6 +156,10 @@ public class Merge {
         }
     }
 
+    /**
+     * Override "glong" and "gulong" property types to "int" values in Java, for Windows compatibility.
+     * @param cls the (merged) class for which to override the property types
+     */
     private void overrideLongValues(Class cls) {
         for (Property property : cls.propertyList) {
             if (property.type != null) {
