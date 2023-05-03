@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.generator;
 import io.github.jwharm.javagi.model.*;
 import io.github.jwharm.javagi.model.Class;
 import io.github.jwharm.javagi.model.Module;
+import io.github.jwharm.javagi.model.Record;
 
 import java.util.*;
 
@@ -117,6 +118,11 @@ public class Merge {
         setMethodPlatforms(multi.virtualMethodList, registeredTypes);
         setMethodPlatforms(multi.functionList, registeredTypes);
         setMethodPlatforms(multi.constructorList, registeredTypes);
+
+        overrideLongValues(multi.methodList, registeredTypes);
+        overrideLongValues(multi.virtualMethodList, registeredTypes);
+        overrideLongValues(multi.functionList, registeredTypes);
+        overrideLongValues(multi.constructorList, registeredTypes);
     }
 
     /**
@@ -137,7 +143,7 @@ public class Merge {
     }
 
     /**
-     * For each platform, check if the method exists, and override long values to int (for Windows compatibility)
+     * For each platform, check if the method exists
      * @param methods the merged list of methods (Methods, VirtualMethods or Functions)
      * @param registeredTypes a list of three classes (linux, windows and mac)
      */
@@ -150,24 +156,48 @@ public class Merge {
                 }
                 if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
+                }
+                if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                }
+                if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                }
+                if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                }
+            }
+        }
+    }
+
+    /**
+     * Override long values to int (for Windows compatibility)
+     * @param methods the merged list of methods (Methods, VirtualMethods or Functions)
+     * @param registeredTypes a list of three classes (linux, windows and mac)
+     */
+    private void overrideLongValues(List<? extends Method> methods, List<? extends GirElement> registeredTypes) {
+        for (Method method : methods) {
+            String signature = method.getMethodSpecification();
+            for (var rt : registeredTypes) {
+                if (rt == null) {
+                    continue;
+                }
+                if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
                     }
                 }
                 if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
-                    method.platforms.add(rt.module().platform);
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
                     }
                 }
                 if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
-                    method.platforms.add(rt.module().platform);
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
                     }
                 }
                 if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
-                    method.platforms.add(rt.module().platform);
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
                     }
