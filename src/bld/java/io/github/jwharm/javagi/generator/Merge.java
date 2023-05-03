@@ -120,10 +120,10 @@ public class Merge {
      */
     private <T extends Method> void mergeMethods(List<T> multi, List<T> methods) {
         Set<String> signatures = new HashSet<>(multi.stream().map(Method::getMethodSpecification).toList());
-        for (Method method : methods) {
+        for (T method : methods) {
             var signature = method.getMethodSpecification();
             if (! signatures.contains(signature)) {
-                multi.add((T) method);
+                multi.add(method);
                 signatures.add(signature);
             }
         }
