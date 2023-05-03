@@ -111,10 +111,12 @@ public class Merge {
             mergeMethods(multi.methodList, rt.methodList);
             mergeMethods(multi.virtualMethodList, rt.virtualMethodList);
             mergeMethods(multi.functionList, rt.functionList);
+            mergeMethods(multi.constructorList, rt.constructorList);
         }
         setMethodPlatforms(multi.methodList, registeredTypes);
         setMethodPlatforms(multi.virtualMethodList, registeredTypes);
         setMethodPlatforms(multi.functionList, registeredTypes);
+        setMethodPlatforms(multi.constructorList, registeredTypes);
     }
 
     /**
@@ -147,6 +149,24 @@ public class Merge {
                     continue;
                 }
                 if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                    if (rt.module().platform == Platform.WINDOWS) {
+                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                    }
+                }
+                if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                    if (rt.module().platform == Platform.WINDOWS) {
+                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                    }
+                }
+                if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                    method.platforms.add(rt.module().platform);
+                    if (rt.module().platform == Platform.WINDOWS) {
+                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                    }
+                }
+                if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
