@@ -1,7 +1,11 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Platform;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public abstract class GirElement {
 
@@ -38,6 +42,7 @@ public abstract class GirElement {
     public final List<Record> recordList = new ArrayList<>();
     public final List<Union> unionList = new ArrayList<>();
 
+    public final Set<Platform> platforms = new HashSet<>();
 
     public GirElement(GirElement parent) {
         this.parent = parent;

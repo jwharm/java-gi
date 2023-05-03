@@ -147,4 +147,14 @@ public class Type extends GirElement {
     public boolean isTypeClass() {
         return isRecord() && "TypeClass".equals(name);
     }
+
+    /**
+     * Override "glong" and "gulong" types to "int" values in Java, for Windows compatibility.
+     */
+    public void overrideLongType() {
+        if ("glong".equals(cType) || "gulong".equals(cType)) {
+            this.simpleJavaType = "int";
+            this.qualifiedJavaType = "int";
+        }
+    }
 }

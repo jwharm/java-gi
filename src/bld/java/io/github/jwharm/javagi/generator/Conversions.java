@@ -143,8 +143,7 @@ public class Conversions {
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
-            case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr" -> "long";
-            case "glong", "gulong" -> ns.module().platform == Platform.WINDOWS ? "int" : "long";
+            case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr", "glong", "gulong" -> "long";
             case "gdouble" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";

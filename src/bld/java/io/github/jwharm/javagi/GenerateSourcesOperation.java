@@ -33,10 +33,10 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         boolean generated = false;
 
         // Parse gir files
-        Module linux = parse(Platform.LINUX);
         Module windows = parse(Platform.WINDOWS);
-        Module macos = parse(Platform.MAC);
-        Module module = linux;
+        Module linux = parse(Platform.LINUX);
+        Module mac = parse(Platform.MAC);
+        Module module = new Merge().merge(windows, linux, mac);
 
         // Generate bindings classes
         for (Repository repository : module.repositories.values()) {
