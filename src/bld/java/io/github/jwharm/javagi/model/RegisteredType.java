@@ -163,13 +163,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @return the memory layout\n");
         writer.write(" */\n");
         writer.write("public static MemoryLayout getMemoryLayout() {\n");
-
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-            writer.write("}\n");
-            return;
-        }
-
         writer.increaseIndent();
 
         // Check if this type is either defined as a union, or has a union element
@@ -244,9 +237,6 @@ public abstract class RegisteredType extends GirElement {
         if ("TypeInstance".equals(this.javaName) || "TypeClass".equals(this.javaName) || "TypeInterface".equals(this.javaName)) {
             return;
         }
-        if (isApi()) {
-            return;
-        }
 
         // Look for instance methods named "free()" and "unref()"
         for (Method method : methodList) {
@@ -297,12 +287,6 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" */\n");
         writer.write("public static boolean isAvailable() {\n");
         
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-            writer.write("}\n");
-            return;
-        }
-        
         String targetName = null;
         for (Method m : functionList) {
             if (m.name.equals("get_type") && m.getParameters() == null) {
@@ -319,13 +303,6 @@ public abstract class RegisteredType extends GirElement {
     protected void generateEnsureInitialized(SourceWriter writer) throws IOException {
         writer.write("\n");
         writer.write("static {\n");
-        
-        if (isApi()) {
-            writer.write("    Interop.throwApiError();\n");
-            writer.write("}\n");
-            return;
-        }
-        
         writer.write("    " + Conversions.toSimpleJavaType(getNamespace().globalClassName, getNamespace()) + ".javagi$ensureInitialized();\n");
         writer.write("}\n");
     }
@@ -352,11 +329,6 @@ public abstract class RegisteredType extends GirElement {
      * @throws IOException Thrown by {@code writer.write()}
      */
     protected void generateDowncallHandles(SourceWriter writer) throws IOException {
-        // No downcall handles in common-api jar
-        if (isApi()) {
-            return;
-        }
-        
         // Don't generate empty class
         if (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty()) {
             return;

@@ -105,22 +105,19 @@ public class Record extends Class {
 
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
 
-        // Don't allocate memory in common-api jar
-        if (! isApi()) {
-            // Cache the memory segment
-            writer.write("\n");
-            writer.write("private MemorySegment allocatedMemorySegment;\n");
+        // Cache the memory segment
+        writer.write("\n");
+        writer.write("private MemorySegment allocatedMemorySegment;\n");
 
-            // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
-            writer.write("\n");
-            writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
-            writer.write("    if (allocatedMemorySegment == null) {\n");
-            writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
-            writer.write("    }\n");
-            writer.write("    return allocatedMemorySegment;\n");
-            writer.write("}\n");
-        }
-        
+        // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
+        writer.write("\n");
+        writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
+        writer.write("    if (allocatedMemorySegment == null) {\n");
+        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
+        writer.write("    }\n");
+        writer.write("    return allocatedMemorySegment;\n");
+        writer.write("}\n");
+
         // Allocator function
         writer.write("\n");
         writer.write("/**\n");
@@ -130,14 +127,10 @@ public class Record extends Class {
         writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
         writer.write(" */\n");
         writer.write("public static " + javaName + " allocate() {\n");
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-        } else {
-            writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
-            writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
-            writer.write("    newInstance.allocatedMemorySegment = segment;\n");
-            writer.write("    return newInstance;\n");
-        }
+        writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
+        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
+        writer.write("    newInstance.allocatedMemorySegment = segment;\n");
+        writer.write("    return newInstance;\n");
         writer.write("}\n");
 
         // For regular structs (not typeclasses), generate a second allocator function
@@ -195,13 +188,6 @@ public class Record extends Class {
                 first = false;
             }
             writer.write(") {\n");
-
-            if (isApi()) {
-                writer.write("    throw Interop.apiError();\n");
-                writer.write("}\n");
-                return;
-            }
-
             writer.increaseIndent();
 
             // Call the allocate() method

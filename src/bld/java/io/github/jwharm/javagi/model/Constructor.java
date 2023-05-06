@@ -57,9 +57,7 @@ public class Constructor extends Method {
         writer.write("));\n");
 
         // Add instance to cache
-        if (! isApi()) {
-            writer.write("InstanceCache.put(handle(), this);\n");
-        }
+        writer.write("InstanceCache.put(handle(), this);\n");
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -113,13 +111,6 @@ public class Constructor extends Method {
         }
 
         writer.write(" {\n");
-
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-            writer.write("}\n");
-            return;
-        }
-
         writer.increaseIndent();
 
         // Call native constructor function
@@ -164,13 +155,6 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
         writer.write(" {\n");
-
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-            writer.write("}\n");
-            return;
-        }
-
         writer.increaseIndent();
 
         // Generate try-with-resources?

@@ -42,26 +42,22 @@ public class Signal extends Method implements Closure {
         writer.write(qualifiedName + " handler) {\n");
         writer.increaseIndent();
         
-        if (isApi()) {
-            writer.write("throw Interop.apiError();\n");
-        } else {
-            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
-            writer.increaseIndent();
-            writer.write("try {\n");
-            writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
-            writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
-            if (detailed) {
-                writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
-            }
-            writer.write(", _arena), handler.toCallback(), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
-            writer.write("    return new Signal<>(handle(), _result);\n");
-            writer.write("} catch (Throwable _err) {\n");
-            writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
-            writer.write("}\n");
-            writer.decreaseIndent();
-            writer.write("}\n");
+        writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+        writer.increaseIndent();
+        writer.write("try {\n");
+        writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
+        writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
+        if (detailed) {
+            writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
-        
+        writer.write(", _arena), handler.toCallback(), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
+        writer.write("    return new Signal<>(handle(), _result);\n");
+        writer.write("} catch (Throwable _err) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+        writer.write("}\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
+
         writer.decreaseIndent();
         writer.write("}\n");
 
@@ -93,13 +89,6 @@ public class Signal extends Method implements Closure {
             }
 
             writer.write(") {\n");
-
-            if (isApi()) {
-                writer.write("    throw Interop.apiError();\n");
-                writer.write("}\n");
-                return;
-            }
-
             writer.increaseIndent();
             writer.write("try (Arena _arena = Arena.openConfined()) {\n");
             writer.increaseIndent();

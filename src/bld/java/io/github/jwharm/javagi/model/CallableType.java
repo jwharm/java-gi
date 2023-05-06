@@ -17,8 +17,6 @@ public interface CallableType {
 
     String getThrows();
 
-    boolean isApi();
-
     /**
      * This function is used to determine if memory is allocated to marshal
      * the call parameters or return value.

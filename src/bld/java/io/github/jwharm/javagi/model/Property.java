@@ -32,13 +32,6 @@ public class Property extends Variable {
         writer.write("S set" + Conversions.toCamelCase(name, true) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();");
-            writer.write("}\n");
-            return;
-        }
-        
         writer.increaseIndent();
         writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
         writer.write("_value.init(" + gTypeDeclaration + ");\n");

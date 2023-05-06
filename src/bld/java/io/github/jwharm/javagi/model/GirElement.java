@@ -69,10 +69,6 @@ public abstract class GirElement {
         return ((Repository) getNamespace().parent).module;
     }
 
-    public boolean isApi() {
-        return false;
-    }
-
     public String toString() {
         return this.getClass().getSimpleName() + " " + this.name;
     }

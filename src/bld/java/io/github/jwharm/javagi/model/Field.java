@@ -80,11 +80,8 @@ public class Field extends Variable {
             writeType(writer, true, true);
             writer.write(" " + getter + "() {\n");
 
-            if (isApi()) {
-                writer.write("    throw Interop.apiError();\n");
-            
             // Read the memory segment of an embedded field from the struct (not a pointer)
-            } else if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
+            if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
                 writer.write("    long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
                 writer.write("    return ");
                 marshalNativeToJava(writer, "handle().asSlice(_offset)", false);
@@ -114,24 +111,19 @@ public class Field extends Variable {
         writer.write("public void " + setter + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
-        
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-        } else {
-            writer.write("    var _arena = SegmentAllocator.nativeAllocator(getAllocatedMemorySegment().scope());\n");
-            writer.write("    getMemoryLayout()\n");
-            writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-            writer.write("        .set(getAllocatedMemorySegment(), ");
-            // Check for null values
-            if (checkNull()) {
-                writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
-            }
-            marshalJavaToNative(writer, this.name, false, false);
-            if (checkNull()) {
-                writer.write(")");
-            }
-            writer.write(");\n");
+        writer.write("    var _arena = SegmentAllocator.nativeAllocator(getAllocatedMemorySegment().scope());\n");
+        writer.write("    getMemoryLayout()\n");
+        writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+        writer.write("        .set(getAllocatedMemorySegment(), ");
+        // Check for null values
+        if (checkNull()) {
+            writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
         }
+        marshalJavaToNative(writer, this.name, false, false);
+        if (checkNull()) {
+            writer.write(")");
+        }
+        writer.write(");\n");
         writer.write("}\n");
 
         // For callbacks, generate a second override method with java.lang.reflect.Method parameter
@@ -146,26 +138,22 @@ public class Field extends Variable {
             writer.write("public void " + setter + "(java.lang.reflect.Method method) {\n");
             writer.increaseIndent();
             
-            if (isApi()) {
-                writer.write("throw Interop.apiError();\n");                
-            } else {
-                writer.write("this._" + this.name + "Method = method;\n");
+            writer.write("this._" + this.name + "Method = method;\n");
 
-                // Generate function descriptor
-                writer.write("FunctionDescriptor _fdesc = ");
-                callback.generateFunctionDescriptor(writer);
-                writer.write(";\n");
+            // Generate function descriptor
+            writer.write("FunctionDescriptor _fdesc = ");
+            callback.generateFunctionDescriptor(writer);
+            writer.write(";\n");
 
-                // Generate method handle
-                String className = ((Record) parent).javaName;
-                writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
-                writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
-                writer.write("getMemoryLayout()\n");
-                writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("    .set(getAllocatedMemorySegment(), ");
-                writer.write("(method == null ? MemorySegment.NULL : _address));\n");
-            }
-            
+            // Generate method handle
+            String className = ((Record) parent).javaName;
+            writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
+            writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
+            writer.write("getMemoryLayout()\n");
+            writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
+            writer.write("    .set(getAllocatedMemorySegment(), ");
+            writer.write("(method == null ? MemorySegment.NULL : _address));\n");
+
             writer.decreaseIndent();
             writer.write("}\n");
             writer.write("\n");

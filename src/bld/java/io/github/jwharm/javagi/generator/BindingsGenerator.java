@@ -7,7 +7,6 @@ import io.github.jwharm.javagi.model.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
 
 public class BindingsGenerator {
 
@@ -60,19 +59,15 @@ public class BindingsGenerator {
             writer.write("\n");
             writer.write("static {\n");
             
-            if (gir.isApi()) {
-                writer.write("    Interop.throwApiError();\n");
-            } else {
-                // Load libraries
-                if (gir.natives != null) {
-                    for (String libraryName : gir.natives) {
-                        writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
-                    }
+            // Load libraries
+            if (gir.natives != null) {
+                for (String libraryName : gir.natives) {
+                    writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
                 }
-
-                // Register types
-                writer.write("    registerTypes();\n");
             }
+
+            // Register types
+            writer.write("    registerTypes();\n");
             writer.write("}\n");
             writer.write("\n");
             writer.write("@ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
@@ -88,7 +83,7 @@ public class BindingsGenerator {
             }
             
             // Generate downcallhandles
-            if (! (gir.isApi() || gir.namespace.functionList.isEmpty())) {
+            if (! gir.namespace.functionList.isEmpty()) {
                 writer.write("\n");
                 writer.write("private static class DowncallHandles {\n");
                 writer.increaseIndent();
@@ -97,13 +92,6 @@ public class BindingsGenerator {
                 }
                 writer.decreaseIndent();
                 writer.write("}\n");
-            }
-            
-            // Don't register types in common-api jar
-            if (gir.isApi()) {
-                writer.decreaseIndent();
-                writer.write("}\n");
-                return;
             }
             
             // Generate registerTypes function

@@ -15,10 +15,6 @@ public class Repository extends GirElement {
         this.module = module;
     }
 
-    public boolean isApi() {
-        return namespace.isApi();
-    }
-
     public Repository copy() {
         var copy = new Repository(module);
         copy.namespace = namespace.copy();

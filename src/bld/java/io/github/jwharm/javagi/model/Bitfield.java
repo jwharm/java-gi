@@ -52,18 +52,12 @@ public class Bitfield extends ValueWrapper {
         writer.write(" * @return the combined value by calculating {@code this | mask} \n");
         writer.write(" */\n");
         writer.write("public " + javaName + " or(" + javaName + "... masks) {\n");
-        
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-        } else {
-            writer.write("    int value = this.getValue();\n");
-            writer.write("    for (" + javaName + " arg : masks) {\n");
-            writer.write("        value |= arg.getValue();\n");
-            writer.write("    }\n");
-            writer.write("    return new " + javaName + "(value);\n");
-        }
+        writer.write("    int value = this.getValue();\n");
+        writer.write("    for (" + javaName + " arg : masks) {\n");
+        writer.write("        value |= arg.getValue();\n");
+        writer.write("    }\n");
+        writer.write("    return new " + javaName + "(value);\n");
         writer.write("}\n");
-        
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Combine (bitwise OR) operation\n");
@@ -72,16 +66,11 @@ public class Bitfield extends ValueWrapper {
         writer.write(" * @return the combined value by calculating {@code mask | masks[0] | masks[1] | ...} \n");
         writer.write(" */\n");
         writer.write("public static " + javaName + " combined(" + javaName + " mask, " + javaName + "... masks) {\n");
-        
-        if (isApi()) {
-            writer.write("    throw Interop.apiError();\n");
-        } else {
-            writer.write("    int value = mask.getValue();\n");
-            writer.write("    for (" + javaName + " arg : masks) {\n");
-            writer.write("        value |= arg.getValue();\n");
-            writer.write("    }\n");
-            writer.write("    return new " + javaName + "(value);\n");
-        }
+        writer.write("    int value = mask.getValue();\n");
+        writer.write("    for (" + javaName + " arg : masks) {\n");
+        writer.write("        value |= arg.getValue();\n");
+        writer.write("    }\n");
+        writer.write("    return new " + javaName + "(value);\n");
         writer.write("}\n");
 
         generateDowncallHandles(writer);
