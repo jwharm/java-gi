@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.patches;
 
 import io.github.jwharm.javagi.generator.PatchSet;
 import io.github.jwharm.javagi.model.Repository;
+import io.github.jwharm.javagi.model.Type;
 
 public class GLibPatch implements PatchSet {
 
@@ -9,6 +10,12 @@ public class GLibPatch implements PatchSet {
     public void patch(Repository repo) {
         // Incompletely defined
         removeFunction(repo, "clear_error");
+
+        // GPid is defined as gint on linux vs gpointer on windows
+        Type pid = repo.namespace.registeredTypeMap.get("Pid").type;
+        pid.simpleJavaType = "int";
+        pid.qualifiedJavaType = "int";
+        pid.isPrimitive = true;
 
         // These calls return floating references
         setReturnFloating(findConstructor(repo, "Variant", "new_array"));

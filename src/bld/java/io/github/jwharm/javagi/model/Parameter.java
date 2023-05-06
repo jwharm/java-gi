@@ -7,12 +7,12 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Parameter extends Variable {
 
-    public final String transferOwnership;
-    public final boolean nullable;
-    public final boolean notnull;
-    public final String direction;
-    public final String closure;
-    public final String callerAllocates;
+    public String transferOwnership;
+    public boolean nullable;
+    public boolean notnull;
+    public String direction;
+    public String closure;
+    public String callerAllocates;
 
     public boolean varargs = false;
 

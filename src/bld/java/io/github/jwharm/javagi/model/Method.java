@@ -105,6 +105,9 @@ public class Method extends GirElement implements CallableType {
             // Unsupported platforms (except getType())
             if (platforms.size() < 3 && (! "get_type".equals(name))) {
                 writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
+                writer.write(" /*");
+                for (var p : platforms) writer.write(p.name + " ");
+                writer.write(" */");
             }
         } catch (IOException ignored) {
             // StringWriter will never throw IOException

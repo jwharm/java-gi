@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.patches;
 
 import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.model.Repository;
 
 public class GtkPatch implements PatchSet {
@@ -11,7 +12,8 @@ public class GtkPatch implements PatchSet {
         renameMethod(repo, "ApplicationWindow", "get_id", "get_window_id");
         renameMethod(repo, "MenuButton", "get_direction", "get_arrow_direction");
         renameMethod(repo, "PrintSettings", "get", "get_string");
-        renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
+        if (repo.module.platform != Platform.WINDOWS)
+            renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
         renameMethod(repo, "Widget", "activate", "activate_widget");
 
         // These calls return floating references

@@ -112,10 +112,10 @@ public class Merge {
             if (rt == null) {
                 continue;
             }
-            mergeMethods(multi.methodList, rt.methodList);
-            mergeMethods(multi.virtualMethodList, rt.virtualMethodList);
-            mergeMethods(multi.functionList, rt.functionList);
-            mergeMethods(multi.constructorList, rt.constructorList);
+            mergeMethods(multi, multi.methodList, rt.methodList);
+            mergeMethods(multi, multi.virtualMethodList, rt.virtualMethodList);
+            mergeMethods(multi, multi.functionList, rt.functionList);
+            mergeMethods(multi, multi.constructorList, rt.constructorList);
         }
         setMethodPlatforms(multi.methodList, registeredTypes);
         setMethodPlatforms(multi.virtualMethodList, registeredTypes);
@@ -134,14 +134,22 @@ public class Merge {
      * @param multi the merged class
      * @param methods the list of methods to add
      */
-    private <T extends Method> void mergeMethods(List<T> multi, List<T> methods) {
+    private <T extends Method> void mergeMethods(GirElement parent, List<T> multi, List<T> methods) {
         Set<String> signatures = new HashSet<>(multi.stream().map(Method::getMethodSpecification).toList());
+        Set<String> cIdentifiers = new HashSet<>(multi.stream().map(method -> method.cIdentifier).toList());
         for (T method : methods) {
             var signature = method.getMethodSpecification();
-            if (! signatures.contains(signature)) {
-                multi.add(method);
-                signatures.add(signature);
+            var cIdentifier = method.cIdentifier;
+            if (cIdentifier != null && cIdentifiers.contains(cIdentifier)) {
+                continue;
             }
+            if (signatures.contains(signature)) {
+                continue;
+            }
+            multi.add(method);
+            signatures.add(signature);
+            cIdentifiers.add(cIdentifier);
+            method.parent = parent;
         }
     }
 

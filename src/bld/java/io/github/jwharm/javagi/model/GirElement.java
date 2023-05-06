@@ -11,7 +11,7 @@ public abstract class GirElement {
 
     private static GirElement previouslyCreated = null;
 
-    public final GirElement parent;
+    public GirElement parent;
     public GirElement next;
     public Array array;
     public Type type = null;
