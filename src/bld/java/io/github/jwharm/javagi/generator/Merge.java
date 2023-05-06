@@ -3,7 +3,6 @@ package io.github.jwharm.javagi.generator;
 import io.github.jwharm.javagi.model.*;
 import io.github.jwharm.javagi.model.Class;
 import io.github.jwharm.javagi.model.Module;
-import io.github.jwharm.javagi.model.Record;
 
 import java.util.*;
 
@@ -90,8 +89,12 @@ public class Merge {
                 if (ns.registeredTypeMap.containsKey(name)) {
                     var rt = multi.registeredTypeMap.get(name);
                     rt.platforms.add(ns.module().platform);
-                    if (ns.module().platform == Platform.WINDOWS && rt instanceof Class cls) {
-                        overrideLongValues(cls); // Convert glong/gulong properties to gint/guint
+                    if (ns.module().platform == Platform.WINDOWS) {
+                        if (rt instanceof Class cls) {
+                            overrideLongValues(cls); // Convert glong/gulong properties to gint/guint
+                        } else if (rt instanceof Alias alias) {
+                            overrideLongValues(alias); // Aliases (typedefs) for glong/gulong primitive values
+                        }
                     }
                 }
             }
@@ -215,6 +218,12 @@ public class Merge {
             if (property.type != null) {
                 property.type.overrideLongType();
             }
+        }
+    }
+
+    private void overrideLongValues(Alias alias) {
+        if (alias.getTargetType() == Alias.TargetType.VALUE && alias.type != null) {
+            alias.type.overrideLongType();
         }
     }
 
