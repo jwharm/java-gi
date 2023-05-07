@@ -67,27 +67,31 @@ public class JavaGIBuild extends ModularProject {
     }
 
     @BuildCommand(summary="Build glib")
-    public void glib() {
+    public void glib() throws Exception {
+        downloadGirFiles();
         modules(new GLibBuild(this));
     }
 
     @BuildCommand(summary="Build gtk")
-    public void gtk() {
+    public void gtk() throws Exception {
+        downloadGirFiles();
         modules(new GtkBuild(this));
     }
 
     @BuildCommand(summary="Build adwaita")
-    public void adwaita() {
+    public void adwaita() throws Exception {
+        downloadGirFiles();
         modules(new AdwaitaBuild(this));
     }
 
     @BuildCommand(summary="Build gstreamer")
-    public void gstreamer() {
+    public void gstreamer() throws Exception {
+        downloadGirFiles();
         modules(new GStreamerBuild(this));
     }
 
     @BuildCommand(summary="Build all modules")
-    public void all() {
+    public void all() throws Exception {
         glib();
         gtk();
         adwaita();
