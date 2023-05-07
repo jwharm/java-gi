@@ -116,7 +116,7 @@ public class InstanceCache {
         }
 
         // Get the Java proxy TypeClass definition
-        Class<? extends GObject> instanceClass = ((GObject) newInstance).getClass();
+        Class<? extends TypeInstance> instanceClass = ((TypeInstance) newInstance).getClass();
         Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
         if (typeClass == null) {
             return fallback.apply(address);
