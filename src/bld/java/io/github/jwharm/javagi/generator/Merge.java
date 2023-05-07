@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.generator;
 import io.github.jwharm.javagi.model.*;
 import io.github.jwharm.javagi.model.Class;
 import io.github.jwharm.javagi.model.Module;
+import io.github.jwharm.javagi.model.Record;
 
 import java.util.*;
 
@@ -83,6 +84,19 @@ public class Merge {
     private void mergeRegisteredTypes(Namespace multi, List<Namespace> namespaces) {
         for (var ns : namespaces) {
             multi.registeredTypeMap.putAll(ns.registeredTypeMap);
+            for (var rt : ns.registeredTypeMap.values()) {
+                if (rt instanceof Union union) {
+                    multi.unionList.add(union);
+                } else if (rt instanceof Record record) {
+                    multi.recordList.add(record);
+                } else if (rt instanceof Interface iface) {
+                    multi.interfaceList.add(iface);
+                } else if (rt instanceof Alias alias) {
+                    multi.aliasList.add(alias);
+                } else if (rt instanceof Class cls) {
+                    multi.classList.add(cls);
+                }
+            }
         }
         for (String name : multi.registeredTypeMap.keySet()) {
             for (var ns : namespaces) {
