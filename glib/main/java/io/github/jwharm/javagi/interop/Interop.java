@@ -30,12 +30,10 @@ public class Interop {
     }
 
     /**
-     * Check if the runtime platform is in the list of provided platforms; if not, throws UnsupportedPlatformException
-     * @param supportedPlatforms the platforms on which the api call is supported
-     * @throws UnsupportedPlatformException when the runtime platform does not support this api call
+     * Determine the runtime platform
+     * @return the runtime platform: "windows", "linux" or "macos"
      */
-    public static void checkSupportedPlatform(String... supportedPlatforms) throws UnsupportedPlatformException {
-        // Determine the runtime platform
+    public static String getRuntimePlatform() {
         if (runtimePlatform == null) {
             String osName = System.getProperty("os.name").toLowerCase();
             if (osName.contains("windows")) {
@@ -46,9 +44,18 @@ public class Interop {
                 runtimePlatform = "macos";
             }
         }
+        return runtimePlatform;
+    }
+
+    /**
+     * Check if the runtime platform is in the list of provided platforms; if not, throws UnsupportedPlatformException
+     * @param supportedPlatforms the platforms on which the api call is supported
+     * @throws UnsupportedPlatformException when the runtime platform does not support this api call
+     */
+    public static void checkSupportedPlatform(String... supportedPlatforms) throws UnsupportedPlatformException {
         // Check if the runtime platform is in the list of platforms where this function is available
         for (var platform : supportedPlatforms) {
-            if (platform.equals(runtimePlatform)) {
+            if (platform.equals(getRuntimePlatform())) {
                 return;
             }
         }

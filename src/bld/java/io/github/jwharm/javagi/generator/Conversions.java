@@ -192,15 +192,20 @@ public class Conversions {
     public static String getValueLayoutPlain(Type t) {
         if (t == null) {
             return "ValueLayout.ADDRESS";
-        } else if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
-            return "ValueLayout.JAVA_INT";
-        } else if (t.isPrimitive) {
-            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
-        } else if (t.isAliasForPrimitive()) {
-            return getValueLayoutPlain(t.girElementInstance.type);
-        } else {
-            return "ValueLayout.ADDRESS";
         }
+        if (t.isEnum() || t.isBitfield() || t.isBoolean()) {
+            return "ValueLayout.JAVA_INT";
+        }
+        if (t.isPrimitive) {
+            if ("glong".equals(t.cType) || "gulong".equals(t.cType)) {
+                return "\"windows\".equals(Interop.getRuntimePlatform()) ? ValueLayout.JAVA_LONG : ValueLayout.JAVA_INT";
+            }
+            return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
+        }
+        if (t.isAliasForPrimitive()) {
+            return getValueLayoutPlain(t.girElementInstance.type);
+        }
+        return "ValueLayout.ADDRESS";
     }
 
     /**
