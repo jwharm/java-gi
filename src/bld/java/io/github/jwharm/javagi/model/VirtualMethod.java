@@ -30,6 +30,9 @@ public class VirtualMethod extends Method {
         writer.write(" {\n");
         writer.increaseIndent();
 
+        // Check for unsupported platforms
+        generatePlatformCheck(writer);
+
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {

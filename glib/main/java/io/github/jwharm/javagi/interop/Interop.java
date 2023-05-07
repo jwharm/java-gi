@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.interop;
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.Arrays;
+import java.util.StringJoiner;
 
 import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
@@ -17,6 +18,7 @@ public class Interop {
 
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
+    private static String runtimePlatform = null;
 
     static {
         SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
@@ -25,6 +27,37 @@ public class Interop {
         // Ensure that the "gobject-2.0" library has been loaded.
         // This is required for the downcall handle to g_signal_connect.
         GObjects.javagi$ensureInitialized();
+    }
+
+    /**
+     * Check if the runtime platform is in the list of provided platforms; if not, throws UnsupportedPlatformException
+     * @param supportedPlatforms the platforms on which the api call is supported
+     * @throws UnsupportedPlatformException when the runtime platform does not support this api call
+     */
+    public static void checkSupportedPlatform(String... supportedPlatforms) throws UnsupportedPlatformException {
+        // Determine the runtime platform
+        if (runtimePlatform == null) {
+            String osName = System.getProperty("os.name").toLowerCase();
+            if (osName.contains("windows")) {
+                runtimePlatform = "windows";
+            } else if (osName.contains("linux")) {
+                runtimePlatform = "linux";
+            } else {
+                runtimePlatform = "macos";
+            }
+        }
+        // Check if the runtime platform is in the list of platforms where this function is available
+        for (var platform : supportedPlatforms) {
+            if (platform.equals(runtimePlatform)) {
+                return;
+            }
+        }
+        // Runtime platform is not in list of supported platforms: throw UnsupportedPlatformException
+        StringJoiner joiner = new StringJoiner(" and ", "Unsupported API call (only available on ", ".");
+        for (var platform : supportedPlatforms) {
+            joiner.add(platform);
+        }
+        throw new UnsupportedPlatformException(joiner.toString());
     }
 
     /**

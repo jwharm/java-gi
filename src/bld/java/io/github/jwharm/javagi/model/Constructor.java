@@ -42,7 +42,7 @@ public class Constructor extends Method {
         }
 
         // Unsupported platforms
-        if (platforms.size() < 3 || parent.platforms.size() < 3) {
+        if (doPlatformCheck() || parent.platforms.size() < 3) {
             writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
         }
 
@@ -106,12 +106,15 @@ public class Constructor extends Method {
         }
 
         // Unsupported platforms
-        if (platforms.size() < 3 || parent.platforms.size() < 3) {
+        if (doPlatformCheck() || parent.platforms.size() < 3) {
             writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
         }
 
         writer.write(" {\n");
         writer.increaseIndent();
+
+        // Check for unsupported platforms
+        generatePlatformCheck(writer);
 
         // Call native constructor function
         writer.write("var _result = " + privateMethodName + "(");
@@ -154,8 +157,17 @@ public class Constructor extends Method {
         if (throws_ != null) {
             writer.write(" throws GErrorException");
         }
+
+        // Check for unsupported platforms
+        if (doPlatformCheck() || parent.platforms.size() < 3) {
+            writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
+        }
+
         writer.write(" {\n");
         writer.increaseIndent();
+
+        // Check for unsupported platforms
+        generatePlatformCheck(writer);
 
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();

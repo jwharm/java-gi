@@ -2,8 +2,10 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.StringJoiner;
 
 import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Method extends GirElement implements CallableType {
@@ -103,7 +105,7 @@ public class Method extends GirElement implements CallableType {
             }
 
             // Unsupported platforms (except getType())
-            if (platforms.size() < 3 && (! "get_type".equals(name))) {
+            if (doPlatformCheck()) {
                 writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
             }
         } catch (IOException ignored) {
@@ -141,6 +143,24 @@ public class Method extends GirElement implements CallableType {
         return writer.toString();
     }
 
+    public boolean doPlatformCheck() {
+        return platforms.size() < 3 && (! "get_type".equals(name));
+    }
+
+    public void generatePlatformCheck(SourceWriter writer) throws IOException {
+        // No platform check neccessary
+        if (! doPlatformCheck()) {
+            return;
+        }
+
+        // Generate platform check; this will throw UnsupportedPlatformException based on the runtime platform
+        StringJoiner joiner = new StringJoiner(", ", "Interop.checkSupportedPlatform(", ");\n");
+        for (Platform platform : platforms) {
+            joiner.add("\"" + platform.name.toLowerCase() + "\"");
+        }
+        writer.write(joiner.toString());
+    }
+
     public void generate(SourceWriter writer) throws IOException {
         if (skip) {
             return;
@@ -163,6 +183,9 @@ public class Method extends GirElement implements CallableType {
         
         writer.write(" {\n");
         writer.increaseIndent();
+
+        // Check for unsupported platforms
+        generatePlatformCheck(writer);
 
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
