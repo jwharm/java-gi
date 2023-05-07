@@ -7,12 +7,7 @@ import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.InterfaceInfo;
-import org.gnome.gobject.TypeClass;
-import org.gnome.gobject.TypeInterface;
-import org.gnome.gobject.TypeFlags;
+import org.gnome.gobject.*;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
@@ -93,11 +88,11 @@ public class Types {
      * Return the inner TypeClass class, or the inner TypeClass from the superclass, or null if not found.
      * @param cls the class that contains (or whose superclass contains) an inner TypeClass class
      * @return the TypeClass class, or null if not found
-     * @param <T> the parameter must extend {@link org.gnome.gobject.GObject}
+     * @param <T> the parameter must extend {@link org.gnome.gobject.TypeInstance}
      * @param <TC> the returned class extends {@link org.gnome.gobject.TypeClass}
      */
     @SuppressWarnings("unchecked")
-    public static <T extends GObject, TC extends GObject.ObjectClass> Class<TC> getTypeClass(Class<T> cls) {
+    public static <T extends TypeInstance, TC extends TypeClass> Class<TC> getTypeClass(Class<T> cls) {
         // Get the type-struct. This is an inner class that extends ObjectClass.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
