@@ -43,6 +43,10 @@ public class GitPullOperation extends AbstractOperation<GitPullOperation> {
                 .setRemoteBranchName("main")
                 .call();
             git.close();
+
+            if (! silent()) {
+                System.out.println("Git pull completed successfully.");
+            }
         } else {
             // Clone the repository
             Git.cloneRepository()
@@ -61,6 +65,10 @@ public class GitPullOperation extends AbstractOperation<GitPullOperation> {
             config.setString("remote", "origin", "url", uri_);
             config.save();
             git.close();
+
+            if (! silent()) {
+                System.out.println("Git clone completed successfully.");
+            }
         }
     }
 }
