@@ -18,7 +18,7 @@ import static io.github.jwharm.javagi.types.Types.LOG_DOMAIN;
 /**
  * Helper class to register properties in a new GType
  */
-class Properties {
+public class Properties {
 
     // Create a GParamFlags based on @Property annotation parameters
     private static ParamFlags getFlags(Property property) {
@@ -42,7 +42,7 @@ class Properties {
      * @param <T> the class must extend {@link org.gnome.gobject.GObject}
      * @param <TC> the returned lambda expects a {@link GObject.ObjectClass} parameter
      */
-    static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> installProperties(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> installProperties(Class<T> cls) {
         List<ParamSpec> propertySpecs = new ArrayList<>();
         propertySpecs.add(null); // Index 0 is reserved
 

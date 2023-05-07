@@ -17,7 +17,7 @@ import static io.github.jwharm.javagi.types.Types.LOG_DOMAIN;
 /**
  * Helper class to register method overrides in a new GType
  */
-class Overrides {
+public class Overrides {
 
     /**
      * Find declared methods that override methods defined in a GObject type class,
@@ -28,7 +28,7 @@ class Overrides {
      * @param <T> the class must extend {@link GObject}
      * @param <TC> the returned lambda expects a {@link GObject.ObjectClass} parameter
      */
-    static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> overrideClassMethods(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> overrideClassMethods(Class<T> cls) {
         Class<?> typeStruct = Types.getTypeClass(cls);
         if (typeStruct == null) {
             return null;

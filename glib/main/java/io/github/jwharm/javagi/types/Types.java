@@ -569,7 +569,7 @@ public class Types {
      * When only second is not null: Return second
      * When both lambdas are null: Return null
      */
-    private static <Z> Consumer<Z> chain(Consumer<Z> first, Consumer<Z> second) {
+    public static <Z> Consumer<Z> chain(Consumer<Z> first, Consumer<Z> second) {
         if (first != null && second != null) {
             return first.andThen(second);
         }
