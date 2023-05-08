@@ -28,6 +28,9 @@ public class Type extends GirElement {
     /** Only true if this type is represented by a primitive type on the Java side */
     public boolean isPrimitive;
 
+    /** Only true if this type is a generic type **/
+    public boolean isGeneric = false;
+
     public Type(GirElement parent, String name, String cType) {
         super(parent);
         this.cType = cType;
@@ -53,7 +56,7 @@ public class Type extends GirElement {
         }
         this.qualifiedName = name;
         this.simpleJavaType = Conversions.convertToJavaType(name, false, getNamespace());
-        this.qualifiedJavaType = Conversions.convertToJavaType(name, true, getNamespace());
+        this.qualifiedJavaType = isGeneric ? "T" : Conversions.convertToJavaType(name, true, getNamespace());
         this.isPrimitive = Conversions.isPrimitive(simpleJavaType);
         
         if (girElementInstance != null && girElementInstance instanceof Record rec && rec.isGTypeStructFor != null) {

@@ -160,14 +160,14 @@ public interface PatchSet {
                 if (m.parameters != null) {
                     for (Parameter p : m.parameters.parameterList) {
                         if (p.type != null && "org.gnome.gobject.GObject".equals(p.type.qualifiedJavaType)) {
-                            p.type.qualifiedJavaType = "T";
+                            p.type.isGeneric = true;
                         }
                     }
                 }
                 if (m.returnValue != null) {
                     Type returnType = m.returnValue.type;
                     if (returnType != null && "org.gnome.gobject.GObject".equals(returnType.qualifiedJavaType)) {
-                        returnType.qualifiedJavaType = "T";
+                        returnType.isGeneric = true;
                     }
                 }
             }

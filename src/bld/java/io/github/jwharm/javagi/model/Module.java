@@ -65,7 +65,6 @@ public class Module {
                         }
                     }
                     // Redo the initialization, now that all repositories have loaded.
-                    // If the repositories were loaded in the correct order, this will not change anything.
                     t.init(t.qualifiedName);
                 }
 
