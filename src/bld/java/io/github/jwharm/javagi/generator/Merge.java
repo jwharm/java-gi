@@ -38,15 +38,28 @@ public class Merge {
         mergeRepositories(merged, modules);
 
         // Merge registered types
-        merged.repositories.forEach((name, repository) -> mergeRegisteredTypes(repository.namespace,
-                modules.stream().map(module -> module.repositories.get(name).namespace).toList()));
+        merged.repositories.forEach((name, repository) -> {
+            if (repository.platforms.size() < 3) {
+                return;
+            }
+            mergeRegisteredTypes(repository.namespace, modules.stream().map(module ->
+                    module.repositories.get(name).namespace).toList());
+        });
 
         // Loop through the repositories, and merge globally defined methods
-        merged.repositories.forEach((name, repository) -> mergeMethods(repository.namespace,
-                modules.stream().map(module -> module.repositories.get(name).namespace).toList()));
+        merged.repositories.forEach((name, repository) -> {
+            if (repository.platforms.size() < 3) {
+                return;
+            }
+            mergeMethods(repository.namespace, modules.stream().map(module ->
+                    module.repositories.get(name).namespace).toList());
+        });
 
         // Loop through the repositories, loop through the registered types, and merge methods
         merged.repositories.forEach((name, repository) -> {
+            if (repository.platforms.size() < 3) {
+                return;
+            }
             List<Map<String, RegisteredType>> typeMaps = modules.stream().map(module ->
                     module.repositories.get(name).namespace.registeredTypeMap).toList();
 
@@ -207,24 +220,29 @@ public class Merge {
                 if (rt == null) {
                     continue;
                 }
+                // Check if this method exists on Windows
                 if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
-                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                        // Convert glong/gulong parameters to gint/guint
+                        overrideLongValues(method);
                     }
                 }
+                // Same for virtual methods
                 if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
-                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                        overrideLongValues(method);
                     }
                 }
+                // Same for functions (static methods)
                 if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
-                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                        overrideLongValues(method);
                     }
                 }
+                // Same for constructors
                 if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
-                        overrideLongValues(method); // Convert glong/gulong parameters to gint/guint
+                        overrideLongValues(method);
                     }
                 }
             }

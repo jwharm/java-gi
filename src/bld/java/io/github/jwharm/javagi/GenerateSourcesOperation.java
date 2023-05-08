@@ -32,10 +32,12 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         Set<String> namespaces = new LinkedHashSet<>();
         boolean generated = false;
 
-        // Parse gir files
+        // Parse all platform-specific gir files
         Module windows = parse(Platform.WINDOWS);
         Module linux = parse(Platform.LINUX);
         Module macos = parse(Platform.MACOS);
+
+        // Merge the gir repositories into one cross-platform repository
         Module module = new Merge().merge(windows, linux, macos);
 
         // Generate bindings classes

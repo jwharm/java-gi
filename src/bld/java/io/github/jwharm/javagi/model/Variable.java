@@ -338,7 +338,8 @@ public class Variable extends GirElement {
                 case "gulong" -> "org.gnome.glib.Type.G_TYPE_ULONG";
                 case "gint64" -> "org.gnome.glib.Type.G_TYPE_INT64";
                 case "guint64" -> "org.gnome.glib.Type.G_TYPE_UINT64";
-                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "org.gnome.glib.Type.G_TYPE_POINTER";
+                case "gpointer", "gconstpointer", "gssize", "gsize",
+                        "goffset", "gintptr", "guintptr" -> "org.gnome.glib.Type.G_TYPE_POINTER";
                 case "gdouble" -> "org.gnome.glib.Type.G_TYPE_DOUBLE";
                 case "gfloat" -> "org.gnome.glib.Type.G_TYPE_FLOAT";
                 case "none" -> "org.gnome.glib.Type.G_TYPE_NONE";
@@ -355,7 +356,9 @@ public class Variable extends GirElement {
         if (type.qualifiedJavaType.equals("org.gnome.gobject.GObject")) {
             return "org.gnome.glib.Type.G_TYPE_OBJECT";
         }
-        RegisteredType rt = (type.isAlias() && (! type.isAliasForPrimitive())) ? type.girElementInstance.type.girElementInstance : type.girElementInstance;
+        RegisteredType rt = (type.isAlias() && (! type.isAliasForPrimitive()))
+                ? type.girElementInstance.type.girElementInstance
+                : type.girElementInstance;
         if (rt != null) {
             if (rt.isInstanceOf("org.gnome.gobject.ParamSpec")) {
                 return "org.gnome.glib.Type.G_TYPE_PARAM";

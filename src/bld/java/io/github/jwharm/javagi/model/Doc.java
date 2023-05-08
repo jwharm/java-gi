@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.Javadoc;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
@@ -61,10 +62,23 @@ public class Doc extends GirElement {
                 }
             }
             
-            // Exception
+            // Exceptions
             if (parent instanceof Method m) {
                 if ("1".equals(m.throws_)) {
                     writeDoc(writer, "GErrorException see {@link org.gnome.glib.GError}", "@throws");
+                }
+
+                if (m.platforms.size() < 3) {
+                    String text = "UnsupportedPlatformException when run on a platform other than ";
+                    boolean first = true;
+                    for (var p : m.platforms) {
+                        if (! first) {
+                            text += " or ";
+                        }
+                        text += Conversions.toCamelCase(p.name, true);
+                        first = false;
+                    }
+                    writeDoc(writer, text, "@throws");
                 }
             }
         }

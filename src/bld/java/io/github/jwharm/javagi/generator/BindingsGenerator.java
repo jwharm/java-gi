@@ -132,6 +132,7 @@ public class BindingsGenerator {
             writer.write("/**\n");
             writer.write(" * This package contains the generated bindings for " + gir.namespace.name + ".\n");
             writer.write(" * <p>\n");
+
             if (gir.natives != null) {
                 writer.write(" * The following native libraries are required and will be loaded: ");
                 for (String libraryName : gir.natives) {
@@ -141,6 +142,21 @@ public class BindingsGenerator {
                 writer.write(" * <p>\n");
             }
             writer.write(" * For namespace-global declarations, refer to the {@link " + className + "} class documentation.\n");
+
+            if (gir.platforms.size() < 3) {
+                writer.write(" * <p>\n");
+                writer.write(" * This package is only available on ");
+                boolean first = true;
+                for (var p : gir.platforms) {
+                    if (! first) {
+                        writer.write(" and ");
+                    }
+                    writer.write(Conversions.toCamelCase(p.name, true));
+                    first = false;
+                }
+                writer.write(".\n");
+            }
+
             writer.write(" */\n");
             writer.write("package " + gir.namespace.packageName + ";\n");
         }
