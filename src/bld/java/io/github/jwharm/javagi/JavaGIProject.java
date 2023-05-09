@@ -46,8 +46,8 @@ public class JavaGIProject extends Project {
 
         javadocOperation()
             .sourceDirectories(generateSourcesOperation().outputDirectory().toFile())
-            .javadocOptions(List.of("--module-path", getModulePathString()))
             .javadocOptions()
+                .modulePath(getModulePath())
                 .enablePreview()
                 .docLint(JavadocOptions.DocLinkOption.NO_MISSING)
                 .quiet();
@@ -86,10 +86,6 @@ public class JavaGIProject extends Project {
         return modules;
     }
 
-    private String getModulePathString() {
-        return FileUtils.joinPaths(getModulePath().stream().map(File::getAbsolutePath).toList());
-    }
-
     @BuildCommand(value="generate-sources", summary="Generates Java sources from gir files")
     public void generateSources() throws Exception {
         generateSourcesOperation().executeOnce();
@@ -107,7 +103,6 @@ public class JavaGIProject extends Project {
      */
     @Override
     public void javadoc() throws Exception {
-        javadocOperation().javadocOptions(List.of("--module-path", getModulePathString()));
-        javadocOperation().executeOnce(() -> javadocOperation().fromProject(this));
+        javadocOperation().javadocOptions().modulePath(getModulePath());
     }
 }
