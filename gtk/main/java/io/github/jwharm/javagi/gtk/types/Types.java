@@ -183,16 +183,16 @@ public class Types {
      * {@link io.github.jwharm.javagi.types.Types#register(Class)}
      * @param cls a @GtkTemplate-annotated class
      * @return the new GType that has been registered
-     * @param <T> the class must extend GtkWidget
+     * @param <W> the class must extend GtkWidget
      */
-    public static <T extends Widget> Type registerTemplate(Class<T> cls) {
+    private static <W extends Widget> Type registerTemplate(Class<W> cls) {
         try {
             String typeName = getTemplateName(cls);
             MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, typeName);
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = getGType(parentClass);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
-            Function<MemorySegment, T> constructor = getAddressConstructor(cls);
+            Function<MemorySegment, W> constructor = getAddressConstructor(cls);
             TypeFlags flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
@@ -208,8 +208,8 @@ public class Types {
             classInit = chain(classInit, userDefinedClassInit);
 
             // Chain template instance init with user-defined init function
-            Consumer<T> instanceInit = getTemplateInstanceInit(cls);
-            Consumer<T> userDefinedInit = getInstanceInit(cls);
+            Consumer<W> instanceInit = getTemplateInstanceInit(cls);
+            Consumer<W> userDefinedInit = getInstanceInit(cls);
             if (userDefinedInit != null)
                 instanceInit = instanceInit.andThen(userDefinedInit);
 
@@ -234,13 +234,19 @@ public class Types {
     }
 
     /**
-     * Convenience function that redirects to {@link io.github.jwharm.javagi.types.Types#register(Class)}
+     * Redirects to {@link Types#registerTemplate(Class)} for Widget.class and
+     * {@link io.github.jwharm.javagi.types.Types#register(Class)} for GObject.class.
      * @param cls the class to register as a new GType
      * @return the new GType
      * @param <T> the class must extend {@link org.gnome.gobject.GObject}
      */
-    public static <T extends GObject> Type register(Class<T> cls) {
-        return io.github.jwharm.javagi.types.Types.register(cls);
+    @SuppressWarnings("unchecked")
+    public static <T extends GObject, W extends Widget> Type register(Class<T> cls) {
+        if (Widget.class.isAssignableFrom(cls)) {
+            return registerTemplate((Class<W>) cls);
+        } else {
+            return io.github.jwharm.javagi.types.Types.register(cls);
+        }
     }
 
     /**
