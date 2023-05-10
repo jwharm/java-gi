@@ -2,4 +2,4 @@ jdk:
   - openjdk20
 
 install:
-  - ./bld download all publish
+  - ./bld all download publish
