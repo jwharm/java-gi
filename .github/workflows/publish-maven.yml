@@ -1,4 +1,4 @@
-name: Publish package to GitHub Packages
+name: Publish package
 
 on:
   release:
@@ -16,37 +16,28 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.x'
       - name: Install MkDocs
         run: pip3 install mkdocs
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          java-version: |
-            20
-            19
+          java-version: 20
           distribution: 'temurin'
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
       - name: Build Project and Publish Maven Packages
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publish javadoc --stacktrace
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./bld download all publish
       - name: Build Site
         working-directory: website/
         run: mkdocs build
       - name: Create Site Artifact
         run: |
-          mkdir site
+          mv website/site site
           mv glib/build/docs/javadoc site/glib
           mv gstreamer/build/docs/javadoc site/gstreamer
           mv gtk/build/docs/javadoc site/gtk
           mv adwaita/build/docs/javadoc site/adwaita
-          mv website/site/* site/
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
