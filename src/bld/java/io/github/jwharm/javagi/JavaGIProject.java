@@ -104,5 +104,6 @@ public class JavaGIProject extends Project {
     @Override
     public void javadoc() throws Exception {
         javadocOperation().javadocOptions().modulePath(getModulePath());
+        super.javadoc();
     }
 }
