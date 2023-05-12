@@ -24,7 +24,7 @@ public class JavaGIBuild extends ModularProject {
     public JavaGIBuild() {
         pkg = "io.github.jwharm.javagi";
         name = "javagi";
-        version = version(0, 5).withQualifier("SNAPSHOT");
+        version = version(0, 5);
         showStacktrace = true;
 
         gitPullOperation_ = new GitPullOperation()
