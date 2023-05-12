@@ -16,7 +16,7 @@ Please note that Java-GI is still under active development. The bindings should 
 ## Quickstart
 
 - Java-GI requires [JDK 20](https://jdk.java.net/20/).
-- To create a Gtk application, add the `glib` and `gtk` artifacts as dependencies, as described on [jitpack.io](https://jitpack.io/#jwharm/java-gi). Make sure to select the versions that end with '-0.5'.
+- Download the jar files of the GLib, Gtk, Adwaita and GStreamer bindings from the [Java-GI v0.5 release artifacts](https://github.com/jwharm/java-gi/releases/tag/v0.5).
 - If your application has a `module-info.java` file, add `requires org.gnome.gtk;` to it.
 - Write, compile and run a GTK application:
 
