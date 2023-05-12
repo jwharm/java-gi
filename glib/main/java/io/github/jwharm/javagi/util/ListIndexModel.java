@@ -16,6 +16,9 @@ import org.gnome.gobject.*;
  */
 public class ListIndexModel extends GObject implements ListModel {
 
+    private static final Type gtype = Types.register(ListIndexModel.class);
+    private ArrayList<ListIndex> items = new ArrayList<>();
+
     /**
      * Construct a ListIndexModel for the provided memory address.
      * @param address the memory address of the instance in native memory
@@ -24,27 +27,12 @@ public class ListIndexModel extends GObject implements ListModel {
         super(address);
     }
 
-    private static Type type;
-    private ArrayList<ListIndex> items = new ArrayList<>();
-
-    /**
-     * Get the gtype of {@link ListIndexModel}, or register it as a new gtype
-     * if it was not registered yet.
-     * @return the {@link Type} that has been registered for {@link ListIndexModel}
-     */
-    public static Type getType() {
-        if (type == null) {
-            type = Types.register(ListIndexModel.class);
-        }
-        return type;
-    }
-
     /**
      * Instantiate a new ListIndexModel with the provided size.
      * @param size the initial size of the list model
      */
     public static ListIndexModel newInstance(int size) {
-        ListIndexModel model = GObject.newInstance(getType());
+        ListIndexModel model = GObject.newInstance(gtype);
         model.setSize(size);
         return model;
     }
@@ -68,7 +56,7 @@ public class ListIndexModel extends GObject implements ListModel {
     @Property(name="item-type", type=ParamSpecGType.class, constructOnly=true)
     @Override
     public Type getItemType() {
-        return ListIndex.getType();
+        return ListIndex.gtype;
     }
 
     /**
@@ -97,7 +85,7 @@ public class ListIndexModel extends GObject implements ListModel {
      */
     public static class ListIndex extends GObject {
 
-        private static Type type;
+        private static final Type gtype = Types.register(ListIndex.class);
         private int index;
 
         /**
@@ -109,23 +97,12 @@ public class ListIndexModel extends GObject implements ListModel {
         }
 
         /**
-         * Get the gtype of the ListIndex class. The gtype will be
-         * registered on the first call to this method.
-         * @return the gtype of the ListIndex class
-         */
-        public static Type getType() {
-            if (type == null)
-                type = Types.register(ListIndex.class);
-            return type;
-        }
-
-        /**
          * Construct a new ListIndex with the provided value
          * @param value the value of the ListIndex instance
          * @return a new ListIndex instance
          */
         public static ListIndex newInstance(int value) {
-            ListIndex instance = GObject.newInstance(getType());
+            ListIndex instance = GObject.newInstance(gtype);
             instance.index = value;
             return instance;
         }
