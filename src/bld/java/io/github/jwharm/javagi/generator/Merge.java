@@ -46,6 +46,12 @@ public class Merge {
                     module.repositories.get(name).namespace).toList());
         });
 
+        // Merge constants
+        merged.repositories.forEach((name, repository) -> {
+            mergeConstants(repository.namespace, modules.stream().map(module ->
+                    module.repositories.get(name).namespace).toList());
+        });
+
         // Loop through the repositories, and merge globally defined methods
         merged.repositories.forEach((name, repository) -> {
             if (repository.platforms.size() < 3) {
@@ -82,6 +88,18 @@ public class Merge {
             for (var module : platformModules) {
                 if (module.repositories.containsKey(name)) {
                     merged.repositories.get(name).platforms.add(module.platform);
+                }
+            }
+        }
+    }
+
+    private void mergeConstants(Namespace multi, List<Namespace> namespaces) {
+        Set<String> constants = new HashSet<>();
+        for (var ns : namespaces) {
+            for (var constant : ns.constantList) {
+                if (! constants.contains(constant.name)) {
+                    multi.constantList.add(constant);
+                    constants.add(constant.name);
                 }
             }
         }
