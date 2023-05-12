@@ -59,16 +59,19 @@ public class HelloWorld {
 
 While the Panama foreign function API is still in preview status, you must add the `--enable-preview` JVM parameter when compiling and running your application. To suppress warnings about native access, also add `--enable-native-access=org.gnome.glib,org.gnome.gtk`.
 
+The result:
+
+![Screenshot of a simple Java-GI HelloWorld app](images/simple-helloworld.png)
+
 It is recommended to download the Javadoc documentation and sources to assist during the development of your GTK application. The original docstrings have been transformed to Javadoc syntax, so they are really nice to use.
 
 ## Examples
 
-You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`.
+You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`:
 
-- Very basic "Hello world" app
-- "Peg Solitaire" game (ported from the Gtk demo)
-- Calculator
-- Simple notepad
+| ![Hello World screenshot](images/simple-helloworld.png) | ![Peg Solitaire screenshot](images/peg-solitaire.png) | ![Calculator screenshot](images/calculator.png) | ![Notepad screenshot](images/notepad.png) |
+| ---- | ---- | ---- | ---- |
+| Very basic "Hello world" app | "Peg Solitaire" game (ported from the Gtk demo) | Calculator | Simple notepad |
 
 ## Features
 
