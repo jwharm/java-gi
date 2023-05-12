@@ -22,7 +22,7 @@ public class GLibBuild extends JavaGIProject {
 
     public GLibBuild(JavaGIBuild bld) {
         super(bld, "glib");
-        version = version(2,74).withQualifier(bld.version().toString());
+        version = version(2,76).withQualifier(bld.version().toString());
         srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
