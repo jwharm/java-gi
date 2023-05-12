@@ -27,29 +27,29 @@ public class HelloWorld {
     public static void main(String[] args) {
         new HelloWorld(args);
     }
-    
+
     private final Application app;
-    
+
     public HelloWorld(String[] args) {
         app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
         app.onActivate(this::activate);
         app.run(args);
     }
-    
+
     public void activate() {
         var window = new ApplicationWindow(app);
         window.setTitle("GTK from Java");
         window.setDefaultSize(300, 200);
-        
+
         var box = Box.builder()
             .setOrientation(Orientation.VERTICAL)
             .setHalign(Align.CENTER)
             .setValign(Align.CENTER)
             .build();
-        
+
         var button = Button.newWithLabel("Hello world!");
         button.onClicked(window::close);
-        
+
         box.append(button);
         window.setChild(box);
         window.present();
@@ -94,6 +94,8 @@ As an example, the generated documentation of `gtk_button_get_icon_name` contain
 public @Nullable java.lang.String getIconName() {
     ...
 ```
+
+![Javadoc screenshot](images/javadoc.png)
 
 The Javadoc is also published online:
 
