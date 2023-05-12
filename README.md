@@ -11,6 +11,8 @@
 
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
+[For more information, visit the Java-GI website.](https://jwharm.github.io/java-gi/)
+
 ## Quickstart
 
 - Java-GI requires [JDK 20](https://jdk.java.net/20/).
