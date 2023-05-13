@@ -6,32 +6,26 @@ When you extend a Java class from an existing GObject-derived class, Java will t
 exports [package.name] to org.gnome.glib;
 ```
 
-It is recommended to register the new gtype in a method `public Type getType()` like this:
+It is recommended to register the new gtype in a field `gtype` like this:
 
 ```java
 public class MyObject extends GObject {
 
-    private static Type type;
-    
-    public Type getType() {
-        if (type == null)
-            type = Types.register(MyObject.class);
-        return type;
-    }
+    public static final Type gtype = Types.register(MyObject.class);
 ```
 
-When instantiating a new instance of the object with `GObject.newInstance`, you call `getType()` to register the new gtype and pass it to the GObject constructor:
+When instantiating a new instance of the object with `GObject.newInstance`, you pass the `gtype` to register the new gtype and pass it to the GObject constructor:
 
 ```java
     public MyObject newInstance() {
-        return GObject.newInstance(getType());
+        return GObject.newInstance(gtype);
     }
 ```
 
 Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
 ```java
-    public MyObject(Addressable address) {
+    public MyObject(MemorySegment address) {
         super(address);
     }
 }
@@ -60,17 +54,17 @@ You can define GObject properties with the `@Property` annotation on the getter 
 Example definition of an `int` property with name `size`:
 
 ```java
-    private int size;
+private int size;
 
-    @Property(name="n-items", type=ParamSpecInt.class)
-    public int getNItems() {
-        return size;
-    }
+@Property(name="n-items", type=ParamSpecInt.class)
+public int getNItems() {
+    return size;
+}
 
-    @Property(name="n-items")
-    public void setNItems(int nItems) {
-        size = nItems;
-    }
+@Property(name="n-items")
+public void setNItems(int nItems) {
+    size = nItems;
+}
 ```
 
 The `@Property` annotation accepts the following parameters:
@@ -93,15 +87,15 @@ The type must be one of the subclasses of `GParamSpec`.  The boolean parameters 
 To implement a custom class initializer or instance initializer function, use the `@ClassInit` and `@InstanceInit` attributes:
 
 ```java
-    // (Optional) class initialization function    
-    @ClassInit
-    public static void classInit(GObject.ObjectClass typeClass) {
-        ...
-    }
+// (Optional) class initialization function    
+@ClassInit
+public static void classInit(GObject.ObjectClass typeClass) {
+    ...
+}
 
-    // (Optional) instance initialization function    
-    @InstanceInit
-    public static void init(MyObject instance) {
-        ...
-    }
+// (Optional) instance initialization function    
+@InstanceInit
+public static void init(MyObject instance) {
+    ...
+}
 ```

@@ -2,17 +2,17 @@
 
 ## Required Java version
 
-First, download and install [JDK 19](https://jdk.java.net/19/). Java-GI uses the "Panama" Foreign Function & Memory API that is available as a preview feature in JDK 19.
+First, download and install [JDK 19](https://jdk.java.net/20/). Java-GI uses the "Panama" Foreign Function & Memory API that is available as a preview feature in JDK 20.
 
-Please be aware that the Panama API is still under development. The current version of Java-GI has been developed with JDK 19, and will not work with JDK 20. Future versions of Java-GI will be ported to JDK 20 and then JDK 21, etcetera, until Panama enters general availability.
+Please be aware that the Panama API is still under development. You will need to pass the `--enable-preview` parameter when compiling and running Java-GI applications.
 
 ## Dependencies
 
 First of all, make sure that the native GLib, Gtk and/or GStreamer libraries are installed on your operating system.
 
-Next, download the jar files with the Java bindings from [Github Packages](https://github.com/jwharm?tab=packages&repo_name=java-gi). At a minimum, you will need to download the GLib bindings jar. Additionally, download the Gtk, Adwaita and/or GStreamer bindings, and add the jars to the classpath of your project.
+Next, download the jar files with the Java bindings from [Github](https://github.com/jwharm/java-gi). The jar files are published as artifacts under the v0.5 release. At a minimum, you will need to download the GLib bindings jar. Additionally, download the Gtk, Adwaita and/or GStreamer bindings, and add the jars to the classpath of your project.
 
-It is recommended to download the Javadoc documentation and sources, to assist during the development of your GTK application. They are available for download from Github Packages.
+It is recommended to download the Javadoc documentation and sources, to assist during the development of your GTK application.
 
 ## Modules
 
@@ -30,21 +30,27 @@ Each module transitively exports its dependencies, so when you want to create a 
 An example Gtk application with a "Hello world" button can be created as follows:
 
 ```java
-package io.github.jwharm.javagi.example;
+package io.github.jwharm.javagi.examples.helloworld;
 
 import org.gnome.gtk.*;
 import org.gnome.gio.ApplicationFlags;
 
-public class HelloWorld extends Application {
+public class HelloWorld {
 
     public static void main(String[] args) {
-        var app = new HelloWorld("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
-        app.onActivate(app::activate);
+        new HelloWorld(args);
+    }
+    
+    private final Application app;
+    
+    public HelloWorld(String[] args) {
+        app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
+        app.onActivate(this::activate);
         app.run(args);
     }
     
     public void activate() {
-        var window = new ApplicationWindow(this);
+        var window = new ApplicationWindow(app);
         window.setTitle("GTK from Java");
         window.setDefaultSize(300, 200);
         
@@ -59,7 +65,7 @@ public class HelloWorld extends Application {
         
         box.append(button);
         window.setChild(box);
-        window.show();
+        window.present();
     }
 }
 ```

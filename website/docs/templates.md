@@ -8,13 +8,7 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
 @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
 public class HelloWindow extends ApplicationWindow {
 
-    private static Type type;
-
-    public static Type getType() {
-        if (type == null)
-            type = Types.registerTemplate(HelloWindow.class);
-        return type;
-    }
+    public static final Type gtype = Types.register(HelloWindow.class);
 
     @GtkChild
     public HeaderBar header_bar;
