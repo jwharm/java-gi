@@ -17,7 +17,7 @@ public class GStreamerBuild extends JavaGIProject {
 
     public GStreamerBuild(JavaGIBuild bld) {
         super(bld, "gstreamer");
-        version = version(1, 22).withQualifier(bld.version().toString());
+        version = version(1, 20).withQualifier(bld.version().toString());
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", false, Set.of("glib-2.0"), new GLibPatch())
