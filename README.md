@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.5 generates bindings to develop Java applications with the following libraries:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.5.1 generates bindings to develop Java applications with the following libraries:
 
 | Library    | Version |
 |------------|---------|
@@ -15,8 +15,37 @@ Please note that Java-GI is still under active development. The bindings should 
 
 ## Quickstart
 
-- Java-GI requires [JDK 20](https://jdk.java.net/20/).
-- Download the jar files of the GLib, Gtk, Adwaita and GStreamer bindings from the [Java-GI v0.5 release artifacts](https://github.com/jwharm/java-gi/releases/tag/v0.5).
+To use Java-GI in your app, you need to specify a few things in your `gradle.build` file:
+
+- Set the Java language version to 20
+
+- Add the [JitPack](https://jitpack.io) repository in your root `build.gradle` at the end of repositories:
+
+```groovy
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+- Add the following dependencies to your `build.gradle` file:
+
+```groovy
+dependencies {
+    compileOnly 'org.jetbrains:annotations:24.+'
+    implementation 'com.github.jwharm.java-gi:glib:v0.5.1'
+    implementation 'com.github.jwharm.java-gi:gtk:v0.5.1'
+    implementation 'com.github.jwharm.java-gi:adwaita:v0.5.1'
+    implementation 'com.github.jwharm.java-gi:gstreamer:v0.5.1'
+}
+```
+
+- While the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
+
+See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/build.gradle) for a complete example.
+
 - If your application has a `module-info.java` file, add `requires org.gnome.gtk;` to it.
 - Write, compile and run a GTK application:
 
@@ -59,8 +88,6 @@ public class HelloWorld {
 }
 ```
 
-While the Panama foreign function API is still in preview status, you must add the `--enable-preview` JVM parameter when compiling and running your application. To suppress warnings about native access, also add `--enable-native-access=org.gnome.glib,org.gnome.gtk`.
-
 The result:
 
 ![Screenshot of a simple Java-GI HelloWorld app](images/simple-helloworld.png)
@@ -73,7 +100,7 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 
 | ![Hello World screenshot](images/simple-helloworld.png) | ![Peg Solitaire screenshot](images/peg-solitaire.png) | ![Calculator screenshot](images/calculator.png) | ![Notepad screenshot](images/notepad.png) |
 | ---- | ---- | ---- | ---- |
-| Very basic "Hello world" app | "Peg Solitaire" game (ported from the Gtk demo) | Calculator | Simple notepad |
+| [Hello World](https://github.com/jwharm/java-gi-examples/tree/main/HelloWorld) | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
 
 ## Features
 
