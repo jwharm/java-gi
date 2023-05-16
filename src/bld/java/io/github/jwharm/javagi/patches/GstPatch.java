@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.Patch;
 import io.github.jwharm.javagi.model.Repository;
 
-public class GstPatch implements PatchSet {
+public class GstPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {

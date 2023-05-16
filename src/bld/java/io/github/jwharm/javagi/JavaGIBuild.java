@@ -1,5 +1,10 @@
 package io.github.jwharm.javagi;
 
+import io.github.jwharm.javagi.modules.AdwaitaBuild;
+import io.github.jwharm.javagi.modules.GLibBuild;
+import io.github.jwharm.javagi.modules.GStreamerBuild;
+import io.github.jwharm.javagi.modules.GtkBuild;
+import io.github.jwharm.javagi.operations.GitPullOperation;
 import rife.bld.BuildCommand;
 import java.nio.file.Path;
 

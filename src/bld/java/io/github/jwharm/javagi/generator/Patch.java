@@ -3,8 +3,7 @@ package io.github.jwharm.javagi.generator;
 import io.github.jwharm.javagi.model.*;
 
 @FunctionalInterface
-public interface PatchSet {
-    PatchSet EMPTY = new Empty();
+public interface Patch {
 
     void patch(Repository repo);
 
@@ -195,7 +194,7 @@ public interface PatchSet {
         else inst.injected += code;
     }
 
-    class Empty implements PatchSet {
+    class Empty implements Patch {
         @Override
         public void patch(Repository repository) {
         }

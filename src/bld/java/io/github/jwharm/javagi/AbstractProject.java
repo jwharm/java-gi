@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
 import rife.bld.BuildCommand;
 import rife.bld.Project;
 import rife.bld.operations.JavadocOptions;
@@ -17,13 +18,13 @@ import static rife.bld.dependencies.Repository.MAVEN_CENTRAL;
 import static rife.bld.dependencies.Repository.MAVEN_LOCAL;
 import static rife.bld.dependencies.Scope.compile;
 
-public class JavaGIProject extends Project {
+public abstract class AbstractProject extends Project {
 
     public static final Pattern SOURCES_JAR_FILE_PATTERN = Pattern.compile("^.*-sources\\.jar$");
 
     private final GenerateSourcesOperation generateSourcesOperation_;
 
-    public JavaGIProject(JavaGIBuild bld, String name) {
+    public AbstractProject(JavaGIBuild bld, String name) {
         this.name = name;
         javaRelease = 20;
         repositories = List.of(MAVEN_CENTRAL);
@@ -60,7 +61,7 @@ public class JavaGIProject extends Project {
             .info(new PublishInfo()
                 .groupId("io.github.jwharm.javagi")
                 .artifactId(name)
-                .description("Java bindings for " + name + ", generated from GObject-Introspection")
+                .description("Java bindings for " + name + ", generated with Java-GI")
                 .url("https://jwharm.github.io/java-gi/")
                 .developer(new PublishDeveloper()
                     .id("jwharm")
@@ -91,6 +92,10 @@ public class JavaGIProject extends Project {
         generateSourcesOperation().executeOnce();
     }
 
+    /**
+     * Overrides {@link Project#compile()} to run {@link #generateSources()}
+     * and set the module path
+     */
     @Override
     public void compile() throws Exception {
         generateSources();
@@ -99,7 +104,7 @@ public class JavaGIProject extends Project {
     }
 
     /**
-     * Overrides {@link Project#javadoc()} to avoid recompiling the project
+     * Overrides {@link Project#javadoc()} to set the module path
      */
     @Override
     public void javadoc() throws Exception {

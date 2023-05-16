@@ -31,10 +31,10 @@ Alternatively, in most Linux distributions, the gir files are usually installed 
 
 Once the gir file is available, you can add a module to Java-GI for it (replace "xxx" with the library name).
 
-- Add a new `XxxBuild` class in the `src/bld/java/io/github/jwharm/javagi` folder (you can use the existing classes as examples). Change the input- and output-paths to the correct locations.
+- Add a new `XxxBuild` class in the `src/bld/java/io/github/jwharm/javagi/modules` folder (you can use the existing classes as examples). Change the input- and output-paths to the correct locations.
 
-- Add a build command for your library to the `JavaGIBuild` class (located in the same folder). This is a simple method, annotated with `@BuildCommand`, that adds your `XxxBuild` class to the list of modules that will be built.
+- Add a build command for your library to the `JavaGIBuild` class (located in the parent folder). This is a simple method, annotated with `@BuildCommand`, that adds your `XxxBuild` class to the list of modules that will be built.
 
 Run `./bld xxx publish` to generate bindings, compile the classes, create jar, javadoc-jar and sources-jar artifacts, and publish them in maven-local. (They can also be found in the `build/dist` directory.)
 
-If you encounter any problems or errors, check the generated Java source code in the `build/generated` directory for issues. When neccessary, you can patch the introspection data. To do this, create a `XxxPatch` class implementing `PatchSet` in the folder `src/bld/java/io/github/jwharm/javagi/patches`. You can use the other patches as examples.
+If you encounter any problems or errors, check the generated Java source code in the `build/generated` directory for issues. When neccessary, you can patch the introspection data. To do this, create a `XxxPatch` class implementing `PatchSet` in the folder `src/bld/java/io/github/jwharm/javagi/patches` and add it to the `source()` line in the module build class. You can use the other patches as examples.

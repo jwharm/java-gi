@@ -1,11 +1,11 @@
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.Patch;
 import io.github.jwharm.javagi.model.Method;
 import io.github.jwharm.javagi.model.Parameter;
 import io.github.jwharm.javagi.model.Repository;
 
-public class GstAudioPatch implements PatchSet {
+public class GstAudioPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {

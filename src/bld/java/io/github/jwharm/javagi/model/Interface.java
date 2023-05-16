@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.GObjectBuilder;
+import io.github.jwharm.javagi.generator.Builder;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class Interface extends RegisteredType {
             classStruct.generate(writer);
         }
         
-        GObjectBuilder.generateInterfaceBuilder(writer, this);
+        Builder.generateInterfaceBuilder(writer, this);
         generateDowncallHandles(writer);
         generateImplClass(writer);
 

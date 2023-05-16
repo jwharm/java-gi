@@ -1,11 +1,11 @@
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.Patch;
 import io.github.jwharm.javagi.model.Field;
 import io.github.jwharm.javagi.model.Repository;
 import io.github.jwharm.javagi.model.Type;
 
-public class GObjectPatch implements PatchSet {
+public class GObjectPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {

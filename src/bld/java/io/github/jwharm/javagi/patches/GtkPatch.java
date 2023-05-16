@@ -1,10 +1,10 @@
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.PatchSet;
+import io.github.jwharm.javagi.generator.Patch;
 import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.model.Repository;
 
-public class GtkPatch implements PatchSet {
+public class GtkPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {

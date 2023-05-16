@@ -1,7 +1,7 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.GObjectBuilder;
+import io.github.jwharm.javagi.generator.Builder;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class Class extends RegisteredType {
         }
         
         if (isInstanceOf("org.gnome.gobject.GObject")) {
-            GObjectBuilder.generateBuilder(writer, this);
+            Builder.generateBuilder(writer, this);
         }
         generateDowncallHandles(writer);
 

@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi;
+package io.github.jwharm.javagi.operations;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.file.FileRepository;

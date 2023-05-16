@@ -1,11 +1,13 @@
-package io.github.jwharm.javagi;
+package io.github.jwharm.javagi.modules;
 
+import io.github.jwharm.javagi.JavaGIBuild;
+import io.github.jwharm.javagi.AbstractProject;
 import io.github.jwharm.javagi.patches.*;
 
 import java.io.File;
 import java.util.Set;
 
-public class GtkBuild extends JavaGIProject {
+public class GtkBuild extends AbstractProject {
 
     private static final String MODULE_INFO = """
         module org.gnome.gtk {

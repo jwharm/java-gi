@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi;
+package io.github.jwharm.javagi.operations;
 
 import io.github.jwharm.javagi.generator.*;
 import io.github.jwharm.javagi.model.Module;
@@ -44,7 +44,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         for (Repository repository : module.repositories.values()) {
             if (repository.generate) {
                 Path basePath = outputDirectory().resolve(repository.namespace.pathName);
-                BindingsGenerator.generate(repository, basePath);
+                repository.generate(basePath);
                 namespaces.add(repository.namespace.packageName);
                 generated = true;
             }
@@ -73,12 +73,12 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         }
 
         // Parse the GI files into Repository objects
-        for (Source source : sources()) {
+        for (Source(String fileName, String pkg, boolean generate, Set<String> natives, Patch patches) : sources()) {
             try {
                 // Parse the file
-                Repository r = parser.parse(girPath.resolve(source.fileName()), source.pkg());
-                r.generate = source.generate;
-                r.natives = source.natives;
+                Repository r = parser.parse(girPath.resolve(fileName), pkg);
+                r.generate = generate;
+                r.natives = natives;
 
                 // Add the repository to the module
                 module.repositories.put(r.namespace.name, r);
@@ -87,12 +87,12 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                 module.flagVaListFunctions();
 
                 // Apply patches
-                if (source.patches() != null) {
-                    source.patches().patch(r);
+                if (patches != null) {
+                    patches.patch(r);
                 }
 
             } catch (IOException ioe) {
-                System.out.println("Not found: " + source.fileName());
+                System.out.println("Not found: " + fileName);
             }
         }
 
@@ -105,7 +105,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
     /**
      * Source GIR file to parse
      */
-    public record Source(String fileName, String pkg, boolean generate, Set<String> natives, PatchSet patches) {}
+    public record Source(String fileName, String pkg, boolean generate, Set<String> natives, Patch patches) {}
 
     /**
      * Provides the source directory that will be used for the JavaGI operation.
@@ -169,7 +169,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @param natives the names of native libraries
      * @param patches patches to apply before generating bindings
      */
-    public GenerateSourcesOperation source(String file, String pkg, boolean generate, Set<String> natives, PatchSet patches) {
+    public GenerateSourcesOperation source(String file, String pkg, boolean generate, Set<String> natives, Patch patches) {
         sources(new Source(file, pkg, generate, natives, patches));
         return this;
     }
