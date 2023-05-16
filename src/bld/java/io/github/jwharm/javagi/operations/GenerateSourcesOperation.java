@@ -73,12 +73,12 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
         }
 
         // Parse the GI files into Repository objects
-        for (Source(String fileName, String pkg, boolean generate, Set<String> natives, Patch patches) : sources()) {
+        for (var source : sources()) {
             try {
                 // Parse the file
-                Repository r = parser.parse(girPath.resolve(fileName), pkg);
-                r.generate = generate;
-                r.natives = natives;
+                Repository r = parser.parse(girPath.resolve(source.fileName), source.pkg);
+                r.generate = source.generate;
+                r.natives = source.natives;
 
                 // Add the repository to the module
                 module.repositories.put(r.namespace.name, r);
@@ -87,12 +87,12 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                 module.flagVaListFunctions();
 
                 // Apply patches
-                if (patches != null) {
-                    patches.patch(r);
+                if (source.patches != null) {
+                    source.patches.patch(r);
                 }
 
             } catch (IOException ioe) {
-                System.out.println("Not found: " + fileName);
+                System.out.println("Not found: " + source.fileName);
             }
         }
 
