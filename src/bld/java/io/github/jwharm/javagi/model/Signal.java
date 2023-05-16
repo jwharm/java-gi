@@ -32,6 +32,12 @@ public class Signal extends Method implements Closure {
         if (doc != null) {
             doc.generate(writer, true);
         }
+
+        // Deprecation
+        if ("1".equals(deprecated)) {
+            writer.write("@Deprecated\n");
+        }
+
         writer.write("public " + (parent instanceof Interface ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
         
         // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
@@ -74,6 +80,12 @@ public class Signal extends Method implements Closure {
             writer.write("/**\n");
             writer.write(" * Emits the \"" + name + "\" signal. See {@link #on" + signalName + "}.\n");
             writer.write(" */\n");
+
+            // Deprecation
+            if ("1".equals(deprecated)) {
+                writer.write("@Deprecated\n");
+            }
+
             writer.write("public " + (parent instanceof Interface ? "default " : ""));
             returnValue.writeType(writer, true, true);
             writer.write(" emit" + signalName + "(");
