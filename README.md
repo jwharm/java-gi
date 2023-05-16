@@ -15,34 +15,8 @@ Please note that Java-GI is still under active development. The bindings should 
 
 ## Quickstart
 
-To use Java-GI in your app, you need to specify a few things in your `gradle.build` file, as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.5.1):
+- To use Java-GI in your app, you need to specify a few things in your `gradle.build` file, as described on [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 20, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
-```groovy
-allprojects {
-	repositories {
-		mavenCentral()
-		maven { url 'https://jitpack.io' }
-	}
-}
-
-dependencies {
-    // For the @Nullable/@NotNull annotations
-    compileOnly 'org.jetbrains:annotations:24.+'
-    // Include the libraries you want to use. You will at the very least want to include GLib.
-    implementation 'com.github.jwharm.java-gi:glib:v0.5.1'
-    implementation 'com.github.jwharm.java-gi:gtk:v0.5.1'
-    implementation 'com.github.jwharm.java-gi:adwaita:v0.5.1'
-    implementation 'com.github.jwharm.java-gi:gstreamer:v0.5.1'
-}
-```
-
-- Furthermore, you must set the Java language version to 20.
-
-- While the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
-
-See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
-
-- If your application has a `module-info.java` file, add `requires org.gnome.gtk;` to it.
 - Write, compile and run a GTK application:
 
 ```java
