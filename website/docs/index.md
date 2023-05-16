@@ -16,7 +16,7 @@ Please note that java-gi is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.5 has been tested with the following libraries:
+Java-GI version 0.5.1 has been tested with the following libraries:
 
 | Library    | Version |
 |------------|---------|
@@ -25,7 +25,7 @@ Java-GI version 0.5 has been tested with the following libraries:
 | LibAdwaita | 1.3     |
 | GStreamer  | 1.20    |
 
-For these libraries, pre-built Java bindings are available from Maven Central, in separate flavors for Linux, Windows and MacOS. Consult the [usage guide](usage.md) for more information.
+For these libraries, pre-built Java bindings are available from JitPack.io. Consult the [usage guide](usage.md) for more information.
 
 ## API documentation
 
@@ -39,8 +39,8 @@ Java-GI converts API documentation from GObject-Introspection to Javadoc. For th
     
 * Javadoc for [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
 
-JAR files with the Javadoc and source code, to use offline in your IDE, are available from [Github](https://github.com/jwharm/java-gi) under the v0.5 release.
+JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.5.1).
 
 ## Contributing
 
-Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi).
+To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/). Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi).
