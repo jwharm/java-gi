@@ -18,9 +18,10 @@ import static rife.bld.dependencies.Repository.MAVEN_CENTRAL;
 import static rife.bld.dependencies.Repository.MAVEN_LOCAL;
 import static rife.bld.dependencies.Scope.compile;
 
+/**
+ * Base class for Java-GI module build files that contains shared build settings.
+ */
 public abstract class AbstractProject extends Project {
-
-    public static final Pattern SOURCES_JAR_FILE_PATTERN = Pattern.compile("^.*-sources\\.jar$");
 
     private final GenerateSourcesOperation generateSourcesOperation_;
 
@@ -80,9 +81,10 @@ public abstract class AbstractProject extends Project {
      * generated jar files, excluding sources-jar files.
      */
     private List<File> getModulePath() {
+        Pattern sourcesJarPattern = Pattern.compile("^.*-sources\\.jar$");
         List<File> modules = new ArrayList<>();
         modules.add(libCompileDirectory());
-        modules.addAll(FileUtils.getFileList(buildDistDirectory(), FileUtils.JAR_FILE_PATTERN, SOURCES_JAR_FILE_PATTERN)
+        modules.addAll(FileUtils.getFileList(buildDistDirectory(), FileUtils.JAR_FILE_PATTERN, sourcesJarPattern)
             .stream().map(file -> new File(buildDistDirectory(), file)).toList());
         return modules;
     }
