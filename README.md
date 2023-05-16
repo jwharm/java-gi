@@ -15,26 +15,20 @@ Please note that Java-GI is still under active development. The bindings should 
 
 ## Quickstart
 
-To use Java-GI in your app, you need to specify a few things in your `gradle.build` file:
-
-- Set the Java language version to 20
-
-- Add the [JitPack](https://jitpack.io) repository in your root `build.gradle` at the end of repositories:
+To use Java-GI in your app, you need to specify a few things in your `gradle.build` file, as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.5.1):
 
 ```groovy
 allprojects {
 	repositories {
-		...
+		mavenCentral()
 		maven { url 'https://jitpack.io' }
 	}
 }
-```
 
-- Add the following dependencies to your `build.gradle` file:
-
-```groovy
 dependencies {
+    // For the @Nullable/@NotNull annotations
     compileOnly 'org.jetbrains:annotations:24.+'
+    // Include the libraries you want to use. You will at the very least want to include GLib.
     implementation 'com.github.jwharm.java-gi:glib:v0.5.1'
     implementation 'com.github.jwharm.java-gi:gtk:v0.5.1'
     implementation 'com.github.jwharm.java-gi:adwaita:v0.5.1'
@@ -42,9 +36,11 @@ dependencies {
 }
 ```
 
+- Furthermore, you must set the Java language version to 20.
+
 - While the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
 
-See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/build.gradle) for a complete example.
+See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
 - If your application has a `module-info.java` file, add `requires org.gnome.gtk;` to it.
 - Write, compile and run a GTK application:
@@ -91,8 +87,6 @@ public class HelloWorld {
 The result:
 
 ![Screenshot of a simple Java-GI HelloWorld app](images/simple-helloworld.png)
-
-It is recommended to download the Javadoc documentation and sources to assist during the development of your GTK application. The original docstrings have been transformed to Javadoc syntax, so they are really nice to use.
 
 ## Examples
 
@@ -310,28 +304,7 @@ The Java-GI bindings are cross-platform: You can use the same jar on all support
 
 ## Building and Contributing
 
-If you want to generate and build Java-GI bindings by yourself, follow these steps:
-- Clone the Java-GI project from GitHub.
-- Download and install [JDK 20](https://jdk.java.net/20/).
-- Run `./bld all download publish`.
-
-Java-GI uses `bld` (from [Rife2](https://rife2.com/bld)) to build. `bld` is a pure java build tool that is very easy to use. You don't need to install it separately; the included wrapper will download it the first time.
-
-During the build process, the [gircore/gir-files](https://github.com/gircore/gir-files) repository is cloned into the `build/gir-files` folder. The gir-core repository contains GIR files for GLib, Gtk, GStreamer, LibAdwaita and some other commonly used libraries for Linux, Windows and MacOS and is regularly updated. You can find the gir files in `build/gir-files`. Once downloaded, subsequent builds will run `git pull` instead of `git clone`.
-
-The resulting jar files are located in the `build/dist` folder, and also published in the MavenLocal repository.
-
-If you want to build a specific module, run `./bld [modulename] [command]`. Running just `./bld` will display a list of all options. Example usage:
-
-| Command                                 | Result                                                          |
-|-----------------------------------------|-----------------------------------------------------------------|
-| `./bld`                                 | Display all available commands                                  |
-| `./bld clean`                           | Clean the build artifacts                                       |
-| `./bld download`                        | Download dependencies                                           |
-| `./bld glib gtk compile`                | Generate and compile bindings for GLib and Gtk                  |
-| `./bld all compile`                     | Shorthand to compile bindings for all modules                   |
-| `./bld gtk jar jar-javadoc jar-sources` | Create jar, javadoc.jar and sources.jar for Gtk                 |
-| `./bld glib gstreamer publish`          | Publish jar, javadoc.jar and sources.jar for GLib and GStreamer |
+To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/).
 
 ## Known issues
 
