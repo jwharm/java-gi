@@ -86,7 +86,7 @@ public interface Closure extends CallableType {
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
         String throws_ = getThrows();
 
-        String returnType = isVoid ? "void" : Conversions.toPanamaJavaType(returnValue.type);
+        String returnType = isVoid ? "void" : Conversions.getCarrierType(returnValue.type);
 
         writer.write((methodToInvoke.equals("run") ? "@ApiStatus.Internal default " : "private ") + returnType + " ");
         writer.write(name);
@@ -104,7 +104,7 @@ public interface Closure extends CallableType {
             for (Parameter p : parameters.parameterList) {
                 if (!first) writer.write(", ");
                 first = false;
-                writer.write(Conversions.toPanamaJavaType(p.type) + " " + p.name);
+                writer.write(Conversions.getCarrierType(p.type) + " " + p.name);
             }
         }
         // Add a parameter to write the GError
@@ -163,7 +163,7 @@ public interface Closure extends CallableType {
             parameters.generateUpcallPostprocessing(writer);
         }
 
-        boolean isMemorySegment = !isVoid && Conversions.toPanamaJavaType(returnValue.type).equals("MemorySegment");
+        boolean isMemorySegment = !isVoid && Conversions.getCarrierType(returnValue.type).equals("MemorySegment");
         boolean isNullable = isMemorySegment && (!returnValue.notnull);
 
         if (isNullable) {

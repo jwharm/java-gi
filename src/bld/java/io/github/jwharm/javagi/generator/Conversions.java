@@ -159,7 +159,7 @@ public class Conversions {
     /**
      * Get the type name to use when interfacing with native code
      */
-    public static String toPanamaJavaType(Type t) {
+    public static String getCarrierType(Type t) {
         if (t == null) {
             return "MemorySegment";
         } else if (t.isPointer()) {

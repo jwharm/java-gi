@@ -51,7 +51,7 @@ public class VirtualMethod extends Method {
         }
         
         // Variable declaration for return value
-        String panamaReturnType = Conversions.toPanamaJavaType(getReturnValue().type);
+        String panamaReturnType = Conversions.getCarrierType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write(panamaReturnType + " _result;\n");
         }
