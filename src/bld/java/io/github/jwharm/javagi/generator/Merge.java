@@ -37,38 +37,32 @@ public class Merge {
         // Merge repositories
         mergeRepositories(merged, modules);
 
-        // Merge registered types
         merged.repositories.forEach((name, repository) -> {
             if (repository.platforms.size() < 3) {
                 return;
             }
+
+            // Merge registered types
             mergeRegisteredTypes(repository.namespace, modules.stream().map(module ->
                     module.repositories.get(name).namespace).toList());
-        });
 
-        // Merge constants
-        merged.repositories.forEach((name, repository) -> {
+            // Merge constants
             mergeConstants(repository.namespace, modules.stream().map(module ->
                     module.repositories.get(name).namespace).toList());
-        });
 
-        // Loop through the repositories, and merge globally defined methods
-        merged.repositories.forEach((name, repository) -> {
-            if (repository.platforms.size() < 3) {
-                return;
-            }
+            // Merge docsections
+            mergeDocsections(repository.namespace, modules.stream().map(module ->
+                    module.repositories.get(name).namespace).toList());
+
+            // Merge globally defined methods
             mergeMethods(repository.namespace, modules.stream().map(module ->
                     module.repositories.get(name).namespace).toList());
-        });
 
-        // Loop through the repositories, loop through the registered types, and merge methods
-        merged.repositories.forEach((name, repository) -> {
-            if (repository.platforms.size() < 3) {
-                return;
-            }
+            // Create a list with registered types for every platform
             List<Map<String, RegisteredType>> typeMaps = modules.stream().map(module ->
                     module.repositories.get(name).namespace.registeredTypeMap).toList();
 
+            // Loop through the registered types, and merge methods
             repository.namespace.registeredTypeMap.forEach((typeName, registeredType) ->
                     mergeMethods(registeredType, typeMaps.stream().map(tm -> tm.get(typeName)).toList()));
         });
@@ -100,6 +94,18 @@ public class Merge {
                 if (! constants.contains(constant.name)) {
                     multi.constantList.add(constant);
                     constants.add(constant.name);
+                }
+            }
+        }
+    }
+
+    private void mergeDocsections(Namespace multi, List<Namespace> namespaces) {
+        Set<String> names = new HashSet<>();
+        for (var ns : namespaces) {
+            for (var section : ns.docsectionList) {
+                if (! names.contains(section.name)) {
+                    multi.docsectionList.add(section);
+                    names.add(section.name);
                 }
             }
         }
