@@ -28,10 +28,10 @@ public class GLibBuild extends AbstractProject {
         srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
-            .source("GLib-2.0.gir", "org.gnome.glib", true, Set.of("glib-2.0"), new GLibPatch())
-            .source("GObject-2.0.gir", "org.gnome.gobject", true, Set.of("gobject-2.0"), new GObjectPatch())
-            .source("Gio-2.0.gir", "org.gnome.gio", true, Set.of("gio-2.0"), new GioPatch())
-            .source("GModule-2.0.gir", "org.gnome.gmodule", true, null, null)
+            .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", true, Set.of("glib-2.0"), new GLibPatch())
+            .source("GObject-2.0.gir", "org.gnome.gobject", "https://docs.gtk.org/gobject/", true, Set.of("gobject-2.0"), new GObjectPatch())
+            .source("Gio-2.0.gir", "org.gnome.gio", "https://docs.gtk.org/gio/", true, Set.of("gio-2.0"), new GioPatch())
+            .source("GModule-2.0.gir", "org.gnome.gmodule", null, true, null, null)
             .moduleInfo(MODULE_INFO);
     }
 }

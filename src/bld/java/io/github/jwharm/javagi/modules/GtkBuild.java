@@ -26,21 +26,21 @@ public class GtkBuild extends AbstractProject {
         srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
-            .source("GLib-2.0.gir", "org.gnome.glib", false, Set.of("glib-2.0"), new GLibPatch())
-            .source("GObject-2.0.gir", "org.gnome.gobject", false, Set.of("gobject-2.0"), new GObjectPatch())
-            .source("Gio-2.0.gir", "org.gnome.gio", false, Set.of("gio-2.0"), new GioPatch())
-            .source("GModule-2.0.gir", "org.gnome.gmodule", false, null, null)
+            .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", false, Set.of("glib-2.0"), new GLibPatch())
+            .source("GObject-2.0.gir", "org.gnome.gobject", "https://docs.gtk.org/gobject/", false, Set.of("gobject-2.0"), new GObjectPatch())
+            .source("Gio-2.0.gir", "org.gnome.gio", "https://docs.gtk.org/gio/", false, Set.of("gio-2.0"), new GioPatch())
+            .source("GModule-2.0.gir", "org.gnome.gmodule", null, false, null, null)
 
-            .source("cairo-1.0.gir", "org.cairographics", true, Set.of("cairo", "cairo-gobject"), new CairoPatch())
-            .source("freetype2-2.0.gir", "org.freetype", true, null, null)
-            .source("HarfBuzz-0.0.gir", "org.harfbuzz", true, Set.of("harfbuzz"), new HarfBuzzPatch())
-            .source("Pango-1.0.gir", "org.pango", true, Set.of("pango-1.0"), null)
-            .source("PangoCairo-1.0.gir", "org.pango.cairo", true, Set.of("pangocairo-1.0"), null)
-            .source("GdkPixbuf-2.0.gir", "org.gnome.gdkpixbuf", true, Set.of("gdk_pixbuf-2.0"), null)
-            .source("Gdk-4.0.gir", "org.gnome.gdk", true, null, null)
-            .source("Graphene-1.0.gir", "org.gnome.graphene", true, Set.of("graphene-1.0"), null)
-            .source("Gsk-4.0.gir", "org.gnome.gsk", true, null, null)
-            .source("Gtk-4.0.gir", "org.gnome.gtk", true, Set.of("gtk-4"), new GtkPatch())
+            .source("cairo-1.0.gir", "org.cairographics", null, true, Set.of("cairo", "cairo-gobject"), new CairoPatch())
+            .source("freetype2-2.0.gir", "org.freetype", null, true, null, null)
+            .source("HarfBuzz-0.0.gir", "org.harfbuzz", null, true, Set.of("harfbuzz"), new HarfBuzzPatch())
+            .source("Pango-1.0.gir", "org.pango", "https://docs.gtk.org/Pango/", true, Set.of("pango-1.0"), null)
+            .source("PangoCairo-1.0.gir", "org.pango.cairo", "https://docs.gtk.org/Pango/", true, Set.of("pangocairo-1.0"), null)
+            .source("GdkPixbuf-2.0.gir", "org.gnome.gdkpixbuf", "https://docs.gtk.org/gdk-pixbuf/", true, Set.of("gdk_pixbuf-2.0"), null)
+            .source("Gdk-4.0.gir", "org.gnome.gdk", "https://docs.gtk.org/gdk4/", true, null, null)
+            .source("Graphene-1.0.gir", "org.gnome.graphene", "https://developer-old.gnome.org/graphene/stable/", true, Set.of("graphene-1.0"), null)
+            .source("Gsk-4.0.gir", "org.gnome.gsk", null, true, null, null)
+            .source("Gtk-4.0.gir", "org.gnome.gtk", "https://docs.gtk.org/gtk4/", true, Set.of("gtk-4"), new GtkPatch())
 
             .moduleInfo(MODULE_INFO);
 

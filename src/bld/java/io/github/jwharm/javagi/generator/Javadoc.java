@@ -299,8 +299,12 @@ public class Javadoc {
 
     // Replace "! [...](...)" image links with <img src="..." alt="...">
     private String convertImg(String img, String desc, String url) {
+        String fullUrl = url;
+        if (! url.startsWith("http")) {
+            fullUrl = ((Repository) doc.getNamespace().parent).urlPrefix + url;
+        }
         String alt = desc.replace("\"", "\\\"");
-        return "<img src=\"./doc-files/" + url + "\" alt=\"" + alt + "\">";
+        return "<img src=\"" + fullUrl + "\" alt=\"" + alt + "\">";
     }
 
     // Replace "# Header" with <strong>Header</strong><br/>
@@ -436,18 +440,27 @@ public class Javadoc {
         if (rt == null) {
             return "{@code ";
         }
+        // Generating a link to an inner class is not implemented, it is used very little
+        if (rt instanceof Record rec && rec.isGTypeStructFor != null) {
+            return "{@code ";
+        }
+        for (Method vm : rt.virtualMethodList) {
+            if (identifier.equals(vm.name) && (! vm.skip)) {
+                return "{@link ";
+            }
+        }
         for (Method m : rt.methodList) {
-            if (identifier.equals(m.name)) {
+            if (identifier.equals(m.name) && (! m.skip)) {
                 return "{@link ";
             }
         }
         for (Constructor c : rt.constructorList) {
-            if (identifier.equals(c.name)) {
+            if (identifier.equals(c.name) && (! c.skip)) {
                 return "{@link ";
             }
         }
         for (Function f : rt.functionList) {
-            if (identifier.equals(f.name)) {
+            if (identifier.equals(f.name) && (! f.skip)) {
                 return "{@link ";
             }
         }

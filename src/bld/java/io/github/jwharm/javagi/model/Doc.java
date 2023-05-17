@@ -16,11 +16,18 @@ public class Doc extends GirElement {
     }
 
     public void generate(SourceWriter writer, boolean signalDeclaration) throws IOException {
+        generate(writer, signalDeclaration, true);
+    }
+
+    public void generate(SourceWriter writer, boolean signalDeclaration, boolean fullComment) throws IOException {
         if (contents == null || contents.length() == 0) {
             return;
         }
-        writer.write("/**\n");
-        
+
+        if (fullComment) {
+            writer.write("/**\n");
+        }
+
         // Convert docstring to javadoc
         String javadoc = Javadoc.getInstance().convert(this);
         
@@ -111,8 +118,10 @@ public class Doc extends GirElement {
             writeDoc(writer, f.name + " the value for the {@code " + f.name + "} field", "@param");
             writeDoc(writer, "the {@code Build} instance is returned, to allow method chaining", "@return");
         }
-        
-        writer.write(" */\n");
+
+        if (fullComment) {
+            writer.write(" */\n");
+        }
     }
 
     // Write documentation, with an optional tag, starting each line with a " * ", and escape backslashes

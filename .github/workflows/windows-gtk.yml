@@ -38,13 +38,13 @@ jobs:
       - name: Library artifact
         uses: actions/upload-artifact@v3
         with:
-          name: natives
+          name: libraries
           path: |
             dist\bin\*.dll
       - name: Application artifact
         uses: actions/upload-artifact@v3
         with:
-          name: natives
+          name: libraries
           path: |
             dist\bin\*.exe
       - name: Generate Release
@@ -52,7 +52,7 @@ jobs:
         if: ${{ inputs.release }}
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "natives"
+          automatic_release_tag: "libraries"
           prerelease: false
           title: "GTK Natives for ${{ inputs.tag }}"
           files: |

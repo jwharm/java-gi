@@ -78,7 +78,8 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                 // Parse the file
                 Repository r = parser.parse(girPath.resolve(source.fileName), source.pkg);
                 r.generate = source.generate;
-                r.natives = source.natives;
+                r.libraries = source.libraries;
+                r.urlPrefix = source.urlPrefix;
 
                 // Add the repository to the module
                 module.repositories.put(r.namespace.name, r);
@@ -86,9 +87,9 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                 // Flag unsupported va_list methods so they will not be generated
                 module.flagVaListFunctions();
 
-                // Apply patches
-                if (source.patches != null) {
-                    source.patches.patch(r);
+                // Apply patch
+                if (source.patch != null) {
+                    source.patch.patch(r);
                 }
 
             } catch (IOException ioe) {
@@ -103,9 +104,15 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
     }
 
     /**
-     * Source GIR file to parse
+     * Source gir file to parse
+     * @param fileName the filename of the gir file
+     * @param pkg the java package name to generate
+     * @param urlPrefix URL to prefix before links to images
+     * @param generate true when classes must be generated, false when this Source is only needed as a dependency
+     * @param libraries names of native libraries that must be loaded during runtime initialization
+     * @param patch patch to apply to a parsed gi repository before generating classes
      */
-    public record Source(String fileName, String pkg, boolean generate, Set<String> natives, Patch patches) {}
+    public record Source(String fileName, String pkg, String urlPrefix, boolean generate, Set<String> libraries, Patch patch) {}
 
     /**
      * Provides the source directory that will be used for the JavaGI operation.
@@ -165,12 +172,13 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * Create a new Source
      * @param file the gir filename
      * @param pkg the package name
+     * @param urlPrefix the prefix for image link URLs
      * @param generate whether to generate bindings for this source
      * @param natives the names of native libraries
-     * @param patches patches to apply before generating bindings
+     * @param patches patch to apply before generating bindings
      */
-    public GenerateSourcesOperation source(String file, String pkg, boolean generate, Set<String> natives, Patch patches) {
-        sources(new Source(file, pkg, generate, natives, patches));
+    public GenerateSourcesOperation source(String file, String pkg, String urlPrefix, boolean generate, Set<String> natives, Patch patches) {
+        sources(new Source(file, pkg, urlPrefix, generate, natives, patches));
         return this;
     }
 

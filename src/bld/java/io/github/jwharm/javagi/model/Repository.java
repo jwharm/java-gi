@@ -14,7 +14,8 @@ public class Repository extends GirElement {
     public Namespace namespace = null;
     public Package package_ = null;
     public boolean generate;
-    public Set<String> natives;
+    public Set<String> libraries;
+    public String urlPrefix;
 
     public Repository(Module module) {
         super(null);
@@ -36,8 +37,8 @@ public class Repository extends GirElement {
                 continue;
             }
 
-            // Private inner structs can be omitted from language bindings
-            if (rt instanceof Record rec && rec.name.endsWith("Private")) {
+            // Private inner structs can be omitted from language bindings, but don't exclude `GPrivate`
+            if (rt instanceof Record rec && rec.name.endsWith("Private") && (! rec.name.equals("Private"))) {
                 continue;
             }
 
@@ -71,8 +72,8 @@ public class Repository extends GirElement {
             writer.write("static {\n");
 
             // Load libraries
-            if (natives != null) {
-                for (String libraryName : natives) {
+            if (libraries != null) {
+                for (String libraryName : libraries) {
                     writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
                 }
             }
@@ -144,9 +145,9 @@ public class Repository extends GirElement {
             writer.write(" * This package contains the generated bindings for " + namespace.name + ".\n");
             writer.write(" * <p>\n");
 
-            if (natives != null) {
+            if (libraries != null) {
                 writer.write(" * The following native libraries are required and will be loaded: ");
-                for (String libraryName : natives) {
+                for (String libraryName : libraries) {
                     writer.write(" {@code " + libraryName + "}");
                 }
                 writer.write("\n");
@@ -168,6 +169,11 @@ public class Repository extends GirElement {
                 writer.write(".\n");
             }
 
+            // Write docsections in the package-info documentation
+            for (var docsection : namespace.docsectionList) {
+                docsection.generate(writer);
+            }
+
             writer.write(" */\n");
             writer.write("package " + namespace.packageName + ";\n");
         }
@@ -178,7 +184,7 @@ public class Repository extends GirElement {
         copy.namespace = namespace.copy();
         copy.package_ = package_;
         copy.generate = generate;
-        copy.natives = natives;
+        copy.libraries = libraries;
         return copy;
     }
 }
