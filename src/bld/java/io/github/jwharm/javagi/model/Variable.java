@@ -322,6 +322,10 @@ public class Variable extends GirElement {
     
     public String getGTypeDeclaration() {
         if (array != null) {
+            if (array.type != null && "utf8".equals(array.type.name)) {
+                return "io.github.jwharm.javagi.types.Types.G_TYPE_STRV";
+            }
+            // Other array types are not supported yet, but could be added here
             return "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED";
         }
         if (type == null) {
@@ -406,9 +410,9 @@ public class Variable extends GirElement {
             case "io.github.jwharm.javagi.types.Types.G_TYPE_UINT64" -> "setUint64";
             case "io.github.jwharm.javagi.types.Types.G_TYPE_STRING" -> "setString";
             case "io.github.jwharm.javagi.types.Types.G_TYPE_POINTER" -> "setPointer";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED" -> "setBoxed";
             case "io.github.jwharm.javagi.types.Types.G_TYPE_PARAM" -> "setParam";
             case "io.github.jwharm.javagi.types.Types.G_TYPE_VARIANT" -> "setVariant";
+            case "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED", "io.github.jwharm.javagi.types.Types.G_TYPE_STRV" -> "setBoxed";
             case "org.gnome.gobject.GObjects.gtypeGetType()" -> "setGtype";
             default -> type.isEnum() ? "setEnum" : type.isBitfield() ? "setFlags" : type.isRecord() ? "setBoxed" : "setObject";
         };
