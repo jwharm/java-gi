@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.util;
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
+import io.github.jwharm.javagi.types.Types;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -37,31 +38,31 @@ public class ValueUtil {
             return null;
         }
         
-        if (type.equals(Type.G_TYPE_BOOLEAN)) {
+        if (type.equals(Types.G_TYPE_BOOLEAN)) {
             return src.getBoolean();
-        } else if (type.equals(Type.G_TYPE_CHAR)) {
+        } else if (type.equals(Types.G_TYPE_CHAR)) {
             return src.getSchar();
-        } else if (type.equals(Type.G_TYPE_DOUBLE)) {
+        } else if (type.equals(Types.G_TYPE_DOUBLE)) {
             return src.getDouble();
-        } else if (type.equals(Type.G_TYPE_FLOAT)) {
+        } else if (type.equals(Types.G_TYPE_FLOAT)) {
             return src.getFloat();
-        } else if (type.equals(Type.G_TYPE_INT)) {
+        } else if (type.equals(Types.G_TYPE_INT)) {
             return src.getInt();
-        } else if (type.equals(Type.G_TYPE_LONG)) {
+        } else if (type.equals(Types.G_TYPE_LONG)) {
             return src.getLong();
-        } else if (type.equals(Type.G_TYPE_STRING)) {
+        } else if (type.equals(Types.G_TYPE_STRING)) {
             return src.getString();
-        } else if (type.equals(Type.G_TYPE_ENUM)) {
+        } else if (type.equals(Types.G_TYPE_ENUM)) {
             return src.getEnum();
-        } else if (type.equals(Type.G_TYPE_FLAGS)) {
+        } else if (type.equals(Types.G_TYPE_FLAGS)) {
             return src.getFlags();
-        } else if (type.equals(Type.G_TYPE_OBJECT)) {
+        } else if (type.equals(Types.G_TYPE_OBJECT)) {
             return src.getObject();
         } else if (type.equals(GObjects.gtypeGetType())) {
             return src.getGtype();
-        } else if (type.equals(Type.G_TYPE_POINTER)) {
+        } else if (type.equals(Types.G_TYPE_POINTER)) {
             return src.getPointer();
-        } else if (type.equals(Type.G_TYPE_PARAM)) {
+        } else if (type.equals(Types.G_TYPE_PARAM)) {
             return src.getParam();
         } else {
             // Boxed value
@@ -143,17 +144,17 @@ public class ValueUtil {
         }
         
         try {
-            if (type.equals(Type.G_TYPE_BOOLEAN)) {
+            if (type.equals(Types.G_TYPE_BOOLEAN)) {
                 dest.setBoolean((Boolean) src);
-            } else if (type.equals(Type.G_TYPE_CHAR)) {
+            } else if (type.equals(Types.G_TYPE_CHAR)) {
                 dest.setSchar((Byte) src);
-            } else if (type.equals(Type.G_TYPE_DOUBLE)) {
+            } else if (type.equals(Types.G_TYPE_DOUBLE)) {
                 dest.setDouble((Double) src);
-            } else if (type.equals(Type.G_TYPE_FLOAT)) {
+            } else if (type.equals(Types.G_TYPE_FLOAT)) {
                 dest.setFloat((Float) src);
-            } else if (type.equals(Type.G_TYPE_INT)) {
+            } else if (type.equals(Types.G_TYPE_INT)) {
                 dest.setInt((Integer) src);
-            } else if (type.equals(Type.G_TYPE_LONG)) {
+            } else if (type.equals(Types.G_TYPE_LONG)) {
                 // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
                 // Use reflection to bypass the type checker
                 for (Method m : Value.class.getDeclaredMethods()) {
@@ -162,19 +163,19 @@ public class ValueUtil {
                         break;
                     }
                 }
-            } else if (type.equals(Type.G_TYPE_STRING)) {
+            } else if (type.equals(Types.G_TYPE_STRING)) {
                 dest.setString((String) src);
-            } else if (type.equals(Type.G_TYPE_ENUM)) {
+            } else if (type.equals(Types.G_TYPE_ENUM)) {
                 dest.setEnum(((Enumeration) src).getValue());
-            } else if (type.equals(Type.G_TYPE_FLAGS)) {
+            } else if (type.equals(Types.G_TYPE_FLAGS)) {
                 dest.setFlags(((Bitfield) src).getValue());
-            } else if (type.equals(Type.G_TYPE_OBJECT)) {
+            } else if (type.equals(Types.G_TYPE_OBJECT)) {
                 dest.setObject((GObject) src);
             } else if (type.equals(GObjects.gtypeGetType())) {
                 dest.setGtype((Type) src);
-            } else if (type.equals(Type.G_TYPE_POINTER)) {
+            } else if (type.equals(Types.G_TYPE_POINTER)) {
                 dest.setPointer((MemorySegment) src);
-            } else if (type.equals(Type.G_TYPE_PARAM)) {
+            } else if (type.equals(Types.G_TYPE_PARAM)) {
                 dest.setParam((ParamSpec) src);
             } else {
                 // Boxed value

@@ -75,7 +75,7 @@ public class Properties {
             } else if (p.type().equals(ParamSpecFloat.class)) {
                 ps = GObjects.paramSpecFloat(p.name(), p.name(), p.name(), Float.MIN_VALUE, Float.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecGType.class)) {
-                ps = GObjects.paramSpecGtype(p.name(), p.name(), p.name(), Type.G_TYPE_NONE, getFlags(p));
+                ps = GObjects.paramSpecGtype(p.name(), p.name(), p.name(), Types.G_TYPE_NONE, getFlags(p));
             } else if (p.type().equals(ParamSpecInt.class)) {
                 ps = GObjects.paramSpecInt(p.name(), p.name(), p.name(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (p.type().equals(ParamSpecInt64.class)) {
