@@ -161,12 +161,13 @@ public class Record extends Class {
             writer.write(" * release the memory when the {@link " + javaName + "} instance is garbage-collected.\n");
             // Write javadoc for parameters
             for (Field field : fieldList) {
-                if (field.disguised() || (field.callback != null)) {
+                // Ignore disguised fields
+                if (field.disguised()) {
                     continue;
                 }
                 writer.write(" * @param ");
                 field.writeName(writer);
-                writer.write(" value for the field {@code ");
+                writer.write((field.callback == null ? " value " : " callback function ") + "for the field {@code ");
                 field.writeName(writer);
                 writer.write("}\n");
             }
@@ -177,8 +178,8 @@ public class Record extends Class {
             // Write parameters
             boolean first = true;
             for (Field field : fieldList) {
-                // Ignore disguised fields and callbacks
-                if (field.disguised() || (field.callback != null)) {
+                // Ignore disguised fields
+                if (field.disguised()) {
                     continue;
                 }
                 if (! first) {
@@ -195,11 +196,12 @@ public class Record extends Class {
 
             // Call the field setters
             for (Field field : fieldList) {
-                // Ignore disguised fields and callbacks
-                if (field.disguised() || (field.callback != null)) {
+                // Ignore disguised fields
+                if (field.disguised()) {
                     continue;
                 }
-                writer.write("_instance.write" + Conversions.toCamelCase(field.name, true) + "(");
+                writer.write("_instance." + (field.callback == null ? "write" : "override"));
+                writer.write(Conversions.toCamelCase(field.name, true) + "(");
                 field.writeName(writer);
                 writer.write(");\n");
             }
