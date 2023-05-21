@@ -95,7 +95,6 @@ public class Class extends RegisteredType {
         if (isInstanceOf("org.gnome.gobject.GObject")) {
             Builder.generateBuilder(writer, this);
         }
-        generateDowncallHandles(writer);
 
         // Generate a custom getType() function for ParamSpec
         if (isInstanceOf("org.gnome.gobject.ParamSpec") && "intern".equals(getType)) {

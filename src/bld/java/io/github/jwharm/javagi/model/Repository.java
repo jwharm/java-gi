@@ -94,18 +94,6 @@ public class Repository extends GirElement {
                 function.generate(writer);
             }
 
-            // Generate downcallhandles
-            if (! namespace.functionList.isEmpty()) {
-                writer.write("\n");
-                writer.write("private static class DowncallHandles {\n");
-                writer.increaseIndent();
-                for (Function f : namespace.functionList) {
-                    f.generateMethodHandle(writer);
-                }
-                writer.decreaseIndent();
-                writer.write("}\n");
-            }
-
             // Generate registerTypes function
             writer.write("\n");
             writer.write("private static void registerTypes() {\n");

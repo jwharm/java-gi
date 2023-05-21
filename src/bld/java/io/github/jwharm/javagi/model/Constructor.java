@@ -169,6 +169,11 @@ public class Constructor extends Method {
         // Check for unsupported platforms
         generatePlatformCheck(writer);
 
+        // FunctionDescriptor of the native function signature
+        writer.write("FunctionDescriptor _fdesc = ");
+        boolean varargs = generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
@@ -193,9 +198,9 @@ public class Constructor extends Method {
         writer.write("try {\n");
         writer.increaseIndent();
 
-        // Invoke the method handle
-        writer.write("_result = (MemorySegment) DowncallHandles." + cIdentifier + ".invokeExact(");
-        
+        // Invoke to the method handle
+        writer.write("_result = (MemorySegment) Interop.downcallHandle(\"" + cIdentifier + "\", _fdesc, " + varargs + ").invokeExact(");
+
         // Marshall the parameters to the native types
         if (parameters != null) {
             parameters.marshalJavaToNative(writer, throws_);

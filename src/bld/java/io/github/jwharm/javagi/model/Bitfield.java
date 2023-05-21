@@ -73,8 +73,6 @@ public class Bitfield extends ValueWrapper {
         writer.write("    return new " + javaName + "(value);\n");
         writer.write("}\n");
 
-        generateDowncallHandles(writer);
-
         generateInjected(writer);
 
         writer.decreaseIndent();

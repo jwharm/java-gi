@@ -49,23 +49,6 @@ public class Method extends GirElement implements CallableType {
         }
     }
 
-    public void generateMethodHandle(SourceWriter writer) throws IOException {
-        if (skip) {
-            return;
-        }
-
-        boolean varargs = false;
-        writer.write("\n");
-        writer.write(parent instanceof Interface ? "@ApiStatus.Internal\n" : "private ");
-        writer.write("static final MethodHandle " + cIdentifier + " = Interop.downcallHandle(\n");
-        writer.write("        \"" + cIdentifier + "\",\n");
-        writer.write("        ");
-        varargs = generateFunctionDescriptor(writer);
-        writer.write(",\n");
-        writer.write(varargs ? "        true\n" : "        false\n");
-        writer.write(");\n");
-    }
-    
     public String getMethodDeclaration() {
         SourceWriter writer = new SourceWriter(new StringWriter());
         
@@ -187,6 +170,11 @@ public class Method extends GirElement implements CallableType {
         // Check for unsupported platforms
         generatePlatformCheck(writer);
 
+        // FunctionDescriptor of the native function signature
+        writer.write("FunctionDescriptor _fdesc = ");
+        boolean varargs = generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
@@ -222,8 +210,8 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Invoke to the method handle
-        writer.write("DowncallHandles." + cIdentifier + ".invokeExact(");
-        
+        writer.write("Interop.downcallHandle(\"" + cIdentifier + "\", _fdesc, " + varargs + ").invokeExact(");
+
         // Marshall the parameters to the native types
         if (parameters != null) {
             parameters.marshalJavaToNative(writer, throws_);

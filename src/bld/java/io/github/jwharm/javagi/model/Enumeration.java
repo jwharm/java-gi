@@ -104,7 +104,6 @@ public class Enumeration extends ValueWrapper {
         writer.write("}\n");
         
         generateMethodsAndSignals(writer);
-        generateDowncallHandles(writer);
         generateInjected(writer);
 
         writer.decreaseIndent();

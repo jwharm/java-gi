@@ -95,8 +95,6 @@ public class Record extends Class {
         generateMemoryAddressConstructor(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
-
-        generateDowncallHandles(writer);
         generateInjected(writer);
 
         writer.decreaseIndent();

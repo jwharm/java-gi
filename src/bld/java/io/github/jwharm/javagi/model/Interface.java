@@ -48,7 +48,6 @@ public class Interface extends RegisteredType {
         }
         
         Builder.generateInterfaceBuilder(writer, this);
-        generateDowncallHandles(writer);
         generateImplClass(writer);
 
         generateInjected(writer);

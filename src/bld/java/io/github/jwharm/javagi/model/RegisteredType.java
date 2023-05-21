@@ -296,7 +296,7 @@ public abstract class RegisteredType extends GirElement {
         }
         if (targetName == null)
             throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
-        writer.write("    return DowncallHandles." + targetName + " != null;\n");
+        writer.write("    return Interop.isAvailable(\"" + targetName + "\", FunctionDescriptor.of(ValueLayout.JAVA_LONG), false);\n");
         writer.write("}\n");
     }
 
@@ -323,34 +323,6 @@ public abstract class RegisteredType extends GirElement {
         }
     }
     
-    /**
-     * Generates an inner class DowncallHandles with MethodHandle declarations.
-     * @param writer The writer for the source code
-     * @throws IOException Thrown by {@code writer.write()}
-     */
-    protected void generateDowncallHandles(SourceWriter writer) throws IOException {
-        // Don't generate empty class
-        if (constructorList.isEmpty() && methodList.isEmpty() && functionList.isEmpty()) {
-            return;
-        }
-        
-        writer.write("\n");
-        writer.write(this instanceof Interface ? "@ApiStatus.Internal\n" : "private ");
-        writer.write("static class DowncallHandles {\n");
-        writer.increaseIndent();
-        for (Constructor c : constructorList) {
-            c.generateMethodHandle(writer);
-        }
-        for (Method m : methodList) {
-            m.generateMethodHandle(writer);
-        }
-        for (Function f : functionList) {
-            f.generateMethodHandle(writer);
-        }
-        writer.decreaseIndent();
-        writer.write("}\n");
-    }
-
     public void generateImplClass(SourceWriter writer) throws IOException {
         writer.write("\n");
 

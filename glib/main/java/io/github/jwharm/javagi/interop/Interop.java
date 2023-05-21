@@ -3,6 +3,8 @@ package io.github.jwharm.javagi.interop;
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import org.gnome.glib.GLib;
@@ -15,6 +17,12 @@ import io.github.jwharm.javagi.base.*;
  * The Interop class contains functionality for interoperability with native code.
  */
 public class Interop {
+
+    private record NamedFunction(String name, FunctionDescriptor fdesc, boolean variadic) {}
+    private record FunctionPointer(MemorySegment address, FunctionDescriptor fdesc, boolean variadic) {}
+
+    private static final Map<NamedFunction, MethodHandle> namedFunctions = new HashMap<>();
+    private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
 
     private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
@@ -132,14 +140,27 @@ public class Interop {
      * @return the MethodHandle
      */
     public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, boolean variadic) {
+        var func = new NamedFunction(name, fdesc, variadic);
+        if (namedFunctions.containsKey(func)) {
+            return namedFunctions.get(func);
+        }
         // Copied from jextract-generated code
-        return symbolLookup.find(name).map(addr -> {
-            return variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc);
-        }).orElse(null);
+        var handle = symbolLookup
+                .find(name)
+                .map(addr -> variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc))
+                .orElse(null);
+        namedFunctions.put(func, handle);
+        return handle;
     }
     
     public static MethodHandle downcallHandle(MemorySegment symbol, FunctionDescriptor fdesc) {
-        return linker.downcallHandle(symbol, fdesc);
+        var func = new FunctionPointer(symbol, fdesc, false);
+        if (functionPointers.containsKey(func)) {
+            return functionPointers.get(func);
+        }
+        var handle = linker.downcallHandle(symbol, fdesc);
+        functionPointers.put(func, handle);
+        return handle;
     }
 
     /**
@@ -202,6 +223,17 @@ public class Interop {
 
         return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+    }
+
+    /**
+     * Check whether a function is available as a native linker symbol
+     * @param name name of the native function
+     * @param fdesc function descriptor that specifies the function signature
+     * @param variadic whether the function accepts varargs
+     * @return true if a {@link MethodHandle} can be created for the provided function
+     */
+    public static boolean isAvailable(String name, FunctionDescriptor fdesc, boolean variadic) {
+        return (downcallHandle(name, fdesc, variadic) != null);
     }
 
     /**
