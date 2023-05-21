@@ -363,10 +363,11 @@ public class Variable extends GirElement {
             if (rt.isInstanceOf("org.gnome.gobject.ParamSpec")) {
                 return "org.gnome.glib.Type.G_TYPE_PARAM";
             }
-            for (Function function : rt.functionList) {
-                if (function.name.equals("get_type")) {
-                    return type.qualifiedJavaType + ".getType()";
-                }
+            if (rt.isInstanceOf("org.gnome.glib.Variant")) {
+                return "org.gnome.glib.Type.G_TYPE_VARIANT";
+            }
+            if (rt.getType != null) {
+                return type.qualifiedJavaType + ".gtype";
             }
         }
         if (type.qualifiedJavaType.equals("org.gnome.glib.Type")) {
@@ -407,8 +408,9 @@ public class Variable extends GirElement {
             case "org.gnome.glib.Type.G_TYPE_POINTER" -> "setPointer";
             case "org.gnome.glib.Type.G_TYPE_BOXED" -> "setBoxed";
             case "org.gnome.glib.Type.G_TYPE_PARAM" -> "setParam";
+            case "org.gnome.glib.Type.G_TYPE_VARIANT" -> "setVariant";
             case "org.gnome.gobject.GObjects.gtypeGetType()" -> "setGtype";
-            default -> type.isEnum() ? "setEnum" : type.isBitfield() ? "setFlags" : "setObject";
+            default -> type.isEnum() ? "setEnum" : type.isBitfield() ? "setFlags" : type.isRecord() ? "setBoxed" : "setObject";
         };
         return gvalueIdentifier + "." + switch(setValue) {
             case "setEnum", "setFlags" -> setValue + "(" + payloadIdentifier + ".getValue())";

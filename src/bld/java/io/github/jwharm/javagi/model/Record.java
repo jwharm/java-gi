@@ -9,8 +9,8 @@ public class Record extends Class {
 
     public final String disguised, isGTypeStructFor;
 
-    public Record(GirElement parent, String name, String cType, String version, String disguised, String isGTypeStructFor) {
-        super(parent, name, null, cType, null, null, null, null, null, version, null, null);
+    public Record(GirElement parent, String name, String cType, String getType, String version, String disguised, String isGTypeStructFor) {
+        super(parent, name, null, cType, null, getType, null, null, null, version, null, null);
         this.disguised = disguised;
         this.isGTypeStructFor = isGTypeStructFor;
     }
@@ -76,6 +76,7 @@ public class Record extends Class {
         if (isGTypeStructFor == null) {
             generateEnsureInitialized(writer);
         }
+        generateGType(writer);
 
         // Opaque structs have unknown memory layout and should not have an allocator
         if (! (isOpaqueStruct() || hasOpaqueStructFields())) {
@@ -96,6 +97,12 @@ public class Record extends Class {
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
         generateInjected(writer);
+
+        // Generate a custom gtype declaration for GVariant
+        if (isInstanceOf("org.gnome.glib.Variant") && "intern".equals(getType)) {
+            writer.write("\n");
+            writer.write("public static final org.gnome.glib.Type gtype = org.gnome.glib.Type.G_TYPE_VARIANT;\n");
+        }
 
         writer.decreaseIndent();
         writer.write("}\n");

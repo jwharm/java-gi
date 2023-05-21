@@ -11,10 +11,7 @@ import org.gnome.gobject.*;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -157,53 +154,44 @@ public class Types {
     }
 
     /**
-     * Return the {@link org.gnome.glib.Type} that is returned by a method with @GType
-     * annotation, or if that annotation is not found, by invoking
-     * {@code cls.getType()} if such method exists, or else, return null.
+     * Return the {@link org.gnome.glib.Type} that is returned by a field with @GType
+     * annotation, or if that annotation is not found, by searching for a field with type
+     * {@code org.gnome.glib.Type}, or else, return null.
      * @param cls the class for which to return the declared GType
      * @return the declared GType
      */
     public static Type getGType(Class<?> cls) {
-        // Find a method that is annotated with @GType and execute it
-        for (Method method : cls.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(GType.class)) {
-                // Check method signature
-                if ((method.getParameterTypes().length != 0)
-                        || (! method.getReturnType().equals(org.gnome.glib.Type.class))) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Method %s.%s does not have expected signature () -> org.gnome.glib.Type\n",
-                            cls.getName(), method.getName());
-                    return null;
-                }
-                // Invoke the @GType-annotated method and return the result
-                try {
-                    return (Type) method.invoke(null);
-                } catch (IllegalAccessException e) {
-                    // Method is not public
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "IllegalAccessException when calling %s.%s\n",
-                            cls.getName(), method.getName());
-                    return null;
-                } catch (InvocationTargetException e) {
-                    // Method throws an exception
-                    Throwable t = e.getTargetException();
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Exception when calling %s.%s: %s\n",
-                            cls.getName(), method.getName(), t.toString());
-                    return null;
-                }
+        Field gtypeField = null;
+
+        // Find a field that is annotated with @GType and read its value
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.isAnnotationPresent(GType.class)) {
+                gtypeField = field;
             }
         }
 
-        try {
-            // invoke getType() on the class
-            Method getTypeMethod = cls.getDeclaredMethod("getType");
-            return (Type) getTypeMethod.invoke(null);
+        // Find a field with type org.gnome.glib.Type.class
+        for (Field field : cls.getDeclaredFields()) {
+            if (field.getType().equals(org.gnome.glib.Type.class)) {
+                gtypeField = field;
+            }
+        }
 
-        } catch (Exception e) {
+        if (gtypeField == null) {
+            // No gtype found
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot get GType for class %s: %s\n",
-                    cls.getName(), e.toString());
+                    "Cannot find GType field in class %s\n",
+                    cls.getName());
+            return null;
+        }
+
+        try {
+            return (Type) gtypeField.get(null);
+        } catch (IllegalAccessException e) {
+            // Field is not public
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "IllegalAccessException while trying to read %s.%s\n",
+                    cls.getName(), gtypeField.getName());
             return null;
         }
     }
@@ -413,8 +401,8 @@ public class Types {
 
     /**
      * Register a new GType for a Java class. The GType will inherit from the GType of the Java
-     * superclass (using {@link Class#getSuperclass()}, and invoking {@code getType()} and
-     * {@code getMemoryLayout()} using reflection).
+     * superclass (using {@link Class#getSuperclass()}, reading a {@link GType} annotated field and
+     * executing {@code getMemoryLayout()} using reflection).
      * <p>
      * The name of the new GType will be the simple name of the Java class, but can also be
      * specified with the {@link RegisteredType} annotation. (All invalid characters, including '.',

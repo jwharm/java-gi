@@ -20,6 +20,7 @@ public class Method extends GirElement implements CallableType {
     public ReturnValue returnValue;
     public Parameters parameters;
 
+    public String visibility = "public";
     public boolean skip = false;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
@@ -58,7 +59,7 @@ public class Method extends GirElement implements CallableType {
                 writer.write("default ");
             } else {
                 // Visibility
-                writer.write("public ");
+                writer.write(visibility + " ");
             }
 
             // Static methods (functions)
@@ -87,7 +88,7 @@ public class Method extends GirElement implements CallableType {
                 writer.write(" throws GErrorException");
             }
 
-            // Unsupported platforms (except getType())
+            // Unsupported platforms
             if (doPlatformCheck()) {
                 writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
             }
@@ -127,7 +128,7 @@ public class Method extends GirElement implements CallableType {
     }
 
     public boolean doPlatformCheck() {
-        return platforms.size() < 3 && (! "get_type".equals(name));
+        return platforms.size() < 3;
     }
 
     public void generatePlatformCheck(SourceWriter writer) throws IOException {

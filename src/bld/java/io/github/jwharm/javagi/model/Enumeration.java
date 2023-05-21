@@ -8,14 +8,8 @@ import java.util.stream.Collectors;
 
 public class Enumeration extends ValueWrapper {
 
-    public String getType;
-    
     public Enumeration(GirElement parent, String name, String cType, String getType, String version) {
-        super(parent, name, null, cType, version);
-        this.getType = getType;
-        
-        // Generate a function declaration to retrieve the type of this enumeration.
-        registerGetTypeFunction(getType);
+        super(parent, name, null, cType, getType, version);
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -67,6 +61,7 @@ public class Enumeration extends ValueWrapper {
             }
         }
 
+        generateGType(writer);
         generateMemoryLayout(writer);
 
         writer.write("\n");

@@ -84,7 +84,7 @@ public class Builder {
         writer.increaseIndent();
         writer.write("try {\n");
         writer.write("    return (" + c.javaName + ") org.gnome.gobject.GObject.newWithProperties(\n");
-        writer.write("            " + c.javaName + ".getType(), getNames(), getValues()\n");
+        writer.write("            " + c.javaName + ".gtype, getNames(), getValues()\n");
         writer.write("    );\n");
         writer.write("} finally {\n");
         writer.write("    for (var _value : getValues()) {\n");

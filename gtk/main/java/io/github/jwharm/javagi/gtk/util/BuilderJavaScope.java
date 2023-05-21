@@ -27,7 +27,6 @@ import java.lang.reflect.Method;
 public final class BuilderJavaScope extends GObject implements BuilderScope {
 
     private static final String LOG_DOMAIN = "java-gi";
-    private static Type type;
 
     static {
         Gtk.javagi$ensureInitialized();
@@ -42,23 +41,15 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
     }
 
     /**
-     * Get the gtype of {@link BuilderJavaScope}, or register it as a new gtype
-     * if it was not registered yet.
-     * @return the {@link Type} that has been registered for {@link BuilderJavaScope}
+     * The GType of {@link BuilderJavaScope}
      */
-    public static Type getType() {
-        if (type == null) {
-            // Register the new gtype
-            type = Types.register(BuilderJavaScope.class);
-        }
-        return type;
-    }
+    public static final Type gtype = Types.register(BuilderJavaScope.class);
 
     /**
      * Instantiates a new {@link BuilderScope}
      */
     public BuilderJavaScope() {
-        super(getType(), null);
+        super(gtype, null);
     }
 
     /**

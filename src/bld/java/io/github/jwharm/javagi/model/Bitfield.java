@@ -9,14 +9,8 @@ import java.util.List;
 
 public class Bitfield extends ValueWrapper {
 
-    public String getType;
-    
     public Bitfield(GirElement parent, String name, String cType, String getType, String version) {
-        super(parent, name, null, cType, version);
-        this.getType = getType;
-        
-        // Generate a function declaration to retrieve the type of this bitfield.
-        registerGetTypeFunction(getType);
+        super(parent, name, null, cType, getType, version);
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -28,6 +22,7 @@ public class Bitfield extends ValueWrapper {
         writer.increaseIndent();
 
         generateMemoryLayout(writer);
+        generateGType(writer);
 
         // Filter duplicate members
         for (Member m : filterDuplicates(memberList)) {

@@ -11,7 +11,7 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     public String throws_;
 
     public Callback(GirElement parent, String name, String cType, String throws_, String version) {
-        super(parent, name, null, cType, version);
+        super(parent, name, null, cType, null, version);
         this.throws_ = throws_;
     }
 

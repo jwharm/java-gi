@@ -9,7 +9,6 @@ import java.io.IOException;
 public class Interface extends RegisteredType {
 
     public String typeName;
-    public String getType;
     public String typeStruct;
     public Prerequisite prerequisite;
 
@@ -18,13 +17,9 @@ public class Interface extends RegisteredType {
     public Interface(GirElement parent, String name, String cType, String typeName, String getType,
             String typeStruct, String version) {
         
-        super(parent, name, null, cType, version);
+        super(parent, name, null, cType, getType, version);
         this.typeName = typeName;
-        this.getType = getType;
         this.typeStruct = typeStruct;
-        
-        // Generate a function declaration to retrieve the type of this object.
-        registerGetTypeFunction(getType);
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -41,6 +36,7 @@ public class Interface extends RegisteredType {
         writer.write(" extends io.github.jwharm.javagi.base.Proxy {\n");
         writer.increaseIndent();
 
+        generateGType(writer);
         generateMethodsAndSignals(writer);
 
         if (classStruct != null) {
@@ -49,10 +45,7 @@ public class Interface extends RegisteredType {
         
         Builder.generateInterfaceBuilder(writer, this);
         generateImplClass(writer);
-
         generateInjected(writer);
-
-        generateIsAvailable(writer);
 
         writer.decreaseIndent();
         writer.write("}\n");

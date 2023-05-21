@@ -61,17 +61,20 @@ public class VirtualMethod extends Method {
         writer.increaseIndent();
         
         Record classStruct = null;
+        String className = null;
         if (parent instanceof Class c) {
             classStruct = c.classStruct;
+            className = c.javaName;
         } else if (parent instanceof Interface i) {
             classStruct = i.classStruct;
+            className = i.javaName;
         }
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
         writer.write("MemorySegment _func = Interop.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
-            writer.write(", getType()");
+            writer.write(", " + className + ".gtype");
         }
         writer.write(");\n");
         writer.write("FunctionDescriptor _fdesc = ");

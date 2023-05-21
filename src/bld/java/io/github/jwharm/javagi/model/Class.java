@@ -11,7 +11,6 @@ import java.util.StringJoiner;
 public class Class extends RegisteredType {
     
     public String typeName;
-    public String getType;
     public String typeStruct;
     public String getValueFunc;
     public String setValueFunc;
@@ -23,21 +22,13 @@ public class Class extends RegisteredType {
     public Class(GirElement parent, String name, String parentClass, String cType, String typeName, String getType,
             String typeStruct, String getValueFunc, String setValueFunc, String version, String abstract_, String final_) {
         
-        super(parent, name, parentClass, cType, version);
+        super(parent, name, parentClass, cType, getType, version);
         this.typeName = typeName;
-        this.getType = getType;
         this.typeStruct = typeStruct;
         this.getValueFunc = getValueFunc;
         this.setValueFunc = setValueFunc;
         this.abstract_ = abstract_;
         this.final_ = final_;
-
-        // Generate a function declaration to retrieve the type of this object.
-        if (! (this instanceof Record)) {
-            if (! "intern".equals(getType)) {
-                registerGetTypeFunction(getType);
-            }
-        }
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -84,6 +75,7 @@ public class Class extends RegisteredType {
 
         generateMemoryAddressConstructor(writer);
         generateEnsureInitialized(writer);
+        generateGType(writer);
         generateMemoryLayout(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
@@ -96,18 +88,10 @@ public class Class extends RegisteredType {
             Builder.generateBuilder(writer, this);
         }
 
-        // Generate a custom getType() function for ParamSpec
+        // Generate a custom gtype declaration for ParamSpec
         if (isInstanceOf("org.gnome.gobject.ParamSpec") && "intern".equals(getType)) {
             writer.write("\n");
-            writer.write("public static org.gnome.glib.Type getType() {\n");
-            writer.write("    return org.gnome.glib.Type.G_TYPE_PARAM;\n");
-            writer.write("}\n");
-            writer.write("\n");
-            writer.write("public static boolean isAvailable() {\n");
-            writer.write("    return true;\n");
-            writer.write("}\n");
-        } else {
-            generateIsAvailable(writer);
+            writer.write("public static final org.gnome.glib.Type gtype = org.gnome.glib.Type.G_TYPE_PARAM;\n");
         }
 
         // Abstract classes

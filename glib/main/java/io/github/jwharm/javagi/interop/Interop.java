@@ -237,6 +237,26 @@ public class Interop {
     }
 
     /**
+     * Get a gtype by executing the provided get-type function
+     * @return The gtype from the provided get-type function
+     */
+    public static org.gnome.glib.Type getType(String getTypeFunction) {
+        if (getTypeFunction == null) {
+            return null;
+        }
+        FunctionDescriptor fdesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
+        try {
+            MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
+            if (handle == null) {
+                return null;
+            }
+            return new org.gnome.glib.Type((long) handle.invokeExact());
+        } catch (Throwable err) {
+            throw new AssertionError("Unexpected exception occured: ", err);
+        }
+    }
+
+    /**
      * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
      * @param string the string to allocate as a native string (utf8 char*)
      * @param allocator the segment allocator to use

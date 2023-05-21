@@ -6,8 +6,8 @@ import java.io.IOException;
 
 public class Union extends RegisteredType {
 
-    public Union(GirElement parent, String name, String cType, String version) {
-        super(parent, name, null, cType, version);
+    public Union(GirElement parent, String name, String cType, String getType, String version) {
+        super(parent, name, null, cType, getType, version);
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -22,6 +22,7 @@ public class Union extends RegisteredType {
         writer.write(" extends ProxyInstance {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
+        generateGType(writer);
         generateMemoryLayout(writer);
         generateMemoryAddressConstructor(writer);
         generateInjected(writer);

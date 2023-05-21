@@ -37,8 +37,8 @@ public class Alias extends ValueWrapper {
         return TargetType.UNKNOWN;
     }
 
-    public Alias(GirElement parent, String name, String cType, String version) {
-        super(parent, name, null, cType, version);
+    public Alias(GirElement parent, String name, String cType, String getType, String version) {
+        super(parent, name, null, cType, getType, version);
     }
 
     // Aliases (typedefs) don't exist in Java. We can emulate this using inheritance.
@@ -85,9 +85,7 @@ public class Alias extends ValueWrapper {
                 writer.increaseIndent();
             }
         }
-        if (getTargetType() == TargetType.CLASS || getTargetType() == TargetType.INTERFACE) {
-            generateIsAvailable(writer);
-        }
+        generateGType(writer);
         generateInjected(writer);
         writer.decreaseIndent();
         writer.write("}\n");

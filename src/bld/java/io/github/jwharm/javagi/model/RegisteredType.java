@@ -13,6 +13,7 @@ public abstract class RegisteredType extends GirElement {
     public final String javaName;
     public final String parentClass;
     public final String cType;
+    public final String getType;
     public final String version;
     protected final String qualifiedName;
 
@@ -20,7 +21,7 @@ public abstract class RegisteredType extends GirElement {
     public boolean autoCloseable = false;
     public String injected = null;
 
-    public RegisteredType(GirElement parent, String name, String parentClass, String cType, String version) {
+    public RegisteredType(GirElement parent, String name, String parentClass, String cType, String getType, String version) {
         super(parent);
         
         this.parentClass = Conversions.toQualifiedJavaType(parentClass, getNamespace());
@@ -30,7 +31,8 @@ public abstract class RegisteredType extends GirElement {
         
         // If c type is not provided, guess that the name is also the c type
         this.cType = Objects.requireNonNullElse(cType, name);
-        
+
+        this.getType = getType;
         this.version = version;
 
         // Register the full names of this class and the parent class
@@ -99,27 +101,19 @@ public abstract class RegisteredType extends GirElement {
     }
     
     /**
-     * Generate a function declaration to retrieve the type of this object.
-     * @param getType the name of the function
+     * Generate a field declaration for the gtype of this object.
      */
-    protected void registerGetTypeFunction(String getType) {
-        if (getType == null) {
+    protected void generateGType(SourceWriter writer) throws IOException {
+        if (getType == null || "intern".equals(getType)) {
             return;
         }
-        
-        // Function
-        Function getTypeFunc = new Function(this, "get_type", getType, null, null, null);
-        getTypeFunc.returnValue = new ReturnValue(getTypeFunc, "none", null);
-        getTypeFunc.returnValue.type = new Type(getTypeFunc.returnValue, "GType", "GType");
-        
-        // Docstrings
-        getTypeFunc.doc = new Doc(getTypeFunc, null);
-        getTypeFunc.doc.contents = "Get the gtype";
-        getTypeFunc.returnValue.doc = new Doc(getTypeFunc.returnValue, null);
-        getTypeFunc.returnValue.doc.contents = "The gtype";
-        
-        // Add the function
-        this.functionList.add(getTypeFunc);
+
+        // Generate field declaration
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * The GType of the " + cType + " " + (this instanceof Interface ? "interface" : "class") + ".\n");
+        writer.write(" */\n");
+        writer.write("public static final org.gnome.glib.Type gtype = Interop.getType(\"" + getType + "\");\n");
     }
 
     /**
@@ -286,17 +280,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * @return {@code true} when the type is available on the runtime platform\n");
         writer.write(" */\n");
         writer.write("public static boolean isAvailable() {\n");
-        
-        String targetName = null;
-        for (Method m : functionList) {
-            if (m.name.equals("get_type") && m.getParameters() == null) {
-                targetName = m.cIdentifier;
-                break;
-            }
-        }
-        if (targetName == null)
-            throw new NullPointerException("Could not find get_type method in " + getNamespace().packageName + "." + javaName);
-        writer.write("    return Interop.isAvailable(\"" + targetName + "\", FunctionDescriptor.of(ValueLayout.JAVA_LONG), false);\n");
+        writer.write("    return Interop.isAvailable(\"" + getType + "\", FunctionDescriptor.of(ValueLayout.JAVA_LONG), false);\n");
         writer.write("}\n");
     }
 
