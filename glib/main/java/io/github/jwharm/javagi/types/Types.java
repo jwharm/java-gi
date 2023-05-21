@@ -3,6 +3,7 @@ package io.github.jwharm.javagi.types;
 import io.github.jwharm.javagi.annotations.*;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.InstanceCache;
+import io.github.jwharm.javagi.interop.Interop;
 import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -24,6 +25,8 @@ public class Types {
      * The domain to use for GLib error logging
      */
     static final String LOG_DOMAIN = "java-gi";
+
+    // GLib fundamental types, adapted from <gobject/gtype.h>
 
     private static final long G_TYPE_FUNDAMENTAL_SHIFT = 2;
     public static final Type G_TYPE_INVALID = new Type(0L << G_TYPE_FUNDAMENTAL_SHIFT);
@@ -48,6 +51,196 @@ public class Types {
     public static final Type G_TYPE_PARAM = new Type(19L << G_TYPE_FUNDAMENTAL_SHIFT);
     public static final Type G_TYPE_OBJECT = new Type(20L << G_TYPE_FUNDAMENTAL_SHIFT);
     public static final Type G_TYPE_VARIANT = new Type(21L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    // GLib boxed types, adapted from <gobject/glib-types.h>
+
+    /**
+     * The {@code GType} for {@code GDate}.
+     */
+    public static final Type G_TYPE_DATE = Interop.getType("g_date_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code null}-terminated array of strings.
+     * @since 2.4
+     */
+    public static final Type G_TYPE_STRV = Interop.getType("g_strv_get_type");
+
+    /**
+     * The {@code GType} for {@code GString}.
+     */
+    public static final Type G_TYPE_GSTRING = Interop.getType("g_gstring_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GHashTable} reference.
+     * @since 2.10
+     */
+    public static final Type G_TYPE_HASH_TABLE = Interop.getType("g_hash_table_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GRegex} reference.
+     * @since 2.14
+     */
+    public static final Type G_TYPE_REGEX = Interop.getType("g_regex_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GMatchInfo} reference.
+     * @since 2.30
+     */
+    public static final Type G_TYPE_MATCH_INFO = Interop.getType("g_match_info_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GArray} reference.
+     * @since 2.22
+     */
+    public static final Type G_TYPE_ARRAY = Interop.getType("g_array_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GByteArray} reference.
+     * @since 2.22
+     */
+    public static final Type G_TYPE_BYTE_ARRAY = Interop.getType("g_byte_array_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GPtrArray} reference.
+     * @since 2.22
+     */
+    public static final Type G_TYPE_PTR_ARRAY = Interop.getType("g_ptr_array_get_type");
+
+    /**
+     * The {@code GType} for {@code GBytes}.
+     * @since 2.32
+     */
+    public static final Type G_TYPE_BYTES = Interop.getType("g_bytes_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GVariantType}.
+     * @since 2.24
+     */
+    public static final Type G_TYPE_VARIANT_TYPE = Interop.getType("g_variant_type_get_gtype");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GError}.
+     * @since 2.26
+     */
+    public static final Type G_TYPE_ERROR = Interop.getType("g_error_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GDateTime}.
+     * @since 2.26
+     */
+    public static final Type G_TYPE_DATE_TIME = Interop.getType("g_date_time_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GTimeZone}.
+     * @since 2.34
+     */
+    public static final Type G_TYPE_TIME_ZONE = Interop.getType("g_time_zone_get_type");
+
+    /**
+     * The {@code GType} for {@code GIOChannel}.
+     */
+    public static final Type G_TYPE_IO_CHANNEL = Interop.getType("g_io_channel_get_type");
+
+    /**
+     * The {@code GType} for {@code GIOCondition}.
+     */
+    public static final Type G_TYPE_IO_CONDITION = Interop.getType("g_io_condition_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GVariantBuilder}.
+     * @since 2.30
+     */
+    public static final Type G_TYPE_VARIANT_BUILDER = Interop.getType("g_variant_builder_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GVariantDict}.
+     * @since 2.40
+     */
+    public static final Type G_TYPE_VARIANT_DICT = Interop.getType("g_variant_dict_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GMainLoop}.
+     * @since 2.30
+     */
+    public static final Type G_TYPE_MAIN_LOOP = Interop.getType("g_main_loop_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GMainContext}.
+     * @since 2.30
+     */
+    public static final Type G_TYPE_MAIN_CONTEXT = Interop.getType("g_main_context_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GSource}.
+     * @since 2.30
+     */
+    public static final Type G_TYPE_SOURCE = Interop.getType("g_source_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GPollFD}.
+     * @since 2.36
+     */
+    public static final Type G_TYPE_POLLFD = Interop.getType("g_pollfd_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GMarkupParseContext}.
+     * @since 2.36
+     */
+    public static final Type G_TYPE_MARKUP_PARSE_CONTEXT = Interop.getType("g_markup_parse_context_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GKeyFile}.
+     * @since 2.32
+     */
+    public static final Type G_TYPE_KEY_FILE = Interop.getType("g_key_file_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GMappedFile}.
+     * @since 2.40
+     */
+    public static final Type G_TYPE_MAPPED_FILE = Interop.getType("g_mapped_file_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GThread}.
+     * @since 2.36
+     */
+    public static final Type G_TYPE_THREAD = Interop.getType("g_thread_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GChecksum}.
+     * @since 2.36
+     */
+    public static final Type G_TYPE_CHECKSUM = Interop.getType("g_checksum_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GOptionGroup}.
+     * @since 2.44
+     */
+    public static final Type G_TYPE_OPTION_GROUP = Interop.getType("g_option_group_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GUri}.
+     * @since 2.66
+     */
+    public static final Type G_TYPE_URI = Interop.getType("g_uri_get_type");
+
+    /**
+     * The {@code GType} for {@code GTree}.
+     * @since 2.68
+     */
+    public static final Type G_TYPE_TREE = Interop.getType("g_tree_get_type");
+
+    /**
+     * The {@code GType} for {@code GPatternSpec}.
+     * @since 2.70
+     */
+    public static final Type G_TYPE_PATTERN_SPEC = Interop.getType("g_pattern_spec_get_type");
+
+    /**
+     * The {@code GType} for a boxed type holding a {@code GBookmarkFile}.
+     * @since 2.76
+     */
+    public static final Type G_TYPE_BOOKMARK_FILE = Interop.getType("g_bookmark_file_get_type");
 
     /**
      * Convert the name of a class to the name for a new GType. When the
