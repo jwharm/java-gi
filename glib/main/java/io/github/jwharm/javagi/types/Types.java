@@ -17,7 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * The Types class contains static methods to register a Java class as a new GObject type.
+ * The Types class contains GType constants, a series of static methods to check gtype characteristics,
+ * and static methods to register a Java class as a new GObject-derived GType.
  */
 public class Types {
 
@@ -29,27 +30,138 @@ public class Types {
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
     private static final long G_TYPE_FUNDAMENTAL_SHIFT = 2;
+
+    /**
+     * An integer constant that represents the number of identifiers reserved
+     * for types that are assigned at compile-time.
+     */
+    private static final long G_TYPE_FUNDAMENTAL_MAX = (255 << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * An invalid {@code GType} used as error return value in some functions which return
+     * a {@code GType}.
+     */
     public static final Type G_TYPE_INVALID = new Type(0L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * A fundamental type which is used as a replacement for the C
+     * void return type.
+     */
     public static final Type G_TYPE_NONE = new Type(1L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type from which all interfaces are derived.
+     */
     public static final Type G_TYPE_INTERFACE = new Type(2L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gchar}.
+     * <p>
+     * The type designated by {@code G_TYPE_CHAR} is unconditionally an 8-bit signed integer.
+     * This may or may not be the same type a the C type "gchar".
+     */
     public static final Type G_TYPE_CHAR = new Type(3L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code guchar}.
+     */
     public static final Type G_TYPE_UCHAR = new Type(4L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gboolean}.
+     */
     public static final Type G_TYPE_BOOLEAN = new Type(5L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gint}.
+     */
     public static final Type G_TYPE_INT = new Type(6L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code guint}.
+     */
     public static final Type G_TYPE_UINT = new Type(7L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code glong}.
+     */
     public static final Type G_TYPE_LONG = new Type(8L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gulong}.
+     */
     public static final Type G_TYPE_ULONG = new Type(9L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gint64}.
+     */
     public static final Type G_TYPE_INT64 = new Type(10L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code guint64}.
+     */
     public static final Type G_TYPE_UINT64 = new Type(11L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type from which all enumeration types are derived.
+     */
     public static final Type G_TYPE_ENUM = new Type(12L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type from which all flags types are derived.
+     */
     public static final Type G_TYPE_FLAGS = new Type(13L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gfloat}.
+     */
     public static final Type G_TYPE_FLOAT = new Type(14L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gdouble}.
+     */
     public static final Type G_TYPE_DOUBLE = new Type(15L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to nul-terminated C strings.
+     */
     public static final Type G_TYPE_STRING = new Type(16L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code gpointer}.
+     */
     public static final Type G_TYPE_POINTER = new Type(17L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type from which all boxed types are derived.
+     */
     public static final Type G_TYPE_BOXED = new Type(18L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type from which all {@code GParamSpec} types are derived.
+     */
     public static final Type G_TYPE_PARAM = new Type(19L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type for {@code GObject}.
+     */
     public static final Type G_TYPE_OBJECT = new Type(20L << G_TYPE_FUNDAMENTAL_SHIFT);
+
+    /**
+     * The fundamental type corresponding to {@code G_TYPE_VARIANT}.
+     * <p>
+     * All floating {@code G_TYPE_VARIANT} instances passed through the {@code GType} system are
+     * consumed.
+     * <p>
+     * Note that callbacks in closures, and signal handlers
+     * for signals of return type {@code G_TYPE_VARIANT}, must never return floating
+     * variants.
+     * <p>
+     * Note: GLib 2.24 did include a boxed type with this name. It was replaced
+     * with this fundamental type in 2.26.
+     * <p>
+     * @since 2.26
+     */
     public static final Type G_TYPE_VARIANT = new Type(21L << G_TYPE_FUNDAMENTAL_SHIFT);
 
     // GLib boxed types, adapted from <gobject/glib-types.h>
@@ -241,6 +353,182 @@ public class Types {
      * @since 2.76
      */
     public static final Type G_TYPE_BOOKMARK_FILE = Interop.getType("g_bookmark_file_get_type");
+
+    /**
+     * First fundamental type number to create a new fundamental type id with
+     * G_TYPE_MAKE_FUNDAMENTAL() reserved for GLib.
+     */
+    public static final long G_TYPE_RESERVED_GLIB_FIRST	= 22L;
+
+    /**
+     * Last fundamental type number reserved for GLib.
+     */
+    public static final long G_TYPE_RESERVED_GLIB_LAST = 31L;
+
+    /**
+     * First fundamental type number to create a new fundamental type id with
+     * G_TYPE_MAKE_FUNDAMENTAL() reserved for BSE.
+     */
+    public static final long G_TYPE_RESERVED_BSE_FIRST = 32L;
+
+    /**
+     * Last fundamental type number reserved for BSE.
+     */
+    public static final long G_TYPE_RESERVED_BSE_LAST = 48L;
+
+    /**
+     * First available fundamental type number to create new fundamental
+     * type id with G_TYPE_MAKE_FUNDAMENTAL().
+     */
+    public static final long RESERVED_USER_FIRST	= 49L;
+
+    // Type Checking Macros
+
+    /**
+     * Checks if {@code type} is a fundamental type.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is fundamental
+     */
+    public static boolean IS_FUNDAMENTAL(Type type) {
+        return type.getValue() <= G_TYPE_FUNDAMENTAL_MAX;
+    }
+
+    /**
+     * Checks if {@code type} is derived (or in object-oriented terminology:
+     * inherited) from another type (this holds true for all non-fundamental
+     * types).
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is derived
+     */
+    public static boolean IS_DERIVED(Type type) {
+        return type.getValue() > G_TYPE_FUNDAMENTAL_MAX;
+    }
+
+    /**
+     * Checks if {@code type} is an interface type.
+     * <p>
+     * An interface type provides a pure API, the implementation
+     * of which is provided by another type (which is then said to conform
+     * to the interface).  GLib interfaces are somewhat analogous to Java
+     * interfaces and C++ classes containing only pure virtual functions,
+     * with the difference that GType interfaces are not derivable (but see
+     * g_type_interface_add_prerequisite() for an alternative).
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is an interface
+     */
+    public static boolean IS_INTERFACE(Type type) {
+        return GObjects.typeFundamental(type).equals(G_TYPE_INTERFACE);
+    }
+
+    /**
+     * Checks if {@code type} is a classed type.
+     * <p>
+     * A classed type has an associated {@link org.gnome.gobject.TypeClass} which can be derived to store
+     * class-wide virtual function pointers and data for all instances of the type.
+     * This allows for subclassing. All {@link org.gnome.gobject.GObject}s are classed; none of the scalar
+     * fundamental types built into GLib are classed.
+     * <p>
+     * Interfaces are not classed: while their {@link org.gnome.gobject.TypeInterface} struct could be
+     * considered similar to {@link org.gnome.gobject.TypeClass}, and classes can derive interfaces,
+     * {@link org.gnome.gobject.TypeInterface} doesn’t allow for subclassing.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is classed
+     */
+    public static boolean IS_CLASSED(Type type) {
+        return GObjects.typeTestFlags(type, TypeFundamentalFlags.CLASSED.getValue());
+    }
+
+    /**
+     * Checks if {@code type} can be instantiated. Instantiation is the
+     * process of creating an instance (object) of this type.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is instantiable
+     */
+    public static boolean IS_INSTANTIATABLE(Type type) {
+        return GObjects.typeTestFlags(type, TypeFundamentalFlags.INSTANTIATABLE.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is a derivable type.  A derivable type can
+     * be used as the base class of a flat (single-level) class hierarchy.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is derivable
+     */
+    public static boolean IS_DERIVABLE(Type type) {
+        return GObjects.typeTestFlags(type, TypeFundamentalFlags.DERIVABLE.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is a deep derivable type.  A deep derivable type
+     * can be used as the base class of a deep (multi-level) class hierarchy.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is deep derivable
+     */
+    public static boolean IS_DEEP_DERIVABLE(Type type) {
+        return GObjects.typeTestFlags(type, TypeFundamentalFlags.DEEP_DERIVABLE.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is an abstract type.  An abstract type cannot be
+     * instantiated and is normally used as an abstract base class for
+     * derived classes.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is abstract
+     */
+    public static boolean IS_ABSTRACT(Type type) {
+        return GObjects.typeTestFlags(type, TypeFlags.ABSTRACT.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is an abstract value type.  An abstract value type introduces
+     * a value table, but can't be used for g_value_init() and is normally used as
+     * an abstract base type for derived value types.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is an abstract value type
+     */
+    public static boolean IS_VALUE_ABSTRACT(Type type) {
+        return GObjects.typeTestFlags(type, TypeFlags.VALUE_ABSTRACT.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is a value type and can be used with g_value_init().
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is a value type
+     */
+    public static boolean IS_VALUE_TYPE(Type type) {
+        return GObjects.typeCheckIsValueType(type);
+    }
+
+    /**
+     * Checks if {@code type} has a {@link org.gnome.gobject.TypeValueTable}.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} has a value table
+     */
+    public static boolean HAS_VALUE_TABLE(Type type) {
+        return TypeValueTable.peek(type) != null;
+    }
+
+    /**
+     * Checks if {@code type} is a final type. A final type cannot be derived any
+     * further.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if {@code type} is final
+     * @since 2.70
+     */
+    public static boolean IS_FINAL(Type type) {
+        return GObjects.typeTestFlags(type, TypeFlags.FINAL.getValue());
+    }
+
+    /**
+     * Checks if {@code type} is deprecated. Instantiating a deprecated type will
+     * trigger a warning if running with {@code G_ENABLE_DIAGNOSTIC=1}.
+     * @param type A {@link org.gnome.glib.Type} value
+     * @return {@code true} if the type is deprecated
+     * @since 2.76
+     */
+    public static boolean IS_DEPRECATED(Type type) {
+        return GObjects.typeTestFlags(type, TypeFlags.DEPRECATED.getValue());
+    }
 
     /**
      * Convert the name of a class to the name for a new GType. When the
