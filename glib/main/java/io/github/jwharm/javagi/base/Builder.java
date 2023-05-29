@@ -36,7 +36,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @return a {@code String} array of property names
      */
     public String[] getNames() {
-        return names.toArray(new String[names.size()]);
+        return names.toArray(new String[0]);
     }
 
     /**
@@ -44,7 +44,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @return a {@code GValue} array of property names
      */
     public Value[] getValues() {
-        return values.toArray(new Value[values.size()]);
+        return values.toArray(new Value[0]);
     }
 
 }
