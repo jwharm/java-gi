@@ -29,7 +29,7 @@ public class Property extends Variable {
             doc.generate(writer, false);
         }
         writer.write((parent instanceof Interface) ? "default " : "public ");
-        writer.write("S set" + Conversions.toCamelCase(name, true) + "(");
+        writer.write("S " + Conversions.toLowerCaseJavaName(name) + "(");
         writeTypeAndName(writer, false);
         writer.write(") {\n");
         writer.increaseIndent();
