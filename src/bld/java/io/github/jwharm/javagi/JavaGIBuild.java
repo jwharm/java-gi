@@ -38,6 +38,12 @@ public class JavaGIBuild extends ModularProject {
         girDirectory(gitPullOperation_.directory());
     }
 
+    @Override
+    public void download() throws Exception {
+        super.download();
+        downloadGirFiles();
+    }
+
     @BuildCommand(value="download-gir-files", summary="Pull gir files from remote repository")
     public void downloadGirFiles() throws Exception {
         gitPullOperation_.executeOnce();
@@ -45,25 +51,21 @@ public class JavaGIBuild extends ModularProject {
 
     @BuildCommand(summary="Build glib")
     public void glib() throws Exception {
-        downloadGirFiles();
         modules(new GLibBuild(this));
     }
 
     @BuildCommand(summary="Build gtk")
     public void gtk() throws Exception {
-        downloadGirFiles();
         modules(new GtkBuild(this));
     }
 
     @BuildCommand(summary="Build adwaita")
     public void adwaita() throws Exception {
-        downloadGirFiles();
         modules(new AdwaitaBuild(this));
     }
 
     @BuildCommand(summary="Build gstreamer")
     public void gstreamer() throws Exception {
-        downloadGirFiles();
         modules(new GStreamerBuild(this));
     }
 
