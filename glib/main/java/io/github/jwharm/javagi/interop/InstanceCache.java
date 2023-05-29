@@ -20,9 +20,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class InstanceCache {
 
-    public final static Map<MemorySegment, Proxy> strongReferences = new HashMap<>();
-    public final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new HashMap<>();
-
+    private final static Map<MemorySegment, Proxy> strongReferences = new HashMap<>();
+    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new HashMap<>();
     private static final Cleaner CLEANER = Cleaner.create();
 
     /**
@@ -60,7 +59,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy getForType(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
+    public static Proxy getForType(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback, boolean cache) {
         
         // Get instance from the cache
         Proxy instance = get(address);
@@ -82,7 +81,7 @@ public class InstanceCache {
             return null;
         }
 
-        return put(address, newInstance);
+        return cache? put(address, newInstance) : newInstance;
     }
 
     /**
@@ -94,7 +93,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy getForTypeClass(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
+    public static Proxy getForTypeClass(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback, boolean cache) {
 
         // Get instance from the cache
         Proxy instance = get(address);
@@ -134,7 +133,7 @@ public class InstanceCache {
             return fallback.apply(address);
         }
 
-        return put(address, newInstance);
+        return cache ? put(address, newInstance) : newInstance;
     }
 
     /**
@@ -145,7 +144,7 @@ public class InstanceCache {
      * @param fallback fallback constructor to use when the type is not found in the TypeCache
      * @return         a Proxy instance for the provided memory address
      */
-    public static Proxy get(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
+    public static Proxy get(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback, boolean cache) {
 
         // Get instance from the cache
         Proxy instance = get(address);
@@ -163,7 +162,7 @@ public class InstanceCache {
 
         // Cache GTypeInstance, GTypeClass and GTypeInterface
         if (newInstance instanceof TypeInstance || newInstance instanceof TypeClass || newInstance instanceof TypeInterface) {
-            return put(address, newInstance);
+            return cache ? put(address, newInstance) : newInstance;
         }
 
         return newInstance;
@@ -197,6 +196,8 @@ public class InstanceCache {
 
         // Sink floating references
         if (newInstance instanceof Floating floatingReference) {
+            floatingReference.refSink();
+        } else if (newInstance instanceof InitiallyUnowned floatingReference) {
             floatingReference.refSink();
         }
         

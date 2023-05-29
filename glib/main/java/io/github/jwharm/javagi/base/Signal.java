@@ -24,7 +24,7 @@ public class Signal<T> {
      * @param handlerId the handler ID of the signal
      */
     public Signal(MemorySegment instance, long handlerId) {
-        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new);
+        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
         this.handlerId = (int) handlerId;
     }
 

@@ -252,7 +252,8 @@ public class Variable extends GirElement {
                 cacheFunction = "InstanceCache.getForType";
             else if (type.isTypeClass())
                 cacheFunction = "InstanceCache.getForTypeClass";
-            return "(" + type.qualifiedJavaType + ") " + cacheFunction + "(" + identifier + ", " + type.constructorName + ")";
+            String cache = upcall ? "false" : "true";
+            return "(" + type.qualifiedJavaType + ") " + cacheFunction + "(" + identifier + ", " + type.constructorName + ", " + cache + ")";
         }
 
         if (type.isBoolean())

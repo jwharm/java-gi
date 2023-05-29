@@ -38,9 +38,14 @@ public class GObjectPatch implements Patch {
         // Add a static factory method for GObject
         inject(repo, "Object", """
             
+            /**
+             * Create a new GObject instance of the provided GType.
+             * @param objectType the GType of the new GObject
+             * @return the new GObject instance
+             */
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
                 var _result = constructNew(objectType, null);
-                T _object = (T) InstanceCache.getForType(_result, org.gnome.gobject.GObject::new);
+                T _object = (T) InstanceCache.getForType(_result, org.gnome.gobject.GObject::new, true);
                 if (_object != null) {
                     _object.ref();
                 }

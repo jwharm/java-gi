@@ -60,9 +60,20 @@ public abstract class RegisteredType extends GirElement {
     }
 
     public boolean isFloating() {
-        if (isInstanceOf("org.gnome.gobject.InitiallyUnowned")) {
-            return true;
+        // GObject has a ref_sink function but we don't want to treat all GObjects as floating references.
+        if ("GObject".equals(javaName) && "org.gnome.gobject".equals(getNamespace().packageName)) {
+            return false;
         }
+        // GInitiallyUnowned is always a floating reference, and doesn't explicitly need to be marked as such.
+        if ("InitiallyUnowned".equals(javaName) && "org.gnome.gobject".equals(getNamespace().packageName)) {
+            return false;
+        }
+        // Subclasses of GInitiallyUnowned don't need to implement the `Floating` interface,
+        // because GInitiallyUnowned already does.
+        if (isInstanceOf("org.gnome.gobject.InitiallyUnowned")) {
+            return false;
+        }
+        // Any other classes that have a ref_sink method, will be treated as floating references.
         for (Method method : methodList) {
             if ("ref_sink".equals(method.name)) {
                 return true;
