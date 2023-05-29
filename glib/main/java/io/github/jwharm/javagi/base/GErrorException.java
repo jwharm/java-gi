@@ -1,6 +1,5 @@
 package io.github.jwharm.javagi.base;
 
-import java.io.Serial;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
@@ -15,10 +14,6 @@ import org.gnome.glib.Quark;
  * error reporting</a> for details about GError.
  */
 public class GErrorException extends Exception {
-
-    // Auto-generated
-    @Serial
-    private static final long serialVersionUID = -5219056090883059292L;
 
     private final Quark domain;
     private final int code;
@@ -62,7 +57,7 @@ public class GErrorException extends Exception {
         super(message);
         this.domain = domain;
         this.code = code;
-        this.message = message;
+        this.message = message == null ? null : message.formatted(args);
     }
 
     /**

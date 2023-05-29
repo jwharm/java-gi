@@ -307,7 +307,8 @@ public class Parameter extends Variable {
             }
         }
         
-        // If the parameter has attribute transfer-ownership="full", the JVM must own a reference.
+        // If the parameter has attribute transfer-ownership="full", we must register a reference, because
+        // the native code is going to call un_ref() at some point while we still keep a pointer in the InstanceCache.
         // Only for GObjects where ownership is fully transferred away, unless it's an out parameter or a pointer.
         if (isGObject()
                 && "full".equals(transferOwnership) 
@@ -317,7 +318,6 @@ public class Parameter extends Variable {
             if (checkNull()) writer.write("if (" + param + " != null) ");
             writer.write(param + ".ref();\n");
         }
-
         // Same, but for structs/unions: Disable the cleaner
         if (type != null && (type.isUnion() || type.isRecord())
                 && "full".equals(transferOwnership)

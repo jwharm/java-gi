@@ -133,7 +133,8 @@ public class Interop {
 
     /**
      * Creates a method handle that is used to call the native function with 
-     * the provided name and function descriptor.
+     * the provided name and function descriptor. The method handle is cached
+     * and reused in subsequent lookups.
      * @param name Name of the native function
      * @param fdesc Function descriptor of the native function
      * @param variadic Whether the function has varargs
@@ -152,7 +153,15 @@ public class Interop {
         namedFunctions.put(func, handle);
         return handle;
     }
-    
+
+    /**
+     * Creates a method handle that is used to call the native function at
+     * the provided memory address. The method handle is cached and reused
+     * in subsequent lookups.
+     * @param symbol Memory address of the native function
+     * @param fdesc Function descriptor of the native function
+     * @return the MethodHandle
+     */
     public static MethodHandle downcallHandle(MemorySegment symbol, FunctionDescriptor fdesc) {
         var func = new FunctionPointer(symbol, fdesc, false);
         if (functionPointers.containsKey(func)) {
@@ -223,17 +232,6 @@ public class Interop {
 
         return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
-    }
-
-    /**
-     * Check whether a function is available as a native linker symbol
-     * @param name name of the native function
-     * @param fdesc function descriptor that specifies the function signature
-     * @param variadic whether the function accepts varargs
-     * @return true if a {@link MethodHandle} can be created for the provided function
-     */
-    public static boolean isAvailable(String name, FunctionDescriptor fdesc, boolean variadic) {
-        return (downcallHandle(name, fdesc, variadic) != null);
     }
 
     /**

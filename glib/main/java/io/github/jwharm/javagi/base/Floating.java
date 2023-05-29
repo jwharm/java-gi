@@ -5,7 +5,14 @@ package io.github.jwharm.javagi.base;
  */
 public interface Floating extends Proxy {
 
+    /**
+     * Sink the floating reference
+     * @return the instance
+     */
     Floating refSink();
 
+    /**
+     * Decrease the reference count of the instance
+     */
     void unref();
 }

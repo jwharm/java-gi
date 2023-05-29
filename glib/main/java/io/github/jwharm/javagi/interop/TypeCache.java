@@ -65,7 +65,7 @@ public class TypeCache {
 
     /**
      * Register the provided marshal function for the provided type
-     * @param type Type to use as key in the type register
+     * @param type    Type to use as key in the type register
      * @param marshal Marshal function for this type
      */
     public static void register(Type type, Function<MemorySegment, ? extends Proxy> marshal) {

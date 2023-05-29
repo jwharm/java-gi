@@ -28,9 +28,8 @@ import java.util.Map;
  */
 public class MemoryCleaner {
 
-    private static final Cleaner CLEANER = Cleaner.create();
-
     private static final Map<MemorySegment, Cached> references = new HashMap<>();
+    private static final Cleaner CLEANER = Cleaner.create();
 
     /**
      * Register the memory address of this proxy to be cleaned when the proxy gets garbage-collected.
@@ -114,27 +113,36 @@ public class MemoryCleaner {
          */
         public void run() {
             Cached cached = references.get(address);
+
+            // When other references exist, decrease the refcount
             if (cached.references > 1) {
-                // Other references exist: Decrease refcount
                 references.put(address, new Cached(cached.owned, cached.references - 1, cached.freeFunc));
-            } else {
-                // No other references exist: Remove address from the cache and (if ownership is enabled) run free()
-                references.remove(address);
-                if (cached.owned) {
-                    if (cached.freeFunc != null) {
-                        try {
-                            Interop.downcallHandle(
-                                    cached.freeFunc,
-                                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
-                                    false
-                            ).invokeExact(address);
-                        } catch (Throwable e) {
-                            throw new AssertionError("Unexpected exception occured: ", e);
-                        }
-                    } else {
-                        GLib.free(address);
-                    }
-                }
+                return;
+            }
+
+            // When no other references exist, remove the address from the cache and free the memory
+            references.remove(address);
+
+            // if we don't have ownership, we must not run free()
+            if (! cached.owned) {
+                return;
+            }
+
+            // run g_free
+            if (cached.freeFunc == null) {
+                GLib.free(address);
+                return;
+            }
+
+            // Run specialized free function
+            try {
+                Interop.downcallHandle(
+                        cached.freeFunc,
+                        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                        false
+                ).invokeExact(address);
+            } catch (Throwable e) {
+                throw new AssertionError("Unexpected exception occured: ", e);
             }
         }
     }

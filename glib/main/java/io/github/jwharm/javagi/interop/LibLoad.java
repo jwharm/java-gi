@@ -9,9 +9,11 @@ import java.util.stream.Stream;
  * The LibLoad class is used internally to load native libraries by name
  */
 public class LibLoad {
+
     private static final boolean OS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
     private static final boolean OS_MACOS = System.getProperty("os.name").toLowerCase().contains("mac");
     private static final String LIB_SUFFIX;
+
     static {
         if (OS_WINDOWS) LIB_SUFFIX = ".dll";
         else if (OS_MACOS) LIB_SUFFIX = ".dylib";
@@ -20,8 +22,11 @@ public class LibLoad {
         String javagiPath = System.getProperty("javagi.path");
         String javaPath = System.getProperty("java.library.path");
         if (javagiPath != null) {
-            if (javaPath == null) System.setProperty("java.library.path", javagiPath);
-            else System.setProperty("java.library.path", javaPath + File.pathSeparator + javagiPath);
+            if (javaPath == null) {
+                System.setProperty("java.library.path", javagiPath);
+            } else {
+                System.setProperty("java.library.path", javaPath + File.pathSeparator + javagiPath);
+            }
         }
     }
 
@@ -38,9 +43,15 @@ public class LibLoad {
             fail.addSuppressed(t);
         }
         for (String s : System.getProperty("java.library.path").split(File.pathSeparator)) {
-            if (s.isBlank()) continue;
+            if (s.isBlank()) {
+                continue;
+            }
+
             Path pk = Path.of(s).toAbsolutePath().normalize();
-            if (!Files.isDirectory(pk)) continue;
+            if (!Files.isDirectory(pk)) {
+                continue;
+            }
+
             Path[] paths;
             try (Stream<Path> p = Files.list(pk)) {
                 paths = p.toArray(Path[]::new);
@@ -48,6 +59,7 @@ public class LibLoad {
                 fail.addSuppressed(t);
                 continue;
             }
+
             String libName = System.mapLibraryName(name);
             for (Path path : paths) {
                 try {

@@ -5,6 +5,10 @@ package io.github.jwharm.javagi.base;
  */
 public class UnsupportedPlatformException extends Exception {
 
+    /**
+     * Create a new UnsupportedPlatformException with the provided message
+     * @param message the exception message
+     */
     public UnsupportedPlatformException(String message) {
         super();
     }
