@@ -138,7 +138,7 @@ public class Properties {
             } else if (paramspec.equals(ParamSpecDouble.class)) {
                 ps = GObjects.paramSpecDouble(p.name(), p.name(), p.name(), -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, getFlags(p));
             } else if (paramspec.equals(ParamSpecFloat.class)) {
-                ps = GObjects.paramSpecFloat(p.name(), p.name(), p.name(), -Float.MIN_VALUE, Float.MAX_VALUE, 0.0f, getFlags(p));
+                ps = GObjects.paramSpecFloat(p.name(), p.name(), p.name(), -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, getFlags(p));
             } else if (paramspec.equals(ParamSpecGType.class)) {
                 ps = GObjects.paramSpecGtype(p.name(), p.name(), p.name(), Types.NONE, getFlags(p));
             } else if (paramspec.equals(ParamSpecInt.class)) {
