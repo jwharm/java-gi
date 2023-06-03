@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import io.github.jwharm.javagi.types.TypeCache;
 import io.github.jwharm.javagi.types.Types;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;

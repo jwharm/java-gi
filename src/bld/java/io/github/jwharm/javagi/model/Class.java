@@ -91,7 +91,7 @@ public class Class extends RegisteredType {
         // Generate a custom gtype declaration for ParamSpec
         if (isInstanceOf("org.gnome.gobject.ParamSpec") && "intern".equals(getType)) {
             writer.write("\n");
-            writer.write("public static final org.gnome.glib.Type gtype = io.github.jwharm.javagi.types.Types.G_TYPE_PARAM;\n");
+            writer.write("public static final org.gnome.glib.Type gtype = Types.PARAM;\n");
         }
 
         // Abstract classes

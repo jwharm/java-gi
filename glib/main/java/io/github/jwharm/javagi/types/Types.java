@@ -4,7 +4,6 @@ import io.github.jwharm.javagi.annotations.*;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.InstanceCache;
 import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.TypeCache;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -20,6 +19,7 @@ import java.util.function.Function;
  * The Types class contains GType constants, a series of static methods to check gtype characteristics,
  * and static methods to register a Java class as a new GObject-derived GType.
  */
+@SuppressWarnings("unused")
 public class Types {
 
     /**
@@ -29,123 +29,123 @@ public class Types {
 
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
-    private static final long G_TYPE_FUNDAMENTAL_SHIFT = 2;
+    private static final long FUNDAMENTAL_SHIFT = 2;
 
     /**
      * An integer constant that represents the number of identifiers reserved
      * for types that are assigned at compile-time.
      */
-    private static final long G_TYPE_FUNDAMENTAL_MAX = (255 << G_TYPE_FUNDAMENTAL_SHIFT);
+    private static final long FUNDAMENTAL_MAX = (255 << FUNDAMENTAL_SHIFT);
 
     /**
      * An invalid {@code GType} used as error return value in some functions which return
      * a {@code GType}.
      */
-    public static final Type G_TYPE_INVALID = new Type(0L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type INVALID = new Type(0L << FUNDAMENTAL_SHIFT);
 
     /**
      * A fundamental type which is used as a replacement for the C
      * void return type.
      */
-    public static final Type G_TYPE_NONE = new Type(1L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type NONE = new Type(1L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type from which all interfaces are derived.
      */
-    public static final Type G_TYPE_INTERFACE = new Type(2L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type INTERFACE = new Type(2L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gchar}.
      * <p>
-     * The type designated by {@code G_TYPE_CHAR} is unconditionally an 8-bit signed integer.
+     * The type designated by {@code CHAR} is unconditionally an 8-bit signed integer.
      * This may or may not be the same type a the C type "gchar".
      */
-    public static final Type G_TYPE_CHAR = new Type(3L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type CHAR = new Type(3L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code guchar}.
      */
-    public static final Type G_TYPE_UCHAR = new Type(4L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type UCHAR = new Type(4L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gboolean}.
      */
-    public static final Type G_TYPE_BOOLEAN = new Type(5L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type BOOLEAN = new Type(5L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gint}.
      */
-    public static final Type G_TYPE_INT = new Type(6L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type INT = new Type(6L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code guint}.
      */
-    public static final Type G_TYPE_UINT = new Type(7L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type UINT = new Type(7L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code glong}.
      */
-    public static final Type G_TYPE_LONG = new Type(8L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type LONG = new Type(8L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gulong}.
      */
-    public static final Type G_TYPE_ULONG = new Type(9L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type ULONG = new Type(9L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gint64}.
      */
-    public static final Type G_TYPE_INT64 = new Type(10L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type INT64 = new Type(10L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code guint64}.
      */
-    public static final Type G_TYPE_UINT64 = new Type(11L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type UINT64 = new Type(11L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type from which all enumeration types are derived.
      */
-    public static final Type G_TYPE_ENUM = new Type(12L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type ENUM = new Type(12L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type from which all flags types are derived.
      */
-    public static final Type G_TYPE_FLAGS = new Type(13L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type FLAGS = new Type(13L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gfloat}.
      */
-    public static final Type G_TYPE_FLOAT = new Type(14L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type FLOAT = new Type(14L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gdouble}.
      */
-    public static final Type G_TYPE_DOUBLE = new Type(15L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type DOUBLE = new Type(15L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to nul-terminated C strings.
      */
-    public static final Type G_TYPE_STRING = new Type(16L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type STRING = new Type(16L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code gpointer}.
      */
-    public static final Type G_TYPE_POINTER = new Type(17L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type POINTER = new Type(17L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type from which all boxed types are derived.
      */
-    public static final Type G_TYPE_BOXED = new Type(18L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type BOXED = new Type(18L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type from which all {@code GParamSpec} types are derived.
      */
-    public static final Type G_TYPE_PARAM = new Type(19L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type PARAM = new Type(19L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type for {@code GObject}.
      */
-    public static final Type G_TYPE_OBJECT = new Type(20L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type OBJECT = new Type(20L << FUNDAMENTAL_SHIFT);
 
     /**
      * The fundamental type corresponding to {@code G_TYPE_VARIANT}.
@@ -162,219 +162,219 @@ public class Types {
      * <p>
      * @since 2.26
      */
-    public static final Type G_TYPE_VARIANT = new Type(21L << G_TYPE_FUNDAMENTAL_SHIFT);
+    public static final Type VARIANT = new Type(21L << FUNDAMENTAL_SHIFT);
 
     // GLib boxed types, adapted from <gobject/glib-types.h>
 
     /**
      * The {@code GType} for {@code GDate}.
      */
-    public static final Type G_TYPE_DATE = Interop.getType("g_date_get_type");
+    public static final Type DATE = Interop.getType("g_date_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code null}-terminated array of strings.
      * @since 2.4
      */
-    public static final Type G_TYPE_STRV = Interop.getType("g_strv_get_type");
+    public static final Type STRV = Interop.getType("g_strv_get_type");
 
     /**
      * The {@code GType} for {@code GString}.
      */
-    public static final Type G_TYPE_GSTRING = Interop.getType("g_gstring_get_type");
+    public static final Type GSTRING = Interop.getType("g_gstring_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GHashTable} reference.
      * @since 2.10
      */
-    public static final Type G_TYPE_HASH_TABLE = Interop.getType("g_hash_table_get_type");
+    public static final Type HASH_TABLE = Interop.getType("g_hash_table_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GRegex} reference.
      * @since 2.14
      */
-    public static final Type G_TYPE_REGEX = Interop.getType("g_regex_get_type");
+    public static final Type REGEX = Interop.getType("g_regex_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMatchInfo} reference.
      * @since 2.30
      */
-    public static final Type G_TYPE_MATCH_INFO = Interop.getType("g_match_info_get_type");
+    public static final Type MATCH_INFO = Interop.getType("g_match_info_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GArray} reference.
      * @since 2.22
      */
-    public static final Type G_TYPE_ARRAY = Interop.getType("g_array_get_type");
+    public static final Type ARRAY = Interop.getType("g_array_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GByteArray} reference.
      * @since 2.22
      */
-    public static final Type G_TYPE_BYTE_ARRAY = Interop.getType("g_byte_array_get_type");
+    public static final Type BYTE_ARRAY = Interop.getType("g_byte_array_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GPtrArray} reference.
      * @since 2.22
      */
-    public static final Type G_TYPE_PTR_ARRAY = Interop.getType("g_ptr_array_get_type");
+    public static final Type PTR_ARRAY = Interop.getType("g_ptr_array_get_type");
 
     /**
      * The {@code GType} for {@code GBytes}.
      * @since 2.32
      */
-    public static final Type G_TYPE_BYTES = Interop.getType("g_bytes_get_type");
+    public static final Type BYTES = Interop.getType("g_bytes_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantType}.
      * @since 2.24
      */
-    public static final Type G_TYPE_VARIANT_TYPE = Interop.getType("g_variant_type_get_gtype");
+    public static final Type VARIANT_TYPE = Interop.getType("g_variant_type_get_gtype");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GError}.
      * @since 2.26
      */
-    public static final Type G_TYPE_ERROR = Interop.getType("g_error_get_type");
+    public static final Type ERROR = Interop.getType("g_error_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GDateTime}.
      * @since 2.26
      */
-    public static final Type G_TYPE_DATE_TIME = Interop.getType("g_date_time_get_type");
+    public static final Type DATE_TIME = Interop.getType("g_date_time_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GTimeZone}.
      * @since 2.34
      */
-    public static final Type G_TYPE_TIME_ZONE = Interop.getType("g_time_zone_get_type");
+    public static final Type TIME_ZONE = Interop.getType("g_time_zone_get_type");
 
     /**
      * The {@code GType} for {@code GIOChannel}.
      */
-    public static final Type G_TYPE_IO_CHANNEL = Interop.getType("g_io_channel_get_type");
+    public static final Type IO_CHANNEL = Interop.getType("g_io_channel_get_type");
 
     /**
      * The {@code GType} for {@code GIOCondition}.
      */
-    public static final Type G_TYPE_IO_CONDITION = Interop.getType("g_io_condition_get_type");
+    public static final Type IO_CONDITION = Interop.getType("g_io_condition_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantBuilder}.
      * @since 2.30
      */
-    public static final Type G_TYPE_VARIANT_BUILDER = Interop.getType("g_variant_builder_get_type");
+    public static final Type VARIANT_BUILDER = Interop.getType("g_variant_builder_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantDict}.
      * @since 2.40
      */
-    public static final Type G_TYPE_VARIANT_DICT = Interop.getType("g_variant_dict_get_type");
+    public static final Type VARIANT_DICT = Interop.getType("g_variant_dict_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainLoop}.
      * @since 2.30
      */
-    public static final Type G_TYPE_MAIN_LOOP = Interop.getType("g_main_loop_get_type");
+    public static final Type MAIN_LOOP = Interop.getType("g_main_loop_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainContext}.
      * @since 2.30
      */
-    public static final Type G_TYPE_MAIN_CONTEXT = Interop.getType("g_main_context_get_type");
+    public static final Type MAIN_CONTEXT = Interop.getType("g_main_context_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GSource}.
      * @since 2.30
      */
-    public static final Type G_TYPE_SOURCE = Interop.getType("g_source_get_type");
+    public static final Type SOURCE = Interop.getType("g_source_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GPollFD}.
      * @since 2.36
      */
-    public static final Type G_TYPE_POLLFD = Interop.getType("g_pollfd_get_type");
+    public static final Type POLLFD = Interop.getType("g_pollfd_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMarkupParseContext}.
      * @since 2.36
      */
-    public static final Type G_TYPE_MARKUP_PARSE_CONTEXT = Interop.getType("g_markup_parse_context_get_type");
+    public static final Type MARKUP_PARSE_CONTEXT = Interop.getType("g_markup_parse_context_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GKeyFile}.
      * @since 2.32
      */
-    public static final Type G_TYPE_KEY_FILE = Interop.getType("g_key_file_get_type");
+    public static final Type KEY_FILE = Interop.getType("g_key_file_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMappedFile}.
      * @since 2.40
      */
-    public static final Type G_TYPE_MAPPED_FILE = Interop.getType("g_mapped_file_get_type");
+    public static final Type MAPPED_FILE = Interop.getType("g_mapped_file_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GThread}.
      * @since 2.36
      */
-    public static final Type G_TYPE_THREAD = Interop.getType("g_thread_get_type");
+    public static final Type THREAD = Interop.getType("g_thread_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GChecksum}.
      * @since 2.36
      */
-    public static final Type G_TYPE_CHECKSUM = Interop.getType("g_checksum_get_type");
+    public static final Type CHECKSUM = Interop.getType("g_checksum_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GOptionGroup}.
      * @since 2.44
      */
-    public static final Type G_TYPE_OPTION_GROUP = Interop.getType("g_option_group_get_type");
+    public static final Type OPTION_GROUP = Interop.getType("g_option_group_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GUri}.
      * @since 2.66
      */
-    public static final Type G_TYPE_URI = Interop.getType("g_uri_get_type");
+    public static final Type URI = Interop.getType("g_uri_get_type");
 
     /**
      * The {@code GType} for {@code GTree}.
      * @since 2.68
      */
-    public static final Type G_TYPE_TREE = Interop.getType("g_tree_get_type");
+    public static final Type TREE = Interop.getType("g_tree_get_type");
 
     /**
      * The {@code GType} for {@code GPatternSpec}.
      * @since 2.70
      */
-    public static final Type G_TYPE_PATTERN_SPEC = Interop.getType("g_pattern_spec_get_type");
+    public static final Type PATTERN_SPEC = Interop.getType("g_pattern_spec_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GBookmarkFile}.
      * @since 2.76
      */
-    public static final Type G_TYPE_BOOKMARK_FILE = Interop.getType("g_bookmark_file_get_type");
+    public static final Type BOOKMARK_FILE = Interop.getType("g_bookmark_file_get_type");
 
     /**
      * First fundamental type number to create a new fundamental type id with
      * G_TYPE_MAKE_FUNDAMENTAL() reserved for GLib.
      */
-    public static final long G_TYPE_RESERVED_GLIB_FIRST	= 22L;
+    public static final long RESERVED_GLIB_FIRST	= 22L;
 
     /**
      * Last fundamental type number reserved for GLib.
      */
-    public static final long G_TYPE_RESERVED_GLIB_LAST = 31L;
+    public static final long RESERVED_GLIB_LAST = 31L;
 
     /**
      * First fundamental type number to create a new fundamental type id with
      * G_TYPE_MAKE_FUNDAMENTAL() reserved for BSE.
      */
-    public static final long G_TYPE_RESERVED_BSE_FIRST = 32L;
+    public static final long RESERVED_BSE_FIRST = 32L;
 
     /**
      * Last fundamental type number reserved for BSE.
      */
-    public static final long G_TYPE_RESERVED_BSE_LAST = 48L;
+    public static final long RESERVED_BSE_LAST = 48L;
 
     /**
      * First available fundamental type number to create new fundamental
@@ -390,7 +390,7 @@ public class Types {
      * @return {@code true} if {@code type} is fundamental
      */
     public static boolean IS_FUNDAMENTAL(Type type) {
-        return type.getValue() <= G_TYPE_FUNDAMENTAL_MAX;
+        return type.getValue() <= FUNDAMENTAL_MAX;
     }
 
     /**
@@ -401,7 +401,7 @@ public class Types {
      * @return {@code true} if {@code type} is derived
      */
     public static boolean IS_DERIVED(Type type) {
-        return type.getValue() > G_TYPE_FUNDAMENTAL_MAX;
+        return type.getValue() > FUNDAMENTAL_MAX;
     }
 
     /**
@@ -417,7 +417,7 @@ public class Types {
      * @return {@code true} if {@code type} is an interface
      */
     public static boolean IS_INTERFACE(Type type) {
-        return GObjects.typeFundamental(type).equals(G_TYPE_INTERFACE);
+        return GObjects.typeFundamental(type).equals(INTERFACE);
     }
 
     /**

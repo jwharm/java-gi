@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.interop;
+package io.github.jwharm.javagi.types;
 
 import java.lang.foreign.MemorySegment;
 import java.util.HashMap;

@@ -101,7 +101,7 @@ public class Record extends Class {
         // Generate a custom gtype declaration for GVariant
         if (isInstanceOf("org.gnome.glib.Variant") && "intern".equals(getType)) {
             writer.write("\n");
-            writer.write("public static final org.gnome.glib.Type gtype = io.github.jwharm.javagi.types.Types.G_TYPE_VARIANT;\n");
+            writer.write("public static final org.gnome.glib.Type gtype = Types.VARIANT;\n");
         }
 
         writer.decreaseIndent();

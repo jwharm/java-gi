@@ -7,6 +7,7 @@ import org.gnome.glib.VariantType;
  * This class contains G_VARIANT_TYPE_... declarations and conversion functions from
  * Java classes to GVariant types and vice versa.
  */
+@SuppressWarnings("unused")
 public class VariantTypes {
 
     // GVariant types, adapted from <glib/gvarianttype.h>
@@ -76,7 +77,7 @@ public class VariantTypes {
      * The type of a D-Bus object reference.  These are strings of a
      * specific format used to identify objects at a given destination on
      * the bus.
-     *
+     * <p>
      * If you are not interacting with D-Bus, then there is no reason to make
      * use of this type.  If you are, then the D-Bus specification contains a
      * precise description of valid object paths.
@@ -86,7 +87,7 @@ public class VariantTypes {
     /**
      * The type of a D-Bus type signature.  These are strings of a specific
      * format used as type signatures for D-Bus methods and messages.
-     *
+     * <p>
      * If you are not interacting with D-Bus, then there is no reason to make
      * use of this type.  If you are, then the D-Bus specification contains a
      * precise description of valid signature strings.
@@ -103,7 +104,7 @@ public class VariantTypes {
      * The type of a 32bit signed integer value, that by convention, is used
      * as an index into an array of file descriptors that are sent alongside
      * a D-Bus message.
-     *
+     * <p>
      * If you are not interacting with D-Bus, then there is no reason to make
      * use of this type.
      **/

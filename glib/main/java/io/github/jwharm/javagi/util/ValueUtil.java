@@ -38,31 +38,31 @@ public class ValueUtil {
             return null;
         }
         
-        if (type.equals(Types.G_TYPE_BOOLEAN)) {
+        if (type.equals(Types.BOOLEAN)) {
             return src.getBoolean();
-        } else if (type.equals(Types.G_TYPE_CHAR)) {
+        } else if (type.equals(Types.CHAR)) {
             return src.getSchar();
-        } else if (type.equals(Types.G_TYPE_DOUBLE)) {
+        } else if (type.equals(Types.DOUBLE)) {
             return src.getDouble();
-        } else if (type.equals(Types.G_TYPE_FLOAT)) {
+        } else if (type.equals(Types.FLOAT)) {
             return src.getFloat();
-        } else if (type.equals(Types.G_TYPE_INT)) {
+        } else if (type.equals(Types.INT)) {
             return src.getInt();
-        } else if (type.equals(Types.G_TYPE_LONG)) {
+        } else if (type.equals(Types.LONG)) {
             return src.getLong();
-        } else if (type.equals(Types.G_TYPE_STRING)) {
+        } else if (type.equals(Types.STRING)) {
             return src.getString();
-        } else if (type.equals(Types.G_TYPE_ENUM)) {
+        } else if (type.equals(Types.ENUM)) {
             return src.getEnum();
-        } else if (type.equals(Types.G_TYPE_FLAGS)) {
+        } else if (type.equals(Types.FLAGS)) {
             return src.getFlags();
-        } else if (type.equals(Types.G_TYPE_OBJECT)) {
+        } else if (type.equals(Types.OBJECT)) {
             return src.getObject();
         } else if (type.equals(GObjects.gtypeGetType())) {
             return src.getGtype();
-        } else if (type.equals(Types.G_TYPE_POINTER)) {
+        } else if (type.equals(Types.POINTER)) {
             return src.getPointer();
-        } else if (type.equals(Types.G_TYPE_PARAM)) {
+        } else if (type.equals(Types.PARAM)) {
             return src.getParam();
         } else {
             // Boxed value
@@ -89,17 +89,17 @@ public class ValueUtil {
         }
         
         try {
-            if (type.equals(Types.G_TYPE_BOOLEAN)) {
+            if (type.equals(Types.BOOLEAN)) {
                 dest.setBoolean((Boolean) src);
-            } else if (type.equals(Types.G_TYPE_CHAR)) {
+            } else if (type.equals(Types.CHAR)) {
                 dest.setSchar((Byte) src);
-            } else if (type.equals(Types.G_TYPE_DOUBLE)) {
+            } else if (type.equals(Types.DOUBLE)) {
                 dest.setDouble((Double) src);
-            } else if (type.equals(Types.G_TYPE_FLOAT)) {
+            } else if (type.equals(Types.FLOAT)) {
                 dest.setFloat((Float) src);
-            } else if (type.equals(Types.G_TYPE_INT)) {
+            } else if (type.equals(Types.INT)) {
                 dest.setInt((Integer) src);
-            } else if (type.equals(Types.G_TYPE_LONG)) {
+            } else if (type.equals(Types.LONG)) {
                 // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
                 // Use reflection to bypass the type checker
                 for (Method m : Value.class.getDeclaredMethods()) {
@@ -108,19 +108,19 @@ public class ValueUtil {
                         break;
                     }
                 }
-            } else if (type.equals(Types.G_TYPE_STRING)) {
+            } else if (type.equals(Types.STRING)) {
                 dest.setString((String) src);
-            } else if (type.equals(Types.G_TYPE_ENUM)) {
+            } else if (type.equals(Types.ENUM)) {
                 dest.setEnum(((Enumeration) src).getValue());
-            } else if (type.equals(Types.G_TYPE_FLAGS)) {
+            } else if (type.equals(Types.FLAGS)) {
                 dest.setFlags(((Bitfield) src).getValue());
-            } else if (type.equals(Types.G_TYPE_OBJECT)) {
+            } else if (type.equals(Types.OBJECT)) {
                 dest.setObject((GObject) src);
             } else if (type.equals(GObjects.gtypeGetType())) {
                 dest.setGtype((Type) src);
-            } else if (type.equals(Types.G_TYPE_POINTER)) {
+            } else if (type.equals(Types.POINTER)) {
                 dest.setPointer((MemorySegment) src);
-            } else if (type.equals(Types.G_TYPE_PARAM)) {
+            } else if (type.equals(Types.PARAM)) {
                 dest.setParam((ParamSpec) src);
             } else {
                 // Boxed value

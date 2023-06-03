@@ -324,52 +324,52 @@ public class Variable extends GirElement {
     public String getGTypeDeclaration() {
         if (array != null) {
             if (array.type != null && "utf8".equals(array.type.name)) {
-                return "io.github.jwharm.javagi.types.Types.G_TYPE_STRV";
+                return "Types.STRV";
             }
             // Other array types are not supported yet, but could be added here
-            return "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED";
+            return "Types.BOXED";
         }
         if (type == null) {
-            return "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED";
+            return "Types.BOXED";
         }
         if (type.isPrimitive) {
             return switch(type.cType) {
-                case "gboolean" -> "io.github.jwharm.javagi.types.Types.G_TYPE_BOOLEAN";
-                case "gchar", "gint8" -> "io.github.jwharm.javagi.types.Types.G_TYPE_CHAR";
-                case "guchar", "guint8" -> "io.github.jwharm.javagi.types.Types.G_TYPE_UCHAR";
-                case "gint", "gint32" -> "io.github.jwharm.javagi.types.Types.G_TYPE_INT";
-                case "guint", "guint32", "gunichar" -> "io.github.jwharm.javagi.types.Types.G_TYPE_UINT";
-                case "glong" -> "io.github.jwharm.javagi.types.Types.G_TYPE_LONG";
-                case "gulong" -> "io.github.jwharm.javagi.types.Types.G_TYPE_ULONG";
-                case "gint64" -> "io.github.jwharm.javagi.types.Types.G_TYPE_INT64";
-                case "guint64" -> "io.github.jwharm.javagi.types.Types.G_TYPE_UINT64";
+                case "gboolean" -> "Types.BOOLEAN";
+                case "gchar", "gint8" -> "Types.CHAR";
+                case "guchar", "guint8" -> "Types.UCHAR";
+                case "gint", "gint32" -> "Types.INT";
+                case "guint", "guint32", "gunichar" -> "Types.UINT";
+                case "glong" -> "Types.LONG";
+                case "gulong" -> "Types.ULONG";
+                case "gint64" -> "Types.INT64";
+                case "guint64" -> "Types.UINT64";
                 case "gpointer", "gconstpointer", "gssize", "gsize",
-                        "goffset", "gintptr", "guintptr" -> "io.github.jwharm.javagi.types.Types.G_TYPE_POINTER";
-                case "gdouble" -> "io.github.jwharm.javagi.types.Types.G_TYPE_DOUBLE";
-                case "gfloat" -> "io.github.jwharm.javagi.types.Types.G_TYPE_FLOAT";
-                case "none" -> "io.github.jwharm.javagi.types.Types.G_TYPE_NONE";
-                case "utf8", "filename" -> "io.github.jwharm.javagi.types.Types.G_TYPE_STRING";
+                        "goffset", "gintptr", "guintptr" -> "Types.POINTER";
+                case "gdouble" -> "Types.DOUBLE";
+                case "gfloat" -> "Types.FLOAT";
+                case "none" -> "Types.NONE";
+                case "utf8", "filename" -> "Types.STRING";
                 default -> "UNKNOWN: " + type.cType;
             };
         }
         if (type.qualifiedJavaType.equals("java.lang.String")) {
-            return "io.github.jwharm.javagi.types.Types.G_TYPE_STRING";
+            return "Types.STRING";
         }
         if (type.qualifiedJavaType.equals("java.lang.foreign.MemorySegment")) {
-            return "io.github.jwharm.javagi.types.Types.G_TYPE_POINTER";
+            return "Types.POINTER";
         }
         if (type.qualifiedJavaType.equals("org.gnome.gobject.GObject")) {
-            return "io.github.jwharm.javagi.types.Types.G_TYPE_OBJECT";
+            return "Types.OBJECT";
         }
         RegisteredType rt = (type.isAlias() && (! type.isAliasForPrimitive()))
                 ? type.girElementInstance.type.girElementInstance
                 : type.girElementInstance;
         if (rt != null) {
             if (rt.isInstanceOf("org.gnome.gobject.ParamSpec")) {
-                return "io.github.jwharm.javagi.types.Types.G_TYPE_PARAM";
+                return "Types.PARAM";
             }
             if (rt.isInstanceOf("org.gnome.glib.Variant")) {
-                return "io.github.jwharm.javagi.types.Types.G_TYPE_VARIANT";
+                return "Types.VARIANT";
             }
             if (rt.getType != null) {
                 return type.qualifiedJavaType + ".gtype";
@@ -378,7 +378,7 @@ public class Variable extends GirElement {
         if (type.qualifiedJavaType.equals("org.gnome.glib.Type")) {
             return "org.gnome.gobject.GObjects.gtypeGetType()";
         }
-        return "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED";
+        return "Types.BOXED";
     }
     
     public String getValueSetter(String gvalueIdentifier, String gTypeDeclaration, String payloadIdentifier) {
@@ -399,23 +399,27 @@ public class Variable extends GirElement {
         }
         // Other, known types
         String setValue = switch (gTypeDeclaration) {
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_BOOLEAN" -> "setBoolean";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_CHAR" -> "setSchar";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_DOUBLE" -> "setDouble";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_FLOAT" -> "setFloat";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_INT" -> "setInt";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_UINT" -> "setUint";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_LONG" -> "setLong";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_ULONG" -> "setUlong";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_INT64" -> "setInt64";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_UINT64" -> "setUint64";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_STRING" -> "setString";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_POINTER" -> "setPointer";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_PARAM" -> "setParam";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_VARIANT" -> "setVariant";
-            case "io.github.jwharm.javagi.types.Types.G_TYPE_BOXED", "io.github.jwharm.javagi.types.Types.G_TYPE_STRV" -> "setBoxed";
+            case "Types.BOOLEAN" -> "setBoolean";
+            case "Types.CHAR" -> "setSchar";
+            case "Types.DOUBLE" -> "setDouble";
+            case "Types.FLOAT" -> "setFloat";
+            case "Types.INT" -> "setInt";
+            case "Types.UINT" -> "setUint";
+            case "Types.LONG" -> "setLong";
+            case "Types.ULONG" -> "setUlong";
+            case "Types.INT64" -> "setInt64";
+            case "Types.UINT64" -> "setUint64";
+            case "Types.STRING" -> "setString";
+            case "Types.POINTER" -> "setPointer";
+            case "Types.PARAM" -> "setParam";
+            case "Types.VARIANT" -> "setVariant";
+            case "Types.BOXED", "Types.STRV" -> "setBoxed";
             case "org.gnome.gobject.GObjects.gtypeGetType()" -> "setGtype";
-            default -> type.isEnum() ? "setEnum" : type.isBitfield() ? "setFlags" : type.isRecord() ? "setBoxed" : "setObject";
+            default -> type == null ? "UNKNOWN"
+                    : type.isEnum() ? "setEnum"
+                    : type.isBitfield() ? "setFlags"
+                    : type.isRecord() ? "setBoxed"
+                    : "setObject";
         };
         return gvalueIdentifier + "." + switch(setValue) {
             case "setEnum", "setFlags" -> setValue + "(" + payloadIdentifier + ".getValue())";
