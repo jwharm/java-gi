@@ -44,6 +44,12 @@ public class JavaGIBuild extends ModularProject {
         downloadGirFiles();
     }
 
+    @Override
+    public void updates() throws Exception {
+        super.updates();
+        downloadGirFiles();
+    }
+
     @BuildCommand(value="download-gir-files", summary="Pull gir files from remote repository")
     public void downloadGirFiles() throws Exception {
         gitPullOperation_.executeOnce();
