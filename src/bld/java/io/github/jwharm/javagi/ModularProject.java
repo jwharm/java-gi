@@ -107,6 +107,13 @@ public class ModularProject extends Project {
     }
 
     @Override
+    public void test() throws Exception {
+        for (var project : modules_) {
+            project.test();
+        }
+    }
+
+    @Override
     public void updates() throws Exception {
         super.updates();
         for (var project : modules_) {

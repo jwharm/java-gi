@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import static rife.bld.dependencies.Repository.MAVEN_CENTRAL;
 import static rife.bld.dependencies.Repository.MAVEN_LOCAL;
 import static rife.bld.dependencies.Scope.compile;
+import static rife.bld.dependencies.Scope.test;
 
 /**
  * Base class for Java-GI module build files that contains shared build settings.
@@ -28,13 +29,19 @@ public abstract class AbstractProject extends Project {
     public AbstractProject(JavaGIBuild bld, String name) {
         this.name = name;
         javaRelease = 20;
-        repositories = List.of(MAVEN_CENTRAL);
-        buildMainDirectory = new File(bld.buildMainDirectory(), name);
-        buildJavadocDirectory = new File(bld.buildJavadocDirectory(), name);
         generateSourcesOperation_ = new GenerateSourcesOperation();
 
+        srcDirectory = new File(bld.workDirectory(), name);
+        buildMainDirectory = new File(bld.buildMainDirectory(), name);
+        buildTestDirectory = new File(bld.buildTestDirectory(), name);
+        buildJavadocDirectory = new File(bld.buildJavadocDirectory(), name);
+
+        repositories = List.of(MAVEN_CENTRAL);
         scope(compile)
             .include(dependency("org.jetbrains", "annotations", version(24,0,1)));
+        scope(test)
+            .include(dependency("org.junit.jupiter", "junit-jupiter", version(5,9,3)))
+            .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1,9,3)));
 
         generateSourcesOperation()
             .sourceDirectory(bld.girDirectory())
@@ -45,6 +52,11 @@ public abstract class AbstractProject extends Project {
             .compileOptions()
                 .modulePath(getModulePath())
                 .enablePreview();
+
+        testOperation()
+            .javaOptions()
+                .enablePreview()
+                .enableNativeAccess(List.of("ALL-UNNAMED"));
 
         javadocOperation()
             .sourceDirectories(generateSourcesOperation().outputDirectory().toFile())

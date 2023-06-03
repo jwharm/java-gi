@@ -4,7 +4,6 @@ import io.github.jwharm.javagi.JavaGIBuild;
 import io.github.jwharm.javagi.AbstractProject;
 import io.github.jwharm.javagi.patches.*;
 
-import java.io.File;
 import java.util.Set;
 
 public class GLibBuild extends AbstractProject {
@@ -25,7 +24,6 @@ public class GLibBuild extends AbstractProject {
     public GLibBuild(JavaGIBuild bld) {
         super(bld, "glib");
         version = version(2,76).withQualifier(bld.version().toString());
-        srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", true, Set.of("glib-2.0"), new GLibPatch())

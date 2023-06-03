@@ -12,5 +12,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="annotations-24.0.1" level="project" />
     <orderEntry type="module" module-name="glib" />
+    <orderEntry type="library" name="test" level="project" />
   </component>
 </module>

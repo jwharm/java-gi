@@ -23,7 +23,6 @@ public class GtkBuild extends AbstractProject {
     public GtkBuild(JavaGIBuild bld) {
         super(bld, "gtk");
         version = version(4, 10).withQualifier(bld.version().toString());
-        srcDirectory = new File(workDirectory(), name);
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", false, Set.of("glib-2.0"), new GLibPatch())
