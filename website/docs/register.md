@@ -49,14 +49,14 @@ When you override virtual methods from parent GObject classes (or implemented in
 
 ## Properties
 
-You can define GObject properties with the `@Property` annotation on the getter and setter methods. Annotate both the getter and setter methods. The `@Property` annotation must always specify the `name` parameter; all other parameters need only be specified once (either on the getter or setter method).
+You can define GObject properties with the `@Property` annotation on the getter and setter methods. Annotate both the getter and setter methods. The `@Property` annotation must always specify the `name` parameter; all other parameters are optional.
 
 Example definition of an `int` property with name `size`:
 
 ```java
 private int size;
 
-@Property(name="n-items", type=ParamSpecInt.class)
+@Property(name="n-items")
 public int getNItems() {
     return size;
 }
@@ -72,7 +72,7 @@ The `@Property` annotation accepts the following parameters:
 | Parameter      | Type      | Default value |
 |----------------|-----------|---------------|
 | name           | Mandatory | n/a           |
-| type           | ParamSpec | n/a           |
+| type           | ParamSpec | inferred      |
 | readable       | Boolean   | true          |
 | writable       | Boolean   | true          |
 | construct      | Boolean   | false         |
@@ -80,7 +80,7 @@ The `@Property` annotation accepts the following parameters:
 | explicitNotify | Boolean   | false         |
 | deprecated     | Boolean   | false         |
 
-The type must be one of the subclasses of `GParamSpec`.  The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
+When the type is not specified, it will be inferred from the parameter or return-type of the method. When the type is specified, it must be one of the subclasses of `GParamSpec`. The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
 
 ## Class and instance init functions
 
@@ -95,7 +95,7 @@ public static void classInit(GObject.ObjectClass typeClass) {
 
 // (Optional) instance initialization function    
 @InstanceInit
-public static void init(MyObject instance) {
+public void init() {
     ...
 }
 ```
