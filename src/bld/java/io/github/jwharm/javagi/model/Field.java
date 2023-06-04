@@ -178,7 +178,7 @@ public class Field extends Variable {
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
-                return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+                return "ValueLayout.ADDRESS.asUnbounded().withName(\"" + this.fieldName + "\")";
             }
             
             // Bitfields and enumerations are integers
