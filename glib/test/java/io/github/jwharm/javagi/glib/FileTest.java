@@ -18,7 +18,7 @@ public class FileTest {
 
     @Test
     public void createFile() {
-        String read, write;
+        String output, input;
         try {
             // explicitly trigger initialization
             Gio.javagi$ensureInitialized();
@@ -27,23 +27,23 @@ public class FileTest {
             File file = File.newForPath("test.txt");
 
             // write to file
-            write = "test string";
+            input = "test string";
             try (var stream = file.openReadwrite(null)) {
-                stream.getOutputStream().write(write.getBytes(StandardCharsets.UTF_8), null);
+                stream.getOutputStream().write(input.getBytes(StandardCharsets.UTF_8), null);
             }
 
             // read from file
             try (var stream = file.openReadwrite(null)) {
-                Out<byte[]> buffer = new Out<>(new byte[write.length()]);
+                Out<byte[]> buffer = new Out<>(new byte[input.length()]);
                 stream.getInputStream().read(buffer, null);
                 byte[] result = buffer.get();
-                read = new String(result);
+                output = new String(result);
             }
 
             // delete file
             file.delete(null);
 
-            assertEquals(read, write);
+            assertEquals(output, input);
         } catch (GErrorException | IOException ignored) {}
     }
 }
