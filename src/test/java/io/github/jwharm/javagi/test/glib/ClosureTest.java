@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.glib;
+package io.github.jwharm.javagi.test.glib;
 
 import io.github.jwharm.javagi.annotations.Property;
 import io.github.jwharm.javagi.types.Types;

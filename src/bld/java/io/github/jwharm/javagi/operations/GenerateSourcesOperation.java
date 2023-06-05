@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
  * @since 0.5
  */
 public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesOperation> {
-    private Path sourceDirectory_ = null;
-    private Path outputDirectory_ = null;
-    private final List<Source> sources_ = new ArrayList<>();
-    private String moduleInfo_;
+    private Path sourceDirectory = null;
+    private Path outputDirectory = null;
+    private final List<Source> sources = new ArrayList<>();
+    private String moduleInfo;
 
     /**
      * Performs the JavaGI operation.
@@ -121,7 +121,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public GenerateSourcesOperation sourceDirectory(Path directory) {
-        sourceDirectory_ = directory;
+        sourceDirectory = directory;
         return this;
     }
 
@@ -132,7 +132,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public GenerateSourcesOperation outputDirectory(Path directory) {
-        outputDirectory_ = directory;
+        outputDirectory = directory;
         return this;
     }
 
@@ -143,7 +143,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public GenerateSourcesOperation moduleInfo(String moduleInfo) {
-        moduleInfo_ = moduleInfo;
+        this.moduleInfo = moduleInfo;
         return this;
     }
 
@@ -164,7 +164,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public GenerateSourcesOperation sources(List<Source> sources) {
-        sources_.addAll(sources);
+        this.sources.addAll(sources);
         return this;
     }
 
@@ -190,7 +190,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public Path sourceDirectory() {
-        return sourceDirectory_;
+        return sourceDirectory;
     }
 
     /**
@@ -202,7 +202,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public List<Source> sources() {
-        return sources_;
+        return sources;
     }
 
     /**
@@ -212,7 +212,7 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public Path outputDirectory() {
-        return outputDirectory_;
+        return outputDirectory;
     }
 
     /**
@@ -221,6 +221,6 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
      * @since 0.5
      */
     public String moduleInfo() {
-        return moduleInfo_;
+        return moduleInfo;
     }
 }

@@ -26,8 +26,7 @@ public class ModularProject extends Project {
      * @return this Project instance
      */
     public ModularProject modules(Project... projects) {
-        modules(List.of(projects));
-        return this;
+        return modules(List.of(projects));
     }
 
     /**
@@ -50,6 +49,7 @@ public class ModularProject extends Project {
 
     @Override
     public void compile() throws Exception {
+        super.compile();
         for (var project : modules_) {
             project.compile();
         }
@@ -103,13 +103,6 @@ public class ModularProject extends Project {
         super.purge();
         for (var project : modules_) {
             project.purge();
-        }
-    }
-
-    @Override
-    public void test() throws Exception {
-        for (var project : modules_) {
-            project.test();
         }
     }
 

@@ -11,31 +11,31 @@ import java.util.List;
 
 public class GitPullOperation extends AbstractOperation<GitPullOperation> {
 
-    String uri_;
-    Path directory_;
+    String uri;
+    Path directory;
 
     public GitPullOperation uri(String uri) {
-        uri_ = uri;
+        this.uri = uri;
         return this;
     }
 
     public String uri() {
-        return uri_;
+        return uri;
     }
 
     public GitPullOperation directory(Path directory) {
-        directory_ = directory;
+        this.directory = directory;
         return this;
     }
 
     public Path directory() {
-        return directory_;
+        return directory;
     }
 
     public void execute() throws Exception {
-        if (Files.exists(directory_)) {
+        if (Files.exists(directory)) {
             // Open existing repository
-            Git git = new Git(new FileRepository(directory_.resolve(".git").toString()));
+            Git git = new Git(new FileRepository(directory.resolve(".git").toString()));
 
             // Pull updates from origin
             git.pull()
@@ -50,19 +50,19 @@ public class GitPullOperation extends AbstractOperation<GitPullOperation> {
         } else {
             // Clone the repository
             Git.cloneRepository()
-                .setURI(uri_)
+                .setURI(uri)
                 .setBranchesToClone(List.of("refs/heads/main"))
-                .setDirectory(directory_.toFile())
+                .setDirectory(directory.toFile())
                 .call()
                 .close();
 
             // Write config file that pull() will use
-            Git git = Git.open(directory_.toFile());
+            Git git = Git.open(directory.toFile());
             StoredConfig config = git.getRepository().getConfig();
             config.setString("branch", "main", "merge", "refs/heads/main");
             config.setString("branch", "main", "remote", "origin");
             config.setString("remote", "origin", "fetch", "+refs/heads/main:refs/remotes/origin/main");
-            config.setString("remote", "origin", "url", uri_);
+            config.setString("remote", "origin", "url", uri);
             config.save();
             git.close();
 

@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.glib;
+package io.github.jwharm.javagi.test.glib;
 
 import io.github.jwharm.javagi.annotations.ClassInit;
 import io.github.jwharm.javagi.annotations.InstanceInit;

@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.glib;
+package io.github.jwharm.javagi.test.glib;
 
 import org.gnome.gio.SimpleAction;
 import org.gnome.gobject.WeakRef;

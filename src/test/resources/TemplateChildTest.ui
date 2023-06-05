@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="ChildTestWindow" parent="GtkApplicationWindow">
+    <child>
+      <object class="GtkLabel" id="label">
+        <property name="label">Test Label</property>
+      </object>
+    </child>
+  </template>
+</interface>
