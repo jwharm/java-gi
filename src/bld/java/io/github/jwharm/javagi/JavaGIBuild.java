@@ -10,6 +10,7 @@ import rife.bld.BuildCommand;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -125,7 +126,7 @@ public class JavaGIBuild extends ModularProject {
 
     private List<String> getModuleClasspath() {
         File[] modules = buildMainDirectory().listFiles(File::isDirectory);
-        return modules == null ? null : Arrays.stream(modules)
+        return modules == null ? new ArrayList<>() : Arrays.stream(modules)
             .map(File::getAbsolutePath)
             .toList();
     }
