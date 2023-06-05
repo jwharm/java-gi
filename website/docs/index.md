@@ -41,6 +41,10 @@ Java-GI converts API documentation from GObject-Introspection to Javadoc. For th
 
 JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.5.1).
 
+## Example apps
+
+You can find example applications in the [java-gi-examples repository](https://github.com/jwharm/java-gi-examples).
+
 ## Contributing
 
 To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/). Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi).

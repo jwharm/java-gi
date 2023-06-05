@@ -32,6 +32,8 @@ Because the registration of composite template classes uses reflection, you must
 exports [package name] to org.gnome.glib,org.gnome.gtk;
 ```
 
+A complete example template-application can be found [here](https://github.com/jwharm/java-gi-examples/tree/main/HelloTemplate).
+
 ## Annotations
 
 Composite template classes in Java-GI use three annotations:
@@ -43,6 +45,8 @@ Composite template classes in Java-GI use three annotations:
 * `@GtkCallback` is a method-annotation to mark callback-functions that are used from inside the template file, for example in a `<signal>` element.
 
 All annotations have an optional `name` attribute to manually override the name of the class, field, or callback method.
+
+The `@GtkCallback` annotation is mostly useful for overriding the method's name. When you name the method exactly the same as it is specified in the signal handler in the UI template, you can safely omit the `@GtkCallback` annotation. The signal connection will still work as expected.
 
 ## Compiling the UI template file to a resource bundle
 
