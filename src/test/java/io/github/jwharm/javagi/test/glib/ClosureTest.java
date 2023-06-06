@@ -39,9 +39,7 @@ public class ClosureTest {
         Binding binding = n1.bindPropertyFull("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
 
         // Set the "num" property of n1 to 10
-        Value input = Value.allocate().init(Types.INT);
-        input.setInt(10);
-        n1.setProperty("num", input);
+        n1.set("num", 10);
 
         // The "num" property of n2 should now be n1 times two
         assertEquals(n2.getNum(), 20);

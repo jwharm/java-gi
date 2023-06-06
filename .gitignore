@@ -69,3 +69,5 @@ hs_err_pid*
 # Site files from mkdocs
 website/site/
 
+# Compiled GResource files
+src/test/resources/*.gresource
