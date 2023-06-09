@@ -1,9 +1,6 @@
 package io.github.jwharm.javagi;
 
-import io.github.jwharm.javagi.modules.AdwaitaBuild;
-import io.github.jwharm.javagi.modules.GLibBuild;
-import io.github.jwharm.javagi.modules.GStreamerBuild;
-import io.github.jwharm.javagi.modules.GtkBuild;
+import io.github.jwharm.javagi.modules.*;
 import io.github.jwharm.javagi.operations.GitPullOperation;
 import io.github.jwharm.javagi.operations.GlibCompileResourcesOperation;
 import rife.bld.BuildCommand;
@@ -116,12 +113,18 @@ public class JavaGIBuild extends ModularProject {
         modules(new GStreamerBuild(this));
     }
 
+    @BuildCommand(summary="Builds gtksourceview")
+    public void gtksourceview() {
+        modules(new GtkSourceViewBuild(this));
+    }
+
     @BuildCommand(summary="Builds all modules")
     public void all() {
         glib();
         gtk();
         adwaita();
         gstreamer();
+        gtksourceview();
     }
 
     private List<String> getModuleClasspath() {
