@@ -15,7 +15,7 @@ public abstract class RegisteredType extends GirElement {
     public final String cType;
     public final String getType;
     public final String version;
-    protected final String qualifiedName;
+    public final String qualifiedName;
 
     public boolean generic = false;
     public boolean autoCloseable = false;

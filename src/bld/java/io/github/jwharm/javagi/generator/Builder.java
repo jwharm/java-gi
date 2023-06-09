@@ -31,7 +31,7 @@ public class Builder {
         // Write the inner Build class definition
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * A {@link " + c.javaName + ".Builder} object constructs a {@link " + c.javaName + "} \n");
+        writer.write(" * A {@link " + c.javaName + ".Builder} object constructs a {@code " + c.javaName + "} \n");
         writer.write(" * using the <em>builder pattern</em> to set property values. \n");
         writer.write(" * Use the various {@code set...()} methods to set properties, \n");
         writer.write(" * and finish construction with {@link " + c.javaName + ".Builder#build()}. \n");
@@ -74,17 +74,17 @@ public class Builder {
         writer.write("}\n");
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * Finish building the {@link " + c.javaName + "} object. This will call \n");
+        writer.write(" * Finish building the {@code " + c.javaName + "} object. This will call \n");
         writer.write(" * {@link org.gnome.gobject.GObject#newWithProperties} to create a new \n");
-        writer.write(" * GObject instance, which is then cast to {@link " + c.javaName + "}.\n");
+        writer.write(" * GObject instance, which is then cast to {@code " + c.javaName + "}.\n");
         writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
         writer.write(" *         that were set in the Builder object.\n");
         writer.write(" */\n");
-        writer.write("public " + c.javaName + " build() {\n");
+        writer.write("public " + c.qualifiedName + " build() {\n");
         writer.increaseIndent();
         writer.write("try {\n");
-        writer.write("    return (" + c.javaName + ") org.gnome.gobject.GObject.newWithProperties(\n");
-        writer.write("            " + c.javaName + ".gtype, getNames(), getValues()\n");
+        writer.write("    return (" + c.qualifiedName + ") org.gnome.gobject.GObject.newWithProperties(\n");
+        writer.write("            " + c.qualifiedName + ".gtype, getNames(), getValues()\n");
         writer.write("    );\n");
         writer.write("} finally {\n");
         writer.write("    for (var _value : getValues()) {\n");
