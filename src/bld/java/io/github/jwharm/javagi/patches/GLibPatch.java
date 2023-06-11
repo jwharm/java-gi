@@ -11,6 +11,9 @@ public class GLibPatch implements Patch {
         // Incompletely defined
         removeFunction(repo, "clear_error");
 
+        // A getType() method is generated already by java-gi
+        renameMethod(repo, "Variant", "get_type", "get_variant_type");
+
         // GPid is defined as gint on linux vs gpointer on windows
         Type pid = repo.namespace.registeredTypeMap.get("Pid").type;
         pid.simpleJavaType = "int";

@@ -51,6 +51,7 @@ public class Interface extends RegisteredType {
         writer.write("}\n");
     }
 
+    @Override
     public String getConstructorString() {
         String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
         return qName + "." + this.javaName + "Impl::new";

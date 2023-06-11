@@ -113,25 +113,31 @@ public abstract class RegisteredType extends GirElement {
     }
     
     /**
-     * Generate a field declaration for the gtype of this object.
+     * Generate a static method declaration to retrieve the gtype of this object.
      */
     protected void generateGType(SourceWriter writer) throws IOException {
         if (getType == null || "intern".equals(getType)) {
             return;
         }
-
-        // Generate field declaration
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * The GType of the " + cType + " " + (this instanceof Interface ? "interface" : "class") + ".\n");
+        writer.write(" * Get the GType of the " + cType + " " + (this instanceof Interface ? "interface" : "class") + ".\n");
+        writer.write(" * @return the GType");
         writer.write(" */\n");
-        writer.write("public static final org.gnome.glib.Type gtype = Interop.getType(\"" + getType + "\");\n");
+        writer.write("public static org.gnome.glib.Type getType() {\n");
+        writer.write("    return Interop.getType(\"" + getType + "\");\n");
+        writer.write("}\n");
     }
 
-    /**
-     * Opaque structs have unknown memory layout and should not have an allocator
-     * @return true if the struct has no fields specified in the GIR file
-     */
+    public String getConstructorString() {
+        String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
+        return qName + "::new";
+    }
+
+        /**
+         * Opaque structs have unknown memory layout and should not have an allocator
+         * @return true if the struct has no fields specified in the GIR file
+         */
     public boolean isOpaqueStruct() {
         return fieldList.isEmpty() && unionList.isEmpty();
     }

@@ -91,7 +91,13 @@ public class Class extends RegisteredType {
         // Generate a custom gtype declaration for ParamSpec
         if (isInstanceOf("org.gnome.gobject.ParamSpec") && "intern".equals(getType)) {
             writer.write("\n");
-            writer.write("public static final org.gnome.glib.Type gtype = Types.PARAM;\n");
+            writer.write("/**\n");
+            writer.write(" * Get the GType of the " + cType + " class.\n");
+            writer.write(" * @return the GType");
+            writer.write(" */\n");
+            writer.write("public static org.gnome.glib.Type getType() {\n");
+            writer.write("    return Types.PARAM;\n");
+            writer.write("}\n");
         }
 
         // Abstract classes
@@ -105,6 +111,7 @@ public class Class extends RegisteredType {
         writer.write("}\n");
     }
 
+    @Override
     public String getConstructorString() {
         String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
         return ("1".equals(abstract_)

@@ -74,7 +74,7 @@ public class VirtualMethod extends Method {
         }
         writer.write("MemorySegment _func = Interop.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
-            writer.write(", " + className + ".gtype");
+            writer.write(", " + className + ".getType()");
         }
         writer.write(");\n");
         writer.write("FunctionDescriptor _fdesc = ");

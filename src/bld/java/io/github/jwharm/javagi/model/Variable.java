@@ -372,7 +372,7 @@ public class Variable extends GirElement {
                 return "Types.VARIANT";
             }
             if (rt.getType != null) {
-                return type.qualifiedJavaType + ".gtype";
+                return type.qualifiedJavaType + ".getType()";
             }
         }
         if (type.qualifiedJavaType.equals("org.gnome.glib.Type")) {

@@ -20,6 +20,14 @@ public class ListIndexModel extends GObject implements ListModel {
     private ArrayList<ListIndex> items = new ArrayList<>();
 
     /**
+     * Return the GType for the ListIndexModel
+     * @return the GType
+     */
+    public static Type getType() {
+        return gtype;
+    }
+
+    /**
      * Construct a ListIndexModel for the provided memory address.
      * @param address the memory address of the instance in native memory
      */
@@ -87,6 +95,14 @@ public class ListIndexModel extends GObject implements ListModel {
 
         private static final Type gtype = Types.register(ListIndex.class);
         private int index;
+
+        /**
+         * Return the GType for the ListIndex
+         * @return the GType
+         */
+        public static Type getType() {
+            return gtype;
+        }
 
         /**
          * Construct a new ListIndex Proxy instance

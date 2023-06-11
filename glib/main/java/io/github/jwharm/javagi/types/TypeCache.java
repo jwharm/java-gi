@@ -69,6 +69,8 @@ public class TypeCache {
      * @param marshal Marshal function for this type
      */
     public static void register(Type type, Function<MemorySegment, ? extends Proxy> marshal) {
-        typeRegister.put(type, marshal);
+        if (type != null) {
+            typeRegister.put(type, marshal);
+        }
     }
 }

@@ -659,44 +659,44 @@ public class Types {
     }
 
     /**
-     * Return the {@link org.gnome.glib.Type} that is returned by a field with @GType
-     * annotation, or if that annotation is not found, by searching for a field with type
-     * {@code org.gnome.glib.Type}, or else, return null.
+     * Return the {@link org.gnome.glib.Type} that is returned by a static method with @GType
+     * annotation, or if that annotation is not found, by searching for a method with
+     * return type {@code org.gnome.glib.Type}, or else, return null.
      * @param cls the class for which to return the declared GType
      * @return the declared GType
      */
     public static Type getGType(Class<?> cls) {
-        Field gtypeField = null;
+        Method gtypeMethod = null;
 
-        // Find a field that is annotated with @GType and read its value
-        for (Field field : cls.getDeclaredFields()) {
-            if (field.isAnnotationPresent(GType.class)) {
-                gtypeField = field;
+        // Find a static method that is annotated with @GType and read its value
+        for (Method method : cls.getDeclaredMethods()) {
+            if (Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(GType.class)) {
+                gtypeMethod = method;
             }
         }
 
-        // Find a field with type org.gnome.glib.Type.class
-        for (Field field : cls.getDeclaredFields()) {
-            if (field.getType().equals(org.gnome.glib.Type.class)) {
-                gtypeField = field;
+        // Find a static method with return type org.gnome.glib.Type.class
+        for (Method method : cls.getDeclaredMethods()) {
+            if (Modifier.isStatic(method.getModifiers()) && method.getReturnType().equals(org.gnome.glib.Type.class)) {
+                gtypeMethod = method;
             }
         }
 
-        if (gtypeField == null) {
-            // No gtype found
+        if (gtypeMethod == null) {
+            // No gtype method found
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find GType field in class %s\n",
+                    "Cannot find static method that returns org.gnome.glib.Type in class %s\n",
                     cls.getName());
             return null;
         }
 
         try {
-            return (Type) gtypeField.get(null);
-        } catch (IllegalAccessException e) {
-            // Field is not public
+            return (Type) gtypeMethod.invoke(null);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            // Method is not public, or throws an exception
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "IllegalAccessException while trying to read %s.%s\n",
-                    cls.getName(), gtypeField.getName());
+                    "Exception while trying to read %s.%s\n",
+                    cls.getName(), gtypeMethod.getName());
             return null;
         }
     }

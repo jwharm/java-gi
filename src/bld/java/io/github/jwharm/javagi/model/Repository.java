@@ -101,22 +101,22 @@ public class Repository extends GirElement {
 
             // Classes
             for (Class c : namespace.classList) {
-                writer.write("if (" + c.javaName + ".gtype != null) TypeCache.register(" + c.javaName + ".gtype, " + c.getConstructorString() + ");\n");
+                writer.write("TypeCache.register(" + c.javaName + ".getType(), " + c.getConstructorString() + ");\n");
             }
 
             // Interfaces
             for (Interface i : namespace.interfaceList) {
-                writer.write("if (" + i.javaName + ".gtype != null) TypeCache.register(" + i.javaName + ".gtype, " + i.getConstructorString() + ");\n");
+                writer.write("TypeCache.register(" + i.javaName + ".getType(), " + i.getConstructorString() + ");\n");
             }
 
             // Aliases
             for (Alias a : namespace.aliasList) {
                 if (a.getTargetType() == Alias.TargetType.CLASS) {
                     Class c = (Class) a.type.girElementInstance;
-                    writer.write("if (" + a.javaName + ".gtype != null) TypeCache.register(" + a.javaName + ".gtype, " + c.getConstructorString() + ");\n");
+                    writer.write("TypeCache.register(" + a.javaName + ".getType(), " + c.getConstructorString() + ");\n");
                 } else if (a.getTargetType() == Alias.TargetType.INTERFACE) {
                     Interface i = (Interface) a.type.girElementInstance;
-                    writer.write("if (" + a.javaName + ".gtype != null) TypeCache.register(" + a.javaName + ".gtype, " + i.getConstructorString() + ");\n");
+                    writer.write("TypeCache.register(" + a.javaName + ".getType(), " + i.getConstructorString() + ");\n");
                 }
             }
 
