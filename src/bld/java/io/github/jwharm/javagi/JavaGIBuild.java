@@ -88,9 +88,9 @@ public class JavaGIBuild extends ModularProject {
     }
 
     @Override
-    public void compile() throws Exception {
+    public void test() throws Exception {
         compileTestResources();
-        super.compile();
+        super.test();
     }
 
     @BuildCommand(summary="Builds glib")
@@ -118,6 +118,11 @@ public class JavaGIBuild extends ModularProject {
         modules(new GtkSourceViewBuild(this));
     }
 
+    @BuildCommand(summary="Builds webkitgtk")
+    public void webkitgtk() {
+        modules(new WebKitGtkBuild(this));
+    }
+
     @BuildCommand(summary="Builds all modules")
     public void all() {
         glib();
@@ -125,6 +130,7 @@ public class JavaGIBuild extends ModularProject {
         adwaita();
         gstreamer();
         gtksourceview();
+        webkitgtk();
     }
 
     private List<String> getModuleClasspath() {

@@ -5,9 +5,10 @@
       <module fileurl="file://$PROJECT_DIR$/adwaita/adwaita.iml" filepath="$PROJECT_DIR$/adwaita/adwaita.iml" />
       <module fileurl="file://$PROJECT_DIR$/glib/glib.iml" filepath="$PROJECT_DIR$/glib/glib.iml" />
       <module fileurl="file://$PROJECT_DIR$/gstreamer/gstreamer.iml" filepath="$PROJECT_DIR$/gstreamer/gstreamer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/gtksourceview/gtksourceview.iml" filepath="$PROJECT_DIR$/gtksourceview/gtksourceview.iml" />
       <module fileurl="file://$PROJECT_DIR$/gtk/gtk.iml" filepath="$PROJECT_DIR$/gtk/gtk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gtksourceview/gtksourceview.iml" filepath="$PROJECT_DIR$/gtksourceview/gtksourceview.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/java-gi.iml" filepath="$PROJECT_DIR$/.idea/java-gi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/webkitgtk/webkitgtk.iml" filepath="$PROJECT_DIR$/webkitgtk/webkitgtk.iml" />
     </modules>
   </component>
 </project>
