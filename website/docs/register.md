@@ -11,8 +11,14 @@ However, the GObject type system itself will not recognize it as its own class. 
 It is recommended to register the new gtype in a field `gtype` like this:
 
 ```java
-    public static final Type gtype = Types.register(MyObject.class);
+    private static final Type gtype = Types.register(MyObject.class);
+    
+    public Type getType() {
+        return gtype;
+    }
 ```
+
+
 
 By declaring the `gtype` as a static field in this way, it will be registered immediately when the JVM classloader initializes the Java class.
 
