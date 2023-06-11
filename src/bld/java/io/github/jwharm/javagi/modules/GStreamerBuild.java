@@ -19,7 +19,7 @@ public class GStreamerBuild extends AbstractProject {
 
     public GStreamerBuild(JavaGIBuild bld) {
         super(bld, "gstreamer");
-        version = version(1, 20).withQualifier(bld.version().toString());
+        version = version(1,20).withQualifier(bld.version().toString());
 
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", false, Set.of("glib-2.0"), new GLibPatch())
