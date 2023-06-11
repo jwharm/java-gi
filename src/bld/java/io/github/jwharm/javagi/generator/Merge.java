@@ -38,29 +38,27 @@ public class Merge {
         mergeRepositories(merged, modules);
 
         merged.repositories.forEach((name, repository) -> {
-            if (repository.platforms.size() < 3) {
-                return;
-            }
-
             // Merge registered types
             mergeRegisteredTypes(repository.namespace, modules.stream().map(module ->
-                    module.repositories.get(name).namespace).toList());
+                    module.getNamespace(name)).filter(Objects::nonNull).toList());
 
             // Merge constants
             mergeConstants(repository.namespace, modules.stream().map(module ->
-                    module.repositories.get(name).namespace).toList());
+                    module.getNamespace(name)).filter(Objects::nonNull).toList());
 
             // Merge docsections
             mergeDocsections(repository.namespace, modules.stream().map(module ->
-                    module.repositories.get(name).namespace).toList());
+                    module.getNamespace(name)).filter(Objects::nonNull).toList());
 
             // Merge globally defined methods
             mergeMethods(repository.namespace, modules.stream().map(module ->
-                    module.repositories.get(name).namespace).toList());
+                    module.getNamespace(name)).filter(Objects::nonNull).toList());
 
             // Create a list with registered types for every platform
-            List<Map<String, RegisteredType>> typeMaps = modules.stream().map(module ->
-                    module.repositories.get(name).namespace.registeredTypeMap).toList();
+            List<Map<String, RegisteredType>> typeMaps = modules.stream().map(module -> {
+                    Namespace ns = module.getNamespace(name);
+                    return ns == null ? null : ns.registeredTypeMap;
+            }).filter(Objects::nonNull).toList();
 
             // Loop through the registered types, and merge methods
             repository.namespace.registeredTypeMap.forEach((typeName, registeredType) ->

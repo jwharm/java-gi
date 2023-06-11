@@ -92,8 +92,8 @@ public class GenerateSourcesOperation extends AbstractOperation<GenerateSourcesO
                     source.patch.patch(r);
                 }
 
-            } catch (IOException ioe) {
-                System.out.println("Not found: " + source.fileName);
+            } catch (IOException ignored) {
+                // Gir file not found for this platform: This will generate code with UnsupportedPlatformExceptions
             }
         }
 

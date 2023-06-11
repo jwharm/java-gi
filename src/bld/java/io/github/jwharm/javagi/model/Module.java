@@ -38,6 +38,17 @@ public class Module {
     }
 
     /**
+     * Return the Namespace of the Repository with the given name,
+     * or {@code null} if the Repository with this name is not found
+     * @param repositoryName the name of the repository
+     * @return the Namespace, or {@code null} if the repository was not found
+     */
+    public Namespace getNamespace(String repositoryName) {
+        Repository repo = repositories.get(repositoryName);
+        return repo == null ? null : repo.namespace;
+    }
+
+    /**
      * Loop through all type references in all repositories, find the
      * actual type instance in the parsed GI tree, and save a reference
      * to that GirElement.
