@@ -76,7 +76,7 @@ public class ValueTest {
     public void boxedValue() {
         // compare a boxed value with its duplicate
         Date date = Date.newDmy(new DateDay((byte) 3), DateMonth.JUNE, new DateYear((short) 2023));
-        Value boxedValue = Value.allocate().init(Date.gtype);
+        Value boxedValue = Value.allocate().init(Date.getType());
         boxedValue.setBoxed(date.handle());
         Date dup = new Date(boxedValue.dupBoxed());
         assertEquals(date.compare(dup), 0);
