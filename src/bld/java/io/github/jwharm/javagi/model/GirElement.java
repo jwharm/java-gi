@@ -1,11 +1,10 @@
 package io.github.jwharm.javagi.model;
 
 import io.github.jwharm.javagi.generator.Platform;
+import io.github.jwharm.javagi.generator.SourceWriter;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 public abstract class GirElement {
 
@@ -67,6 +66,33 @@ public abstract class GirElement {
 
     public Module module() {
         return ((Repository) getNamespace().parent).module;
+    }
+
+    /**
+     * Check if this method must do a platorm compatibility check and throw UnsupportedPlatformException.
+     * When an entire class is not cross-platform, the check is not done on regular methods, but only on
+     * the constructors and on functions (static methods).
+     * @return whether to do a cross-platform availability check.
+     */
+    public boolean doPlatformCheck() {
+        if (parent instanceof RegisteredType && parent.platforms.size() < 3 && platforms.size() < 3) {
+            return this instanceof Constructor || this instanceof Function;
+        }
+        return platforms.size() < 3;
+    }
+
+    public void generatePlatformCheck(SourceWriter writer) throws IOException {
+        // No platform check neccessary
+        if (! doPlatformCheck()) {
+            return;
+        }
+
+        // Generate platform check; this will throw UnsupportedPlatformException based on the runtime platform
+        StringJoiner joiner = new StringJoiner(", ", "Interop.checkSupportedPlatform(", ");\n");
+        for (Platform platform : platforms) {
+            joiner.add("\"" + platform.name.toLowerCase() + "\"");
+        }
+        writer.write(joiner.toString());
     }
 
     public String toString() {

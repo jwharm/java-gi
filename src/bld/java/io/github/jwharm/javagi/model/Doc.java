@@ -75,7 +75,7 @@ public class Doc extends GirElement {
                     writeDoc(writer, "GErrorException see {@link org.gnome.glib.GError}", "@throws");
                 }
 
-                if (m.platforms.size() < 3) {
+                if (m.doPlatformCheck()) {
                     String text = "UnsupportedPlatformException when run on a platform other than ";
                     boolean first = true;
                     for (var p : m.platforms) {

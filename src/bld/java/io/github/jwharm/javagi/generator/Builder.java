@@ -79,13 +79,19 @@ public class Builder {
         writer.write(" * GObject instance, which is then cast to {@code " + c.javaName + "}.\n");
         writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
         writer.write(" *         that were set in the Builder object.\n");
+        if (c.doPlatformCheck()) {
+            writer.write(" * @throws UnsupportedPlatformException when run on an unsupported platform\n");
+        }
         writer.write(" */\n");
         writer.write("public " + c.qualifiedName + " build() {\n");
         writer.increaseIndent();
         writer.write("try {\n");
-        writer.write("    return (" + c.qualifiedName + ") org.gnome.gobject.GObject.newWithProperties(\n");
-        writer.write("            " + c.qualifiedName + ".getType(), getNames(), getValues()\n");
-        writer.write("    );\n");
+        writer.increaseIndent();
+        c.generatePlatformCheck(writer);
+        writer.write("return (" + c.qualifiedName + ") org.gnome.gobject.GObject.newWithProperties(\n");
+        writer.write("        " + c.qualifiedName + ".getType(), getNames(), getValues()\n");
+        writer.write(");\n");
+        writer.decreaseIndent();
         writer.write("} finally {\n");
         writer.write("    for (var _value : getValues()) {\n");
         writer.write("        _value.unset();\n");

@@ -87,11 +87,6 @@ public class Method extends GirElement implements CallableType {
             if (throws_ != null) {
                 writer.write(" throws GErrorException");
             }
-
-            // Unsupported platforms
-            if (doPlatformCheck()) {
-                writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
-            }
         } catch (IOException ignored) {
             // StringWriter will never throw IOException
         }
@@ -125,33 +120,6 @@ public class Method extends GirElement implements CallableType {
         }
 
         return writer.toString();
-    }
-
-    /**
-     * Check if this method must do a platorm compatibility check and throw UnsupportedPlatformException.
-     * When an entire class is not cross-platform, the check is not done on regular methods, but only on
-     * the constructors and on functions (static methods).
-     * @return whether to do a cross-platform availability check.
-     */
-    public boolean doPlatformCheck() {
-        if (parent instanceof RegisteredType && parent.platforms.size() < 3 && platforms.size() < 3) {
-            return this instanceof Constructor || this instanceof Function;
-        }
-        return platforms.size() < 3;
-    }
-
-    public void generatePlatformCheck(SourceWriter writer) throws IOException {
-        // No platform check neccessary
-        if (! doPlatformCheck()) {
-            return;
-        }
-
-        // Generate platform check; this will throw UnsupportedPlatformException based on the runtime platform
-        StringJoiner joiner = new StringJoiner(", ", "Interop.checkSupportedPlatform(", ");\n");
-        for (Platform platform : platforms) {
-            joiner.add("\"" + platform.name.toLowerCase() + "\"");
-        }
-        writer.write(joiner.toString());
     }
 
     public void generate(SourceWriter writer) throws IOException {

@@ -118,4 +118,13 @@ public class Class extends RegisteredType {
                 ? qName + "." + this.javaName + "Impl::new"
                 : qName + "::new");
     }
+
+    /**
+     * Check if this method must do a platorm compatibility check and throw UnsupportedPlatformException.
+     * @return whether to do a cross-platform availability check.
+     */
+    @Override
+    public boolean doPlatformCheck() {
+        return platforms.size() < 3;
+    }
 }

@@ -41,11 +41,6 @@ public class Constructor extends Method {
             writer.write(" throws GErrorException");
         }
 
-        // Unsupported platforms
-        if (doPlatformCheck() || parent.platforms.size() < 3) {
-            writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
-        }
-
         writer.write(" {\n");
         writer.increaseIndent();
 
