@@ -3,8 +3,8 @@ package io.github.jwharm.javagi.interop;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import io.github.jwharm.javagi.types.TypeCache;
@@ -21,8 +21,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class InstanceCache {
 
-    private final static Map<MemorySegment, Proxy> strongReferences = new HashMap<>();
-    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new HashMap<>();
+    private final static Map<MemorySegment, Proxy> strongReferences = new ConcurrentHashMap<>();
+    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new ConcurrentHashMap<>();
     private static final Cleaner CLEANER = Cleaner.create();
 
     /**

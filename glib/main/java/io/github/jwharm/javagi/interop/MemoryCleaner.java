@@ -43,12 +43,14 @@ public class MemoryCleaner {
 
         // Put the address in the cache (or increase the refcount)
         MemorySegment address = proxy.handle();
-        Cached cached = references.get(address);
-        if (cached == null) {
-            references.put(address, new Cached(false, 1, null));
-            CLEANER.register(proxy, new StructFinalizer(address));
-        } else {
-            references.put(address, new Cached(false, cached.references + 1, cached.freeFunc));
+        synchronized (references) {
+            Cached cached = references.get(address);
+            if (cached == null) {
+                references.put(address, new Cached(false, 1, null));
+                CLEANER.register(proxy, new StructFinalizer(address));
+            } else {
+                references.put(address, new Cached(false, cached.references + 1, cached.freeFunc));
+            }
         }
     }
 
@@ -59,8 +61,10 @@ public class MemoryCleaner {
      * @param freeFunc the specialized cleanup function to call
      */
     public static void setFreeFunc(MemorySegment address, String freeFunc) {
-        Cached cached = references.get(address);
-        references.put(address, new Cached(cached.owned, cached.references, freeFunc));
+        synchronized (references) {
+            Cached cached = references.get(address);
+            references.put(address, new Cached(cached.owned, cached.references, freeFunc));
+        }
     }
 
     /**
@@ -69,8 +73,10 @@ public class MemoryCleaner {
      * @param address the memory address
      */
     public static void takeOwnership(MemorySegment address) {
-        Cached cached = references.get(address);
-        references.put(address, new Cached(true, cached.references, cached.freeFunc));
+        synchronized (references) {
+            Cached cached = references.get(address);
+            references.put(address, new Cached(true, cached.references, cached.freeFunc));
+        }
     }
 
     /**
@@ -79,8 +85,10 @@ public class MemoryCleaner {
      * @param address the memory address
      */
     public static void yieldOwnership(MemorySegment address) {
-        Cached cached = references.get(address);
-        references.put(address, new Cached(false, cached.references, cached.freeFunc));
+        synchronized (references) {
+            Cached cached = references.get(address);
+            references.put(address, new Cached(false, cached.references, cached.freeFunc));
+        }
     }
 
     /**
@@ -92,39 +100,32 @@ public class MemoryCleaner {
     private record Cached(boolean owned, int references, String freeFunc) {}
 
     /**
-     * This callback is run by the {@link Cleaner} when a struct or union instance
-     * has become unreachable, to free the native memory.
+     * This callback is run by the {@link Cleaner} when a struct or union instance has become unreachable, to free the
+     * native memory.
      */
-    private static class StructFinalizer implements Runnable {
-
-        private final MemorySegment address;
+    private record StructFinalizer(MemorySegment address) implements Runnable {
 
         /**
-         * Create a new StructFinalizer that will be run by the {@link Cleaner}
-         * @param address the native memory address
-         */
-        public StructFinalizer(MemorySegment address) {
-            this.address = address;
-        }
-
-        /**
-         * This method is run by the {@link Cleaner} when the last Proxy object for this
-         * memory address is garbage-collected.
+         * This method is run by the {@link Cleaner} when the last Proxy object for this memory address is
+         * garbage-collected.
          */
         public void run() {
-            Cached cached = references.get(address);
+            Cached cached;
+            synchronized (references) {
+                cached = references.get(address);
 
-            // When other references exist, decrease the refcount
-            if (cached.references > 1) {
-                references.put(address, new Cached(cached.owned, cached.references - 1, cached.freeFunc));
-                return;
+                // When other references exist, decrease the refcount
+                if (cached.references > 1) {
+                    references.put(address, new Cached(cached.owned, cached.references - 1, cached.freeFunc));
+                    return;
+                }
+
+                // When no other references exist, remove the address from the cache and free the memory
+                references.remove(address);
             }
 
-            // When no other references exist, remove the address from the cache and free the memory
-            references.remove(address);
-
             // if we don't have ownership, we must not run free()
-            if (! cached.owned) {
+            if (!cached.owned) {
                 return;
             }
 

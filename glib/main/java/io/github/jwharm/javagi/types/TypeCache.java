@@ -1,9 +1,9 @@
 package io.github.jwharm.javagi.types;
 
 import java.lang.foreign.MemorySegment;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.gnome.glib.Type;
@@ -18,7 +18,7 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class TypeCache {
     
-    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister = new HashMap<>();
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister = new ConcurrentHashMap<>();
 
     /**
      * Get the constructor from the type registry for the native object instance at the given 
