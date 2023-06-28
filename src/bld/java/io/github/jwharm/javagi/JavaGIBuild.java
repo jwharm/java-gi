@@ -46,9 +46,10 @@ public class JavaGIBuild extends ModularProject {
             .include(dependency("org.junit.jupiter", "junit-jupiter", version(5,9,3)))
             .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1,9,3)));
 
-        compileOperation().compileOptions()
-            .modulePath(buildDistDirectory(), libTestDirectory())
-            .enablePreview();
+        compileOperation()
+            .compileTestClasspath(getModuleClasspath())
+            .compileOptions()
+                .enablePreview();
 
         testOperation()
             .classpath(getModuleClasspath())
