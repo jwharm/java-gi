@@ -6,7 +6,6 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
 
 public class Repository extends GirElement {
 
@@ -14,7 +13,6 @@ public class Repository extends GirElement {
     public Namespace namespace = null;
     public Package package_ = null;
     public boolean generate;
-    public Set<String> libraries;
     public String urlPrefix;
 
     public Repository(Module module) {
@@ -70,16 +68,33 @@ public class Repository extends GirElement {
             writer.increaseIndent();
             writer.write("\n");
             writer.write("static {\n");
+            writer.increaseIndent();
 
             // Load libraries
-            if (libraries != null) {
-                for (String libraryName : libraries) {
-                    writer.write("    LibLoad.loadLibrary(\"" + libraryName + "\");\n");
-                }
+            if (namespace.sharedLibrary != null) {
+                writer.write("switch (Interop.getRuntimePlatform()) {\n");
+                writer.increaseIndent();
+                namespace.sharedLibraries.forEach((platform, libraryName) -> {
+                    try {
+                        if (libraryName.contains(",")) {
+                            writer.write("case \"" + platform.name + "\" -> {\n");
+                            for (String libName : libraryName.split(",")) {
+                                writer.write("    LibLoad.loadLibrary(\"" + libName + "\");\n");
+                            }
+                            writer.write("}\n");
+                        } else {
+                            writer.write("case \"" + platform.name + "\" -> LibLoad.loadLibrary(\"" + libraryName + "\");\n");
+                        }
+                    } catch (IOException ignored) {
+                    }
+                });
+                writer.decreaseIndent();
+                writer.write("}\n");
             }
 
             // Register types
-            writer.write("    registerTypes();\n");
+            writer.write("registerTypes();\n");
+            writer.decreaseIndent();
             writer.write("}\n");
             writer.write("\n");
             writer.write("@ApiStatus.Internal public static void javagi$ensureInitialized() {}\n");
@@ -133,10 +148,15 @@ public class Repository extends GirElement {
             writer.write(" * This package contains the generated bindings for " + namespace.name + ".\n");
             writer.write(" * <p>\n");
 
-            if (libraries != null) {
+            if (namespace.sharedLibrary != null) {
                 writer.write(" * The following native libraries are required and will be loaded: ");
-                for (String libraryName : libraries) {
-                    writer.write(" {@code " + libraryName + "}");
+                for (String libraryName : namespace.sharedLibrary.split(",")) {
+                    if (libraryName.contains("/")) {
+                        // Strip path from library name
+                        writer.write(" {@code " + libraryName.substring(libraryName.lastIndexOf("/")) + "}");
+                    } else {
+                        writer.write(" {@code " + libraryName + "}");
+                    }
                 }
                 writer.write("\n");
                 writer.write(" * <p>\n");
@@ -172,7 +192,6 @@ public class Repository extends GirElement {
         copy.namespace = namespace.copy();
         copy.package_ = package_;
         copy.generate = generate;
-        copy.libraries = libraries;
         return copy;
     }
 }

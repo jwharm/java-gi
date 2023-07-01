@@ -79,7 +79,11 @@ public class Merge {
         for (String name : merged.repositories.keySet()) {
             for (var module : platformModules) {
                 if (module.repositories.containsKey(name)) {
-                    merged.repositories.get(name).platforms.add(module.platform);
+                    var repo = merged.repositories.get(name);
+                    repo.platforms.add(module.platform);
+                    // Create a map with the native library name for every platform
+                    repo.namespace.sharedLibraries.put(module.platform,
+                            module.repositories.get(name).namespace.sharedLibrary);
                 }
             }
         }

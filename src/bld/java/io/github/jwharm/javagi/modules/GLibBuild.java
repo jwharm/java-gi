@@ -4,8 +4,6 @@ import io.github.jwharm.javagi.JavaGIBuild;
 import io.github.jwharm.javagi.AbstractProject;
 import io.github.jwharm.javagi.patches.*;
 
-import java.util.Set;
-
 public class GLibBuild extends AbstractProject {
 
     private static final String MODULE_INFO = """
@@ -26,10 +24,10 @@ public class GLibBuild extends AbstractProject {
         version = version(2,76).withQualifier(bld.version().toString());
 
         generateSourcesOperation()
-            .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", true, Set.of("glib-2.0"), new GLibPatch())
-            .source("GObject-2.0.gir", "org.gnome.gobject", "https://docs.gtk.org/gobject/", true, Set.of("gobject-2.0"), new GObjectPatch())
-            .source("Gio-2.0.gir", "org.gnome.gio", "https://docs.gtk.org/gio/", true, Set.of("gio-2.0"), new GioPatch())
-            .source("GModule-2.0.gir", "org.gnome.gmodule", null, true, null, null)
+            .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", true, new GLibPatch())
+            .source("GObject-2.0.gir", "org.gnome.gobject", "https://docs.gtk.org/gobject/", true, new GObjectPatch())
+            .source("Gio-2.0.gir", "org.gnome.gio", "https://docs.gtk.org/gio/", true, new GioPatch())
+            .source("GModule-2.0.gir", "org.gnome.gmodule", null, true, null)
             .moduleInfo(MODULE_INFO);
     }
 }

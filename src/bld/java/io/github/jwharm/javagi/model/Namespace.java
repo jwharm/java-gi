@@ -16,6 +16,7 @@ public class Namespace extends GirElement {
     public final String globalClassName;
     public final String pathName;
     public final Map<String, RegisteredType> registeredTypeMap = new HashMap<>();
+    public final Map<Platform, String> sharedLibraries = new HashMap<>();
 
     public Namespace(GirElement parent, String name, String version, String sharedLibrary,
                      String cIdentifierPrefix, String cSymbolPrefix, String pkg) {
