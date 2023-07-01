@@ -28,4 +28,28 @@ public class ProxyInstance implements Proxy {
     public MemorySegment handle() {
         return address;
     }
+
+    /**
+     * Returns the hashcode of the memory address
+     * @return the hashcode of the memory address
+     * @see MemorySegment#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return address.hashCode();
+    }
+
+    /**
+     * Checks whether the other object is a ProxyInstance instance and the memory 
+     * addresses are equal.
+     * @param obj another object
+     * @return true when the other object is a ProxyInstance instance and the 
+     *         memory addresses are equal, otherwise false.
+     * @see MemorySegment#equals(Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ProxyInstance other
+                && address.equals(other.address);
+    }
 }
