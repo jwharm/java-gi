@@ -72,7 +72,7 @@ public class Repository extends GirElement {
 
             // Load libraries
             if (namespace.sharedLibrary != null) {
-                writer.write("switch (Interop.getRuntimePlatform()) {\n");
+                writer.write("switch (Platform.getRuntimePlatform()) {\n");
                 writer.increaseIndent();
                 namespace.sharedLibraries.forEach((platform, libraryName) -> {
                     try {

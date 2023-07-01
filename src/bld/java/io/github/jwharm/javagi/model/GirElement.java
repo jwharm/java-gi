@@ -88,7 +88,7 @@ public abstract class GirElement {
         }
 
         // Generate platform check; this will throw UnsupportedPlatformException based on the runtime platform
-        StringJoiner joiner = new StringJoiner(", ", "Interop.checkSupportedPlatform(", ");\n");
+        StringJoiner joiner = new StringJoiner(", ", "Platform.checkSupportedPlatform(", ");\n");
         for (Platform platform : platforms) {
             joiner.add("\"" + platform.name.toLowerCase() + "\"");
         }

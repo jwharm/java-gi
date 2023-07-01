@@ -27,7 +27,6 @@ public class LibLoad {
      * @param name the name of the library
      */
     public static void loadLibrary(String name) {
-        System.out.println("Load library " + name);
         InteropException fail = new InteropException("Could not load library " + name);
         try {
             System.loadLibrary(name);
