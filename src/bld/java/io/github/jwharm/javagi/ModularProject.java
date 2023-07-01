@@ -49,10 +49,10 @@ public class ModularProject extends Project {
 
     @Override
     public void compile() throws Exception {
-        super.compile();
         for (var project : modules_) {
             project.compile();
         }
+        super.compile();
     }
 
     @Override
