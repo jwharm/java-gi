@@ -56,6 +56,19 @@ public class ModularProject extends Project {
     }
 
     @Override
+    public void dependencyTree() throws Exception {
+        if (modules_.isEmpty()) {
+            super.dependencyTree();
+        } else {
+            for (var project : modules_) {
+                System.out.println(project.name());
+                System.out.println("=".repeat(project.name().length()));
+                project.dependencyTree();
+            }
+        }
+    }
+
+    @Override
     public void download() throws Exception {
         super.download();
         for (var project : modules_) {
