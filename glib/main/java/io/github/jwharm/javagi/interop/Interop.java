@@ -92,6 +92,17 @@ public class Interop {
     );
 
     /**
+     * Convenience method that calls {@link #downcallHandle(String, FunctionDescriptor, boolean)}
+     * with variadic=false.
+     * @param name Name of the native function
+     * @param fdesc Function descriptor of the native function
+     * @return the MethodHandle
+     */
+    public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
+        return downcallHandle(name, fdesc, false);
+    }
+
+    /**
      * Creates a method handle that is used to call the native function with 
      * the provided name and function descriptor. The method handle is cached
      * and reused in subsequent lookups.
@@ -221,7 +232,7 @@ public class Interop {
      * @return the allocated MemorySegment
      */
     public static MemorySegment allocateNativeString(String string, SegmentAllocator allocator) {
-        return string == null ? MemorySegment.NULL : allocator.allocateUtf8String(string);
+        return string == null || "".equals(string) ? MemorySegment.NULL : allocator.allocateUtf8String(string);
     }
     
     /**
