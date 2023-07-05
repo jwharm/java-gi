@@ -46,10 +46,10 @@ public class MemoryCleaner {
         synchronized (references) {
             Cached cached = references.get(address);
             if (cached == null) {
-                references.put(address, new Cached(false, 1, null));
-                CLEANER.register(proxy, new StructFinalizer(address));
+                var cleanable = CLEANER.register(proxy, new StructFinalizer(address));
+                references.put(address, new Cached(false, 1, null, cleanable));
             } else {
-                references.put(address, new Cached(false, cached.references + 1, cached.freeFunc));
+                references.put(address, new Cached(false, cached.references + 1, cached.freeFunc, cached.cleanable));
             }
         }
     }
@@ -63,7 +63,7 @@ public class MemoryCleaner {
     public static void setFreeFunc(MemorySegment address, String freeFunc) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(cached.owned, cached.references, freeFunc));
+            references.put(address, new Cached(cached.owned, cached.references, freeFunc, cached.cleanable));
         }
     }
 
@@ -75,7 +75,7 @@ public class MemoryCleaner {
     public static void takeOwnership(MemorySegment address) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(true, cached.references, cached.freeFunc));
+            references.put(address, new Cached(true, cached.references, cached.freeFunc, cached.cleanable));
         }
     }
 
@@ -87,7 +87,19 @@ public class MemoryCleaner {
     public static void yieldOwnership(MemorySegment address) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(false, cached.references, cached.freeFunc));
+            references.put(address, new Cached(false, cached.references, cached.freeFunc, cached.cleanable));
+        }
+    }
+
+    /**
+     * Run the {@link StructFinalizer} associated with this memory address, by invoking
+     * {@link Cleaner.Cleanable#clean()}.
+     * @param address the memory address to free
+     */
+    public static void free(MemorySegment address) {
+        synchronized (references) {
+            Cached cached = references.get(address);
+            cached.cleanable.clean();
         }
     }
 
@@ -97,7 +109,7 @@ public class MemoryCleaner {
      * @param references the numnber of references (active Proxy objects) for this address
      * @param freeFunc an (optional) specialized function that will release the native memory
      */
-    private record Cached(boolean owned, int references, String freeFunc) {}
+    private record Cached(boolean owned, int references, String freeFunc, Cleaner.Cleanable cleanable) {}
 
     /**
      * This callback is run by the {@link Cleaner} when a struct or union instance has become unreachable, to free the
@@ -116,7 +128,7 @@ public class MemoryCleaner {
 
                 // When other references exist, decrease the refcount
                 if (cached.references > 1) {
-                    references.put(address, new Cached(cached.owned, cached.references - 1, cached.freeFunc));
+                    references.put(address, new Cached(cached.owned, cached.references - 1, cached.freeFunc, cached.cleanable));
                     return;
                 }
 
