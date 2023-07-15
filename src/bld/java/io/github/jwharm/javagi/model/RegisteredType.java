@@ -265,12 +265,12 @@ public abstract class RegisteredType extends GirElement {
 
     protected void generateParentAccessor(SourceWriter writer) throws IOException {
         writer.write("\n");
-        writer.write("protected " + javaName + " parent() {\n");
+        writer.write("protected " + qualifiedName + " parent() {\n");
         writer.increaseIndent();
         if (this instanceof Interface || (this instanceof Class c && ("1".equals(c.abstract_)))) {
-            writer.write(javaName + " _parent = new " + javaName + "Impl(handle());\n");
+            writer.write(qualifiedName + " _parent = new " + qualifiedName + "." + javaName + "Impl(handle());\n");
         } else {
-            writer.write( javaName + " _parent = new " + javaName + "(handle());\n");
+            writer.write( qualifiedName + " _parent = new " + qualifiedName + "(handle());\n");
         }
         writer.write("_parent.callParent(true);\n");
         writer.write("return _parent;\n");
