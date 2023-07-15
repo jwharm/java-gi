@@ -37,7 +37,7 @@ public class JavaGIBuild extends ModularProject {
     public JavaGIBuild() {
         pkg = "io.github.jwharm.javagi";
         name = "javagi";
-        version = version(0,6);
+        version = version(0,6, 0);
         javaRelease = 20;
         showStacktrace = true;
         repositories = List.of(MAVEN_CENTRAL);
