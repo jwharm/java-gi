@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.base;
 
 import io.github.jwharm.javagi.interop.MemoryCleaner;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.lang.foreign.MemorySegment;
 
@@ -27,6 +28,7 @@ public class ProxyInstance implements Proxy {
      * is used to obtain the function pointer of the parent type instead of the instance class.
      * @param callParent true if you want to call the parent vfunc instead of an overrided vfunc
      */
+    @ApiStatus.Internal
     protected void callParent(boolean callParent) {
         this.callParent = callParent;
     }
@@ -37,6 +39,7 @@ public class ProxyInstance implements Proxy {
      * @return true when parent vfunc is called instead of an overrided vfunc, or false when the
      *         overrided vfunc of the instance is called.
      */
+    @ApiStatus.Internal
     public boolean callParent() {
         return this.callParent;
     }
