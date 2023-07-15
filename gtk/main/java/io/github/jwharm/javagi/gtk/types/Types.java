@@ -22,7 +22,7 @@ import java.util.function.Function;
 import static io.github.jwharm.javagi.types.Types.*;
 
 /**
- * This class contains functionality to register a Java class 
+ * This class contains functionality to register a Java class
  * as a Gtk composite template class.
  * <p>
  * To register a Java class as a "regular" GObject class, see 
@@ -32,13 +32,18 @@ public class Types {
 
     private static final String LOG_DOMAIN = "java-gi";
 
+    /**
+     * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or if it is
+     * not defined, fallback to {@link io.github.jwharm.javagi.types.Types#getName(Class)}.
+     * @param cls the class that is registered as a new GType
+     * @return the name
+     */
     public static String getTemplateName(Class<?> cls) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String name = annotation.name();
         if (! "".equals(name)) {
             return name;
         }
-
         return getName(cls);
     }
 
@@ -234,15 +239,16 @@ public class Types {
     }
 
     /**
-     * Redirects to {@link Types#registerTemplate(Class)} for Widget.class and
-     * {@link io.github.jwharm.javagi.types.Types#register(Class)} for GObject.class.
+     * Redirects to {@link Types#registerTemplate(Class)} for Widget.class with {@link GtkTemplate}
+     * annotation, and {@link io.github.jwharm.javagi.types.Types#register(Class)} for all other
+     * (GObject-derived) classes.
      * @param cls the class to register as a new GType
      * @return the new GType
      * @param <T> the class must extend {@link org.gnome.gobject.GObject}
      */
     @SuppressWarnings("unchecked")
     public static <T extends GObject, W extends Widget> Type register(Class<T> cls) {
-        if (Widget.class.isAssignableFrom(cls)) {
+        if (Widget.class.isAssignableFrom(cls) && cls.isAnnotationPresent(GtkTemplate.class)) {
             return registerTemplate((Class<W>) cls);
         } else {
             return io.github.jwharm.javagi.types.Types.register(cls);
