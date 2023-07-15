@@ -91,6 +91,18 @@ public class Interop {
             false
     );
 
+    public static final MethodHandle g_type_interface_peek_parent = Interop.downcallHandle(
+            "g_type_interface_peek_parent",
+            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG),
+            false
+    );
+
+    public static final MethodHandle g_type_class_peek_parent = Interop.downcallHandle(
+            "g_type_class_peek_parent",
+            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+            false
+    );
+
     /**
      * Convenience method that calls {@link #downcallHandle(String, FunctionDescriptor, boolean)}
      * with variadic=false.
@@ -185,6 +197,19 @@ public class Interop {
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
+    public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name) {
+        MemorySegment gclass = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
+                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+        MemorySegment parent;
+        try {
+            parent = (MemorySegment) g_type_class_peek_parent.invoke(gclass);
+        } catch (Throwable t) {
+            throw new InteropException(t);
+        }
+        MemorySegment parentClass = MemorySegment.ofAddress(parent.address(), classLayout.byteSize(), address.scope());
+        return parentClass.get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+    }
+
     /**
      * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeInterface
      * with the specified GType.
@@ -194,12 +219,29 @@ public class Interop {
      * @param ifaceType the GType of the interface that declares the virtual method
      * @return a function pointer to the requested virtual method
      */
-    public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType)
-            throws Throwable {
+    public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
         MemorySegment struct = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
                 .get(ValueLayout.ADDRESS.asUnbounded(), 0);
 
-        struct = (MemorySegment) g_type_interface_peek.invokeExact(struct, ifaceType.getValue().longValue());
+        try {
+            struct = (MemorySegment) g_type_interface_peek.invokeExact(struct, ifaceType.getValue().longValue());
+        } catch (Throwable t) {
+            throw new InteropException(t);
+        }
+
+        return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
+                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+    }
+
+    public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
+        MemorySegment struct = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
+                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+
+        try {
+            struct = (MemorySegment) g_type_interface_peek_parent.invokeExact(struct, ifaceType.getValue().longValue());
+        } catch (Throwable t) {
+            throw new InteropException(t);
+        }
 
         return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));

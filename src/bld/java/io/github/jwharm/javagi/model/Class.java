@@ -77,6 +77,7 @@ public class Class extends RegisteredType {
         generateEnsureInitialized(writer);
         generateGType(writer);
         generateMemoryLayout(writer);
+        generateParentAccessor(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
 

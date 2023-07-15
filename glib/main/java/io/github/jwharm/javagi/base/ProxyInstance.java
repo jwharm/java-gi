@@ -10,6 +10,7 @@ import java.lang.foreign.MemorySegment;
 public class ProxyInstance implements Proxy {
 
     private final MemorySegment address;
+    private boolean callParent;
 
     /**
      * Create a new {@code ProxyInstance} object for an instance in native memory.
@@ -17,7 +18,16 @@ public class ProxyInstance implements Proxy {
      */
     public ProxyInstance(MemorySegment address) {
         this.address = address;
+        this.callParent = false;
         MemoryCleaner.register(this);
+    }
+
+    protected void callParent(boolean callParent) {
+        this.callParent = callParent;
+    }
+
+    public boolean callParent() {
+        return this.callParent;
     }
 
     /**
