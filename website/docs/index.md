@@ -16,14 +16,16 @@ Please note that java-gi is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.5.1 has been tested with the following libraries:
+Java-GI version 0.6.0 has been tested with the following libraries:
 
-| Library    | Version |
-|------------|---------|
-| GLib       | 2.76    |
-| GTK        | 4.10    |
-| LibAdwaita | 1.3     |
-| GStreamer  | 1.20    |
+| Library       | Version |
+|---------------|---------|
+| GLib          | 2.76    |
+| GTK           | 4.10    |
+| LibAdwaita    | 1.3     |
+| GStreamer     | 1.20    |
+| GtkSourceview | 5.9     |
+| WebkitGtk     | 2.41    |
 
 For these libraries, pre-built Java bindings are available from JitPack.io. Consult the [usage guide](usage.md) for more information.
 
