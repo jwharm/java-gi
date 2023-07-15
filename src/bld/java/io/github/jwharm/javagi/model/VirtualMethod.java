@@ -56,10 +56,6 @@ public class VirtualMethod extends Method {
             writer.write(panamaReturnType + " _result;\n");
         }
         
-        // The method call is wrapped in a try-catch block
-        writer.write("try {\n");
-        writer.increaseIndent();
-        
         Record classStruct = null;
         String className = null;
         if (parent instanceof Class c) {
@@ -72,14 +68,32 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemorySegment _func = Interop.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
+        writer.write("MemorySegment _func = ((ProxyInstance) this).callParent()\n");
+        writer.increaseIndent();
+        writer.write("? Interop.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
+        if (parent instanceof Interface) {
+            writer.write(", " + className + ".getType()");
+        }
+        writer.write(")\n");
+        writer.write(": Interop.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
             writer.write(", " + className + ".getType()");
         }
         writer.write(");\n");
+        writer.decreaseIndent();
+
+        writer.write("if (MemorySegment.NULL.equals(_func)) {\n");
+        writer.write("    throw new NullPointerException();\n");
+        writer.write("}\n");
+
+        // Check if the virtual method points to a null address.
         writer.write("FunctionDescriptor _fdesc = ");
         generateFunctionDescriptor(writer);
         writer.write(";\n");
+
+        // The method call is wrapped in a try-catch block
+        writer.write("try {\n");
+        writer.increaseIndent();
 
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {

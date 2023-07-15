@@ -159,8 +159,9 @@ public class Field extends Variable {
             writer.write("\n");
 
             // Generate upcall method
-            String methodToInvoke = "this._" + this.name + "Method.invoke";
-            callback.generateUpcallMethod(writer, upcallName, methodToInvoke);
+            String method = "this._" + this.name + "Method";
+            String methodToInvoke = method + ".invoke";
+            callback.generateUpcallMethod(writer, method, upcallName, methodToInvoke);
         }
     }
 

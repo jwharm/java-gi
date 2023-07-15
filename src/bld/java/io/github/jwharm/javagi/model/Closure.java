@@ -53,7 +53,7 @@ public interface Closure extends CallableType {
         writer.write(" * The {@code upcall} method is called from native code. The parameters \n");
         writer.write(" * are marshalled and {@link #run} is executed.\n");
         writer.write(" */\n");
-        generateUpcallMethod(writer, "upcall","run");
+        generateUpcallMethod(writer, javaName, "upcall","run");
 
         // Generate toCallback()
         writer.write("/**\n");
@@ -80,7 +80,7 @@ public interface Closure extends CallableType {
         writer.write("}\n");
     }
 
-    default void generateUpcallMethod(SourceWriter writer, String name, String methodToInvoke) throws IOException {
+    default void generateUpcallMethod(SourceWriter writer, String methodName, String name, String methodToInvoke) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
         boolean isVoid = returnValue.type == null || "void".equals(returnValue.type.simpleJavaType);
@@ -229,6 +229,21 @@ public interface Closure extends CallableType {
 
         // Close try-catch block for reflection calls
         if (methodToInvoke.endsWith("invoke")) {
+            writer.decreaseIndent();
+            writer.write("} catch (java.lang.reflect.InvocationTargetException ite) {\n");
+            writer.increaseIndent();
+            writer.write("org.gnome.glib.GLib.log(\"java-gi\", org.gnome.glib.LogLevelFlags.LEVEL_WARNING, ite.getCause().toString() + \" in \" + " + methodName + ");\n");
+            // Return null
+            if (! isVoid) {
+                Type type = returnValue.type;
+                if (type != null
+                        && (type.isPrimitive || type.isEnum() || type.isBitfield() || type.isAliasForPrimitive())
+                        && (! type.isPointer())) {
+                    writer.write("return 0;\n");
+                } else {
+                    writer.write("return MemorySegment.NULL;\n");
+                }
+            }
             writer.decreaseIndent();
             writer.write("} catch (Exception e) {\n");
             writer.write("    throw new RuntimeException(e);\n");
