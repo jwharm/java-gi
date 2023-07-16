@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- This is a dummy pom.xml to make JitPack.io recognize the build artifacts. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.jwharm.javagi</groupId>
   <artifactId>gtk</artifactId>
-  <version>4.10-0.6.0</version>
+  <version>4.10-0.6.1</version>
   <packaging>pom</packaging>
   <name>gtk</name>
 </project>

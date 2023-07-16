@@ -10,7 +10,7 @@ Please be aware that the Panama API is still under development. You will need to
 
 First of all, make sure that the native GLib, Gtk and/or GStreamer libraries are installed on your operating system.
 
-Next, add the dependencies as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.6.0). For example, if you use Gradle:
+Next, add the dependencies as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1). For example, if you use Gradle:
 
 ```groovy
 allprojects {
@@ -27,10 +27,12 @@ dependencies {
     
     // Include the libraries you want to use. 
     // You will at the very least want to include GLib.
-    implementation "com.github.jwharm.java-gi:glib:0.6.0"
-    implementation "com.github.jwharm.java-gi:gtk:0.6.0"
-    implementation "com.github.jwharm.java-gi:adwaita:0.6.0"
-    implementation 'com.github.jwharm.java-gi:gstreamer:0.6.0'
+    implementation "com.github.jwharm.java-gi:glib:0.6.1"
+    implementation "com.github.jwharm.java-gi:gtk:0.6.1"
+    implementation "com.github.jwharm.java-gi:adwaita:0.6.1"
+    implementation 'com.github.jwharm.java-gi:gstreamer:0.6.1'
+    implementation 'com.github.jwharm.java-gi:gtksourceview:0.6.1'
+    implementation 'com.github.jwharm.java-gi:webkitgtk:0.6.1'
 }
 ```
 

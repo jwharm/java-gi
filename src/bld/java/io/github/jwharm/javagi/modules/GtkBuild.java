@@ -6,12 +6,15 @@ import io.github.jwharm.javagi.patches.*;
 
 import java.io.File;
 
+import static rife.bld.dependencies.Scope.compile;
+
 public class GtkBuild extends AbstractProject {
 
     private static final String MODULE_INFO = """
         module org.gnome.gtk {
             requires static org.jetbrains.annotations;
             requires transitive org.gnome.glib;
+            requires transitive org.freedesktop.cairo;
             exports io.github.jwharm.javagi.gtk.annotations;
             exports io.github.jwharm.javagi.gtk.types;
             exports io.github.jwharm.javagi.gtk.util;
@@ -23,14 +26,20 @@ public class GtkBuild extends AbstractProject {
         super(bld, "gtk");
         version = version(4,10).withQualifier(bld.version().toString());
 
+        // Add cairo-java-bindings dependency
+        scope(compile)
+            .include(dependency("com.github.jwharm", "cairo-java-bindings", version(1, 16, 0)));
+
         generateSourcesOperation()
             .source("GLib-2.0.gir", "org.gnome.glib", "https://docs.gtk.org/glib/", false, new GLibPatch())
             .source("GObject-2.0.gir", "org.gnome.gobject", "https://docs.gtk.org/gobject/", false, new GObjectPatch())
             .source("Gio-2.0.gir", "org.gnome.gio", "https://docs.gtk.org/gio/", false, new GioPatch())
             .source("GModule-2.0.gir", "org.gnome.gmodule", null, false, null)
 
-            .source("cairo-1.0.gir", "org.freedesktop.cairo", null, true, new CairoPatch())
-            .source("freetype2-2.0.gir", "org.freedesktop.freetype", null, true, null)
+            // Do not generate cairo and freetype gir files: These classes are included from cairo-java-bindings
+            .source("cairo-1.0.gir", "org.freedesktop.cairo", null, false, new CairoPatch())
+            .source("freetype2-2.0.gir", "org.freedesktop.freetype", null, false, null)
+
             .source("HarfBuzz-0.0.gir", "org.freedesktop.harfbuzz", null, true, new HarfBuzzPatch())
             .source("Pango-1.0.gir", "org.gnome.pango", "https://docs.gtk.org/Pango/", true, null)
             .source("PangoCairo-1.0.gir", "org.gnome.pango.cairo", "https://docs.gtk.org/Pango/", true, null)

@@ -3,6 +3,7 @@ package io.github.jwharm.javagi;
 import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
 import rife.bld.BuildCommand;
 import rife.bld.Project;
+import rife.bld.dependencies.Repository;
 import rife.bld.operations.JavadocOptions;
 import rife.bld.publish.PublishDeveloper;
 import rife.bld.publish.PublishInfo;
@@ -24,6 +25,8 @@ import static rife.bld.dependencies.Scope.test;
  */
 public abstract class AbstractProject extends Project {
 
+    public static final Repository JITPACK = new Repository("https://jitpack.io");
+
     private final GenerateSourcesOperation generateSourcesOperation_;
 
     public AbstractProject(JavaGIBuild bld, String name) {
@@ -35,7 +38,7 @@ public abstract class AbstractProject extends Project {
         buildMainDirectory = new File(bld.buildMainDirectory(), name);
         buildJavadocDirectory = new File(bld.buildJavadocDirectory(), name);
 
-        repositories = List.of(MAVEN_CENTRAL);
+        repositories = List.of(MAVEN_CENTRAL, JITPACK);
         scope(compile)
             .include(dependency("org.jetbrains", "annotations", version(24,0,1)));
         downloadSources = true;
