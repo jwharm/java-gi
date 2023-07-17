@@ -1,6 +1,8 @@
 # Welcome to Java-GI
 
-Java-GI generates Java bindings for native libraries like Gtk, LibAdwaita and GStreamer using GObject-Introspection data. The bindings use the Panama Foreign Function & Memory API (JEP-434) to directly access native resources from inside the JVM.
+Java-GI generates Java bindings for native libraries like Gtk, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer using GObject-Introspection data. The bindings use the Panama Foreign Function & Memory API (JEP-434) to directly access native resources from inside the JVM.
+
+![Screenshot of Browser example](img/browser-screenshot.png)
 
 Please note that java-gi is still under active development. Feedback is welcome.
 
@@ -39,9 +41,13 @@ Java-GI converts API documentation from GObject-Introspection to Javadoc. For th
     
 * Javadoc for [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adwaita/module-summary.html)
     
+* Javadoc for [GtkSourceView](https://jwharm.github.io/java-gi/gtksourceview/org.gnome.gtksourceview/module-summary.html)
+
+* Javadoc for [WebkitGtk](https://jwharm.github.io/java-gi/webkitgtk/org.gnome.webkitgtk/module-summary.html)
+
 * Javadoc for [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
 
-JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/v0.5.1).
+JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1).
 
 ## Example apps
 

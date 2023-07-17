@@ -74,7 +74,7 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 
 ## Features
 
-Nearly all types, functions and parameters defined in the GIR files for Gtk, LibAdwaita and GStreamer are supported by Java-GI. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
+Nearly all types, functions and parameters defined in the GIR files are supported by Java-GI. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
 
 Some interesting features of the bindings that Java-GI generates:
 
@@ -104,6 +104,8 @@ The Javadoc is also published online:
 - [GLib](https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
 - [Gtk](https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
 - [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adwaita/module-summary.html)
+- [GtkSourceView](https://jwharm.github.io/java-gi/gtksourceview/org.gnome.gtksourceview/module-summary.html)
+- [WebkitGtk](https://jwharm.github.io/java-gi/webkitgtk/org.gnome.webkitgtk/module-summary.html)
 - [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
 
 ### Classes and Interfaces
@@ -129,7 +131,7 @@ var button2 = Button.newWithLabel("Open...");
 var button3 = Button.newFromIconName("document-open");
 ```
 
-Some struct types (also called "records" in GObject jargon) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct that you can use. You can either allocate an empty struct (`var color = RGBA.allocate();`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(0.9f, 0.1f, 0.9f, 1.0f);`
+Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct that you can use. You can either allocate an empty struct (`var color = RGBA.allocate();`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(0.9f, 0.1f, 0.9f, 1.0f);`
 
 ### Automatic memory management
 
