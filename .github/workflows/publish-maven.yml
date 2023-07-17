@@ -34,10 +34,7 @@ jobs:
       - name: Create Site Artifact
         run: |
           mv website/site site
-          mv build/javadoc/glib site/glib
-          mv build/javadoc/gstreamer site/gstreamer
-          mv build/javadoc/gtk site/gtk
-          mv build/javadoc/adwaita site/adwaita
+          mv build/javadoc/* site/
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
