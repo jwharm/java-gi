@@ -122,7 +122,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Get the GType of the " + cType + " " + (this instanceof Interface ? "interface" : "class") + ".\n");
-        writer.write(" * @return the GType");
+        writer.write(" * @return the GType\n");
         writer.write(" */\n");
         writer.write("public static org.gnome.glib.Type getType() {\n");
         writer.write("    return Interop.getType(\"" + getType + "\");\n");
@@ -134,10 +134,10 @@ public abstract class RegisteredType extends GirElement {
         return qName + "::new";
     }
 
-        /**
-         * Opaque structs have unknown memory layout and should not have an allocator
-         * @return true if the struct has no fields specified in the GIR file
-         */
+    /**
+     * Opaque structs have unknown memory layout and should not have an allocator
+     * @return true if the struct has no fields specified in the GIR file
+     */
     public boolean isOpaqueStruct() {
         return fieldList.isEmpty() && unionList.isEmpty();
     }
@@ -268,8 +268,8 @@ public abstract class RegisteredType extends GirElement {
         writer.write("/**\n");
         writer.write(" * Returns this instance as if it were its parent type. This is mostly synonymous to the Java\n");
         writer.write(" * {@code super} keyword, but will set the native typeclass function pointers to the parent\n");
-        writer.write(" * type. In other words, when overriding a native virtual method in Java, \"chaining up\" with\n");
-        writer.write(" * {@code super().methodName()} doesn't work, because it invokes the overridden function pointer\n");
+        writer.write(" * type. When overriding a native virtual method in Java, \"chaining up\" with\n");
+        writer.write(" * {@code super.methodName()} doesn't work, because it invokes the overridden function pointer\n");
         writer.write(" * again. To chain up, call {@code parent().methodName()}. This will call the native function\n");
         writer.write(" * pointer of this virtual method in the typeclass of the parent type.\n");
         writer.write(" */\n");
