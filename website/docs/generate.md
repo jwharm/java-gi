@@ -1,6 +1,6 @@
 # Building and running the bindings generator
 
-Java-GI publishes pre-built bindings for the entire GTK4 library stack, LibAdwaita and GStreamer. The bindings should work on Linux, Windows and MacOS. If you want to generate bindings for other libraries, platforms or versions, follow these steps:
+Java-GI publishes pre-built bindings for GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. If you want to generate bindings for other libraries, platforms or versions, follow these steps:
 
 - Clone the Java-GI project from GitHub.
 - Run `./bld all download publish`.

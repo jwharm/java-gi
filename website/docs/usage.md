@@ -8,7 +8,7 @@ Please be aware that the Panama API is still under development. You will need to
 
 ## Dependencies
 
-First of all, make sure that the native GLib, Gtk and/or GStreamer libraries are installed on your operating system.
+Make sure that the native GLib, Gtk and/or GStreamer libraries are installed on your operating system.
 
 Next, add the dependencies as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1). For example, if you use Gradle:
 
@@ -27,9 +27,9 @@ dependencies {
     
     // Include the libraries you want to use. 
     // You will at the very least want to include GLib.
-    implementation "com.github.jwharm.java-gi:glib:0.6.1"
-    implementation "com.github.jwharm.java-gi:gtk:0.6.1"
-    implementation "com.github.jwharm.java-gi:adwaita:0.6.1"
+    implementation 'com.github.jwharm.java-gi:glib:0.6.1'
+    implementation 'com.github.jwharm.java-gi:gtk:0.6.1'
+    implementation 'com.github.jwharm.java-gi:adwaita:0.6.1'
     implementation 'com.github.jwharm.java-gi:gstreamer:0.6.1'
     implementation 'com.github.jwharm.java-gi:gtksourceview:0.6.1'
     implementation 'com.github.jwharm.java-gi:webkitgtk:0.6.1'
@@ -97,5 +97,7 @@ For module-based applications (with a `module-info.java` file), the following mo
     * org.freedesktop.gstreamer
     * org.gnome.gtk
         * org.gnome.adwaita
+        * org.gnome.gtksourceview
+        * org.gnome.webkitgtk
 
 Each module transitively exports its dependencies, so when you want to create a Gtk application, you only need to add `requires org.gnome.gtk;` to your `module-info.java` file.

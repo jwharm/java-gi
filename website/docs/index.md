@@ -2,13 +2,13 @@
 
 Java-GI generates Java bindings for native libraries like Gtk, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer using GObject-Introspection data. The bindings use the Panama Foreign Function & Memory API (JEP-434) to directly access native resources from inside the JVM.
 
-![Screenshot of Browser example](img/browser-screenshot.png)
+![Screenshot of Java-GI code with the Browser example](img/browser-screenshot.png)
 
-Please note that java-gi is still under active development. Feedback is welcome.
+Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## How to use
 
-* [Basic usage](usage.md)
+* [Basic usage](usage.md) and [example applications](examples.md)
 
 * [Registering new GTypes](register.md)
 
@@ -55,4 +55,4 @@ You can find example applications in the [java-gi-examples repository](https://g
 
 ## Contributing
 
-To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/). Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi).
+To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/). Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi), or join the discussion on [Matrix](https://matrix.to/#/#java-gi:matrix.org).

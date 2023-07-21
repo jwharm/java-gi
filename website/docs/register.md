@@ -18,14 +18,12 @@ It is recommended to register the new gtype in a field `gtype` like this:
     }
 ```
 
-
-
 By declaring the `gtype` as a static field in this way, it will be registered immediately when the JVM classloader initializes the Java class.
 
 When instantiating a new instance of the object, pass the `gtype` field to `GObject.newInstance`. You can simplify this with a static factory method with a descriptive name like `create` or `newInstance`:
 
 ```java
-    public MyObject create() {
+    public static MyObject create() {
         return GObject.newInstance(gtype);
     }
 ```
@@ -65,7 +63,25 @@ If you don't intend to override the name of the GType, you can safely omit the `
 
 ## Method overrides
 
-When you override virtual methods from parent GObject classes (or implemented interfaces), the override will automatically be registered. You don't need to do this manually.
+When you override virtual methods from parent GObject classes (or implemented interfaces), the override will automatically be registered by `Types.register(class)`. You don't need to do this manually.
+
+### Chaining up
+
+From inside the method body of an overridden method, you cannot call `super.method()` to "chain up" to a parent (native GObject) virtual method. Because virtual method invocations call the function pointer that is installed in the GObject typeclass, "chaining up" requires a lookup of the typeclass of the parent type first. Java-GI will do this when you call the `parent()` method that is available on all 
+GObject classes. So instead of `super.method()`, call `parent().method` to "chain up". This is similar to [the `parent_class` pointer in native GObject code](https://developer-old.gnome.org/gobject/stable/howto-gobject-chainup.html).
+
+For example:
+
+```java
+// Override the GObject.finalize_() virtual method
+@Override
+public void finalize_() {
+    ... do cleanup work here ...
+    
+    // Chain up:
+    parent().finalize_();
+}
+```
 
 ## Properties
 

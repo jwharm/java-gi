@@ -4,6 +4,7 @@ nav:
     - Home: index.md
     - Basic usage: usage.md
     - Advanced usage: advanced.md
+    - Examples: examples.md
     - Registering new types: register.md
     - Composite template classes: templates.md
     - Generating bindings: generate.md
