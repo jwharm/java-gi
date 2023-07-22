@@ -89,6 +89,10 @@ Because the Panama foreign function API is still in preview status, add the `--e
 
 To suppress warnings about native access, add a command-line parameter `--enable-native-access=ALL-UNNAMED`. For module-based applications, add `--enable-native-access=org.gnome.glib` (and all other modules that you use) instead.
 
+## Java library path
+
+If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument, for example: `-Djava.library.path=/lib/x86_64-linux-gnu` on Debian-based systems.
+
 ## Modules
 
 For module-based applications (with a `module-info.java` file), the following modules are available:
