@@ -1,4 +1,4 @@
-# Examples applications
+# Example applications
 
 A set of example applications is available on the [java-gi-examples GitHub repository](https://github.com/jwharm/java-gi-examples). To run an example, install Java 20 and Gradle, clone the Git repository:
 
