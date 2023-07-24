@@ -13,7 +13,7 @@ cd HelloWorld
 gradle run
 ```
 
-If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument in the `gradle.build` file, in the `tasks.withType(JavaExec) {` block. For example:
+If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument in the `gradle.build` file:
 
 ```
 tasks.withType(JavaExec) {
