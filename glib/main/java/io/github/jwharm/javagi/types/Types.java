@@ -15,17 +15,14 @@ import java.lang.reflect.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+
 /**
  * The Types class contains GType constants, a series of static methods to check gtype characteristics,
  * and static methods to register a Java class as a new GObject-derived GType.
  */
 @SuppressWarnings("unused")
 public class Types {
-
-    /**
-     * The domain to use for GLib error logging
-     */
-    static final String LOG_DOMAIN = "java-gi";
 
     // GLib fundamental types, adapted from <gobject/gtype.h>
 

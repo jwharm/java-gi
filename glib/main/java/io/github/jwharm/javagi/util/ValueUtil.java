@@ -13,13 +13,13 @@ import org.gnome.gobject.*;
 import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
 
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+
 /**
  * Utility functions to convert a {@link Value} to and from a Java {@link Object}.
  */
 public class ValueUtil {
     
-    private static final String LOG_DOMAIN = "java-gi";
-
     /**
      * Read the GType from the GValue, call the corresponding getter (using the methods defined 
      * in the {@link Value} proxy class), and return the result.

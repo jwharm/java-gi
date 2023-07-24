@@ -10,13 +10,13 @@ import org.gnome.gobject.Closure;
 import org.gnome.gobject.ClosureMarshal;
 import org.gnome.gobject.Value;
 
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+
 /**
  * An implementation of {@link Closure} that can be used with Java methods.
  */
 public class JavaClosure extends Closure {
     
-    private static final String LOG_DOMAIN = "java-gi";
-
     /**
      * Construct a {@link Closure} for a method or lambda that takes no parameters and returns void.
      * @param callback a callback with signature {@code void run()}

@@ -9,6 +9,7 @@ public class GLibBuild extends AbstractProject {
     private static final String MODULE_INFO = """
         module org.gnome.glib {
             requires static org.jetbrains.annotations;
+            exports io.github.jwharm.javagi;
             exports io.github.jwharm.javagi.annotations;
             exports io.github.jwharm.javagi.base;
             exports io.github.jwharm.javagi.interop;

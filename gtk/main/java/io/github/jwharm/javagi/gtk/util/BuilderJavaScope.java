@@ -13,6 +13,8 @@ import io.github.jwharm.javagi.gtk.types.Types;
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+
 /**
  * The {@code BuilderJavaScope} class can be used with a {@link GtkBuilder} to
  * refer to Java instance methods from a ui file.
@@ -26,7 +28,6 @@ import java.lang.reflect.Method;
  */
 public final class BuilderJavaScope extends GObject implements BuilderScope {
 
-    private static final String LOG_DOMAIN = "java-gi";
     private static final Type gtype = Types.register(BuilderJavaScope.class);
 
     static {

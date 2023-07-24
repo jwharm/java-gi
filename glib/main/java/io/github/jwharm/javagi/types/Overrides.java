@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static io.github.jwharm.javagi.types.Types.LOG_DOMAIN;
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
 /**
  * Helper class to register method overrides in a new GType

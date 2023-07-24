@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.github.jwharm.javagi.types.Types.*;
+import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
 /**
  * This class contains functionality to register a Java class
@@ -29,8 +30,6 @@ import static io.github.jwharm.javagi.types.Types.*;
  * {@link io.github.jwharm.javagi.types.Types#register(Class)}
  */
 public class Types {
-
-    private static final String LOG_DOMAIN = "java-gi";
 
     /**
      * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or if it is

@@ -232,7 +232,7 @@ public interface Closure extends CallableType {
             writer.decreaseIndent();
             writer.write("} catch (java.lang.reflect.InvocationTargetException ite) {\n");
             writer.increaseIndent();
-            writer.write("org.gnome.glib.GLib.log(\"java-gi\", org.gnome.glib.LogLevelFlags.LEVEL_WARNING, ite.getCause().toString() + \" in \" + " + methodName + ");\n");
+            writer.write("org.gnome.glib.GLib.log(io.github.jwharm.javagi.Constants.LOG_DOMAIN, org.gnome.glib.LogLevelFlags.LEVEL_WARNING, ite.getCause().toString() + \" in \" + " + methodName + ");\n");
             // Return null
             if (! isVoid) {
                 Type type = returnValue.type;
@@ -251,6 +251,5 @@ public interface Closure extends CallableType {
         }
         writer.decreaseIndent();
         writer.write("}\n");
-        writer.write("\n");
     }
 }
