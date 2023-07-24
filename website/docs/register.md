@@ -28,7 +28,7 @@ When instantiating a new instance of the object, pass the `gtype` field to `GObj
     }
 ```
 
-Now, when you call `MyObject.newInstance()`, you will have a Java object that is also instantiated as a native GObject instance.
+Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
 
 The constructor **must** be a static factory method; a regular constructor that calls `super(gtype, null)` **will not work** correctly.
 
