@@ -68,7 +68,7 @@ The result:
 
 You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`:
 
-| ![Hello World screenshot](https://github.com/jwharm/java-gi-examples/blob/main/images/simple-helloworld.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/images/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/images/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/images/notepad.png) |
+| ![Hello World screenshot](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/simple-helloworld.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
 | [Hello World](https://github.com/jwharm/java-gi-examples/tree/main/HelloWorld) | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
 
