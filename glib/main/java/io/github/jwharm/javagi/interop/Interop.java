@@ -274,7 +274,7 @@ public class Interop {
      * @return the allocated MemorySegment
      */
     public static MemorySegment allocateNativeString(String string, SegmentAllocator allocator) {
-        return string == null || "".equals(string) ? MemorySegment.NULL : allocator.allocateUtf8String(string);
+        return string == null ? MemorySegment.NULL : allocator.allocateUtf8String(string);
     }
     
     /**
