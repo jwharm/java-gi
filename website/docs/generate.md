@@ -1,15 +1,19 @@
 # Building and running the bindings generator
 
-Java-GI publishes pre-built bindings for GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. If you want to generate bindings for other libraries, platforms or versions, follow these steps:
+Java-GI publishes pre-built bindings for GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
 - Clone the Java-GI project from GitHub.
 - Run `./bld all download publish`.
 
-Java-GI uses `bld` (from [Rife2](https://rife2.com/bld)) to build. `bld` is a pure java build tool that is very easy to use. You don't need to install it separately; the included wrapper will download it the first time.
-
 During the build process, the [gircore/gir-files](https://github.com/gircore/gir-files) repository is cloned into the `build/gir-files` folder. The gir-core repository contains regularly updated gir files for GLib, Gtk, GStreamer, LibAdwaita and some other commonly used libraries for Linux, Windows and MacOS. Once downloaded, subsequent builds will run `git pull` instead of `git clone`.
 
 The resulting jar files are located in the `build/dist` folder, and also published in the MavenLocal repository.
+
+## Using `bld`
+
+Java-GI uses `bld` (from [Rife2](https://rife2.com/bld)) to build. You don't need to install it separately; the included wrapper will download it the first time.
+
+`bld` is a pure java build tool that is very easy to use and extend. It is very suitable for Java-GI, because Java-GI is mainly a code generator that is executed during the build process of the language bindings. The entire process is located under the `src/bld` tree and is easy to follow and edit from a Java IDE or debugger.
 
 If you want to build a specific module, run `./bld [modulename] [command]`. Running just `./bld` will display a list of all options. Example usage:
 
@@ -17,7 +21,7 @@ If you want to build a specific module, run `./bld [modulename] [command]`. Runn
 |-----------------------------------------|-----------------------------------------------------------------|
 | `./bld`                                 | Display all available commands                                  |
 | `./bld clean`                           | Clean the build artifacts                                       |
-| `./bld download`                        | Download dependencies                                           |
+| `./bld download`                        | Download dependencies, and clone the gir-files repository       |
 | `./bld glib gtk compile`                | Generate and compile bindings for GLib and Gtk                  |
 | `./bld all compile`                     | Shorthand to compile bindings for all modules                   |
 | `./bld gtk jar jar-javadoc jar-sources` | Create jar, javadoc.jar and sources.jar for Gtk                 |
