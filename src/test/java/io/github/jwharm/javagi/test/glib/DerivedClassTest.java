@@ -61,10 +61,26 @@ public class DerivedClassTest {
         input.setString("test value");
 
         TestObject object = GObject.newInstance(TestObject.gtype);
-        object.setProperty("test-property", input);
-        object.getProperty("test-property", output);
+        object.setProperty("string-property", input);
+        object.getProperty("string-property", output);
 
         assertEquals(input.getString(), output.getString());
+    }
+
+    /**
+     * Write a boolean to a GObject property and read it back
+     */
+    @Test
+    public void writeAndReadBooleanProperty() {
+        Value input = Value.allocate().init(Types.BOOLEAN);
+        Value output = Value.allocate().init(Types.BOOLEAN);
+        input.setBoolean(true);
+
+        TestObject object = GObject.newInstance(TestObject.gtype);
+        object.setProperty("bool-property", input);
+        object.getProperty("bool-property", output);
+
+        assertEquals(input.getBoolean(), output.getBoolean());
     }
 
     /**
@@ -87,16 +103,28 @@ public class DerivedClassTest {
             instanceInitHasRun = true;
         }
 
-        private String testProperty = null;
+        private String stringProperty = null;
 
-        @Property(name="test-property")
-        public String getTestProperty() {
-            return testProperty;
+        @Property(name="string-property")
+        public String getStringProperty() {
+            return stringProperty;
         }
 
-        @Property(name="test-property")
-        public void setTestProperty(String value) {
-            this.testProperty = value;
+        @Property(name="string-property")
+        public void setStringProperty(String value) {
+            this.stringProperty = value;
+        }
+
+        private boolean boolProperty = false;
+
+        @Property(name="bool-property")
+        public boolean getBoolProperty() {
+            return boolProperty;
+        }
+
+        @Property(name="bool-property")
+        public void setBoolProperty(boolean boolProperty) {
+            this.boolProperty = boolProperty;
         }
     }
 }

@@ -40,7 +40,7 @@ public class Properties {
         }
 
         // Infer the ParamSpec from the Java class.
-        if (paramClass.equals(Boolean.class)) {
+        if (paramClass.equals(boolean.class) || paramClass.equals(Boolean.class)) {
             return ParamSpecBoolean.class;
         } else if (paramClass.equals(byte.class) || paramClass.equals(Byte.class)) {
             return ParamSpecChar.class;
