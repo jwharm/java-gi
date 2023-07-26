@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.jwharm.javagi</groupId>
   <artifactId>gtksourceview</artifactId>
-  <version>5.9-0.6.1</version>
+  <version>5.9-0.6.2</version>
   <packaging>pom</packaging>
   <name>gtksourceview</name>
 </project>
