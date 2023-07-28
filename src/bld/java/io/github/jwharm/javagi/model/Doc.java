@@ -20,7 +20,7 @@ public class Doc extends GirElement {
     }
 
     public void generate(SourceWriter writer, boolean signalDeclaration, boolean fullComment) throws IOException {
-        if (contents == null || contents.length() == 0) {
+        if (contents == null || contents.isEmpty()) {
             return;
         }
 
@@ -105,6 +105,11 @@ public class Doc extends GirElement {
                 String deprecatedJavadoc = Javadoc.getInstance().convert(parent.docDeprecated);
                 writeDoc(writer, deprecatedJavadoc, "@deprecated");
             }
+        }
+
+        // VaList parameter = deprecated
+        if (parent instanceof Method m && m.hasVaListParameter()) {
+            writeDoc(writer, "Support for va_list will be dropped in the next release of Java-GI", "@deprecated");
         }
         
         // Property setters

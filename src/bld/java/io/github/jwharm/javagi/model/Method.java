@@ -2,10 +2,8 @@ package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.StringJoiner;
 
 import io.github.jwharm.javagi.generator.Conversions;
-import io.github.jwharm.javagi.generator.Platform;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Method extends GirElement implements CallableType {
@@ -135,7 +133,7 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Deprecation
-        if ("1".equals(deprecated)) {
+        if ("1".equals(deprecated) || hasVaListParameter()) {
             writer.write("@Deprecated\n");
         }
 
@@ -225,6 +223,17 @@ public class Method extends GirElement implements CallableType {
 
         writer.decreaseIndent();
         writer.write("}\n");
+    }
+
+    /**
+     * Check whether the last parameter of this method is of type VaList
+     * @return true when the last parameter of this method is of type VaList
+     */
+    public boolean hasVaListParameter() {
+        if (parameters == null)
+            return false;
+        var lastParam = parameters.parameterList.get(parameters.parameterList.size() - 1);
+        return lastParam.type != null && "VaList".equals(lastParam.type.simpleJavaType);
     }
     
     @Override
