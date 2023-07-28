@@ -198,7 +198,7 @@ public class Conversions {
         }
         if (t.isPrimitive) {
             if ("glong".equals(t.cType) || "gulong".equals(t.cType)) {
-                return "\"windows\".equals(Platform.getRuntimePlatform()) ? ValueLayout.JAVA_LONG : ValueLayout.JAVA_INT";
+                return "ValueLayout.JAVA_INT";
             }
             return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
         }
