@@ -22,6 +22,114 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
  */
 public class Properties {
 
+    /**
+     * Reads the GType of the GParamSpec of a GObject property
+     * @param objectClass the GObject typeclass that has a property installed with the provided name
+     * @param propertyName the name of the property
+     * @return the GType of the GParamSpec of the GObject property, or null if not found
+     */
+    public static Type readPropertyValueType(GObject.ObjectClass objectClass, String propertyName) {
+        ParamSpec pspec = objectClass.findProperty(propertyName);
+        if (pspec == null) {
+            return null;
+        }
+        ParamSpec.ParamSpecClass pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
+        return pclass == null ? null : pclass.readValueType();
+    }
+
+    /**
+     * Sets a property of an object.
+     * @param propertyName the name of the property to set
+     * @param propertyValue the new property propertyValue
+     */
+    public static void setProperty(GObject gobject, String propertyName, Object propertyValue) {
+        GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
+        Type valueType = readPropertyValueType(gclass, propertyName);
+        Value gvalue = Value.allocate().init(valueType);
+        try {
+            ValueUtil.objectToValue(propertyValue, gvalue);
+            gobject.setProperty(propertyName, gvalue);
+        } finally {
+            gvalue.unset();
+        }
+    }
+
+    /**
+     * Gets a property of an object.
+     * @param gobject the object instance
+     * @param propertyName the name of the property to get
+     * @return the property value
+     */
+    public static Object getProperty(GObject gobject, String propertyName) {
+        GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
+        Type valueType = readPropertyValueType(gclass, propertyName);
+        Value gvalue = Value.allocate().init(valueType);
+        try {
+            gobject.getProperty(propertyName, gvalue);
+            return ValueUtil.valueToObject(gvalue);
+        } finally {
+            gvalue.unset();
+        }
+    }
+
+    /**
+     * Creates a new GObject instance of the provided GType and with the provided property values.
+     * @param objectType the GType of the new GObject
+     * @param propertyNamesAndValues pairs of property names and values (Strings and Objects)
+     * @return the newly created GObject instance
+     */
+    public static <T extends GObject> T newGObjectWithProperties(Type objectType, Object... propertyNamesAndValues) {
+        List<String> names = new ArrayList<>();
+        List<Value> values = new ArrayList<>();
+        TypeClass typeClass = TypeClass.ref(objectType);
+
+        try {
+            if (! (typeClass instanceof GObject.ObjectClass objectClass)) {
+                throw new IllegalArgumentException("Type " + GObjects.typeName(objectType) + " is not a GObject class");
+            }
+
+            for (int i = 0; i < propertyNamesAndValues.length; i++) {
+                // Odd number of parameters?
+                if (i == propertyNamesAndValues.length - 1) {
+                    if (propertyNamesAndValues[i] == null) {
+                        // Ignore a closing null parameter (often expected by GObject vararg functions)
+                        break;
+                    }
+                    throw new IllegalArgumentException("Argument list must contain pairs of property names and values");
+                }
+
+                // Get the name of the property
+                if (propertyNamesAndValues[i] instanceof String name) {
+                    names.add(name);
+                } else {
+                    throw new IllegalArgumentException("Property name is not a String: " + propertyNamesAndValues[i]);
+                }
+
+                // The value for the property is a java object, and must be converted to a GValue
+                Object object = propertyNamesAndValues[++i];
+
+                // Read the objectType of GValue that is expected for this property
+                Type valueType = readPropertyValueType(objectClass, name);
+                if (valueType == null) {
+                    throw new IllegalArgumentException("Cannot read objectType for property " + name + " in class " + objectClass);
+                }
+                // Create a GValue and write the object to it
+                Value gvalue = Value.allocate().init(valueType);
+                ValueUtil.objectToValue(object, gvalue);
+                values.add(gvalue);
+            }
+
+            // Create and return the GObject with the property names and values
+            // The cast to T is safe: it will always return the expected GObject-derived objectType
+            @SuppressWarnings("unchecked")
+            T gobject = (T) GObject.newWithProperties(objectType, names.toArray(new String[0]), values.toArray(new Value[0]));
+            return gobject;
+        } finally {
+            typeClass.unref();
+            values.forEach(Value::unset);
+        }
+    }
+
     // Infer the ParamSpec class from the Java class that is used in the getter/setter method.
     private static Class<? extends ParamSpec> inferType(Method method) {
         // Determine the Java class of the property

@@ -7,7 +7,6 @@ import io.github.jwharm.javagi.types.Types;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.glib.Variant;
 import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Bitfield;

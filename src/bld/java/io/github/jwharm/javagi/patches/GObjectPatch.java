@@ -39,9 +39,9 @@ public class GObjectPatch implements Patch {
         inject(repo, "Object", """
             
             /**
-             * Create a new GObject instance of the provided GType.
+             * Creates a new GObject instance of the provided GType.
              * @param objectType the GType of the new GObject
-             * @return the new GObject instance
+             * @return the newly created GObject instance
              */
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
                 var _result = constructNew(objectType, null);
@@ -52,6 +52,33 @@ public class GObjectPatch implements Patch {
                 return _object;
             }
             
+            /**
+             * Creates a new GObject instance of the provided GType and with the provided property values.
+             * @param objectType the GType of the new GObject
+             * @param propertyNamesAndValues pairs of property names and values (Strings and Objects)
+             * @return the newly created GObject instance
+             */
+            public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType, Object... propertyNamesAndValues) {
+                return io.github.jwharm.javagi.types.Properties.newGObjectWithProperties(objectType, propertyNamesAndValues);
+            }
+            
+            /**
+             * Gets a property of an object.
+             * @param propertyName the name of the property to get
+             * @return the property value
+             */
+            public Object getProperty(String propertyName) {
+                return io.github.jwharm.javagi.types.Properties.getProperty(this, propertyName);
+            }
+            
+            /**
+             * Sets a property of an object.
+             * @param propertyName the name of the property to set
+             * @param value the new property value
+             */
+            public void setProperty(String propertyName, Object value) {
+                io.github.jwharm.javagi.types.Properties.setProperty(this, propertyName, value);
+            }
         """);
     }
 }

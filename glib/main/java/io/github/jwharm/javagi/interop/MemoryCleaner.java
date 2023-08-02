@@ -63,7 +63,8 @@ public class MemoryCleaner {
     public static void setFreeFunc(MemorySegment address, String freeFunc) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(cached.owned, cached.references, freeFunc, cached.cleanable));
+            if (cached != null)
+                references.put(address, new Cached(cached.owned, cached.references, freeFunc, cached.cleanable));
         }
     }
 
@@ -75,7 +76,8 @@ public class MemoryCleaner {
     public static void takeOwnership(MemorySegment address) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(true, cached.references, cached.freeFunc, cached.cleanable));
+            if (cached != null)
+                references.put(address, new Cached(true, cached.references, cached.freeFunc, cached.cleanable));
         }
     }
 
@@ -87,7 +89,8 @@ public class MemoryCleaner {
     public static void yieldOwnership(MemorySegment address) {
         synchronized (references) {
             Cached cached = references.get(address);
-            references.put(address, new Cached(false, cached.references, cached.freeFunc, cached.cleanable));
+            if (cached != null)
+                references.put(address, new Cached(false, cached.references, cached.freeFunc, cached.cleanable));
         }
     }
 

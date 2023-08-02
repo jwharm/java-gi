@@ -56,6 +56,7 @@ public class DerivedClassTest {
      */
     @Test
     public void writeAndReadProperty() {
+        // With manually created GValues
         Value input = Value.allocate().init(Types.STRING);
         Value output = Value.allocate().init(Types.STRING);
         input.setString("test value");
@@ -63,8 +64,12 @@ public class DerivedClassTest {
         TestObject object = GObject.newInstance(TestObject.gtype);
         object.setProperty("string-property", input);
         object.getProperty("string-property", output);
-
         assertEquals(input.getString(), output.getString());
+
+        // With convenience methods
+        String input2 = "another test value";
+        object.setProperty("string-property", input2);
+        assertEquals(input2, object.getProperty("string-property"));
     }
 
     /**
@@ -72,15 +77,19 @@ public class DerivedClassTest {
      */
     @Test
     public void writeAndReadBooleanProperty() {
+        // With manually created GValues
         Value input = Value.allocate().init(Types.BOOLEAN);
         Value output = Value.allocate().init(Types.BOOLEAN);
         input.setBoolean(true);
-
         TestObject object = GObject.newInstance(TestObject.gtype);
         object.setProperty("bool-property", input);
         object.getProperty("bool-property", output);
-
         assertEquals(input.getBoolean(), output.getBoolean());
+
+        // With convenience methods
+        boolean input2 = false;
+        object.setProperty("bool-property", input2);
+        assertEquals(input2, object.getProperty("bool-property"));
     }
 
     /**
