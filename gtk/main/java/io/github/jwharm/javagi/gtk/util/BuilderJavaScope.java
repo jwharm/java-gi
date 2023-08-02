@@ -12,6 +12,7 @@ import io.github.jwharm.javagi.gtk.types.Types;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
+import java.util.function.BooleanSupplier;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
@@ -86,7 +87,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
 
             // Signal that returns boolean
             if (method.getReturnType().equals(Boolean.TYPE)) {
-                return new JavaClosure(() -> {
+                return new JavaClosure((BooleanSupplier) () -> {
                     try {
                         return (boolean) method.invoke(currentObject);
                     } catch (Exception e) {
@@ -98,7 +99,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
                 });
             // Signal that returns void
             } else {
-                return new JavaClosure(() -> {
+                return new JavaClosure((Runnable) () -> {
                     try {
                         method.invoke(currentObject);
                     } catch (Exception e) {
