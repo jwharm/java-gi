@@ -21,6 +21,8 @@ public class Method extends GirElement implements CallableType {
     public String visibility = "public";
     public boolean skip = false;
 
+    private String methodSpecification = null;
+
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
                   String throws_, String shadowedBy, String shadows, String movedTo) {
         super(parent);
@@ -106,6 +108,10 @@ public class Method extends GirElement implements CallableType {
     }
 
     public String getMethodSpecification() {
+        if (this.methodSpecification != null) {
+            return this.methodSpecification;
+        }
+
         SourceWriter writer = new SourceWriter(new StringWriter());
 
         try {
@@ -130,7 +136,9 @@ public class Method extends GirElement implements CallableType {
             // StringWriter will never throw IOException
         }
 
-        return writer.toString();
+        // Cache the result for future invocations
+        this.methodSpecification = writer.toString();
+        return this.methodSpecification;
     }
 
     public void generate(SourceWriter writer) throws IOException {
