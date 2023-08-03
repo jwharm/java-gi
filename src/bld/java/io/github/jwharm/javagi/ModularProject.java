@@ -1,5 +1,6 @@
 package io.github.jwharm.javagi;
 
+import rife.bld.BuildCommand;
 import rife.bld.Project;
 
 import java.util.ArrayList;
@@ -38,6 +39,16 @@ public class ModularProject extends Project {
         this.modules_.addAll(projects);
         return this;
     }
+
+    @BuildCommand(value="generate-sources", summary="Generates Java sources from gir files")
+    public void generateSources() throws Exception {
+        for (var project : modules_) {
+            if (project instanceof AbstractProject p) {
+                p.generateSources();
+            }
+        }
+    }
+
 
     @Override
     public void clean() throws Exception {
