@@ -55,22 +55,35 @@ public class Method extends GirElement implements CallableType {
             if ((parent instanceof Interface) && (! (this instanceof Function))) {
                 // Default interface methods
                 writer.write("default ");
+            } else if (this instanceof Constructor) {
+                writer.write("private ");
             } else {
                 // Visibility
                 writer.write(visibility + " ");
             }
 
-            // Static methods (functions)
-            if (this instanceof Function) {
+            // Static methods (functions and constructor helpers)
+            if (this instanceof Function || this instanceof Constructor) {
                 writer.write("static ");
             }
 
             // Return type
-            getReturnValue().writeType(writer, true, true);
+            if (this instanceof Constructor) {
+                writer.write("MemorySegment");
+            } else {
+                getReturnValue().writeType(writer, true, true);
+            }
 
             // Method name
             String methodName = Conversions.toLowerCaseJavaName(name);
-            if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
+
+            // Constructor helper
+            if (this instanceof Constructor) {
+                methodName = "construct" + Conversions.toCamelCase(name, true);
+            }
+
+            // Overriding toString() in a default method is not allowed.
+            if (parent instanceof Interface) {
                 methodName = Conversions.replaceJavaObjectMethodNames(methodName);
             }
             writer.write(" " + methodName + "(");
@@ -128,7 +141,11 @@ public class Method extends GirElement implements CallableType {
         writer.write("\n");
         
         // Documentation
-        if (doc != null) {
+        if (this instanceof Constructor) {
+            writer.write("/**\n");
+            writer.write(" * Helper function for the (@code " + name + "} constructor\n");
+            writer.write(" */\n");
+        } else if (doc != null) {
             doc.generate(writer, false);
         }
 
@@ -213,7 +230,11 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Generate code to process and return the result value
-        returnValue.generate(writer, panamaReturnType);
+        if (this instanceof Constructor) {
+            writer.write("return _result;\n");
+        } else {
+            returnValue.generate(writer, panamaReturnType);
+        }
 
         // End of memory allocation scope
         if (hasScope) {
