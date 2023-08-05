@@ -8,22 +8,22 @@ import io.github.jwharm.javagi.interop.InstanceCache;
 import java.lang.foreign.MemorySegment;
 
 /**
- * Represents a signal connection. With a {@code Signal} object, a signal connection
+ * Represents a signal connection. With a {@code SignalConnection} object, a signal connection
  * can be blocked, unblocked, and disconnected. It is also possible to check if the
  * signal is still connected.
  * @param <T> the type of the signal
  */
-public class Signal<T> {
+public class SignalConnection<T> {
 
     private final GObject instance;
     private final int handlerId;
 
     /**
-     * Create a Signal instance for the provided GObject instance and handler ID
+     * Create a SignalConnection instance for the provided GObject instance and handler ID
      * @param instance the native memory address of the GObject instance
      * @param handlerId the handler ID of the signal
      */
-    public Signal(MemorySegment instance, long handlerId) {
+    public SignalConnection(MemorySegment instance, long handlerId) {
         this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
         this.handlerId = (int) handlerId;
     }
