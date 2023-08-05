@@ -38,7 +38,7 @@ public class Signal extends Method implements Closure {
             writer.write("@Deprecated\n");
         }
 
-        writer.write("public " + (parent instanceof Interface ? "default " : "") + "Signal<" + qualifiedName + "> on" + signalName + "(");
+        writer.write("public " + (parent instanceof Interface ? "default " : "") + "SignalConnection<" + qualifiedName + "> on" + signalName + "(");
         
         // For detailed signals like GObject.notify::..., generate a String parameter to specify the detailed signal
         if (detailed) {
@@ -57,7 +57,7 @@ public class Signal extends Method implements Closure {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
         writer.write(", _arena), handler.toCallback(), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
-        writer.write("    return new Signal<>(handle(), _result);\n");
+        writer.write("    return new SignalConnection<>(handle(), _result);\n");
         writer.write("} catch (Throwable _err) {\n");
         writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
         writer.write("}\n");
