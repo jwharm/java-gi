@@ -198,7 +198,7 @@ public class Properties {
     /**
      * If the provided class defines @Property-annotated getter and/or setter methods,
      * this function will return a class initializer that registers these properties as
-     * a GObject properties and overrides the {@code GObject.getProperty} and
+     * GObject properties and overrides the {@code GObject.getProperty} and
      * {@code setProperty} methods to call the annotated getters and setters.
      * @param cls the class that possibly contains @Property annotations
      * @return a class initalizer that registers the properties

@@ -56,7 +56,7 @@ public class JavaClosure extends Closure {
      * @return the Method reference to the method that implements the SAM
      * @throws IllegalArgumentException if {@code functionalInterfaceClass} is not a functional interface
      */
-    private static Method getSingleMethod(Class<?> functionalInterfaceClass) throws IllegalArgumentException {
+    public static Method getSingleMethod(Class<?> functionalInterfaceClass) throws IllegalArgumentException {
         // Check if the class is not an enum or array
         if (functionalInterfaceClass.isEnum() || functionalInterfaceClass.isArray()) {
             throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface");
