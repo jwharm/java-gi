@@ -79,6 +79,47 @@ public class GObjectPatch implements Patch {
             public void setProperty(String propertyName, Object value) {
                 io.github.jwharm.javagi.types.Properties.setProperty(this, propertyName, value);
             }
+            
+            /**
+             * Connect a callback to a signal for this object. The handler will be called
+             * before the default handler of the signal.
+             *
+             * @param detailedSignal a string of the form "signal-name::detail"
+             * @param callback       the callback to connect
+             * @return a SignalConnection object to track, block and disconnect the signal 
+             *         connection
+             */
+            public <T> SignalConnection<T> connect(String detailedSignal, T callback) {
+                return connect(detailedSignal, callback, false);
+            }
+            
+            /**
+             * Connect a callback to a signal for this object.
+             *
+             * @param detailedSignal a string of the form "signal-name::detail"
+             * @param callback       the callback to connect
+             * @param after          whether the handler should be called before or after
+             *                       the default handler of the signal
+             * @return a SignalConnection object to track, block and disconnect the signal 
+             *         connection
+             */
+            public <T> SignalConnection<T> connect(String detailedSignal, T callback, boolean after) {
+                var closure = new io.github.jwharm.javagi.util.JavaClosure(callback);
+                int handlerId = GObjects.signalConnectClosure(this, detailedSignal, closure, after);
+                return new SignalConnection(handle(), handlerId);
+            }
+            
+            /**
+             * Emits a signal from this object.
+             * 
+             * @param detailedSignal a string of the form "signal-name::detail"
+             * @param params         the parameters to emit for this signal
+             * @return the return value of the signal, or {@code null} if the signal 
+                       has no return value
+             */
+            public Object emit(String detailedSignal, Object... params) {
+                return io.github.jwharm.javagi.types.Signals.emit(this, detailedSignal, params);
+            }
         """);
     }
 }

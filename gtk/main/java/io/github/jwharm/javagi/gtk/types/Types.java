@@ -6,6 +6,8 @@ import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.gtk.util.BuilderJavaScope;
 import io.github.jwharm.javagi.types.Overrides;
 import io.github.jwharm.javagi.types.Properties;
+import io.github.jwharm.javagi.types.Signals;
+
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -202,12 +204,14 @@ public class Types {
             // Chain template class init with user-defined class init function
             Consumer<GObject.ObjectClass> overridesInit = Overrides.overrideClassMethods(cls);
             Consumer<GObject.ObjectClass> propertiesInit = Properties.installProperties(cls);
+            Consumer<GObject.ObjectClass> signalsInit = Signals.installSignals(cls);
             Consumer<GObject.ObjectClass> templateClassInit = getTemplateClassInit(cls, instanceLayout);
             Consumer<GObject.ObjectClass> userDefinedClassInit = getClassInit(cls);
 
-            // Override virtual methods, install properties, and then install
+            // Override virtual methods, install properties and signals, and then install
             // the template before running a user-defined class init.
             Consumer<GObject.ObjectClass> classInit = chain(overridesInit, propertiesInit);
+            classInit = chain(classInit, signalsInit);
             classInit = chain(classInit, templateClassInit);
             classInit = chain(classInit, userDefinedClassInit);
 

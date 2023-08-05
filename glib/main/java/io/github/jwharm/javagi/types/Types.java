@@ -933,6 +933,7 @@ public class Types {
             MemoryLayout classLayout = getClassLayout(cls, typeName);
             Consumer<TC> overridesInit = Overrides.overrideClassMethods(cls);
             Consumer<TC> propertiesInit = Properties.installProperties(cls);
+            Consumer<TC> signalsInit = Signals.installSignals(cls);
             Consumer<TC> classInit = getClassInit(cls);
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Consumer<T> instanceInit = getInstanceInit(cls);
@@ -949,10 +950,11 @@ public class Types {
             // Generate default init function
             if (instanceInit == null) instanceInit = $ -> {};
 
-            // Override virtual methods and install properties before running
+            // Override virtual methods and install properties and signals before running
             // a user-defined class init. We chain the generated initializers
             // (if not null) and default to an empty method _ -> {}.
             Consumer<TC> init = chain(overridesInit, propertiesInit);
+            init = chain(init, signalsInit);
             init = chain(init, classInit);
             classInit = init != null ? init : $ -> {};
 
