@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.util;
 
 import java.lang.foreign.MemorySegment;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.function.BooleanSupplier;
@@ -112,7 +113,15 @@ public class JavaClosure extends Closure {
 
                     // Convert the returned Object to a GValue
                     ValueUtil.objectToValue(result, returnValue);
-
+                } catch (InvocationTargetException e) {
+                    GLib.log(
+                            LOG_DOMAIN,
+                            LogLevelFlags.LEVEL_CRITICAL,
+                            "JavaClosure: Exception in method %s in class %s: %s\n",
+                            method.getName(),
+                            instance == null ? "null" : instance.getClass().getName(),
+                            e.getCause().toString()
+                    );
                 } catch (Exception e) {
                     GLib.log(
                             LOG_DOMAIN,

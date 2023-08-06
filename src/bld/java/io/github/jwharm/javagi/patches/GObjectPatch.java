@@ -57,6 +57,7 @@ public class GObjectPatch implements Patch {
              * @param objectType the GType of the new GObject
              * @param propertyNamesAndValues pairs of property names and values (Strings and Objects)
              * @return the newly created GObject instance
+             * @throws IllegalArgumentException invalid property name
              */
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType, Object... propertyNamesAndValues) {
                 return io.github.jwharm.javagi.types.Properties.newGObjectWithProperties(objectType, propertyNamesAndValues);
@@ -66,6 +67,7 @@ public class GObjectPatch implements Patch {
              * Gets a property of an object.
              * @param propertyName the name of the property to get
              * @return the property value
+             * @throws IllegalArgumentException invalid property name
              */
             public Object getProperty(String propertyName) {
                 return io.github.jwharm.javagi.types.Properties.getProperty(this, propertyName);
@@ -75,6 +77,7 @@ public class GObjectPatch implements Patch {
              * Sets a property of an object.
              * @param propertyName the name of the property to set
              * @param value the new property value
+             * @throws IllegalArgumentException invalid property name
              */
             public void setProperty(String propertyName, Object value) {
                 io.github.jwharm.javagi.types.Properties.setProperty(this, propertyName, value);
@@ -115,7 +118,8 @@ public class GObjectPatch implements Patch {
              * @param detailedSignal a string of the form "signal-name::detail"
              * @param params         the parameters to emit for this signal
              * @return the return value of the signal, or {@code null} if the signal 
-                       has no return value
+             *         has no return value
+             * @throws IllegalArgumentException if a signal with this name is not found for the object
              */
             public Object emit(String detailedSignal, Object... params) {
                 return io.github.jwharm.javagi.types.Signals.emit(this, detailedSignal, params);

@@ -31,7 +31,8 @@ public class Properties {
     public static Type readPropertyValueType(GObject.ObjectClass objectClass, String propertyName) {
         ParamSpec pspec = objectClass.findProperty(propertyName);
         if (pspec == null) {
-            return null;
+            throw new IllegalArgumentException("Cannot find property \"%s\" for type %s\n"
+                    .formatted(propertyName, GObjects.typeName(objectClass.readGType())));
         }
         ParamSpec.ParamSpecClass pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
         return pclass == null ? null : pclass.readValueType();
@@ -41,6 +42,7 @@ public class Properties {
      * Sets a property of an object.
      * @param propertyName the name of the property to set
      * @param propertyValue the new property propertyValue
+     * @throws IllegalArgumentException if a property with this name is not found for the object
      */
     public static void setProperty(GObject gobject, String propertyName, Object propertyValue) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
@@ -59,6 +61,7 @@ public class Properties {
      * @param gobject the object instance
      * @param propertyName the name of the property to get
      * @return the property value
+     * @throws IllegalArgumentException if a property with this name is not found for the object
      */
     public static Object getProperty(GObject gobject, String propertyName) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
@@ -77,6 +80,7 @@ public class Properties {
      * @param objectType the GType of the new GObject
      * @param propertyNamesAndValues pairs of property names and values (Strings and Objects)
      * @return the newly created GObject instance
+     * @throws IllegalArgumentException if a property with this name is not found for the object
      */
     public static <T extends GObject> T newGObjectWithProperties(Type objectType, Object... propertyNamesAndValues) {
         List<String> names = new ArrayList<>();
@@ -110,9 +114,7 @@ public class Properties {
 
                 // Read the objectType of GValue that is expected for this property
                 Type valueType = readPropertyValueType(objectClass, name);
-                if (valueType == null) {
-                    throw new IllegalArgumentException("Cannot read objectType for property " + name + " in class " + objectClass);
-                }
+
                 // Create a GValue and write the object to it
                 Value gvalue = Value.allocate().init(valueType);
                 ValueUtil.objectToValue(object, gvalue);
@@ -313,11 +315,14 @@ public class Properties {
             gclass.overrideGetProperty((object, propertyId, value, pspec) -> {
                 if (propertyId < 1 || propertyId >= getters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Invalid property id %d in %s.getProperty:\n",
+                            "Invalid property id %d in %s.getProperty\n",
                             propertyId, cls.getName());
                     return;
                 }
                 if (getters[propertyId] == null) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "No getter method defined for property \"%s\" in %s\n",
+                            propertyNames.get(propertyId), cls.getName());
                     return;
                 }
                 Object output;
@@ -343,11 +348,14 @@ public class Properties {
             gclass.overrideSetProperty((object, propertyId, value, pspec) -> {
                 if (propertyId < 1 || propertyId >= setters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Invalid property id %d in %s.setProperty:\n",
+                            "Invalid property id %d in %s.setProperty\n",
                             propertyId, cls.getName());
                     return;
                 }
                 if (setters[propertyId] == null) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "No setter method defined for property \"%s\" in %s\n",
+                            propertyNames.get(propertyId), cls.getName());
                     return;
                 }
                 Object input = ValueUtil.valueToObject(value);
