@@ -19,9 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Test a GObject property binding with a transformation closure.
  */
 public class ClosureTest {
-    
+
+    @SuppressWarnings("unused")
     public interface MyInterface {
-        public boolean timesTwo(MemorySegment p1, MemorySegment p2);
+        boolean timesTwo(MemorySegment p1, MemorySegment p2);
     }
 
     @Test
@@ -55,8 +56,6 @@ public class ClosureTest {
         NumObject n1 = GObject.newInstance(NumObject.type);
         NumObject n2 = GObject.newInstance(NumObject.type);
         
-        MyInterface tt = this::timesTwo;
-
         // Create a JavaClosure for the "timesTwo" method
         JavaClosure closure = new JavaClosure((MyInterface) this::timesTwo);
 
@@ -74,7 +73,6 @@ public class ClosureTest {
 
     // The method that is wrapped in a JavaClosure
     public boolean timesTwo(MemorySegment boxed1, MemorySegment boxed2) {
-        System.out.println("Entering tt");
         Value src = new Value(boxed1);
         Value dest = new Value(boxed2);
         dest.setInt(src.getInt() * 2);
