@@ -1,16 +1,15 @@
 package io.github.jwharm.javagi.types;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import io.github.jwharm.javagi.pointer.PointerLong;
 import org.gnome.glib.Quark;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.SignalFlags;
-import org.gnome.gobject.Value;
+import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.annotations.Signal;
 import io.github.jwharm.javagi.base.Out;
@@ -24,11 +23,12 @@ import io.github.jwharm.javagi.util.ValueUtil;
  */
 public class Signals {
 
-    private record SignalDeclaration(String signalName, Type itype, SignalFlags signalFlags, Type returnType, int nParams, Type[] paramTypes) {}
+    private record SignalDeclaration(String signalName, SignalFlags signalFlags, Type returnType, int nParams, Type[] paramTypes) {}
 
     // Convert "CamelCase" to "kebab-case"
     private static String getSignalName(String className) {
-        return className.replaceAll("([a-z0-9])([A-Z])", "$1-$2").toLowerCase().replaceAll("\\.", "");
+        return className.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
+                .toLowerCase().replaceAll("\\.", "");
     }
     
     // Convert the annotation parameters to SignalFlags
@@ -98,20 +98,19 @@ public class Signals {
             if (! iface.isInterface()) {
                 continue;
             }
-            // ... that are annotated with @SignalConnection
+            // ... that are annotated with @Signal
             if (! iface.isAnnotationPresent(Signal.class)) {
                 continue;
             }
             Signal signalAnnotation = iface.getDeclaredAnnotation(Signal.class);
             
             // get the Single Abstract Method of the functional interface
-            Method sam = JavaClosure.getSingleMethod(iface);
+            Method sam = getSingleAbstractMethod(iface);
             
             // signal name
-            String signalName = signalAnnotation.name().isBlank() ? getSignalName(iface.getSimpleName()) : signalAnnotation.name();
-            
-            // GType of the class that declares the signal
-            Type itype = Types.getGType(cls);
+            String signalName = signalAnnotation.name().isBlank()
+                    ? getSignalName(iface.getSimpleName())
+                    : signalAnnotation.name();
             
             // flags
             SignalFlags signalFlags = getFlags(signalAnnotation);
@@ -128,15 +127,16 @@ public class Signals {
             for (int p = 0; p < nParams; p++) {
                 paramTypes[p] = inferType(paramClasses[p]);
             }
-            
+
             // Add the signal to the list
-            signalDeclarations.add(new SignalDeclaration(signalName, itype, signalFlags, returnType, nParams, paramTypes));
+            signalDeclarations.add(new SignalDeclaration(signalName, signalFlags, returnType, nParams, paramTypes));
         }
         
         // Return class initializer method that installs the signals.
         return (gclass) -> {
             for (var sig : signalDeclarations) {
-                GObjects.signalNewv(sig.signalName, sig.itype, sig.signalFlags, null, null, null, sig.returnType, sig.paramTypes);
+                GObjects.signalNewv(sig.signalName, gclass.readGType(), sig.signalFlags,
+                        null, null, null, sig.returnType, sig.paramTypes);
             }
         };
     }
@@ -147,33 +147,106 @@ public class Signals {
      * @param detailedSignal a string of the form "signal-name::detail"
      * @param params the parameters to emit for this signal
      * @return the return value of the signal, or {@code null} if the signal has no return value
+     * @throws IllegalArgumentException if a signal with this name is not found for the object
      */
     public static Object emit(GObject gobject, String detailedSignal, Object... params) {
-        Value[] values = new Value[params.length + 1];
-        
         Type gtype = Types.getGType(gobject.getClass());
-        
-        // Set instance parameter
-        values[0] = Value.allocate().init(gtype);
-        values[0].setObject(gobject);
-
-        // Set other parameters
-        for (int i = 0; i < params.length; i++) {
-            ValueUtil.objectToValue(params[i], values[i+1]);
-        }
-
-        // Allocation return value
-        Value returnValue = Value.allocate();
 
         // Parse the detailed signal name into a signal id and detail quark
         Out<Integer> signalId = new Out<>();
         Quark detailQ = new Quark(0);
-        GObjects.signalParseName(detailedSignal, gtype, signalId, detailQ, false);
+        boolean success = GObjects.signalParseName(detailedSignal, gtype, signalId, detailQ, false);
 
-        // Emit the signal
-        GObjects.signalEmitv(values, signalId.get(), detailQ, returnValue);
+        if (! success) {
+            throw new IllegalArgumentException("Invalid signal \"%s\" for class %s".formatted(detailedSignal, gobject));
+        }
 
-        // Return the result (if any)
-        return ValueUtil.valueToObject(returnValue);
+        // Query the parameter details of the signal
+        SignalQuery query = SignalQuery.allocate();
+        GObjects.signalQuery(signalId.get(), query);
+
+        // Create an array of Types for the parameters
+        // TODO: SignalQuery.readParamTypes() should return Type[]
+        int nParams = query.readNParams();
+        PointerLong typesPtr = query.readParamTypes();
+        Type[] paramTypes = new Type[nParams];
+        for (int p = 0; p < nParams; p++) {
+            paramTypes[p] = new Type(typesPtr.get(p));
+        }
+
+        // Allocate Values array for the instance parameter and other parameters
+        Value[] values = new Value[nParams+1];
+
+        // Allocation return value
+        Value returnValue = Value.allocate();
+        Type returnType = query.readReturnType();
+        if (! Types.NONE.equals(returnType)) {
+            returnValue.init(returnType);
+        }
+
+        try {
+            // Set instance parameter
+            values[0] = Value.allocate().init(gtype);
+            values[0].setObject(gobject);
+
+            // Set other parameters
+            for (int i = 0; i < nParams; i++) {
+                values[i+1] = Value.allocate().init(paramTypes[i]);
+                ValueUtil.objectToValue(params[i], values[i+1]);
+            }
+
+            // Emit the signal
+            GObjects.signalEmitv(values, signalId.get(), detailQ, returnValue);
+
+            // Return the result (if any)
+            return Types.NONE.equals(returnType) ? null : ValueUtil.valueToObject(returnValue);
+
+        } finally {
+            // Cleanup the allocated values
+            for (Value value : values) {
+                if (value != null) {
+                    value.unset();
+                }
+            }
+            returnValue.unset();
+        }
+    }
+
+    /**
+     * Get the single abstract method (SAM) implementation of a class that implements a functional interface.
+     * A functional interface is an interface with exactly one abstract method.
+     * @param functionalInterfaceClass a functional interface
+     * @return the Method reference to the method that implements the SAM
+     * @throws IllegalArgumentException if {@code functionalInterfaceClass} is not a functional interface
+     */
+    public static Method getSingleAbstractMethod(Class<?> functionalInterfaceClass) throws IllegalArgumentException {
+        // Check if the class is not an enum or array
+        if ((! functionalInterfaceClass.isInterface()) || functionalInterfaceClass.isEnum() || functionalInterfaceClass.isArray()) {
+            throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface");
+        }
+
+        // Loop through all declared methods
+        Method samMethod = null;
+        for (Method method : functionalInterfaceClass.getMethods()) {
+            // Check if the method is not static
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            // Check if the method is abstract
+            if (! Modifier.isAbstract(method.getModifiers())) {
+                continue;
+            }
+            // If there is more than one SAM, return null (ambiguous)
+            if (samMethod != null) {
+                throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface: more than one abstract method found.");
+            }
+            samMethod = method;
+        }
+
+        // Check that a SAM exists
+        if (samMethod == null) {
+            throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface: abstract method not found.");
+        }
+        return samMethod;
     }
 }
