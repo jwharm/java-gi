@@ -223,7 +223,7 @@ public class Field extends Variable {
         
         // Arrays with non-fixed size
         if (array != null) {
-            return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
+            return "ValueLayout.ADDRESS.asUnbounded().withName(\"" + this.fieldName + "\")";
         }
         
         // Callbacks
