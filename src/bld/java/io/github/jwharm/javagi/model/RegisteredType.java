@@ -37,7 +37,7 @@ public abstract class RegisteredType extends GirElement {
     public final String javaName;
     public final String parentClass;
     public final String cType;
-    public final String getType;
+    public String getType;
     public final String version;
     public final String qualifiedName;
 
@@ -281,12 +281,12 @@ public abstract class RegisteredType extends GirElement {
         writer.write("public " + javaName + "(MemorySegment address) {\n");
         writer.increaseIndent();
         writer.write("super(address);\n");
-        generateSetFreeFunc(writer, "this");
+        generateSetFreeFunc(writer, "this", null);
         writer.decreaseIndent();
         writer.write("}\n");
     }
 
-    public void generateSetFreeFunc(SourceWriter writer, String identifier) throws IOException {
+    public void generateSetFreeFunc(SourceWriter writer, String identifier, String classname) throws IOException {
         if (! (this instanceof Record || this instanceof Union)) {
             return;
         }
@@ -303,7 +303,19 @@ public abstract class RegisteredType extends GirElement {
 
                 String cIdentifier = Conversions.literal("java.lang.String", method.cIdentifier);
                 writer.write("MemoryCleaner.setFreeFunc(" + identifier + ".handle(), " + cIdentifier + ");\n");
+                return;
             }
+        }
+
+        if (this instanceof Record && getType != null) {
+            writer.write("MemoryCleaner.setFreeFunc(" + identifier + ".handle(), \"g_boxed_free\");\n");
+            writer.write("MemoryCleaner.setBoxedType(" + identifier + ".handle(), ");
+            if (classname != null) {
+                writer.write(classname + ".getType()");
+            } else {
+                writer.write("getType()");
+            }
+            writer.write(");\n");
         }
     }
 

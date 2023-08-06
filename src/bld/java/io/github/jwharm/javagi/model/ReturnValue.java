@@ -115,7 +115,8 @@ public class ReturnValue extends Parameter {
 
             RegisteredType rt = type.girElementInstance;
             if (rt != null) {
-                rt.generateSetFreeFunc(writer, "_instance");
+                String classname = type.qualifiedJavaType;
+                rt.generateSetFreeFunc(writer, "_instance", classname);
             }
 
             writer.decreaseIndent();
