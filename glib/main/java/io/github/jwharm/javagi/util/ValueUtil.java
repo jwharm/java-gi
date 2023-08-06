@@ -33,10 +33,10 @@ public class ValueUtil {
         
         Type type = src.readGType();
         
-        if (type == null) {
+        if (type == null || type.equals(Types.NONE)) {
             return null;
         }
-        
+
         if (type.equals(Types.BOOLEAN)) {
             return src.getBoolean();
         } else if (type.equals(Types.CHAR)) {
