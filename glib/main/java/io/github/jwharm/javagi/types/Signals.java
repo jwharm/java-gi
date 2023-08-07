@@ -19,13 +19,13 @@
 
 package io.github.jwharm.javagi.types;
 
+import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import io.github.jwharm.javagi.pointer.PointerLong;
 import org.gnome.glib.Quark;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
@@ -34,7 +34,6 @@ import io.github.jwharm.javagi.annotations.Signal;
 import io.github.jwharm.javagi.base.Out;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.base.ProxyInstance;
-import io.github.jwharm.javagi.util.JavaClosure;
 import io.github.jwharm.javagi.util.ValueUtil;
 
 /**
@@ -187,11 +186,8 @@ public class Signals {
         // Create an array of Types for the parameters
         // TODO: SignalQuery.readParamTypes() should return Type[]
         int nParams = query.readNParams();
-        PointerLong typesPtr = query.readParamTypes();
-        Type[] paramTypes = new Type[nParams];
-        for (int p = 0; p < nParams; p++) {
-            paramTypes[p] = new Type(typesPtr.get(p));
-        }
+        MemorySegment typesPtr = query.readParamTypes();
+        Type[] paramTypes = Type.fromNativeArray(typesPtr, nParams, false);
 
         // Allocate Values array for the instance parameter and other parameters
         Value[] values = new Value[nParams+1];

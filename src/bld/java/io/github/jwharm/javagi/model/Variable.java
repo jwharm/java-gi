@@ -82,7 +82,7 @@ public class Variable extends GirElement {
             return getAnnotations(array.type, writeAnnotations)
                     + ((array.size(false) != null)
                     ? getArrayType(array.type)
-                    : (pointerForArray ? getPointerType(array.type) : getArrayType(array.type)));
+                    : (pointerForArray ? "java.lang.foreign.MemorySegment" : getArrayType(array.type)));
 
         if (this instanceof Parameter p && p.varargs)
             return "java.lang.Object...";
@@ -104,16 +104,16 @@ public class Variable extends GirElement {
             return "Out<" + (type.isPrimitive ? Conversions.primitiveClassName(type.simpleJavaType) : type.qualifiedJavaType) + ">";
 
         if (type.cType != null && type.cType.endsWith("**"))
-            return getPointerType(type);
+            return "java.lang.foreign.MemorySegment";
 
         if (type.isPrimitive && type.isPointer())
-            return "Pointer" + Conversions.primitiveClassName(type.simpleJavaType);
+            return "java.lang.foreign.MemorySegment";
 
         if (type.isBitfield() && type.isPointer())
-            return "PointerBitfield<" + type.qualifiedJavaType + ">";
+            return "java.lang.foreign.MemorySegment";
 
         if (type.isEnum() && type.isPointer())
-            return "PointerEnumeration<" + type.qualifiedJavaType + ">";
+            return "java.lang.foreign.MemorySegment";
 
         return type.qualifiedJavaType;
     }
@@ -123,28 +123,6 @@ public class Variable extends GirElement {
             return "Out<" + type.qualifiedJavaType + "[]>";
 
         return type.qualifiedJavaType + "[]";
-    }
-
-    private String getPointerType(Type type) {
-        if (type.isEnum())
-            return "PointerEnumeration";
-
-        if (type.isBitfield())
-            return "PointerBitfield";
-
-        if (type.isAliasForPrimitive())
-            return "Pointer" + Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType);
-
-        if (type.isPrimitive)
-            return "Pointer" + Conversions.primitiveClassName(type.qualifiedJavaType);
-
-        if (type.qualifiedJavaType.equals("java.lang.String"))
-            return "PointerString";
-
-        if (type.qualifiedJavaType.equals("java.lang.foreign.MemorySegment"))
-            return "PointerAddress";
-
-        return "PointerProxy<" + type.qualifiedJavaType + ">";
     }
 
     private String getName() {
@@ -171,10 +149,6 @@ public class Variable extends GirElement {
     }
 
     protected String marshalJavaToNative(Type type, String identifier, boolean upcall) {
-        // When ownership is transferred, we must not free the allocated memory -> use global scope
-        String allocator = (this instanceof Parameter p && "full".equals(p.transferOwnership))
-                ? "SegmentAllocator.nativeAllocator(SegmentScope.global())" : "_arena";
-
         if (type.cType != null && type.cType.endsWith("**"))
             return marshalJavaPointerToNative(type, identifier, upcall);
 
@@ -185,7 +159,7 @@ public class Variable extends GirElement {
             return identifier;
 
         if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum()))
-            return identifier + ".handle()";
+            return identifier;
 
         if (type.isBoolean())
             return identifier + " ? 1 : 0";
@@ -226,16 +200,19 @@ public class Variable extends GirElement {
         if (upcall && "java.lang.String".equals(type.qualifiedJavaType))
             return "Interop.allocateNativeString(" + identifier + ", _arena)";
 
-        return identifier + ".handle()";
+        if (upcall && type.girElementInstance != null)
+            return type.girElementInstance.getInteropString(identifier, true);
+
+        return identifier;
     }
 
     private String marshalNativeToJava(String identifier, boolean upcall) {
         if (type != null) {
             if (type.cType != null && type.cType.endsWith("**"))
-                return marshalNativetoJavaPointer(type, identifier);
+                return identifier;
 
             if (type.isPointer() && (type.isPrimitive || type.isBitfield() || type.isEnum()))
-                return marshalNativetoJavaPointer(type, identifier);
+                return identifier;
 
             return marshalNativeToJava(type, identifier, upcall);
         }
@@ -245,7 +222,7 @@ public class Variable extends GirElement {
 
         if (array != null && array.type != null)
             return (array.size(upcall) == null)
-                    ? marshalNativetoJavaPointer(array.type, identifier) : marshalNativeToJavaArray(array, identifier, upcall);
+                    ? identifier : marshalNativeToJavaArray(array, identifier, upcall);
 
         return "null /* unsupported */";
     }
@@ -291,13 +268,11 @@ public class Variable extends GirElement {
         if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType))
             return "Interop.getAddressArrayFrom(" + identifier + ", " + array.size(upcall) + ", " + free + ")";
 
-        if (type.isEnum())
-            return "new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::of)"
-                    + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, " + free + ")";
+        // public static <T> T[] fromIntPointer(MemorySegment address, int length, Class<T> clazz, Function<Integer, T> make)
 
-        if (type.isBitfield())
-            return "new PointerBitfield<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)"
-                    + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, " + free + ")";
+        if (type.isEnum() || type.isBitfield())
+            return "Arrays.fromIntPointer(" + identifier + ", (int) " + array.size(upcall) + ", "
+                    + type.qualifiedJavaType + ".class, " + type.qualifiedJavaType + "::of)";
 
         if (type.isAliasForPrimitive())
             return type.qualifiedJavaType + ".fromNativeArray(" + identifier + ", " + array.size(upcall) + ", " + free + ")";
@@ -307,39 +282,14 @@ public class Variable extends GirElement {
                     + identifier + ", " + array.size(upcall) + ", " + identifier + ".scope(), " + free + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()))
-            return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
-                    + ".toArrayOfStructs((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, "
+            return "Arrays.fromStructPointer(" + identifier + ", (int) " + array.size(upcall) + ", "
+                    + type.qualifiedJavaType + ".class, " + type.constructorName + ", "
                     + type.qualifiedJavaType + ".getMemoryLayout())";
 
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")"
-                + ".toArray((int) " + array.size(upcall) + ", " + type.qualifiedJavaType + ".class, false)";
+        return "Arrays.fromPointer(" + identifier + ", (int) " + array.size(upcall) + ", "
+                + type.qualifiedJavaType + ".class, " + type.constructorName + ")";
     }
 
-    private String marshalNativetoJavaPointer(Type type, String identifier) {
-        if ("java.lang.String".equals(type.qualifiedJavaType))
-            return "new PointerString(" + identifier + ")";
-
-        if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType))
-            return "new PointerAddress(" + identifier + ")";
-
-        if (type.isEnum())
-            return "new PointerEnumeration<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::of)";
-
-        if (type.isBitfield())
-            return "new PointerBitfield<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.qualifiedJavaType + "::new)";
-
-        if (type.isAliasForPrimitive())
-            return "new Pointer" + Conversions.primitiveClassName(type.girElementInstance.type.qualifiedJavaType) + "(" + identifier + ")";
-
-        if (type.isBoolean())
-            return "new PointerBoolean(" + identifier + ")";
-
-        if (type.isPrimitive)
-            return "new Pointer" + Conversions.primitiveClassName(type.simpleJavaType) + "(" + identifier + ")";
-
-        return "new PointerProxy<" + type.qualifiedJavaType + ">(" + identifier + ", " + type.constructorName + ")";
-    }
-    
     public String getGTypeDeclaration() {
         if (array != null) {
             if (array.type != null && "utf8".equals(array.type.name)) {
