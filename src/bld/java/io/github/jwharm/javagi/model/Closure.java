@@ -47,7 +47,7 @@ public interface Closure extends CallableType {
             doc.generate(writer, false);
 
         // Generate run(...) method
-        returnValue.writeType(writer, false, true);
+        returnValue.writeType(writer, true);
         writer.write(" run(");
         if (parameters != null) {
             boolean first = true;
@@ -57,7 +57,7 @@ public interface Closure extends CallableType {
                 }
                 if (!first) writer.write(", ");
                 first = false;
-                p.writeTypeAndName(writer, true);
+                p.writeTypeAndName(writer);
             }
         }
         writer.write(")");
@@ -165,7 +165,7 @@ public interface Closure extends CallableType {
             // Add cast to reflection call
             if (methodToInvoke.endsWith("invoke")) {
                 writer.write("(");
-                returnValue.writeType(writer, false, false);
+                returnValue.writeType(writer, false);
                 writer.write(") ");
             }
         }
@@ -173,7 +173,7 @@ public interface Closure extends CallableType {
         // Call run()
         writer.write(methodToInvoke + "(");
         if (parameters != null) {
-            parameters.marshalNativeToJava(writer);
+            parameters.marshalNativeToJava(methodToInvoke, writer);
         }
         writer.write(");\n");
 
@@ -198,7 +198,7 @@ public interface Closure extends CallableType {
         // Return statement
         if (!isVoid) {
             writer.write("return ");
-            returnValue.marshalJavaToNative(writer, "_result", false, false);
+            returnValue.marshalJavaToNative(writer, "_result");
             writer.write(";\n");
             if (isNullable) {
                 writer.decreaseIndent();

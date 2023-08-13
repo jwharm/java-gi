@@ -234,7 +234,7 @@ public class Parameter extends Variable {
         // Generate pointer allocation
         if (isOutParameter() && array != null && array.size(false) != null && "1".equals(callerAllocates)) {
             writer.write("MemorySegment _" + name + "Pointer = (MemorySegment) ");
-            marshalJavaToNative(writer, name + ".get()", false, false);
+            marshalJavaToNative(writer, name + ".get()");
             writer.write(";\n");
         } else if (isOutParameter() || (isAliasForPrimitive() && type.isPointer())) {
             writer.write("MemorySegment _" + name + "Pointer = _arena.allocate(" + Conversions.getValueLayoutPlain(type) + ");\n");
@@ -243,7 +243,7 @@ public class Parameter extends Variable {
         // Array length parameter: generate local variable that contains the length
         // array length
         if (isArrayLengthParameter()) {
-            writeTypeAndName(writer, false);
+            writeTypeAndName(writer);
             writer.write (" = ");
             if (isOutParameter()) {
                 writer.write("new Out<>();\n");
@@ -371,7 +371,7 @@ public class Parameter extends Variable {
                 }
             }
             if (array != null) {
-                writeType(writer, false, true);
+                writeType(writer, true);
                 writer.write(" _" + name + "Out = new Out<>(");
                 marshalNativeToJava(writer, name, true);
                 writer.write(");\n");
@@ -386,7 +386,7 @@ public class Parameter extends Variable {
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = Conversions.getValueLayoutPlain(type);
-                String identifier = marshalJavaToNative(type, "_" + name + "Out.get()", true);
+                String identifier = marshalJavaToNative(type, "_" + name + "Out.get()");
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
                     identifier = "_" + name + "Out.get()";
                     if (type.isBoolean()) identifier += " ? 1 : 0";

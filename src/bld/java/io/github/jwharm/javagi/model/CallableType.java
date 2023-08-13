@@ -46,6 +46,7 @@ public interface CallableType {
         if (getParameters() != null) {
             if (getParameters().parameterList.stream().anyMatch(
                     p -> (p.array != null)
+                            || (p.type != null && p.type.isActuallyAnArray())
                             || (p.type != null && "java.lang.String".equals(p.type.qualifiedJavaType))
                             || (p.isOutParameter())
                             || (p.isAliasForPrimitive() && p.type.isPointer())

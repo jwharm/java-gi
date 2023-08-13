@@ -90,14 +90,25 @@ public class Field extends Variable {
 
         // Generate getter method
         if (callback == null) {
+
+            // To read from ...** fields, you must provide the length of the array.
+            boolean isArray = type != null && type.isActuallyAnArray();
+
             writer.write("\n");
             writer.write("/**\n");
             writer.write(" * Read the value of the field {@code " + this.fieldName + "}\n");
+            if (isArray) {
+                writer.write(" * @param length the number of " + this.fieldName + " to read\n");
+            }
             writer.write(" * @return The value of the field {@code " + this.fieldName + "}\n");
             writer.write(" */\n");
             writer.write("public ");
-            writeType(writer, true, true);
-            writer.write(" " + getter + "() {\n");
+            writeType(writer, true);
+            writer.write(" " + getter + "(");
+            if (isArray) {
+                writer.write("int length");
+            }
+            writer.write(") {\n");
 
             // Read the memory segment of an embedded field from the struct (not a pointer)
             if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
@@ -128,7 +139,7 @@ public class Field extends Variable {
         writer.write(" * @param " + this.name + " The new value for the field {@code " + this.fieldName + "}\n");
         writer.write(" */\n");
         writer.write("public void " + setter + "(");
-        writeTypeAndName(writer, false);
+        writeTypeAndName(writer);
         writer.write(") {\n");
         writer.write("    var _arena = SegmentAllocator.nativeAllocator(getAllocatedMemorySegment().scope());\n");
         writer.write("    getMemoryLayout()\n");
@@ -138,7 +149,7 @@ public class Field extends Variable {
         if (checkNull()) {
             writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
         }
-        marshalJavaToNative(writer, this.name, false, false);
+        marshalJavaToNative(writer, this.name);
         if (checkNull()) {
             writer.write(")");
         }

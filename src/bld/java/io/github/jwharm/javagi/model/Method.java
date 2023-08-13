@@ -92,7 +92,7 @@ public class Method extends GirElement implements CallableType {
             if (this instanceof Constructor) {
                 writer.write("MemorySegment");
             } else {
-                getReturnValue().writeType(writer, true, true);
+                getReturnValue().writeType(writer, true);
             }
 
             // Method name
@@ -111,7 +111,7 @@ public class Method extends GirElement implements CallableType {
 
             // Parameters
             if (getParameters() != null) {
-                getParameters().generateJavaParameters(writer, false);
+                getParameters().generateJavaParameters(writer);
             }
             writer.write(")");
 
@@ -143,7 +143,7 @@ public class Method extends GirElement implements CallableType {
 
             // Parameters
             if (getParameters() != null) {
-                getParameters().generateJavaParameterTypes(writer, false, false);
+                getParameters().generateJavaParameterTypes(writer, false);
             }
             writer.write(")");
 

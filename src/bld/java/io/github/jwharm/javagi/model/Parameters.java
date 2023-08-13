@@ -33,7 +33,7 @@ public class Parameters extends GirElement {
         super(parent);
     }
 
-    public void generateJavaParameters(SourceWriter writer, boolean pointerForArray) throws IOException {
+    public void generateJavaParameters(SourceWriter writer) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
             if (p.isInstanceParameter() || p.isUserDataParameter()
@@ -43,11 +43,11 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.writeTypeAndName(writer, pointerForArray);
+            p.writeTypeAndName(writer);
         }
     }
 
-    public void generateJavaParameterTypes(SourceWriter writer, boolean pointerForArray, boolean writeAnnotations) throws IOException {
+    public void generateJavaParameterTypes(SourceWriter writer, boolean writeAnnotations) throws IOException {
         int counter = 0;
         for (Parameter p : parameterList) {
             if (p.isInstanceParameter() || p.isUserDataParameter()
@@ -57,7 +57,7 @@ public class Parameters extends GirElement {
             if (counter++ > 0) {
                 writer.write(", ");
             }
-            p.writeType(writer, pointerForArray, writeAnnotations);
+            p.writeType(writer, writeAnnotations);
         }
     }
 
@@ -108,7 +108,7 @@ public class Parameters extends GirElement {
 
             // Custom interop
             } else {
-                p.marshalJavaToNative(writer, p.name, false, false);
+                p.marshalJavaToNative(writer, p.name);
             }
 
             // Closing parentheses for null-check
@@ -124,10 +124,13 @@ public class Parameters extends GirElement {
         }
     }
 
-    public void marshalNativeToJava(SourceWriter writer) throws IOException {
+    public void marshalNativeToJava(String methodToInvoke, SourceWriter writer) throws IOException {
         boolean first = true;
 
-        for (Parameter p : parameterList) {
+        for (int i = 0; i < parameterList.size(); i++) {
+            Parameter p = parameterList.get(i);
+            boolean last = i == parameterList.size() - 1;
+
             if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter()) {
                 continue;
             }
@@ -146,6 +149,13 @@ public class Parameters extends GirElement {
             if (p.isOutParameter()) {
                 writer.write("_" + p.name + "Out");
                 continue;
+            }
+
+            // Invoking a method using reflection calls Method.invoke() which is variadic.
+            // If the last parameter is an array, that will trigger a compiler warning, because
+            // it is unsure if the array should be treated as varargs or not
+            if (last && p.array != null && methodToInvoke.endsWith("invoke")) {
+                writer.write("(Object) ");
             }
 
             p.marshalNativeToJava(writer, p.name, true);

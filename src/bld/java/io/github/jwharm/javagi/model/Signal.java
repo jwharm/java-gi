@@ -106,7 +106,7 @@ public class Signal extends Method implements Closure {
             }
 
             writer.write("public " + (parent instanceof Interface ? "default " : ""));
-            returnValue.writeType(writer, true, true);
+            returnValue.writeType(writer, true);
             writer.write(" emit" + signalName + "(");
             if (detailed) {
                 writer.write("@Nullable String detail");
@@ -116,7 +116,7 @@ public class Signal extends Method implements Closure {
                 if (detailed) {
                     writer.write(", ");
                 }
-                parameters.generateJavaParameters(writer, false);
+                parameters.generateJavaParameters(writer);
             }
 
             writer.write(") {\n");

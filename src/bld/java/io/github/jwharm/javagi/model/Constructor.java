@@ -51,7 +51,7 @@ public class Constructor extends Method {
         // Parameters
         writer.write("(");
         if (parameters != null) {
-            parameters.generateJavaParameters(writer, false);
+            parameters.generateJavaParameters(writer);
         }
         writer.write(")");
 
@@ -110,7 +110,7 @@ public class Constructor extends Method {
         // Parameters
         writer.write("(");
         if (parameters != null) {
-            parameters.generateJavaParameters(writer, false);
+            parameters.generateJavaParameters(writer);
         }
         writer.write(")");
 

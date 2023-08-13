@@ -49,7 +49,7 @@ public class Property extends Variable {
         }
         writer.write((parent instanceof Interface) ? "default " : "public ");
         writer.write("S " + Conversions.toLowerCaseJavaName(name) + "(");
-        writeTypeAndName(writer, false);
+        writeTypeAndName(writer);
         writer.write(") {\n");
         writer.increaseIndent();
         writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");

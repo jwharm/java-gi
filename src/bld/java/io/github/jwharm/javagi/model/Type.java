@@ -154,6 +154,11 @@ public class Type extends GirElement {
         return cType != null && (cType.endsWith("*") || cType.endsWith("gpointer"));
     }
 
+    public boolean isActuallyAnArray() {
+        return cType != null && cType.endsWith("**")
+                && (! (parent instanceof Parameter p && p.isOutParameter()));
+    }
+
     /**
      * All classes and interfaces (and aliases for classes and interfaces) have a gtype
      * @return whether it's possible to read a gtype for this type

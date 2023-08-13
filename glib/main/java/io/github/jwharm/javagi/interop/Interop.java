@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.interop;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -339,6 +340,29 @@ public class Interop {
     }
 
     /**
+     * Read an array of Strings from a null-terminated array in native memory
+     * @param address address of the memory segment
+     * @param free if the strings and the array must be freed
+     * @return Array of Strings
+     */
+    public static String[] getStringArrayFrom(MemorySegment address, boolean free) {
+        ArrayList<String> result = new ArrayList<>();
+        long offset = 0;
+        while (true) {
+            MemorySegment ptr = address.get(ValueLayout.ADDRESS, offset);
+            if (MemorySegment.NULL.equals(ptr)) {
+                break;
+            }
+            result.add(ptr.getUtf8String(0));
+            offset += ValueLayout.ADDRESS.byteSize();
+        }
+        if (free) {
+            GLib.free(address);
+        }
+        return result.toArray(new String[0]);
+    }
+
+    /**
      * Read an array of pointers with the given length from native memory
      * @param address address of the memory segment
      * @param length length of the array
@@ -357,6 +381,29 @@ public class Interop {
             GLib.free(address);
         }
         return result;
+    }
+
+    /**
+     * Read an array of pointers from a null-terminated array in native memory
+     * @param address address of the memory segment
+     * @param free if the addresses and the array must be freed
+     * @return Array of pointers
+     */
+    public static MemorySegment[] getAddressArrayFrom(MemorySegment address, boolean free) {
+        ArrayList<MemorySegment> result = new ArrayList<>();
+        long offset = 0;
+        while (true) {
+            MemorySegment ptr = address.get(ValueLayout.ADDRESS, offset);
+            if (MemorySegment.NULL.equals(ptr)) {
+                break;
+            }
+            result.add(ptr);
+            offset += ValueLayout.ADDRESS.byteSize();
+        }
+        if (free) {
+            GLib.free(address);
+        }
+        return result.toArray(new MemorySegment[0]);
     }
 
     /**
@@ -391,6 +438,15 @@ public class Interop {
             GLib.free(address);
         }
         return array;
+    }
+
+    public static byte[] getByteArrayFrom(MemorySegment address, SegmentScope scope, boolean free) {
+        // Find the null byte
+        long idx = 0;
+        while (address.get(ValueLayout.JAVA_BYTE, idx) != 0) {
+            idx++;
+        }
+        return getByteArrayFrom(address, idx, scope, free);
     }
 
     /**

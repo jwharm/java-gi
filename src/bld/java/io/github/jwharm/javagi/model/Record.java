@@ -215,7 +215,7 @@ public class Record extends Class {
                 if (! first) {
                     writer.write(", ");
                 }
-                field.writeTypeAndName(writer, false);
+                field.writeTypeAndName(writer);
                 first = false;
             }
             writer.write(") {\n");
