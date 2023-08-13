@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.types;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -184,10 +183,8 @@ public class Signals {
         GObjects.signalQuery(signalId.get(), query);
 
         // Create an array of Types for the parameters
-        // TODO: SignalQuery.readParamTypes() should return Type[]
         int nParams = query.readNParams();
-        MemorySegment typesPtr = query.readParamTypes();
-        Type[] paramTypes = Type.fromNativeArray(typesPtr, nParams, false);
+        Type[] paramTypes = query.readParamTypes();
 
         // Allocate Values array for the instance parameter and other parameters
         Value[] values = new Value[nParams+1];

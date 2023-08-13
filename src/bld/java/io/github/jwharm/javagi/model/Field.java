@@ -61,7 +61,27 @@ public class Field extends Variable {
         }
         return false;
     }
-    
+
+    /**
+     * Return the parameter that is referred to by index in a GIR attribute.
+     * For example: array length="2" refers to the third field (counting from zero)
+     * for the length of that particular array.
+     */
+    public Field getFieldAt(String indexAttr) {
+        if (indexAttr == null) {
+            return null;
+        }
+        // Parse the value of the 'length' attribute
+        int index;
+        try {
+            index = Integer.parseInt(indexAttr);
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
+        Record record = (Record) parent;
+        return record.fieldList.get(index);
+    }
+
     /**
      * Generates a read...() and write...() method for a field in (the MemoryLayout of) a C struct,
      * or an override...() method for a function pointer.

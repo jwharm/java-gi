@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.generator.Conversions;
+
 public class Array extends GirElement {
 
     public final String cType, length, zeroTerminated, fixedSize;
@@ -40,7 +42,7 @@ public class Array extends GirElement {
         if (fixedSize != null) {
             return fixedSize;
         }
-        // the "length" attribute refers to another parameter, which contains the length
+        // the "length" attribute refers to another parameter or field, which contains the length
         if (length != null) {
             if (parent instanceof Parameter p) {
                 Parameter lp = p.getParameterAt(length);
@@ -55,6 +57,11 @@ public class Array extends GirElement {
                         return lp.name + ".getValue()";
                     }
                     return lp.name;
+                }
+            } else if (parent instanceof Field f) {
+                Field lf = f.getFieldAt(length);
+                if (lf != null && lf.type != null && (! lf.type.isPointer())) {
+                    return "read" + Conversions.toCamelCase(lf.name, true) + "()";
                 }
             }
         }
