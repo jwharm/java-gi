@@ -514,6 +514,22 @@ public class Interop {
     }
 
     /**
+     * Read a null-terminated array of integers from native memory
+     * @param address address of the memory segment
+     * @param scope the memory scope
+     * @param free if the array must be freed
+     * @return array of integers
+     */
+    public static int[] getIntegerArrayFrom(MemorySegment address, SegmentScope scope, boolean free) {
+        // Find the null value
+        long idx = 0;
+        while (address.get(ValueLayout.JAVA_INT, idx) != 0) {
+            idx++;
+        }
+        return getIntegerArrayFrom(address, idx, scope, free);
+    }
+
+    /**
      * Read an array of longs with the given length from native memory
      * @param address address of the memory segment
      * @param length length of the array

@@ -274,7 +274,7 @@ public class Variable extends GirElement {
                 return type.qualifiedJavaType + ".fromNativeArray(" + identifier + ", " + free + ")";
 
             if (type.isPrimitive)
-                return "Interop.get" + Conversions.primitiveClassName(array.type.simpleJavaType) + "ArrayFrom("
+                return "Interop.get" + Conversions.primitiveClassName(type.simpleJavaType) + "ArrayFrom("
                         + identifier + ", " + identifier + ".scope(), " + free + ")";
 
             if (type.girElementInstance instanceof Record && (! type.isPointer()) &&

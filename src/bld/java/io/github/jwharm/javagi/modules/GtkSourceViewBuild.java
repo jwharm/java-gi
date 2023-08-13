@@ -29,7 +29,7 @@ public class GtkSourceViewBuild extends AbstractProject {
             .source("cairo-1.0.gir", "org.freedesktop.cairo", null, false, new CairoPatch())
             .source("freetype2-2.0.gir", "org.freedesktop.freetype", null, false, null)
             .source("HarfBuzz-0.0.gir", "org.freedesktop.harfbuzz", null, false, new HarfBuzzPatch())
-            .source("Pango-1.0.gir", "org.gnome.pango", "https://docs.gtk.org/Pango/", false, null)
+            .source("Pango-1.0.gir", "org.gnome.pango", "https://docs.gtk.org/Pango/", false, new PangoPatch())
             .source("PangoCairo-1.0.gir", "org.gnome.pango.cairo", "https://docs.gtk.org/Pango/", false, null)
             .source("GdkPixbuf-2.0.gir", "org.gnome.gdkpixbuf", "https://docs.gtk.org/gdk-pixbuf/", false, null)
             .source("Gdk-4.0.gir", "org.gnome.gdk", "https://docs.gtk.org/gdk4/", false, null)

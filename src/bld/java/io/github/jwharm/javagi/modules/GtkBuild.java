@@ -41,7 +41,7 @@ public class GtkBuild extends AbstractProject {
             .source("freetype2-2.0.gir", "org.freedesktop.freetype", null, false, null)
 
             .source("HarfBuzz-0.0.gir", "org.freedesktop.harfbuzz", null, true, new HarfBuzzPatch())
-            .source("Pango-1.0.gir", "org.gnome.pango", "https://docs.gtk.org/Pango/", true, null)
+            .source("Pango-1.0.gir", "org.gnome.pango", "https://docs.gtk.org/Pango/", true, new PangoPatch())
             .source("PangoCairo-1.0.gir", "org.gnome.pango.cairo", "https://docs.gtk.org/Pango/", true, null)
             .source("GdkPixbuf-2.0.gir", "org.gnome.gdkpixbuf", "https://docs.gtk.org/gdk-pixbuf/", true, null)
             .source("Gdk-4.0.gir", "org.gnome.gdk", "https://docs.gtk.org/gdk4/", true, null)
