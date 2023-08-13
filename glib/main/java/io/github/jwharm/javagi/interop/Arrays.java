@@ -1,13 +1,11 @@
 package io.github.jwharm.javagi.interop;
 
 import io.github.jwharm.javagi.base.Proxy;
-import org.gnome.glib.GLib;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 

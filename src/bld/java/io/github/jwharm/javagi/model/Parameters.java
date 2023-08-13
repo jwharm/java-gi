@@ -154,8 +154,10 @@ public class Parameters extends GirElement {
             // Invoking a method using reflection calls Method.invoke() which is variadic.
             // If the last parameter is an array, that will trigger a compiler warning, because
             // it is unsure if the array should be treated as varargs or not
-            if (last && p.array != null && methodToInvoke.endsWith("invoke")) {
-                writer.write("(Object) ");
+            if (last && methodToInvoke.endsWith("invoke")) {
+                if ((p.array != null) || (p.type != null && p.type.isActuallyAnArray())) {
+                    writer.write("(Object) ");
+                }
             }
 
             p.marshalNativeToJava(writer, p.name, true);

@@ -196,6 +196,9 @@ public class Variable extends GirElement {
     }
 
     private String marshalNativeToJava(String identifier, boolean upcall) {
+        if (type != null && type.cType != null && type.cType.equals("gfloat**"))
+            return "null /* unsupported */";
+
         if (type != null) {
             if (type.isActuallyAnArray())
                 return marshalNativeToJavaArray(type, null, identifier);
