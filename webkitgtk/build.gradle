@@ -1,0 +1,70 @@
+import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
+import io.github.jwharm.javagi.patches.*;
+
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    implementation project(':glib')
+    implementation project(':gtk')
+    implementation 'com.github.jwharm:cairo-java-bindings:1.16.0'
+}
+
+version = "2.41-${version}"
+
+tasks.register('generateSources') {
+    def MODULE_INFO = """
+        module org.gnome.webkitgtk {
+            requires static org.jetbrains.annotations;
+            requires transitive org.gnome.gtk;
+            %s
+        }
+        """
+    
+    new GenerateSourcesOperation()
+        .sourceDirectory(new File(girFilesLocation).toPath())
+        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
+        
+        .source('GLib-2.0.gir', 'org.gnome.glib', 'https://docs.gtk.org/glib/', false, new GLibPatch())
+        .source('GObject-2.0.gir', 'org.gnome.gobject', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
+        .source('Gio-2.0.gir', 'org.gnome.gio', 'https://docs.gtk.org/gio/', false, new GioPatch())
+        .source('GModule-2.0.gir', 'org.gnome.gmodule', null, false, null)
+
+        .source('cairo-1.0.gir', 'org.freedesktop.cairo', null, false, new CairoPatch())
+        .source('freetype2-2.0.gir', 'org.freedesktop.freetype', null, false, null)
+        .source('HarfBuzz-0.0.gir', 'org.freedesktop.harfbuzz', null, false, new HarfBuzzPatch())
+        .source('Pango-1.0.gir', 'org.gnome.pango', 'https://docs.gtk.org/Pango/', false, new PangoPatch())
+        .source('PangoCairo-1.0.gir', 'org.gnome.pango.cairo', 'https://docs.gtk.org/Pango/', false, null)
+        .source('GdkPixbuf-2.0.gir', 'org.gnome.gdkpixbuf', 'https://docs.gtk.org/gdk-pixbuf/', false, null)
+        .source('Gdk-4.0.gir', 'org.gnome.gdk', 'https://docs.gtk.org/gdk4/', false, null)
+        .source('Graphene-1.0.gir', 'org.gnome.graphene', 'https://developer-old.gnome.org/graphene/stable/', false, null)
+        .source('Gsk-4.0.gir', 'org.gnome.gsk', null, false, null)
+        .source('Gtk-4.0.gir', 'org.gnome.gtk', 'https://docs.gtk.org/gtk4/', false, new GtkPatch())
+
+        .source('Soup-3.0.gir', 'org.gnome.soup', 'https://libsoup.org/libsoup-3.0/', true, null)
+        .source('JavaScriptCore-6.0.gir', 'org.gnome.webkit.jsc', 'https://webkitgtk.org/reference/jsc-glib/stable/', true, null)
+        .source('WebKitWebProcessExtension-6.0.gir', 'org.gnome.webkit.wpe', 'https://webkitgtk.org/reference/webkit2gtk-web-extension/stable/', true, null)
+        .source('WebKit-6.0.gir', 'org.gnome.webkit', 'https://webkitgtk.org/reference/webkit2gtk/stable/', true, new WebkitGtkPatch())
+
+        .moduleInfo(MODULE_INFO)
+        .execute()
+}
+
+tasks.named('javadoc') {
+    options.linksOffline('https://jwharm.github.io/java-gi/glib', project(':glib').javadoc.outputDirectory.getAbsolutePath())
+    options.linksOffline('https://jwharm.github.io/java-gi/gtk', project(':gtk').javadoc.outputDirectory.getAbsolutePath())
+}
+
+tasks.named('compileJava') {
+    dependsOn generateSources
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = name
+            version = version
+        }
+    }
+}

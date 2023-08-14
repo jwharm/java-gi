@@ -1,0 +1,85 @@
+/* Common build settings for Java-GI modules:
+ * 
+ * - Load java-library and maven-publish plugins
+ * - Set maven repositories
+ * - Load common dependencies
+ * - Set group and Java-GI version number
+ * - Set JDK version number
+ * - Enable preview features
+ * - Set common POM metadata
+ */
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compileOnly 'org.jetbrains:annotations:24.+'
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+group = 'io.github.jwharm.javagi'
+version = '0.6.2'
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(20)
+    }
+}
+
+sourceSets.main.java.srcDirs += ['build/generated/sources/java-gi']
+
+tasks.named('compileJava') {
+    options.compilerArgs += '--enable-preview'
+}
+
+tasks.named('compileTestJava') {
+    options.compilerArgs += '--enable-preview'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += "--enable-preview"
+    jvmArgs += "--enable-native-access=ALL-UNNAMED"
+}
+
+tasks.named('javadoc') {
+    options.addStringOption('source', '20')
+    options.addBooleanOption('-enable-preview', true)
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                groupId = 'io.github.jwharm.javagi'
+                description = 'Java language bindings for GObject-Introspection-based libraries'
+                url = 'https://jwharm.github.io/java-gi/'
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License, version 2.1'
+                        url = 'https://www.gnu.org/licenses/lgpl-2.1.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'jwharm'
+                        name = 'Jan-Willem Harmannij'
+                        url = 'https://github.com/jwharm'
+                    }
+                }
+            }
+        }
+    }
+}

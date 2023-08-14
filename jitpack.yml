@@ -1,5 +1,0 @@
-jdk:
-  - openjdk20
-
-install:
-  - ./bld all download publish

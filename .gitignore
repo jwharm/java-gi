@@ -1,73 +1,100 @@
+##############################
+## Java
+##############################
+.mtj.tmp/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+##############################
+## Maven
+##############################
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+##############################
+## Gradle
+##############################
+bin/
+build/
 .gradle
-.DS_Store
-build
-lib/bld/**
-!lib/bld/bld-wrapper.properties
-!lib/bld/bld-wrapper.jar
-lib/compile/
-lib/runtime/
-lib/standalone/
-lib/test/
+.gradletasknamecache
+gradle-app.setting
+!gradle-wrapper.jar
 
-# IDEA ignores
-
-# User-specific
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
-
-# AWS User-specific
-.idea/**/aws.xml
-
-# Generated files
-.idea/**/contentModel.xml
-
-# Sensitive or high-churn files
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
-
-# Gradle
-.idea/**/gradle.xml
-
-# Mongo Explorer plugin
-.idea/**/mongoSettings.xml
-
-# mpeltonen/sbt-idea plugin
+##############################
+## IntelliJ
+##############################
+out/
+.idea/
 .idea_modules/
+*.iml
+*.ipr
+*.iws
 
-# JIRA plugin
-atlassian-ide-plugin.xml
-
-# Cursive Clojure plugin
-.idea/replstate.xml
-
-# SonarLint plugin
-.idea/sonarlint/
-
-# Editor-based Rest Client
-.idea/httpRequests
-
-# Eclipse files
+##############################
+## Eclipse
+##############################
+.settings/
+bin/
+tmp/
+.metadata
 .classpath
 .project
-.settings/
-.metadata/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
 
-# BlueJ files
-*.ctxt
+##############################
+## NetBeans
+##############################
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
 
-# JVM crash logs
+##############################
+## Visual Studio Code
+##############################
+.vscode/
+.code-workspace
+
+##############################
+## OS X
+##############################
+.DS_Store
+
+##############################
+## JVM crash logs
+##############################
 hs_err_pid*
 
-# Site files from mkdocs
+##############################
+## Site files from mkdocs
+##############################
 website/site/
 
-# Compiled GResource files
+##############################
+## Compiled GResource files
+##############################
 src/test/resources/*.gresource

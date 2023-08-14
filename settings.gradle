@@ -1,0 +1,8 @@
+rootProject.name = 'java-gi'
+
+include 'glib'
+include 'gtk'
+include 'gstreamer'
+include 'adwaita'
+include 'gtksourceview'
+include 'webkitgtk'
