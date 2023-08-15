@@ -63,7 +63,7 @@ public class ClosureTest {
         Binding binding = n1.bindPropertyFull("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
 
         // Set the "num" property of n1 to 10
-        n1.set("num", 10);
+        n1.setProperty("num", 10);
 
         // The "num" property of n2 should now be n1 times two
         assertEquals(20, n2.getNum());
@@ -84,7 +84,7 @@ public class ClosureTest {
         Binding binding = n1.bindPropertyFull("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
 
         // Set the "num" property of n1 to 10
-        n1.set("num", -25);
+        n1.setProperty("num", -25);
 
         // The "num" property of n2 should now be n1 times two
         assertEquals(-50, n2.getNum());
