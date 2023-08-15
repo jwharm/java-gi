@@ -47,6 +47,11 @@ tasks.named('compileTestJava') {
 }
 
 tasks.named('test') {
+    // Don't run tests in Github action. The native libraries aren't installed.
+    if (System.getenv("CI") != null || System.getenv("JITPACK") != null) {
+        enabled = false
+    }
+
     useJUnitPlatform()
     jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
