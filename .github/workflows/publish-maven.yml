@@ -24,17 +24,27 @@ jobs:
         with:
           java-version: 20
           distribution: 'temurin'
-      - name: Checkout
+      - name: Checkout gir-files repository
         uses: actions/checkout@v3
-      - name: Build Project and Publish Maven Packages
-        run: ./bld all download publish
+        with:
+          repository: 'gircore/gir-files'
+          path: 'gir-files'
+      - name: Checkout java-gi repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'jwharm/java-gi'
+          path: 'java-gi'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Run build with Gradle Wrapper
+        run: java-gi/gradlew build
       - name: Build Site
-        working-directory: website/
+        working-directory: java-gi/website/
         run: mkdocs build
       - name: Create Site Artifact
         run: |
-          mv website/site site
-          mv build/javadoc/* site/
+          mv java-gi/website/site site
+          mv java-gi/build/javadoc/* site/
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
