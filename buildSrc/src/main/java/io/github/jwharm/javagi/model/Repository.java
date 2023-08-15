@@ -94,15 +94,20 @@ public class Repository extends GirElement {
                 writer.write("switch (Platform.getRuntimePlatform()) {\n");
                 writer.increaseIndent();
                 namespace.sharedLibraries.forEach((platform, libraryName) -> {
+                    // Remove path from library name
+                    String libFilename = libraryName;
+                    if (libraryName.contains("/")) {
+                        libFilename = libFilename.substring(libFilename.lastIndexOf("/") + 1);
+                    }
                     try {
-                        if (libraryName.contains(",")) {
+                        if (libFilename.contains(",")) {
                             writer.write("case \"" + platform.name + "\" -> {\n");
-                            for (String libName : libraryName.split(",")) {
+                            for (String libName : libFilename.split(",")) {
                                 writer.write("    LibLoad.loadLibrary(\"" + libName + "\");\n");
                             }
                             writer.write("}\n");
                         } else {
-                            writer.write("case \"" + platform.name + "\" -> LibLoad.loadLibrary(\"" + libraryName + "\");\n");
+                            writer.write("case \"" + platform.name + "\" -> LibLoad.loadLibrary(\"" + libFilename + "\");\n");
                         }
                     } catch (IOException ignored) {
                     }
@@ -172,7 +177,7 @@ public class Repository extends GirElement {
                 for (String libraryName : namespace.sharedLibrary.split(",")) {
                     if (libraryName.contains("/")) {
                         // Strip path from library name
-                        writer.write(" {@code " + libraryName.substring(libraryName.lastIndexOf("/")) + "}");
+                        writer.write(" {@code " + libraryName.substring(libraryName.lastIndexOf("/") + 1) + "}");
                     } else {
                         writer.write(" {@code " + libraryName + "}");
                     }
