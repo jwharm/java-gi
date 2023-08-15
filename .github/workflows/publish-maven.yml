@@ -37,14 +37,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Run build with Gradle Wrapper
+        working-directory: java-gi/
         run: ./gradlew build
       - name: Build Site
-        working-directory: website/
+        working-directory: java-gi/website/
         run: mkdocs build
       - name: Create Site Artifact
         run: |
-          mv website/site site
-          mv build/javadoc/* site/
+          mv java-gi/website/site site
+          mv java-gi/build/javadoc/* site/
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
