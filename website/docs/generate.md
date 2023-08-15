@@ -2,30 +2,17 @@
 
 Java-GI publishes pre-built bindings for GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
-- Clone the Java-GI project from GitHub.
-- Run `./bld all download publish`.
+- Clone the Java-GI project (`jwharm/java-gi`) and the GIR input files (`gircore/gir-files`) from GitHub
+- Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
 
-During the build process, the [gircore/gir-files](https://github.com/gircore/gir-files) repository is cloned into the `build/gir-files` folder. The gir-core repository contains regularly updated gir files for GLib, Gtk, GStreamer, LibAdwaita and some other commonly used libraries for Linux, Windows and MacOS. Once downloaded, subsequent builds will run `git pull` instead of `git clone`.
+```shell
+git clone https://github.com/gircore/gir-files.git
+git clone https://github.com/jwharm/java-gi.git
+cd java-gi
+./gradlew build
+```
 
-The resulting jar files are located in the `build/dist` folder, and also published in the MavenLocal repository.
-
-## Using `bld`
-
-Java-GI uses `bld` (from [Rife2](https://rife2.com/bld)) to build. You don't need to install it separately; the included wrapper will download it the first time.
-
-`bld` is a pure java build tool that is very easy to use and extend. It is very suitable for Java-GI, because Java-GI is mainly a code generator that is executed during the build process of the language bindings. The entire process is located under the `src/bld` tree and is easy to follow and edit from a Java IDE or debugger.
-
-If you want to build a specific module, run `./bld [modulename] [command]`. Running just `./bld` will display a list of all options. Example usage:
-
-| Command                                 | Result                                                          |
-|-----------------------------------------|-----------------------------------------------------------------|
-| `./bld`                                 | Display all available commands                                  |
-| `./bld clean`                           | Clean the build artifacts                                       |
-| `./bld download`                        | Download dependencies, and clone the gir-files repository       |
-| `./bld glib gtk compile`                | Generate and compile bindings for GLib and Gtk                  |
-| `./bld all compile`                     | Shorthand to compile bindings for all modules                   |
-| `./bld gtk jar jar-javadoc jar-sources` | Create jar, javadoc.jar and sources.jar for Gtk                 |
-| `./bld glib gstreamer publish`          | Publish jar, javadoc.jar and sources.jar for GLib and GStreamer |
+The gir-files repository contains regularly updated gir files that Java-GI generates bindings from. If you clone this repository in another location, update the `girFilesLocation` path in `gradle.properties` accordingly.
 
 ## Generating bindings for other libraries
 
@@ -33,12 +20,8 @@ First of all, install the GObject-introspection (gir) files of the library you w
 
 Alternatively, in most Linux distributions, the gir files are usually installed with a development package, postfixed with "-dev" or "-devel". For example, the Gtk gir files on Fedora are installed by the "gtk4-devel" package. All installed gir files can normally be found in `/usr/share/gir-1.0`. However, this is not the preferred method to obtain a gir file. Distributions often patch libraries, impacting the gir file too. It's better to generate the gir file from the upstream release package. Be sure to download the release package for an actual release, and not a random snapshot.
 
-Once the gir file is available, you can add a module to Java-GI for it (replace "xxx" with the library name).
+Once the gir file is available, copy it into the `gir-files` folder under the correct platform subfolder (linux, windows or macos).
 
-- Add a new `XxxBuild` class in the `src/bld/java/io/github/jwharm/javagi/modules` folder (you can use the existing classes as examples). Change the input- and output-paths to the correct locations.
+Now you can add a module to Java-GI for the library. Simply copy one of the existing module folders to a new folder, add it to `settings.gradle`, and modify the `build.gradle` file to suit your needs.
 
-- Add a build command for your library to the `JavaGIBuild` class (located in the parent folder). This is a simple method, annotated with `@BuildCommand`, that adds your `XxxBuild` class to the list of modules that will be built.
-
-Run `./bld xxx publish` to generate bindings, compile the classes, create jar, javadoc-jar and sources-jar artifacts, and publish them in maven-local. (They can also be found in the `build/dist` directory.)
-
-If you encounter any problems or errors, check the generated Java source code in the `build/generated` directory for issues. When neccessary, you can patch the introspection data. To do this, create a `XxxPatch` class implementing `PatchSet` in the folder `src/bld/java/io/github/jwharm/javagi/patches` and add it to the `source()` line in the module build class. You can use the other patches as examples.
+If you encounter any problems or errors, check the generated Java source code in the `build/generated/java-gi` directory for issues. When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add it to the `source()` line in the module build class. You can use the other patches as examples.
