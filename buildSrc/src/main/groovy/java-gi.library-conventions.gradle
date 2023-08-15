@@ -50,6 +50,10 @@ tasks.named('test') {
     useJUnitPlatform()
     jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
+    // Configure library path for Arch, Fedora, Debian/Ubuntu, and MacOS
+    jvmArgs += "-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib"
+    // Uncomment on MacOS:
+    // jvmArgs += "-XstartOnFirstThread"
 }
 
 tasks.named('javadoc') {
