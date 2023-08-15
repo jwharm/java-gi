@@ -53,6 +53,7 @@ tasks.register('generateSources') {
 
 tasks.named('javadoc') {
     options.linksOffline('https://jwharm.github.io/java-gi/glib', project(':glib').javadoc.outputDirectory.getAbsolutePath())
+    dependsOn ':glib:javadoc'
 }
 
 tasks.named('compileJava') {
