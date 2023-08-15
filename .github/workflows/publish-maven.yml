@@ -45,12 +45,12 @@ jobs:
       - name: Create Site Artifact
         run: |
           mv java-gi/website/site site
-          mv java-gi/glib/build/docs/javadoc/* site/
-          mv java-gi/gtk/build/docs/javadoc/* site/
-          mv java-gi/gstreamer/build/docs/javadoc/* site/
-          mv java-gi/adwaita/build/docs/javadoc/* site/
-          mv java-gi/gtksourceview/build/docs/javadoc/* site/
-          mv java-gi/webkitgtk/build/docs/javadoc/* site/
+          mv java-gi/glib/build/docs/javadoc site/glib
+          mv java-gi/gtk/build/docs/javadoc site/gtk
+          mv java-gi/gstreamer/build/docs/javadoc site/gstreamer
+          mv java-gi/adwaita/build/docs/javadoc site/adwaita
+          mv java-gi/gtksourceview/build/docs/javadoc site/gtksourceview
+          mv java-gi/webkitgtk/build/docs/javadoc site/webkitgtk
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
