@@ -28,7 +28,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.6.2'
+version = '0.7-SNAPSHOT'
 
 tasks.register('generateSources') {
     GenerateSourcesOperation.packageNames([
@@ -89,7 +89,7 @@ tasks.named('test') {
     // Configure library path for Arch, Fedora, Debian/Ubuntu, and MacOS
     jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib'
     // Uncomment on MacOS:
-    jvmArgs += '-XstartOnFirstThread'
+    // jvmArgs += '-XstartOnFirstThread'
 }
 
 tasks.named('javadoc') {
