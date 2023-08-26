@@ -10,5 +10,8 @@ tasks.named('generateSources') {
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
         .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', new GLibPatch())
+        .source('GObject-2.0.gir', 'https://docs.gtk.org/glib/', new GObjectPatch())
+        .source('Gio-2.0.gir', 'https://docs.gtk.org/glib/', new GioPatch())
+        .source('GModule-2.0.gir', 'https://docs.gtk.org/glib/', null)
         .execute()
 }
