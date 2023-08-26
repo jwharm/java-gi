@@ -71,6 +71,7 @@ sourceSets.main.java.srcDirs += ['build/generated/sources/java-gi']
 
 tasks.named('compileJava') {
     options.compilerArgs += '--enable-preview'
+    dependsOn generateSources
 }
 
 tasks.named('compileTestJava') {

@@ -23,10 +23,6 @@ tasks.named('generateSources') {
         .execute()
 }
 
-tasks.named('compileJava') {
-    dependsOn generateSources
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
