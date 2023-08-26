@@ -99,14 +99,7 @@ public @Nullable java.lang.String getIconName() {
 
 ![Javadoc screenshot](images/javadoc.png)
 
-The Javadoc is also published online:
-
-- [GLib](https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
-- [Gtk](https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
-- [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adwaita/module-summary.html)
-- [GtkSourceView](https://jwharm.github.io/java-gi/gtksourceview/org.gnome.gtksourceview/module-summary.html)
-- [WebkitGtk](https://jwharm.github.io/java-gi/webkitgtk/org.gnome.webkitgtk/module-summary.html)
-- [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
+The Javadoc is also published [online](https://jwharm.github.io/java-gi/javadoc).
 
 ### Classes and Interfaces
 

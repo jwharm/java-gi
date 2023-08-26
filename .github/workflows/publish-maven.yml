@@ -54,7 +54,7 @@ jobs:
       - name: Create Site Artifact
         run: |
           mv java-gi/website/site site
-          ls java-gi/modules | xargs -I % mv java-gi/modules/%/build/docs/javadoc site/%
+          mv java-gi/build/docs/javadoc site/javadoc
 
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1

@@ -13,22 +13,9 @@ dependencies {
 version = "4.10-${version}"
 
 tasks.named('generateSources') {
-    def MODULE_INFO = """
-        module org.gnome.gtk {
-            requires static org.jetbrains.annotations;
-            requires transitive org.gnome.glib;
-            requires transitive org.freedesktop.cairo;
-            exports io.github.jwharm.javagi.gtk.annotations;
-            exports io.github.jwharm.javagi.gtk.types;
-            exports io.github.jwharm.javagi.gtk.util;
-            %s
-        }
-        """
-    
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-
         .source('HarfBuzz-0.0.gir', null, new HarfBuzzPatch())
         .source('Pango-1.0.gir', 'https://docs.gtk.org/Pango/', new PangoPatch())
         .source('PangoCairo-1.0.gir', 'https://docs.gtk.org/Pango/', null)
@@ -37,14 +24,7 @@ tasks.named('generateSources') {
         .source('Graphene-1.0.gir', 'https://developer-old.gnome.org/graphene/stable/', null)
         .source('Gsk-4.0.gir', null, null)
         .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', new GtkPatch())
-
-        .moduleInfo(MODULE_INFO)
         .execute()
-}
-
-tasks.named('javadoc') {
-    options.linksOffline('https://jwharm.github.io/java-gi/glib', project(':glib').javadoc.outputDirectory.getAbsolutePath())
-    dependsOn ':glib:javadoc'
 }
 
 tasks.named('compileJava') {

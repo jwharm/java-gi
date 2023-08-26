@@ -1,0 +1,30 @@
+/* The top-level project is used to generate javadoc.
+ */
+
+plugins {
+    id 'java-library'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(20)
+    }
+}
+
+// Disable jar for top-level project
+tasks.named('jar') {
+    enabled = false
+}
+
+// Generate javadoc for all modules
+tasks.named('javadoc', Javadoc) {
+    options.addStringOption('source', '20')
+    options.addBooleanOption('-enable-preview', true)
+    options.addStringOption('Xdoclint:none', '-quiet')
+    source subprojects.collect {
+        it.sourceSets.main.allJava
+    }
+    classpath = files(subprojects.collect {
+        it.sourceSets.main.compileClasspath
+    })
+}

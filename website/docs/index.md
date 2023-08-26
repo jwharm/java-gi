@@ -33,19 +33,7 @@ For these libraries, pre-built Java bindings are available from JitPack.io. Cons
 
 ## API documentation
 
-Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI, the complete Javadoc pages are available online:
-
-* Javadoc for [GLib](https://jwharm.github.io/java-gi/glib/org.gnome.glib/module-summary.html)
-    
-* Javadoc for [Gtk](https://jwharm.github.io/java-gi/gtk/org.gnome.gtk/module-summary.html)
-    
-* Javadoc for [Adwaita](https://jwharm.github.io/java-gi/adwaita/org.gnome.adwaita/module-summary.html)
-    
-* Javadoc for [GtkSourceView](https://jwharm.github.io/java-gi/gtksourceview/org.gnome.gtksourceview/module-summary.html)
-
-* Javadoc for [WebkitGtk](https://jwharm.github.io/java-gi/webkitgtk/org.gnome.webkitgtk/module-summary.html)
-
-* Javadoc for [GStreamer](https://jwharm.github.io/java-gi/gstreamer/org.freedesktop.gstreamer/module-summary.html)
+Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI, the complete Javadoc pages are available [online](https://jwharm.github.io/java-gi/javadoc).
 
 JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1).
 

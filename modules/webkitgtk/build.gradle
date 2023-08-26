@@ -14,32 +14,14 @@ dependencies {
 version = "2.41-${version}"
 
 tasks.named('generateSources') {
-    def MODULE_INFO = """
-        module org.gnome.webkitgtk {
-            requires static org.jetbrains.annotations;
-            requires transitive org.gnome.gtk;
-            %s
-        }
-        """
-    
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-
         .source('Soup-3.0.gir', 'https://libsoup.org/libsoup-3.0/', null)
         .source('JavaScriptCore-6.0.gir', 'https://webkitgtk.org/reference/jsc-glib/stable/', null)
         .source('WebKitWebProcessExtension-6.0.gir', 'https://webkitgtk.org/reference/webkit2gtk-web-extension/stable/', null)
         .source('WebKit-6.0.gir', 'https://webkitgtk.org/reference/webkit2gtk/stable/', new WebkitGtkPatch())
-
-        .moduleInfo(MODULE_INFO)
         .execute()
-}
-
-tasks.named('javadoc') {
-    options.linksOffline('https://jwharm.github.io/java-gi/glib', project(':glib').javadoc.outputDirectory.getAbsolutePath())
-    options.linksOffline('https://jwharm.github.io/java-gi/gtk', project(':gtk').javadoc.outputDirectory.getAbsolutePath())
-    dependsOn ':glib:javadoc'
-    dependsOn ':gtk:javadoc'
 }
 
 tasks.named('compileJava') {

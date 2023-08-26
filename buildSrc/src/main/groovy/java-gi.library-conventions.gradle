@@ -61,7 +61,6 @@ tasks.register('generateSources') {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
     toolchain {
         languageVersion = JavaLanguageVersion.of(20)
@@ -90,13 +89,13 @@ tasks.named('test') {
     // Configure library path for Arch, Fedora, Debian/Ubuntu, and MacOS
     jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib'
     // Uncomment on MacOS:
-    // jvmArgs += '-XstartOnFirstThread'
+    jvmArgs += '-XstartOnFirstThread'
 }
 
 tasks.named('javadoc') {
-    options.addStringOption('source', '20')
-    options.addBooleanOption('-enable-preview', true)
-    options.addStringOption('Xdoclint:none', '-quiet')
+    // Do not generate javadoc for individual modules.
+    // Javadoc is generated once for alle modules together (see top-level build file).
+    enabled = false
 }
 
 publishing {

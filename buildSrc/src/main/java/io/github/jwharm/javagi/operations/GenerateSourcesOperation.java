@@ -27,9 +27,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Generates Java sources from GIR files
@@ -41,7 +39,6 @@ public class GenerateSourcesOperation {
     private Path outputDirectory = null;
     private final List<Source> sources = new ArrayList<>();
     private static Map<String, String> packageNames = null;
-    private String moduleInfo;
 
     /**
      * Performs the JavaGI operation.
@@ -67,14 +64,6 @@ public class GenerateSourcesOperation {
                 namespaces.add(repository.namespace.packageName);
             }
         }
-
-        // Write module-info.java
-        Files.writeString(outputDirectory().resolve("module-info.java"), moduleInfo()
-                .formatted(namespaces.stream()
-                        .map(s -> "exports " + s + ";")
-                        .collect(Collectors.joining("\n    "))
-                )
-        );
     }
 
     public Module parse(Platform platform) throws ParserConfigurationException, SAXException {
@@ -152,17 +141,6 @@ public class GenerateSourcesOperation {
     }
 
     /**
-     * Provides the contents for the module-info.java file.
-     * @param moduleInfo the module-info contents
-     * @return this operation instance
-     * @since 0.5
-     */
-    public GenerateSourcesOperation moduleInfo(String moduleInfo) {
-        this.moduleInfo = moduleInfo;
-        return this;
-    }
-
-    /**
      * Provides the sources for which bindings are generated.
      * @param sources the sources
      * @return this operation instance
@@ -234,14 +212,5 @@ public class GenerateSourcesOperation {
      */
     public Path outputDirectory() {
         return outputDirectory;
-    }
-
-    /**
-     * Retrieves the provided module-info.java contents.
-     * @return the provided module-info.java contents
-     * @since 0.5
-     */
-    public String moduleInfo() {
-        return moduleInfo;
     }
 }

@@ -11,6 +11,7 @@ include 'adwaita'
 include 'gtksourceview'
 include 'webkitgtk'
 
+// All child projects are located in the modules/ directory
 rootProject.children.each {project ->
     String projectDirName = "modules/$project.name"
     project.projectDir = new File(settingsDir, projectDirName)
