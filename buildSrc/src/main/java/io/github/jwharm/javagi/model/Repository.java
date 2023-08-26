@@ -31,12 +31,13 @@ public class Repository extends GirElement {
     public final Module module;
     public Namespace namespace = null;
     public Package package_ = null;
-    public boolean generate;
+    public final boolean generate;
     public String urlPrefix;
 
-    public Repository(Module module) {
+    public Repository(Module module, boolean generate) {
         super(null);
         this.module = module;
+        this.generate = generate;
     }
 
     /**
@@ -214,10 +215,9 @@ public class Repository extends GirElement {
     }
 
     public Repository copy() {
-        var copy = new Repository(module);
+        var copy = new Repository(module, generate);
         copy.namespace = namespace.copy();
         copy.package_ = package_;
-        copy.generate = generate;
         return copy;
     }
 }

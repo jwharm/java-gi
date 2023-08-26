@@ -79,19 +79,18 @@ public class GenerateSourcesOperation {
 
     public Module parse(Platform platform) throws ParserConfigurationException, SAXException {
         Module module = new Module(platform);
-        GirParser parser = new GirParser(module);
         Path girPath = sourceDirectory().resolve(platform.name().toLowerCase());
         if (! girPath.toFile().exists()) {
             System.out.println("Not found: " + girPath);
             return null;
         }
+        GirParser parser = new GirParser(girPath, module);
 
         // Parse the GI files into Repository objects
         for (var source : sources()) {
             try {
                 // Parse the file
-                Repository r = parser.parse(girPath.resolve(source.fileName));
-                r.generate = source.generate;
+                Repository r = parser.parse(source.fileName);
                 r.urlPrefix = source.urlPrefix;
 
                 // Add the repository to the module
@@ -120,10 +119,9 @@ public class GenerateSourcesOperation {
      * Source gir file to parse
      * @param fileName the filename of the gir file
      * @param urlPrefix URL to prefix before links to images
-     * @param generate true when classes must be generated, false when this Source is only needed as a dependency
      * @param patch patch to apply to a parsed gi repository before generating classes
      */
-    public record Source(String fileName, String urlPrefix, boolean generate, Patch patch) {}
+    public record Source(String fileName, String urlPrefix, Patch patch) {}
 
     /**
      * Provides the source directory that will be used for the JavaGI operation.
@@ -192,11 +190,10 @@ public class GenerateSourcesOperation {
      * Create a new Source
      * @param file the gir filename
      * @param urlPrefix the prefix for image link URLs
-     * @param generate whether to generate bindings for this source
      * @param patches patch to apply before generating bindings
      */
-    public GenerateSourcesOperation source(String file, String urlPrefix, boolean generate, Patch patches) {
-        sources(new Source(file, urlPrefix, generate, patches));
+    public GenerateSourcesOperation source(String file, String urlPrefix, Patch patches) {
+        sources(new Source(file, urlPrefix, patches));
         return this;
     }
 

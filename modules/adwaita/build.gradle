@@ -26,23 +26,7 @@ tasks.named('generateSources') {
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
 
-        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', false, new GLibPatch())
-        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
-        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', false, new GioPatch())
-        .source('GModule-2.0.gir', null, false, null)
-
-        .source('cairo-1.0.gir', null, false, new CairoPatch())
-        .source('freetype2-2.0.gir', null, false, null)
-        .source('HarfBuzz-0.0.gir', null, false, new HarfBuzzPatch())
-        .source('Pango-1.0.gir', 'https://docs.gtk.org/Pango/', false, new PangoPatch())
-        .source('PangoCairo-1.0.gir', 'https://docs.gtk.org/Pango/', false, null)
-        .source('GdkPixbuf-2.0.gir', 'https://docs.gtk.org/gdk-pixbuf/', false, null)
-        .source('Gdk-4.0.gir', 'https://docs.gtk.org/gdk4/', false, null)
-        .source('Graphene-1.0.gir', 'https://developer-old.gnome.org/graphene/stable/', false, null)
-        .source('Gsk-4.0.gir', null, false, null)
-        .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', false, new GtkPatch())
-
-        .source('Adw-1.gir', 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/', true, new AdwaitaPatch())
+        .source('Adw-1.gir', 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/', new AdwaitaPatch())
 
         .moduleInfo(MODULE_INFO)
         .execute()

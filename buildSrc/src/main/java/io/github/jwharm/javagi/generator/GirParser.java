@@ -43,8 +43,10 @@ import java.nio.file.Path;
  */
 public class GirParser extends DefaultHandler {
 
+    private final Path sourceDir;
     private final SAXParser parser;
     private final Module module;
+    private boolean generate = true;
 
     private StringBuilder chars;
     private GirElement current;
@@ -191,9 +193,18 @@ public class GirParser extends DefaultHandler {
                 current = newImplements;
             }
             case "include" -> {
-                Include newInclude = new Include(current, attr.getValue("name"));
+                Include newInclude = new Include(current, attr.getValue("name"), attr.getValue("version"));
                 current.includeList.add(newInclude);
                 current = newInclude;
+
+                // Recursively parse included gir files
+                try {
+                    GirParser parser = new GirParser(sourceDir, module);
+                    parser.generate = false;
+                    parser.parse(newInclude.name + "-" + newInclude.version + ".gir");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
             case "instance-parameter" -> {
                 InstanceParameter newInstanceParameter = new InstanceParameter(current, attr.getValue("name"),
@@ -274,7 +285,7 @@ public class GirParser extends DefaultHandler {
                 current = newRecord;
             }
             case "repository" -> {
-                current = new Repository(module);
+                current = new Repository(module, this.generate);
             }
             case "return-value" -> {
                 ReturnValue newReturnValue = new ReturnValue(current, attr.getValue("transfer-ownership"),
@@ -351,11 +362,14 @@ public class GirParser extends DefaultHandler {
 
     /**
      * Setup a new XML parser to process a GIR file
+     * @param sourceDir folder that contains the GIR files
+     * @param module module to add repositories into
      * @throws ParserConfigurationException Indicates a serious SAX configuration error. Should not happen.
      * @throws SAXException Generic SAX error. Should not happen here.
      */
-    public GirParser(Module module) throws ParserConfigurationException, SAXException {
+    public GirParser(Path sourceDir, Module module) throws ParserConfigurationException, SAXException {
         parser = SAXParserFactory.newInstance().newSAXParser();
+        this.sourceDir = sourceDir;
         this.module = module;
     }
 
@@ -363,12 +377,13 @@ public class GirParser extends DefaultHandler {
      * Parse the provided GIR file and create a tree of GirElement instances that
      * represents the GI repository.
      *
-     * @param source Location of the GIR file
+     * @param girFile Filename of the GIR file
      * @return The GI repository tree of GirElement instances
      * @throws IOException  If an error is encountered while reading the GIR file
      * @throws SAXException If an error is encountered while parsing the XML in the GIR file
      */
-    public Repository parse(Path source) throws IOException, SAXException {
+    public Repository parse(String girFile) throws IOException, SAXException {
+        Path source = sourceDir.resolve(girFile);
         if (!Files.exists(source)) {
             throw new IOException("Specified GIR file does not exist: " + source);
         }

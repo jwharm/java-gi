@@ -24,16 +24,11 @@ tasks.named('generateSources') {
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
 
-        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', false, new GLibPatch())
-        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
-        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', false, new GioPatch())
-        .source('GModule-2.0.gir', null, false, null)
-
-        .source('Gst-1.0.gir', null, true, new GstPatch())
-        .source('GstBase-1.0.gir', null, true, null)
-        .source('GstAudio-1.0.gir', null, true, new GstAudioPatch())
-        .source('GstPbutils-1.0.gir', null, true, null)
-        .source('GstVideo-1.0.gir', null, true, null)
+        .source('Gst-1.0.gir', null, new GstPatch())
+        .source('GstBase-1.0.gir', null, null)
+        .source('GstAudio-1.0.gir', null, new GstAudioPatch())
+        .source('GstPbutils-1.0.gir', null, null)
+        .source('GstVideo-1.0.gir', null, null)
 
         .moduleInfo(MODULE_INFO)
         .execute()

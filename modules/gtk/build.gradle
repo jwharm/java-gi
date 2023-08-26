@@ -29,23 +29,14 @@ tasks.named('generateSources') {
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
 
-        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', false, new GLibPatch())
-        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
-        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', false, new GioPatch())
-        .source('GModule-2.0.gir', null, false, null)
-
-        // Do not generate cairo and freetype gir files: These classes are included from cairo-java-bindings
-        .source('cairo-1.0.gir', null, false, new CairoPatch())
-        .source('freetype2-2.0.gir', null, false, null)
-
-        .source('HarfBuzz-0.0.gir', null, true, new HarfBuzzPatch())
-        .source('Pango-1.0.gir', 'https://docs.gtk.org/Pango/', true, new PangoPatch())
-        .source('PangoCairo-1.0.gir', 'https://docs.gtk.org/Pango/', true, null)
-        .source('GdkPixbuf-2.0.gir', 'https://docs.gtk.org/gdk-pixbuf/', true, null)
-        .source('Gdk-4.0.gir', 'https://docs.gtk.org/gdk4/', true, null)
-        .source('Graphene-1.0.gir', 'https://developer-old.gnome.org/graphene/stable/', true, null)
-        .source('Gsk-4.0.gir', null, true, null)
-        .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', true, new GtkPatch())
+        .source('HarfBuzz-0.0.gir', null, new HarfBuzzPatch())
+        .source('Pango-1.0.gir', 'https://docs.gtk.org/Pango/', new PangoPatch())
+        .source('PangoCairo-1.0.gir', 'https://docs.gtk.org/Pango/', null)
+        .source('GdkPixbuf-2.0.gir', 'https://docs.gtk.org/gdk-pixbuf/', null)
+        .source('Gdk-4.0.gir', 'https://docs.gtk.org/gdk4/', null)
+        .source('Graphene-1.0.gir', 'https://developer-old.gnome.org/graphene/stable/', null)
+        .source('Gsk-4.0.gir', null, null)
+        .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', new GtkPatch())
 
         .moduleInfo(MODULE_INFO)
         .execute()

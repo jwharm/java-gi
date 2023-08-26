@@ -21,8 +21,11 @@ package io.github.jwharm.javagi.model;
 
 public class Include extends GirElement {
 
-    public Include(GirElement parent, String name) {
+    public final String version;
+
+    public Include(GirElement parent, String name, String version) {
         super(parent);
         this.name = name;
+        this.version = version;
     }
 }
