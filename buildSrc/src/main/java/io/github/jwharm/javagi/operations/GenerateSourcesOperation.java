@@ -91,10 +91,16 @@ public class GenerateSourcesOperation {
             try {
                 // Parse the file
                 Repository r = parser.parse(source.fileName);
-                r.urlPrefix = source.urlPrefix;
 
-                // Add the repository to the module
-                module.repositories.put(r.namespace.name, r);
+                // Check if this one has already been parsed
+                if (module.repositories.containsKey(r.namespace.name)) {
+                    r = module.repositories.get(r.namespace.name);
+                } else {
+                    // Add the repository to the module
+                    module.repositories.put(r.namespace.name, r);
+                }
+
+                r.urlPrefix = source.urlPrefix;
 
                 // Flag unsupported va_list methods so they will not be generated
                 module.flagVaListFunctions();
