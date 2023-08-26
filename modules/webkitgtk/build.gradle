@@ -11,8 +11,6 @@ dependencies {
     api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
-version = "2.41-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
@@ -22,13 +20,4 @@ tasks.named('generateSources') {
         .source('WebKitWebProcessExtension-6.0.gir', 'https://webkitgtk.org/reference/webkit2gtk-web-extension/stable/', null)
         .source('WebKit-6.0.gir', 'https://webkitgtk.org/reference/webkit2gtk/stable/', new WebkitGtkPatch())
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }

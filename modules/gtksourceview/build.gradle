@@ -11,21 +11,10 @@ dependencies {
     api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
-version = "5.9-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
         .source('GtkSource-5.gir', 'https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/', null)
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }

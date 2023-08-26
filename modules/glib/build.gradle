@@ -5,24 +5,10 @@ plugins {
     id 'java-gi.library-conventions'
 }
 
-version = "2.76-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
         .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', new GLibPatch())
-        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', new GObjectPatch())
-        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', new GioPatch())
-        .source('GModule-2.0.gir', null, null)
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }

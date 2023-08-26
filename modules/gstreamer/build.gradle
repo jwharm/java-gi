@@ -9,8 +9,6 @@ dependencies {
     api project(':glib')
 }
 
-version = "1.20-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
@@ -21,13 +19,4 @@ tasks.named('generateSources') {
         .source('GstVideo-1.0.gir', null, null)
         .source('GstPbutils-1.0.gir', null, null)
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }

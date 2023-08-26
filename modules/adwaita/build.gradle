@@ -11,21 +11,10 @@ dependencies {
     api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
-version = "1.3-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
         .source('Adw-1.gir', 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/', new AdwaitaPatch())
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }

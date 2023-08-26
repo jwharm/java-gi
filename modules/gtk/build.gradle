@@ -10,8 +10,6 @@ dependencies {
     api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
-version = "4.10-${version}"
-
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
@@ -25,13 +23,4 @@ tasks.named('generateSources') {
         .source('Gsk-4.0.gir', null, null)
         .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', new GtkPatch())
         .execute()
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = name
-            version = version
-        }
-    }
 }
