@@ -196,15 +196,8 @@ public class GirParser extends DefaultHandler {
                 Include newInclude = new Include(current, attr.getValue("name"), attr.getValue("version"));
                 current.includeList.add(newInclude);
                 current = newInclude;
-
                 // Recursively parse included gir files
-                try {
-                    GirParser parser = new GirParser(sourceDir, module);
-                    parser.generate = false;
-                    parser.parse(newInclude.name + "-" + newInclude.version + ".gir");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                parseInclude(newInclude);
             }
             case "instance-parameter" -> {
                 InstanceParameter newInstanceParameter = new InstanceParameter(current, attr.getValue("name"),
@@ -357,6 +350,29 @@ public class GirParser extends DefaultHandler {
             skip = null;
         } else if ((skip == null) && (! (current instanceof Repository))) {
             current = current.parent;
+        }
+    }
+
+    /**
+     * Recursively parse an included GIR file
+     * @param include the include-element from the current GIR file
+     */
+    private void parseInclude(Include include) {
+        // Check if this one has already been parsed
+        if (module.repositories.containsKey(include.name)) {
+            return;
+        }
+
+        try {
+            // Recursively parse included gir files
+            GirParser parser = new GirParser(sourceDir, module);
+            parser.generate = false;
+            Repository r = parser.parse(include.name + "-" + include.version + ".gir");
+
+            // Add the repository to the module
+            module.repositories.put(r.namespace.name, r);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
