@@ -40,6 +40,7 @@ public class GenerateSourcesOperation {
     private Path sourceDirectory = null;
     private Path outputDirectory = null;
     private final List<Source> sources = new ArrayList<>();
+    private static Map<String, String> packageNames = null;
     private String moduleInfo;
 
     /**
@@ -47,6 +48,7 @@ public class GenerateSourcesOperation {
      * @since 0.5
      */
     public void execute() throws Exception {
+        Conversions.packageNames = packageNames;
         Set<String> namespaces = new LinkedHashSet<>();
 
         // Parse all platform-specific gir files
@@ -88,7 +90,7 @@ public class GenerateSourcesOperation {
         for (var source : sources()) {
             try {
                 // Parse the file
-                Repository r = parser.parse(girPath.resolve(source.fileName), source.pkg);
+                Repository r = parser.parse(girPath.resolve(source.fileName));
                 r.generate = source.generate;
                 r.urlPrefix = source.urlPrefix;
 
@@ -117,12 +119,11 @@ public class GenerateSourcesOperation {
     /**
      * Source gir file to parse
      * @param fileName the filename of the gir file
-     * @param pkg the java package name to generate
      * @param urlPrefix URL to prefix before links to images
      * @param generate true when classes must be generated, false when this Source is only needed as a dependency
      * @param patch patch to apply to a parsed gi repository before generating classes
      */
-    public record Source(String fileName, String pkg, String urlPrefix, boolean generate, Patch patch) {}
+    public record Source(String fileName, String urlPrefix, boolean generate, Patch patch) {}
 
     /**
      * Provides the source directory that will be used for the JavaGI operation.
@@ -179,15 +180,23 @@ public class GenerateSourcesOperation {
     }
 
     /**
+     * Provide the map of namespaces to package names
+     * @param map the map of namespaces to package names
+     * @since 0.7
+     */
+    public static void packageNames(Map<String, String> map) {
+        packageNames = map;
+    }
+
+    /**
      * Create a new Source
      * @param file the gir filename
-     * @param pkg the package name
      * @param urlPrefix the prefix for image link URLs
      * @param generate whether to generate bindings for this source
      * @param patches patch to apply before generating bindings
      */
-    public GenerateSourcesOperation source(String file, String pkg, String urlPrefix, boolean generate, Patch patches) {
-        sources(new Source(file, pkg, urlPrefix, generate, patches));
+    public GenerateSourcesOperation source(String file, String urlPrefix, boolean generate, Patch patches) {
+        sources(new Source(file, urlPrefix, generate, patches));
         return this;
     }
 

@@ -11,7 +11,7 @@ dependencies {
 
 version = "1.20-${version}"
 
-tasks.register('generateSources') {
+tasks.named('generateSources') {
     def MODULE_INFO = """
         module org.freedesktop.gstreamer {
             requires static org.jetbrains.annotations;
@@ -23,17 +23,17 @@ tasks.register('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        
-        .source('GLib-2.0.gir', 'org.gnome.glib', 'https://docs.gtk.org/glib/', false, new GLibPatch())
-        .source('GObject-2.0.gir', 'org.gnome.gobject', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
-        .source('Gio-2.0.gir', 'org.gnome.gio', 'https://docs.gtk.org/gio/', false, new GioPatch())
-        .source('GModule-2.0.gir', 'org.gnome.gmodule', null, false, null)
 
-        .source('Gst-1.0.gir', 'org.freedesktop.gstreamer.gst', null, true, new GstPatch())
-        .source('GstBase-1.0.gir', 'org.freedesktop.gstreamer.base', null, true, null)
-        .source('GstAudio-1.0.gir', 'org.freedesktop.gstreamer.audio', null, true, new GstAudioPatch())
-        .source('GstPbutils-1.0.gir', 'org.freedesktop.gstreamer.pbutils', null, true, null)
-        .source('GstVideo-1.0.gir', 'org.freedesktop.gstreamer.video', null, true, null)
+        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', false, new GLibPatch())
+        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', false, new GObjectPatch())
+        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', false, new GioPatch())
+        .source('GModule-2.0.gir', null, false, null)
+
+        .source('Gst-1.0.gir', null, true, new GstPatch())
+        .source('GstBase-1.0.gir', null, true, null)
+        .source('GstAudio-1.0.gir', null, true, new GstAudioPatch())
+        .source('GstPbutils-1.0.gir', null, true, null)
+        .source('GstVideo-1.0.gir', null, true, null)
 
         .moduleInfo(MODULE_INFO)
         .execute()

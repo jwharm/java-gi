@@ -9,6 +9,8 @@
  * - Set common POM metadata
  */
 
+import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
+
 plugins {
     id 'java-library'
     id 'maven-publish'
@@ -16,17 +18,47 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io" }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     compileOnly 'org.jetbrains:annotations:24.+'
-    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 group = 'io.github.jwharm.javagi'
 version = '0.6.2'
+
+tasks.register('generateSources') {
+    GenerateSourcesOperation.packageNames([
+            GLib                     : 'org.gnome.glib',
+            GObject                  : 'org.gnome.gobject',
+            GModule                  : 'org.gnome.gmodule',
+            Gio                      : 'org.gnome.gio',
+            cairo                    : 'org.freedesktop.cairo',
+            freetype2                : 'org.freedesktop.freetype',
+            HarfBuzz                 : 'org.freedesktop.harfbuzz',
+            Pango                    : 'org.gnome.pango',
+            PangoCairo               : 'org.gnome.pango.cairo',
+            GdkPixbuf                : 'org.gnome.gdkpixbuf',
+            Gdk                      : 'org.gnome.gdk',
+            Graphene                 : 'org.gnome.graphene',
+            Gsk                      : 'org.gnome.gsk',
+            Gtk                      : 'org.gnome.gtk',
+            GtkSource                : 'org.gnome.gtksourceview',
+            Adw                      : 'org.gnome.adw',
+            Soup                     : 'org.gnome.soup',
+            JavaScriptCore           : 'org.gnome.webkit.jsc',
+            WebKit                   : "org.gnome.webkit",
+            WebKitWebProcessExtension: "org.gnome.webkit.wpe",
+            Gst                      : 'org.freedesktop.gstreamer',
+            GstBase                  : 'org.freedesktop.gstreamer.base',
+            GstAudio                 : 'org.freedesktop.gstreamer.audio',
+            GstPbutils               : 'org.freedesktop.gstreamer.pbutils',
+            GstVideo                 : 'org.freedesktop.gstreamer.video'
+    ])
+}
 
 java {
     withJavadocJar()
@@ -48,17 +80,17 @@ tasks.named('compileTestJava') {
 
 tasks.named('test') {
     // Don't run tests in Github action. The native libraries aren't installed.
-    if (System.getenv("CI") != null || System.getenv("JITPACK") != null) {
+    if (System.getenv('CI') != null || System.getenv('JITPACK') != null) {
         enabled = false
     }
 
     useJUnitPlatform()
-    jvmArgs += "--enable-preview"
-    jvmArgs += "--enable-native-access=ALL-UNNAMED"
+    jvmArgs += '--enable-preview'
+    jvmArgs += '--enable-native-access=ALL-UNNAMED'
     // Configure library path for Arch, Fedora, Debian/Ubuntu, and MacOS
-    jvmArgs += "-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib"
+    jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib'
     // Uncomment on MacOS:
-    // jvmArgs += "-XstartOnFirstThread"
+    // jvmArgs += '-XstartOnFirstThread'
 }
 
 tasks.named('javadoc') {

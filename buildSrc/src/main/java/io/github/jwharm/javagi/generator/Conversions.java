@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generator;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.github.jwharm.javagi.model.*;
@@ -32,10 +33,15 @@ import io.github.jwharm.javagi.model.Module;
 public class Conversions {
 
     /**
+     * Map of namespaces to Java package names
+     */
+    public static Map<String, String> packageNames;
+
+    /**
      * Convert "Gdk" to "org.gnome.gdk"
      */
-    public static String namespaceToJavaPackage(String ns, Module module) {
-        return Objects.requireNonNullElse(module.nsLookupTable.get(ns.toLowerCase()), ns);
+    public static String namespaceToJavaPackage(String ns) {
+        return Objects.requireNonNullElse(packageNames.get(ns), ns);
     }
 
     /** 
@@ -77,7 +83,7 @@ public class Conversions {
         int idx = typeName.indexOf('.');
         if (idx > 0) {
             String nsPrefix = typeName.substring(0, idx);
-            String packageName = Conversions.namespaceToJavaPackage(nsPrefix, ns.module());
+            String packageName = Conversions.namespaceToJavaPackage(nsPrefix);
             if (packageName == null) System.err.println("Could not get namespace for " + typeName);
             Namespace namespace = ns;
             Repository repo = ns.module().repositories.get(nsPrefix);

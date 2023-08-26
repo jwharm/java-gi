@@ -391,7 +391,7 @@ public class Javadoc {
 
     // Return the Java package name followed by "." for another (not our own) namespace
     private String formatNS(String ns) {
-        return doc.getNamespace().name.equals(ns) ? "" : (Conversions.namespaceToJavaPackage(ns, doc.module()) + ".");
+        return doc.getNamespace().name.equals(ns) ? "" : (Conversions.namespaceToJavaPackage(ns) + ".");
     }
 
     // Change method name to camel case Java style and prepend a "#"

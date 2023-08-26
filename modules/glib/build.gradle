@@ -7,7 +7,7 @@ plugins {
 
 version = "2.76-${version}"
 
-tasks.register('generateSources') {
+tasks.named('generateSources') {
     def MODULE_INFO = """
         module org.gnome.glib {
             requires static org.jetbrains.annotations;
@@ -24,10 +24,10 @@ tasks.register('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('GLib-2.0.gir', 'org.gnome.glib', 'https://docs.gtk.org/glib/', true, new GLibPatch())
-        .source('GObject-2.0.gir', 'org.gnome.gobject', 'https://docs.gtk.org/gobject/', true, new GObjectPatch())
-        .source('Gio-2.0.gir', 'org.gnome.gio', 'https://docs.gtk.org/gio/', true, new GioPatch())
-        .source('GModule-2.0.gir', 'org.gnome.gmodule', null, true, null)
+        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', true, new GLibPatch())
+        .source('GObject-2.0.gir', 'https://docs.gtk.org/gobject/', true, new GObjectPatch())
+        .source('Gio-2.0.gir', 'https://docs.gtk.org/gio/', true, new GioPatch())
+        .source('GModule-2.0.gir', null, true, null)
         .moduleInfo(MODULE_INFO)
         .execute()
 }

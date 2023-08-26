@@ -31,11 +31,6 @@ public class Module {
     public final Map<String, Repository> repositories = new HashMap<>();
 
     /**
-     * Map to find java packages by namespaces
-     */
-    public final Map<String, String> nsLookupTable = new HashMap<>();
-
-    /**
      * Map to find elements by their {@code c:identifier} attribute
      */
     public final Map<String, GirElement> cIdentifierLookupTable = new HashMap<>();

@@ -388,7 +388,7 @@ public class Variable extends GirElement {
                 if (setter instanceof Function function) {
                     String setValueFunc = Conversions.toLowerCaseJavaName(function.name);
                     String clsName = Conversions.convertToJavaType(rt.getNamespace().globalClassName, false, rt.getNamespace());
-                    return rt.getNamespace().globalClassPackage + "." + clsName 
+                    return rt.getNamespace().packageName + "." + clsName
                             + "." + setValueFunc + "(" + gvalueIdentifier + ", " + payloadIdentifier + ")";
                 }
             }

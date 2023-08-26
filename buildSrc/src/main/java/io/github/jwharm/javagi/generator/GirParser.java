@@ -46,7 +46,6 @@ public class GirParser extends DefaultHandler {
     private final SAXParser parser;
     private final Module module;
 
-    private String pkg;
     private StringBuilder chars;
     private GirElement current;
     private String skip;
@@ -233,7 +232,7 @@ public class GirParser extends DefaultHandler {
             case "namespace" -> {
                 Namespace newNamespace = new Namespace(current, attr.getValue("name"), attr.getValue("version"),
                         attr.getValue("shared-library"), attr.getValue("c:identifier-prefixes"),
-                        attr.getValue("c:symbol-prefixes"), pkg);
+                        attr.getValue("c:symbol-prefixes"));
                 ((Repository) current).namespace = newNamespace;
                 current = newNamespace;
             }
@@ -365,16 +364,14 @@ public class GirParser extends DefaultHandler {
      * represents the GI repository.
      *
      * @param source Location of the GIR file
-     * @param pkg    Name of the Java package to use
      * @return The GI repository tree of GirElement instances
      * @throws IOException  If an error is encountered while reading the GIR file
      * @throws SAXException If an error is encountered while parsing the XML in the GIR file
      */
-    public Repository parse(Path source, String pkg) throws IOException, SAXException {
+    public Repository parse(Path source) throws IOException, SAXException {
         if (!Files.exists(source)) {
             throw new IOException("Specified GIR file does not exist: " + source);
         }
-        this.pkg = pkg;
         try (InputStream is = Files.newInputStream(source)) {
             parser.parse(is, this);
         }
