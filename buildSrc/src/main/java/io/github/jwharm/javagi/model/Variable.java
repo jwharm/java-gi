@@ -270,7 +270,7 @@ public class Variable extends GirElement {
                 return "Interop.getAddressArrayFrom(" + identifier + ", " + free + ")";
 
             if (type.isEnum() || type.isBitfield())
-                return "Arrays.fromIntPointer(" + identifier + ", (int) "
+                return "Interop.getArrayFromIntPointer(" + identifier + ", (int) "
                         + type.qualifiedJavaType + ".class, " + type.qualifiedJavaType + "::of)";
 
             if (type.isAliasForPrimitive())
@@ -282,10 +282,10 @@ public class Variable extends GirElement {
 
             if (type.girElementInstance instanceof Record && (! type.isPointer()) &&
                     (! (array != null && "GLib.PtrArray".equals(array.name))))
-                return "Arrays.fromStructPointer(" + identifier + ", " + type.qualifiedJavaType + ".class, "
+                return "Interop.getStructArrayFrom(" + identifier + ", " + type.qualifiedJavaType + ".class, "
                         + type.constructorName + ", " + type.qualifiedJavaType + ".getMemoryLayout())";
 
-            return "Arrays.fromPointer(" + identifier + ", " + type.qualifiedJavaType + ".class, "
+            return "Interop.getProxyArrayFrom(" + identifier + ", " + type.qualifiedJavaType + ".class, "
                     + type.constructorName + ")";
         }
 
@@ -297,7 +297,7 @@ public class Variable extends GirElement {
             return "Interop.getAddressArrayFrom(" + identifier + ", " + size + ", " + free + ")";
 
         if (type.isEnum() || type.isBitfield())
-            return "Arrays.fromIntPointer(" + identifier + ", (int) " + size + ", "
+            return "Interop.getArrayFromIntPointer(" + identifier + ", (int) " + size + ", "
                     + type.qualifiedJavaType + ".class, " + type.qualifiedJavaType + "::of)";
 
         if (type.isAliasForPrimitive())
@@ -309,11 +309,11 @@ public class Variable extends GirElement {
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()) &&
                 (! (array != null && "GLib.PtrArray".equals(array.name))))
-            return "Arrays.fromStructPointer(" + identifier + ", (int) " + size + ", "
+            return "Interop.getStructArrayFrom(" + identifier + ", (int) " + size + ", "
                     + type.qualifiedJavaType + ".class, " + type.constructorName + ", "
                     + type.qualifiedJavaType + ".getMemoryLayout())";
 
-        return "Arrays.fromPointer(" + identifier + ", (int) " + size + ", "
+        return "Interop.getProxyArrayFrom(" + identifier + ", (int) " + size + ", "
                 + type.qualifiedJavaType + ".class, " + type.constructorName + ")";
     }
 

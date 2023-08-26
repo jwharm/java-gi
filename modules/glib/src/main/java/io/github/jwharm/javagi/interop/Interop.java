@@ -21,11 +21,12 @@ package io.github.jwharm.javagi.interop;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
-import java.util.ArrayList;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.Function;
 
+import io.github.jwharm.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
@@ -557,6 +558,89 @@ public class Interop {
         short[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_SHORT);
         if (free) {
             GLib.free(address);
+        }
+        return array;
+    }
+
+    /**
+     * Read a null-terminated array of memory addresses from native memory,
+     * create a Proxy instance for each address, and return an array of
+     * Proxy instances
+     * @param address address of the memory segment
+     * @param clazz class of the Proxy type
+     * @param make constructor of the Proxy type
+     * @return array of Proxy instances
+     * @param <T> the type of the Proxy instances
+     */
+    public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address, Class<T> clazz, Function<MemorySegment, T> make) {
+        long offset = 0;
+        while (! MemorySegment.NULL.equals(address.get(ValueLayout.ADDRESS, offset))) {
+            offset += ValueLayout.ADDRESS.byteSize();
+        }
+        return getProxyArrayFrom(address, (int) offset, clazz, make);
+    }
+
+    /**
+     * Read an array of memory addresses from native memory, create a Proxy
+     * instance for each address, and return an array of Proxy instances
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param clazz class of the Proxy type
+     * @param make constructor of the Proxy type
+     * @return array of Proxy instances
+     * @param <T> the type of the Proxy instances
+     */
+    public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address, int length, Class<T> clazz, Function<MemorySegment, T> make) {
+        MemorySegment segment = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize() * length, address.scope());
+        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            array[i] = make.apply(segment.getAtIndex(ValueLayout.ADDRESS, i));
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of structs from native memory, create a Proxy
+     * instance for each struct, and return an array of Proxy instances
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param clazz class of the Proxy type
+     * @param make constructor of the Proxy type
+     * @return array of Proxy instances
+     * @param <T> the type of the Proxy instances
+     */
+    public static <T extends Proxy> T[] getStructArrayFrom(MemorySegment address, int length, Class<T> clazz, Function<MemorySegment, T> make, MemoryLayout layout) {
+        var segment = MemorySegment.ofAddress(address.address(), layout.byteSize() * length, address.scope());
+        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
+        // MemorySegment.elements() only works for >1 elements
+        if (length == 1) {
+            array[0] = make.apply(segment);
+        } else {
+            List<MemorySegment> elements = segment.elements(layout).toList();
+            for (int i = 0; i < length; i++) {
+                array[i] = make.apply(elements.get(i));
+            }
+        }
+        return array;
+    }
+
+    /**
+     * Read an array of integers from native memory, create a Java instance
+     * for each integer value with the provided constructor, and return an
+     * array of these instances. This is used to quickly create an array of
+     * Enumeration or Bitfield objects from a native int array.
+     * @param address address of the memory segment
+     * @param length length of the array
+     * @param clazz class that will be returned in the array
+     * @param make constructor to create the instances
+     * @return array of constructed instances
+     * @param <T> the type to construct
+     */
+    public static <T> T[] getArrayFromIntPointer(MemorySegment address, int length, Class<T> clazz, Function<Integer, T> make) {
+        MemorySegment segment = MemorySegment.ofAddress(address.address(), ValueLayout.JAVA_INT.byteSize() * length, address.scope());
+        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            array[i] = make.apply(segment.getAtIndex(ValueLayout.JAVA_INT, i));
         }
         return array;
     }
