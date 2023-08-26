@@ -89,7 +89,6 @@ public class Overrides {
                 } catch (InvocationTargetException ite) {
                     System.err.printf("Cannot override method %s in class %s: %s\n",
                             method.getName(), cls.getName(), ite.getTargetException().toString());
-                    ite.printStackTrace();
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s in class %s: %s\n",
