@@ -26,12 +26,15 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class Record extends Class {
 
-    public final String disguised, isGTypeStructFor;
+    public final String disguised;
+    public final String isGTypeStructFor;
+    public final String foreign;
 
-    public Record(GirElement parent, String name, String cType, String getType, String version, String disguised, String isGTypeStructFor) {
+    public Record(GirElement parent, String name, String cType, String getType, String version, String disguised, String isGTypeStructFor, String foreign) {
         super(parent, name, null, cType, null, getType, null, null, null, version, null, null);
         this.disguised = disguised;
         this.isGTypeStructFor = isGTypeStructFor;
+        this.foreign = foreign;
     }
     
     /**

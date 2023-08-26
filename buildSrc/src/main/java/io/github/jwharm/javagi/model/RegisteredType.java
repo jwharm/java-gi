@@ -306,7 +306,7 @@ public abstract class RegisteredType extends GirElement {
             }
         }
 
-        if (this instanceof Record && getType != null) {
+        if (this instanceof Record rec && getType != null && (! "1".equals(rec.foreign))) {
             writer.write("MemoryCleaner.setFreeFunc(" + identifier + ".handle(), \"g_boxed_free\");\n");
             writer.write("MemoryCleaner.setBoxedType(" + identifier + ".handle(), ");
             if (classname != null) {
