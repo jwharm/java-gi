@@ -13,48 +13,54 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v2
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+
       - name: Install MkDocs
         run: pip3 install mkdocs
+
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: 20
           distribution: 'temurin'
+
       - name: Checkout gir-files repository
         uses: actions/checkout@v3
         with:
           repository: 'gircore/gir-files'
           path: 'gir-files'
+
       - name: Checkout java-gi repository
         uses: actions/checkout@v3
         with:
           repository: 'jwharm/java-gi'
           path: 'java-gi'
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
-      - name: Run build with Gradle Wrapper
+
+      - name: Run Gradle build
         working-directory: java-gi/
         run: ./gradlew build
-      - name: Build Site
+
+      - name: Run Mkdocs build
         working-directory: java-gi/website/
         run: mkdocs build
+
       - name: Create Site Artifact
         run: |
           mv java-gi/website/site site
-          mv java-gi/modules/glib/build/docs/javadoc site/glib
-          mv java-gi/modules/gtk/build/docs/javadoc site/gtk
-          mv java-gi/modules/gstreamer/build/docs/javadoc site/gstreamer
-          mv java-gi/modules/adwaita/build/docs/javadoc site/adwaita
-          mv java-gi/modules/gtksourceview/build/docs/javadoc site/gtksourceview
-          mv java-gi/modules/webkitgtk/build/docs/javadoc site/webkitgtk
+          ls java-gi/modules | xargs -I % mv java-gi/modules/%/build/docs/javadoc site/%
+
       - name: Upload Site Artifact
         uses: actions/upload-pages-artifact@v1
         with:
           path: 'site'
+
   pages:
     runs-on: ubuntu-latest
     needs: publish
