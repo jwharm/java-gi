@@ -28,7 +28,6 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 public class Method extends GirElement implements CallableType {
 
     public final String cIdentifier;
-    public final String deprecated;
     public final String throws_;
     public final String shadowedBy;
     public final String shadows;

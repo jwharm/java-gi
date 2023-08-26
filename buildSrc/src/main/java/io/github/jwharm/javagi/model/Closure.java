@@ -46,6 +46,11 @@ public interface Closure extends CallableType {
         if (doc != null)
             doc.generate(writer, false);
 
+        // Deprecation
+        if ("1".equals(((GirElement) this).deprecated)) {
+            writer.write("@Deprecated\n");
+        }
+
         // Generate run(...) method
         returnValue.writeType(writer, true);
         writer.write(" run(");

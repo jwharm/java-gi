@@ -34,6 +34,7 @@ public abstract class GirElement {
     public Array array;
     public Type type = null;
     public String name = null;
+    public String deprecated = null;
     public Doc doc = null;
     public DocDeprecated docDeprecated = null;
     public DocVersion docVersion = null;
