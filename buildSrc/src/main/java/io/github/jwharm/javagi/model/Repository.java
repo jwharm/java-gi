@@ -175,12 +175,14 @@ public class Repository extends GirElement {
             if (namespace.sharedLibrary != null) {
                 writer.write(" * The following native libraries are required and will be loaded: ");
                 for (String libraryName : namespace.sharedLibrary.split(",")) {
-                    if (libraryName.contains("/")) {
-                        // Strip path from library name
-                        writer.write(" {@code " + libraryName.substring(libraryName.lastIndexOf("/") + 1) + "}");
-                    } else {
-                        writer.write(" {@code " + libraryName + "}");
+                    String fileName = libraryName;
+                    // Strip path from library name
+                    if (fileName.contains("/")) {
+                        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
                     }
+                    // Strip extension from library name
+                    fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                    writer.write(" {@code " + fileName + "}");
                 }
                 writer.write("\n");
                 writer.write(" * <p>\n");
