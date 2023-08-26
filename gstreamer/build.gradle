@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    implementation project(':glib')
+    api project(':glib')
 }
 
 version = "1.20-${version}"

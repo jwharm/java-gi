@@ -6,8 +6,8 @@ plugins {
 }
 
 dependencies {
-    implementation project(':glib')
-    implementation 'com.github.jwharm:cairo-java-bindings:1.16.0'
+    api project(':glib')
+    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
 version = "4.10-${version}"
