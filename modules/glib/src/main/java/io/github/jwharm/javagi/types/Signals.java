@@ -148,7 +148,12 @@ public class Signals {
             // Add the signal to the list
             signalDeclarations.add(new SignalDeclaration(signalName, signalFlags, returnType, nParams, paramTypes));
         }
-        
+
+        // Don't generate unnecessary class initializer methods.
+        if (signalDeclarations.isEmpty()) {
+            return null;
+        }
+
         // Return class initializer method that installs the signals.
         return (gclass) -> {
             for (var sig : signalDeclarations) {
