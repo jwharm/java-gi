@@ -227,13 +227,17 @@ public class Variable extends GirElement {
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
 
-        if (type.isBitfield() || type.isAliasForPrimitive())
+        if (type.isBitfield()
+                || type.isAliasForPrimitive()
+                || (type.isRecord() && (! type.isTypeClass()))
+                || type.isUnion()
+                || (type.isAlias() && ((Alias) type.girElementInstance).getTargetType() == Alias.TargetType.RECORD))
             return "new " + type.qualifiedJavaType + "(" + identifier + ")";
 
         if (type.isCallback())
             return "null /* Unsupported parameter type */";
 
-        if (type.isClass() || type.isInterface() || type.isAlias() || type.isRecord() || type.isUnion()) {
+        if (type.isClass() || type.isInterface() || type.isAlias() || type.isTypeClass()) {
             String cacheFunction = "InstanceCache.get";
             if (type.hasGType())
                 cacheFunction = "InstanceCache.getForType";

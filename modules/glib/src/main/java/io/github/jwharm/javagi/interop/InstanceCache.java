@@ -196,12 +196,6 @@ public class InstanceCache {
      * @return the cached Proxy instance
      */
     public static Proxy put(MemorySegment address, Proxy newInstance) {
-        // Do not cache TypeInstance objects.
-        // They will be cached later with the actual type.
-        if (newInstance.getClass().getSimpleName().equals("TypeInstance")) {
-            return newInstance;
-        }
-
         // Do not put a new instance if it already exists
         if (strongReferences.containsKey(address) || weakReferences.containsKey(address)) {
             return newInstance;
