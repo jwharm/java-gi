@@ -104,7 +104,9 @@ public class ReturnValue extends Parameter {
 
         } else if (type != null
                 && (type.isUnion() || type.isRecord())
-                && (! "org.gnome.gobject.TypeInstance".equals(type.qualifiedJavaType))) {
+                && (! "org.gnome.gobject.TypeInstance".equals(type.qualifiedJavaType))
+                && (! "org.gnome.gobject.TypeClass".equals(type.qualifiedJavaType))
+                && (! "org.gnome.gobject.TypeInterface".equals(type.qualifiedJavaType))) {
 
             writer.write("var _instance = ");
             marshalNativeToJava(writer, "_result", false);

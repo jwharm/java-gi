@@ -87,7 +87,7 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemorySegment _func = ((ProxyInstance) this).callParent()\n");
+        writer.write("MemorySegment _func = ((org.gnome.gobject.TypeInstance) this).callParent()\n");
         writer.increaseIndent();
         writer.write("? Interop.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {

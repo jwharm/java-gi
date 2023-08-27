@@ -83,8 +83,10 @@ public class Record extends Class {
                     writer.write(" extends " + parentClass);
                 }
             }
-        } else {
+        } else if ("GTypeInstance".equals(cType) || "GTypeClass".equals(cType) || "GTypeInterface".equals(cType)) {
             writer.write(" extends ProxyInstance");
+        } else {
+            writer.write(" extends ManagedInstance");
         }
 
         // Floating

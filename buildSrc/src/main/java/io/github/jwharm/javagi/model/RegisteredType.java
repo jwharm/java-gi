@@ -289,7 +289,7 @@ public abstract class RegisteredType extends GirElement {
         if (! (this instanceof Record || this instanceof Union)) {
             return;
         }
-        if ("TypeInstance".equals(this.javaName) || "TypeClass".equals(this.javaName) || "TypeInterface".equals(this.javaName)) {
+        if ("GTypeInstance".equals(this.cType) || "GTypeClass".equals(this.cType) || "GTypeInterface".equals(this.cType)) {
             return;
         }
 

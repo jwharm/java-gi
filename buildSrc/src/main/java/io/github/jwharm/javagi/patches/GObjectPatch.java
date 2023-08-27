@@ -54,7 +54,34 @@ public class GObjectPatch implements Patch {
             iuc.fieldList.add(parent_class);
         }
 
-        // Add a static factory method for GObject
+        // Add methods for TypeInstance to set the flag to call the parent method
+        inject(repo, "TypeInstance", """
+        
+            private boolean callParent = false;
+        
+            /**
+             * Set the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
+             * is used to obtain the function pointer of the parent type instead of the instance class.
+             * @param callParent true if you want to call the parent vfunc instead of an overrided vfunc
+             */
+            @ApiStatus.Internal
+            protected void callParent(boolean callParent) {
+                this.callParent = callParent;
+            }
+        
+            /**
+             * Returns the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
+             * is used to obtain the function pointer of the parent type instead of the instance class.
+             * @return true when parent vfunc is called instead of an overrided vfunc, or false when the
+             *         overrided vfunc of the instance is called.
+             */
+            @ApiStatus.Internal
+            public boolean callParent() {
+                return this.callParent;
+            }
+        """);
+
+        // Add methods for GObject
         inject(repo, "Object", """
             
             /**

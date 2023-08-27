@@ -38,7 +38,7 @@ public class Union extends RegisteredType {
         if (generic) {
             writer.write("<T extends org.gnome.gobject.GObject>");
         }
-        writer.write(" extends ProxyInstance {\n");
+        writer.write(" extends ManagedInstance {\n");
         writer.increaseIndent();
         generateEnsureInitialized(writer);
         generateGType(writer);

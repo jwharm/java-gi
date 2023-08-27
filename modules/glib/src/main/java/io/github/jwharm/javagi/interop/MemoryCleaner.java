@@ -22,9 +22,6 @@ package io.github.jwharm.javagi.interop;
 import io.github.jwharm.javagi.base.Proxy;
 import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
-import org.gnome.gobject.TypeClass;
-import org.gnome.gobject.TypeInstance;
-import org.gnome.gobject.TypeInterface;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -56,20 +53,16 @@ public class MemoryCleaner {
      * @param proxy The Proxy object
      */
     public static void register(Proxy proxy) {
-        // Do not cache GObjects, they are cached in the InstanceCache
-        if (proxy instanceof TypeInstance || proxy instanceof TypeClass || proxy instanceof TypeInterface) {
-            return;
-        }
-
-        // Put the address in the cache (or increase the refcount)
         MemorySegment address = proxy.handle();
         synchronized (references) {
             Cached cached = references.get(address);
             if (cached == null) {
+                // Put the address in the cache
                 var cleanable = CLEANER.register(proxy, new StructFinalizer(address));
                 references.put(address, new Cached(false, 1, null,
                         null, cleanable));
             } else {
+                // Already in the cache: increase the refcount
                 references.put(address, new Cached(false, cached.references + 1, cached.freeFunc,
                         cached.boxedType, cached.cleanable));
             }
