@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    api project(':gobject')
+    api project(':gio')
     api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 

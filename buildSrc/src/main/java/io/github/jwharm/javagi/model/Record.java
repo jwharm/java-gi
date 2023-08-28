@@ -130,7 +130,8 @@ public class Record extends Class {
             writer.write(" * @return the GType");
             writer.write(" */\n");
             writer.write("public static org.gnome.glib.Type getType() {\n");
-            writer.write("    return Types.VARIANT;\n");
+            // Types.VARIANT is declared in GObject. Hard-coded value as workaround
+            writer.write("    return new org.gnome.glib.Type(21L << 2);\n");
             writer.write("}\n");
         }
 
