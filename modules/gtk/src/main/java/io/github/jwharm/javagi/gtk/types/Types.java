@@ -23,9 +23,9 @@ import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.gtk.util.BuilderJavaScope;
-import io.github.jwharm.javagi.types.Overrides;
-import io.github.jwharm.javagi.types.Properties;
-import io.github.jwharm.javagi.types.Signals;
+import io.github.jwharm.javagi.gobject.types.Overrides;
+import io.github.jwharm.javagi.gobject.types.Properties;
+import io.github.jwharm.javagi.gobject.types.Signals;
 
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.github.jwharm.javagi.types.Types.*;
+import static io.github.jwharm.javagi.gobject.types.Types.*;
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
 /**
@@ -48,13 +48,13 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
  * as a Gtk composite template class.
  * <p>
  * To register a Java class as a "regular" GObject class, see 
- * {@link io.github.jwharm.javagi.types.Types#register(Class)}
+ * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)}
  */
 public class Types {
 
     /**
      * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or if it is
-     * not defined, fallback to {@link io.github.jwharm.javagi.types.Types#getName(Class)}.
+     * not defined, fallback to {@link io.github.jwharm.javagi.gobject.types.Types#getName(Class)}.
      * @param cls the class that is registered as a new GType
      * @return the name
      */
@@ -205,7 +205,7 @@ public class Types {
      * Register a class as a Gtk composite template class.
      * <p>
      * To register a Java class as a "regular" GObject class, see
-     * {@link io.github.jwharm.javagi.types.Types#register(Class)}
+     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)}
      * @param cls a @GtkTemplate-annotated class
      * @return the new GType that has been registered
      * @param <W> the class must extend GtkWidget
@@ -262,7 +262,7 @@ public class Types {
 
     /**
      * Redirects to {@link Types#registerTemplate(Class)} for Widget.class with {@link GtkTemplate}
-     * annotation, and {@link io.github.jwharm.javagi.types.Types#register(Class)} for all other
+     * annotation, and {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)} for all other
      * (GObject-derived) classes.
      * @param cls the class to register as a new GType
      * @return the new GType
@@ -273,13 +273,13 @@ public class Types {
         if (Widget.class.isAssignableFrom(cls) && cls.isAnnotationPresent(GtkTemplate.class)) {
             return registerTemplate((Class<W>) cls);
         } else {
-            return io.github.jwharm.javagi.types.Types.register(cls);
+            return io.github.jwharm.javagi.gobject.types.Types.register(cls);
         }
     }
 
     /**
      * Convenience function that redirects to
-     * {@link io.github.jwharm.javagi.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, TypeFlags)}
+     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, TypeFlags)}
      * @param parentType Parent GType
      * @param typeName name of the GType
      * @param classLayout memory layout of the typeclass
@@ -304,7 +304,7 @@ public class Types {
             Function<MemorySegment, T> constructor,
             TypeFlags flags
     ) {
-        return io.github.jwharm.javagi.types.Types.register(
+        return io.github.jwharm.javagi.gobject.types.Types.register(
                 parentType, typeName, classLayout, classInit, instanceLayout, instanceInit, constructor, flags);
     }
 }

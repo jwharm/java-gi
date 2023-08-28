@@ -106,7 +106,7 @@ public class GObjectPatch implements Patch {
              * @throws IllegalArgumentException invalid property name
              */
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType, Object... propertyNamesAndValues) {
-                return io.github.jwharm.javagi.types.Properties.newGObjectWithProperties(objectType, propertyNamesAndValues);
+                return Properties.newGObjectWithProperties(objectType, propertyNamesAndValues);
             }
             
             /**
@@ -116,7 +116,7 @@ public class GObjectPatch implements Patch {
              * @throws IllegalArgumentException invalid property name
              */
             public Object getProperty(String propertyName) {
-                return io.github.jwharm.javagi.types.Properties.getProperty(this, propertyName);
+                return Properties.getProperty(this, propertyName);
             }
             
             /**
@@ -126,7 +126,7 @@ public class GObjectPatch implements Patch {
              * @throws IllegalArgumentException invalid property name
              */
             public void setProperty(String propertyName, Object value) {
-                io.github.jwharm.javagi.types.Properties.setProperty(this, propertyName, value);
+                Properties.setProperty(this, propertyName, value);
             }
             
             /**
@@ -153,7 +153,7 @@ public class GObjectPatch implements Patch {
              *         connection
              */
             public <T> SignalConnection<T> connect(String detailedSignal, T callback, boolean after) {
-                var closure = new io.github.jwharm.javagi.util.JavaClosure(callback);
+                var closure = new JavaClosure(callback);
                 int handlerId = GObjects.signalConnectClosure(this, detailedSignal, closure, after);
                 return new SignalConnection(handle(), handlerId);
             }
@@ -168,7 +168,7 @@ public class GObjectPatch implements Patch {
              * @throws IllegalArgumentException if a signal with this name is not found for the object
              */
             public Object emit(String detailedSignal, Object... params) {
-                return io.github.jwharm.javagi.types.Signals.emit(this, detailedSignal, params);
+                return Signals.emit(this, detailedSignal, params);
             }
         """);
     }

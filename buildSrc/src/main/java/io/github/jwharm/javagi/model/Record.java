@@ -91,7 +91,7 @@ public class Record extends Class {
 
         // Floating
         if (isFloating()) {
-            writer.write(" implements io.github.jwharm.javagi.base.Floating");
+            writer.write(" implements io.github.jwharm.javagi.gobject.Floating");
         }
 
         writer.write(" {\n");

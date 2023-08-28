@@ -44,7 +44,7 @@ public class Builder {
         // so GObject.Builder extends from the base Builder class.
         String parent = c.parentClass + ".Builder<S>";
         if (c.parentClass == null) {
-            parent = "io.github.jwharm.javagi.base.Builder<S>";
+            parent = "io.github.jwharm.javagi.gobject.Builder<S>";
         }
 
         // Write the inner Build class definition
@@ -147,8 +147,8 @@ public class Builder {
         writer.write(" * a GObject with properties of this interface.\n");
         writer.write(" * @param <S> the type of the Builder that is returned\n");
         writer.write(" */\n");
-        writer.write("interface Builder<S extends io.github.jwharm.javagi.base.Builder<S>>\n");
-        writer.write("        extends io.github.jwharm.javagi.base.BuilderInterface {\n");
+        writer.write("interface Builder<S extends io.github.jwharm.javagi.gobject.Builder<S>>\n");
+        writer.write("        extends io.github.jwharm.javagi.gobject.BuilderInterface {\n");
         writer.increaseIndent();
 
         // Generate setters for the properties

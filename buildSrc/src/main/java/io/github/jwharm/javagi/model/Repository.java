@@ -79,7 +79,7 @@ public class Repository extends GirElement {
 
             writer.write("package " + namespace.packageName + ";\n");
             writer.write("\n");
-            RegisteredType.generateImportStatements(writer);
+            generateImportStatements(writer);
 
             writer.write("/**\n");
             writer.write(" * Constants and functions that are declared in the global " + className + " namespace.\n");
@@ -212,6 +212,19 @@ public class Repository extends GirElement {
             writer.write(" */\n");
             writer.write("package " + namespace.packageName + ";\n");
         }
+    }
+
+    public void generateImportStatements(SourceWriter writer) throws IOException {
+        if (module.repositories.containsKey("GObject")) {
+            writer.write("import io.github.jwharm.javagi.gobject.*;\n");
+            writer.write("import io.github.jwharm.javagi.gobject.types.*;\n");
+        }
+        writer.write("import io.github.jwharm.javagi.base.*;\n");
+        writer.write("import io.github.jwharm.javagi.interop.*;\n");
+        writer.write("import java.lang.foreign.*;\n");
+        writer.write("import java.lang.invoke.*;\n");
+        writer.write("import org.jetbrains.annotations.*;\n");
+        writer.write("\n");
     }
 
     public Repository copy() {

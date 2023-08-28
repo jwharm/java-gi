@@ -70,7 +70,7 @@ public class Signal extends Method implements Closure {
         writer.write("try (Arena _arena = Arena.openConfined()) {\n");
         writer.increaseIndent();
         writer.write("try {\n");
-        writer.write("    var _result = (long) Interop.g_signal_connect_data.invokeExact(\n");
+        writer.write("    var _result = (long) Signals.g_signal_connect_data.invokeExact(\n");
         writer.write("        handle(), Interop.allocateNativeString(\"" + name + "\"");
         if (detailed) {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
@@ -130,7 +130,7 @@ public class Signal extends Method implements Closure {
             if (hasReturn) {
                 writer.write("MemorySegment _result = _arena.allocate(" + Conversions.getValueLayout(returnValue.type) + ");\n");
             }
-            writer.write("Interop.g_signal_emit_by_name.invokeExact(\n");
+            writer.write("Signals.g_signal_emit_by_name.invokeExact(\n");
             writer.write("        handle(),\n");
             writer.write("        Interop.allocateNativeString(\"" + name + "\"");
             if (detailed) {

@@ -84,10 +84,10 @@ public class Class extends RegisteredType {
         StringJoiner interfaces = new StringJoiner(", ", " implements ", "").setEmptyValue("");
         implementsList.forEach(impl -> interfaces.add(impl.getQualifiedJavaName()));
         if (autoCloseable) {
-            interfaces.add("io.github.jwharm.javagi.util.AutoCloseable");
+            interfaces.add("io.github.jwharm.javagi.gio.AutoCloseable");
         }
         if (isFloating()) {
-            interfaces.add("io.github.jwharm.javagi.base.Floating");
+            interfaces.add("io.github.jwharm.javagi.gobject.Floating");
         }
         writer.write(interfaces + " {\n");
         writer.increaseIndent();

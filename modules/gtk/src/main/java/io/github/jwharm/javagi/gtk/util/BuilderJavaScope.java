@@ -21,7 +21,7 @@ package io.github.jwharm.javagi.gtk.util;
 
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkCallback;
-import io.github.jwharm.javagi.util.JavaClosure;
+import io.github.jwharm.javagi.gobject.JavaClosure;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;

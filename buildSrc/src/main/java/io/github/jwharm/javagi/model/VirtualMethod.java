@@ -89,12 +89,12 @@ public class VirtualMethod extends Method {
         }
         writer.write("MemorySegment _func = ((org.gnome.gobject.TypeInstance) this).callParent()\n");
         writer.increaseIndent();
-        writer.write("? Interop.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
+        writer.write("? Overrides.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
             writer.write(", " + className + ".getType()");
         }
         writer.write(")\n");
-        writer.write(": Interop.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
+        writer.write(": Overrides.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
             writer.write(", " + className + ".getType()");
         }
