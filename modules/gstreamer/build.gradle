@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    api project(':glib')
+    api project(':gobject')
 }
 
 tasks.named('generateSources') {

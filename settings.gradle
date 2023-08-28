@@ -5,6 +5,9 @@ plugins {
 rootProject.name = 'java-gi'
 
 include 'glib'
+include 'gmodule'
+include 'gobject'
+include 'gio'
 include 'gtk'
 include 'gstreamer'
 include 'adwaita'

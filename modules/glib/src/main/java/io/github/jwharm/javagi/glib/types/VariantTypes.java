@@ -17,7 +17,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.github.jwharm.javagi.gobject.types;
+package io.github.jwharm.javagi.glib.types;
 
 import org.gnome.glib.Variant;
 import org.gnome.glib.VariantType;

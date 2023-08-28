@@ -87,7 +87,7 @@ public class Class extends RegisteredType {
             interfaces.add("io.github.jwharm.javagi.gio.AutoCloseable");
         }
         if (isFloating()) {
-            interfaces.add("io.github.jwharm.javagi.gobject.Floating");
+            interfaces.add("io.github.jwharm.javagi.base.Floating");
         }
         writer.write(interfaces + " {\n");
         writer.increaseIndent();

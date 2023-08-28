@@ -5,10 +5,14 @@ plugins {
     id 'java-gi.library-conventions'
 }
 
+dependencies {
+    api project(':glib')
+}
+
 tasks.named('generateSources') {
     new GenerateSourcesOperation()
         .sourceDirectory(new File(girFilesLocation).toPath())
         .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', new GLibPatch())
+        .source('Gio-2.0.gir', 'https://docs.gtk.org/glib/', new GioPatch())
         .execute()
 }

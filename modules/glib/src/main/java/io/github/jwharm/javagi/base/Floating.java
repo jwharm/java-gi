@@ -17,9 +17,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.github.jwharm.javagi.gobject;
-
-import io.github.jwharm.javagi.base.Proxy;
+package io.github.jwharm.javagi.base;
 
 /**
  * Classes that implement the Floating interface, have a refSink method

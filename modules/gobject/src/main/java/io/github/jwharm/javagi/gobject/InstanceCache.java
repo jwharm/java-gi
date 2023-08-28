@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.gobject.types.TypeCache;
 import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.Type;

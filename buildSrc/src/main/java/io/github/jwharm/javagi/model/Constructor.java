@@ -71,7 +71,9 @@ public class Constructor extends Method {
         writer.write("));\n");
 
         // Add instance to cache
-        writer.write("InstanceCache.put(handle(), this);\n");
+        if (! (parent instanceof Record)) {
+            writer.write("InstanceCache.put(handle(), this);\n");
+        }
 
         writer.decreaseIndent();
         writer.write("}\n");
