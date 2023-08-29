@@ -115,7 +115,7 @@ public class Doc extends GirElement {
                 writeDoc(writer, "the signal detail", "@param detail");
             }
             writeDoc(writer, "the signal handler", "@param handler");
-            writeDoc(writer, "a {@link io.github.jwharm.javagi.base.SignalConnection} object to keep track of the signal connection", "@return");
+            writeDoc(writer, "a {@link SignalConnection} object to keep track of the signal connection", "@return");
         }
         
         // Deprecated
