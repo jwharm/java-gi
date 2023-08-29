@@ -17,7 +17,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.github.jwharm.javagi.test.gobject;
+package io.github.jwharm.javagi.test.gio;
 
 import io.github.jwharm.javagi.gobject.SignalConnection;
 import org.gnome.gio.Application;
