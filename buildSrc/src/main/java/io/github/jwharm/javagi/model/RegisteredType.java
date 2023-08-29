@@ -286,6 +286,9 @@ public abstract class RegisteredType extends GirElement {
         if ("GTypeInstance".equals(this.cType) || "GTypeClass".equals(this.cType) || "GTypeInterface".equals(this.cType)) {
             return;
         }
+        if (this instanceof Record rec && "1".equals(rec.foreign)) {
+            return;
+        }
 
         // Look for instance methods named "free()" and "unref()"
         for (Method method : methodList) {
@@ -300,7 +303,7 @@ public abstract class RegisteredType extends GirElement {
             }
         }
 
-        if (this instanceof Record rec && getType != null && (! "1".equals(rec.foreign))) {
+        if (this instanceof Record && getType != null) {
             writer.write("MemoryCleaner.setFreeFunc(" + identifier + ".handle(), \"g_boxed_free\");\n");
             writer.write("MemoryCleaner.setBoxedType(" + identifier + ".handle(), ");
             if (classname != null) {
