@@ -30,4 +30,8 @@ tasks.named('javadoc', Javadoc) {
     classpath = files(subprojects.collect {
         it.sourceSets.main.compileClasspath
     })
+
+    subprojects.forEach {
+        dependsOn it.tasks.named('generateSources')
+    }
 }
