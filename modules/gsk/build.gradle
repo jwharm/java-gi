@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-    api project(':glib')
+    api project(':gdk')
+    api project(':graphene')
 }
 
 tasks.named('generateSources') {
-    girFile = 'GModule-2.0.gir'
-    urlPrefix = 'https://docs.gtk.org/glib/'
+    girFile = 'Gsk-4.0.gir'
 }

@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-    api project(':glib')
+    api project(':gst')
+    api project(':gstbase')
 }
 
 tasks.named('generateSources') {
-    girFile = 'GModule-2.0.gir'
-    urlPrefix = 'https://docs.gtk.org/glib/'
+    girFile = 'GstVideo-1.0.gir'
 }

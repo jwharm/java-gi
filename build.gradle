@@ -21,9 +21,12 @@ tasks.named('javadoc', Javadoc) {
     options.addStringOption('source', '20')
     options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
+    options.encoding = 'UTF-8'
+
     source subprojects.collect {
         it.sourceSets.main.allJava
     }
+
     classpath = files(subprojects.collect {
         it.sourceSets.main.compileClasspath
     })

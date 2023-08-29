@@ -1,5 +1,4 @@
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
-import io.github.jwharm.javagi.patches.*;
+import io.github.jwharm.javagi.patches.GObjectPatch;
 
 plugins {
     id 'java-gi.library-conventions'
@@ -10,9 +9,7 @@ dependencies {
 }
 
 tasks.named('generateSources') {
-    new GenerateSourcesOperation()
-        .sourceDirectory(new File(girFilesLocation).toPath())
-        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('GObject-2.0.gir', 'https://docs.gtk.org/glib/', new GObjectPatch())
-        .execute()
+    girFile = 'GObject-2.0.gir'
+    urlPrefix = 'https://docs.gtk.org/glib/'
+    patch = new GObjectPatch()
 }

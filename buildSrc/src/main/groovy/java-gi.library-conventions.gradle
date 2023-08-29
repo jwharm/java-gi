@@ -1,15 +1,18 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import io.github.jwharm.javagi.generator.GenerateSources
+
 /* Common build settings for Java-GI modules:
  * 
  * - Load java-library and maven-publish plugins
  * - Set maven repositories
  * - Load common dependencies
  * - Set group and Java-GI version number
- * - Set JDK version number
+ * - Set JDK version
+ * - Configure 'generateSources' action
  * - Enable preview features
+ * - Set OS-specific library paths for unit tests
  * - Set common POM metadata
  */
-
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
 
 plugins {
     id 'java-library'
@@ -30,36 +33,6 @@ dependencies {
 group = 'io.github.jwharm.javagi'
 version = '0.7-SNAPSHOT'
 
-tasks.register('generateSources') {
-    GenerateSourcesOperation.packageNames([
-            GLib                     : 'org.gnome.glib',
-            GObject                  : 'org.gnome.gobject',
-            GModule                  : 'org.gnome.gmodule',
-            Gio                      : 'org.gnome.gio',
-            cairo                    : 'org.freedesktop.cairo',
-            freetype2                : 'org.freedesktop.freetype',
-            HarfBuzz                 : 'org.freedesktop.harfbuzz',
-            Pango                    : 'org.gnome.pango',
-            PangoCairo               : 'org.gnome.pango.cairo',
-            GdkPixbuf                : 'org.gnome.gdkpixbuf',
-            Gdk                      : 'org.gnome.gdk',
-            Graphene                 : 'org.gnome.graphene',
-            Gsk                      : 'org.gnome.gsk',
-            Gtk                      : 'org.gnome.gtk',
-            GtkSource                : 'org.gnome.gtksourceview',
-            Adw                      : 'org.gnome.adw',
-            Soup                     : 'org.gnome.soup',
-            JavaScriptCore           : 'org.gnome.webkit.jsc',
-            WebKit                   : "org.gnome.webkit",
-            WebKitWebProcessExtension: "org.gnome.webkit.wpe",
-            Gst                      : 'org.freedesktop.gstreamer',
-            GstBase                  : 'org.freedesktop.gstreamer.base',
-            GstAudio                 : 'org.freedesktop.gstreamer.audio',
-            GstPbutils               : 'org.freedesktop.gstreamer.pbutils',
-            GstVideo                 : 'org.freedesktop.gstreamer.video'
-    ])
-}
-
 java {
     withSourcesJar()
     toolchain {
@@ -67,35 +40,63 @@ java {
     }
 }
 
+tasks.register('generateSources', GenerateSources) {
+    // Input directory should point to a clone of the GitHub gircore/gir-files
+    // repository. The location is set in gradle.properties. Default is '../gir-files'
+    inputDirectory = project.rootDir.toPath().resolve(girFilesLocation).toFile()
+
+    // Write generated sources to build/generated/sources/java-gi
+    outputDirectory = layout.buildDirectory.get().dir('generated').dir('sources').dir('java-gi').asFile
+}
+
+// Add the generated sources to the main sourceSet
 sourceSets.main.java.srcDirs += ['build/generated/sources/java-gi']
 
 tasks.named('compileJava') {
+    dependsOn generateSources
     options.compilerArgs += '--enable-preview'
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('sourcesJar') {
     dependsOn generateSources
 }
 
 tasks.named('compileTestJava') {
     options.compilerArgs += '--enable-preview'
+    options.encoding = 'UTF-8'
 }
 
 tasks.named('test') {
     // Don't run tests in Github action. The native libraries aren't installed.
-    if (System.getenv('CI') != null || System.getenv('JITPACK') != null) {
+    if (System.getenv('CI')) {
         enabled = false
+    }
+
+    // Configure library path for MacOS (Homebrew) and set MacOS-specific JVM parameter
+    if (Os.isFamily(Os.FAMILY_MAC)) {
+        jvmArgs += '-Djava.library.path=/opt/homebrew/lib'
+        jvmArgs += '-XstartOnFirstThread'
+    }
+
+    // Configure library path for Arch, Fedora and Debian/Ubuntu
+    else if (Os.isFamily(Os.FAMILY_UNIX)) {
+        jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu'
+    }
+
+    // Configure library path for Windows (MSYS2)
+    else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        jvmArgs += '-Djava.library.path=C:/msys64/mingw64/bin'
     }
 
     useJUnitPlatform()
     jvmArgs += '--enable-preview'
     jvmArgs += '--enable-native-access=ALL-UNNAMED'
-    // Configure library path for Arch, Fedora, Debian/Ubuntu, and MacOS
-    jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu:/opt/homebrew/lib'
-    // Uncomment on MacOS:
-    // jvmArgs += '-XstartOnFirstThread'
 }
 
 tasks.named('javadoc') {
     // Do not generate javadoc for individual modules.
-    // Javadoc is generated once for alle modules together (see top-level build file).
+    // Javadoc is generated once for all modules together (see top-level build file).
     enabled = false
 }
 

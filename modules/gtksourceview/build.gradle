@@ -1,20 +1,12 @@
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
-import io.github.jwharm.javagi.patches.*;
-
 plugins {
     id 'java-gi.library-conventions'
 }
 
 dependencies {
-    api project(':glib')
     api project(':gtk')
-    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
 tasks.named('generateSources') {
-    new GenerateSourcesOperation()
-        .sourceDirectory(new File(girFilesLocation).toPath())
-        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('GtkSource-5.gir', 'https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/', null)
-        .execute()
+    girFile = 'GtkSource-5.gir'
+    urlPrefix = 'https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/'
 }

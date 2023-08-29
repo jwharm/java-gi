@@ -1,0 +1,16 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gdkpixbuf')
+    api project(':gio')
+    api project(':pango')
+    api project(':pangocairo')
+    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
+}
+
+tasks.named('generateSources') {
+    girFile = 'Gdk-4.0.gir'
+    urlPrefix = 'https://docs.gtk.org/gdk4/'
+}

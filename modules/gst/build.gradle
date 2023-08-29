@@ -1,0 +1,16 @@
+import io.github.jwharm.javagi.patches.GstPatch;
+
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':glib')
+    api project(':gmodule')
+    api project(':gobject')
+}
+
+tasks.named('generateSources') {
+    girFile = 'Gst-1.0.gir'
+    patch = new GstPatch()
+}

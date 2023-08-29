@@ -21,13 +21,17 @@ package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
 
+import java.io.Serializable;
+
 /**
  * Interface implemented by patch classes. It contains a series of
  * convenience functions to quickly find, change and remove types
  * and methods from the parsed GIR data.
  */
 @FunctionalInterface
-public interface Patch {
+public interface Patch extends Serializable {
+
+    Patch NONE = repo -> {};
 
     void patch(Repository repo);
 

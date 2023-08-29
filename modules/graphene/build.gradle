@@ -1,0 +1,12 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gobject')
+}
+
+tasks.named('generateSources') {
+    girFile = 'Graphene-1.0.gir'
+    urlPrefix = 'https://developer-old.gnome.org/graphene/stable/'
+}

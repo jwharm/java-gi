@@ -1,0 +1,14 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gtk')
+    api project(':javascriptcore')
+    api project(':soup')
+}
+
+tasks.named('generateSources') {
+    girFile = 'WebKitWebProcessExtension-6.0.gir'
+    urlPrefix = 'https://webkitgtk.org/reference/webkit2gtk-web-extension/stable/'
+}

@@ -1,0 +1,18 @@
+import io.github.jwharm.javagi.patches.GstAudioPatch;
+
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':glib')
+    api project(':gmodule')
+    api project(':gobject')
+    api project(':gst')
+    api project(':gstbase')
+}
+
+tasks.named('generateSources') {
+    girFile = 'GstAudio-1.0.gir'
+    patch = new GstAudioPatch()
+}

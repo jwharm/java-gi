@@ -1,0 +1,18 @@
+import io.github.jwharm.javagi.patches.PangoPatch
+
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gobject')
+    api project(':gio')
+    api project(':harfbuzz')
+    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
+}
+
+tasks.named('generateSources') {
+    girFile = 'Pango-1.0.gir'
+    urlPrefix = 'https://docs.gtk.org/Pango/'
+    patch = new PangoPatch()
+}

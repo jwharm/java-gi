@@ -1,14 +1,11 @@
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
-import io.github.jwharm.javagi.patches.*;
+import io.github.jwharm.javagi.patches.GLibPatch;
 
 plugins {
     id 'java-gi.library-conventions'
 }
 
 tasks.named('generateSources') {
-    new GenerateSourcesOperation()
-        .sourceDirectory(new File(girFilesLocation).toPath())
-        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('GLib-2.0.gir', 'https://docs.gtk.org/glib/', new GLibPatch())
-        .execute()
+    girFile = 'GLib-2.0.gir'
+    urlPrefix = 'https://docs.gtk.org/glib/'
+    patch = new GLibPatch()
 }

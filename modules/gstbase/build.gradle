@@ -4,9 +4,11 @@ plugins {
 
 dependencies {
     api project(':glib')
+    api project(':gmodule')
+    api project(':gobject')
+    api project(':gst')
 }
 
 tasks.named('generateSources') {
-    girFile = 'GModule-2.0.gir'
-    urlPrefix = 'https://docs.gtk.org/glib/'
+    girFile = 'GstBase-1.0.gir'
 }

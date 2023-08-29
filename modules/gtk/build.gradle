@@ -1,26 +1,16 @@
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
-import io.github.jwharm.javagi.patches.*;
+import io.github.jwharm.javagi.patches.GtkPatch;
 
 plugins {
     id 'java-gi.library-conventions'
 }
 
 dependencies {
-    api project(':gio')
-    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
+    api project(':gdk')
+    api project(':gsk')
 }
 
 tasks.named('generateSources') {
-    new GenerateSourcesOperation()
-        .sourceDirectory(new File(girFilesLocation).toPath())
-        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('HarfBuzz-0.0.gir', null, new HarfBuzzPatch())
-        .source('Pango-1.0.gir', 'https://docs.gtk.org/Pango/', new PangoPatch())
-        .source('PangoCairo-1.0.gir', 'https://docs.gtk.org/Pango/', null)
-        .source('GdkPixbuf-2.0.gir', 'https://docs.gtk.org/gdk-pixbuf/', null)
-        .source('Gdk-4.0.gir', 'https://docs.gtk.org/gdk4/', null)
-        .source('Graphene-1.0.gir', 'https://developer-old.gnome.org/graphene/stable/', null)
-        .source('Gsk-4.0.gir', null, null)
-        .source('Gtk-4.0.gir', 'https://docs.gtk.org/gtk4/', new GtkPatch())
-        .execute()
+    girFile = 'Gtk-4.0.gir'
+    urlPrefix = 'https://docs.gtk.org/gtk4/'
+    patch = new GtkPatch()
 }

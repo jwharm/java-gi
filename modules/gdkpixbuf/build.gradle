@@ -1,0 +1,13 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gmodule')
+    api project(':gio')
+}
+
+tasks.named('generateSources') {
+    girFile = 'GdkPixbuf-2.0.gir'
+    urlPrefix = 'https://docs.gtk.org/gdk-pixbuf/'
+}

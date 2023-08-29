@@ -1,20 +1,15 @@
-import io.github.jwharm.javagi.operations.GenerateSourcesOperation;
-import io.github.jwharm.javagi.patches.*;
+import io.github.jwharm.javagi.patches.AdwaitaPatch;
 
 plugins {
     id 'java-gi.library-conventions'
 }
 
 dependencies {
-    api project(':glib')
     api project(':gtk')
-    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
 }
 
 tasks.named('generateSources') {
-    new GenerateSourcesOperation()
-        .sourceDirectory(new File(girFilesLocation).toPath())
-        .outputDirectory(buildDir.toPath().resolve('generated').resolve('sources').resolve('java-gi'))
-        .source('Adw-1.gir', 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/', new AdwaitaPatch())
-        .execute()
+    girFile = 'Adw-1.gir'
+    urlPrefix = 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/'
+    patch = new AdwaitaPatch()
 }

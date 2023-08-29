@@ -1,0 +1,14 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gobject')
+    api project(':pango')
+    api 'com.github.jwharm:cairo-java-bindings:1.16.0'
+}
+
+tasks.named('generateSources') {
+    girFile = 'PangoCairo-1.0.gir'
+    urlPrefix = 'https://docs.gtk.org/Pango/'
+}

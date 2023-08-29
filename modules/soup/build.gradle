@@ -1,0 +1,12 @@
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    api project(':gio')
+}
+
+tasks.named('generateSources') {
+    girFile = 'Soup-3.0.gir'
+    urlPrefix = 'https://libsoup.org/libsoup-3.0/'
+}
