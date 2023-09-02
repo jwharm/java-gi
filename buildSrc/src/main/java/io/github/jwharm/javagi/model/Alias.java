@@ -33,7 +33,7 @@ public class Alias extends ValueWrapper {
      * Represents the different types of elements which may be aliased
      */
     public enum TargetType {
-        CLASS, RECORD, INTERFACE, CALLBACK, VALUE, UNKNOWN
+        ALIAS, CLASS, RECORD, INTERFACE, CALLBACK, VALUE, UNKNOWN
     }
 
     /**
@@ -44,6 +44,8 @@ public class Alias extends ValueWrapper {
                 || "java.lang.String".equals(type.qualifiedJavaType)
                 || "java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)) {
             return TargetType.VALUE;
+        } else if (type.girElementInstance instanceof Alias) {
+            return TargetType.ALIAS;
         } else if (type.girElementInstance instanceof Callback) {
             return TargetType.CALLBACK;
         } else if (type.girElementInstance instanceof Interface) {
@@ -68,6 +70,11 @@ public class Alias extends ValueWrapper {
         generateJavadoc(writer);
 
         switch (getTargetType()) {
+            case ALIAS -> {
+                writer.write("public class " + javaName + " extends " + type.qualifiedJavaType + " {\n");
+                writer.increaseIndent();
+                generateValueConstructor(writer, type.girElementInstance.type.qualifiedJavaType);
+            }
             case CLASS, RECORD -> {
                 writer.write("public class " + javaName);
                 if (generic)

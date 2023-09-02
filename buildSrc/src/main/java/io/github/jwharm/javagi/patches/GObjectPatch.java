@@ -54,6 +54,14 @@ public class GObjectPatch implements Patch {
             iuc.fieldList.add(parent_class);
         }
 
+        // GLib and GObject both define gtype as an alias to gsize. We change the Java class for the
+        // gtype declaration in GObject to inherit from the GLib gtype, so the instances of both classes
+        // can be used interchangeably in most cases.
+        Type t = repo.namespace.registeredTypeMap.get("Type").type;
+        t.name = "GLib.Type";
+        t.cType = "gtype";
+        t.init(t.name);
+
         // Add methods for TypeInstance to set the flag to call the parent method
         inject(repo, "TypeInstance", """
         
