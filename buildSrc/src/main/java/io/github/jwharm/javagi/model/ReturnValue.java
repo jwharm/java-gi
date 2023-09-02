@@ -98,6 +98,11 @@ public class ReturnValue extends Parameter {
             writer.write(";\n");
             writer.write("if (_object != null) {\n");
 
+            // Debug logging
+            writer.write("    Logger.debug(\"Ref ");
+            writeType(writer, false);
+            writer.write(" %ld\\n\", _object == null || _object.handle() == null ? 0 : _object.handle().address());\n");
+
             writer.write("    _object.ref();\n");
             writer.write("}\n");
             writer.write("return _object;\n");
