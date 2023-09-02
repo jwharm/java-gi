@@ -45,7 +45,7 @@ jobs:
 
       - name: Run Gradle build
         working-directory: java-gi/
-        run: ./gradlew build
+        run: ./gradlew build javadoc
 
       - name: Run Mkdocs build
         working-directory: java-gi/website/
