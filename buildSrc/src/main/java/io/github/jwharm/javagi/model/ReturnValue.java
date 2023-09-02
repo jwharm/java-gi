@@ -90,8 +90,8 @@ public class ReturnValue extends Parameter {
             return;
         }
 
-        // When transfer-ownership="full", we must take a reference. (except in ref() to avoid a recursive loop)
-        if (isGObject() && "full".equals(transferOwnership) && (! parent.name.equals("ref"))) {
+        // When transfer-ownership="none", we must take a reference
+        if (isGObject() && "none".equals(transferOwnership) && (! parent.name.equals("ref"))) {
 
             writer.write("var _object = ");
             marshalNativeToJava(writer, "_result", false);
