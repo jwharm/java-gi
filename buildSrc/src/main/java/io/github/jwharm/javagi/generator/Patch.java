@@ -31,8 +31,6 @@ import java.io.Serializable;
 @FunctionalInterface
 public interface Patch extends Serializable {
 
-    Patch NONE = repo -> {};
-
     void patch(Repository repo);
 
     default void removeConstant(Repository repo, String constant) {
