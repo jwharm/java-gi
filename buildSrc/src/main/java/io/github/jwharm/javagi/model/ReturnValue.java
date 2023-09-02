@@ -99,7 +99,7 @@ public class ReturnValue extends Parameter {
             writer.write("if (_object != null) {\n");
 
             // Debug logging
-            writer.write("    Logger.debug(\"Ref ");
+            writer.write("    GLibLogger.debug(\"Ref ");
             writeType(writer, false);
             writer.write(" %ld\\n\", _object == null || _object.handle() == null ? 0 : _object.handle().address());\n");
 

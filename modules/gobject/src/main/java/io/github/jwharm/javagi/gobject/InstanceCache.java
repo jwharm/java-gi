@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import io.github.jwharm.javagi.base.Floating;
-import io.github.jwharm.javagi.base.Logger;
+import io.github.jwharm.javagi.base.GLibLogger;
 import io.github.jwharm.javagi.gobject.types.TypeCache;
 import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.Type;
@@ -202,7 +202,7 @@ public class InstanceCache {
             return newInstance;
         }
 
-        Logger.debug("New %s %ld", newInstance.getClass().getName(), address == null ? 0L : address.address());
+        GLibLogger.debug("New %s %ld", newInstance.getClass().getName(), address == null ? 0L : address.address());
 
         // Put the instance in the cache. If another thread did this (while we were creating a new
         // instance), putIfAbsent() will return that instance.
@@ -251,11 +251,11 @@ public class InstanceCache {
         public void run(@Nullable MemorySegment data, GObject object, boolean isLastRef) {
             var key = object.handle();
             if (isLastRef) {
-                Logger.debug("Toggle strong %ld", object.handle() == null ? 0 : object.handle().address());
+                GLibLogger.debug("Toggle strong %ld", object.handle() == null ? 0 : object.handle().address());
                 weakReferences.put(key, new WeakReference<>(object));
                 strongReferences.remove(key);
             } else {
-                Logger.debug("Toggle weak %ld", object.handle() == null ? 0 : object.handle().address());
+                GLibLogger.debug("Toggle weak %ld", object.handle() == null ? 0 : object.handle().address());
                 strongReferences.put(key, object);
                 weakReferences.remove(key);
             }
@@ -273,7 +273,7 @@ public class InstanceCache {
             implements Runnable {
 
         public void run() {
-            Logger.debug("Unref %ld", address == null ? 0L : address.address());
+            GLibLogger.debug("Unref %ld", address == null ? 0L : address.address());
             new GObject(address).removeToggleRef(toggleNotify);
             InstanceCache.weakReferences.remove(address);
         }
