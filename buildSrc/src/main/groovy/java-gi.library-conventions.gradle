@@ -35,7 +35,9 @@ group = 'io.github.jwharm.javagi'
 version = '0.7-SNAPSHOT'
 
 java {
-    withJavadocJar()
+    if (! System.getenv('CI')) {
+        withJavadocJar()
+    }
     withSourcesJar()
     toolchain {
         languageVersion = JavaLanguageVersion.of(20)
@@ -61,6 +63,9 @@ tasks.named('compileJava') {
 }
 
 tasks.named('javadoc') {
+    if (System.getenv('CI')) {
+        enabled = false
+    }
     options.addStringOption('source', '20')
     options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
