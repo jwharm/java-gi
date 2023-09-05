@@ -11,12 +11,13 @@ import io.github.jwharm.javagi.generator.GenerateSources
  * - Configure 'generateSources' action
  * - Enable preview features
  * - Set OS-specific library paths for unit tests
- * - Set common POM metadata
+ * - Set common POM metadata and enable signing
  */
 
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
 }
 
 repositories {
@@ -34,6 +35,7 @@ group = 'io.github.jwharm.javagi'
 version = '0.7-SNAPSHOT'
 
 java {
+    withJavadocJar()
     withSourcesJar()
     toolchain {
         languageVersion = JavaLanguageVersion.of(20)
@@ -55,6 +57,13 @@ sourceSets.main.java.srcDirs += ['build/generated/sources/java-gi']
 tasks.named('compileJava') {
     dependsOn generateSources
     options.compilerArgs += '--enable-preview'
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('javadoc') {
+    options.addStringOption('source', '20')
+    options.addBooleanOption('-enable-preview', true)
+    options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
 }
 
@@ -94,19 +103,14 @@ tasks.named('test') {
     jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
-tasks.named('javadoc') {
-    // Do not generate javadoc for individual modules.
-    // Javadoc is generated once for all modules together (see top-level build file).
-    enabled = false
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
             pom {
+                name = "${groupId}:${artifactId}"
                 groupId = 'io.github.jwharm.javagi'
-                description = 'Java language bindings for GObject-Introspection-based libraries'
+                description = "Java language bindings for ${artifactId.capitalize()}, generated with Java-GI"
                 url = 'https://jwharm.github.io/java-gi/'
                 licenses {
                     license {
@@ -118,10 +122,20 @@ publishing {
                     developer {
                         id = 'jwharm'
                         name = 'Jan-Willem Harmannij'
+                        email = 'jwharmannij@gmail.com'
                         url = 'https://github.com/jwharm'
                     }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/jwharm/java-gi.git'
+                    developerConnection = 'scm:git:ssh://github.com:jwharm/java-gi.git'
+                    url = 'http://github.com/jwharm/java-gi/tree/master'
                 }
             }
         }
     }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
