@@ -21,11 +21,10 @@ package io.github.jwharm.javagi.generator;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
+import io.github.jwharm.javagi.configuration.PackageNames;
 import io.github.jwharm.javagi.model.*;
-import io.github.jwharm.javagi.model.Module;
 
 /**
  * Utility functions to convert names and keywords
@@ -33,15 +32,10 @@ import io.github.jwharm.javagi.model.Module;
 public class Conversions {
 
     /**
-     * Map of namespaces to Java package names
-     */
-    public static Map<String, String> packageNames;
-
-    /**
      * Convert "Gdk" to "org.gnome.gdk"
      */
     public static String namespaceToJavaPackage(String ns) {
-        return Objects.requireNonNullElse(packageNames.get(ns), ns);
+        return Objects.requireNonNullElse(PackageNames.getMap().get(ns), ns);
     }
 
     /** 

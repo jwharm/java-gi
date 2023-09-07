@@ -19,7 +19,7 @@
 
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
+import io.github.jwharm.javagi.configuration.PackageNames;
 import io.github.jwharm.javagi.generator.Platform;
 
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public class Namespace extends GirElement {
         this.sharedLibrary = sharedLibrary;
         this.cIdentifierPrefix = cIdentifierPrefix;
         this.cSymbolPrefix = cSymbolPrefix;
-        this.packageName = Conversions.packageNames.get(name);
+        this.packageName = PackageNames.getMap().get(name);
         this.globalClassName = (name.equals("GObject") ? "GObjects" : name);
         this.pathName = packageName.replace('.', '/') + '/';
     }
