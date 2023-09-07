@@ -160,8 +160,9 @@ public class Types {
             widgetClass.setTemplateFromResource(ui);
 
             widgetClass.overrideDispose((object) -> {
-                ((Widget) object).disposeTemplate(typeClass.readGType());
-                object.dispose(); // This should call the parent class dispose
+                Widget widget = (Widget) object;
+                widget.disposeTemplate(typeClass.readGType());
+                widget.asParent().dispose(); // This will call the parent class dispose
             });
 
             // Install BuilderJavaScope to call Java signal handler methods

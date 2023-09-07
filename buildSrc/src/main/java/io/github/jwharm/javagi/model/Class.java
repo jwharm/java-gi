@@ -131,6 +131,29 @@ public class Class extends RegisteredType {
         writer.write("}\n");
     }
 
+    protected void generateParentAccessor(SourceWriter writer) throws IOException {
+        writer.write("\n");
+        writer.write("/**\n");
+        writer.write(" * Returns this instance as if it were its parent type. This is mostly synonymous to the Java\n");
+        writer.write(" * {@code super} keyword, but will set the native typeclass function pointers to the parent\n");
+        writer.write(" * type. When overriding a native virtual method in Java, \"chaining up\" with\n");
+        writer.write(" * {@code super.methodName()} doesn't work, because it invokes the overridden function pointer\n");
+        writer.write(" * again. To chain up, call {@code asParent().methodName()}. This will call the native function\n");
+        writer.write(" * pointer of this virtual method in the typeclass of the parent type.\n");
+        writer.write(" */\n");
+        writer.write("public " + qualifiedName + " asParent() {\n");
+        writer.increaseIndent();
+        if ("1".equals(abstract_)) {
+            writer.write(qualifiedName + " _parent = new " + qualifiedName + "." + javaName + "Impl(handle());\n");
+        } else {
+            writer.write( qualifiedName + " _parent = new " + qualifiedName + "(handle());\n");
+        }
+        writer.write("_parent.callParent(true);\n");
+        writer.write("return _parent;\n");
+        writer.decreaseIndent();
+        writer.write("}\n");
+    }
+
     @Override
     public String getConstructorString() {
         String qName = Conversions.convertToJavaType(this.javaName, true, getNamespace());
