@@ -51,7 +51,7 @@ public class PackageNames {
                 entry("JavaScriptCore",            "org.gnome.webkit.jsc"),
                 entry("WebKit",                    "org.gnome.webkit"),
                 entry("WebKitWebProcessExtension", "org.gnome.webkit.wpe"),
-                entry("Gst",                       "org.freedesktop.gstreamer"),
+                entry("Gst",                       "org.freedesktop.gstreamer.gst"),
                 entry("GstBase",                   "org.freedesktop.gstreamer.base"),
                 entry("GstAudio",                  "org.freedesktop.gstreamer.audio"),
                 entry("GstPbutils",                "org.freedesktop.gstreamer.pbutils"),
