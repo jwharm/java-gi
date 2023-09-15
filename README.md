@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.6.1 generates bindings to develop Java applications with the following libraries:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7 generates bindings to develop Java applications with the following libraries:
 
 | Library       | Version |
 |---------------|---------|
@@ -17,7 +17,7 @@ Please note that Java-GI is still under active development. The bindings should 
 
 ## Quickstart
 
-- To use Java-GI in your app, you need to specify a few things in your `gradle.build` file, as described on [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 20, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
+- To use Java-GI in your app, add the dependency to your `gradle.build` or `pom.xml` as described on [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 20, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
 - Write, compile and run a GTK application:
 
@@ -139,7 +139,7 @@ var button = Button.newWithLabel("Close");
 button.onClicked(window::close);
 ```
 
-For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `Signal` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected.
+For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `SignalConnection` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected.
 
 Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callback functions to ensure type safety.
 
@@ -183,7 +183,7 @@ You can define custom GObject Properties with an annotation:
 
 Java classes can implement interfaces and override methods without any additional effort. You can override any method you want; however, when you override methods from an interface (or virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. An [example implementation](https://github.com/jwharm/java-gi/blob/main/glib/main/java/io/github/jwharm/javagi/util/ListIndexModel.java) of the `ListModel` interface is included in the GLib module.
 
-Read [the documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
+You can also create new Signals in your custom class, using the `@Signal` annotation.  Read [the documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
 
 ### Composite template classes
 
@@ -271,7 +271,7 @@ try {
 }
 ```
 
-The Java-GI bindings are cross-platform: You can use the same jar on all supported operating systems (Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when neccessary.
+The Java-GI bindings are cross-platform: You can use the same jar on all supported operating systems (Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
 
 ## Building and Contributing
 
