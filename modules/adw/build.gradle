@@ -1,4 +1,4 @@
-import io.github.jwharm.javagi.patches.AdwaitaPatch;
+import io.github.jwharm.javagi.patches.AdwPatch;
 
 plugins {
     id 'java-gi.library-conventions'
@@ -11,5 +11,5 @@ dependencies {
 tasks.named('generateSources') {
     girFile = 'Adw-1.gir'
     urlPrefix = 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/'
-    patch = new AdwaitaPatch()
+    patch = new AdwPatch()
 }
