@@ -135,6 +135,54 @@ public void init() {
 }
 ```
 
+## Signals
+
+Java-GI 0.7 added support for custom signals in Java classes that extend GObject. For example:
+
+```java
+public class Counter extends GObject {
+
+    // register the type
+    private static final Type gtype = Types.register(Counter.class);
+    
+    // define signal
+    @Signal
+    public interface LimitReached {
+        public void run(int limit);
+    }
+
+    public void count() {
+        num++;
+        if (num == limit) {
+            // call GObject.emit(signalName, args...) to emit the signal:
+            emit("limit-reached", limit);
+        }
+    }
+    
+    ...
+}
+```
+
+The "limit-reached" signal is defined with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
+
+You can connect to the custom signal, like this:
+
+```java
+counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
+    System.out.println("Limit reached: " + limit));
+}
+```
+
+Because the signal declaration is an ordinary functional interface, the declaration in the above example can also be declared as an `IntConsumer`:
+
+```
+@Signal
+public interface LimitReached extends IntConsumer {}
+```
+
+It's also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
+
+
 ## Examples
 
 In [this example application](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire), the inner class `SolitairePeg` is registered as a GObject subclass that implements the `Paintable` interface.

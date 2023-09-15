@@ -12,33 +12,19 @@ Make sure that the native GLib, Gtk and/or GStreamer libraries are installed on 
 
 * GStreamer: Follow the [installation instructions](https://gstreamer.freedesktop.org/documentation/installing/).
 
-Next, add the dependencies as described on [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1). For example, if you use Gradle:
+Next, add the dependencies. For example, if you use Gradle:
 
 ```groovy
-allprojects {
-	repositories {
-		mavenCentral()
-		maven { url 'https://jitpack.io' }
-	}
+repositories {
+    mavenCentral()
 }
 
 dependencies {
-    // For the @Nullable/@NotNull annotations
-    compileOnly 'org.jetbrains:annotations:24.+'
-    
-    // Include the libraries you want to use. 
-    implementation 'com.github.jwharm.java-gi:glib:latest.release'
-    implementation 'com.github.jwharm.java-gi:gtk:latest.release'
-    implementation 'com.github.jwharm.java-gi:adwaita:latest.release'
-    implementation 'com.github.jwharm.java-gi:gstreamer:latest.release'
-    implementation 'com.github.jwharm.java-gi:gtksourceview:latest.release'
-    implementation 'com.github.jwharm.java-gi:webkitgtk:latest.release'
+    implementation 'io.github.jwharm.javagi:gtk:0.7'
 }
 ```
 
-The `glib` jar contains GLib, GIO, GObject and GModule, and the Java-GI base classes. You should always include it. The other jars only need to be included if you intend to use that specific functionality.
-
-The `gtk` jar contains, besides Gtk, also the bindings for Gdk, GdkPixbuf, Graphene, HarfBuzz and Pango. Furthermore, it depends on the [cairo-java-bindings](https://github.com/jwharm/cairo-java-bindings). Maven or Gradle will download the cairo dependency from JitPack.io automatically.
+This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gst`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://github.com/jwharm/java-gi/tree/main/modules).
 
 ## Application code
 
@@ -93,7 +79,7 @@ Build and run the application with the following parameters:
 
 * While the Panama foreign function API is still in preview status, set the `--enable-preview` option both when **compiling** and **running** your application.
 
-* To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`. For module-based applications, add `--enable-native-access=org.gnome.glib` (and all other modules that you use) instead.
+* To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
 
 * If you encounter an error about a missing library, override the java library path with `"-Djava.library.path=/usr/lib/..."`
 
@@ -102,16 +88,3 @@ See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/m
 ## Java library path
 
 If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument, for example: `-Djava.library.path=/lib/x86_64-linux-gnu` on Debian-based systems.
-
-## Modules
-
-For module-based applications (with a `module-info.java` file), the following modules are available:
-
-* org.gnome.glib
-    * org.freedesktop.gstreamer
-    * org.gnome.gtk
-        * org.gnome.adwaita
-        * org.gnome.gtksourceview
-        * org.gnome.webkitgtk
-
-Each module transitively exports its dependencies, so when you want to create a Gtk application, you only need to add `requires org.gnome.gtk;` to your `module-info.java` file.
