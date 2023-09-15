@@ -80,7 +80,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * Returns the gtype of {@link ListIndex}
      * @return always returns the value of {@link ListIndex#gtype}
      */
-    @Property(name="item-type", constructOnly=true)
+    @Property(name="item-type", writable=false)
     @Override
     public Type getItemType() {
         return ListIndex.gtype;
