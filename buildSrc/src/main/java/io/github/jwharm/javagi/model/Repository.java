@@ -235,8 +235,14 @@ public class Repository extends GirElement {
 
             // Write dependencies
             for (var incl : includeList) {
-                String pkg = PackageNames.getMap().get(incl.name);
-                writer.write("requires transitive " + pkg + ";\n");
+                String module = PackageNames.getMap().get(incl.name);
+
+                // A minimal set of FreeType bindings is included in the Cairo module
+                if ("org.freedesktop.freetype".equals(module)) {
+                    module = "org.freedesktop.cairo";
+                }
+
+                writer.write("requires transitive " + module + ";\n");
             }
 
             // Write the generated package name
