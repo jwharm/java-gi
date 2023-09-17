@@ -27,11 +27,14 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.Optional;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 
 /**
  * GenerateSources is a Gradle task that will parse a GIR file (and all included GIR files)
@@ -70,6 +73,7 @@ public abstract class GenerateSources extends DefaultTask {
                 if (repository.generate) {
                     Path basePath = getOutputDirectory().get().file(repository.namespace.pathName).getAsFile().toPath();
                     repository.generate(basePath);
+                    repository.generateModuleInfo(getOutputDirectory().get().getAsFile().toPath(), getPackages());
                 }
             }
         } catch (Exception e) {
@@ -118,5 +122,30 @@ public abstract class GenerateSources extends DefaultTask {
         module.link();
 
         return module;
+    }
+
+    /**
+     * Return a set of package names for all directories in the src/main/java folder that
+     * contain at least one *.java file.
+     */
+    private Set<String> getPackages() throws IOException {
+        Set<String> packages = new HashSet<>();
+        var srcDir = getProject().getProjectDir().toPath()
+                .resolve(Path.of("src", "main", "java"));
+        if (! Files.exists(srcDir)) {
+            return packages;
+        }
+        Files.walkFileTree(srcDir, EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                if (file.toString().endsWith(".java")) {
+                    String pkg = srcDir.relativize(file.getParent()).toString()
+                            .replace(srcDir.getFileSystem().getSeparator(), ".");
+                    packages.add(pkg);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        return packages;
     }
 }

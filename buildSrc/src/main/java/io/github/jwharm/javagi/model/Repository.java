@@ -19,12 +19,14 @@
 
 package io.github.jwharm.javagi.model;
 
+import io.github.jwharm.javagi.configuration.PackageNames;
 import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class Repository extends GirElement {
 
@@ -65,16 +67,18 @@ public class Repository extends GirElement {
                 rt.generate(writer);
             }
         }
+
         // Create a class file for global declarations
-        generateGlobals(basePath);
+        String globalsClassName = Conversions.convertToJavaType(namespace.globalClassName, false, namespace);
+        generateGlobals(basePath, globalsClassName);
+        generatePackageInfo(basePath, globalsClassName);
     }
 
     /**
      * Generate the contents for the class with the namespace-global declarations and a package-info.
      * The name of the class is the namespace identifier.
      */
-    public void generateGlobals(Path basePath) throws IOException {
-        String className = Conversions.convertToJavaType(namespace.globalClassName, false, namespace);
+    public void generateGlobals(Path basePath, String className) throws IOException {
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve(className + ".java")))) {
 
             writer.write("package " + namespace.packageName + ";\n");
@@ -166,8 +170,12 @@ public class Repository extends GirElement {
             writer.decreaseIndent();
             writer.write("}\n");
         }
+    }
 
-        // Generate package-info.java file
+    /**
+     * Generate package-info.java file
+     */
+    private void generatePackageInfo(Path basePath, String globalsClassName) throws IOException {
         try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(basePath.resolve("package-info.java")))) {
             writer.write("/**\n");
             writer.write(" * This package contains the generated bindings for " + namespace.name + ".\n");
@@ -188,7 +196,7 @@ public class Repository extends GirElement {
                 writer.write("\n");
                 writer.write(" * <p>\n");
             }
-            writer.write(" * For namespace-global declarations, refer to the {@link " + className + "} class documentation.\n");
+            writer.write(" * For namespace-global declarations, refer to the {@link " + globalsClassName + "} class documentation.\n");
 
             if (platforms.size() < 3) {
                 writer.write(" * <p>\n");
@@ -214,6 +222,41 @@ public class Repository extends GirElement {
         }
     }
 
+    /**
+     * Generate a module-info.java file for JPMS modules
+     */
+    public void generateModuleInfo(Path rootPath, Set<String> packageNames) throws IOException {
+        try (SourceWriter writer = new SourceWriter(Files.newBufferedWriter(rootPath.resolve("module-info.java")))) {
+            writer.write("module " + namespace.packageName + " {\n");
+            writer.increaseIndent();
+
+            // Always include jetbrains annotations
+            writer.write("requires org.jetbrains.annotations;\n");
+
+            // Write dependencies
+            for (var incl : includeList) {
+                String module = PackageNames.getMap().get(incl.name);
+
+                // A minimal set of FreeType bindings is included in the Cairo module
+                if ("org.freedesktop.freetype".equals(module)) {
+                    module = "org.freedesktop.cairo";
+                }
+
+                writer.write("requires transitive " + module + ";\n");
+            }
+
+            // Write the generated package name
+            writer.write("exports " + namespace.packageName + ";\n");
+
+            // Write source packages (specified in the build file)
+            for (var pkg : packageNames) {
+                writer.write("exports " + pkg + ";\n");
+            }
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+    }
+
     public void generateImportStatements(SourceWriter writer) throws IOException {
         if (module.repositories.containsKey("GObject")) {
             writer.write("import io.github.jwharm.javagi.gobject.*;\n");
@@ -230,6 +273,7 @@ public class Repository extends GirElement {
     public Repository copy() {
         var copy = new Repository(module, generate);
         copy.namespace = namespace.copy();
+        copy.includeList.addAll(includeList);
         copy.package_ = package_;
         return copy;
     }
