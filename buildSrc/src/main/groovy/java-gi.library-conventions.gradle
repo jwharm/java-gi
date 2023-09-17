@@ -31,7 +31,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.7'
+version = '0.7.1'
 
 java {
     if (! System.getenv('CI')) {
