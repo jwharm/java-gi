@@ -23,6 +23,10 @@ tasks.named('javadoc', Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
 
+    // Prevent "too many module declarations found" javadoc error
+    exclude "**/module-info.java"
+    options.addStringOption('-add-modules', 'org.jetbrains.annotations,org.freedesktop.cairo')
+
     source subprojects.collect {
         it.sourceSets.main.allJava
     }
