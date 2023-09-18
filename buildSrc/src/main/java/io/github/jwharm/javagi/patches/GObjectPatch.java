@@ -179,5 +179,21 @@ public class GObjectPatch implements Patch {
                 return Signals.emit(this, detailedSignal, params);
             }
         """);
+
+        inject(repo, "Value", """
+            
+            /**
+             * Return a newly allocated string using {@link GObjects#strdupValueContents(Value)},
+             * which describes the contents of a {@link Value}.
+             * The main purpose of this function is to describe {@link Value}
+             * contents for debugging output, the way in which the contents are
+             * described may change between different GLib versions.
+             * @return Newly allocated string.
+             */
+            @Override
+            public String toString() {
+                return GObjects.strdupValueContents(this);
+            }
+        """);
     }
 }
