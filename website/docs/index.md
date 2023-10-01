@@ -18,7 +18,7 @@ Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.7 has been tested with the following libraries:
+Java-GI version 0.7.1 has been tested with the following libraries:
 
 | Library       | Version |
 |---------------|---------|
