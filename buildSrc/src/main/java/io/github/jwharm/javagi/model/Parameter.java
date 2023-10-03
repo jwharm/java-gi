@@ -87,7 +87,7 @@ public class Parameter extends Variable {
             return params.parameterList.get(index);
         }
     }
-    
+
     public boolean isProxy() {
         if (type == null) {
             return false;
@@ -197,7 +197,7 @@ public class Parameter extends Variable {
     public boolean isArrayLengthParameter() {
         return linkedArray != null;
     }
-    
+
     /**
      * We don't need to perform a null-check on parameters that are not nullable, or not user-specified
      * (instance param, gerror, user_data or array length), or primitive values.
@@ -205,10 +205,10 @@ public class Parameter extends Variable {
      */
     public boolean checkNull() {
         return (! notnull)
-            && (! (isInstanceParameter() || isErrorParameter()
+                && (! (isInstanceParameter() || isErrorParameter()
                 || isUserDataParameter() || isDestroyNotifyParameter()
                 || isArrayLengthParameter() || varargs))
-            && super.checkNull();
+                && super.checkNull();
     }
 
     /**
@@ -219,7 +219,7 @@ public class Parameter extends Variable {
      * @throws IOException Thrown when an error occurs while writing to the file
      */
     public void generatePreprocessing(SourceWriter writer) throws IOException {
-        
+
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
         if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
@@ -230,7 +230,7 @@ public class Parameter extends Variable {
                         + ", \"" + "Parameter '" + name + "' must not be null\");\n");
             }
         }
-        
+
         // Generate pointer allocation
         if (isOutParameter() && array != null && array.size(false) != null && "1".equals(callerAllocates)) {
             writer.write("MemorySegment _" + name + "Pointer = (MemorySegment) ");
@@ -269,7 +269,7 @@ public class Parameter extends Variable {
         }
 
     }
-    
+
     /**
      * Generate code to do post-processing of the parameter after the function call.
      * @param writer The source code file writer
@@ -325,13 +325,13 @@ public class Parameter extends Variable {
                 }
             }
         }
-        
+
         // If the parameter has attribute transfer-ownership="full", we must register a reference, because
         // the native code is going to call un_ref() at some point while we still keep a pointer in the InstanceCache.
         // Only for GObjects where ownership is fully transferred away, unless it's an out parameter or a pointer.
         if (isGObject()
-                && "full".equals(transferOwnership) 
-                && (! isOutParameter()) 
+                && "full".equals(transferOwnership)
+                && (! isOutParameter())
                 && (type.cType == null || (! type.cType.endsWith("**")))) {
             String param = isInstanceParameter() ? "this" : name;
             if (checkNull()) writer.write("if (" + param + " != null) ");
@@ -350,22 +350,26 @@ public class Parameter extends Variable {
 
     public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         if (isAliasForPrimitive() && type.isPointer()) {
+            writer.write("MemorySegment %sParam = MemorySegment.ofAddress(%s.address(), %s.byteSize(), %s.scope());\n"
+                    .formatted(name, name, Conversions.getValueLayoutPlain(type), name));
             String typeStr = Conversions.getValueLayoutPlain(type.girElementInstance.type);
-            writer.write(type.qualifiedJavaType + " _" + name + "Alias = new " + type.qualifiedJavaType + "(" + name + ".get(" + typeStr + ", 0));\n");
+            writer.write(type.qualifiedJavaType + " _" + name + "Alias = new " + type.qualifiedJavaType + "(" + name + "Param.get(" + typeStr + ", 0));\n");
         } else if (isOutParameter()) {
             if (type != null) {
+                writer.write("MemorySegment %sParam = MemorySegment.ofAddress(%s.address(), %s.byteSize(), %s.scope());\n"
+                        .formatted(name, name, Conversions.getValueLayoutPlain(type), name));
                 String typeStr = type.qualifiedJavaType;
                 if (type.isPrimitive) typeStr = Conversions.primitiveClassName(typeStr);
                 writer.write("Out<" + typeStr + "> _" + name + "Out = new Out<>(");
                 if (type.isPrimitive || type.isAliasForPrimitive()) {
                     String layout = Conversions.getValueLayoutPlain(type);
-                    writer.write(name + ".get(" + layout + ", 0)");
+                    writer.write(name + "Param.get(" + layout + ", 0)");
                     if (type.isBoolean()) writer.write(" != 0");
                     writer.write(");\n");
                 } else {
-                    String identifier = name;
+                    String identifier = name + "Param";
                     if (type.isEnum() || type.isBitfield()) {
-                        identifier = name + ".get(ValueLayout.JAVA_INT, 0)";
+                        identifier = name + "Param.get(ValueLayout.JAVA_INT, 0)";
                     }
                     writer.write(marshalNativeToJava(type, identifier, true) + ");\n");
                 }
@@ -382,7 +386,7 @@ public class Parameter extends Variable {
     public void generateUpcallPostprocessing(SourceWriter writer) throws IOException {
         if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayoutPlain(type.girElementInstance.type);
-            writer.write(name + ".set(" + typeStr + ", 0, _" + name + "Alias.getValue());\n");
+            writer.write(name + "Param.set(" + typeStr + ", 0, _" + name + "Alias.getValue());\n");
         } else if (isOutParameter()) {
             if (type != null) {
                 String typeStr = Conversions.getValueLayoutPlain(type);
@@ -394,7 +398,7 @@ public class Parameter extends Variable {
                 if (type.isEnum() || type.isBitfield()) {
                     identifier = "_" + name + "Out.get().getValue()";
                 }
-                writer.write(name + ".set(" + typeStr + ", 0, " + identifier + ");\n");
+                writer.write(name + "Param.set(" + typeStr + ", 0, " + identifier + ");\n");
             }
             if (array != null) {
                 // TODO: Copy the array from the Out<> parameter to the provided memory address.

@@ -80,6 +80,7 @@ public interface Closure extends CallableType {
         generateUpcallMethod(writer, javaName, "upcall","run");
 
         // Generate toCallback()
+        writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
         writer.write(" * @return the memory address of the callback function\n");
