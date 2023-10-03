@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7.1 generates bindings to develop Java applications with the following libraries:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7.2 generates bindings to develop Java applications with the following libraries:
 
 | Library       | Version |
 |---------------|---------|
@@ -45,10 +45,10 @@ public class HelloWorld {
         window.setDefaultSize(300, 200);
 
         var box = Box.builder()
-            .setOrientation(Orientation.VERTICAL)
-            .setHalign(Align.CENTER)
-            .setValign(Align.CENTER)
-            .build();
+                .orientation(Orientation.VERTICAL)
+                .halign(Align.CENTER)
+                .valign(Align.CENTER)
+                .build();
 
         var button = Button.newWithLabel("Hello world!");
         button.onClicked(window::close);
@@ -68,15 +68,29 @@ The result:
 
 You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`:
 
-| ![Hello World screenshot](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/simple-helloworld.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
+| ![Browser screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
-| [Hello World](https://github.com/jwharm/java-gi-examples/tree/main/HelloWorld) | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
+| [Web Browser](https://github.com/jwharm/java-gi-examples/tree/main/Browser)                     | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
 
-## Features
+## Roadmap
+
+Upcoming improvements planned for Q4 2023:
+
+* Upgrade to GNOME 45
+* Upgrade the [Cairo bindings](https://github.com/jwharm/cairo-java-bindings) to the recent 1.18 release
+* A brand-new [Gradle plugin](https://github.com/jwharm/sources-list-plugin) to facilitate offline Flatpak builds 
+
+An upgrade to OpenJDK 21 (JEP 442) is currently on-hold, until Kotlin supports JDK 21 (maybe with 1.9.20).
+
+## Current features
 
 Nearly all types, functions and parameters defined in the GIR files are supported by Java-GI. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
 
 Some interesting features of the bindings that Java-GI generates:
+
+### Automatic memory management
+
+Memory management of native resources is automatically taken care of. Java-GI uses GObject toggle references to dispose the native object when the Java instance is garbage-collected, and releases all other memory allocations (for strings, arrays and structs) after use.
 
 ### Javadoc
 
@@ -99,9 +113,9 @@ public @Nullable java.lang.String getIconName() {
 
 ![Javadoc screenshot](images/javadoc.png)
 
-The Javadoc is also published [online](https://jwharm.github.io/java-gi/javadoc).
+The Javadoc is published [online](https://jwharm.github.io/java-gi/javadoc).
 
-### Classes and Interfaces
+### GObject type system
 
 GObject classes are available as Java classes (obviously). The GObject TypeClass definition is an inner class in the Java class.
 
@@ -125,10 +139,6 @@ var button3 = Button.newFromIconName("document-open");
 ```
 
 Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct that you can use. You can either allocate an empty struct (`var color = RGBA.allocate();`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(0.9f, 0.1f, 0.9f, 1.0f);`
-
-### Automatic memory management
-
-Memory management of native resources is automatically taken care of. Java-GI uses GObject toggle references to dispose the native object when the Java instance is garbage-collected, and releases all other memory allocations (for strings, arrays and structs) after use.
 
 ### Signals, callbacks and closures
 
@@ -166,24 +176,28 @@ public class MyWidget extends Widget {
 }
 ```
 
-You can define custom GObject Properties with an annotation:
+You can define custom GObject properties and signals using annotations:
 
 ```java
-    @Property(name="my-number", type=ParamSpecInt.class)
-    public int getMyNumber() {
-        return ...;
+    @Property(name="lives")
+    public int getLives() {
+        return lives;
     }
     
-    @Property(name="my-number") {
-    public void setMyNumber(int number) {
-        ...
+    @Property(name="lives")
+    public void setLives(int value) {
+        this.lives = value;
+        if (value == 0) signalEmit("game-over", limit);
     }
-    
+
+    @Signal(name="game-over")
+    @FunctionalInterface
+    public interface GameOver {
+        public void apply(int limit);
+    }
 ```
 
-Java classes can implement interfaces and override methods without any additional effort. You can override any method you want; however, when you override methods from an interface (or virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. An [example implementation](https://github.com/jwharm/java-gi/blob/main/glib/main/java/io/github/jwharm/javagi/util/ListIndexModel.java) of the `ListModel` interface is included in the GLib module.
-
-You can also create new Signals in your custom class, using the `@Signal` annotation.  Read [the documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
+Java classes can implement interfaces and override methods without any additional effort. When implementing methods from an interface (or overriding virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. See for example [this implementation](https://github.com/jwharm/java-gi/blob/main/glib/main/java/io/github/jwharm/javagi/util/ListIndexModel.java) of the `ListModel` interface, or read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
 
 ### Composite template classes
 
@@ -270,6 +284,8 @@ try {
     e.printStackTrace();
 }
 ```
+
+### Portability
 
 The Java-GI bindings are cross-platform: You can use the same jar on all supported operating systems (Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
 

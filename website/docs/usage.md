@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.7'
+    implementation 'io.github.jwharm.javagi:gtk:0.7.2'
 }
 ```
 
@@ -56,9 +56,9 @@ public class HelloWorld {
         window.setDefaultSize(300, 200);
         
         var box = Box.builder()
-            .setOrientation(Orientation.VERTICAL)
-            .setHalign(Align.CENTER)
-            .setValign(Align.CENTER)
+            .orientation(Orientation.VERTICAL)
+            .halign(Align.CENTER)
+            .valign(Align.CENTER)
             .build();
         
         var button = Button.newWithLabel("Hello world!");
