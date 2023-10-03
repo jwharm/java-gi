@@ -31,7 +31,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.7.2-SNAPSHOT'
+version = '0.7.2'
 
 java {
     if (! System.getenv('CI')) {
@@ -46,17 +46,16 @@ java {
 tasks.register('generateSources', GenerateSources) {
     // Input directory should point to a clone of the GitHub gircore/gir-files
     // repository. The location is set in gradle.properties. Default is '../gir-files'
-    inputDirectory = project.rootDir.toPath().resolve(girFilesLocation).toFile()
+    inputDirectory = new File(rootDir, girFilesLocation)
 
     // Write generated sources to build/generated/sources/java-gi
-    outputDirectory = layout.buildDirectory.get().dir('generated').dir('sources').dir('java-gi').asFile
+    outputDirectory = layout.buildDirectory.dir("generated/sources/java-gi")
 }
 
 // Add the generated sources to the main sourceSet
-sourceSets.main.java.srcDirs += ['build/generated/sources/java-gi']
+sourceSets.main.java.srcDir(generateSources)
 
 tasks.named('compileJava') {
-    dependsOn generateSources
     options.compilerArgs += '--enable-preview'
     options.encoding = 'UTF-8'
 }
@@ -69,10 +68,6 @@ tasks.named('javadoc') {
     options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
-}
-
-tasks.named('sourcesJar') {
-    dependsOn generateSources
 }
 
 tasks.named('compileTestJava') {
