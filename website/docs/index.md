@@ -29,13 +29,13 @@ Java-GI version 0.7.2 has been tested with the following libraries:
 | GtkSourceview | 5.9     |
 | WebkitGtk     | 2.41    |
 
-For these libraries, pre-built Java bindings are available from JitPack.io. Consult the [usage guide](usage.md) for more information.
+For these libraries, pre-built Java bindings are available from [Maven Central](https://central.sonatype.com/search?namespace=io.github.jwharm.javagi).
 
 ## API documentation
 
 Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI, the complete Javadoc pages are available [online](https://jwharm.github.io/java-gi/javadoc).
 
-JAR files with the Javadoc and source code, to use offline in your IDE, are available from [JitPack.io](https://jitpack.io/#jwharm/java-gi/0.6.1).
+JAR files with the Javadoc and source code, to use offline in your IDE, are available from Maven Central.
 
 ## Example apps
 
