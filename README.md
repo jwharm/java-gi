@@ -170,7 +170,7 @@ public class MyWidget extends Widget {
     }
 
     // Default constructor, used by Java-GI for marshaling
-    public MyWidget(Addressable address) {
+    public MyWidget(MemorySegment address) {
         super(address);
     }
 }
@@ -187,7 +187,7 @@ You can define custom GObject properties and signals using annotations:
     @Property(name="lives")
     public void setLives(int value) {
         this.lives = value;
-        if (value == 0) signalEmit("game-over", limit);
+        if (value == 0) emit("game-over", limit);
     }
 
     @Signal(name="game-over")
@@ -197,7 +197,7 @@ You can define custom GObject properties and signals using annotations:
     }
 ```
 
-Java classes can implement interfaces and override methods without any additional effort. When implementing methods from an interface (or overriding virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. See for example [this implementation](https://github.com/jwharm/java-gi/blob/main/glib/main/java/io/github/jwharm/javagi/util/ListIndexModel.java) of the `ListModel` interface, or read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
+Java classes can implement interfaces and override methods without any additional effort. When implementing methods from an interface (or overriding virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. See for example [this implementation](https://github.com/jwharm/java-gi/blob/main/modules/gio/src/main/java/io/github/jwharm/javagi/gio/ListIndexModel.java) of the `ListModel` interface, or read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
 
 ### Composite template classes
 
@@ -264,10 +264,10 @@ You can construct an object with properties using a Builder pattern. In the "Hel
 
 ```java
 var window = ApplicationWindow.builder()
-    .setApplication(this)
-    .setTitle("Window")
-    .setDefaultWidth(300)
-    .setDefaultHeight(200)
+    .application(this)
+    .title("Window")
+    .defaultWidth(300)
+    .defaultHeight(200)
     .build();
 ```
 
