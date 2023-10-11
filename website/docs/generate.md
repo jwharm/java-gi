@@ -22,6 +22,6 @@ Alternatively, in most Linux distributions, the gir files are usually installed 
 
 Once the gir file is available, copy it into the `gir-files` folder under the correct platform subfolder (linux, windows or macos).
 
-Now you can add a module to Java-GI for the library. Simply copy one of the existing module folders to a new folder, add it to `settings.gradle`, and modify the `build.gradle` file to suit your needs.
+Now you can add a module to Java-GI for the library. Simply copy one of the existing module folders to a new folder, add it to `settings.gradle`, and modify the `build.gradle` file to suit your needs. Also add all dependencies (look for `<include>` elements in gir file) to the `build.gradle` of the new module.
 
-If you encounter any problems or errors, check the generated Java source code in the `build/generated/java-gi` directory for issues. When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add it to the `source()` line in the module build class. You can use the other patches as examples.
+If you encounter any problems or errors, check the generated Java source code in the `build/generated/java-gi` directory for issues. When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add a line `patch = new ...Patch()` to the `generateSources` configuration block in `build.gradle`. (See the [Gtk](https://github.com/jwharm/java-gi/blob/main/modules/gtk/build.gradle) buildfile for an example).
