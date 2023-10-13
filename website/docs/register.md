@@ -117,7 +117,7 @@ The `@Property` annotation accepts the following parameters:
 | explicitNotify | Boolean   | false         |
 | deprecated     | Boolean   | false         |
 
-When the name is not specified, it will be inferred from the name of the method, stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
+When the name is not specified, it will be inferred from the name of the method (provided that the method names follow the `getX`/`setX` pattern), stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
 
 When the type is not specified, it will be inferred from the parameter or return-type of the method. When the type is specified, it must be one of the subclasses of `GParamSpec`. The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
 
