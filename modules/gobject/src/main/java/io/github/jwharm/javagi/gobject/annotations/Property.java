@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Property {
-    String name();
+    String name() default "";
     Class<? extends ParamSpec> type() default ParamSpec.class;
     boolean readable() default true;
     boolean writable() default true;

@@ -43,10 +43,12 @@ Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
 This constructor must exist in all Java-GI Proxy objects. It enables a Proxy class to be instantiated automatically for new instances returned from native function calls.
 
-If your application is module-based, you must export your package to the `org.gnome.glib` module in your `module-info.java` file, to allow the reflection to work:
+If your application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
 ```
-exports [package.name] to org.gnome.glib;
+module my.module.name {
+    exports my.package.name to org.gnome.gobject;
+}
 ```
 
 ## Specifying the name of the GType
@@ -84,19 +86,19 @@ public void finalize_() {
 
 ## Properties
 
-You can define GObject properties with the `@Property` annotation on the getter and setter methods. You must annotate both the getter and setter methods (if applicable). The `@Property` annotation must always specify the `name` parameter; all other parameters are optional.
+You can define GObject properties with the `@Property` annotation on the getter and setter methods. You must annotate both the getter and setter methods (if applicable). The `@Property` annotation can optionally specify the `name` parameter; all other parameters are optional.
 
 Example definition of an `int` property with name `n-items`:
 
 ```java
 private int size;
 
-@Property(name="n-items")
+@Property
 public int getNItems() {
     return size;
 }
 
-@Property(name="n-items")
+@Property
 public void setNItems(int nItems) {
     size = nItems;
 }
@@ -106,7 +108,7 @@ The `@Property` annotation accepts the following parameters:
 
 | Parameter      | Type      | Default value |
 |----------------|-----------|---------------|
-| name           | Mandatory | n/a           |
+| name           | String    | inferred      |
 | type           | ParamSpec | inferred      |
 | readable       | Boolean   | true          |
 | writable       | Boolean   | true          |
@@ -114,6 +116,8 @@ The `@Property` annotation accepts the following parameters:
 | constructOnly  | Boolean   | false         |
 | explicitNotify | Boolean   | false         |
 | deprecated     | Boolean   | false         |
+
+When the name is not specified, it will be inferred from the name of the method (provided that the method names follow the `getX`/`setX` pattern), stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
 
 When the type is not specified, it will be inferred from the parameter or return-type of the method. When the type is specified, it must be one of the subclasses of `GParamSpec`. The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
 
@@ -163,7 +167,7 @@ public class Counter extends GObject {
 }
 ```
 
-The "limit-reached" signal is defined with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
+The "limit-reached" signal in the example is defined with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
 
 You can connect to the custom signal, like this:
 
@@ -173,7 +177,7 @@ counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
 }
 ```
 
-Because the signal declaration is an ordinary functional interface, the declaration in the above example can also be declared as an `IntConsumer`:
+Because the signal declaration is an ordinary functional interface, it is equally valid to extend from a standard functional interface like `Runnable`, `BooleanSupplier`, or any other one, like (in the above example) an `IntConsumer`:
 
 ```
 @Signal
