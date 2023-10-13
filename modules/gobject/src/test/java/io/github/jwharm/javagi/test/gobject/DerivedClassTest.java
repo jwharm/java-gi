@@ -145,12 +145,12 @@ public class DerivedClassTest {
 
         private boolean boolProperty = false;
 
-        @Property(name="bool-property")
+        @Property // name will be inferred: "bool-property"
         public boolean getBoolProperty() {
             return boolProperty;
         }
 
-        @Property(name="bool-property")
+        @Property
         public void setBoolProperty(boolean boolProperty) {
             this.boolProperty = boolProperty;
         }

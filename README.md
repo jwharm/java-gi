@@ -176,24 +176,24 @@ public class MyWidget extends Widget {
 }
 ```
 
-You can define custom GObject properties and signals using annotations:
+You can define custom GObject properties and signals using annotations. The following example defines an `int` property named `"lives"` and a `"game-over"` signal with a `String` parameter:
 
 ```java
-    @Property(name="lives")
+    @Property
     public int getLives() {
         return lives;
     }
     
-    @Property(name="lives")
+    @Property
     public void setLives(int value) {
         this.lives = value;
-        if (value == 0) emit("game-over", limit);
+        if (value == 0)
+            emit("game-over", player.name());
     }
 
-    @Signal(name="game-over")
-    @FunctionalInterface
+    @Signal
     public interface GameOver {
-        public void apply(int limit);
+        void apply(String playerName);
     }
 ```
 

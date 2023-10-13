@@ -151,6 +151,17 @@ public class Properties {
         }
     }
 
+    // Convert "CamelCase" to "kebab-case"
+    private static String getPropertyName(String methodName) {
+        if (methodName.startsWith("get") || methodName.startsWith("set")) {
+            String value = methodName.substring(3);
+            return value.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
+                    .toLowerCase().replaceAll("\\.", "");
+        }
+        throw new IllegalArgumentException("Cannot infer property name from method named %s"
+                .formatted(methodName));
+    }
+
     // Infer the ParamSpec class from the Java class that is used in the getter/setter method.
     private static Class<? extends ParamSpec> inferType(Method method) {
         // Determine the Java class of the property
@@ -243,8 +254,11 @@ public class Properties {
                 continue;
             }
 
+            // Name is specified with the annotation, or infer it form the method name
+            String name = p.name().isEmpty() ? getPropertyName(method.getName()) : p.name();
+
             // Check if this property has already been added from another method
-            if (propertyNames.contains(p.name())) {
+            if (propertyNames.contains(name)) {
                 continue;
             }
 
@@ -261,35 +275,35 @@ public class Properties {
 
             ParamSpec ps;
             if (paramspec.equals(ParamSpecBoolean.class)) {
-                ps = GObjects.paramSpecBoolean(p.name(), p.name(), p.name(), false, getFlags(p));
+                ps = GObjects.paramSpecBoolean(name, name, name, false, getFlags(p));
             } else if (paramspec.equals(ParamSpecChar.class)) {
-                ps = GObjects.paramSpecChar(p.name(), p.name(), p.name(), Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, getFlags(p));
+                ps = GObjects.paramSpecChar(name, name, name, Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecDouble.class)) {
-                ps = GObjects.paramSpecDouble(p.name(), p.name(), p.name(), -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, getFlags(p));
+                ps = GObjects.paramSpecDouble(name, name, name, -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, getFlags(p));
             } else if (paramspec.equals(ParamSpecFloat.class)) {
-                ps = GObjects.paramSpecFloat(p.name(), p.name(), p.name(), -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, getFlags(p));
+                ps = GObjects.paramSpecFloat(name, name, name, -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, getFlags(p));
             } else if (paramspec.equals(ParamSpecGType.class)) {
-                ps = GObjects.paramSpecGtype(p.name(), p.name(), p.name(), Types.NONE, getFlags(p));
+                ps = GObjects.paramSpecGtype(name, name, name, Types.NONE, getFlags(p));
             } else if (paramspec.equals(ParamSpecInt.class)) {
-                ps = GObjects.paramSpecInt(p.name(), p.name(), p.name(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecInt(name, name, name, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecInt64.class)) {
-                ps = GObjects.paramSpecInt64(p.name(), p.name(), p.name(), Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecInt64(name, name, name, Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecLong.class)) {
-                ps = GObjects.paramSpecLong(p.name(), p.name(), p.name(), Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecLong(name, name, name, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecPointer.class)) {
-                ps = GObjects.paramSpecPointer(p.name(), p.name(), p.name(), getFlags(p));
+                ps = GObjects.paramSpecPointer(name, name, name, getFlags(p));
             } else if (paramspec.equals(ParamSpecString.class)) {
-                ps = GObjects.paramSpecString(p.name(), p.name(), p.name(), null, getFlags(p));
+                ps = GObjects.paramSpecString(name, name, name, null, getFlags(p));
             } else if (paramspec.equals(ParamSpecUChar.class)) {
-                ps = GObjects.paramSpecUchar(p.name(), p.name(), p.name(), (byte) 0, Byte.MAX_VALUE, (byte) 0, getFlags(p));
+                ps = GObjects.paramSpecUchar(name, name, name, (byte) 0, Byte.MAX_VALUE, (byte) 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecUInt.class)) {
-                ps = GObjects.paramSpecUint(p.name(), p.name(), p.name(), 0, Integer.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecUint(name, name, name, 0, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecUInt64.class)) {
-                ps = GObjects.paramSpecUint64(p.name(), p.name(), p.name(), 0, Long.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecUint64(name, name, name, 0, Long.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecULong.class)) {
-                ps = GObjects.paramSpecUlong(p.name(), p.name(), p.name(), 0, Integer.MAX_VALUE, 0, getFlags(p));
+                ps = GObjects.paramSpecUlong(name, name, name, 0, Integer.MAX_VALUE, 0, getFlags(p));
             } else if (paramspec.equals(ParamSpecUnichar.class)) {
-                ps = GObjects.paramSpecUnichar(p.name(), p.name(), p.name(), 0, getFlags(p));
+                ps = GObjects.paramSpecUnichar(name, name, name, 0, getFlags(p));
             } else {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Unsupported ParamSpec %s in class %s:\n",
@@ -297,7 +311,7 @@ public class Properties {
                 return null;
             }
             propertySpecs.add(ps);
-            propertyNames.add(p.name());
+            propertyNames.add(name);
         }
 
         // No properties found?
@@ -314,7 +328,11 @@ public class Properties {
                 continue;
             }
             Property property = method.getDeclaredAnnotation(Property.class);
-            int idx = propertyNames.indexOf(property.name());
+
+            // Name is specified with the annotation, or infer it form the method name
+            String name = property.name().isEmpty() ? getPropertyName(method.getName()) : property.name();
+
+            int idx = propertyNames.indexOf(name);
 
             // Returns void -> setter, else -> getter
             if (method.getReturnType().equals(void.class)) {
