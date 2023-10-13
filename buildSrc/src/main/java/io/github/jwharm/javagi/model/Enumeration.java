@@ -88,7 +88,7 @@ public class Enumeration extends ValueWrapper {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Create a new " + javaName + " for the provided value\n");
-        writer.write(" * @param numeric value the enum value\n");
+        writer.write(" * @param value the enum value\n");
         writer.write(" */\n");
         writer.write(javaName + "(int value) {\n");
         writer.write("    this.value = value;\n");
