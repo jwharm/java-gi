@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generator;
 
 import io.github.jwharm.javagi.model.*;
 import io.github.jwharm.javagi.model.Class;
+import io.github.jwharm.javagi.model.Enumeration;
 import io.github.jwharm.javagi.model.Module;
 import io.github.jwharm.javagi.model.Record;
 
@@ -153,6 +154,10 @@ public class Merge {
                     multi.aliasList.add(alias);
                 } else if (rt instanceof Class cls) {
                     multi.classList.add(cls);
+                } else if (rt instanceof Bitfield flag) {
+                    multi.bitfieldList.add(flag);
+                } else if (rt instanceof Enumeration enu) {
+                    multi.enumerationList.add(enu);
                 }
             }
         }

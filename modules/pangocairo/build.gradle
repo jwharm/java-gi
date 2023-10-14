@@ -5,7 +5,7 @@ plugins {
 dependencies {
     api project(':gobject')
     api project(':pango')
-    api 'io.github.jwharm.cairobindings:cairo:1.16.2'
+    api 'io.github.jwharm.cairobindings:cairo:1.18.0'
 }
 
 tasks.named('generateSources') {
