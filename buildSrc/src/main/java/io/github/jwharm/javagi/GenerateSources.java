@@ -60,14 +60,14 @@ public abstract class GenerateSources extends DefaultTask {
     @TaskAction
     void execute() {
         try {
-            Module windows = parse(Platform.WINDOWS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
             Module linux = parse(Platform.LINUX, getInputDirectory().get(), getGirFile().get(),
+                    getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
+            Module windows = parse(Platform.WINDOWS, getInputDirectory().get(), getGirFile().get(),
                     getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
             Module macos = parse(Platform.MACOS, getInputDirectory().get(), getGirFile().get(),
                     getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
 
-            Module module = new Merge().merge(windows, linux, macos);
+            Module module = new Merge().merge(linux, windows, macos);
 
             for (Repository repository : module.repositories.values()) {
                 if (repository.generate) {
