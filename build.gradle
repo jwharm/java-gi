@@ -32,7 +32,10 @@ tasks.named('javadoc', Javadoc) {
     }
 
     classpath = files(subprojects.collect {
-        it.sourceSets.main.compileClasspath
+        it.sourceSets.main.compileClasspath.filter(file -> {
+            String name = file.getName()
+            return (! (name.startsWith("glib-") && name.endsWith(".jar")))
+        })
     })
 
     subprojects.forEach {
