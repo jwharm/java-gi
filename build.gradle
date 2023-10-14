@@ -33,6 +33,9 @@ tasks.named('javadoc', Javadoc) {
 
     classpath = files(subprojects.collect {
         it.sourceSets.main.compileClasspath.filter(file -> {
+            // Some modules depend on the cairo java bindings, which in turn has an optional
+            // dependency on glib. Because glib is also in the classpath as a module in the
+            // current build, it is duplicate. So we remove the jar from the classpath.
             String name = file.getName()
             return (! (name.startsWith("glib-") && name.endsWith(".jar")))
         })
