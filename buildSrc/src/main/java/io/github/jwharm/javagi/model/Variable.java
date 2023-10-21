@@ -41,6 +41,12 @@ public class Variable extends GirElement {
                 type.isEnum()));
     }
 
+    public boolean allocatesMemory() {
+        return (array != null)
+                || (type != null && type.isActuallyAnArray())
+                || (type != null && "java.lang.String".equals(type.qualifiedJavaType));
+    }
+
     public void writeType(SourceWriter writer, boolean writeAnnotations) throws IOException {
         writer.write(getType(writeAnnotations));
     }
@@ -172,7 +178,7 @@ public class Variable extends GirElement {
     private String marshalJavaArrayToNative(Array array, String identifier) {
         // When ownership is transferred, we must not free the allocated memory -> use global scope
         String allocator = (this instanceof Parameter p && "full".equals(p.transferOwnership))
-                ? "SegmentAllocator.nativeAllocator(SegmentScope.global())" : "_arena";
+                ? "Arena.global()" : "_arena";
 
         Type type = array.type;
 
@@ -282,7 +288,7 @@ public class Variable extends GirElement {
 
             if (type.isPrimitive)
                 return "Interop.get" + Conversions.primitiveClassName(type.simpleJavaType) + "ArrayFrom("
-                        + identifier + ", " + identifier + ".scope(), " + free + ")";
+                        + identifier + ", _arena, " + free + ")";
 
             if (type.girElementInstance instanceof Record && (! type.isPointer()) &&
                     (! (array != null && "GLib.PtrArray".equals(array.name))))
@@ -309,7 +315,7 @@ public class Variable extends GirElement {
 
         if (type.isPrimitive)
             return "Interop.get" + Conversions.primitiveClassName(array.type.simpleJavaType) + "ArrayFrom("
-                    + identifier + ", " + size + ", " + identifier + ".scope(), " + free + ")";
+                    + identifier + ", " + size + ", _arena, " + free + ")";
 
         if (type.girElementInstance instanceof Record && (! type.isPointer()) &&
                 (! (array != null && "GLib.PtrArray".equals(array.name))))

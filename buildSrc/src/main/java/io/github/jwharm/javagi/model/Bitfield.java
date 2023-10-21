@@ -40,7 +40,6 @@ public class Bitfield extends ValueWrapper {
         writer.write("public class " + javaName + " extends io.github.jwharm.javagi.base.Bitfield {\n");
         writer.increaseIndent();
 
-        generateMemoryLayout(writer);
         generateGType(writer);
 
         // Filter duplicate members

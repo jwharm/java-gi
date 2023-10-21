@@ -81,7 +81,6 @@ public class Enumeration extends ValueWrapper {
         }
 
         generateGType(writer);
-        generateMemoryLayout(writer);
 
         writer.write("\n");
         writer.write("private final int value;\n");

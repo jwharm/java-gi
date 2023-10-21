@@ -126,11 +126,6 @@ public class Doc extends GirElement {
             }
         }
 
-        // VaList parameter = deprecated
-        if (parent instanceof Method m && m.hasVaListParameter()) {
-            writeDoc(writer, "Support for va_list will be dropped in the next release of Java-GI", "@deprecated");
-        }
-        
         // Property setters
         if (parent instanceof Property p) {
             writeDoc(writer, p.name + " the value for the {@code " + p.propertyName + "} property", "@param");

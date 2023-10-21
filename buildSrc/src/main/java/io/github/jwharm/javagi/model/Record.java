@@ -140,32 +140,18 @@ public class Record extends Class {
     }
 
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
-
-        // Cache the memory segment
-        writer.write("\n");
-        writer.write("private MemorySegment allocatedMemorySegment;\n");
-
-        // Accessor function for the memory segment, to enable co-allocation of other segments with the same lifetime
-        writer.write("\n");
-        writer.write("private MemorySegment getAllocatedMemorySegment() {\n");
-        writer.write("    if (allocatedMemorySegment == null) {\n");
-        writer.write("        allocatedMemorySegment = MemorySegment.ofAddress(handle().address(), getMemoryLayout().byteSize(), SegmentScope.auto());\n");
-        writer.write("    }\n");
-        writer.write("    return allocatedMemorySegment;\n");
-        writer.write("}\n");
-
-        // Allocator function
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Allocate a new {@link " + javaName + "}. A {@link java.lang.ref.Cleaner} \n");
         writer.write(" * is assigned to the allocated memory segment that will release the \n");
         writer.write(" * memory when the {@link " + javaName + "} instance is garbage-collected.\n");
+        writer.write(" * \n");
+        writer.write(" * @param  _arena to control the memory allocation scope.\n");
         writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
         writer.write(" */\n");
-        writer.write("public static " + javaName + " allocate() {\n");
-        writer.write("    MemorySegment segment = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(getMemoryLayout());\n");
+        writer.write("public static " + javaName + " allocate(Arena _arena) {\n");
+        writer.write("    MemorySegment segment = _arena.allocate(getMemoryLayout());\n");
         writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
-        writer.write("    newInstance.allocatedMemorySegment = segment;\n");
         writer.write("    return newInstance;\n");
         writer.write("}\n");
 
@@ -195,6 +181,8 @@ public class Record extends Class {
             writer.write(" * Allocate a new {@link " + javaName + "} with the fields set to the provided values. \n");
             writer.write(" * A {@link java.lang.ref.Cleaner} is assigned to the allocated memory segment that will \n");
             writer.write(" * release the memory when the {@link " + javaName + "} instance is garbage-collected.\n");
+            writer.write(" * \n");
+            writer.write(" * @param _arena to control the memory allocation scope.\n");
             // Write javadoc for parameters
             for (Field field : fieldList) {
                 // Ignore disguised fields
@@ -209,26 +197,22 @@ public class Record extends Class {
             }
             writer.write(" * @return A new {@link " + javaName + "} with the fields set to the provided values\n");
             writer.write(" */\n");
-            writer.write("public static " + javaName + " allocate(");
+            writer.write("public static " + javaName + " allocate(Arena _arena");
 
             // Write parameters
-            boolean first = true;
             for (Field field : fieldList) {
                 // Ignore disguised fields
                 if (field.disguised()) {
                     continue;
                 }
-                if (! first) {
-                    writer.write(", ");
-                }
+                writer.write(", ");
                 field.writeTypeAndName(writer);
-                first = false;
             }
             writer.write(") {\n");
             writer.increaseIndent();
 
             // Call the allocate() method
-            writer.write(javaName + " _instance = allocate();\n");
+            writer.write(javaName + " _instance = allocate(_arena);\n");
 
             // Call the field setters
             for (Field field : fieldList) {
@@ -238,6 +222,9 @@ public class Record extends Class {
                 }
                 writer.write("_instance." + (field.callback == null ? "write" : "override"));
                 writer.write(Conversions.toCamelCase(field.name, true) + "(");
+                if (field.allocatesMemory()) {
+                    writer.write("_arena, ");
+                }
                 field.writeName(writer);
                 writer.write(");\n");
             }

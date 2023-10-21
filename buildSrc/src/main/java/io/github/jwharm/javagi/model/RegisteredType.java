@@ -45,6 +45,8 @@ public abstract class RegisteredType extends GirElement {
     public boolean autoCloseable = false;
     public String injected = null;
 
+    protected boolean hasMemoryLayout = false;
+
     public RegisteredType(GirElement parent, String name, String parentClass, String cType, String getType, String version) {
         super(parent);
         
@@ -170,10 +172,6 @@ public abstract class RegisteredType extends GirElement {
     }
     
     protected void generateMemoryLayout(SourceWriter writer) throws IOException {
-        if (this instanceof Bitfield || this instanceof Enumeration) {
-            return;
-        }
-
         // Opaque structs have unknown memory layout and should not have an allocator
         if (hasOpaqueStructFields() || (this instanceof Class cls && cls.isOpaqueStruct())) {
             return;
@@ -218,8 +216,8 @@ public abstract class RegisteredType extends GirElement {
             if (! (isUnion)) {
 
                 // If the previous field had a smaller byte size than this one, add padding (to a maximum of 64 bits)
-                if (size % s % 64 > 0) {
-                    int padding = (s - (size % s)) % 64;
+                if (size % s % 8 > 0) {
+                    int padding = (s - (size % s)) % 8; // in bytes (since JDK 21)
                     writer.write("    MemoryLayout.paddingLayout(" + padding + "),\n");
                     size += padding;
                 }
@@ -236,6 +234,8 @@ public abstract class RegisteredType extends GirElement {
         writer.write(").withName(" + Conversions.literal("java.lang.String", cType) + ");\n");
         writer.decreaseIndent();
         writer.write("}\n");
+
+        hasMemoryLayout = true;
     }
     
     protected void generateMemoryAddressConstructor(SourceWriter writer) throws IOException {
@@ -246,7 +246,11 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" */\n");
         writer.write("public " + javaName + "(MemorySegment address) {\n");
         writer.increaseIndent();
-        writer.write("super(address);\n");
+        if (hasMemoryLayout) {
+            writer.write("super(address == null ? null : Interop.reinterpret(address, getMemoryLayout().byteSize()));\n");
+        } else {
+            writer.write("super(address);\n");
+        }
         generateSetFreeFunc(writer, "this", null);
         writer.decreaseIndent();
         writer.write("}\n");
@@ -293,25 +297,38 @@ public abstract class RegisteredType extends GirElement {
         
         // First, generate all virtual methods
         for (VirtualMethod vm : virtualMethodList) {
+            if (vm.hasVaListParameter()) { // va_list parameters are not supported
+                continue;
+            }
             vm.generate(writer);
             generatedMethods.add(vm.name + " " + vm.getMethodSpecification());
         }
 
         // Next, generate the non-virtual instance methods
         for (Method m : methodList) {
-            if (! generatedMethods.contains(m.name + " " + m.getMethodSpecification())) {
-                m.generate(writer);
-                generatedMethods.add(m.name + " " + m.getMethodSpecification());
+            if (m.hasVaListParameter()) {
+                continue;
             }
+            if (generatedMethods.contains(m.name + " " + m.getMethodSpecification())) {
+                continue;
+            }
+            m.generate(writer);
+            generatedMethods.add(m.name + " " + m.getMethodSpecification());
         }
 
         // Generate all functions as static methods
-        for (Function function : functionList) {
-            function.generate(writer);
+        for (Function f : functionList) {
+            if (f.hasVaListParameter()) {
+                continue;
+            }
+            f.generate(writer);
         }
 
         // Generate signals: functional interface, onSignal method and emitSignal method
         for (Signal s : signalList) {
+            if (s.hasVaListParameter()) {
+                continue;
+            }
             s.generate(writer);
         }
     }
@@ -342,6 +359,9 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateConstructors(SourceWriter writer) throws IOException {
         for (Constructor c : constructorList) {
+            if (c.hasVaListParameter()) { // va_list parameters are not supported
+                continue;
+            }
             if (c.name.equals("new")) {
                 c.generate(writer);
             } else {

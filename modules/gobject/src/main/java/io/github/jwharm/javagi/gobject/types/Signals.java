@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.gobject.types;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -221,32 +222,32 @@ public class Signals {
             throw new IllegalArgumentException("Invalid signal \"%s\" for class %s".formatted(detailedSignal, gobject));
         }
 
-        // Query the parameter details of the signal
-        SignalQuery query = SignalQuery.allocate();
-        GObjects.signalQuery(signalId.get(), query);
+        try (var arena = Arena.ofConfined()) {
+            // Query the parameter details of the signal
+            SignalQuery query = SignalQuery.allocate(arena);
+            GObjects.signalQuery(signalId.get(), query);
 
-        // Create an array of Types for the parameters
-        int nParams = query.readNParams();
-        Type[] paramTypes = query.readParamTypes();
+            // Create an array of Types for the parameters
+            int nParams = query.readNParams();
+            Type[] paramTypes = query.readParamTypes();
 
-        // Allocate Values array for the instance parameter and other parameters
-        Value[] values = new Value[nParams+1];
+            // Allocate Values array for the instance parameter and other parameters
+            var values = new Value[nParams+1];
 
-        // Allocation return value
-        Value returnValue = Value.allocate();
-        Type returnType = query.readReturnType();
-        if (! Types.NONE.equals(returnType)) {
-            returnValue.init(returnType);
-        }
+            // Allocation return value
+            var returnValue = Value.allocate(arena);
+            Type returnType = query.readReturnType();
+            if (! Types.NONE.equals(returnType)) {
+                returnValue.init(returnType);
+            }
 
-        try {
             // Set instance parameter
-            values[0] = Value.allocate().init(gtype);
+            values[0] = Value.allocate(arena).init(gtype);
             values[0].setObject(gobject);
 
             // Set other parameters
             for (int i = 0; i < nParams; i++) {
-                values[i+1] = Value.allocate().init(paramTypes[i]);
+                values[i+1] = Value.allocate(arena).init(paramTypes[i]);
                 ValueUtil.objectToValue(params[i], values[i+1]);
             }
 
@@ -254,9 +255,8 @@ public class Signals {
             GObjects.signalEmitv(values, signalId.get(), detailQ, returnValue);
 
             // Return the result (if any)
-            return Types.NONE.equals(returnType) ? null : ValueUtil.valueToObject(returnValue);
+            Object result = Types.NONE.equals(returnType) ? null : ValueUtil.valueToObject(returnValue);
 
-        } finally {
             // Cleanup the allocated values
             for (Value value : values) {
                 if (value != null) {
@@ -264,6 +264,8 @@ public class Signals {
                 }
             }
             returnValue.unset();
+
+            return result;
         }
     }
 

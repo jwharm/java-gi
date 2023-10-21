@@ -21,10 +21,18 @@ package io.github.jwharm.javagi.gobject;
 
 import org.gnome.gobject.Value;
 
+import java.lang.foreign.Arena;
+
 /**
  * Base interface for nested Builder types in interfaces.
  */
 public interface BuilderInterface {
+
+    /**
+     * Get the arena for allocating memory in this builder
+     * @return the arena for allocating memory in this builder
+     */
+    Arena getArena();
 
     /**
      * Add the provided property name and value to the builder

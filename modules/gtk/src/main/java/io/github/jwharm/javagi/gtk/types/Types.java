@@ -133,8 +133,8 @@ public class Types {
     private static long add(MemoryLayout layout, ArrayList<MemoryLayout> elements, long oldSize) {
         long size = oldSize;
         long s = layout.byteSize();
-        if (size % s % 64 > 0) {
-            long padding = (s - (size % s)) % 64;
+        if (size % s % 8 > 0) {
+            long padding = (s - (size % s)) % 8; // in bytes (since JDK 21)
             elements.add(MemoryLayout.paddingLayout(padding));
             size += padding;
         }

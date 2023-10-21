@@ -26,6 +26,13 @@ import java.io.IOException;
 
 public interface Closure extends CallableType {
 
+    @Override
+    default boolean allocatesMemory() {
+        ReturnValue rv = getReturnValue();
+        return CallableType.super.allocatesMemory()
+                || rv.type != null && "java.lang.String".equals(rv.type.qualifiedJavaType);
+    }
+
     default void generateFunctionalInterface(SourceWriter writer, String javaName) throws IOException {
         ReturnValue returnValue = getReturnValue();
         Parameters parameters = getParameters();
@@ -97,7 +104,7 @@ public interface Closure extends CallableType {
         writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
 
         // Create and return upcall stub
-        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
+        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, Arena.global());\n");
 
         writer.decreaseIndent();
         writer.write("}\n");
@@ -150,7 +157,7 @@ public interface Closure extends CallableType {
         // Is memory allocated?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.ofConfined()) {\n");
             writer.increaseIndent();
         }
 

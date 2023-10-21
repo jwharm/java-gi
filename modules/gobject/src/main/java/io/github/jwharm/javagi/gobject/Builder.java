@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.gobject;
 
 import org.gnome.gobject.Value;
 
+import java.lang.foreign.Arena;
 import java.util.ArrayList;
 
 /**
@@ -31,6 +32,12 @@ import java.util.ArrayList;
 public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
+     * Memory scope of allocated gvalues. It will be closed when the enclosing
+     * builder instance is garbage collected.
+     */
+    private final Arena arena = Arena.ofAuto();
+
+    /**
      * List of all property names that are set
      */
     private final ArrayList<String> names = new ArrayList<>();
@@ -39,6 +46,14 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * List of all property values that are set
      */
     private final ArrayList<Value> values = new ArrayList<>();
+
+    /**
+     * Get the arena for allocating memory in this builder
+     * @return the arena for allocating memory in this builder
+     */
+    public Arena getArena() {
+        return arena;
+    }
 
     /**
      * Add the provided property name and value to the builder
