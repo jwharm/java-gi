@@ -251,11 +251,11 @@ public class InstanceCache {
         public void run(@Nullable MemorySegment data, GObject object, boolean isLastRef) {
             var key = object.handle();
             if (isLastRef) {
-                GLibLogger.debug("Toggle strong %ld", object.handle() == null ? 0 : object.handle().address());
+                GLibLogger.debug("Toggle %ld to weak reference (is last ref)", object.handle() == null ? 0 : object.handle().address());
                 weakReferences.put(key, new WeakReference<>(object));
                 strongReferences.remove(key);
             } else {
-                GLibLogger.debug("Toggle weak %ld", object.handle() == null ? 0 : object.handle().address());
+                GLibLogger.debug("Toggle %ld to strong reference", object.handle() == null ? 0 : object.handle().address());
                 strongReferences.put(key, object);
                 weakReferences.remove(key);
             }
