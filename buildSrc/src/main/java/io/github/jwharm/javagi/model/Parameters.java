@@ -96,9 +96,9 @@ public class Parameters extends GirElement {
             }
             // callback destroy
             else if (p.isDestroyNotifyParameter() && p.linkedParameter != null) {
-                writer.write("((org.gnome.glib.DestroyNotify) _ -> _");
+                writer.write("_");
                 p.linkedParameter.writeName(writer);
-                writer.write("Scope.close()).toCallback(_arena)");
+                writer.write("DestroyNotify.toCallback(_arena)");
             }
             // user_data
             else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {

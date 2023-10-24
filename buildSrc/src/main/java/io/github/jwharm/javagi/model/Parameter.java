@@ -304,6 +304,11 @@ public class Parameter extends Variable {
             writer.write("final Arena _");
             writeName(writer);
             writer.write("Scope = Arena.ofConfined();\n");
+            writer.write("final org.gnome.glib.DestroyNotify _");
+            writeName(writer);
+            writer.write("DestroyNotify = $ -> _");
+            writeName(writer);
+            writer.write("Scope.close();\n");
         }
     }
 
