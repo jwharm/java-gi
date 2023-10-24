@@ -31,18 +31,27 @@ public class Parameter extends Variable {
     public boolean notnull;
     public String direction;
     public String closure;
+    public String destroy;
     public String callerAllocates;
+    public Scope scope;
 
     public boolean varargs = false;
 
     /**
      * An array with a "length" attribute which refers to this parameter.
+     * This field is initialized in {@link Module#link()}.
      */
-    public Array linkedArray; // This field is initialized in the CrossReference class.
+    public Array linkedArray;
+
+    /**
+     * A parameter with a "destroy" attribute which refers to this parameter.
+     * This field is initialized in {@link Module#link()}.
+     */
+    public Parameter linkedParameter;
 
     public Parameter(GirElement parent, String name, String transferOwnership, String nullable,
                      String allowNone, String optional, String direction, String closure,
-                     String callerAllocates) {
+                     String destroy, String callerAllocates, String scope) {
 
         super(parent);
         this.name = Conversions.toLowerCaseJavaName(name);
@@ -51,7 +60,15 @@ public class Parameter extends Variable {
         this.notnull = "0".equals(nullable) || "0".equals(allowNone) || "0".equals(optional);
         this.direction = direction;
         this.closure = closure;
+        this.destroy = destroy;
         this.callerAllocates = callerAllocates;
+        this.scope = Scope.from(scope);
+
+        // When scope="notified" without reference to a GDestroyNotify parameter,
+        // fallback to global scope.
+        if (this.scope == Scope.NOTIFIED && this.destroy == null) {
+            this.scope = Scope.FOREVER;
+        }
     }
 
     /**
@@ -199,8 +216,9 @@ public class Parameter extends Variable {
     }
 
     /**
-     * We don't need to perform a null-check on parameters that are not nullable, or not user-specified
-     * (instance param, gerror, user_data or array length), or primitive values.
+     * We don't need to perform a null-check on parameters that are not nullable, or not user-specified (instance param,
+     * gerror, user_data or array length), or primitive values.
+     *
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
     @Override
@@ -212,22 +230,27 @@ public class Parameter extends Variable {
                 && super.checkNull();
     }
 
+    /**
+     * Whether this parameter needs a memory allocator (Arena) for marshaling
+     *
+     * @return true if an enclosing Arena scope must be generated
+     */
     @Override
     public boolean allocatesMemory() {
          return super.allocatesMemory()
                  || isOutParameter()
-                 || (isAliasForPrimitive() && type.isPointer());
+                 || (isAliasForPrimitive() && type.isPointer())
+                 || (type != null && type.isCallback() && (! scope.in(Scope.NOTIFIED, Scope.FOREVER)));
     }
 
     /**
-     * Generate code to do pre-processing of the parameter before the function call. This will 
-     * generate a null check for NotNull parameters, and generate pointer allocation logic for 
-     * pointer parameters.
+     * Generate code to do pre-processing of the parameter before the function call. This will generate a null check for
+     * NotNull parameters, and generate pointer allocation logic for pointer parameters.
+     *
      * @param writer The source code file writer
      * @throws IOException Thrown when an error occurs while writing to the file
      */
     public void generatePreprocessing(SourceWriter writer) throws IOException {
-
         // Generate null-check
         // Don't null-check parameters that are hidden from the Java API, or primitive values
         if (! (isInstanceParameter() || isErrorParameter() || isUserDataParameter()
@@ -276,10 +299,17 @@ public class Parameter extends Variable {
             }
         }
 
+        // Callback functions with an arena that is closed from a DestroyNotify callback
+        if (scope == Scope.NOTIFIED && destroy != null) {
+            writer.write("final Arena _");
+            writeName(writer);
+            writer.write("Scope = Arena.ofConfined();\n");
+        }
     }
 
     /**
      * Generate code to do post-processing of the parameter after the function call.
+     *
      * @param writer The source code file writer
      * @throws IOException Thrown when an error occurs while writing to the file
      */
@@ -357,6 +387,12 @@ public class Parameter extends Variable {
         }
     }
 
+    /**
+     * Generate code to do preprocessing of parameters before an upcall into a Java callback method
+     *
+     * @param writer The source code file writer
+     * @throws IOException Thrown when an error occurs while writing to the file
+     */
     public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         if (isAliasForPrimitive() && type.isPointer()) {
             writer.write("MemorySegment %sParam = %s.reinterpret(%s.byteSize(), _arena, null);\n"
@@ -392,6 +428,12 @@ public class Parameter extends Variable {
         }
     }
 
+    /**
+     * Generate code to do postprocessing of parameters after an upcall into a Java callback method
+     *
+     * @param writer The source code file writer
+     * @throws IOException Thrown when an error occurs while writing to the file
+     */
     public void generateUpcallPostprocessing(SourceWriter writer) throws IOException {
         if (type != null && type.isAliasForPrimitive() && type.isPointer()) {
             String typeStr = Conversions.getValueLayoutPlain(type.girElementInstance.type);

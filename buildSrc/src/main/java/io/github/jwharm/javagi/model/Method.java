@@ -212,9 +212,9 @@ public class Method extends GirElement implements CallableType {
         }
         
         // Variable declaration for return value
-        String panamaReturnType = Conversions.getCarrierType(getReturnValue().type);
+        String carrierType = Conversions.getCarrierType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write(panamaReturnType + " _result;\n");
+            writer.write(carrierType + " _result;\n");
         }
         
         // The method call is wrapped in a try-catch block
@@ -224,7 +224,7 @@ public class Method extends GirElement implements CallableType {
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("_result = (");
-            writer.write(panamaReturnType);
+            writer.write(carrierType);
             writer.write(") ");
         }
 
@@ -240,7 +240,7 @@ public class Method extends GirElement implements CallableType {
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
         writer.write("} catch (Throwable _err) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
         writer.write("}\n");
 
         // Throw GErrorException
@@ -259,7 +259,7 @@ public class Method extends GirElement implements CallableType {
         if (this instanceof Constructor) {
             writer.write("return _result;\n");
         } else {
-            returnValue.generate(writer, panamaReturnType);
+            returnValue.generate(writer);
         }
 
         // End of memory allocation scope

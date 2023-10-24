@@ -93,21 +93,27 @@ public class Parameters extends GirElement {
             // this
             if (p.isInstanceParameter()) {
                 writer.write("handle()");
-
+            }
+            // callback destroy
+            else if (p.isDestroyNotifyParameter() && p.linkedParameter != null) {
+                writer.write("((org.gnome.glib.DestroyNotify) _ -> _");
+                p.linkedParameter.writeName(writer);
+                writer.write("Scope.close()).toCallback(_arena)");
+            }
             // user_data
-            } else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {
+            else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {
                 writer.write("MemorySegment.NULL");
-
+            }
             // Varargs
-            } else if (p.varargs) {
+            else if (p.varargs) {
                 writer.write("varargs");
-
+            }
             // Preprocessing statement
-            } else if (p.isOutParameter() || (p.isAliasForPrimitive() && p.type.isPointer())) {
+            else if (p.isOutParameter() || (p.isAliasForPrimitive() && p.type.isPointer())) {
                 writer.write("_" + p.name + "Pointer");
-
+            }
             // Custom interop
-            } else {
+            else {
                 p.marshalJavaToNative(writer, p.name);
             }
 

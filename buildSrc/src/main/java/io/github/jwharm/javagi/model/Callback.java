@@ -42,8 +42,13 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer) {
-        return paramName + ".toCallback()";
+    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
+        String arena = scope == null ? "Arena.global()" : switch(scope) {
+            case CALL, ASYNC, NONE -> "_arena";
+            case NOTIFIED -> "_" + paramName + "Scope";
+            case FOREVER -> "Arena.global()";
+        };
+        return "%s.toCallback(%s)".formatted(paramName, arena);
     }
 
     @Override

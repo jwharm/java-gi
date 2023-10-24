@@ -34,10 +34,10 @@ group = 'io.github.jwharm.javagi'
 version = '0.8.0-SNAPSHOT'
 
 java {
-    if (! System.getenv('CI')) {
-        withJavadocJar()
-    }
-    withSourcesJar()
+//    if (! System.getenv('CI')) {
+//        withJavadocJar()
+//    }
+//    withSourcesJar()
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }

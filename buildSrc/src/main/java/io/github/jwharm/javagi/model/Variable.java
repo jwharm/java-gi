@@ -24,6 +24,9 @@ import java.io.IOException;
 import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
+/**
+ * Common functionality for marshaling between JVM and native values (parameters, fields and properties).
+ */
 public class Variable extends GirElement {
 
     public Variable(GirElement parent) {
@@ -144,7 +147,7 @@ public class Variable extends GirElement {
             return marshalJavaArrayToNative(array, identifier);
 
         if (this instanceof Field f && f.callback != null)
-            return identifier + ".toCallback()";
+            return identifier + ".toCallback(_arena)";
 
         return "MemorySegment.NULL /* unsupported */";
     }
@@ -169,8 +172,12 @@ public class Variable extends GirElement {
         if (type.isBoolean())
             return identifier + " ? 1 : 0";
 
+        var scope = this instanceof Parameter p ? p.scope
+                : this instanceof Field f ? Scope.CALL
+                : null;
+
         if (type.girElementInstance != null)
-            return type.girElementInstance.getInteropString(identifier, type.isPointer());
+            return type.girElementInstance.getInteropString(identifier, type.isPointer(), scope);
 
         return identifier;
     }
@@ -233,11 +240,13 @@ public class Variable extends GirElement {
         if (type.isEnum())
             return type.qualifiedJavaType + ".of(" + identifier + ")";
 
-        if (type.isBitfield()
-                || type.isAliasForPrimitive()
-                || (type.isRecord() && (! type.isTypeClass()))
+        if ((type.isRecord() && (! type.isTypeClass()))
                 || type.isUnion()
                 || (type.isAlias() && ((Alias) type.girElementInstance).getTargetType() == Alias.TargetType.RECORD))
+            return "MemorySegment.NULL.equals(" + identifier + ") ? null : new " + type.qualifiedJavaType + "(" + identifier + ")";
+
+        if (type.isBitfield()
+                || type.isAliasForPrimitive())
             return "new " + type.qualifiedJavaType + "(" + identifier + ")";
 
         if (type.isCallback())
@@ -349,8 +358,7 @@ public class Variable extends GirElement {
                 case "gulong" -> "Types.ULONG";
                 case "gint64" -> "Types.INT64";
                 case "guint64" -> "Types.UINT64";
-                case "gpointer", "gconstpointer", "gssize", "gsize",
-                        "goffset", "gintptr", "guintptr" -> "Types.POINTER";
+                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "Types.POINTER";
                 case "gdouble" -> "Types.DOUBLE";
                 case "gfloat" -> "Types.FLOAT";
                 case "none" -> "Types.NONE";

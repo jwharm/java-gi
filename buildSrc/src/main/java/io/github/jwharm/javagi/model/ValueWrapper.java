@@ -41,7 +41,7 @@ public abstract class ValueWrapper extends RegisteredType {
     }
     
     @Override
-    public String getInteropString(String paramName, boolean isPointer) {
+    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
         String str = paramName + ".getValue()." + type.qualifiedJavaType + "Value()";
         if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)) {
             str = paramName + ".getValue()";

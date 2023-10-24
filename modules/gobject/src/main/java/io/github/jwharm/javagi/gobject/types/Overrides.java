@@ -29,10 +29,7 @@ import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeInterface;
 
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -105,7 +102,7 @@ public class Overrides {
             String name = method.getName();
             name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
             try {
-                typeStruct.getMethod(name, Method.class);
+                typeStruct.getMethod(name, Arena.class, Method.class);
             } catch (NoSuchMethodException e) {
                 continue;
             }
@@ -121,8 +118,8 @@ public class Overrides {
                 String name = method.getName();
                 name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
                 try {
-                    Method overrider = gclass.getClass().getMethod(name, Method.class);
-                    overrider.invoke(gclass, method);
+                    Method overrider = gclass.getClass().getMethod(name, Arena.class, Method.class);
+                    overrider.invoke(gclass, Arena.global(), method);
                 } catch (InvocationTargetException ite) {
                     System.err.printf("Cannot override method %s in class %s: %s\n",
                             method.getName(), cls.getName(), ite.getTargetException().toString());
@@ -171,7 +168,7 @@ public class Overrides {
             String name = method.getName();
             name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
             try {
-                typeStruct.getMethod(name, Method.class);
+                typeStruct.getMethod(name, Arena.class, Method.class);
             } catch (NoSuchMethodException e) {
                 continue;
             }
@@ -188,8 +185,8 @@ public class Overrides {
                 name = "override" + name.substring(0, 1).toUpperCase() + name.substring(1);
                 try {
                     TI ifaceInstance = constructor.apply(giface.handle()); // upcast to the actual type
-                    Method overrider = typeStruct.getMethod(name, Method.class);
-                    overrider.invoke(ifaceInstance, method);
+                    Method overrider = typeStruct.getMethod(name, Arena.class, Method.class);
+                    overrider.invoke(ifaceInstance, Arena.global(), method);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s from interface %s in class %s: %s\n",

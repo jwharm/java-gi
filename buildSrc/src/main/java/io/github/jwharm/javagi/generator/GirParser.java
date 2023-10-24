@@ -250,7 +250,8 @@ public class GirParser extends DefaultHandler {
                         attr.getValue("transfer-ownership"), attr.getValue("nullable"),
                         attr.getValue("allow-none"), attr.getValue("optional"),
                         attr.getValue("direction"), attr.getValue("closure"),
-                        attr.getValue("caller-allocates"));
+                        attr.getValue("destroy"), attr.getValue("caller-allocates"),
+                        attr.getValue("scope"));
                 ((Parameters) current).parameterList.add(newParameter);
                 current = newParameter;
             }
@@ -283,7 +284,7 @@ public class GirParser extends DefaultHandler {
             }
             case "return-value" -> {
                 ReturnValue newReturnValue = new ReturnValue(current, attr.getValue("transfer-ownership"),
-                        attr.getValue("nullable"));
+                        attr.getValue("nullable"), attr.getValue("scope"));
                 ((CallableType) current).setReturnValue(newReturnValue);
                 current = newReturnValue;
             }
