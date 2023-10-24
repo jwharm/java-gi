@@ -7,7 +7,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(20)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -18,7 +18,7 @@ tasks.named('jar') {
 
 // Generate javadoc for all modules
 tasks.named('javadoc', Javadoc) {
-    options.addStringOption('source', '20')
+    options.addStringOption('source', '21')
     options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
