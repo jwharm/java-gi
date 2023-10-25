@@ -92,11 +92,11 @@ public class Class extends RegisteredType {
         writer.write(interfaces + " {\n");
         writer.increaseIndent();
 
-        generateMemoryAddressConstructor(writer);
         generateEnsureInitialized(writer);
         generateGType(writer);
         generateMemoryLayout(writer);
         generateParentAccessor(writer);
+        generateMemoryAddressConstructor(writer);
         generateConstructors(writer);
         generateMethodsAndSignals(writer);
 

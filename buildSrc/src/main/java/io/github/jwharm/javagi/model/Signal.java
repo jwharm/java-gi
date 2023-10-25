@@ -67,7 +67,7 @@ public class Signal extends Method implements Closure {
         writer.write(qualifiedName + " handler) {\n");
         writer.increaseIndent();
         
-        writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+        writer.write("try (Arena _arena = Arena.ofConfined()) {\n");
         writer.increaseIndent();
         writer.write("try {\n");
         writer.write("    var _result = (long) Signals.g_signal_connect_data.invokeExact(\n");
@@ -121,7 +121,7 @@ public class Signal extends Method implements Closure {
 
             writer.write(") {\n");
             writer.increaseIndent();
-            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.ofConfined()) {\n");
             writer.increaseIndent();
             if (parameters != null) {
                 parameters.generatePreprocessing(writer);

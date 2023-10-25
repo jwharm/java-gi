@@ -37,6 +37,11 @@ public class ReturnValue extends Parameter {
         overrideReturnValue = null;
     }
 
+    @Override
+    public boolean allocatesMemory() {
+        return array != null;
+    }
+
     /**
      * Generate code to process and return the function call result.
      * @param writer The source code file writer
@@ -56,7 +61,7 @@ public class ReturnValue extends Parameter {
                 String valuelayout = Conversions.getValueLayoutPlain(array.type);
                 if (array.type.isPrimitive && (!array.type.isBoolean())) {
                     // Array of primitive values
-                    writer.write("return MemorySegment.ofAddress(_result.get(ValueLayout.ADDRESS, 0).address(), " + len + " * " + valuelayout + ".byteSize(), _arena.scope()).toArray(" + valuelayout + ");\n");
+                    writer.write("return _result.reinterpret(" + len + " * " + valuelayout + ".byteSize(), _arena, null).toArray(" + valuelayout + ");\n");
                 } else {
                     // Array of proxy objects
                     writer.write(array.type.qualifiedJavaType + "[] _resultArray = new " + array.type.qualifiedJavaType + "[" + len + "];\n");
@@ -101,7 +106,7 @@ public class ReturnValue extends Parameter {
             // Debug logging
             writer.write("    GLibLogger.debug(\"Ref ");
             writeType(writer, false);
-            writer.write(" %ld\\n\", _object == null || _object.handle() == null ? 0 : _object.handle().address());\n");
+            writer.write(" %ld\\n\", _object == null || _object.handle() == null ? 0 : _object.handle());\n");
 
             writer.write("    _object.ref();\n");
             writer.write("}\n");

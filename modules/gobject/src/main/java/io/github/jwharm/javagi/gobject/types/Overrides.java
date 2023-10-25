@@ -207,22 +207,21 @@ public class Overrides {
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name) {
-        return MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
-                .get(ValueLayout.ADDRESS.asUnbounded(), 0)
+        return address
+                .get(ValueLayout.ADDRESS.withTargetLayout(classLayout), 0)
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
     public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name) {
-        MemorySegment gclass = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
-                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+        MemorySegment gclass = address.get(ValueLayout.ADDRESS, 0);
         MemorySegment parent;
         try {
             parent = (MemorySegment) g_type_class_peek_parent.invoke(gclass);
         } catch (Throwable t) {
             throw new InteropException(t);
         }
-        MemorySegment parentClass = MemorySegment.ofAddress(parent.address(), classLayout.byteSize(), address.scope());
-        return parentClass.get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+        return parent.reinterpret(classLayout.byteSize())
+                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
     /**
@@ -235,8 +234,7 @@ public class Overrides {
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
-        MemorySegment struct = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
-                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+        MemorySegment struct = address.get(ValueLayout.ADDRESS, 0);
 
         try {
             struct = (MemorySegment) g_type_interface_peek.invokeExact(struct, ifaceType.getValue().longValue());
@@ -244,13 +242,12 @@ public class Overrides {
             throw new InteropException(t);
         }
 
-        return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
+        return struct.reinterpret(classLayout.byteSize())
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
     public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
-        MemorySegment struct = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize(), address.scope())
-                .get(ValueLayout.ADDRESS.asUnbounded(), 0);
+        MemorySegment struct = address.get(ValueLayout.ADDRESS, 0);
 
         try {
             struct = (MemorySegment) g_type_interface_peek_parent.invokeExact(struct, ifaceType.getValue().longValue());
@@ -258,7 +255,7 @@ public class Overrides {
             throw new InteropException(t);
         }
 
-        return MemorySegment.ofAddress(struct.address(), classLayout.byteSize(), struct.scope())
+        return struct.reinterpret(classLayout.byteSize())
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 }

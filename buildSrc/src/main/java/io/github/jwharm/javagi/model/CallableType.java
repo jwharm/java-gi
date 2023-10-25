@@ -43,21 +43,16 @@ public interface CallableType {
      *         an out parameter, or a pointer to a primitive value)
      */
     default boolean allocatesMemory() {
-        if (getParameters() != null) {
-            if (getParameters().parameterList.stream().anyMatch(
-                    p -> (p.array != null)
-                            || (p.type != null && p.type.isActuallyAnArray())
-                            || (p.type != null && "java.lang.String".equals(p.type.qualifiedJavaType))
-                            || (p.isOutParameter())
-                            || (p.isAliasForPrimitive() && p.type.isPointer())
-            )) {
-                return true;
-            }
+        if (getThrows() != null) {
+            return true;
         }
-        ReturnValue rv = getReturnValue();
-        return getThrows() != null
-                || rv.array != null
-                || (this instanceof Closure && rv.type != null && "java.lang.String".equals(rv.type.qualifiedJavaType));
+        if (getReturnValue().allocatesMemory()) {
+            return true;
+        }
+        if (getParameters() != null) {
+            return getParameters().parameterList.stream().anyMatch(Parameter::allocatesMemory);
+        }
+        return false;
     }
 
     default boolean generateFunctionDescriptor(SourceWriter writer) throws IOException {
@@ -75,12 +70,6 @@ public interface CallableType {
         } else {
             writer.write("of(");
             writer.write(Conversions.getValueLayout(returnValue.type));
-
-            // Unbounded valuelayout for Strings, otherwise we cannot read an utf8 string from the returned pointer
-            if (returnValue.type != null && "java.lang.String".equals(returnValue.type.qualifiedJavaType)) {
-                writer.write(".asUnbounded()");
-            }
-
             if (parameters != null || this instanceof Signal) {
                 writer.write(", ");
             }
@@ -106,14 +95,6 @@ public interface CallableType {
                 }
                 first = false;
                 writer.write(Conversions.getValueLayout(p.type));
-
-                // Unbounded valuelayout for String callback/out parameters,
-                // otherwise we cannot read the utf8 string to create a Java String
-                if ((this instanceof Closure || p.isOutParameter())
-                        && p.type != null
-                        && "java.lang.String".equals(p.type.qualifiedJavaType)) {
-                    writer.write(".asUnbounded()");
-                }
             }
         }
 

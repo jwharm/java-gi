@@ -28,7 +28,6 @@ import java.util.function.Function;
 
 import io.github.jwharm.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
-import org.gnome.glib.Type;
 
 import io.github.jwharm.javagi.base.*;
 
@@ -37,8 +36,11 @@ import io.github.jwharm.javagi.base.*;
  */
 public class Interop {
 
-    private record NamedFunction(String name, FunctionDescriptor fdesc, boolean variadic) {}
-    private record FunctionPointer(MemorySegment address, FunctionDescriptor fdesc, boolean variadic) {}
+    private record NamedFunction(String name, FunctionDescriptor fdesc, boolean variadic) {
+    }
+
+    private record FunctionPointer(MemorySegment address, FunctionDescriptor fdesc, boolean variadic) {
+    }
 
     private static final Map<NamedFunction, MethodHandle> namedFunctions = new HashMap<>();
     private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
@@ -52,27 +54,9 @@ public class Interop {
     }
 
     /**
-     * Get the type of a GObject instance. Comparable to the G_TYPE_FROM_INSTANCE macro in C.
-     * @param address the memory address of a GObject instance
-     * @return the type (GType) of the object
-     */
-    public static Type getType(MemorySegment address) {
-        if (address == null || address.equals(MemorySegment.NULL))
-            return null;
-
-        MemorySegment g_class = address.get(ValueLayout.ADDRESS, 0);
-
-        if (g_class == null || g_class.equals(MemorySegment.NULL))
-            return null;
-
-        long g_type = g_class.get(ValueLayout.JAVA_LONG, 0);
-        return new Type(g_type);
-    }
-
-    /**
-     * Convenience method that calls {@link #downcallHandle(String, FunctionDescriptor, boolean)}
-     * with variadic=false.
-     * @param name Name of the native function
+     * Convenience method that calls {@link #downcallHandle(String, FunctionDescriptor, boolean)} with variadic=false.
+     *
+     * @param name  Name of the native function
      * @param fdesc Function descriptor of the native function
      * @return the MethodHandle
      */
@@ -81,11 +65,11 @@ public class Interop {
     }
 
     /**
-     * Creates a method handle that is used to call the native function with 
-     * the provided name and function descriptor. The method handle is cached
-     * and reused in subsequent lookups.
-     * @param name Name of the native function
-     * @param fdesc Function descriptor of the native function
+     * Creates a method handle that is used to call the native function with the provided name and function descriptor.
+     * The method handle is cached and reused in subsequent lookups.
+     *
+     * @param name     Name of the native function
+     * @param fdesc    Function descriptor of the native function
      * @param variadic Whether the function has varargs
      * @return the MethodHandle
      */
@@ -95,20 +79,18 @@ public class Interop {
             return namedFunctions.get(func);
         }
         // Copied from jextract-generated code
-        var handle = symbolLookup
-                .find(name)
-                .map(addr -> variadic ? VarargsInvoker.make(addr, fdesc) : linker.downcallHandle(addr, fdesc))
-                .orElse(null);
+        var handle = symbolLookup.find(name).map(addr -> variadic ? VarargsInvoker.make(addr, fdesc)
+                : linker.downcallHandle(addr, fdesc)).orElse(null);
         namedFunctions.put(func, handle);
         return handle;
     }
 
     /**
-     * Creates a method handle that is used to call the native function at
-     * the provided memory address. The method handle is cached and reused
-     * in subsequent lookups.
+     * Creates a method handle that is used to call the native function at the provided memory address. The method
+     * handle is cached and reused in subsequent lookups.
+     *
      * @param symbol Memory address of the native function
-     * @param fdesc Function descriptor of the native function
+     * @param fdesc  Function descriptor of the native function
      * @return the MethodHandle
      */
     public static MethodHandle downcallHandle(MemorySegment symbol, FunctionDescriptor fdesc) {
@@ -123,11 +105,14 @@ public class Interop {
 
     /**
      * Produce a method handle for a {@code upcall} method in the provided class.
-     * @param klazz the callback class
+     *
+     * @param klazz      the callback class
      * @param descriptor the function descriptor for the native function
      * @return a method handle to use when creating an upcall stub
      */
-    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup, Class<?> klazz, FunctionDescriptor descriptor) {
+    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup,
+                                            Class<?> klazz,
+                                            FunctionDescriptor descriptor) {
         try {
             return lookup.findVirtual(klazz, "upcall", descriptor.toMethodType());
         } catch (NoSuchMethodException | IllegalAccessException e) {
@@ -137,12 +122,16 @@ public class Interop {
 
     /**
      * Produce a method handle for a method in the provided class.
-     * @param klazz the callback class
-     * @param name the name of the callback method
+     *
+     * @param klazz      the callback class
+     * @param name       the name of the callback method
      * @param descriptor the function descriptor for the native function
      * @return a method handle to use when creating an upcall stub
      */
-    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup, Class<?> klazz, String name, FunctionDescriptor descriptor) {
+    public static MethodHandle upcallHandle(MethodHandles.Lookup lookup,
+                                            Class<?> klazz,
+                                            String name,
+                                            FunctionDescriptor descriptor) {
         try {
             return lookup.findVirtual(klazz, name, descriptor.toMethodType());
         } catch (NoSuchMethodException | IllegalAccessException e) {
@@ -151,7 +140,23 @@ public class Interop {
     }
 
     /**
-     * Get a gtype by executing the provided get-type function
+     * Reinterpret {@code address} to {@code newSize} iff {@code newSize} is larger than the current size of
+     * {@code address}.
+     *
+     * @param address a MemorySegment
+     * @param newSize new size for the MemorySegment
+     * @return the same MemorySegment reinterpreted at least {@code newSize}
+     */
+    public static MemorySegment reinterpret(MemorySegment address, long newSize) {
+        if (address == null || address.byteSize() >= newSize) {
+            return address;
+        }
+        return address.reinterpret(newSize);
+    }
+
+    /**
+     * Get a gtype by executing the provided get-type function.
+     *
      * @return The gtype from the provided get-type function
      */
     public static org.gnome.glib.Type getType(String getTypeFunction) {
@@ -171,68 +176,90 @@ public class Interop {
     }
 
     /**
-     * Allocate a native string using SegmentAllocator.allocateUtf8String(String).
-     * @param string the string to allocate as a native string (utf8 char*)
+     * Allocate a native string using {@link SegmentAllocator#allocateUtf8String(String)}, but return
+     * {@link MemorySegment#NULL} for a {@code null} argument.
+     *
+     * @param string    the string to allocate as a native string (utf8 char*) (can be {@code null})
      * @param allocator the segment allocator to use
-     * @return the allocated MemorySegment
+     * @return the allocated MemorySegment with the native utf8 string, or {@link MemorySegment#NULL}
      */
     public static MemorySegment allocateNativeString(String string, SegmentAllocator allocator) {
         return string == null ? MemorySegment.NULL : allocator.allocateUtf8String(string);
     }
-    
+
     /**
-     * Returns a Java string from native memory using {@code MemorySegment.getUtf8String()}.
-     * If an error occurs or when the native address is NULL, null is returned.
+     * Returns a Java string from native memory using {@code MemorySegment.getUtf8String()}. If an error occurs or when
+     * the native address is NULL, null is returned.
+     *
      * @param address The memory address of the native String (\0-terminated char*).
-     * @param free if the address must be freed
+     * @param free    if the address must be freed
      * @return A String or null
      */
     public static String getStringFrom(MemorySegment address, boolean free) {
+        if (MemorySegment.NULL.equals(address)) {
+            return null;
+        }
         try {
-            if (!MemorySegment.NULL.equals(address)) {
-                return address.getUtf8String(0);
-            }
-        } catch (Throwable ignored) {
+            return address.reinterpret(Long.MAX_VALUE).getUtf8String(0);
         } finally {
             if (free) {
                 GLib.free(address);
             }
         }
-        return null;
     }
 
     /**
      * Read an array of Strings with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param free if the strings and the array must be freed
+     * @param length  length of the array
+     * @param free    if the strings and the array must be freed
      * @return Array of Strings
      */
     public static String[] getStringArrayFrom(MemorySegment address, int length, boolean free) {
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
+        }
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+        }
+
         String[] result = new String[length];
         for (int i = 0; i < length; i++) {
-            result[i] = address.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
+            result[i] = array.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
             if (free) {
-                GLib.free(address.getAtIndex(ValueLayout.ADDRESS, i));
+                GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
             }
         }
         if (free) {
-            GLib.free(address);
+            GLib.free(array);
         }
         return result;
     }
 
     /**
      * Read an array of Strings from a null-terminated array in native memory
+     *
      * @param address address of the memory segment
-     * @param free if the strings and the array must be freed
+     * @param free    if the strings and the array must be freed
      * @return Array of Strings
      */
     public static String[] getStringArrayFrom(MemorySegment address, boolean free) {
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
+        }
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(Long.MAX_VALUE);
+        }
+
         ArrayList<String> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = address.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
             if (MemorySegment.NULL.equals(ptr)) {
                 break;
             }
@@ -247,17 +274,27 @@ public class Interop {
 
     /**
      * Read an array of pointers with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param free if the addresses and the array must be freed
+     * @param length  length of the array
+     * @param free    if the addresses and the array must be freed
      * @return Array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address, int length, boolean free) {
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
+        }
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+        }
+
         MemorySegment[] result = new MemorySegment[length];
         for (int i = 0; i < length; i++) {
-            result[i] = address.getAtIndex(ValueLayout.ADDRESS, i);
+            result[i] = array.getAtIndex(ValueLayout.ADDRESS, i);
             if (free) {
-                GLib.free(address.getAtIndex(ValueLayout.ADDRESS, i));
+                GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
             }
         }
         if (free) {
@@ -268,15 +305,25 @@ public class Interop {
 
     /**
      * Read an array of pointers from a null-terminated array in native memory
+     *
      * @param address address of the memory segment
-     * @param free if the addresses and the array must be freed
+     * @param free    if the addresses and the array must be freed
      * @return Array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address, boolean free) {
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
+        }
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(Long.MAX_VALUE);
+        }
+
         ArrayList<MemorySegment> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = address.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
             if (MemorySegment.NULL.equals(ptr)) {
                 break;
             }
@@ -290,17 +337,17 @@ public class Interop {
     }
 
     /**
-     * Read an array of booleans with the given length from native memory
-     * The array is read from native memory as an array of integers with value 1 or 0,
-     * and converted to booleans with 1 = true and 0 = false.
+     * Read an array of booleans with the given length from native memory The array is read from native memory as an
+     * array of integers with value 1 or 0, and converted to booleans with 1 = true and 0 = false.
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of booleans
      */
-    public static boolean[] getBooleanArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        int[] intArray = getIntegerArrayFrom(address, length, scope, free);
+    public static boolean[] getBooleanArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        int[] intArray = getIntegerArrayFrom(address, length, arena, free);
         boolean[] array = new boolean[intArray.length];
         for (int c = 0; c < intArray.length; c++)
             array[c] = (intArray[c] != 0);
@@ -309,39 +356,42 @@ public class Interop {
 
     /**
      * Read an array of bytes with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of bytes
      */
-    public static byte[] getByteArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        byte[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_BYTE);
+    public static byte[] getByteArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        byte[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_BYTE);
         if (free) {
             GLib.free(address);
         }
         return array;
     }
 
-    public static byte[] getByteArrayFrom(MemorySegment address, SegmentScope scope, boolean free) {
+    public static byte[] getByteArrayFrom(MemorySegment address, Arena arena, boolean free) {
         // Find the null byte
+        MemorySegment array = address.reinterpret(Long.MAX_VALUE, arena, null);
         long idx = 0;
-        while (address.get(ValueLayout.JAVA_BYTE, idx) != 0) {
+        while (array.get(ValueLayout.JAVA_BYTE, idx) != 0) {
             idx++;
         }
-        return getByteArrayFrom(address, idx, scope, free);
+        return getByteArrayFrom(address, idx, arena, free);
     }
 
     /**
      * Read an array of chars with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of chars
      */
-    public static char[] getCharacterArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        char[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_CHAR);
+    public static char[] getCharacterArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        char[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_CHAR);
         if (free) {
             GLib.free(address);
         }
@@ -350,14 +400,15 @@ public class Interop {
 
     /**
      * Read an array of doubles with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of doubles
      */
-    public static double[] getDoubleArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        double[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_DOUBLE);
+    public static double[] getDoubleArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        double[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_DOUBLE);
         if (free) {
             GLib.free(address);
         }
@@ -366,14 +417,15 @@ public class Interop {
 
     /**
      * Read an array of floats with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of floats
      */
-    public static float[] getFloatArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        float[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_FLOAT);
+    public static float[] getFloatArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        float[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_FLOAT);
         if (free) {
             GLib.free(address);
         }
@@ -382,14 +434,15 @@ public class Interop {
 
     /**
      * Read an array of integers with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of integers
      */
-    public static int[] getIntegerArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        int[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_INT);
+    public static int[] getIntegerArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        int[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_INT);
         if (free) {
             GLib.free(address);
         }
@@ -398,30 +451,33 @@ public class Interop {
 
     /**
      * Read a null-terminated array of integers from native memory
+     *
      * @param address address of the memory segment
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of integers
      */
-    public static int[] getIntegerArrayFrom(MemorySegment address, SegmentScope scope, boolean free) {
+    public static int[] getIntegerArrayFrom(MemorySegment address, Arena arena, boolean free) {
+        MemorySegment array = address.reinterpret(Integer.MAX_VALUE, arena, null);
         // Find the null value
         long idx = 0;
-        while (address.get(ValueLayout.JAVA_INT, idx) != 0) {
+        while (array.get(ValueLayout.JAVA_INT, idx) != 0) {
             idx++;
         }
-        return getIntegerArrayFrom(address, idx, scope, free);
+        return getIntegerArrayFrom(address, idx, arena, free);
     }
 
     /**
      * Read an array of longs with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of longs
      */
-    public static long[] getLongArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        long[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_LONG);
+    public static long[] getLongArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        long[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_LONG);
         if (free) {
             GLib.free(address);
         }
@@ -430,14 +486,15 @@ public class Interop {
 
     /**
      * Read an array of shorts with the given length from native memory
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param scope the memory scope
-     * @param free if the array must be freed
+     * @param length  length of the array
+     * @param arena   the memory scope
+     * @param free    if the array must be freed
      * @return array of shorts
      */
-    public static short[] getShortArrayFrom(MemorySegment address, long length, SegmentScope scope, boolean free) {
-        short[] array = MemorySegment.ofAddress(address.address(), length, scope).toArray(ValueLayout.JAVA_SHORT);
+    public static short[] getShortArrayFrom(MemorySegment address, long length, Arena arena, boolean free) {
+        short[] array = address.reinterpret(length, arena, null).toArray(ValueLayout.JAVA_SHORT);
         if (free) {
             GLib.free(address);
         }
@@ -445,101 +502,131 @@ public class Interop {
     }
 
     /**
-     * Read a null-terminated array of memory addresses from native memory,
-     * create a Proxy instance for each address, and return an array of
-     * Proxy instances
+     * Read a null-terminated array of memory addresses from native memory, create a Proxy instance for each address,
+     * and return an array of Proxy instances
+     *
      * @param address address of the memory segment
-     * @param clazz class of the Proxy type
-     * @param make constructor of the Proxy type
+     * @param clazz   class of the Proxy type
+     * @param make    constructor of the Proxy type
+     * @param <T>     the type of the Proxy instances
      * @return array of Proxy instances
-     * @param <T> the type of the Proxy instances
      */
     public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address, Class<T> clazz, Function<MemorySegment, T> make) {
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
+        }
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(Long.MAX_VALUE);
+        }
+
         long offset = 0;
-        while (! MemorySegment.NULL.equals(address.get(ValueLayout.ADDRESS, offset))) {
+        while (!MemorySegment.NULL.equals(array.get(ValueLayout.ADDRESS, offset))) {
             offset += ValueLayout.ADDRESS.byteSize();
         }
         return getProxyArrayFrom(address, (int) offset, clazz, make);
     }
 
     /**
-     * Read an array of memory addresses from native memory, create a Proxy
-     * instance for each address, and return an array of Proxy instances
+     * Read an array of memory addresses from native memory, create a Proxy instance for each address, and return an
+     * array of Proxy instances
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param clazz class of the Proxy type
-     * @param make constructor of the Proxy type
+     * @param length  length of the array
+     * @param clazz   class of the Proxy type
+     * @param make    constructor of the Proxy type
+     * @param <T>     the type of the Proxy instances
      * @return array of Proxy instances
-     * @param <T> the type of the Proxy instances
      */
     public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address, int length, Class<T> clazz, Function<MemorySegment, T> make) {
-        MemorySegment segment = MemorySegment.ofAddress(address.address(), ValueLayout.ADDRESS.byteSize() * length, address.scope());
-        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
-        for (int i = 0; i < length; i++) {
-            array[i] = make.apply(segment.getAtIndex(ValueLayout.ADDRESS, i));
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
         }
-        return array;
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+        }
+
+        @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            result[i] = make.apply(array.getAtIndex(ValueLayout.ADDRESS, i));
+        }
+        return result;
     }
 
     /**
-     * Read an array of structs from native memory, create a Proxy
-     * instance for each struct, and return an array of Proxy instances
+     * Read an array of structs from native memory, create a Proxy instance for each struct, and return an array of
+     * Proxy instances
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param clazz class of the Proxy type
-     * @param make constructor of the Proxy type
+     * @param length  length of the array
+     * @param clazz   class of the Proxy type
+     * @param make    constructor of the Proxy type
+     * @param <T>     the type of the Proxy instances
      * @return array of Proxy instances
-     * @param <T> the type of the Proxy instances
      */
     public static <T extends Proxy> T[] getStructArrayFrom(MemorySegment address, int length, Class<T> clazz, Function<MemorySegment, T> make, MemoryLayout layout) {
-        var segment = MemorySegment.ofAddress(address.address(), layout.byteSize() * length, address.scope());
-        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
-        // MemorySegment.elements() only works for >1 elements
-        if (length == 1) {
-            array[0] = make.apply(segment);
-        } else {
-            List<MemorySegment> elements = segment.elements(layout).toList();
-            for (int i = 0; i < length; i++) {
-                array[i] = make.apply(elements.get(i));
-            }
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
         }
-        return array;
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(layout.byteSize() * length);
+        }
+
+        @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(clazz, length);
+        List<MemorySegment> elements = array.elements(layout).toList();
+        for (int i = 0; i < length; i++) {
+            result[i] = make.apply(elements.get(i));
+        }
+        return result;
     }
 
     /**
-     * Read an array of integers from native memory, create a Java instance
-     * for each integer value with the provided constructor, and return an
-     * array of these instances. This is used to quickly create an array of
-     * Enumeration or Bitfield objects from a native int array.
+     * Read an array of integers from native memory, create a Java instance for each integer value with the provided
+     * constructor, and return an array of these instances. This is used to quickly create an array of Enumeration or
+     * Bitfield objects from a native int array.
+     *
      * @param address address of the memory segment
-     * @param length length of the array
-     * @param clazz class that will be returned in the array
-     * @param make constructor to create the instances
+     * @param length  length of the array
+     * @param clazz   class that will be returned in the array
+     * @param make    constructor to create the instances
+     * @param <T>     the type to construct
      * @return array of constructed instances
-     * @param <T> the type to construct
      */
     public static <T> T[] getArrayFromIntPointer(MemorySegment address, int length, Class<T> clazz, Function<Integer, T> make) {
-        MemorySegment segment = MemorySegment.ofAddress(address.address(), ValueLayout.JAVA_INT.byteSize() * length, address.scope());
-        @SuppressWarnings("unchecked") T[] array = (T[]) Array.newInstance(clazz, length);
-        for (int i = 0; i < length; i++) {
-            array[i] = make.apply(segment.getAtIndex(ValueLayout.JAVA_INT, i));
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            return null;
         }
-        return array;
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0) {
+            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+        }
+
+        @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(clazz, length);
+        for (int i = 0; i < length; i++) {
+            result[i] = make.apply(array.getAtIndex(ValueLayout.JAVA_INT, i));
+        }
+        return result;
     }
 
     /**
-     * Allocates and initializes an (optionally NULL-terminated) array 
-     * of strings (NUL-terminated utf8 char*).
-     * @param strings Array of Strings
+     * Allocates and initializes an (optionally NULL-terminated) array of strings (NUL-terminated utf8 char*).
+     *
+     * @param strings        Array of Strings
      * @param zeroTerminated Whether to add a NUL at the end the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(String[] strings, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(String[] strings, boolean zeroTerminated, Arena arena) {
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = allocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < strings.length; i++) {
-            var cString = strings[i] == null ? MemorySegment.NULL : allocator.allocateUtf8String(strings[i]);
+            var cString = strings[i] == null ? MemorySegment.NULL : arena.allocateUtf8String(strings[i]);
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
         }
         if (zeroTerminated) {
@@ -549,137 +636,145 @@ public class Interop {
     }
 
     /**
-     * Converts the boolean[] array into an int[] array, and calls {@link #allocateNativeArray(int[], boolean, SegmentAllocator)}.
+     * Converts the boolean[] array into an int[] array, and calls {@link #allocateNativeArray(int[], boolean, Arena)}.
      * Each boolean value "true" is converted 1, boolean value "false" to 0.
-     * @param array Array of booleans
+     *
+     * @param array          Array of booleans
      * @param zeroTerminated When true, an (int) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(boolean[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(boolean[] array, boolean zeroTerminated, Arena arena) {
         int[] intArray = new int[array.length];
         for (int i = 0; i < array.length; i++) {
             intArray[i] = array[i] ? 1 : 0;
         }
-        return allocateNativeArray(intArray, zeroTerminated, allocator);
+        return allocateNativeArray(intArray, zeroTerminated, arena);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of bytes.
-     * @param array The array of bytes
+     *
+     * @param array          The array of bytes
      * @param zeroTerminated When true, a (byte) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(byte[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(byte[] array, boolean zeroTerminated, Arena arena) {
         byte[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_BYTE, copy);
+        return arena.allocateArray(ValueLayout.JAVA_BYTE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of chars.
-     * @param array The array of chars
+     *
+     * @param array          The array of chars
      * @param zeroTerminated When true, a (char) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(char[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(char[] array, boolean zeroTerminated, Arena arena) {
         char[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_CHAR, copy);
+        return arena.allocateArray(ValueLayout.JAVA_CHAR, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of doubles.
-     * @param array The array of doubles
+     *
+     * @param array          The array of doubles
      * @param zeroTerminated When true, a (double) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(double[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(double[] array, boolean zeroTerminated, Arena arena) {
         double[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
+        return arena.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
-     * @param array The array of floats
+     *
+     * @param array          The array of floats
      * @param zeroTerminated When true, a (float) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(float[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(float[] array, boolean zeroTerminated, Arena arena) {
         float[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_FLOAT, copy);
+        return arena.allocateArray(ValueLayout.JAVA_FLOAT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of floats.
-     * @param array The array of floats
+     *
+     * @param array          The array of floats
      * @param zeroTerminated When true, a (int) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(int[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(int[] array, boolean zeroTerminated, Arena arena) {
         int[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_INT, copy);
+        return arena.allocateArray(ValueLayout.JAVA_INT, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of longs.
-     * @param array The array of longs
+     *
+     * @param array          The array of longs
      * @param zeroTerminated When true, a (long) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(long[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(long[] array, boolean zeroTerminated, Arena arena) {
         long[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_LONG, copy);
+        return arena.allocateArray(ValueLayout.JAVA_LONG, copy);
     }
 
     /**
      * Allocates and initializes an (optionally NULL-terminated) array of shorts.
-     * @param array The array of shorts
+     *
+     * @param array          The array of shorts
      * @param zeroTerminated When true, a (short) 0 is appended to the array
-     * @param allocator the segment allocator for memory allocation
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(short[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(short[] array, boolean zeroTerminated, Arena arena) {
         short[] copy = zeroTerminated ? Arrays.copyOf(array, array.length + 1) : array;
-        return allocator.allocateArray(ValueLayout.JAVA_SHORT, copy);
+        return arena.allocateArray(ValueLayout.JAVA_SHORT, copy);
     }
 
     /**
-     * Allocates and initializes an (optionally NULL-terminated) array 
-     * of pointers (from Proxy instances).
-     * @param array The array of Proxy instances
-     * @param zeroTerminated Whether to add an additional NUL to the array
-     * @param allocator the segment allocator for memory allocation
+     * Allocates and initializes an (optionally NULL-terminated) array of pointers (from Proxy instances).
+     *
+     * @param array          The array of Proxy instances
+     * @param zeroTerminated Whether to add a NUL to the array
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(Proxy[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(Proxy[] array, boolean zeroTerminated, Arena arena) {
         MemorySegment[] addressArray = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
             addressArray[i] = array[i] == null ? MemorySegment.NULL : array[i].handle();
         }
-        return allocateNativeArray(addressArray, zeroTerminated, allocator);
+        return allocateNativeArray(addressArray, zeroTerminated, arena);
     }
-    
+
     /**
-     * Allocates and initializes an (optionally NULL-terminated) array
-     * of structs (from Proxy instances). The actual memory segments (not 
-     * the pointers) are copied into the array.
-     * @param array The array of Proxy instances
-     * @param layout The memory layout of the object type
-     * @param zeroTerminated Whether to add an additional NUL to the array
-     * @param allocator the allocator for memory allocation
+     * Allocates and initializes an (optionally NULL-terminated) array of structs (from Proxy instances). The actual
+     * memory segments (not the pointers) are copied into the array.
+     *
+     * @param array          The array of Proxy instances
+     * @param layout         The memory layout of the object type
+     * @param zeroTerminated Whether to add a NUL to the array
+     * @param arena          the allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(Proxy[] array, MemoryLayout layout, boolean zeroTerminated, Arena arena) {
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment memorySegment = allocator.allocateArray(layout, length);
+        MemorySegment memorySegment = arena.allocateArray(layout, length);
         for (int i = 0; i < array.length; i++) {
-            if (array[i] != null) {
-                MemorySegment element = MemorySegment.ofAddress(array[i].handle().address(), layout.byteSize(), memorySegment.scope());
+            if (array[i] != null && (!MemorySegment.NULL.equals(array[i].handle()))) {
+                MemorySegment element = array[i].handle().reinterpret(layout.byteSize(), arena, null);
                 memorySegment.asSlice(i * layout.byteSize()).copyFrom(element);
             } else {
                 memorySegment.asSlice(i * layout.byteSize(), layout.byteSize()).fill((byte) 0);
@@ -692,16 +787,16 @@ public class Interop {
     }
 
     /**
-     * Allocates and initializes an (optionally NULL-terminated) array 
-     * of memory addresses.
-     * @param array The array of addresses
-     * @param zeroTerminated Whether to add an additional NUL to the array
-     * @param allocator the segment allocator for memory allocation
+     * Allocates and initializes an (optionally NULL-terminated) array of memory addresses.
+     *
+     * @param array          The array of addresses
+     * @param zeroTerminated Whether to add a NUL to the array
+     * @param arena          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(MemorySegment[] array, boolean zeroTerminated, SegmentAllocator allocator) {
+    public static MemorySegment allocateNativeArray(MemorySegment[] array, boolean zeroTerminated, Arena arena) {
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = allocator.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
         for (int i = 0; i < array.length; i++) {
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, array[i] == null ? MemorySegment.NULL : array[i]);
         }
@@ -712,16 +807,11 @@ public class Interop {
     }
 
     // Adapted from code that was generated by jextract
-    private static class VarargsInvoker {
+    private record VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
         private static final MethodHandle INVOKE_MH;
-        private final MemorySegment symbol;
-        private final FunctionDescriptor function;
-        private static final SegmentAllocator THROWING_ALLOCATOR = (x, y) -> { throw new AssertionError("should not reach here"); };
-
-        private VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
-            this.symbol = symbol;
-            this.function = function;
-        }
+        private static final SegmentAllocator THROWING_ALLOCATOR = (x, y) -> {
+            throw new AssertionError("should not reach here");
+        };
 
         static {
             try {
@@ -739,8 +829,7 @@ public class Interop {
                 mtype = mtype.appendParameterTypes(carrier(layout, false));
             }
             mtype = mtype.appendParameterTypes(Object[].class);
-            boolean needsAllocator = function.returnLayout().isPresent() &&
-                    function.returnLayout().get() instanceof GroupLayout;
+            boolean needsAllocator = function.returnLayout().isPresent() && function.returnLayout().get() instanceof GroupLayout;
             if (needsAllocator) {
                 mtype = mtype.insertParameterTypes(0, SegmentAllocator.class);
             } else {
@@ -751,8 +840,7 @@ public class Interop {
 
         static Class<?> carrier(MemoryLayout layout, boolean ret) {
             if (layout instanceof ValueLayout valLayout) {
-                return (ret || valLayout.carrier() != MemorySegment.class) ?
-                        valLayout.carrier() : MemorySegment.class;
+                return (ret || valLayout.carrier() != MemorySegment.class) ? valLayout.carrier() : MemorySegment.class;
             } else if (layout instanceof GroupLayout) {
                 return MemorySegment.class;
             } else {
@@ -765,7 +853,7 @@ public class Interop {
         private Object invoke(SegmentAllocator allocator, Object[] args) throws Throwable {
             // one trailing Object[]
             int nNamedArgs = function.argumentLayouts().size();
-            assert(args.length == nNamedArgs + 1);
+            assert (args.length == nNamedArgs + 1);
             // The last argument is the array of vararg collector
             Object[] unnamedArgs = (Object[]) args[args.length - 1];
 
@@ -776,7 +864,7 @@ public class Interop {
             for (pos = 0; pos < nNamedArgs; pos++) {
                 argLayouts[pos] = function.argumentLayouts().get(pos);
             }
-            
+
             // Unwrap the java-gi types to their memory address or primitive value
             Object[] unwrappedArgs = new Object[unnamedArgs.length];
             for (int i = 0; i < unnamedArgs.length; i++) {
@@ -784,18 +872,15 @@ public class Interop {
             }
 
             assert pos == nNamedArgs;
-            for (Object o: unwrappedArgs) {
+            for (Object o : unwrappedArgs) {
                 argLayouts[pos] = variadicLayout(normalize(o.getClass()));
                 pos++;
             }
             assert pos == argsCount;
 
-            FunctionDescriptor f = (function.returnLayout().isEmpty()) ?
-                    FunctionDescriptor.ofVoid(argLayouts) :
-                    FunctionDescriptor.of(function.returnLayout().get(), argLayouts);
+            FunctionDescriptor f = (function.returnLayout().isEmpty()) ? FunctionDescriptor.ofVoid(argLayouts) : FunctionDescriptor.of(function.returnLayout().get(), argLayouts);
             MethodHandle mh = linker.downcallHandle(symbol, f);
-            boolean needsAllocator = function.returnLayout().isPresent() &&
-                    function.returnLayout().get() instanceof GroupLayout;
+            boolean needsAllocator = function.returnLayout().isPresent() && function.returnLayout().get() instanceof GroupLayout;
             if (needsAllocator) {
                 mh = mh.bindTo(allocator);
             }
@@ -863,7 +948,7 @@ public class Interop {
                 throw new IllegalArgumentException("Unhandled variadic argument class: " + c);
             }
         }
-        
+
         // Unwrap the java-gi types to their memory address or primitive value.
         // Arrays are allocated to native memory as-is (no additional NUL is appended: the caller must do this)
         private Object unwrapJavagiTypes(Object o) {
@@ -871,40 +956,40 @@ public class Interop {
                 return MemorySegment.NULL;
             }
             if (o instanceof MemorySegment[] addresses) {
-                return Interop.allocateNativeArray(addresses, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(addresses, false, Arena.ofAuto()).address();
             }
             if (o instanceof Boolean bool) {
                 return bool ? 1 : 0;
             }
             if (o instanceof boolean[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof byte[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof char[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof double[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof float[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof int[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof long[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof short[] values) {
-                return Interop.allocateNativeArray(values, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(values, false, Arena.ofAuto()).address();
             }
             if (o instanceof Proxy proxy) {
                 return proxy.handle();
             }
             if (o instanceof Proxy[] proxys) {
-                return Interop.allocateNativeArray(proxys, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+                return Interop.allocateNativeArray(proxys, false, Arena.ofAuto()).address();
             }
             if (o instanceof Alias<?> alias) {
                 return alias.getValue();
@@ -921,11 +1006,11 @@ public class Interop {
             if (o instanceof Enumeration[] enumerations) {
                 return Enumeration.getValues(enumerations);
             }
-            if (o instanceof java.lang.String string) {
-                return Interop.allocateNativeString(string, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+            if (o instanceof String string) {
+                return Interop.allocateNativeString(string, Arena.ofAuto()).address();
             }
-            if (o instanceof java.lang.String[] strings) {
-                return Interop.allocateNativeArray(strings, false, SegmentAllocator.nativeAllocator(SegmentScope.auto())).address();
+            if (o instanceof String[] strings) {
+                return Interop.allocateNativeArray(strings, false, Arena.ofAuto()).address();
             }
             return o;
         }

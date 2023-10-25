@@ -100,9 +100,6 @@ public class GObjectPatch implements Patch {
             public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
                 var _result = constructNew(objectType, null);
                 T _object = (T) InstanceCache.getForType(_result, org.gnome.gobject.GObject::new, true);
-                if (_object != null) {
-                    _object.ref();
-                }
                 return _object;
             }
             

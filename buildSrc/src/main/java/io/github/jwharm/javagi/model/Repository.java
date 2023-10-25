@@ -135,6 +135,9 @@ public class Repository extends GirElement {
 
             // Generate global functions
             for (Function function : namespace.functionList) {
+                if (function.hasVaListParameter()) {
+                    continue;
+                }
                 function.generate(writer);
             }
 

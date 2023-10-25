@@ -52,11 +52,13 @@ public class Property extends Variable {
         writeTypeAndName(writer);
         writer.write(") {\n");
         writer.increaseIndent();
-        writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate();\n");
-        writer.write("_value.init(" + gTypeDeclaration + ");\n");
-        if (array != null) {
-            writer.write("SegmentAllocator _arena = SegmentAllocator.nativeAllocator(SegmentScope.auto());\n");
+        if (allocatesMemory()) {
+            writer.write("Arena _arena = getArena();\n");
+            writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate(_arena);\n");
+        } else {
+            writer.write("org.gnome.gobject.Value _value = org.gnome.gobject.Value.allocate(getArena());\n");
         }
+        writer.write("_value.init(" + gTypeDeclaration + ");\n");
         writer.write(getValueSetter("_value", gTypeDeclaration, name) + ";\n");
         writer.write("addBuilderProperty(\"" + propertyName + "\", _value);\n");
         writer.write("return (S) this;\n");

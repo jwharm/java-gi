@@ -31,7 +31,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.7.2'
+version = '0.8.0-SNAPSHOT'
 
 java {
     if (! System.getenv('CI')) {
@@ -39,7 +39,7 @@ java {
     }
     withSourcesJar()
     toolchain {
-        languageVersion = JavaLanguageVersion.of(20)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -64,7 +64,7 @@ tasks.named('javadoc') {
     if (System.getenv('CI')) {
         enabled = false
     }
-    options.addStringOption('source', '20')
+    options.addStringOption('source', '21')
     options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'

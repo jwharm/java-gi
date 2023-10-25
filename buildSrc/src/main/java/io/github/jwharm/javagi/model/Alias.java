@@ -125,12 +125,13 @@ public class Alias extends ValueWrapper {
         
         writer.write("    " + javaName + "[] array = new " + javaName + "[(int) length];\n");
         writer.write("    long bytesSize = " + layout + ".byteSize();\n");
+        writer.write("    MemorySegment segment = address.reinterpret(bytesSize * length);\n");
         writer.write("    for (int i = 0; i < length; i++) {\n");
         
         if ("utf8".equals(type.name)) {
-            writer.write("        array[i] = new " + javaName + "(Interop.getStringFrom(address.get(" + layout + ", i * bytesSize), free));\n");
+            writer.write("        array[i] = new " + javaName + "(Interop.getStringFrom(segment.get(" + layout + ", i * bytesSize), free));\n");
         } else {
-            writer.write("        array[i] = new " + javaName + "(address.get(" + layout + ", i * bytesSize));\n");
+            writer.write("        array[i] = new " + javaName + "(segment.get(" + layout + ", i * bytesSize));\n");
         }
         
         writer.write("    }\n");

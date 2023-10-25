@@ -30,6 +30,7 @@ import org.gnome.gobject.GObjects;
 import org.gnome.gobject.Value;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,8 +77,8 @@ public class DerivedClassTest {
     @Test
     public void writeAndReadProperty() {
         // With manually created GValues
-        Value input = Value.allocate().init(Types.STRING);
-        Value output = Value.allocate().init(Types.STRING);
+        Value input = Value.allocate(Arena.ofAuto()).init(Types.STRING);
+        Value output = Value.allocate(Arena.ofAuto()).init(Types.STRING);
         input.setString("test value");
 
         TestObject object = GObject.newInstance(TestObject.gtype);
@@ -97,8 +98,8 @@ public class DerivedClassTest {
     @Test
     public void writeAndReadBooleanProperty() {
         // With manually created GValues
-        Value input = Value.allocate().init(Types.BOOLEAN);
-        Value output = Value.allocate().init(Types.BOOLEAN);
+        Value input = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
+        Value output = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
         input.setBoolean(true);
         TestObject object = GObject.newInstance(TestObject.gtype);
         object.setProperty("bool-property", input);

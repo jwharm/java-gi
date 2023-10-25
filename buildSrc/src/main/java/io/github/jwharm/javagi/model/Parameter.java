@@ -203,12 +203,20 @@ public class Parameter extends Variable {
      * (instance param, gerror, user_data or array length), or primitive values.
      * @return true iff this parameter is nullable, is user-specified, and is not a primitive value
      */
+    @Override
     public boolean checkNull() {
         return (! notnull)
                 && (! (isInstanceParameter() || isErrorParameter()
                 || isUserDataParameter() || isDestroyNotifyParameter()
                 || isArrayLengthParameter() || varargs))
                 && super.checkNull();
+    }
+
+    @Override
+    public boolean allocatesMemory() {
+         return super.allocatesMemory()
+                 || isOutParameter()
+                 || (isAliasForPrimitive() && type.isPointer());
     }
 
     /**
@@ -308,7 +316,8 @@ public class Parameter extends Variable {
                 } else if (array.type.isPrimitive && (! array.type.isBoolean())) {
                     // Array of primitive values
                     writer.write("if (" + name + " != null) " + name + ".set(");
-                    writer.write("MemorySegment.ofAddress(_" + name + "Pointer.get(ValueLayout.ADDRESS, 0).address(), " + len + " * " + valuelayout + ".byteSize(), _arena.scope()).toArray(" + valuelayout + "));\n");
+                    writer.write("_" + name + "Pointer.get(ValueLayout.ADDRESS, 0).reinterpret("
+                            + len + " * " + valuelayout + ".byteSize(), _arena, null).toArray(" + valuelayout + "));\n");
                 } else {
                     // Array of proxy objects
                     writer.write("if (" + name + " != null) {\n");
@@ -350,14 +359,14 @@ public class Parameter extends Variable {
 
     public void generateUpcallPreprocessing(SourceWriter writer) throws IOException {
         if (isAliasForPrimitive() && type.isPointer()) {
-            writer.write("MemorySegment %sParam = MemorySegment.ofAddress(%s.address(), %s.byteSize(), %s.scope());\n"
-                    .formatted(name, name, Conversions.getValueLayoutPlain(type), name));
+            writer.write("MemorySegment %sParam = %s.reinterpret(%s.byteSize(), _arena, null);\n"
+                    .formatted(name, name, Conversions.getValueLayoutPlain(type)));
             String typeStr = Conversions.getValueLayoutPlain(type.girElementInstance.type);
             writer.write(type.qualifiedJavaType + " _" + name + "Alias = new " + type.qualifiedJavaType + "(" + name + "Param.get(" + typeStr + ", 0));\n");
         } else if (isOutParameter()) {
             if (type != null) {
-                writer.write("MemorySegment %sParam = MemorySegment.ofAddress(%s.address(), %s.byteSize(), %s.scope());\n"
-                        .formatted(name, name, Conversions.getValueLayoutPlain(type), name));
+                writer.write("MemorySegment %sParam = %s.reinterpret(%s.byteSize(), _arena, null);\n"
+                        .formatted(name, name, Conversions.getValueLayoutPlain(type)));
                 String typeStr = type.qualifiedJavaType;
                 if (type.isPrimitive) typeStr = Conversions.primitiveClassName(typeStr);
                 writer.write("Out<" + typeStr + "> _" + name + "Out = new Out<>(");

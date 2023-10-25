@@ -40,7 +40,7 @@ public class Constructor extends Method {
         }
 
         // @Deprecated
-        if ("1".equals(deprecated) || hasVaListParameter()) {
+        if ("1".equals(deprecated)) {
             writer.write("@Deprecated\n");
         }
 
@@ -102,7 +102,7 @@ public class Constructor extends Method {
         }
 
         // @Deprecated
-        if ("1".equals(deprecated) || hasVaListParameter()) {
+        if ("1".equals(deprecated)) {
             writer.write("@Deprecated\n");
         }
 

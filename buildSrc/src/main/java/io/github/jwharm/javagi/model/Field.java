@@ -130,6 +130,11 @@ public class Field extends Variable {
             }
             writer.write(") {\n");
 
+            // Allocator for array field getters
+            if (allocatesMemory()) {
+                writer.write("    Arena _arena = Arena.ofAuto();\n");
+            }
+
             // Read the memory segment of an embedded field from the struct (not a pointer)
             if ((type != null) && (!type.isPointer()) && (type.isClass() || type.isInterface())) {
                 writer.write("    long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"));\n");
@@ -141,10 +146,9 @@ public class Field extends Variable {
             } else {
                 String memoryType = getMemoryType();
                 if ("ARRAY".equals(memoryType)) memoryType = "MemorySegment";
-                writer.write("    var _scope = getAllocatedMemorySegment().scope();\n");
                 writer.write("    var _result = (" + memoryType + ") getMemoryLayout()\n");
                 writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-                writer.write("        .get(getAllocatedMemorySegment());\n");
+                writer.write("        .get(handle());\n");
                 writer.write("    return ");
                 marshalNativeToJava(writer, "_result", false);
                 writer.write(";\n");
@@ -159,12 +163,15 @@ public class Field extends Variable {
         writer.write(" * @param " + this.name + " The new value for the field {@code " + this.fieldName + "}\n");
         writer.write(" */\n");
         writer.write("public void " + setter + "(");
+        // Arena parameter
+        if (allocatesMemory()) {
+            writer.write("Arena _arena, ");
+        }
         writeTypeAndName(writer);
         writer.write(") {\n");
-        writer.write("    var _arena = SegmentAllocator.nativeAllocator(getAllocatedMemorySegment().scope());\n");
         writer.write("    getMemoryLayout()\n");
         writer.write("        .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-        writer.write("        .set(getAllocatedMemorySegment(), ");
+        writer.write("        .set(handle(), ");
         // Check for null values
         if (checkNull()) {
             writer.write("(" + this.name + " == null ? MemorySegment.NULL : ");
@@ -198,10 +205,10 @@ public class Field extends Variable {
             // Generate method handle
             String className = ((Record) parent).javaName;
             writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
-            writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, SegmentScope.global());\n");
+            writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, Arena.global());\n");
             writer.write("getMemoryLayout()\n");
             writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
-            writer.write("    .set(getAllocatedMemorySegment(), ");
+            writer.write("    .set(handle(), ");
             writer.write("(method == null ? MemorySegment.NULL : _address));\n");
 
             writer.decreaseIndent();
@@ -229,7 +236,7 @@ public class Field extends Variable {
                     || "java.lang.String".equals(type.qualifiedJavaType)
                     || "java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)
                     || type.isCallback()) {
-                return "ValueLayout.ADDRESS.asUnbounded().withName(\"" + this.fieldName + "\")";
+                return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
             }
             
             // Bitfields and enumerations are integers
@@ -273,7 +280,7 @@ public class Field extends Variable {
         
         // Arrays with non-fixed size
         if (array != null) {
-            return "ValueLayout.ADDRESS.asUnbounded().withName(\"" + this.fieldName + "\")";
+            return "ValueLayout.ADDRESS.withName(\"" + this.fieldName + "\")";
         }
         
         // Callbacks
@@ -328,17 +335,17 @@ public class Field extends Variable {
      */
     public int getSize(String memoryType) {
         return switch(memoryType) {
-            case "boolean" -> 32; // treated as an integer
-            case "byte" -> 8;
-            case "char" -> 8;
-            case "short" -> 16;
-            case "int" -> 32;
-            case "long" -> 64; // java long is 64-bits
-            case "float" -> 32;
-            case "double" -> 64;
-            case "MemorySegment" -> 64; // 64-bits pointer
+            case "boolean" -> 4; // treated as an integer
+            case "byte" -> 1;
+            case "char" -> 1;
+            case "short" -> 2;
+            case "int" -> 4;
+            case "long" -> 8; // java long is 64-bits
+            case "float" -> 4;
+            case "double" -> 8;
+            case "MemorySegment" -> 8; // 64-bits pointer
             case "ARRAY" -> Integer.parseInt(array.fixedSize) * getSize(getMemoryType(array.type));
-            default -> 64;
+            default -> 8;
         };
     }
 }

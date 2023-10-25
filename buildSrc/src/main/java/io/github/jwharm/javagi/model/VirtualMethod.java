@@ -55,7 +55,7 @@ public class VirtualMethod extends Method {
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
-            writer.write("try (Arena _arena = Arena.openConfined()) {\n");
+            writer.write("try (Arena _arena = Arena.ofConfined()) {\n");
             writer.increaseIndent();
         }
 

@@ -28,6 +28,7 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
 import java.lang.reflect.*;
@@ -57,7 +58,7 @@ public class Types {
      * An invalid {@code GType} used as error return value in some functions which return
      * a {@code GType}.
      */
-    public static final Type INVALID = new Type(0L << FUNDAMENTAL_SHIFT);
+    public static final Type INVALID = new Type(0L /* << FUNDAMENTAL_SHIFT */);
 
     /**
      * A fundamental type which is used as a replacement for the C
@@ -790,6 +791,11 @@ public class Types {
         return (addr) -> {
             try {
                 return ctor.newInstance(addr);
+            } catch (InvocationTargetException ite) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                        "Exception in constructor for class %s: %s\n",
+                        cls.getName(), ite.getCause().toString());
+                return null;
             } catch (Exception e) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Exception in constructor for class %s: %s\n",
@@ -990,32 +996,33 @@ public class Types {
             );
 
             // Add interfaces
-            for (Class<?> iface : cls.getInterfaces()) {
-                if (Proxy.class.isAssignableFrom(iface)) {
-                    Type ifaceType = getGType(iface);
-                    if (ifaceType == null) {
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Cannot implement interface %s on class %s: No GType\n",
-                                iface.getName(), cls.getName());
-                        continue;
+            try (var arena = Arena.ofConfined()) {
+                for (Class<?> iface : cls.getInterfaces()) {
+                    if (Proxy.class.isAssignableFrom(iface)) {
+                        Type ifaceType = getGType(iface);
+                        if (ifaceType == null) {
+                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                    "Cannot implement interface %s on class %s: No GType\n",
+                                    iface.getName(), cls.getName());
+                            continue;
+                        }
+
+                        InterfaceInfo interfaceInfo = InterfaceInfo.allocate(arena);
+                        Consumer<TypeInterface> ifaceOverridesInit = Overrides.overrideInterfaceMethods(cls, iface);
+                        Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
+
+                        // Override virtual methods before running a user-defined interface init
+                        ifaceInit = chain(ifaceOverridesInit, ifaceInit);
+                        if (ifaceInit == null) {
+                            ifaceInit = $ -> {};
+                        }
+
+                        Consumer<TypeInterface> finalIfaceInit = ifaceInit;
+                        interfaceInfo.writeInterfaceInit((ti, data) -> finalIfaceInit.accept(ti));
+                        GObjects.typeAddInterfaceStatic(type, ifaceType, interfaceInfo);
                     }
-
-                    InterfaceInfo interfaceInfo = InterfaceInfo.allocate();
-                    Consumer<TypeInterface> ifaceOverridesInit = Overrides.overrideInterfaceMethods(cls, iface);
-                    Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
-
-                    // Override virtual methods before running a user-defined interface init
-                    ifaceInit = chain(ifaceOverridesInit, ifaceInit);
-                    if (ifaceInit == null) {
-                        ifaceInit = $ -> {};
-                    }
-
-                    Consumer<TypeInterface> finalIfaceInit = ifaceInit;
-                    interfaceInfo.writeInterfaceInit((ti, data) -> finalIfaceInit.accept(ti));
-                    GObjects.typeAddInterfaceStatic(type, ifaceType, interfaceInfo);
                 }
             }
-
             return type;
 
         } catch (Exception e) {
