@@ -92,7 +92,7 @@ public interface Closure extends CallableType {
         writer.write(" * Creates a callback that can be called from native code and executes the {@code run} method.\n");
         writer.write(" * @return the memory address of the callback function\n");
         writer.write(" */\n");
-        writer.write("default MemorySegment toCallback() {\n");
+        writer.write("default MemorySegment toCallback(Arena arena) {\n");
         writer.increaseIndent();
 
         // Generate function descriptor
@@ -104,7 +104,7 @@ public interface Closure extends CallableType {
         writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + javaName + ".class, _fdesc);\n");
 
         // Create and return upcall stub
-        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, Arena.global());\n");
+        writer.write("return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena);\n");
 
         writer.decreaseIndent();
         writer.write("}\n");

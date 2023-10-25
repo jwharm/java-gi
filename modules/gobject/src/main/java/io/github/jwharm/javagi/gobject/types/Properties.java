@@ -352,7 +352,7 @@ public class Properties {
         }
         // Return class initializer method that installs the properties.
         return (gclass) -> {
-            gclass.overrideGetProperty((object, propertyId, value, pspec) -> {
+            gclass.overrideGetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
                 if (propertyId < 1 || propertyId >= getters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.getProperty\n",
@@ -385,7 +385,7 @@ public class Properties {
                 }
             });
 
-            gclass.overrideSetProperty((object, propertyId, value, pspec) -> {
+            gclass.overrideSetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
                 if (propertyId < 1 || propertyId >= setters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.setProperty\n",

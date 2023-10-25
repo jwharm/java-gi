@@ -159,7 +159,7 @@ public class Types {
             // The ui parameter must refer to a registered GResource
             widgetClass.setTemplateFromResource(ui);
 
-            widgetClass.overrideDispose((object) -> {
+            widgetClass.overrideDispose(Arena.global(), (object) -> {
                 Widget widget = (Widget) object;
                 widget.disposeTemplate(typeClass.readGType());
                 widget.asParent().dispose(); // This will call the parent class dispose
@@ -262,7 +262,7 @@ public class Types {
     }
 
     /**
-     * Redirects to {@link Types#registerTemplate(Class)} for Widget.class with {@link GtkTemplate}
+     * Redirects to {@link Types#registerTemplate(Class)} for {@code Widget.class} with {@link GtkTemplate}
      * annotation, and {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)} for all other
      * (GObject-derived) classes.
      * @param cls the class to register as a new GType
@@ -285,7 +285,7 @@ public class Types {
      * @param typeName name of the GType
      * @param classLayout memory layout of the typeclass
      * @param classInit static class initializer function
-     * @param instanceLayout memmory layout of the typeinstance
+     * @param instanceLayout memory layout of the typeinstance
      * @param instanceInit static instance initializer function
      * @param constructor memory-address constructor
      * @param flags type flags

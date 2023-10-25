@@ -151,8 +151,7 @@ public class Record extends Class {
         writer.write(" */\n");
         writer.write("public static " + javaName + " allocate(Arena _arena) {\n");
         writer.write("    MemorySegment segment = _arena.allocate(getMemoryLayout());\n");
-        writer.write("    " + javaName + " newInstance = new " + javaName + "(segment);\n");
-        writer.write("    return newInstance;\n");
+        writer.write("    return new " + javaName + "(segment);\n");
         writer.write("}\n");
 
         // For regular structs (not typeclasses), generate a second allocator function

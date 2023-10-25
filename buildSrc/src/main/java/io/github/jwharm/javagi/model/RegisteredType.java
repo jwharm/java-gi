@@ -401,7 +401,7 @@ public abstract class RegisteredType extends GirElement {
         writer.write("}\n");
     }
 
-    public String getInteropString(String paramName, boolean isPointer) {
+    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
         return paramName + ".handle()";
     }
 

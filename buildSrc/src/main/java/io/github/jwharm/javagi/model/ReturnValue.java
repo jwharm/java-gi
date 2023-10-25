@@ -29,9 +29,9 @@ public class ReturnValue extends Parameter {
     public boolean returnsFloatingReference;
     public String overrideReturnValue;
 
-    public ReturnValue(GirElement parent, String transferOwnership, String nullable) {
+    public ReturnValue(GirElement parent, String transferOwnership, String nullable, String scope) {
         super(parent, null, transferOwnership, nullable,
-                null, null, null, null, null);
+                null, null, null, null, null, null, scope);
 
         returnsFloatingReference = false;
         overrideReturnValue = null;
@@ -39,16 +39,16 @@ public class ReturnValue extends Parameter {
 
     @Override
     public boolean allocatesMemory() {
-        return array != null;
+        return array != null
+                || (type != null && type.isCallback() && scope.in(Scope.CALL, Scope.ASYNC));
     }
 
     /**
      * Generate code to process and return the function call result.
      * @param writer The source code file writer
-     * @param panamaReturnType The type of the value that was returned by the downcall
      * @throws IOException Thrown when an error occurs while writing
      */
-    public void generate(SourceWriter writer, String panamaReturnType) throws IOException {
+    public void generate(SourceWriter writer) throws IOException {
         // If the return value is an array, try to convert it to a Java array
         if (array != null) {
             String len = array.size(false);

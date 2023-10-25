@@ -62,6 +62,12 @@ public class Field extends Variable {
         return false;
     }
 
+    public boolean allocatesMemory() {
+        return super.allocatesMemory()
+                || (callback != null)
+                || (type != null && type.isCallback());
+    }
+
     /**
      * Return the parameter that is referred to by index in a GIR attribute.
      * For example: array length="2" refers to the third field (counting from zero)
@@ -192,7 +198,7 @@ public class Field extends Variable {
             writer.write(" * Override virtual method {@code " + this.fieldName + "}\n");
             writer.write(" * @param method The method to invoke\n");
             writer.write(" */\n");
-            writer.write("public void " + setter + "(java.lang.reflect.Method method) {\n");
+            writer.write("public void " + setter + "(Arena arena, java.lang.reflect.Method method) {\n");
             writer.increaseIndent();
             
             writer.write("this._" + this.name + "Method = method;\n");
@@ -205,7 +211,7 @@ public class Field extends Variable {
             // Generate method handle
             String className = ((Record) parent).javaName;
             writer.write("MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), " + className + ".class, \"" + upcallName + "\", _fdesc);\n");
-            writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, Arena.global());\n");
+            writer.write("MemorySegment _address = Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena);\n");
             writer.write("getMemoryLayout()\n");
             writer.write("    .varHandle(MemoryLayout.PathElement.groupElement(\"" + this.fieldName + "\"))\n");
             writer.write("    .set(handle(), ");

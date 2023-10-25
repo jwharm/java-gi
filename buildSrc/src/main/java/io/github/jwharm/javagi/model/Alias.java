@@ -143,11 +143,11 @@ public class Alias extends ValueWrapper {
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer) {
+    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
         if (getTargetType() == TargetType.VALUE) {
-            return super.getInteropString(paramName, isPointer);
+            return super.getInteropString(paramName, isPointer, scope);
         } else {
-            return type.girElementInstance.getInteropString(paramName, isPointer);
+            return type.girElementInstance.getInteropString(paramName, isPointer, scope);
         }
     }
 }

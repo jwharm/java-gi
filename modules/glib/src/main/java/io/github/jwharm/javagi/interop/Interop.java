@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.interop;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
+import java.lang.ref.Cleaner;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Arrays;
@@ -137,6 +138,20 @@ public class Interop {
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Register a Cleaner that will close the arena when the instance is garbage-collected,
+     * coupling the lifetime of the arena to the lifetime of the instance.
+     *
+     * @param arena a memory arena that can be closed (normally {@link Arena#ofConfined()} or {@link Arena#ofAuto()}.
+     * @param instance an object
+     * @return the arena (for method chaining)
+     */
+    public static Arena attachArena(Arena arena, Object instance) {
+        Cleaner cleaner = Cleaner.create();
+        cleaner.register(instance, arena::close);
+        return arena;
     }
 
     /**

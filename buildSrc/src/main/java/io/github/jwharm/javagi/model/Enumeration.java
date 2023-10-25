@@ -124,7 +124,7 @@ public class Enumeration extends ValueWrapper {
     }
     
     @Override
-    public String getInteropString(String paramName, boolean isPointer) {
+    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
         String str = paramName + ".getValue()";
         if (isPointer) {
             return "new PointerInteger(" + str + ").handle()";

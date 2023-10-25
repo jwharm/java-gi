@@ -70,9 +70,9 @@ public class VirtualMethod extends Method {
         }
         
         // Variable declaration for return value
-        String panamaReturnType = Conversions.getCarrierType(getReturnValue().type);
+        String carrierType = Conversions.getCarrierType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
-            writer.write(panamaReturnType + " _result;\n");
+            writer.write(carrierType + " _result;\n");
         }
         
         Record classStruct = null;
@@ -114,10 +114,13 @@ public class VirtualMethod extends Method {
         writer.write("try {\n");
         writer.increaseIndent();
 
+        // Log the method call
+        log(classStruct.javaName + "." + name, writer);
+
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("_result = (");
-            writer.write(panamaReturnType);
+            writer.write(carrierType);
             writer.write(") ");
         }
 
@@ -133,7 +136,7 @@ public class VirtualMethod extends Method {
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
         writer.write("} catch (Throwable _err) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
         writer.write("}\n");
 
         // Throw GErrorException
@@ -149,7 +152,7 @@ public class VirtualMethod extends Method {
         }
 
         // Generate code to process and return the result value
-        returnValue.generate(writer, panamaReturnType);
+        returnValue.generate(writer);
 
         // End of memory allocation scope
         if (hasScope) {

@@ -1018,7 +1018,7 @@ public class Types {
                         }
 
                         Consumer<TypeInterface> finalIfaceInit = ifaceInit;
-                        interfaceInfo.writeInterfaceInit((ti, data) -> finalIfaceInit.accept(ti));
+                        interfaceInfo.writeInterfaceInit(arena, (ti, data) -> finalIfaceInit.accept(ti));
                         GObjects.typeAddInterfaceStatic(type, ifaceType, interfaceInfo);
                     }
                 }

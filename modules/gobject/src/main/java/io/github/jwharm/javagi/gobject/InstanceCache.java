@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.gobject;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
@@ -240,9 +241,9 @@ public class InstanceCache {
         private MemorySegment callback;
 
         @Override
-        public MemorySegment toCallback() {
+        public MemorySegment toCallback(Arena arena) {
             if (callback == null) {
-                callback = ToggleNotify.super.toCallback();
+                callback = ToggleNotify.super.toCallback(arena);
             }
             return callback;
         }

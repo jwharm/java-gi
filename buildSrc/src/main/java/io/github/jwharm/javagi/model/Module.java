@@ -101,6 +101,12 @@ public class Module {
                     }
                 }
 
+                // Link destroy-parameters to the corresponding parameter
+                if (element instanceof Parameter param && param.destroy != null) {
+                    Parameter destroyNotify = param.getParameterAt(param.destroy);
+                    destroyNotify.linkedParameter = param;
+                }
+
                 element = element.next;
             }
         }

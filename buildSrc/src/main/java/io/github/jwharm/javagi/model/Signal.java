@@ -75,10 +75,10 @@ public class Signal extends Method implements Closure {
         if (detailed) {
             writer.write(" + ((detail == null || detail.isBlank()) ? \"\" : (\"::\" + detail))");
         }
-        writer.write(", _arena), handler.toCallback(), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
+        writer.write(", _arena), handler.toCallback(Arena.global()), MemorySegment.NULL, MemorySegment.NULL, 0);\n");
         writer.write("    return new SignalConnection<>(handle(), _result);\n");
         writer.write("} catch (Throwable _err) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
         writer.write("}\n");
         writer.decreaseIndent();
         writer.write("}\n");
@@ -169,7 +169,7 @@ public class Signal extends Method implements Closure {
             }
             writer.decreaseIndent();
             writer.write("} catch (Throwable _err) {\n");
-            writer.write("    throw new AssertionError(\"Unexpected exception occured: \", _err);\n");
+            writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
             writer.write("}\n");
             writer.decreaseIndent();
             writer.write("}\n");
