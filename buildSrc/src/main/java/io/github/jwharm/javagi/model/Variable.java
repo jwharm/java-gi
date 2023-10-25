@@ -172,12 +172,8 @@ public class Variable extends GirElement {
         if (type.isBoolean())
             return identifier + " ? 1 : 0";
 
-        var scope = this instanceof Parameter p ? p.scope
-                : this instanceof Field f ? Scope.CALL
-                : null;
-
         if (type.girElementInstance != null)
-            return type.girElementInstance.getInteropString(identifier, type.isPointer(), scope);
+            return type.girElementInstance.getInteropString(identifier, type.isPointer(), Scope.ofVariable(this));
 
         return identifier;
     }

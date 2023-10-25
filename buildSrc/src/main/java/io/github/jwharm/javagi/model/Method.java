@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.model;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import io.github.jwharm.javagi.configuration.Settings;
 import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
@@ -221,6 +222,9 @@ public class Method extends GirElement implements CallableType {
         writer.write("try {\n");
         writer.increaseIndent();
 
+        // Log the method call
+        log(cIdentifier, writer);
+
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("_result = (");
@@ -311,5 +315,38 @@ public class Method extends GirElement implements CallableType {
     @Override
     public String getThrows() {
         return throws_;
+    }
+
+    // Log the method call
+    protected void log(String cIdentifier, SourceWriter writer) throws IOException {
+        if (! Settings.DEBUG_LOGGING_ENABLED)
+            return;
+
+        // Prevent stack overflow: don't log the log invocation
+        if ("g_log".equals(cIdentifier) || "g_strdup_value_contents".equals(cIdentifier))
+            return;
+
+        var wildcards = new StringBuilder();
+        var sw = new SourceWriter(new StringWriter());
+        if (parameters != null) {
+            boolean first = true;
+            for (Parameter p : parameters.parameterList) {
+                if (p.isDestroyNotifyParameter() || p.isArrayLengthParameter() || p.isUserDataParameter() || p.isErrorParameter())
+                    continue;
+                if (!first) sw.write(", ");
+                sw.write("\"\"+");
+                if (p instanceof InstanceParameter)
+                    sw.write("this");
+                else
+                    p.writeName(sw);
+                if (!first) wildcards.append(", ");
+                wildcards.append("%s");
+                first = false;
+            }
+        }
+        if (wildcards.isEmpty())
+            writer.write("GLibLogger.debug(\"" + cIdentifier + "()\\n\");\n");
+        else
+            writer.write("GLibLogger.debug(\"" + cIdentifier + "(" + wildcards + ")\\n\".formatted(" + sw + "));\n");
     }
 }

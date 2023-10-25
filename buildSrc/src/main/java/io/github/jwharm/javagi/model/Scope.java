@@ -8,7 +8,7 @@ import java.util.Arrays;
 public enum Scope {
 
     /**
-     * (Default.) Only valid for the duration of the call. Can be called multiple times during the call.
+     * Only valid for the duration of the call. Can be called multiple times during the call.
      * (try-with-resources scope)
      */
     CALL,
@@ -31,9 +31,9 @@ public enum Scope {
     FOREVER,
 
     /**
-     * No scope attribute set
+     * Scope bound to instance lifetime (default for instance methods)
      */
-    NONE;
+    BOUND;
 
     /**
      * Create a Scope from the provided String, case-insensitive. Defaults to {@link #CALL}.
@@ -43,12 +43,12 @@ public enum Scope {
      */
     public static Scope from(String value) {
         if (value == null || value.isEmpty()) {
-            return NONE;
+            return BOUND;
         }
         try {
             return Scope.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return NONE;
+            return BOUND;
         }
     }
 
@@ -60,5 +60,29 @@ public enum Scope {
      */
     public boolean in(Scope... scopes) {
         return Arrays.asList(scopes).contains(this);
+    }
+
+    /**
+     * Get the Scope of a variable:
+     * <ul>
+     * <li>Field: Always {@link #CALL}
+     * <li>Parameter: The value of the {@code "scope"} attribute if present, else {@link #BOUND}, except for
+     * constructor and function parameters: in that case {@link #FOREVER}.
+     * </ul>
+     *
+     * @param variable the variable to get the scope for
+     * @return the scope as described above
+     */
+    public static Scope ofVariable(Variable variable) {
+        var scope = variable instanceof Parameter p ? p.scope
+                : variable instanceof Field ? Scope.CALL
+                : null;
+
+        if (scope == Scope.BOUND) {
+            var method = variable.parent.parent;
+            if (method instanceof Constructor || method instanceof Function)
+                scope = Scope.FOREVER;
+        }
+        return scope;
     }
 }

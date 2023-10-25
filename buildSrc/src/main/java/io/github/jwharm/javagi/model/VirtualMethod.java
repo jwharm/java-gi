@@ -114,6 +114,9 @@ public class VirtualMethod extends Method {
         writer.write("try {\n");
         writer.increaseIndent();
 
+        // Log the method call
+        log(classStruct.javaName + "." + name, writer);
+
         // Generate the return type
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("_result = (");
