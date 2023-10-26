@@ -116,6 +116,11 @@ public class InstanceCache {
      * @return         a Proxy instance for the provided memory address
      */
     public static Proxy getForTypeClass(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback, boolean cache) {
+        // Null check
+        if (address == null || MemorySegment.NULL.equals(address)) {
+            GLibLogger.debug("InstanceCache.getForTypeClass: address is NULL\n");
+            return null;
+        }
 
         // Get instance from the cache
         Proxy instance = get(address);
