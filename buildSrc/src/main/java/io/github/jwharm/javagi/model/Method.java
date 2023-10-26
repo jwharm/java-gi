@@ -323,7 +323,9 @@ public class Method extends GirElement implements CallableType {
             return;
 
         // Prevent stack overflow: don't log the log invocation
-        if ("g_log".equals(cIdentifier) || "g_strdup_value_contents".equals(cIdentifier))
+        if ("g_log".equals(cIdentifier)
+                || "g_strdup_value_contents".equals(cIdentifier)
+                || "g_type_name".equals(cIdentifier))
             return;
 
         var wildcards = new StringBuilder();
@@ -335,10 +337,19 @@ public class Method extends GirElement implements CallableType {
                     continue;
                 if (!first) sw.write(", ");
                 sw.write("\"\"+");
-                if (p instanceof InstanceParameter)
+                if (p instanceof InstanceParameter) {
                     sw.write("this");
-                else
+                } else if (p.type != null && "GType".equals(p.type.cType)) {
+                    sw.write("\"GType:\" + org.gnome.gobject.GObjects.typeName(");
                     p.writeName(sw);
+                    sw.write(")");
+                } else if (p.array != null && (!p.isOutParameter())) {
+                    sw.write("java.util.Arrays.toString(");
+                    p.writeName(sw);
+                    sw.write(")");
+                } else {
+                    p.writeName(sw);
+                }
                 if (!first) wildcards.append(", ");
                 wildcards.append("%s");
                 first = false;
