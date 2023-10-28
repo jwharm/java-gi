@@ -35,20 +35,42 @@ public class Property extends Variable {
         this.transferOwnership = transferOwnership;
         this.getter = getter;
     }
-    
+
+    /**
+     * Temporarily generate two builder methods, with deprecated and new syntax
+     * @param writer The writer to the class file
+     * @throws IOException Thrown when an exception occurs during writing
+     */
+    public void generate(SourceWriter writer) throws IOException {
+        generate(writer, true);
+        generate(writer, false);
+    }
+
     /**
      * Generate a setter method for use in a GObjectBuilder
      * @param writer The writer to the class file
      * @throws IOException Thrown when an exception occurs during writing
      */
-    public void generate(SourceWriter writer) throws IOException {
+    public void generate(SourceWriter writer, boolean deprecatedVersion) throws IOException {
         String gTypeDeclaration = getGTypeDeclaration();
         writer.write("\n");
         if (doc != null) {
-            doc.generate(writer, false);
+            writer.write("/**\n");
+            doc.generate(writer, false, false);
+            if (deprecatedVersion)
+                writer.write(" * @deprecated Use {@link #set" + Conversions.toUpperCaseJavaName(name) + "} instead\n");
+            writer.write(" */\n");
         }
+
+        String setterName = "set" + Conversions.toUpperCaseJavaName(name);
+        if (deprecatedVersion)
+            setterName = Conversions.toLowerCaseJavaName(name);
+
+        if (deprecatedVersion)
+            writer.write("@Deprecated\n");
+
         writer.write((parent instanceof Interface) ? "default " : "public ");
-        writer.write("S " + Conversions.toLowerCaseJavaName(name) + "(");
+        writer.write("S " + setterName + "(");
         writeTypeAndName(writer);
         writer.write(") {\n");
         writer.increaseIndent();

@@ -46,6 +46,13 @@ public class Conversions {
     }
 
     /**
+     * Convert "identifier_name" to "IdentifierName"
+     */
+    public static String toUpperCaseJavaName(String typeName) {
+        return prefixDigits(replaceKeywords(toCamelCase(typeName, true)));
+    }
+
+    /**
      * Convert "GLib.type_name" to "TypeName"
      */
     public static String toSimpleJavaType(String typeName, Namespace ns) {
@@ -245,8 +252,6 @@ public class Conversions {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
-            case "java.lang.foreign.MemorySegment" -> "Address";
-            case "java.lang.String" -> "String";
             default -> toCamelCase(primitive, true);
         };
     }
