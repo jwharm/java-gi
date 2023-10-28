@@ -143,7 +143,7 @@ public class Conversions {
     }
 
     /**
-     * For types that conflict with common Java classes, prefix with Gi
+     * For types that conflict with common Java classes, prefix with C namespace
      */
     public static String replaceKnownType(String name, Namespace ns) {
         final String[] types = {"String", "Object", "Error", "Builder"};

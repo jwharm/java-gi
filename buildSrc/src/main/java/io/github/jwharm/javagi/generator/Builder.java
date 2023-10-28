@@ -50,10 +50,10 @@ public class Builder {
         // Write the inner Build class definition
         writer.write("\n");
         writer.write("/**\n");
-        writer.write(" * A {@link " + c.javaName + ".Builder} object constructs a {@code " + c.javaName + "} \n");
+        writer.write(" * A {@link Builder} object constructs a {@code " + c.javaName + "} \n");
         writer.write(" * using the <em>builder pattern</em> to set property values. \n");
         writer.write(" * Use the various {@code set...()} methods to set properties, \n");
-        writer.write(" * and finish construction with {@link " + c.javaName + ".Builder#build()}. \n");
+        writer.write(" * and finish construction with {@link Builder#build()}. \n");
         writer.write(" */\n");
         writer.write("public static Builder<? extends Builder> builder() {\n");
         writer.write("    return new Builder<>();\n");

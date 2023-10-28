@@ -230,10 +230,12 @@ public class Javadoc {
                         return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
                     }
                 } else {
+                    Namespace ns = getNamespace(part1);
+                    String className = (ns == null) ? part2 : Conversions.replaceKnownType(part2, ns);
                     if ("new".equals(part3)) {
-                        return checkLink(part1, part2) + formatNS(part1) + part2 + "#" + part2 + "}";
+                        return checkLink(part1, part2) + formatNS(part1) + className + "#" + className + "}";
                     } else {
-                        return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                        return checkLink(part1, part2, part3) + formatNS(part1) + className + formatMethod(part3) + "}";
                     }
                 }
             case "method":
@@ -251,7 +253,9 @@ public class Javadoc {
                     if (part2 == null) {
                         return checkLink(part1) + doc.getNamespace().name + formatMethod(part1) + "}";
                     } else {
-                        return checkLink(part1, part2) + formatNS(part1) + part1 + formatMethod(part2) + "}";
+                        Namespace ns = getNamespace(part1);
+                        String className = (ns == null) ? part1 : ns.globalClassName;
+                        return checkLink(part1, part2) + formatNS(part1) + className + formatMethod(part2) + "}";
                     }
                 } else {
                     return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
@@ -405,7 +409,9 @@ public class Javadoc {
             return null;
         }
         String name = formatNS(girElement.getNamespace().name);
-        String type = girElement.parent.name;
+        String type = girElement.parent instanceof RegisteredType rt ? rt.javaName
+                : girElement.parent instanceof Namespace ns ? ns.globalClassName
+                : girElement.parent.name;
         if (type != null) {
             name += type;
         }
