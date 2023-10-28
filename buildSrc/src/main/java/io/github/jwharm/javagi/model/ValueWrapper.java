@@ -19,11 +19,13 @@
 
 package io.github.jwharm.javagi.model;
 
-import io.github.jwharm.javagi.generator.Conversions;
 import io.github.jwharm.javagi.generator.SourceWriter;
 
 import java.io.IOException;
 
+/**
+ * Base class for types that wrap a primitive value: Bitfields, Enumerations, and Aliases (typedefs)
+ */
 public abstract class ValueWrapper extends RegisteredType {
     
     public ValueWrapper(GirElement parent, String name, String parentClass, String cType, String getType, String version) {
@@ -46,10 +48,6 @@ public abstract class ValueWrapper extends RegisteredType {
         if ("java.lang.foreign.MemorySegment".equals(type.qualifiedJavaType)) {
             str = paramName + ".getValue()";
         }
-        if (isPointer) {
-            return "new Pointer" + Conversions.primitiveClassName(type.qualifiedJavaType) + "(" + str + ").handle()";
-        } else {
-            return str;
-        }
+        return str;
     }
 }
