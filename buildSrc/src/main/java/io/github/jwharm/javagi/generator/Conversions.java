@@ -105,8 +105,16 @@ public class Conversions {
         if (typeName == null) {
             return null;
         }
-        char[] chars = typeName.toCharArray();
+
+        char[] chars;
         StringBuilder builder = new StringBuilder();
+
+        // Strip "_t" from "type_name_t"-style names (HarfBuzz has this)
+        if (typeName.endsWith("_t")) {
+            chars = typeName.substring(0, typeName.length() - 2).toCharArray();
+        } else {
+            chars = typeName.toCharArray();
+        }
 
         boolean upper = startUpperCase;
         for (char c : chars) {
