@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7.2 generates bindings to develop Java applications with the following libraries:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7.2 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 44:
 
 | Library       | Version |
 |---------------|---------|
@@ -74,13 +74,13 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 
 ## Roadmap
 
-Upcoming improvements planned for Q4 2023:
+Features planned for release 0.8.0:
 
 * Upgrade to GNOME 45
-* Upgrade the [Cairo bindings](https://github.com/jwharm/cairo-java-bindings) to the recent 1.18 release
-* A brand-new [Gradle plugin](https://github.com/jwharm/sources-list-plugin) to facilitate offline Flatpak builds 
-
-An upgrade to OpenJDK 21 (JEP 442) is currently on-hold, until Kotlin supports JDK 21 (maybe with 1.9.20).
+* Upgrade to OpenJDK 21 (JEP 442)
+* Automatic cleanup of memory allocated for callback functions
+* Slightly improved HarfBuzz bindings
+* For custom properties, the property name will be automatically inferred from the getter/setter method name
 
 ## Current features
 
