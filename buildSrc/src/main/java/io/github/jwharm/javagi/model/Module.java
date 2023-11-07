@@ -167,8 +167,7 @@ public class Module {
             for (RegisteredType rt : repository.namespace.registeredTypeMap.values()) {
                 for (Method method : rt.methodList) {
                     for (VirtualMethod vm : rt.virtualMethodList) {
-                        if (method.name.equals(vm.name)
-                                && method.getTypeSignature().equals(vm.getTypeSignature())) {
+                        if (method.getNameAndSignature().equals(vm.getNameAndSignature())) {
                             method.linkedVirtualMethod = vm;
                             vm.linkedMethod = method;
                             break;

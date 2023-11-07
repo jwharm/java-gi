@@ -39,7 +39,7 @@ public class VirtualMethod extends Method {
         }
 
         writer.write("\n");
-        
+
         // Documentation
         if (doc != null) {
             doc.generate(writer, false);
@@ -52,7 +52,7 @@ public class VirtualMethod extends Method {
 
         // Declaration
         writer.write(getMethodDeclaration());
-        
+
         writer.write(" {\n");
         writer.increaseIndent();
 
@@ -75,13 +75,56 @@ public class VirtualMethod extends Method {
         if (throws_ != null) {
             writer.write("MemorySegment _gerror = _arena.allocate(ValueLayout.ADDRESS);\n");
         }
-        
+
+        // Function descriptor
+        writer.write("FunctionDescriptor _fdesc = ");
+        generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
         // Variable declaration for return value
         String carrierType = Conversions.getCarrierType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write(carrierType + " _result;\n");
         }
-        
+
+        // The method call is wrapped in a try-catch block
+        writer.write("try {\n");
+        writer.increaseIndent();
+
+        generateInvocation(writer);
+
+        // If something goes wrong in the invokeExact() call
+        writer.decreaseIndent();
+        writer.write("} catch (Throwable _err) {\n");
+        writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
+        writer.write("}\n");
+
+        // Throw GErrorException
+        if (throws_ != null) {
+            writer.write("if (GErrorException.isErrorSet(_gerror)) {\n");
+            writer.write("    throw new GErrorException(_gerror);\n");
+            writer.write("}\n");
+        }
+
+        // Generate post-processing actions for parameters
+        if (parameters != null) {
+            parameters.generatePostprocessing(writer);
+        }
+
+        // Generate code to process and return the result value
+        returnValue.generate(writer);
+
+        // End of memory allocation scope
+        if (hasScope) {
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+
+        writer.decreaseIndent();
+        writer.write("}\n");
+    }
+
+    public void generateInvocation(SourceWriter writer) throws IOException {
         Record classStruct = null;
         String className = null;
         if (parent instanceof Class c) {
@@ -99,23 +142,17 @@ public class VirtualMethod extends Method {
             writer.write(", " + className + ".getType()");
         }
         writer.write(");\n");
+
+        // Check if the virtual method points to a null address.
         writer.write("if (MemorySegment.NULL.equals(_func)) {\n");
         writer.write("    throw new NullPointerException();\n");
         writer.write("}\n");
-
-        // Check if the virtual method points to a null address.
-        writer.write("FunctionDescriptor _fdesc = ");
-        generateFunctionDescriptor(writer);
-        writer.write(";\n");
-
-        // The method call is wrapped in a try-catch block
-        writer.write("try {\n");
-        writer.increaseIndent();
 
         // Log the method call
         log(classStruct.javaName + "." + name, writer);
 
         // Generate the return type
+        String carrierType = Conversions.getCarrierType(getReturnValue().type);
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write("_result = (");
             writer.write(carrierType);
@@ -130,35 +167,5 @@ public class VirtualMethod extends Method {
             parameters.marshalJavaToNative(writer, throws_);
         }
         writer.write(");\n");
-        
-        // If something goes wrong in the invokeExact() call
-        writer.decreaseIndent();
-        writer.write("} catch (Throwable _err) {\n");
-        writer.write("    throw new AssertionError(\"Unexpected exception occurred: \", _err);\n");
-        writer.write("}\n");
-
-        // Throw GErrorException
-        if (throws_ != null) {
-            writer.write("if (GErrorException.isErrorSet(_gerror)) {\n");
-            writer.write("    throw new GErrorException(_gerror);\n");
-            writer.write("}\n");
-        }
-        
-        // Generate post-processing actions for parameters
-        if (parameters != null) {
-            parameters.generatePostprocessing(writer);
-        }
-
-        // Generate code to process and return the result value
-        returnValue.generate(writer);
-
-        // End of memory allocation scope
-        if (hasScope) {
-            writer.decreaseIndent();
-            writer.write("}\n");
-        }
-
-        writer.decreaseIndent();
-        writer.write("}\n");
     }
 }

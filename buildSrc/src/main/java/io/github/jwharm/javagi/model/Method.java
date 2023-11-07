@@ -42,7 +42,7 @@ public class Method extends GirElement implements CallableType {
 
     public VirtualMethod linkedVirtualMethod = null;
 
-    private String methodSpecification = null;
+    private String signature = null;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
                   String throws_, String shadowedBy, String shadows, String movedTo) {
@@ -127,9 +127,9 @@ public class Method extends GirElement implements CallableType {
      * Generates a String that describes the type signature of this method.
      * The result is cached for performance reasons.
      */
-    public String getTypeSignature() {
-        if (this.methodSpecification != null) {
-            return this.methodSpecification;
+    public String getNameAndSignature() {
+        if (this.signature != null) {
+            return this.signature;
         }
 
         SourceWriter writer = new SourceWriter(new StringWriter());
@@ -140,7 +140,7 @@ public class Method extends GirElement implements CallableType {
             if (parent instanceof Interface) { // Overriding toString() in a default method is not allowed.
                 methodName = Conversions.replaceJavaObjectMethodNames(methodName);
             }
-            writer.write(methodName + "(");
+            writer.write(" " + methodName + "(");
 
             // Parameters
             if (getParameters() != null) {
@@ -157,8 +157,8 @@ public class Method extends GirElement implements CallableType {
         }
 
         // Cache the result for future invocations
-        this.methodSpecification = writer.toString();
-        return this.methodSpecification;
+        this.signature = writer.toString();
+        return this.signature;
     }
 
     public void generate(SourceWriter writer) throws IOException {
@@ -171,7 +171,7 @@ public class Method extends GirElement implements CallableType {
         // Documentation
         if (this instanceof Constructor) {
             writer.write("/**\n");
-            writer.write(" * Helper function for the (@code " + name + "} constructor\n");
+            writer.write(" * Helper function for the {@code " + name + "} constructor\n");
             writer.write(" */\n");
         } else if (doc != null) {
             doc.generate(writer, false);
@@ -218,10 +218,24 @@ public class Method extends GirElement implements CallableType {
         if (! (returnValue.type != null && returnValue.type.isVoid())) {
             writer.write(carrierType + " _result;\n");
         }
-        
+
         // The method call is wrapped in a try-catch block
         writer.write("try {\n");
         writer.increaseIndent();
+
+        // If this method is also a virtual method, and callParent() is set, call the parent virtual method
+        if (linkedVirtualMethod != null) {
+            writer.write("if (");
+            if (parent instanceof Interface) {
+                writer.write("((org.gnome.gobject.TypeInstance) this).");
+            }
+            writer.write("callParent()) {\n");
+            writer.increaseIndent();
+            linkedVirtualMethod.generateInvocation(writer);
+            writer.decreaseIndent();
+            writer.write("} else {\n");
+            writer.increaseIndent();
+        }
 
         // Log the method call
         log(cIdentifier, writer);
@@ -241,7 +255,13 @@ public class Method extends GirElement implements CallableType {
             parameters.marshalJavaToNative(writer, throws_);
         }
         writer.write(");\n");
-        
+
+        // End of if/else block for virtual/named method call
+        if (linkedVirtualMethod != null) {
+            writer.decreaseIndent();
+            writer.write("}\n");
+        }
+
         // If something goes wrong in the invokeExact() call
         writer.decreaseIndent();
         writer.write("} catch (Throwable _err) {\n");

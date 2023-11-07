@@ -16,6 +16,8 @@ public class GtkPatch implements Patch {
             renameMethod(repo, "PrintUnixDialog", "get_settings", "get_print_settings");
         renameMethod(repo, "Widget", "activate", "activate_widget");
 
+        setReturnType(repo, "MediaStream", "play", "none", "void", null, null);
+
         // These calls return floating references
         setReturnFloating(findMethod(repo, "FileFilter", "to_gvariant"));
         setReturnFloating(findMethod(repo, "PageSetup", "to_gvariant"));

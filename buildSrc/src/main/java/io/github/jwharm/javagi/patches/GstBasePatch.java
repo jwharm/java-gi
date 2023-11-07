@@ -10,5 +10,12 @@ public class GstBasePatch implements Patch {
         // Add virtual methods as instance methods
         addInstanceMethod(repo, "BaseSink", "query");
         addInstanceMethod(repo, "BaseSrc", "query");
+
+        // Change virtual method parameter name to the instance method parameter name
+        findVirtualMethod(repo, "Aggregator", "peek_next_sample")
+                .parameters
+                .parameterList
+                .get(1)
+                .name = "pad";
     }
 }
