@@ -26,11 +26,18 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 
 public class VirtualMethod extends Method {
 
+    public Method linkedMethod = null;
+
     public VirtualMethod(GirElement parent, String name, String deprecated, String throws_) {
         super(parent, name, null, deprecated, throws_, null, null, null);
+        visibility = "protected";
     }
     
     public void generate(SourceWriter writer) throws IOException {
+        if (parent instanceof Interface || linkedMethod != null) {
+            return;
+        }
+
         writer.write("\n");
         
         // Documentation
@@ -87,20 +94,11 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
-        writer.write("MemorySegment _func = ((org.gnome.gobject.TypeInstance) this).callParent()\n");
-        writer.increaseIndent();
-        writer.write("? Overrides.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
-        if (parent instanceof Interface) {
-            writer.write(", " + className + ".getType()");
-        }
-        writer.write(")\n");
-        writer.write(": Overrides.lookupVirtualMethod(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
+        writer.write("MemorySegment _func = Overrides.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
             writer.write(", " + className + ".getType()");
         }
         writer.write(");\n");
-        writer.decreaseIndent();
-
         writer.write("if (MemorySegment.NULL.equals(_func)) {\n");
         writer.write("    throw new NullPointerException();\n");
         writer.write("}\n");

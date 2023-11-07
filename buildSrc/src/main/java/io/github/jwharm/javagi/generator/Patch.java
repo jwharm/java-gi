@@ -71,19 +71,21 @@ public interface Patch extends Serializable {
     }
 
     default void setReturnType(Repository repo, String type, String name, String typeName, String typeCType, String defaultReturnValue, String doc) {
-        Method m = findVirtualMethod(repo, type, name);
-        if (m == null)
-            m = findMethod(repo, type, name);
-        if (m != null) {
-            ReturnValue rv = m.returnValue;
-            rv.type = new Type(rv, typeName, typeCType);
-            rv.overrideReturnValue = defaultReturnValue;
-            if (doc != null) {
-                rv.doc = new Doc(rv, "1");
-                rv.doc.contents = doc;
-            }
-        } else
-            System.out.println("Did not change return type of " + type + "." + name + ": Not found");
+        setReturnType(findVirtualMethod(repo, type, name), typeName, typeCType, defaultReturnValue, doc);
+        setReturnType(findMethod(repo, type, name), typeName, typeCType, defaultReturnValue, doc);
+    }
+
+    private void setReturnType(Method m, String typeName, String typeCType, String defaultReturnValue, String doc) {
+        if (m == null) {
+            return;
+        }
+        ReturnValue rv = m.returnValue;
+        rv.type = new Type(rv, typeName, typeCType);
+        rv.overrideReturnValue = defaultReturnValue;
+        if (doc != null) {
+            rv.doc = new Doc(rv, "1");
+            rv.doc.contents = doc;
+        }
     }
 
     default void setReturnFloating(CallableType ct) {
@@ -175,6 +177,19 @@ public interface Patch extends Serializable {
         }
         if (found == null) System.out.println("Did not remove " + member + " in " + e + ": Member not found");
         else e.memberList.remove(found);
+    }
+
+    default void addInstanceMethod(Repository repo, String type, String virtualMethod) {
+        var vm = findVirtualMethod(repo, type, virtualMethod);
+        if (vm == null) {
+            return;
+        }
+        var method = new Method(vm.parent, vm.name, vm.cIdentifier, vm.deprecated, vm.throws_, vm.shadowedBy, vm.shadows, vm.movedTo);
+        method.doc = vm.doc;
+        method.docDeprecated = vm.docDeprecated;
+        method.parameters = vm.parameters;
+        method.returnValue = vm.returnValue;
+        vm.parent.methodList.add(method);
     }
 
     default void makeGeneric(Repository repo, String type) {

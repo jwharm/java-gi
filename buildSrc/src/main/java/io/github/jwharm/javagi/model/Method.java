@@ -37,22 +37,26 @@ public class Method extends GirElement implements CallableType {
     public ReturnValue returnValue;
     public Parameters parameters;
 
-    public String visibility = "public";
+    public String visibility;
     public boolean skip = false;
+
+    public VirtualMethod linkedVirtualMethod = null;
 
     private String methodSpecification = null;
 
     public Method(GirElement parent, String name, String cIdentifier, String deprecated,
                   String throws_, String shadowedBy, String shadows, String movedTo) {
         super(parent);
-        this.name = shadows == null ? name : shadows; // Language bindings are expected to rename a function to the shadowed function
+        // Language bindings are expected to rename a function to the shadowed function
+        this.name = shadows == null ? name : shadows;
         this.cIdentifier = cIdentifier;
         this.deprecated = deprecated;
         this.throws_ = throws_;
         this.shadowedBy = shadowedBy;
         this.shadows = shadows;
         this.movedTo = movedTo;
-        
+        this.visibility = (parent instanceof Interface) ? "default" : "public";
+
         // Generated under another name
         if (shadowedBy != null) {
             this.skip = true;
@@ -73,15 +77,8 @@ public class Method extends GirElement implements CallableType {
         SourceWriter writer = new SourceWriter(new StringWriter());
         
         try {
-            if ((parent instanceof Interface) && (! (this instanceof Function))) {
-                // Default interface methods
-                writer.write("default ");
-            } else if (this instanceof Constructor) {
-                writer.write("private ");
-            } else {
-                // Visibility
-                writer.write(visibility + " ");
-            }
+            // Visibility
+            writer.write(visibility + " ");
 
             // Static methods (functions and constructor helpers)
             if (this instanceof Function || this instanceof Constructor) {
@@ -126,7 +123,11 @@ public class Method extends GirElement implements CallableType {
         return writer.toString();
     }
 
-    public String getMethodSpecification() {
+    /**
+     * Generates a String that describes the type signature of this method.
+     * The result is cached for performance reasons.
+     */
+    public String getTypeSignature() {
         if (this.methodSpecification != null) {
             return this.methodSpecification;
         }

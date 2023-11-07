@@ -293,27 +293,20 @@ public abstract class RegisteredType extends GirElement {
     }
 
     protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {
-        HashSet<String> generatedMethods = new HashSet<>();
-        
-        // First, generate all virtual methods
-        for (VirtualMethod vm : virtualMethodList) {
-            if (vm.hasVaListParameter()) { // va_list parameters are not supported
-                continue;
-            }
-            vm.generate(writer);
-            generatedMethods.add(vm.name + " " + vm.getMethodSpecification());
-        }
-
-        // Next, generate the non-virtual instance methods
+        // Generate instance methods
         for (Method m : methodList) {
-            if (m.hasVaListParameter()) {
-                continue;
-            }
-            if (generatedMethods.contains(m.name + " " + m.getMethodSpecification())) {
+            if (m.hasVaListParameter()) { // va_list parameters are not supported
                 continue;
             }
             m.generate(writer);
-            generatedMethods.add(m.name + " " + m.getMethodSpecification());
+        }
+
+        // Generate virtual methods
+        for (VirtualMethod vm : virtualMethodList) {
+            if (vm.hasVaListParameter()) {
+                continue;
+            }
+            vm.generate(writer);
         }
 
         // Generate all functions as static methods

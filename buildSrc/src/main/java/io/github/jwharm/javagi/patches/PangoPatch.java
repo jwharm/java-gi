@@ -9,6 +9,8 @@ public class PangoPatch implements Patch {
     public void patch(Repository repo) {
         // Return type defined as "Language" but should be "Language*"
         removeMethod(repo, "Font", "get_languages");
-    }
 
+        // Deprecated method, causes java-gi compile warnings
+        removeMethod(repo, "Coverage", "ref");
+    }
 }

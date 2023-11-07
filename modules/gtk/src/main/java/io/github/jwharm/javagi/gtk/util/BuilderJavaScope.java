@@ -73,8 +73,8 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
     /**
      * Instantiates a new {@link BuilderScope}
      */
-    public BuilderJavaScope() {
-        super(gtype, null);
+    public static BuilderJavaScope newInstance() {
+        return GObject.newInstance(gtype);
     }
 
     /**

@@ -21,5 +21,13 @@ public class GtkPatch implements Patch {
         setReturnFloating(findMethod(repo, "PageSetup", "to_gvariant"));
         setReturnFloating(findMethod(repo, "PaperSize", "to_gvariant"));
         setReturnFloating(findMethod(repo, "PrintSettings", "to_gvariant"));
+
+        // Add virtual methods as instance methods
+        addInstanceMethod(repo, "BuilderScope", "get_type_from_name");
+        addInstanceMethod(repo, "BuilderScope", "get_type_from_function");
+        addInstanceMethod(repo, "BuilderScope", "create_closure");
+        addInstanceMethod(repo, "Window", "activate_default");
+        addInstanceMethod(repo, "Dialog", "close");
+        addInstanceMethod(repo, "Popover", "activate_default");
     }
 }
