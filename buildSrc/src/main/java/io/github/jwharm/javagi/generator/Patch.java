@@ -85,6 +85,8 @@ public interface Patch extends Serializable {
         if (doc != null) {
             rv.doc = new Doc(rv, "1");
             rv.doc.contents = doc;
+        } else {
+            rv.doc = null;
         }
     }
 
