@@ -27,6 +27,7 @@ import io.github.jwharm.javagi.gobject.types.Overrides;
 import io.github.jwharm.javagi.gobject.types.Properties;
 import io.github.jwharm.javagi.gobject.types.Signals;
 
+import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -159,14 +160,24 @@ public class Types {
             // The ui parameter must refer to a registered GResource
             widgetClass.setTemplateFromResource(ui);
 
+            // Override GObject.dispose() to dispose the template
             widgetClass.overrideDispose(Arena.global(), (object) -> {
-                Widget widget = (Widget) object;
-                widget.disposeTemplate(typeClass.readGType());
-                widget.asParent().dispose(); // This will call the parent class dispose
+                ((Widget) object).disposeTemplate(typeClass.readGType());
+
+                // Chain up to the parent (GObject) dispose function.
+                // The Java binding is a protected method, so we call the C function directly.
+                try {
+                    var parent = GObject.ObjectClass.getMemoryLayout();
+                    var func = Overrides.lookupVirtualMethodParent(object.handle(), parent, "dispose");
+                    var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+                    Interop.downcallHandle(func, desc).invokeExact(object.handle());
+                } catch (Throwable _err) {
+                    throw new AssertionError("Unexpected exception occurred: ", _err);
+                }
             });
 
             // Install BuilderJavaScope to call Java signal handler methods
-            widgetClass.setTemplateScope(new BuilderJavaScope());
+            widgetClass.setTemplateScope(BuilderJavaScope.newInstance());
 
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {

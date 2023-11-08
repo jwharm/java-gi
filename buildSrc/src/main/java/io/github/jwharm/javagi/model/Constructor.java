@@ -28,9 +28,15 @@ public class Constructor extends Method {
 
     public Constructor(GirElement parent, String name, String cIdentifier, String deprecated, String throws_) {
         super(parent, name, cIdentifier, deprecated, throws_, null, null, null);
+        // constructor helper method has private visibility
+        visibility = "private";
     }
 
     public void generate(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("\n");
 
@@ -83,6 +89,10 @@ public class Constructor extends Method {
     }
 
     public void generateNamed(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         RegisteredType constructed = (RegisteredType) parent;
 

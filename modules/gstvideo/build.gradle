@@ -1,3 +1,5 @@
+import io.github.jwharm.javagi.patches.GstVideoPatch;
+
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -9,4 +11,5 @@ dependencies {
 
 tasks.named('generateSources') {
     girFile = 'GstVideo-1.0.gir'
+    patch = new GstVideoPatch()
 }

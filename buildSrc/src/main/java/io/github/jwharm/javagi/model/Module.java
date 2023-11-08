@@ -45,6 +45,9 @@ public class Module {
      */
     public final Map<String, String> superLookupTable = new HashMap<>();
 
+    /**
+     * The OS platform of this module
+     */
     public final Platform platform;
 
     public Module(Platform platform) {
@@ -111,6 +114,9 @@ public class Module {
             }
         }
 
+        // Link virtual methods to the accompanying methods
+        linkVirtualMethods();
+
         // Create lookup tables
         createIdLookupTable();
         createCTypeLookupTable();
@@ -124,6 +130,9 @@ public class Module {
         for (Repository repository : repositories.values()) {
             // Methods, virtual methods and functions
             for (RegisteredType rt : repository.namespace.registeredTypeMap.values()) {
+                for (Constructor method : rt.constructorList) {
+                    flagVaListFunction(method);
+                }
                 for (Method method : rt.methodList) {
                     flagVaListFunction(method);
                 }
@@ -144,7 +153,8 @@ public class Module {
     private void flagVaListFunction(Method method) {
         if (method.parameters != null) {
             for (Parameter parameter : method.parameters.parameterList) {
-                if (parameter.type != null && "va_list".equals(parameter.type.cType)) {
+                if (parameter.type != null
+                        && ("va_list".equals(parameter.type.cType) || "va_list*".equals(parameter.type.cType))) {
                     method.skip = true;
                     break;
                 }
@@ -153,9 +163,36 @@ public class Module {
     }
 
     /**
+     * Find classes that define methods and virtual methods with the same name and type signature.
+     * When found, add cross-references between them.
+     */
+    private void linkVirtualMethods() {
+        for (Repository repository : repositories.values()) {
+            for (RegisteredType rt : repository.namespace.registeredTypeMap.values()) {
+                for (Method method : rt.methodList) {
+                    for (VirtualMethod vm : rt.virtualMethodList) {
+                        if (method.getNameAndSignature().equals(vm.getNameAndSignature())) {
+                            method.linkedVirtualMethod = vm;
+                            vm.linkedMethod = method;
+                            vm.skip = true;
+                            break;
+                        }
+                    }
+                }
+                // Flag virtual methods in interfaces to not be generated
+                if (rt instanceof Interface) {
+                    for (VirtualMethod vm : rt.virtualMethodList) {
+                        vm.skip = true;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Update {@code cIdentifierLookupTable} with current {@code repositoriesLookupTable}
      */
-    public void createIdLookupTable() {
+    private void createIdLookupTable() {
         cIdentifierLookupTable.clear();
         for (Repository repository : repositories.values()) {
             GirElement element = repository;
@@ -173,7 +210,7 @@ public class Module {
     /**
      * Update {@code cTypeLookupTable} with current {@code repositoriesLookupTable}
      */
-    public void createCTypeLookupTable() {
+    private void createCTypeLookupTable() {
         cTypeLookupTable.clear();
         for (Repository gir : repositories.values()) {
             for (RegisteredType rt : gir.namespace.registeredTypeMap.values()) {

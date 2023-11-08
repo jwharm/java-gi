@@ -1,3 +1,5 @@
+import io.github.jwharm.javagi.patches.SoupPatch;
+
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -9,4 +11,5 @@ dependencies {
 tasks.named('generateSources') {
     girFile = 'Soup-3.0.gir'
     urlPrefix = 'https://libsoup.org/libsoup-3.0/'
+    patch = new SoupPatch()
 }

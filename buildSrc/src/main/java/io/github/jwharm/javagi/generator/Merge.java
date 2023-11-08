@@ -212,10 +212,10 @@ public class Merge {
      * @param methods the list of methods to add
      */
     private <T extends Method> void mergeMethods(GirElement parent, List<T> multi, List<T> methods) {
-        Set<String> signatures = new HashSet<>(multi.stream().map(Method::getMethodSpecification).toList());
+        Set<String> signatures = new HashSet<>(multi.stream().map(Method::getNameAndSignature).toList());
         Set<String> cIdentifiers = new HashSet<>(multi.stream().map(method -> method.cIdentifier).toList());
         for (T method : methods) {
-            var signature = method.getMethodSpecification();
+            var signature = method.getNameAndSignature();
             var cIdentifier = method.cIdentifier;
             if (cIdentifier != null && cIdentifiers.contains(cIdentifier)) {
                 continue;
@@ -237,21 +237,21 @@ public class Merge {
      */
     private void setMethodPlatforms(List<? extends Method> methods, List<? extends GirElement> registeredTypes) {
         for (Method method : methods) {
-            String signature = method.getMethodSpecification();
+            String signature = method.getNameAndSignature();
             for (var rt : registeredTypes) {
                 if (rt == null) {
                     continue;
                 }
-                if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.methodList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                 }
-                if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.virtualMethodList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                 }
-                if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.functionList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                 }
-                if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.constructorList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     method.platforms.add(rt.module().platform);
                 }
             }
@@ -265,32 +265,32 @@ public class Merge {
      */
     private void overrideLongValues(List<? extends Method> methods, List<? extends GirElement> registeredTypes) {
         for (Method method : methods) {
-            String signature = method.getMethodSpecification();
+            String signature = method.getNameAndSignature();
             for (var rt : registeredTypes) {
                 if (rt == null) {
                     continue;
                 }
                 // Check if this method exists on Windows
-                if (rt.methodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.methodList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
                         // Convert glong/gulong parameters to gint/guint
                         overrideLongValues(method);
                     }
                 }
                 // Same for virtual methods
-                if (rt.virtualMethodList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.virtualMethodList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method);
                     }
                 }
                 // Same for functions (static methods)
-                if (rt.functionList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.functionList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method);
                     }
                 }
                 // Same for constructors
-                if (rt.constructorList.stream().map(Method::getMethodSpecification).anyMatch(signature::equals)) {
+                if (rt.constructorList.stream().map(Method::getNameAndSignature).anyMatch(signature::equals)) {
                     if (rt.module().platform == Platform.WINDOWS) {
                         overrideLongValues(method);
                     }

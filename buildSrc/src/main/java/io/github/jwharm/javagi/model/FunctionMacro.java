@@ -39,6 +39,11 @@ public class FunctionMacro extends GirElement implements CallableType {
     }
 
     @Override
+    public GirElement getParent() {
+        return parent;
+    }
+
+    @Override
     public Parameters getParameters() {
         return parameters;
     }

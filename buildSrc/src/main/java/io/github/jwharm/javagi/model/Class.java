@@ -141,7 +141,7 @@ public class Class extends RegisteredType {
         writer.write(" * again. To chain up, call {@code asParent().methodName()}. This will call the native function\n");
         writer.write(" * pointer of this virtual method in the typeclass of the parent type.\n");
         writer.write(" */\n");
-        writer.write("public " + qualifiedName + " asParent() {\n");
+        writer.write("protected " + qualifiedName + " asParent() {\n");
         writer.increaseIndent();
         if ("1".equals(abstract_)) {
             writer.write(qualifiedName + " _parent = new " + qualifiedName + "." + javaName + "Impl(handle());\n");

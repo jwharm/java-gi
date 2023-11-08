@@ -46,7 +46,7 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
  * the Java instance method {@code okButtonClicked()} will be called on
  * the widget that is being built with the {@link GtkBuilder}.
  */
-public final class BuilderJavaScope extends GObject implements BuilderScope {
+public final class BuilderJavaScope extends BuilderCScope implements BuilderScope {
 
     private static final Type gtype = Types.register(BuilderJavaScope.class);
 
@@ -73,8 +73,8 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
     /**
      * Instantiates a new {@link BuilderScope}
      */
-    public BuilderJavaScope() {
-        super(gtype, null);
+    public static BuilderJavaScope newInstance() {
+        return GObject.newInstance(gtype);
     }
 
     /**
@@ -97,7 +97,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
         if (currentObject == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot create closure for handler %s: Current object not set\n", functionName);
-            return new BuilderCScope().createClosure(builder, functionName, flags, object);
+            return asParent().createClosure(builder, functionName, flags, object);
         }
 
         try {
@@ -132,7 +132,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find method %s in class %s\n",
                     functionName, currentObject.getClass().getName());
-            return new BuilderCScope().createClosure(builder, functionName, flags, object);
+            return asParent().createClosure(builder, functionName, flags, object);
         }
     }
 
@@ -165,7 +165,7 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
      */
     @Override
     public Type getTypeFromFunction(GtkBuilder builder, String functionName) {
-        return new BuilderCScope().getTypeFromFunction(builder, functionName);
+        return asParent().getTypeFromFunction(builder, functionName);
     }
 
     /**
@@ -176,6 +176,6 @@ public final class BuilderJavaScope extends GObject implements BuilderScope {
      */
     @Override
     public Type getTypeFromName(GtkBuilder builder, String typeName) {
-        return new BuilderCScope().getTypeFromName(builder, typeName);
+        return asParent().getTypeFromName(builder, typeName);
     }
 }
