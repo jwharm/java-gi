@@ -32,10 +32,10 @@ import java.util.ArrayList;
 public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
-     * Memory scope of allocated gvalues. It will be closed when the enclosing
-     * builder instance is garbage collected.
+     * Memory scope of allocated gvalues. It will be closed after the enclosing
+     * builder instance has been built.
      */
-    private final Arena arena = Arena.ofAuto();
+    private final Arena arena = Arena.ofConfined();
 
     /**
      * List of all property names that are set
@@ -51,6 +51,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * Get the arena for allocating memory in this builder
      * @return the arena for allocating memory in this builder
      */
+    @Override
     public Arena getArena() {
         return arena;
     }
@@ -60,6 +61,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @param name name of the property
      * @param value value of the property (a {@code GValue})
      */
+    @Override
     public void addBuilderProperty(String name, Value value) {
         names.add(name);
         values.add(value);

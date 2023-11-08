@@ -115,6 +115,7 @@ public class Builder {
         writer.write("    for (var _value : getValues()) {\n");
         writer.write("        _value.unset();\n");
         writer.write("    }\n");
+        writer.write("    getArena().close();\n");
         writer.write("}\n");
         writer.decreaseIndent();
         writer.write("}\n");
