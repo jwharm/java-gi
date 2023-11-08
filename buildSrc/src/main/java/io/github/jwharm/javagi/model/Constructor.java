@@ -33,6 +33,10 @@ public class Constructor extends Method {
     }
 
     public void generate(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         writer.write("\n");
 
@@ -85,6 +89,10 @@ public class Constructor extends Method {
     }
 
     public void generateNamed(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         RegisteredType constructed = (RegisteredType) parent;
 

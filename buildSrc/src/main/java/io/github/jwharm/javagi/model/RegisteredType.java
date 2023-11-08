@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.model;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -70,7 +69,7 @@ public abstract class RegisteredType extends GirElement {
         }
     }
 
-    // Find out if this tyjpe is a subclass of the provided classname
+    // Find out if this type is a subclass of the provided classname
     protected boolean isInstanceOf(String classname) {
         if (this.qualifiedName.equals(classname)) {
             return true;
@@ -86,7 +85,7 @@ public abstract class RegisteredType extends GirElement {
     }
 
     public boolean isFloating() {
-        // GObject has a ref_sink function but we don't want to treat all GObjects as floating references.
+        // GObject has a ref_sink function, but we don't want to treat all GObjects as floating references.
         if ("GObject".equals(javaName) && "org.gnome.gobject".equals(getNamespace().packageName)) {
             return false;
         }
@@ -136,7 +135,10 @@ public abstract class RegisteredType extends GirElement {
         writer.write(" * Get the GType of the " + cType + " " + (this instanceof Interface ? "interface" : "class") + ".\n");
         writer.write(" * @return the GType\n");
         writer.write(" */\n");
-        writer.write("public static org.gnome.glib.Type getType() {\n");
+        if (! (this instanceof Interface)) {
+            writer.write("public ");
+        }
+        writer.write("static org.gnome.glib.Type getType() {\n");
         writer.write("    return Interop.getType(\"" + getType + "\");\n");
         writer.write("}\n");
     }
@@ -186,7 +188,7 @@ public abstract class RegisteredType extends GirElement {
         writer.increaseIndent();
 
         // Check if this type is either defined as a union, or has a union element
-        boolean isUnion = this instanceof Union || (! unionList.isEmpty());
+        boolean isUnion = this instanceof Union || !unionList.isEmpty();
 
         writer.write("return MemoryLayout.");
         if (isUnion) {
@@ -196,8 +198,9 @@ public abstract class RegisteredType extends GirElement {
         }
 
         List<Field> fieldList = this.fieldList;
-        if (fieldList.isEmpty() && unionList.size() > 0 && unionList.get(0).fieldList.size() > 0)
+        if (fieldList.isEmpty() && !unionList.isEmpty() && !unionList.get(0).fieldList.isEmpty()) {
             fieldList = unionList.get(0).fieldList;
+        }
 
         // How many bytes have we generated thus far
         int size = 0;
@@ -295,46 +298,23 @@ public abstract class RegisteredType extends GirElement {
     protected void generateMethodsAndSignals(SourceWriter writer) throws IOException {
         // Generate instance methods
         for (Method m : methodList) {
-            if (m.hasVaListParameter()) { // va_list parameters are not supported
-                continue;
-            }
             m.generate(writer);
         }
 
         // Generate virtual methods
         for (VirtualMethod vm : virtualMethodList) {
-            if (vm.hasVaListParameter()) {
-                continue;
-            }
             vm.generate(writer);
         }
 
-        // Generate all functions as static methods
+        // Generate functions as static methods
         for (Function f : functionList) {
-            if (f.hasVaListParameter()) {
-                continue;
-            }
             f.generate(writer);
         }
 
         // Generate signals: functional interface, onSignal method and emitSignal method
         for (Signal s : signalList) {
-            if (s.hasVaListParameter()) {
-                continue;
-            }
             s.generate(writer);
         }
-    }
-
-    protected void generateIsAvailable(SourceWriter writer) throws IOException {
-        writer.write("\n");
-        writer.write("/**\n");
-        writer.write(" * Check whether the type is available on the runtime platform.\n");
-        writer.write(" * @return {@code true} when the type is available on the runtime platform\n");
-        writer.write(" */\n");
-        writer.write("public static boolean isAvailable() {\n");
-        writer.write("    return Interop.isAvailable(\"" + getType + "\", FunctionDescriptor.of(ValueLayout.JAVA_LONG), false);\n");
-        writer.write("}\n");
     }
 
     protected void generateEnsureInitialized(SourceWriter writer) throws IOException {
@@ -352,9 +332,6 @@ public abstract class RegisteredType extends GirElement {
      */
     protected void generateConstructors(SourceWriter writer) throws IOException {
         for (Constructor c : constructorList) {
-            if (c.hasVaListParameter()) { // va_list parameters are not supported
-                continue;
-            }
             if (c.name.equals("new")) {
                 c.generate(writer);
             } else {

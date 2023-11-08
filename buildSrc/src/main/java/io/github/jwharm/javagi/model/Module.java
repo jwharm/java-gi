@@ -130,6 +130,9 @@ public class Module {
         for (Repository repository : repositories.values()) {
             // Methods, virtual methods and functions
             for (RegisteredType rt : repository.namespace.registeredTypeMap.values()) {
+                for (Constructor method : rt.constructorList) {
+                    flagVaListFunction(method);
+                }
                 for (Method method : rt.methodList) {
                     flagVaListFunction(method);
                 }
@@ -150,7 +153,8 @@ public class Module {
     private void flagVaListFunction(Method method) {
         if (method.parameters != null) {
             for (Parameter parameter : method.parameters.parameterList) {
-                if (parameter.type != null && "va_list".equals(parameter.type.cType)) {
+                if (parameter.type != null
+                        && ("va_list".equals(parameter.type.cType) || "va_list*".equals(parameter.type.cType))) {
                     method.skip = true;
                     break;
                 }
@@ -170,8 +174,15 @@ public class Module {
                         if (method.getNameAndSignature().equals(vm.getNameAndSignature())) {
                             method.linkedVirtualMethod = vm;
                             vm.linkedMethod = method;
+                            vm.skip = true;
                             break;
                         }
+                    }
+                }
+                // Flag virtual methods in interfaces to not be generated
+                if (rt instanceof Interface) {
+                    for (VirtualMethod vm : rt.virtualMethodList) {
+                        vm.skip = true;
                     }
                 }
             }

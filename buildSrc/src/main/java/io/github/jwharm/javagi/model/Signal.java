@@ -43,6 +43,10 @@ public class Signal extends Method implements Closure {
     }
 
     public void generate(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
         writer.write("\n");
         generateFunctionalInterface(writer, signalName);
         writer.write("\n");

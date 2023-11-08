@@ -44,14 +44,18 @@ public interface Closure extends CallableType {
             writer.write(" */\n");
         }
         writer.write("@FunctionalInterface\n");
-        writer.write("public interface " + javaName + " {\n");
+        if (! (getParent() instanceof Interface)) {
+            writer.write("public ");
+        }
+        writer.write("interface " + javaName + " {\n");
         writer.write("\n");
         writer.increaseIndent();
 
         // Generate javadoc for run(...)
         Doc doc = getDoc();
-        if (doc != null)
+        if (doc != null) {
             doc.generate(writer, false);
+        }
 
         // Deprecation
         if ("1".equals(((GirElement) this).deprecated)) {

@@ -78,7 +78,9 @@ public class Method extends GirElement implements CallableType {
         
         try {
             // Visibility
-            writer.write(visibility + " ");
+            if (! visibility.isEmpty()) {
+                writer.write(visibility + " ");
+            }
 
             // Static methods (functions and constructor helpers)
             if (this instanceof Function || this instanceof Constructor) {
@@ -306,6 +308,11 @@ public class Method extends GirElement implements CallableType {
             return false;
         var lastParam = parameters.parameterList.get(parameters.parameterList.size() - 1);
         return lastParam.type != null && "VaList".equals(lastParam.type.simpleJavaType);
+    }
+
+    @Override
+    public GirElement getParent() {
+        return parent;
     }
     
     @Override

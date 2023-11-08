@@ -61,11 +61,11 @@ public abstract class GenerateSources extends DefaultTask {
     void execute() {
         try {
             Module linux = parse(Platform.LINUX, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
+                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
             Module windows = parse(Platform.WINDOWS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
+                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
             Module macos = parse(Platform.MACOS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrElse(null), getPatch().getOrElse(null));
+                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
 
             Module module = new Merge().merge(linux, windows, macos);
 
@@ -109,6 +109,9 @@ public abstract class GenerateSources extends DefaultTask {
             // Flag unsupported va_list methods so they will not be generated
             module.flagVaListFunctions();
 
+            // Link the type references to the GIR type definition across the GI repositories
+            module.link();
+
             // Apply patch
             if (patch != null) {
                 patch.patch(r);
@@ -117,9 +120,6 @@ public abstract class GenerateSources extends DefaultTask {
         } catch (IOException ignored) {
             // Gir file not found for this platform: This will generate code with UnsupportedPlatformExceptions
         }
-
-        // Link the type references to the GIR type definition across the GI repositories
-        module.link();
 
         return module;
     }

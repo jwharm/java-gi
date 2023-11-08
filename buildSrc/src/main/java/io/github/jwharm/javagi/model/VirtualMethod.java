@@ -30,11 +30,11 @@ public class VirtualMethod extends Method {
 
     public VirtualMethod(GirElement parent, String name, String deprecated, String throws_) {
         super(parent, name, null, deprecated, throws_, null, null, null);
-        visibility = "protected";
+        visibility = parent instanceof Interface ? "default" : "protected";
     }
     
     public void generate(SourceWriter writer) throws IOException {
-        if (parent instanceof Interface || linkedMethod != null) {
+        if (skip) {
             return;
         }
 

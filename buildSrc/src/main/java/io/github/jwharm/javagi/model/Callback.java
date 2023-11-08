@@ -53,6 +53,11 @@ public class Callback extends RegisteredType implements CallableType, Closure {
     }
 
     @Override
+    public GirElement getParent() {
+        return parent;
+    }
+
+    @Override
     public Parameters getParameters() {
         return parameters;
     }

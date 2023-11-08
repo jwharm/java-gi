@@ -190,6 +190,7 @@ public interface Patch extends Serializable {
         method.parameters = vm.parameters;
         method.returnValue = vm.returnValue;
         vm.parent.methodList.add(method);
+        vm.skip = true;
     }
 
     default void makeGeneric(Repository repo, String type) {
@@ -201,6 +202,7 @@ public interface Patch extends Serializable {
                     for (Parameter p : m.parameters.parameterList) {
                         if (p.type != null && "org.gnome.gobject.GObject".equals(p.type.qualifiedJavaType)) {
                             p.type.isGeneric = true;
+                            p.type.init(p.type.name);
                         }
                     }
                 }
@@ -208,6 +210,7 @@ public interface Patch extends Serializable {
                     Type returnType = m.returnValue.type;
                     if (returnType != null && "org.gnome.gobject.GObject".equals(returnType.qualifiedJavaType)) {
                         returnType.isGeneric = true;
+                        returnType.init(returnType.name);
                     }
                 }
             }

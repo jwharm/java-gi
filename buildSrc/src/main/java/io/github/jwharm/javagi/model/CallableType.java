@@ -26,6 +26,8 @@ import java.io.IOException;
 
 public interface CallableType {
 
+    GirElement getParent();
+
     Parameters getParameters();
     void setParameters(Parameters ps);
 

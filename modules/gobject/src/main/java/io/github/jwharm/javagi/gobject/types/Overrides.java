@@ -60,12 +60,6 @@ public class Overrides {
             false
     );
 
-    private static final MethodHandle g_type_interface_peek_parent = Interop.downcallHandle(
-            "g_type_interface_peek_parent",
-            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG),
-            false
-    );
-
     private static final MethodHandle g_type_class_peek_parent = Interop.downcallHandle(
             "g_type_class_peek_parent",
             FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
@@ -198,9 +192,10 @@ public class Overrides {
 
     /**
      * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeClass.
-     * @param address the memory address of the object instance
+     *
+     * @param address     the memory address of the object instance
      * @param classLayout the memory layout of the object's TypeClass
-     * @param name the name of the virtual method (as defined in the TypeClass)
+     * @param name        the name of the virtual method (as defined in the TypeClass)
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name) {
@@ -209,50 +204,83 @@ public class Overrides {
                 .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
+    /**
+     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeClass of the
+     * parent class of the instance.
+     *
+     * @param address     the memory address of the object instance
+     * @param classLayout the memory layout of the object's TypeClass
+     * @param name        the name of the virtual method (as defined in the TypeClass)
+     * @return a function pointer to the requested virtual method
+     */
     public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name) {
-        MemorySegment gclass = address.get(ValueLayout.ADDRESS, 0);
-        MemorySegment parent;
         try {
-            parent = (MemorySegment) g_type_class_peek_parent.invoke(gclass);
+            // Get the TypeClass
+            var myClass = address.get(ValueLayout.ADDRESS, 0);
+
+            // Get the parent TypeClass
+            var parentClass = (MemorySegment) g_type_class_peek_parent.invoke(myClass);
+
+            // Return a pointer to the requested virtual method address in the dispatch table
+            return parentClass.reinterpret(classLayout.byteSize())
+                    .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
-        return parent.reinterpret(classLayout.byteSize())
-                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
     /**
-     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeInterface
-     * with the specified GType.
-     * @param address the memory address of the object instance
+     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeInterface with
+     * the specified GType.
+     *
+     * @param address     the memory address of the object instance
      * @param classLayout the memory layout of the object's TypeClass
-     * @param name the name of the virtual method (as defined in the TypeInterface)
-     * @param ifaceType the GType of the interface that declares the virtual method
+     * @param name        the name of the virtual method (as defined in the TypeInterface)
+     * @param ifaceType   the GType of the interface that declares the virtual method
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethod(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
-        MemorySegment struct = address.get(ValueLayout.ADDRESS, 0);
-
         try {
-            struct = (MemorySegment) g_type_interface_peek.invokeExact(struct, ifaceType.getValue().longValue());
+            // Get the TypeClass
+            MemorySegment myClass = address.get(ValueLayout.ADDRESS, 0);
+
+            // Get the TypeInterface implemented by the TypeClass
+            MemorySegment iface = (MemorySegment) g_type_interface_peek.invokeExact(myClass, ifaceType.getValue().longValue());
+
+            // Return a pointer to the requested virtual method address in the dispatch table
+            return iface.reinterpret(classLayout.byteSize())
+                    .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
-
-        return struct.reinterpret(classLayout.byteSize())
-                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 
-    public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout classLayout, String name, Type ifaceType) {
-        MemorySegment struct = address.get(ValueLayout.ADDRESS, 0);
-
+    /**
+     * Returns a function pointer to the specified virtual method. The pointer is retrieved from the TypeInterface with
+     * the specified GType, implemented by the parent class of the instance.
+     *
+     * @param address           the memory address of the object instance
+     * @param parentClassLayout the memory layout of the parent object's TypeClass
+     * @param name              the name of the virtual method (as defined in the TypeInterface)
+     * @param ifaceType         the GType of the interface that declares the virtual method
+     * @return a function pointer to the requested virtual method
+     */
+    public static MemorySegment lookupVirtualMethodParent(MemorySegment address, MemoryLayout parentClassLayout, String name, Type ifaceType) {
         try {
-            struct = (MemorySegment) g_type_interface_peek_parent.invokeExact(struct, ifaceType.getValue().longValue());
+            // Get the TypeClass
+            var myClass = address.get(ValueLayout.ADDRESS, 0);
+
+            // Get the parent TypeClass
+            var parentClass = (MemorySegment) g_type_class_peek_parent.invoke(myClass);
+
+            // Get the TypeInterface implemented by the parent TypeClass
+            var parentIface = (MemorySegment) g_type_interface_peek.invokeExact(parentClass, ifaceType.getValue().longValue());
+
+            // Return a pointer to the requested virtual method address in the dispatch table
+            return parentIface.reinterpret(parentClassLayout.byteSize())
+                    .get(ValueLayout.ADDRESS, parentClassLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
-
-        return struct.reinterpret(classLayout.byteSize())
-                .get(ValueLayout.ADDRESS, classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
     }
 }
