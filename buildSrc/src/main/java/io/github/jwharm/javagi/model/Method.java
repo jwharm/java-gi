@@ -173,7 +173,7 @@ public class Method extends GirElement implements CallableType {
         // Documentation
         if (this instanceof Constructor) {
             writer.write("/**\n");
-            writer.write(" * Helper function for the {@code " + name + "} constructor\n");
+            writer.write(" * Helper function for the {@code " + cIdentifier + "} constructor\n");
             writer.write(" */\n");
         } else if (doc != null) {
             doc.generate(writer, false);
