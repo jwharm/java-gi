@@ -94,7 +94,7 @@ public class Builder {
         writer.write("\n");
         writer.write("/**\n");
         writer.write(" * Finish building the {@code " + c.javaName + "} object. This will call \n");
-        writer.write(" * {@link org.gnome.gobject.GObject#newWithProperties} to create a new \n");
+        writer.write(" * {@link org.gnome.gobject.GObject#withProperties} to create a new \n");
         writer.write(" * GObject instance, which is then cast to {@code " + c.javaName + "}.\n");
         writer.write(" * @return A new instance of {@code " + c.javaName + "} with the properties \n");
         writer.write(" *         that were set in the Builder object.\n");
@@ -107,7 +107,7 @@ public class Builder {
         writer.write("try {\n");
         writer.increaseIndent();
         c.generatePlatformCheck(writer);
-        writer.write("return (" + c.qualifiedName + ") org.gnome.gobject.GObject.newWithProperties(\n");
+        writer.write("return (" + c.qualifiedName + ") org.gnome.gobject.GObject.withProperties(\n");
         writer.write("        " + c.qualifiedName + ".getType(), getNames(), getValues()\n");
         writer.write(");\n");
         writer.decreaseIndent();

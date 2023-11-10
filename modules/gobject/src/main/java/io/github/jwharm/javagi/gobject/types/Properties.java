@@ -145,7 +145,7 @@ public class Properties {
                 // Create and return the GObject with the property names and values
                 // The cast to T is safe: it will always return the expected GObject-derived objectType
                 @SuppressWarnings("unchecked")
-                T gobject = (T) GObject.newWithProperties(objectType, names.toArray(new String[0]), values.toArray(new Value[0]));
+                T gobject = (T) GObject.withProperties(objectType, names.toArray(new String[0]), values.toArray(new Value[0]));
                 return gobject;
             } finally {
                 typeClass.unref();
@@ -352,7 +352,7 @@ public class Properties {
         }
         // Return class initializer method that installs the properties.
         return (gclass) -> {
-            gclass.overrideGetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
+            gclass.overrideGetProperty(Arena.global(), (object, propertyId, value, _) -> {
                 if (propertyId < 1 || propertyId >= getters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.getProperty\n",
@@ -385,7 +385,7 @@ public class Properties {
                 }
             });
 
-            gclass.overrideSetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
+            gclass.overrideSetProperty(Arena.global(), (object, propertyId, value, _) -> {
                 if (propertyId < 1 || propertyId >= setters.length) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.setProperty\n",

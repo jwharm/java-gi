@@ -145,7 +145,7 @@ public class Conversions {
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
-                "const", "float", "native", "super", "while", "wait", "finalize"
+                "const", "float", "native", "super", "while", "wait", "finalize", "null"
         };
         return Arrays.stream(keywords).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? name + "_" : name;
     }
