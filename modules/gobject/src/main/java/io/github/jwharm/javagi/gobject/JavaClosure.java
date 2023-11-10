@@ -44,7 +44,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(Runnable callback) {
         super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((_, _, _, _, _) -> callback.run());
+        setMarshal((closure, returnValue, paramValues, hint, data) -> callback.run());
     }
     
     /**
@@ -53,7 +53,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(BooleanSupplier callback) {
         super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((_, returnValue, _, _, _) -> {
+        setMarshal((closure, returnValue, paramValues, hint, data) -> {
             if (returnValue != null)
                 returnValue.setBoolean(callback.getAsBoolean());
         });
@@ -114,7 +114,7 @@ public class JavaClosure extends Closure {
      */
     public JavaClosure(Object instance, Method method) {
         super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
-        setMarshal((_, returnValue, paramValues, _, _) -> {
+        setMarshal((closure, returnValue, paramValues, hint, data) -> {
             try {
                 Object[] parameterObjects;
                 if (paramValues == null || paramValues.length == 0) {
