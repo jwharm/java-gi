@@ -30,6 +30,11 @@ public class Constructor extends Method {
         super(parent, name, cIdentifier, deprecated, throws_, null, null, null);
         // constructor helper method has private visibility
         visibility = "private";
+
+        // Strip the "new" prefix from named constructors
+        if (name.startsWith("new_")) {
+            this.name = name.substring(4);
+        }
     }
 
     public void generate(SourceWriter writer) throws IOException {

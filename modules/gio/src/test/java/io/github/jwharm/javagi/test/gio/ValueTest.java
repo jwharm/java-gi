@@ -97,7 +97,7 @@ public class ValueTest {
     @Test
     public void boxedValue() {
         // compare a boxed value with its duplicate
-        Date date = Date.newDmy(new DateDay((byte) 3), DateMonth.JUNE, new DateYear((short) 2023));
+        Date date = Date.dmy(new DateDay((byte) 3), DateMonth.JUNE, new DateYear((short) 2023));
         Value boxedValue = Value.allocate(Arena.ofAuto()).init(Date.getType());
         boxedValue.setBoxed(date.handle());
         var copy = boxedValue.dupBoxed();

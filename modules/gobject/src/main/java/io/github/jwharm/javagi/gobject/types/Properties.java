@@ -145,7 +145,7 @@ public class Properties {
                 // Create and return the GObject with the property names and values
                 // The cast to T is safe: it will always return the expected GObject-derived objectType
                 @SuppressWarnings("unchecked")
-                T gobject = (T) GObject.newWithProperties(objectType, names.toArray(new String[0]), values.toArray(new Value[0]));
+                T gobject = (T) GObject.withProperties(objectType, names.toArray(new String[0]), values.toArray(new Value[0]));
                 return gobject;
             } finally {
                 typeClass.unref();

@@ -227,7 +227,7 @@ public class Javadoc {
                     if ("new".equals(part2)) {
                         return checkLink(part1) + part1 + "#" + part1 + "}";
                     } else {
-                        return checkLink(part1, part2) + part1 + formatMethod(part2) + "}";
+                        return checkLink(part1, part2) + part1 + formatMethod(stripNewPrefix(part2)) + "}";
                     }
                 } else {
                     Namespace ns = getNamespace(part1);
@@ -235,7 +235,7 @@ public class Javadoc {
                     if ("new".equals(part3)) {
                         return checkLink(part1, part2) + formatNS(part1) + className + "#" + className + "}";
                     } else {
-                        return checkLink(part1, part2, part3) + formatNS(part1) + className + formatMethod(part3) + "}";
+                        return checkLink(part1, part2, part3) + formatNS(part1) + className + formatMethod(stripNewPrefix(part3)) + "}";
                     }
                 }
             case "method":
@@ -401,6 +401,11 @@ public class Javadoc {
     // Change method name to camel case Java style and prepend a "#"
     private String formatMethod(String name) {
         return "#" + Conversions.toLowerCaseJavaName(name);
+    }
+
+    // Strip "new_" prefix from named constructors
+    private String stripNewPrefix(String name) {
+        return name.startsWith("new_") ? name.substring(4) : name;
     }
 
     // Format the type as a Java type (with org.package.Class#methodName syntax)
