@@ -240,7 +240,7 @@ public class Parameter extends Variable {
          return super.allocatesMemory()
                  || isOutParameter()
                  || (isAliasForPrimitive() && type.isPointer())
-                 || (type != null && type.isCallback() && (! scope.in(Scope.NOTIFIED, Scope.FOREVER)));
+                 || (type != null && type.isCallback() && (! scope.in(Scope.ASYNC, Scope.NOTIFIED, Scope.FOREVER)));
     }
 
     /**
@@ -301,14 +301,18 @@ public class Parameter extends Variable {
 
         // Callback functions with an arena that is closed from a DestroyNotify callback
         if (scope == Scope.NOTIFIED && destroy != null) {
-            writer.write("final Arena _");
-            writeName(writer);
-            writer.write("Scope = Arena.ofConfined();\n");
+            writer.write("final Arena _" + name + "Scope = Arena.ofConfined();\n");
             writer.write("final org.gnome.glib.DestroyNotify _");
             writeName(writer);
             writer.write("DestroyNotify = $ -> _");
             writeName(writer);
             writer.write("Scope.close();\n");
+        }
+
+        // Callback functions with async scope
+        else if (scope == Scope.ASYNC && (! isDestroyNotifyParameter())) {
+            writer.write("final Arena _" + name + "Scope = Arena.ofConfined();\n");
+            writer.write("if (" + name + " != null) ArenaCloseAction.CLEANER.register(" + name + ", new ArenaCloseAction(_" + name + "Scope));\n");
         }
     }
 

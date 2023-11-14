@@ -96,9 +96,7 @@ public class Parameters extends GirElement {
             }
             // callback destroy
             else if (p.isDestroyNotifyParameter() && p.linkedParameter != null) {
-                writer.write("_");
-                p.linkedParameter.writeName(writer);
-                writer.write("DestroyNotify.toCallback(_arena)");
+                writer.write("_" + p.linkedParameter.name + "DestroyNotify.toCallback(_" + p.linkedParameter.name + "Scope)");
             }
             // user_data
             else if (p.isUserDataParameter() || p.isDestroyNotifyParameter()) {

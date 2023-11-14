@@ -105,9 +105,15 @@ public class Module {
                 }
 
                 // Link destroy-parameters to the corresponding parameter
-                if (element instanceof Parameter param && param.destroy != null) {
+                if (element instanceof Parameter param && param.destroy != null && !param.isDestroyNotifyParameter()) {
                     Parameter destroyNotify = param.getParameterAt(param.destroy);
                     destroyNotify.linkedParameter = param;
+                }
+
+                // Link closure-parameters to the corresponding parameter
+                if (element instanceof Parameter param && param.closure != null && !param.isDestroyNotifyParameter()) {
+                    Parameter callback = param.getParameterAt(param.closure);
+                    callback.linkedParameter = param;
                 }
 
                 element = element.next;
@@ -123,7 +129,7 @@ public class Module {
     }
 
     /**
-     * Flag methods with a `va_list` argument so they will not be generated.
+     * Flag methods with a `va_list` argument, so they will not be generated.
      * As of JDK 21, va_list arguments will be unsupported.
      */
     public void flagVaListFunctions() {
