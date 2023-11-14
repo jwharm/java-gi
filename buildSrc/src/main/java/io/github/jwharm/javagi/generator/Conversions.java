@@ -234,9 +234,6 @@ public class Conversions {
             return "ValueLayout.JAVA_INT";
         }
         if (t.isPrimitive) {
-            if ("glong".equals(t.cType) || "gulong".equals(t.cType)) {
-                return "ValueLayout.JAVA_INT";
-            }
             return "ValueLayout.JAVA_" + t.simpleJavaType.toUpperCase();
         }
         if (t.isAliasForPrimitive()) {
