@@ -142,20 +142,33 @@ public class Record extends Class {
     public void generateRecordAllocator(SourceWriter writer) throws IOException {
         writer.write("\n");
         writer.write("/**\n");
+        writer.write(" * Allocate a new {@link " + javaName + "}.\n");
+        writer.write(" * \n");
+        writer.write(" * @param  arena to control the memory allocation scope.\n");
+        writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
+        writer.write(" */\n");
+        writer.write("public static " + javaName + " allocate(Arena arena) {\n");
+        writer.write("    MemorySegment segment = arena.allocate(getMemoryLayout());\n");
+        writer.write("    return new " + javaName + "(segment);\n");
+        writer.write("}\n");
+
+        // Generate deprecated method for backward compatibility
+        writer.write("\n");
+        writer.write("/**\n");
         writer.write(" * Allocate a new {@link " + javaName + "}. A {@link java.lang.ref.Cleaner} \n");
         writer.write(" * is assigned to the allocated memory segment that will release the \n");
         writer.write(" * memory when the {@link " + javaName + "} instance is garbage-collected.\n");
         writer.write(" * \n");
-        writer.write(" * @param  _arena to control the memory allocation scope.\n");
         writer.write(" * @return A new, uninitialized {@link " + javaName + "}\n");
+        writer.write(" * @deprecated See {@link #allocate(Arena)}\n");
         writer.write(" */\n");
-        writer.write("public static " + javaName + " allocate(Arena _arena) {\n");
-        writer.write("    MemorySegment segment = _arena.allocate(getMemoryLayout());\n");
-        writer.write("    return new " + javaName + "(segment);\n");
+        writer.write("@Deprecated\n");
+        writer.write("public static " + javaName + " allocate() {\n");
+        writer.write("    return " + javaName + ".allocate(Arena.ofAuto());\n");
         writer.write("}\n");
 
         // For regular structs (not typeclasses), generate a second allocator function
-        // that takes values for all fields, so it becomes possible to quicly allocate
+        // that takes values for all fields, so it becomes possible to quickly allocate
         // a struct. For example: var color = RGBA.allocate(0.6F, 0.5F, 0.9F, 1.0F);
         if (isGTypeStructFor == null) {
 
@@ -175,13 +188,68 @@ public class Record extends Class {
                 return;
             }
 
+            // Generate deprecated method for backward compatibility
             writer.write("\n");
             writer.write("/**\n");
             writer.write(" * Allocate a new {@link " + javaName + "} with the fields set to the provided values. \n");
             writer.write(" * A {@link java.lang.ref.Cleaner} is assigned to the allocated memory segment that will \n");
             writer.write(" * release the memory when the {@link " + javaName + "} instance is garbage-collected.\n");
             writer.write(" * \n");
-            writer.write(" * @param _arena to control the memory allocation scope.\n");
+            for (Field field : fieldList) {
+                // Ignore disguised fields
+                if (field.disguised()) {
+                    continue;
+                }
+                writer.write(" * @param ");
+                field.writeName(writer);
+                writer.write((field.callback == null ? " value " : " callback function ") + "for the field {@code ");
+                field.writeName(writer);
+                writer.write("}\n");
+            }
+            writer.write(" * @return A new {@link " + javaName + "} with the fields set to the provided values\n");
+            writer.write(" * @deprecated See {@link #allocate(Arena");
+            for (Field field : fieldList) {
+                if (field.disguised()) {
+                    continue;
+                }
+                writer.write(", ");
+                field.writeType(writer, false);
+            }
+            writer.write(")}\n");
+            writer.write(" */\n");
+            writer.write("@Deprecated\n");
+            writer.write("public static " + javaName + " allocate(");
+            boolean first = true;
+            for (Field field : fieldList) {
+                if (field.disguised()) {
+                    continue;
+                }
+                if (first)
+                    first = false;
+                else
+                    writer.write(", ");
+                field.writeTypeAndName(writer);
+            }
+            writer.write(") {\n");
+            writer.increaseIndent();
+            writer.write("return allocate(Arena.ofAuto()");
+            for (Field field : fieldList) {
+                if (field.disguised()) {
+                    continue;
+                }
+                writer.write(", ");
+                field.writeName(writer);
+            }
+            writer.write(");\n");
+            writer.decreaseIndent();
+            writer.write("}\n");
+            // End of temporary (deprecated) method
+
+            writer.write("\n");
+            writer.write("/**\n");
+            writer.write(" * Allocate a new {@link " + javaName + "} with the fields set to the provided values. \n");
+            writer.write(" * \n");
+            writer.write(" * @param arena to control the memory allocation scope.\n");
             // Write javadoc for parameters
             for (Field field : fieldList) {
                 // Ignore disguised fields
@@ -196,7 +264,7 @@ public class Record extends Class {
             }
             writer.write(" * @return A new {@link " + javaName + "} with the fields set to the provided values\n");
             writer.write(" */\n");
-            writer.write("public static " + javaName + " allocate(Arena _arena");
+            writer.write("public static " + javaName + " allocate(Arena arena");
 
             // Write parameters
             for (Field field : fieldList) {
@@ -211,7 +279,7 @@ public class Record extends Class {
             writer.increaseIndent();
 
             // Call the allocate() method
-            writer.write(javaName + " _instance = allocate(_arena);\n");
+            writer.write(javaName + " _instance = allocate(arena);\n");
 
             // Call the field setters
             for (Field field : fieldList) {
@@ -222,7 +290,7 @@ public class Record extends Class {
                 writer.write("_instance." + (field.callback == null ? "write" : "override"));
                 writer.write(Conversions.toCamelCase(field.name, true) + "(");
                 if (field.allocatesMemory()) {
-                    writer.write("_arena, ");
+                    writer.write("arena, ");
                 }
                 field.writeName(writer);
                 writer.write(");\n");
