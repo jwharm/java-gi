@@ -35,7 +35,6 @@ public record ArenaCloseAction(Arena arena) implements Runnable {
 
     @Override
     public void run() {
-        GLibLogger.debug("Closing arena " + arena);
         arena.close();
     }
 }
