@@ -26,12 +26,15 @@ import java.io.IOException;
 
 public class Constructor extends Method {
 
+    private String oldName;
+
     public Constructor(GirElement parent, String name, String cIdentifier, String deprecated, String throws_) {
         super(parent, name, cIdentifier, deprecated, throws_, null, null, null);
         // constructor helper method has private visibility
         visibility = "private";
 
         // Strip the "new" prefix from named constructors
+        this.oldName = name;
         if (name.startsWith("new_")) {
             this.name = name.substring(4);
         }
@@ -160,7 +163,71 @@ public class Constructor extends Method {
         writer.decreaseIndent();
         writer.write("}\n");
 
+        generateOldNamed(writer);
+
         // Constructor helper
         super.generate(writer);
+    }
+
+    // Temporary method to generate a deprecated constructor with the `new` prefix
+    public void generateOldNamed(SourceWriter writer) throws IOException {
+        if (skip) {
+            return;
+        }
+
+        String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
+        RegisteredType constructed = (RegisteredType) parent;
+
+        writer.write("\n");
+
+        // Docs
+        writer.write("/**\n");
+        if (doc != null) {
+            doc.generate(writer, false, false);
+        }
+        writer.write(" * @deprecated See {@link #" + Conversions.toLowerCaseJavaName(name) + "}\n");
+        writer.write(" */\n");
+
+        // @Deprecated
+        writer.write("@Deprecated\n");
+
+        // Name
+        writer.write("public static " + constructed.javaName + " " + Conversions.toLowerCaseJavaName(oldName));
+
+        // Parameters
+        writer.write("(");
+        if (parameters != null) {
+            parameters.generateJavaParameters(writer);
+        }
+        writer.write(")");
+
+        // Throws
+        if (throws_ != null) {
+            writer.write(" throws GErrorException");
+        }
+
+        // Unsupported platforms
+        if (doPlatformCheck() || parent.platforms.size() < 3) {
+            writer.write((throws_ != null ? ", " : " throws ") + "UnsupportedPlatformException");
+        }
+
+        writer.write(" {\n");
+        writer.increaseIndent();
+
+        // Check for unsupported platforms
+        generatePlatformCheck(writer);
+
+        // Call native constructor function
+        writer.write("var _result = " + privateMethodName + "(");
+        if (parameters != null) {
+            parameters.generateJavaParameterNames(writer);
+        }
+        writer.write(");\n");
+
+        // Return statement
+        returnValue.generateReturnStatement(writer);
+
+        writer.decreaseIndent();
+        writer.write("}\n");
     }
 }
