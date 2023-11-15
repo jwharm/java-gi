@@ -175,6 +175,8 @@ public class Constructor extends Method {
             return;
         }
 
+        if (name.equals(oldName)) return;
+
         String privateMethodName = "construct" + Conversions.toCamelCase(name, true);
         RegisteredType constructed = (RegisteredType) parent;
 
