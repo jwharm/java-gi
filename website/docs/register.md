@@ -6,7 +6,7 @@ When you extend a Java class from an existing GObject-derived class, Java will t
 public class MyObject extends GObject {
 ```
 
-However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new "GType". You can do this manually by calling `GObjects.typeRegisterStaticSimple` and `GObjects.typeAddInterfaceStatic` (see the documentation [here](https://docs.gtk.org/gobject/func.type_register_static_simple.html) and [here](https://docs.gtk.org/gobject/func.type_add_interface_static.html)), but Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This uses reflection to determine the name, parent class, implemented interfaces and overridden methods, and registers it as a new GType.
+However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new GType. You can do this manually by calling `GObjects.typeRegisterStaticSimple` and `GObjects.typeAddInterfaceStatic` (see the documentation [here](https://docs.gtk.org/gobject/func.type_register_static_simple.html) and [here](https://docs.gtk.org/gobject/func.type_add_interface_static.html)), but Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This uses reflection to determine the name, parent class, implemented interfaces and overridden methods, and registers it as a new GType.
 
 It is recommended to register the new gtype in a field `gtype` like this:
 
@@ -41,7 +41,7 @@ Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 }
 ```
 
-This constructor must exist in all Java-GI Proxy objects. It enables a Proxy class to be instantiated automatically for new instances returned from native function calls.
+This constructor must exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
 
 If your application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -53,7 +53,7 @@ module my.module.name {
 
 ## Specifying the name of the GType
 
-All GTypes have a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You can query the name of a GType using `GObjects.typeName`). When a Java class is registered as a GType, the package and class name are used to generate a unique GType name. You can override this with a specific name using the `@RegisteredType` attribute:
+A GType has a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You can query the name of a GType using `GObjects.typeName()`). When a Java class is registered as a GType, the package and class name are used to generate a unique GType name. You can override this with a specific name using the `@RegisteredType` attribute:
 
 ```java
 @RegisteredType(name="MyExampleObject")
@@ -69,7 +69,7 @@ When you override virtual methods from parent GObject classes (or implemented in
 
 ### Chaining up
 
-From inside the method body of an overridden method, you cannot call `super.method()` to "chain up" to a parent (native GObject) virtual method. Because virtual method invocations call the function pointer that is installed in the GObject typeclass, "chaining up" requires a lookup of the typeclass of the parent type first. Java-GI will do this when you call the `asParent()` method that is available on all GObject classes. So instead of `super.method()`, call `asParent().method` to "chain up". This is similar to [the `parent_class` pointer in native GObject code](https://developer-old.gnome.org/gobject/stable/howto-gobject-chainup.html).
+From inside the method body of an overridden method, you cannot call `super.method()` to "chain up" to a parent (native GObject) virtual method. Because virtual method invocations call the function pointer that is installed in the GObject typeclass, "chaining up" requires a lookup of the typeclass of the parent type first. Java-GI will do this when you call the `asParent()` method that is available on all GObject classes. So instead of `super.method()`, call `asParent().method()` to "chain up". This is similar to [the `parent_class` pointer in native GObject code](https://developer-old.gnome.org/gobject/stable/howto-gobject-chainup.html).
 
 For example:
 
@@ -117,7 +117,7 @@ The `@Property` annotation accepts the following parameters:
 | explicitNotify | Boolean   | false         |
 | deprecated     | Boolean   | false         |
 
-When the name is not specified, it will be inferred from the name of the method (provided that the method names follow the `getX`/`setX` pattern), stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
+When the name is not specified, it will be inferred from the name of the method (provided that the method names follow the `getX()`/`setX(...)` pattern), stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
 
 When the type is not specified, it will be inferred from the parameter or return-type of the method. When the type is specified, it must be one of the subclasses of `GParamSpec`. The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
 
@@ -149,7 +149,7 @@ public class Counter extends GObject {
     // register the type
     private static final Type gtype = Types.register(Counter.class);
     
-    // define signal
+    // declare the signal
     @Signal
     public interface LimitReached {
         public void run(int limit);
@@ -158,7 +158,7 @@ public class Counter extends GObject {
     public void count() {
         num++;
         if (num == limit) {
-            // call GObject.emit(signalName, args...) to emit the signal:
+            // emit the signal
             emit("limit-reached", limit);
         }
     }
@@ -167,7 +167,7 @@ public class Counter extends GObject {
 }
 ```
 
-The "limit-reached" signal in the example is defined with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
+The "limit-reached" signal in the example is declared with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
 
 You can connect to the custom signal, like this:
 
@@ -184,7 +184,7 @@ Because the signal declaration is an ordinary functional interface, it is equall
 public interface LimitReached extends IntConsumer {}
 ```
 
-It's also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
+It is also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
 
 
 ## Examples

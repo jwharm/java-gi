@@ -1,6 +1,6 @@
 # Building and running the bindings generator
 
-Java-GI publishes pre-built bindings for GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
+Java-GI publishes pre-built bindings for a number of libraries, including GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
 - Clone the Java-GI project (`jwharm/java-gi`) and the GIR input files (`gircore/gir-files`) from GitHub
 - Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
@@ -22,6 +22,26 @@ Alternatively, in most Linux distributions, the gir files are usually installed 
 
 Once the gir file is available, copy it into the `gir-files` folder under the correct platform subfolder (linux, windows or macos).
 
-Now you can add a module to Java-GI for the library. Simply copy one of the existing module folders to a new folder, add it to `settings.gradle`, and modify the `build.gradle` file to suit your needs. Also add all dependencies (look for `<include>` elements in gir file) to the `build.gradle` of the new module.
+Now you can add a Java-GI module for the library. Create a folder under `/modules`, add it to `settings.gradle`, and create a `build.gradle` file:
 
-If you encounter any problems or errors, check the generated Java source code in the `build/generated/java-gi` directory for issues. When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add a line `patch = new ...Patch()` to the `generateSources` configuration block in `build.gradle`. (See the [Gtk](https://github.com/jwharm/java-gi/blob/main/modules/gtk/build.gradle) buildfile for an example).
+```groovy
+plugins {
+    id 'java-gi.library-conventions'
+}
+
+dependencies {
+    // Add dependencies on other modules here.
+    // The dependencies can be found in the GIR file (search for <include> tags).
+    api project(':gio')
+}
+
+tasks.named('generateSources') {
+    girFile = 'My-Gir-File-0.0.gir'
+}
+```
+
+The `generateSources` task accepts an optional `urlPrefix` argument to set an URL that is prefixed to image links.
+
+When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add a `patch = new ...Patch()` argument to the `generateSources` task. (See the [Gtk](https://github.com/jwharm/java-gi/blob/main/modules/gtk/build.gradle) buildfile for an example).
+
+If you encounter any problems or errors, check the generated Java source code in the `java-gi/modules/{modulename}/build/generated/sources/java-gi` directory for issues. 

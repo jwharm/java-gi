@@ -1,6 +1,6 @@
 # Welcome to Java-GI
 
-Java-GI generates Java bindings for native libraries like Gtk, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer using GObject-Introspection data. The bindings use the Panama Foreign Function & Memory API (JEP-434) to directly access native resources from inside the JVM.
+Java-GI generates Java bindings for native libraries including Gtk, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer using GObject-Introspection data. The bindings use the Panama Foreign Function & Memory API (JEP-442) to directly access native resources from inside the JVM.
 
 ![Screenshot of Java-GI code with the Browser example](img/browser-screenshot.png)
 
@@ -18,22 +18,23 @@ Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.7.2 has been tested with the following libraries:
+Java-GI version 0.7.2 works with OpenJDK 20, and 0.8.0 with OpenJDK 21. They have been built with the following library versions:
 
-| Library       | Version |
-|---------------|---------|
-| GLib          | 2.76    |
-| GTK           | 4.10    |
-| LibAdwaita    | 1.3     |
-| GStreamer     | 1.20    |
-| GtkSourceview | 5.9     |
-| WebkitGtk     | 2.41    |
+| Library       | Java-GI 0.7.x | Java-GI 0.8.x |
+|---------------|---------------|---------------|
+| OpenJDK       | 20            | 21            |
+| GLib          | 2.76          | 2.78          |
+| GTK           | 4.10          | 4.12          |
+| LibAdwaita    | 1.3           | 1.4           |
+| GStreamer     | 1.20          | 1.22          |
+| GtkSourceview | 5.9           | 5.10          |
+| WebkitGtk     | 2.41          | 2.42          |
 
-For these libraries, pre-built Java bindings are available from [Maven Central](https://central.sonatype.com/search?namespace=io.github.jwharm.javagi).
+Java bindings for there libraries are available from [Maven Central](https://central.sonatype.com/search?namespace=io.github.jwharm.javagi).
 
 ## API documentation
 
-Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI, the complete Javadoc pages are available [online](https://jwharm.github.io/java-gi/javadoc).
+Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI 0.8.0, [the Javadoc is available here](https://jwharm.github.io/java-gi/javadoc).
 
 JAR files with the Javadoc and source code, to use offline in your IDE, are available from Maven Central.
 

@@ -26,10 +26,12 @@ public class HelloWindow extends ApplicationWindow {
 
 In the above class, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file.
 
-Because the registration of composite template classes uses reflection, you must add the following line to your `module-info.java` file:
+Because the registration of composite template classes uses reflection, you must add the following `exports` statement to your `module-info.java` file:
 
 ```
-exports [package name] to org.gnome.glib,org.gnome.gtk;
+module my.module.name {
+    exports my.package.name to org.gnome.gobject,org.gnome.gtk;
+}
 ```
 
 A complete example template-application can be found [here](https://github.com/jwharm/java-gi-examples/tree/main/HelloTemplate).

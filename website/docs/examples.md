@@ -1,6 +1,6 @@
 # Example applications
 
-A set of example applications is available on the [java-gi-examples GitHub repository](https://github.com/jwharm/java-gi-examples). To run an example, install Java 20 and Gradle, clone the Git repository:
+A set of example applications is available on the [java-gi-examples GitHub repository](https://github.com/jwharm/java-gi-examples). To run an example, install Java 21 and Gradle 8.3 (or newer), and clone the Git repository:
 
 ```
 git clone https://github.com/jwharm/java-gi-examples
@@ -13,12 +13,4 @@ cd HelloWorld
 gradle run
 ```
 
-If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument in the `gradle.build` file:
-
-```
-tasks.withType(JavaExec) {
-    jvmArgs += "--enable-preview"
-    jvmArgs += "--enable-native-access=ALL-UNNAMED"
-    jvmArgs += "-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu"
-}
-```
+If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument in the `gradle.build` file. By default, it contains the system library folders of the common (RedHat/Fedora, Arch and Debian/Ubuntu) Linux distributions. Read [here](usage.md) for instructions about other distributions and operating systems.

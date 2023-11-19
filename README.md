@@ -1,15 +1,16 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 434, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.7.2 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 44:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.8.0 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
 
-| Library       | Version |
-|---------------|---------|
-| GLib          | 2.76    |
-| GTK           | 4.10    |
-| LibAdwaita    | 1.3     |
-| GStreamer     | 1.20    |
-| GtkSourceview | 5.9     |
-| WebkitGtk     | 2.41    |
+| Library       | Java-GI 0.7.x | Java-GI 0.8.x |
+|---------------|---------------|---------------|
+| OpenJDK       | 20            | 21            |
+| GLib          | 2.76          | 2.78          |
+| GTK           | 4.10          | 4.12          |
+| LibAdwaita    | 1.3           | 1.4           |
+| GStreamer     | 1.20          | 1.22          |
+| GtkSourceview | 5.9           | 5.10          |
+| WebkitGtk     | 2.41          | 2.42          |
 
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
@@ -17,7 +18,7 @@ Please note that Java-GI is still under active development. The bindings should 
 
 ## Quickstart
 
-- To use Java-GI in your app, add the dependency to your `gradle.build` or `pom.xml` as described on [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 20, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
+- To use Java-GI in your app, add the dependency to your `gradle.build` or `pom.xml` as described [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 21, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
 - Write, compile and run a GTK application:
 
@@ -45,12 +46,12 @@ public class HelloWorld {
         window.setDefaultSize(300, 200);
 
         var box = Box.builder()
-                .orientation(Orientation.VERTICAL)
-                .halign(Align.CENTER)
-                .valign(Align.CENTER)
+                .setOrientation(Orientation.VERTICAL)
+                .setHalign(Align.CENTER)
+                .setValign(Align.CENTER)
                 .build();
 
-        var button = Button.newWithLabel("Hello world!");
+        var button = Button.withLabel("Hello world!");
         button.onClicked(window::close);
 
         box.append(button);
@@ -71,16 +72,6 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 | ![Browser screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
 | [Web Browser](https://github.com/jwharm/java-gi-examples/tree/main/Browser)                     | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
-
-## Roadmap
-
-Features planned for release 0.8.0:
-
-* Upgrade to GNOME 45
-* Upgrade to OpenJDK 21 (JEP 442)
-* Automatic cleanup of memory allocated for callback functions
-* Slightly improved HarfBuzz bindings
-* For custom properties, the property name will be automatically inferred from the getter/setter method name
 
 ## Current features
 
@@ -132,20 +123,20 @@ Most classes have one or more constructors. However, constructors in GTK are oft
 var button1 = new Button();
 
 // gtk_button_new_with_label
-var button2 = Button.newWithLabel("Open...");
+var button2 = Button.withLabel("Open...");
 
 // gtk_button_new_from_icon_name
-var button3 = Button.newFromIconName("document-open");
+var button3 = Button.fromIconName("document-open");
 ```
 
-Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct that you can use. You can either allocate an empty struct (`var color = RGBA.allocate();`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(0.9f, 0.1f, 0.9f, 1.0f);`
+Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct in an [Arena](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Arena.html) of your choice. You can either allocate an empty struct (`var color = RGBA.allocate(arena);`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(arena, 0.9f, 0.1f, 0.9f, 1.0f);`
 
 ### Signals, callbacks and closures
 
 Signals are mapped to type-safe methods and objects in Java. (Detailed signals like `notify` have an extra `String` parameter.) A signal can be connected to a lambda expression or method reference:
 
 ```java
-var button = Button.newWithLabel("Close");
+var button = Button.withLabel("Close");
 button.onClicked(window::close);
 ```
 
@@ -236,7 +227,7 @@ Nullability of parameters (as defined in the GObject-introspection attributes) i
 Variadic functions (varargs) are supported too:
 
 ```java
-Dialog d = Dialog.newWithButtons(
+Dialog d = Dialog.withButtons(
         "Test dialog",
         window,
         DialogFlags.MODAL,
@@ -255,7 +246,7 @@ Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offe
 File file = ...
 Out<byte[]> contents = new Out<byte[]>();
 file.loadContents(null, contents, null));
-System.out.printf("Read %d bytes\n", contents.get().length);
+System.out.printf("Read %d bytes%n", contents.get().length);
 ```
 
 ### Builder pattern
@@ -264,10 +255,10 @@ You can construct an object with properties using a Builder pattern. In the "Hel
 
 ```java
 var window = ApplicationWindow.builder()
-    .application(this)
-    .title("Window")
-    .defaultWidth(300)
-    .defaultHeight(200)
+    .setApplication(this)
+    .setTitle("Window")
+    .setDefaultWidth(300)
+    .setDefaultHeight(200)
     .build();
 ```
 
@@ -298,5 +289,5 @@ To build Java-GI for yourself, make changes, or use Java-GI to generate bindings
 The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
 
 - Java does not distinguish between signed and unsigned data types. Be extra careful when native code returns, for example, a `guint`.
-- There are still a few memory leaks.
-- Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). These aren't supported yet.
+- Java-GI makes heavy use of [Cleaners](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ref/Cleaner.html) to free memory or decrease an object's refcount. Cleaners are triggered during garbage collection of a Java instance. However, Java doesn't guarantee when, and if, the GC will run, and what it will clean, leading to memory leaks.
+- Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). Marshalling these arrays from and to Java `String[][]` values isn't supported yet.
