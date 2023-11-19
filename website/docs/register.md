@@ -69,20 +69,9 @@ When you override virtual methods from parent GObject classes (or implemented in
 
 ### Chaining up
 
-From inside the method body of an overridden method, you cannot call `super.method()` to "chain up" to a parent (native GObject) virtual method. Because virtual method invocations call the function pointer that is installed in the GObject typeclass, "chaining up" requires a lookup of the typeclass of the parent type first. Java-GI will do this when you call the `asParent()` method that is available on all GObject classes. So instead of `super.method()`, call `asParent().method()` to "chain up". This is similar to [the `parent_class` pointer in native GObject code](https://developer-old.gnome.org/gobject/stable/howto-gobject-chainup.html).
+From inside the method body of an overridden method that is also available as a regular instance method, you cannot call `super.method()` to "chain up" to a parent (native GObject) virtual method, because Java-GI would invoke the instance method. The instance method would in many cases defer to the virtual function pointer of the derived class, resulting in an endless loop. To work around this problem, instead of `super`, call the `asParent()` method that is available on all GObject classes. So instead of `super.method()`, call `asParent().method()` to "chain up".
 
-For example:
-
-```java
-// Override the GObject.finalize_() virtual method
-@Override
-public void finalize_() {
-    ... do cleanup work here ...
-    
-    // Chain up:
-    asParent().finalize_();
-}
-```
+When a virtual method is not available as a regular instance method, you can safely use `super.method()` to "chain up". These virtual methods are easily recognizable, because they have `protected` visibility.
 
 ## Properties
 
