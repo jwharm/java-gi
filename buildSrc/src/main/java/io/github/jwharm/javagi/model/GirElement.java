@@ -74,6 +74,10 @@ public abstract class GirElement {
         previouslyCreated = this;
     }
 
+    public Type getType() {
+        return this.type;
+    }
+
     public Namespace getNamespace() {
         if (this instanceof Repository r) {
             return r.namespace;

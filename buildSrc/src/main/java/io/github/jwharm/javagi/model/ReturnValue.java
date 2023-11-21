@@ -27,6 +27,7 @@ import io.github.jwharm.javagi.generator.SourceWriter;
 public class ReturnValue extends Parameter {
 
     public boolean returnsFloatingReference;
+    public Type overrideReturnType;
     public String overrideReturnValue;
 
     public ReturnValue(GirElement parent, String transferOwnership, String nullable, String scope) {
@@ -34,6 +35,7 @@ public class ReturnValue extends Parameter {
                 null, null, null, null, null, null, scope);
 
         returnsFloatingReference = false;
+        overrideReturnType = null;
         overrideReturnValue = null;
     }
 
@@ -85,16 +87,11 @@ public class ReturnValue extends Parameter {
      * @throws IOException Thrown when an error occurs while writing
      */
     public void generateReturnStatement(SourceWriter writer) throws IOException {
+        Type type = overrideReturnType == null ? this.type : overrideReturnType;
         if (type != null && type.isVoid()) {
             return;
         }
         
-        // Return value hard-coded in PatchSet?
-        if (overrideReturnValue != null) {
-            writer.write("return " + overrideReturnValue + ";\n");
-            return;
-        }
-
         // When transfer-ownership="none", we must take a reference
         if (isGObject() && "none".equals(transferOwnership) && (! parent.name.equals("ref"))) {
 
@@ -141,5 +138,22 @@ public class ReturnValue extends Parameter {
             marshalNativeToJava(writer, "_result", false);
             writer.write(";\n");
         }
+    }
+
+    @Override
+    public Type getType() {
+        return overrideReturnType != null ? overrideReturnType : super.getType();
+    }
+
+    public boolean isVoid() {
+        if (overrideReturnType != null)
+            return (overrideReturnType.isVoid());
+        return (type != null && type.isVoid());
+    }
+
+    public String getCarrierType() {
+        if (overrideReturnType != null)
+            return Conversions.getCarrierType(overrideReturnType);
+        return Conversions.getCarrierType(type);
     }
 }

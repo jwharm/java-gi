@@ -16,8 +16,6 @@ public class GioPatch implements Patch {
         renameMethod(repo, "BufferedInputStream", "read_byte", "read_int");
         renameMethod(repo, "IOModule", "load", "load_module");
 
-        setReturnType(repo, "ActionGroup", "activate_action", "gboolean", "gboolean", "true", "always %TRUE");
-
         // Override of static method
         removeVirtualMethod(repo, "SocketControlMessage", "get_type");
 

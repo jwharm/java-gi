@@ -91,7 +91,7 @@ public class Method extends GirElement implements CallableType {
             if (this instanceof Constructor) {
                 writer.write("MemorySegment");
             } else {
-                getReturnValue().writeType(writer, true);
+                getReturnValueOverride().writeType(writer, true);
             }
 
             // Method name
@@ -168,6 +168,8 @@ public class Method extends GirElement implements CallableType {
             return;
         }
 
+        ReturnValue returnValue = getReturnValueOverride();
+
         writer.write("\n");
         
         // Documentation
@@ -193,11 +195,6 @@ public class Method extends GirElement implements CallableType {
         // Check for unsupported platforms
         generatePlatformCheck(writer);
 
-        // FunctionDescriptor of the native function signature
-        writer.write("FunctionDescriptor _fdesc = ");
-        boolean varargs = generateFunctionDescriptor(writer);
-        writer.write(";\n");
-
         // Generate try-with-resources?
         boolean hasScope = allocatesMemory();
         if (hasScope) {
@@ -216,8 +213,8 @@ public class Method extends GirElement implements CallableType {
         }
         
         // Variable declaration for return value
-        String carrierType = Conversions.getCarrierType(getReturnValue().type);
-        if (! (returnValue.type != null && returnValue.type.isVoid())) {
+        String carrierType = returnValue.getCarrierType();
+        if (! returnValue.isVoid()) {
             writer.write(carrierType + " _result;\n");
         }
 
@@ -239,13 +236,18 @@ public class Method extends GirElement implements CallableType {
             writer.increaseIndent();
         }
 
+        // FunctionDescriptor of the native function signature
+        writer.write("FunctionDescriptor _fdesc = ");
+        boolean varargs = generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
         // Log the method call
         log(cIdentifier, writer);
 
         // Generate the return type
-        if (! (returnValue.type != null && returnValue.type.isVoid())) {
+        if (! (getReturnValue().type != null && getReturnValue().type.isVoid())) {
             writer.write("_result = (");
-            writer.write(carrierType);
+            writer.write(Conversions.getCarrierType(getReturnValue().type));
             writer.write(") ");
         }
 
@@ -257,6 +259,11 @@ public class Method extends GirElement implements CallableType {
             parameters.marshalJavaToNative(writer, throws_);
         }
         writer.write(");\n");
+
+        // Set default return value (if applicable)
+        if (getReturnValue().overrideReturnValue != null) {
+            writer.write("_result = " + getReturnValue().overrideReturnValue + ";\n");
+        }
 
         // End of if/else block for virtual/named method call
         if (linkedVirtualMethod != null) {
@@ -327,6 +334,16 @@ public class Method extends GirElement implements CallableType {
 
     @Override
     public ReturnValue getReturnValue() {
+        return returnValue;
+    }
+
+    private ReturnValue getReturnValueOverride() {
+        if (linkedVirtualMethod != null) {
+            if (returnValue.getType() != null && returnValue.isVoid()
+                    && linkedVirtualMethod.returnValue.getType() != null) {
+                return linkedVirtualMethod.returnValue;
+            }
+        }
         return returnValue;
     }
 

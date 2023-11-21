@@ -7,6 +7,6 @@ public class GstVideoPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {
-        setReturnType(repo, "VideoOverlay", "set_render_rectangle", "none", "void", null, null);
+        setReturnType(findVirtualMethod(repo, "VideoOverlay", "set_render_rectangle"), "gboolean", "gboolean", "1", null);
     }
 }

@@ -80,6 +80,7 @@ public class Variable extends GirElement {
     }
 
     private String getType(boolean writeAnnotations) {
+        Type type = getType();
 
         if (type != null && type.isActuallyAnArray())
             return getAnnotations(type, writeAnnotations) + getType(type) + "[]";
@@ -205,6 +206,8 @@ public class Variable extends GirElement {
     }
 
     private String marshalNativeToJava(String identifier, boolean upcall) {
+        Type type = getType();
+
         if (type != null && type.cType != null && type.cType.equals("gfloat**"))
             return "null /* unsupported */";
 

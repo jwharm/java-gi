@@ -7,6 +7,6 @@ public class SoupPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {
-        setReturnType(repo, "AuthDomain", "challenge", "none", "void", null, null);
+        setReturnType(findMethod(repo, "AuthDomain", "challenge"), "utf8", "char*", "null", "Always {@code null}");
     }
 }

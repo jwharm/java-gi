@@ -76,14 +76,10 @@ public class VirtualMethod extends Method {
             writer.write("MemorySegment _gerror = _arena.allocate(ValueLayout.ADDRESS);\n");
         }
 
-        // Function descriptor
-        writer.write("FunctionDescriptor _fdesc = ");
-        generateFunctionDescriptor(writer);
-        writer.write(";\n");
-
         // Variable declaration for return value
-        String carrierType = Conversions.getCarrierType(getReturnValue().type);
-        if (! (returnValue.type != null && returnValue.type.isVoid())) {
+        // Variable declaration for return value
+        String carrierType = returnValue.getCarrierType();
+        if (! returnValue.isVoid()) {
             writer.write(carrierType + " _result;\n");
         }
 
@@ -127,6 +123,13 @@ public class VirtualMethod extends Method {
     public void generateInvocation(SourceWriter writer) throws IOException {
         Record classStruct = null;
         String className = null;
+
+        // FunctionDescriptor of the native function signature
+        writer.write("FunctionDescriptor _fdesc = ");
+        boolean varargs = generateFunctionDescriptor(writer);
+        writer.write(";\n");
+
+        // Lookup the function table
         if (parent instanceof Class c) {
             classStruct = c.classStruct;
             className = c.javaName;
@@ -137,6 +140,7 @@ public class VirtualMethod extends Method {
         if (classStruct == null) {
             throw new IOException("Cannot find typestruct for " + parent.name);
         }
+
         writer.write("MemorySegment _func = Overrides.lookupVirtualMethodParent(handle(), " + classStruct.javaName + ".getMemoryLayout(), \"" + name + "\"");
         if (parent instanceof Interface) {
             writer.write(", " + className + ".getType()");
@@ -167,5 +171,10 @@ public class VirtualMethod extends Method {
             parameters.marshalJavaToNative(writer, throws_);
         }
         writer.write(");\n");
+
+        // Set default return value (if applicable)
+        if (returnValue.overrideReturnValue != null) {
+            writer.write("_result = " + returnValue.overrideReturnValue + ";\n");
+        }
     }
 }
