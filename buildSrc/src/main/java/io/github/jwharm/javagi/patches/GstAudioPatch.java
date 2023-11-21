@@ -9,8 +9,8 @@ public class GstAudioPatch implements Patch {
 
     @Override
     public void patch(Repository repo) {
-        // Override with different return type
-        setReturnType(repo, "AudioSink", "stop", "gboolean", "gboolean", "true", "always %TRUE");
+        // Override with different return type (BaseSink.stop() returns boolean)
+        setReturnType(findVirtualMethod(repo, "AudioSink", "stop"), "gboolean", "gboolean", "1", "always %TRUE");
         // A GstFraction cannot automatically be put into a GValue
         removeProperty(repo, "AudioAggregator", "output-buffer-duration-fraction");
 

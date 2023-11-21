@@ -70,17 +70,12 @@ public interface Patch extends Serializable {
             System.out.println("Did not remove " + type + ": Not found");
     }
 
-    default void setReturnType(Repository repo, String type, String name, String typeName, String typeCType, String defaultReturnValue, String doc) {
-        setReturnType(findVirtualMethod(repo, type, name), typeName, typeCType, defaultReturnValue, doc);
-        setReturnType(findMethod(repo, type, name), typeName, typeCType, defaultReturnValue, doc);
-    }
-
-    private void setReturnType(Method m, String typeName, String typeCType, String defaultReturnValue, String doc) {
+    default void setReturnType(Method m, String typeName, String typeCType, String defaultReturnValue, String doc) {
         if (m == null) {
             return;
         }
         ReturnValue rv = m.returnValue;
-        rv.type = new Type(rv, typeName, typeCType);
+        rv.overrideReturnType = new Type(rv, typeName, typeCType);
         rv.overrideReturnValue = defaultReturnValue;
         if (doc != null) {
             rv.doc = new Doc(rv, "1");
