@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.8.0 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.8.1 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
 
 | Library       | Java-GI 0.7.x | Java-GI 0.8.x |
 |---------------|---------------|---------------|
