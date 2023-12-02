@@ -81,7 +81,7 @@ Build and run the application with the following parameters:
 
 - To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
 
-- If you encounter an error about a missing library, override the java library path with `"-Djava.library.path=/usr/lib/..."`. More information about the JVM arguments is available [here](examples.md).
+- If you encounter an error about a missing library, override the java library path with `"-Djava.library.path=/usr/lib/..."`.
 
 See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
