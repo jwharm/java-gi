@@ -4,6 +4,10 @@ plugins {
 
 rootProject.name = 'java-gi'
 
+include 'glib'
+include 'gobject'
+
+/*
 include 'adw'
 include 'gdk'
 include 'gdkpixbuf'
@@ -27,6 +31,7 @@ include 'pangocairo'
 include 'soup'
 include 'webkit'
 include 'webkitwebprocessextension'
+*/
 
 // All child projects are located in the modules/ directory
 rootProject.children.each {project ->

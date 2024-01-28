@@ -31,7 +31,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.8.1'
+version = '0.9.0-ALPHA'
 
 java {
     if (! System.getenv('CI')) {
@@ -49,7 +49,7 @@ tasks.register('generateSources', GenerateSources) {
     inputDirectory = new File(rootDir, girFilesLocation)
 
     // Write generated sources to build/generated/sources/java-gi
-    outputDirectory = layout.buildDirectory.dir("generated/sources/java-gi")
+    outputDirectory = layout.buildDirectory.dir('generated/sources/java-gi')
 }
 
 // Add the generated sources to the main sourceSet

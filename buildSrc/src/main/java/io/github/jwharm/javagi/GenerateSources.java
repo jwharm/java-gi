@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,22 +19,30 @@
 
 package io.github.jwharm.javagi;
 
-import io.github.jwharm.javagi.generator.*;
-import io.github.jwharm.javagi.model.Repository;
-import io.github.jwharm.javagi.model.Module;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.TypeSpec;
+import io.github.jwharm.javagi.configuration.LicenseNotice;
+import io.github.jwharm.javagi.generators.ClassGenerator;
+import io.github.jwharm.javagi.generators.NamespaceGenerator;
+import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Module;
+import io.github.jwharm.javagi.util.Platform;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+
+import static io.github.jwharm.javagi.util.FileUtils.findFile;
 
 /**
  * GenerateSources is a Gradle task that will parse a GIR file (and all included GIR files)
@@ -49,79 +57,69 @@ public abstract class GenerateSources extends DefaultTask {
     abstract DirectoryProperty getOutputDirectory();
 
     @Input
-    abstract Property<String> getGirFile();
+    abstract Property<String> getModuleName();
 
     @Input @Optional
     abstract Property<String> getUrlPrefix();
 
-    @Input @Optional
-    abstract Property<Patch> getPatch();
-
     @TaskAction
     void execute() {
+        Module module = new Module();
+        Directory basePath = getInputDirectory().get();
+        String moduleName = getModuleName().get();
+
         try {
-            Module linux = parse(Platform.LINUX, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-            Module windows = parse(Platform.WINDOWS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-            Module macos = parse(Platform.MACOS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-
-            Module module = new Merge().merge(linux, windows, macos);
-
-            for (Repository repository : module.repositories.values()) {
-                if (repository.generate) {
-                    Path basePath = getOutputDirectory().get().file(repository.namespace.pathName).getAsFile().toPath();
-                    repository.generate(basePath);
-                    repository.generateModuleInfo(getOutputDirectory().get().getAsFile().toPath(), getPackages());
-                }
-            }
+            parse(module, basePath, moduleName);
+            generate(module, moduleName, getOutputDirectory().get());
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
     }
 
-    private static Module parse(Platform platform, Directory sourceDirectory, String girFile, String urlPrefix, Patch patch)
-            throws SAXException, ParserConfigurationException {
-        Module module = new Module(platform);
-        Directory girPath = sourceDirectory.dir(platform.name().toLowerCase());
-        if (! girPath.getAsFile().exists()) {
-            System.out.println("Not found: " + girPath);
-            return null;
+    private static void parse(Module module, Directory baseFolder, String moduleName) throws XMLStreamException {
+        System.out.println("Parse " + moduleName);
+        GirParser parser = GirParser.getInstance();
+        Repository repository = null;
+        for (Integer platform : Platform.toList(Platform.ALL)) {
+            try {
+                File girFile = findFile(baseFolder.dir(Platform.toString(platform)).getAsFile(), moduleName);
+                repository = parser.parse(girFile, platform, repository);
+                module.add(moduleName, repository);
+            } catch (FileNotFoundException ignored) {
+            }
         }
-        GirParser parser = new GirParser(girPath.getAsFile().toPath(), module);
 
-        // Parse the GI files into Repository objects
+        if (repository == null) return;
+
+        // Recursively parse the included repositories
+        for (Include dep : repository.includes())
+            if (!module.contains(dep.name()))
+                parse(module, baseFolder, dep.name());
+    }
+
+    private static void generate(Module module, String moduleName, Directory outputDirectory) {
+        Namespace ns = module.lookupNamespace(moduleName);
+        var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
         try {
-            // Parse the file
-            Repository r = parser.parse(girFile);
-
-            // Check if this one has already been parsed
-            if (module.repositories.containsKey(r.namespace.name)) {
-                r = module.repositories.get(r.namespace.name);
-            } else {
-                // Add the repository to the module
-                module.repositories.put(r.namespace.name, r);
-            }
-
-            r.urlPrefix = urlPrefix;
-
-            // Flag unsupported va_list methods so they will not be generated
-            module.flagVaListFunctions();
-
-            // Link the type references to the GIR type definition across the GI repositories
-            module.link();
-
-            // Apply patch
-            if (patch != null) {
-                patch.patch(r);
-            }
-
-        } catch (IOException ignored) {
-            // Gir file not found for this platform: This will generate code with UnsupportedPlatformExceptions
+            generate(typeSpec, ns.packageName(), outputDirectory);
+        } catch (Exception _) {
         }
+        for (var rt : ns.classes()) {
+            try {
+                typeSpec = new ClassGenerator(rt).generate();
+                generate(typeSpec, ns.packageName(), outputDirectory);
+            } catch (Exception _) {
+            }
+        }
+    }
 
-        return module;
+    private static void generate(TypeSpec typeSpec, String packageName, Directory outputDirectory)
+            throws IOException {
+        JavaFile.builder(packageName, typeSpec)
+                .addFileComment(LicenseNotice.NOTICE)
+                .indent("    ")
+                .build()
+                .writeTo(outputDirectory.getAsFile());
     }
 
     /**
