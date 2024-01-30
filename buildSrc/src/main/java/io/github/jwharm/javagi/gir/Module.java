@@ -26,32 +26,36 @@ import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 
 public class Module implements Serializable {
 
-    private final List<Repository> repositories = new ArrayList<>();
-    private final Set<String> names = new HashSet<>();
+    private final Map<String, Repository> repositories = new HashMap<>();
+    private final String name;
 
-    public List<Repository> repositories() {
-        return repositories;
-    }
-
-    public boolean contains(String name) {
-        return names.contains(name);
-    }
-
-    public void add(String name, Repository repo) {
-        repositories.add(repo);
-        names.add(name);
+    public Module(String name, Repository repo) {
+        this.name = name;
+        repositories.put(name, repo);
         repo.setModule(this);
     }
 
+    public String name() {
+        return name;
+    }
+
+    public boolean contains(String name) {
+        return repositories.containsKey(name);
+    }
+
+    public void add(Module other) {
+        repositories.putAll(other.repositories);
+    }
+
     public Namespace lookupNamespace(String name) {
-        for (Repository repo : repositories)
+        for (Repository repo : repositories.values())
             for (Namespace ns : repo.namespaces())
                 if (name.equals(ns.name())) return ns;
         throw new NoSuchElementException("No namespace with name " + name);
     }
 
     public GirElement lookupCIdentifier(String cIdentifier) {
-        for (Repository repo : repositories) {
+        for (Repository repo : repositories.values()) {
             for (Namespace ns : repo.namespaces()) {
                 for (AbstractCallable ct : filter(ns.children(), AbstractCallable.class))
                     if (cIdentifier.equals(ct.attr("c:identifier")))

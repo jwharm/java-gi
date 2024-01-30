@@ -6,7 +6,10 @@ dependencies {
     api project(':glib')
 }
 
-tasks.named('generateSources') {
+parseGir.configure {
     moduleName = 'GObject'
+}
+
+generateSources.configure {
     urlPrefix = 'https://docs.gtk.org/glib/'
 }

@@ -1,4 +1,5 @@
 import org.apache.tools.ant.taskdefs.condition.Os
+import io.github.jwharm.javagi.ParseGir
 import io.github.jwharm.javagi.GenerateSources
 
 /* Common build settings for Java-GI modules:
@@ -43,10 +44,25 @@ java {
     }
 }
 
-tasks.register('generateSources', GenerateSources) {
+def parseGir = tasks.register('parseGir', ParseGir);
+def generateSources = tasks.register('generateSources', GenerateSources)
+
+parseGir.configure {
     // Input directory should point to a clone of the GitHub gircore/gir-files
     // repository. The location is set in gradle.properties. Default is '../gir-files'
     inputDirectory = new File(rootDir, girFilesLocation)
+
+    includedModules = project.configurations.api.dependencies.collect {
+        it.dependencyProject.parseGir.outputFile.get()
+    }
+
+    // Where the gir model is cached
+    outputFile = layout.buildDirectory.file('gir.module')
+}
+
+generateSources.configure {
+    // Where the gir model is cached
+    inputFile = parseGir.flatMap { it.outputFile }
 
     // Write generated sources to build/generated/sources/java-gi
     outputDirectory = layout.buildDirectory.dir('generated/sources/java-gi')
