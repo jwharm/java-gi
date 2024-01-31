@@ -103,8 +103,11 @@ public final class Type extends AnyType implements TypeReference {
     public String toTypeTag() {
         String cType = cType();
         if (cType != null) {
-            int idx = cType.indexOf("*");
-            return (idx == -1) ? uncapitalize(cType) : uncapitalize(cType).substring(0, cType.indexOf("*"));
+            int start = cType.lastIndexOf(" ");
+            int end = cType.indexOf("*");
+            if (start == -1) start = 0; else start++;
+            if (end == -1) end = cType.length();
+            return uncapitalize(cType.substring(start, end));
         }
         RegisteredType target = get();
         return target == null ? null : uncapitalize(target.namespace().name() + target.name());

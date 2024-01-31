@@ -44,6 +44,7 @@ public class NamespaceGenerator {
                         ns.name())
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addStaticBlock(loadLibraries())
+                .addMethod(ensureInitialized())
                 .addMethod(registerTypes());
 
         for (var constant : ns.constants()) {
@@ -71,18 +72,24 @@ public class NamespaceGenerator {
 
             // Multiple library names (comma-separated)
             if (library.contains(",")) {
-                block.beginControlFlow("case $S -> ", Platform.toStringLiterals(platform));
+                block.beginControlFlow("case $S -> ", Platform.toString(platform));
                 for (String libName : library.split(","))
                     block.addStatement("$T.loadLibrary($S)", ClassNames.LIB_LOAD, libName);
                 block.endControlFlow();
             } else {
                 block.addStatement("case $S -> $T.loadLibrary($S)",
-                        Platform.toStringLiterals(platform), ClassNames.LIB_LOAD, library);
+                        Platform.toString(platform), ClassNames.LIB_LOAD, library);
             }
         }
 
         return block.endControlFlow()
                 .addStatement("registerTypes()")
+                .build();
+    }
+
+    private MethodSpec ensureInitialized() {
+        return MethodSpec.methodBuilder("javagi$ensureInitialized")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .build();
     }
 

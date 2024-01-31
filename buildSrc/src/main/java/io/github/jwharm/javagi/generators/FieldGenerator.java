@@ -120,7 +120,7 @@ public class FieldGenerator extends TypedValueGenerator {
                     stmt.arguments());
         else
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                    + ".set(handle(), " + stmt.format() + "));\n", stmt.arguments());
+                    + ".set(handle(), " + stmt.format() + ");\n", stmt.arguments());
         return spec.build();
     }
 

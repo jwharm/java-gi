@@ -24,6 +24,7 @@ import com.squareup.javapoet.ClassName;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
+import static java.util.function.Predicate.not;
 
 import java.util.List;
 import java.util.Map;
@@ -42,9 +43,14 @@ public final class Record extends RegisteredType
 
     @Override
     public Record mergeWith(RegisteredType rt) {
-        if (rt instanceof Record other)
-            return new Record(attributes(), union(children(), other.children()),
-                    platforms() | other.platforms());
+        if (rt instanceof Record other) {
+            // If this record has different fields on different platforms, remove all
+            // fields to prevent generating field accessors that don't work across all platforms
+            if (!this.fields().equals(other.fields()))
+                return new Record(attributes(), children().stream().filter(not(Field.class::isInstance)).toList(),
+                        platforms() | other.platforms());
+            return new Record(attributes(), children(), platforms() | other.platforms());
+        }
         return this;
     }
 

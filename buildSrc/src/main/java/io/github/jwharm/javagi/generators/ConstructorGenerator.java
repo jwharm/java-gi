@@ -25,14 +25,17 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static java.util.function.Predicate.not;
 
 public class ConstructorGenerator {
 
@@ -77,7 +80,7 @@ public class ConstructorGenerator {
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Invoke private construction method
-        builder.addStatement("super(constructNew())");
+        builder.addStatement("super(constructNew($L))", parameterNames());
 
         // Cache new instance
         if (parent instanceof Class || parent instanceof Interface)
@@ -113,13 +116,7 @@ public class ConstructorGenerator {
             builder.addStatement("$T.checkSupportedPlatform($L)",
                     ClassNames.PLATFORM, Platform.toStringLiterals(ctor.platforms()));
 
-        String params = "";
-        if (ctor.parameters() != null)
-            params = ctor.parameters().parameters().stream()
-                    .map(p -> new TypedValueGenerator(p).getName())
-                    .collect(Collectors.joining(", "));
-
-        builder.addStatement("var _result = $L($L)", privateMethodName, params);
+        builder.addStatement("var _result = $L($L)", privateMethodName, parameterNames());
 
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
@@ -133,7 +130,7 @@ public class ConstructorGenerator {
                     .endControlFlow()
                     .addStatement("return ($T) _object", parent.typeName());
         } else if (parent instanceof Record record) {
-            builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).format(), stmt.arguments())
+            builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).add(";\n").format(), stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
                     .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
             new RecordGenerator(record).setFreeFunc(builder, "_instance", parent.typeName());
@@ -144,5 +141,16 @@ public class ConstructorGenerator {
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
         return builder.build();
+    }
+
+    private String parameterNames() {
+        if (ctor.parameters() == null) return "";
+        return ctor.parameters().parameters().stream()
+                .filter(not(Parameter::isUserDataParameter))
+                .filter(not(Parameter::isDestroyNotifyParameter))
+                .filter(not(Parameter::isArrayLengthParameter))
+                .map(TypedValue::name)
+                .map(name -> "...".equals(name) ? "varargs" : Conversions.toJavaIdentifier(name))
+                .collect(Collectors.joining(", "));
     }
 }

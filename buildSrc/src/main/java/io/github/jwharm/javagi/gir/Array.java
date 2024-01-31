@@ -24,6 +24,7 @@ import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.util.Conversions;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 
 import java.util.List;
 import java.util.Map;
@@ -76,15 +77,16 @@ public final class Array extends AnyType {
         if (attr("fixed-size") != null) return attr("fixed-size");
         TypedValue length = length();
         if (length instanceof Parameter lp) {
+            String name = toJavaIdentifier(lp.name());
             if (upcall && lp.isOutParameter())
-                return "_" + lp.name() + "Out.get()";
+                return "_" + name + "Out.get()";
             if (lp.anyType() instanceof Type type) {
                 if (type.isPointer() || lp.isOutParameter())
-                    return lp.name() + ".get().intValue()";
+                    return name + ".get().intValue()";
                 if (type.get() instanceof Alias a && a.type().isPrimitive())
-                    return lp.name() + ".getValue()";
+                    return name + ".getValue()";
             }
-            return lp.name();
+            return name;
         } else if (length instanceof Field lf) {
             if (lf.anyType() instanceof Type type && (!type.isPointer()))
                 return "read" + Conversions.toCamelCase(lf.name(), true) + "()";

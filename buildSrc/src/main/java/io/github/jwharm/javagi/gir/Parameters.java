@@ -39,8 +39,7 @@ public final class Parameters extends GirElement {
     }
 
     Parameter getAtIndex(int index) {
-        if (index == -1) return null;
-        return parameters().stream().filter(other -> other.index() == index).findAny().orElse(null);
+        return index == -1 ? null : parameters().get(index);
     }
 
     @Override

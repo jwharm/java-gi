@@ -51,9 +51,9 @@ public class MemoryLayoutGenerator {
 
         boolean isUnion = rt instanceof Union || !unionList.isEmpty();
         PartialStatement fieldLayouts = generateFieldLayouts(fieldList, isUnion);
-        PartialStatement layout = PartialStatement.of("return $memoryLayout:T." + (isUnion ? "union" : "struct") + "Layout($Z")
+        PartialStatement layout = PartialStatement.of("return $memoryLayout:T." + (isUnion ? "union" : "struct") + "Layout(\n$>")
                 .add(fieldLayouts)
-                .add("$Z).withName(\"" + rt.cType() + "\");\n");
+                .add("$<\n).withName(\"" + rt.cType() + "\");\n");
 
         return MethodSpec.methodBuilder("getMemoryLayout")
                 .addJavadoc("The memory layout of the native struct.\n")
@@ -68,7 +68,7 @@ public class MemoryLayoutGenerator {
         PartialStatement stmt = PartialStatement.of(null, "memoryLayout", MemoryLayout.class);
         int size = 0;
         for (Field field : fieldList) {
-            if (size > 0) stmt.add(",$Z");
+            if (size > 0) stmt.add(",\n");
 
             // Get the byte size of the field. For example: int = 4 bytes, pointer = 8 bytes, char = 1 byte
             int s = field.getSize();
@@ -78,7 +78,7 @@ public class MemoryLayoutGenerator {
                 // If the previous field had a smaller byte size than this one, add padding (to a maximum of 8 bytes)
                 if (size % s % 8 > 0) {
                     int padding = (s - (size % s)) % 8;
-                    stmt.add("$memoryLayout:T.paddingLayout(" + padding + ")");
+                    stmt.add("$memoryLayout:T.paddingLayout(" + padding + "),\n");
                     size += padding;
                 }
             }
@@ -115,6 +115,11 @@ public class MemoryLayoutGenerator {
                 // Primitive types and aliases
                 if (type.isPrimitive() || (target instanceof Alias a && a.type().isPrimitive()))
                     yield PartialStatement.of("$valueLayout:T." + getValueLayout(type) + ".withName(\"" + f.name() + "\")",
+                            "valueLayout", ValueLayout.class);
+
+                // Opaque type (with unknown memory layout)
+                if (target instanceof Record rec && rec.isOpaque())
+                    yield PartialStatement.of("$valueLayout:T.ADDRESS.withName(\"" + f.name() + "\")",
                             "valueLayout", ValueLayout.class);
 
                 // For Proxy objects we recursively get the memory layout

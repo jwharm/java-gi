@@ -27,11 +27,8 @@ import java.util.Map;
 
 public final class Field extends TypedValue {
 
-    private final int index;
-
-    public Field(Map<String, String> attributes, List<GirElement> children, int index) {
+    public Field(Map<String, String> attributes, List<GirElement> children) {
         super(attributes, children);
-        this.index = index;
         if ((callback() == null) == (anyType() == null))
             throw new IllegalArgumentException("Either Callback | AnyType must be set");
     }
@@ -39,10 +36,6 @@ public final class Field extends TypedValue {
     @Override
     public RegisteredType parent() {
         return (RegisteredType) super.parent();
-    }
-
-    public int index() {
-        return index;
     }
 
     @Override

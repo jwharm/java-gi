@@ -60,10 +60,14 @@ public class Module implements Serializable {
                 for (AbstractCallable ct : filter(ns.children(), AbstractCallable.class))
                     if (cIdentifier.equals(ct.attr("c:identifier")))
                         return ct;
-                for (RegisteredType rt : filter(ns.children(), RegisteredType.class))
+                for (RegisteredType rt : filter(ns.children(), RegisteredType.class)) {
                     for (AbstractCallable ct : filter(rt.children(), AbstractCallable.class))
                         if (cIdentifier.equals(ct.attr("c:identifier")))
                             return ct;
+                    for (Member m : filter(rt.children(), Member.class))
+                        if (cIdentifier.equals(m.attr("c:identifier")))
+                            return m;
+                }
             }
         }
         return null;

@@ -42,6 +42,7 @@ public class Conversions {
      * Convert "identifier_name" to "package.name.IdentifierName"
      */
     public static ClassName toJavaQualifiedType(String typeName, Namespace ns) {
+        if (typeName == null) return null;
         if (typeName.contains(".")) {
             var rt = TypeReference.get(ns, typeName);
             return toJavaQualifiedType(rt.name(), rt.namespace());
@@ -58,6 +59,10 @@ public class Conversions {
             return toJavaSimpleType(rt.name(), rt.namespace());
         }
         return prefixDigits(replaceKnownType(replaceKeywords(toCamelCase(typeName, true)), ns));
+    }
+
+    public static String toJavaConstant(String name) {
+        return prefixDigits(name.toUpperCase());
     }
 
     // Convert a "type_name" or "type-name" to "typeName" or "TypeName".

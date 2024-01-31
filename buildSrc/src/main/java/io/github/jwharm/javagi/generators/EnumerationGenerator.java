@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static io.github.jwharm.javagi.util.Conversions.toJavaConstant;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
 
@@ -78,7 +79,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         }
         for (Member m : en.members().stream().filter(not(uniques::contains)).toList()) {
             try {
-                var spec = FieldSpec.builder(en.typeName(), m.name().toUpperCase(),
+                var spec = FieldSpec.builder(en.typeName(), toJavaConstant(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("of($L)", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
@@ -118,7 +119,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         for (Member m : filterDuplicateValues(en.members()))
             spec.addStatement("case $L -> $L", m.value(), m.name().toUpperCase());
         return spec.addStatement("default -> throw new IllegalStateException($S + value)", "Unexpected value: ")
-                .endControlFlow()
+                .endControlFlow("") // empty string to force an ;
                 .build();
     }
 

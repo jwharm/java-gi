@@ -104,7 +104,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .addParameter(boolean.class, "free")
                 .addStatement("$T array = new $T[(int) length]", ArrayTypeName.of(alias.typeName()), alias.typeName())
                 .addStatement("long byteSize = $T.$L.byteSize()", ValueLayout.class, layout)
-                .addStatement("$T segment = address.reinterpret(bytesSize * length)", MemorySegment.class)
+                .addStatement("$T segment = address.reinterpret(byteSize * length)", MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 
         if ("java.lang.String".equals(alias.type().javaType()))

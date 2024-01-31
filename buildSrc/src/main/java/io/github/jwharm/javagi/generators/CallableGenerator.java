@@ -69,7 +69,7 @@ public class CallableGenerator {
         } else {
             String layouts = valueLayouts.stream()
                     .map(s -> "$2T." + s)
-                    .collect(Collectors.joining(", ", "(", ")"));
+                    .collect(Collectors.joining(",$Z ", "(", ")"));
             builder.addStatement("$1T _fdesc = $1T.$3L" + layouts,
                     FunctionDescriptor.class, ValueLayout.class, isVoid ? "ofVoid" : "of");
         }
@@ -107,7 +107,7 @@ public class CallableGenerator {
             stmt.add("handle()");
 
         for (Parameter p : parameters.parameters()) {
-            if (!stmt.format().isEmpty()) stmt.add(",");
+            if (!stmt.format().isEmpty()) stmt.add(", ");
             stmt.add("$Z"); // emit newline
             var generator = new TypedValueGenerator(p);
 
@@ -124,7 +124,9 @@ public class CallableGenerator {
                         .findAny();
                 if (notify.isPresent()) {
                     String notifyName = Conversions.toJavaIdentifier(notify.get().name());
-                    stmt.add("_" + notifyName + "DestroyNotify.toCallback(" + notifyName + "Scope)");
+                    stmt.add("_" + notifyName + "DestroyNotify.toCallback(_" + notifyName + "Scope)");
+                } else {
+                    stmt.add("$memorySegment:T.NULL", "memorySegment", MemorySegment.class);
                 }
             }
 

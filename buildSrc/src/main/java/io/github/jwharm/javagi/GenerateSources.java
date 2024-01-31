@@ -81,23 +81,26 @@ public abstract class GenerateSources extends DefaultTask {
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
         try {
             generate(typeSpec, ns.packageName(), outputDirectory);
-        } catch (Exception _) {
+        } catch (Exception e) {
+            System.out.println("Exception generating namespace " + ns.name() + ": " + e);
         }
         for (var rt : ns.registeredTypes().values()) {
             try {
                 typeSpec = switch(rt) {
                     case Alias a -> new AliasGenerator(a).generate();
                     case Bitfield b -> new BitfieldGenerator(b).generate();
-                    case Boxed b -> null;
                     case Callback c -> new CallbackGenerator(c).generate();
                     case Class c -> new ClassGenerator(c).generate();
                     case Enumeration e -> new EnumerationGenerator(e).generate();
                     case Interface i -> new InterfaceGenerator(i).generate();
-                    case Record r -> new RecordGenerator(r).generate();
+                    case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
                     case Union u -> new UnionGenerator(u).generate();
+                    default -> null;
                 };
                 generate(typeSpec, ns.packageName(), outputDirectory);
-            } catch (Exception _) {
+            } catch (Exception e) {
+                System.out.println("Exception generating " + rt.name() + ": " + e);
+                e.printStackTrace();
             }
         }
     }

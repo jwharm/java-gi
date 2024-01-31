@@ -19,10 +19,8 @@
 
 package io.github.jwharm.javagi.gir;
 
-import io.github.jwharm.javagi.patches.HBRemoveTrailingT;
-import io.github.jwharm.javagi.patches.HBWindowsBitfields;
+import io.github.jwharm.javagi.patches.*;
 import io.github.jwharm.javagi.util.Patch;
-import io.github.jwharm.javagi.patches.GioWindowsFileDescriptorBased;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -43,7 +41,14 @@ public final class GirParser {
     private static final GirParser INSTANCE = new GirParser();
     private static final List<String> SKIP_LIST = List.of("c:include", "function-macro", "package");
     private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
-    private static final List<Patch> PATCHES = List.of(new GioWindowsFileDescriptorBased(), new HBWindowsBitfields(), new HBRemoveTrailingT());
+    private static final List<Patch> PATCHES = List.of(
+            new GLibConstants(),
+            new GLibVariantGetType(),
+            new GLibRemovePollFDArrays(),
+            new GioWindowsFileDescriptorBased(),
+            new HBWindowsBitfields(),
+            new HBRemoveTrailingT()
+    );
 
     // Prevent instantiation
     private GirParser() {
@@ -92,7 +97,7 @@ public final class GirParser {
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
             if (event.isStartElement())
-                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, -1);
+                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository);
         }
         throw new IllegalStateException("Invalid XML");
     }
@@ -118,7 +123,7 @@ public final class GirParser {
     }
 
     // Recursive method to parse an XML element and create a GIR tree node.
-    private GirElement parseElement(XMLEventReader eventReader, StartElement elem, int platform, GirElement existingNode, int index) throws XMLStreamException {
+    private GirElement parseElement(XMLEventReader eventReader, StartElement elem, int platform, GirElement existingNode) throws XMLStreamException {
         var elemName = qname(elem.getName());
         var children = new ArrayList<GirElement>();
         var attributes = attributes(elem);
@@ -130,11 +135,10 @@ public final class GirParser {
 
             if (event.isStartElement()) {
                 StartElement startElement = event.asStartElement();
-                if (List.of("field", "parameter").contains(qname(startElement.getName()))) index++;
                 GirElement existingChildNode = walkTree(startElement, existingNode);
 
                 // Create new child node
-                GirElement newNode = parseElement(eventReader, startElement, platform, existingChildNode, index);
+                GirElement newNode = parseElement(eventReader, startElement, platform, existingChildNode);
 
                 // Apply patches
                 for (Patch patch : PATCHES)
@@ -171,7 +175,7 @@ public final class GirParser {
             case "doc-deprecated" -> new DocDeprecated(contents.toString().trim());
             case "doc-version" -> new DocVersion(contents.toString().trim());
             case "enumeration" -> new Enumeration(attributes, children, platform);
-            case "field" -> new Field(attributes, children, index);
+            case "field" -> new Field(attributes, children);
             case "function" -> new Function(attributes, children, platform);
             case "function-macro" -> new FunctionMacro();
             case "implements" -> new Implements(attributes);
@@ -182,7 +186,7 @@ public final class GirParser {
             case "method" -> new Method(attributes, children, platform);
             case "namespace" -> new Namespace(attributes, children, platform);
             case "package" -> new Package(attributes);
-            case "parameter" -> new Parameter(attributes, children, index);
+            case "parameter" -> new Parameter(attributes, children);
             case "parameters" -> new Parameters(children);
             case "prerequisite" -> new Prerequisite(attributes);
             case "property" -> new Property(attributes, children, platform);

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static io.github.jwharm.javagi.util.Conversions.toJavaConstant;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 
 public class BitfieldGenerator extends RegisteredTypeGenerator {
@@ -62,7 +63,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
 
         for (Member m : filterDuplicateNames(bf.members())) {
             try {
-                var spec = FieldSpec.builder(bf.typeName(), m.name().toUpperCase(),
+                var spec = FieldSpec.builder(bf.typeName(), toJavaConstant(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("new $T($L)", bf.typeName(), Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
@@ -79,7 +80,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
     private MethodSpec valueConstructor() {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("Create a new $L with the provided value", toJavaSimpleType(bf.name(), bf.namespace()))
-                .addModifiers(Modifier.PRIVATE)
+                .addModifiers(Modifier.PUBLIC)
                 .addParameter(TypeName.INT, "value")
                 .addStatement("super(value)")
                 .build();

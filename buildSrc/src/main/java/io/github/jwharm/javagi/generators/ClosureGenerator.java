@@ -25,7 +25,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import javax.lang.model.element.Modifier;
@@ -66,10 +65,10 @@ public class ClosureGenerator {
     }
 
     private String getName() {
-        String name = Conversions.toJavaSimpleType(closure.name(), closure.namespace());
+        String name = closure.name();
         if (closure instanceof Callback cb && cb.parent() instanceof Field)
             name += "Callback";
-        return name;
+        return toJavaSimpleType(name, closure.namespace());
     }
 
     MethodSpec generateRunMethod() {
@@ -82,7 +81,7 @@ public class ClosureGenerator {
         if (closure.infoElements().doc() != null)
             run.addJavadoc(new DocGenerator(closure.infoElements().doc()).generate());
         if (closure.throws_())
-            run.addException(ClassName.get("org.gnome.glib", "GError"));
+            run.addException(ClassNames.GERROR_EXCEPTION);
 
         generator.generateMethodParameters(run);
         return run.build();
@@ -155,7 +154,7 @@ public class ClosureGenerator {
 
         if (!returnsVoid) {
             var stmt = new TypedValueGenerator(closure.returnValue()).marshalJavaToNative("_result");
-            upcall.addNamedCode("return " + stmt.format(), stmt.arguments());
+            upcall.addNamedCode("return " + stmt.format() + ";\n", stmt.arguments());
         }
 
         if (closure.throws_()) {
@@ -213,7 +212,7 @@ public class ClosureGenerator {
 
             if (i > 0) stmt.add(", ");
 
-            if (p.anyType() instanceof Type t && t.get() instanceof Alias a && a.type().isPrimitive()) {
+            if (p.anyType() instanceof Type t && t.isPointer() && t.get() instanceof Alias a && a.type().isPrimitive()) {
                 stmt.add("_" + toJavaIdentifier(p.name()) + "Alias");
                 continue;
             }

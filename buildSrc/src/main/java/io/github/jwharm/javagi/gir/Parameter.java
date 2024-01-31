@@ -26,20 +26,13 @@ import java.util.Map;
 
 public final class Parameter extends TypedValue {
 
-    private final int index;
-
-    public Parameter(Map<String, String> attributes, List<GirElement> children, int index) {
+    public Parameter(Map<String, String> attributes, List<GirElement> children) {
         super(attributes, children);
-        this.index = index;
     }
 
     @Override
     public Parameters parent() {
         return (Parameters) super.parent();
-    }
-
-    public int index() {
-        return index;
     }
 
     public boolean isOutParameter() {

@@ -52,8 +52,14 @@ parseGir.configure {
     // repository. The location is set in gradle.properties. Default is '../gir-files'
     inputDirectory = new File(rootDir, girFilesLocation)
 
+    // Include the cached gir models of the project dependencies
     includedModules = project.configurations.api.dependencies.collect {
         it.dependencyProject.parseGir.outputFile.get()
+    }
+
+    // Register explicit dependencies
+    project.configurations.api.dependencies.forEach {
+        dependsOn(it.dependencyProject.parseGir)
     }
 
     // Where the gir model is cached

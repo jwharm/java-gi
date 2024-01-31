@@ -26,6 +26,7 @@ import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Conversions;
 
 import javax.lang.model.element.Modifier;
@@ -106,16 +107,18 @@ public class RegisteredTypeGenerator {
     }
 
     protected MethodSpec memoryAddressConstructor() {
-        return MethodSpec.constructorBuilder()
+        MethodSpec.Builder builder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                     Create a $L proxy instance for the provided memory address.
                     @param address the memory address of the native object
                     """, name())
-                .addParameter(MemorySegment.class, "address")
-                .addStatement("super(address == null ? null : $T.reinterpret(address, getMemoryLayout().byteSize()))",
-                        ClassNames.INTEROP)
-                .build();
+                .addParameter(MemorySegment.class, "address");
+        if (rt instanceof Record rec && rec.isOpaque())
+            builder.addStatement("super(address)");
+        else
+            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))", ClassNames.INTEROP);
+        return builder.build();
     }
 
     protected TypeSpec implClass() {

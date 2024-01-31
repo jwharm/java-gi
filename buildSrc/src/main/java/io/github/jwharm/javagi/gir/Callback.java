@@ -19,7 +19,12 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
+import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 
 import java.util.List;
 import java.util.Map;
@@ -49,7 +54,7 @@ public final class Callback extends RegisteredType implements Callable {
             case NOTIFIED, ASYNC -> "_" + paramName + "Scope";
             case FOREVER -> "Arena.global()";
         };
-        return paramName + "toCallback(" + arena + ")";
+        return paramName + ".toCallback(" + arena + ")";
     }
 
     @Override

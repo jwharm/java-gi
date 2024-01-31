@@ -190,7 +190,7 @@ public class MethodGenerator {
                     "org.gnome.gobject.TypeInstance",
                     "org.gnome.gobject.TypeClass",
                     "org.gnome.gobject.TypeInterface").contains(target.javaType()))) {
-                builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).format() + ";\n", stmt.arguments())
+                builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).add(";\n").format(), stmt.arguments())
                         .beginControlFlow("if (_instance != null)")
                         .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
                 new RecordGenerator(record).setFreeFunc(builder, "_instance", target.typeName());

@@ -72,8 +72,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     stmt.arguments());
         } else if (p.isOutParameter()
                 || (type != null && type.isPointer() && target instanceof Alias a && a.type().isPrimitive())) {
-            builder.addStatement("$T _$LPointer = _arena.allocate($L)",
-                    MemorySegment.class, getName(), getValueLayoutPlain(type));
+            builder.addStatement("$T _$LPointer = _arena.allocate($T.$L)",
+                    MemorySegment.class, getName(), ValueLayout.class, getValueLayoutPlain(type));
         }
     }
 
@@ -110,7 +110,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             ClassName.get("org.gnome.glib", "DestroyNotify"), getName());
         else if (p.scope() == Scope.ASYNC && (!p.isDestroyNotifyParameter()))
             builder.addStatement("final $1T _$2LScope = $1T.ofConfined()", Arena.class, getName())
-                    .addStatement("if ($2L != null) $1T.CLEANER.register($2L), new $1T(_$2LScope))",
+                    .addStatement("if ($2L != null) $1T.CLEANER.register($2L, new $1T(_$2LScope))",
                             ClassNames.ARENA_CLOSE_ACTION, getName());
     }
 

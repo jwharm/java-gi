@@ -25,8 +25,7 @@ public sealed interface FieldContainer permits Class, Interface, Record, Union {
     List<Field> fields();
 
     default Field getAtIndex(int index) {
-        if (index == -1) return null;
-        return fields().stream().filter(other -> other.index() == index).findAny().orElseThrow();
+        return index == -1 ? null : fields().get(index);
     }
 
     /**

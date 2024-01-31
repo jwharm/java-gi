@@ -88,6 +88,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
 
+        if (rec.cType().equals("GVariant"))
+            builder.addMethod(gvariantGetType());
+
         builder.addMethod(memoryAddressConstructor());
 
         MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(rec);
@@ -103,6 +106,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         addConstructors(builder);
         addFunctions(builder);
+        addMethods(builder);
 
         return builder.build();
     }
@@ -191,26 +195,40 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         @param  arena to control the memory allocation scope
                         """, rec.typeName());
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
-                spec.addJavadoc("@param $1L $2L for the field {@code $1L}",
+                spec.addJavadoc("@param $1L $2L for the field {@code $1L}\n",
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
         );
-        spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values", rec.typeName())
+        spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n", rec.typeName())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
                 .addParameter(Arena.class, "arena");
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
-                spec.addParameter(f.anyType().typeName(), toJavaIdentifier(f.name()))
+                spec.addParameter(new TypedValueGenerator(f).getType(), toJavaIdentifier(f.name()))
         );
         spec.addStatement("$T _instance = allocate(arena)", rec.typeName());
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
-                spec.addStatement("_instance.$L$L($L, $L)",
+                spec.addStatement("_instance.$L$L($L$L)",
                         f.callback() == null ? "write" : "override",
                         toCamelCase(f.name(), true),
                         f.allocatesMemory() ? "arena, " : "",
                         toJavaIdentifier(f.name()))
         );
         return spec.addStatement("return _instance")
+                .build();
+    }
+
+    private MethodSpec gvariantGetType() {
+        ClassName G_TYPE = ClassName.get("org.gnome.glib", "Type");
+        return MethodSpec.methodBuilder("getType")
+                .addJavadoc("""
+                    Get the GType of the GVariant class
+                    @return the GType
+                    """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(G_TYPE)
+                // Types.VARIANT is declared in GObject. Hard-coded value as workaround
+                .addStatement("return new $T(21L << 2)", G_TYPE)
                 .build();
     }
 }
