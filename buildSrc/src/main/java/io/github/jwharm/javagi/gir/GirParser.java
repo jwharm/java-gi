@@ -45,6 +45,7 @@ public final class GirParser {
             new GLibConstants(),
             new GLibVariantGetType(),
             new GLibRemovePollFDArrays(),
+            new GObjectRemoveVaMarshal(),
             new GioWindowsFileDescriptorBased(),
             new HBWindowsBitfields(),
             new HBRemoveTrailingT()

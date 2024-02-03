@@ -108,6 +108,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         addFunctions(builder);
         addMethods(builder);
 
+        if ("GTypeInstance".equals(rec.cType()))
+            addCallParentMethods();
+
+        if ("GValue".equals(rec.cType()))
+            builder.addMethod(gvalueToString());
+
         return builder.build();
     }
 
@@ -229,6 +235,59 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .returns(G_TYPE)
                 // Types.VARIANT is declared in GObject. Hard-coded value as workaround
                 .addStatement("return new $T(21L << 2)", G_TYPE)
+                .build();
+    }
+
+    private void addCallParentMethods() {
+        builder.addField(FieldSpec.builder(boolean.class, "callParent")
+                .addModifiers(Modifier.PRIVATE)
+                .initializer("false")
+                .build());
+
+        builder.addMethod(MethodSpec.methodBuilder("callParent")
+                .addJavadoc("""
+                        Set the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
+                        is used to obtain the function pointer of the parent type instead of the instance class.
+                                     
+                        @param callParent true to call the parent vfunc instead of an overrided vfunc
+                        """)
+                .addModifiers(Modifier.PROTECTED)
+                .addParameter(boolean.class, "callParent")
+                .addStatement("this.callParent = callParent")
+                .build());
+
+        builder.addMethod(MethodSpec.methodBuilder("callParent")
+                .addJavadoc("""
+                         Returns the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
+                         is used to obtain the function pointer of the parent type instead of the instance class.
+                         
+                         @return true when parent vfunc is called instead of an overrided vfunc, or false when the
+                                 overrided vfunc of the instance is called.
+                        """)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(boolean.class)
+                .addStatement("return this.callParent")
+                .build());
+    }
+
+    private MethodSpec gvalueToString() {
+        return MethodSpec.methodBuilder("toString")
+                .addJavadoc("""
+                                Return a newly allocated String using {@link $1T#strdupValueContents($2T)},
+                                which describes the contents of a {@link $2T}.
+                                The main purpose of this function is to describe {@link $2T}
+                                contents for debugging output, the way in which the contents are
+                                described may change between different GLib versions.
+                                                        
+                                @return the newly allocated String.
+                                """,
+                        ClassName.get("org.gnome.gobject", "GObjects"),
+                        ClassName.get("org.gnome.gobject", "Value"))
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(String.class)
+                .addStatement("return $T.strdupValueContents(this)",
+                        ClassName.get("org.gnome.gobject", "GObjects"))
                 .build();
     }
 }

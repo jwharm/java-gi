@@ -23,6 +23,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -96,6 +97,113 @@ public abstract class GirElement implements Serializable {
 
     public Namespace namespace() {
         return parent.namespace();
+    }
+
+    /**
+     * Change an attribute with the provided name to the provided value
+     * @param attrName the name of the attribute
+     * @param newValue the new value for the attribute
+     * @return a new instance of the same type as {@code elem}, with the new attribute value
+     * @param <T> the element must be a GirElement
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends GirElement> T withAttribute(String attrName, String newValue) {
+        var newAttrs = new HashMap<>(attributes());
+        newAttrs.put(attrName, newValue);
+        return (T) switch(this) {
+            case Alias a -> new Alias(newAttrs, a.children(), a.platforms());
+            case Array a -> new Array(newAttrs, a.children());
+            case Attribute _ -> new Attribute(newAttrs);
+            case Bitfield b -> new Bitfield(newAttrs, b.children(), b.platforms());
+            case Boxed b -> new Boxed(newAttrs, b.children(), b.platforms());
+            case Callback c -> new Callback(newAttrs, c.children(), c.platforms());
+            case CInclude _ -> new CInclude(newAttrs);
+            case Class c -> new Class(newAttrs, c.children(), c.platforms());
+            case Constant c -> new Constant(newAttrs, c.children(), c.platforms());
+            case Constructor c -> new Constructor(newAttrs, c.children(), c.platforms());
+            case Doc d -> new Doc(newAttrs, d.text());
+            case Docsection d -> new Docsection(newAttrs, d.children());
+            case DocDeprecated d -> d;
+            case DocVersion d -> d;
+            case Enumeration e -> new Enumeration(newAttrs, e.children(), e.platforms());
+            case Field f -> new Field(newAttrs, f.children());
+            case Function f -> new Function(newAttrs, f.children(), f.platforms());
+            case FunctionMacro f -> f;
+            case Implements _ -> new Implements(newAttrs);
+            case Include _ -> new Include(newAttrs);
+            case InstanceParameter i -> new InstanceParameter(newAttrs, i.children());
+            case Interface i -> new Interface(newAttrs, i.children(), i.platforms());
+            case Member m -> new Member(newAttrs, m.children());
+            case Method m -> new Method(newAttrs, m.children(), m.platforms());
+            case Namespace n -> new Namespace(newAttrs, n.children(), n.platforms());
+            case Package _ -> new Package(newAttrs);
+            case Parameter p -> new Parameter(newAttrs, p.children());
+            case Parameters p -> p;
+            case Prerequisite _ -> new Prerequisite(newAttrs);
+            case Property p -> new Property(newAttrs, p.children(), p.platforms());
+            case Record r -> new Record(newAttrs, r.children(), r.platforms());
+            case Repository r -> new Repository(newAttrs, r.children());
+            case ReturnValue r -> new ReturnValue(newAttrs, r.children());
+            case Signal s -> new Signal(newAttrs, s.children(), s.platforms());
+            case SourcePosition _ -> new SourcePosition(newAttrs);
+            case Type t -> new Type(newAttrs, t.children());
+            case Union u -> new Union(newAttrs, u.children(), u.platforms());
+            case Varargs v -> v;
+            case VirtualMethod v -> new VirtualMethod(newAttrs, v.children(), v.platforms());
+            default -> throw new UnsupportedOperationException("Unsupported element: " + this);
+        };
+    }
+
+    /**
+     * Replace the child elements of the element with a new list
+     * @param newChildren the new list of child elements
+     * @return a new instance of the same type as {@code elem}, with the new child elements
+     * @param <T> the element must be a GirElement
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends GirElement> T withChildren(List<GirElement> newChildren) {
+        return (T) switch(this) {
+            case Alias a -> new Alias(a.attributes(), newChildren, a.platforms());
+            case Array a -> new Array(a.attributes(), newChildren);
+            case Attribute a -> a;
+            case Bitfield b -> new Bitfield(b.attributes(), newChildren, b.platforms());
+            case Boxed b -> new Boxed(b.attributes(), newChildren, b.platforms());
+            case Callback c -> new Callback(c.attributes(), newChildren, c.platforms());
+            case CInclude c -> c;
+            case Class c -> new Class(c.attributes(), newChildren, c.platforms());
+            case Constant c -> new Constant(c.attributes(), newChildren, c.platforms());
+            case Constructor c -> new Constructor(c.attributes(), newChildren, c.platforms());
+            case Doc d -> d;
+            case Docsection d -> new Docsection(d.attributes(), newChildren);
+            case DocDeprecated d -> d;
+            case DocVersion d -> d;
+            case Enumeration e -> new Enumeration(e.attributes(), newChildren, e.platforms());
+            case Field f -> new Field(f.attributes(), newChildren);
+            case Function f -> new Function(f.attributes(), newChildren, f.platforms());
+            case FunctionMacro f -> f;
+            case Implements i -> i;
+            case Include i -> i;
+            case InstanceParameter i -> new InstanceParameter(i.attributes(), newChildren);
+            case Interface i -> new Interface(i.attributes(), newChildren, i.platforms());
+            case Member m -> new Member(m.attributes(), newChildren);
+            case Method m -> new Method(m.attributes(), newChildren, m.platforms());
+            case Namespace n -> new Namespace(n.attributes(), newChildren, n.platforms());
+            case Package p -> p;
+            case Parameter p -> new Parameter(p.attributes(), newChildren);
+            case Parameters _ -> new Parameters(newChildren);
+            case Prerequisite p -> p;
+            case Property p -> new Property(p.attributes(), newChildren, p.platforms());
+            case Record r -> new Record(r.attributes(), newChildren, r.platforms());
+            case Repository r -> new Repository(r.attributes(), newChildren);
+            case ReturnValue r -> new ReturnValue(r.attributes(), newChildren);
+            case Signal s -> new Signal(s.attributes(), newChildren, s.platforms());
+            case SourcePosition s -> s;
+            case Type t -> new Type(t.attributes(), newChildren);
+            case Union u -> new Union(u.attributes(), newChildren, u.platforms());
+            case Varargs v -> v;
+            case VirtualMethod v -> new VirtualMethod(v.attributes(), newChildren, v.platforms());
+            default -> throw new UnsupportedOperationException("Unsupported element: " + this);
+        };
     }
 
     @Override

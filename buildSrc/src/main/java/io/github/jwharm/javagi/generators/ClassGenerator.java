@@ -67,16 +67,17 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             if (fieldSpec != null) builder.addField(fieldSpec);
         }
 
-        if (hasTypeMethod()) builder.addMethod(getTypeMethod());
+        if (hasTypeMethod())
+            builder.addMethod(getTypeMethod());
+        if (cls.isInstanceOf("GObject", "ParamSpec"))
+            builder.addMethod(paramSpecGetTypeMethod());
 
         MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(cls);
         if (memoryLayout != null)
             builder.addMethod(memoryLayout);
 
         builder.addMethod(parentAccessor());
-
-        if (!cls.abstract_())
-            builder.addMethod(memoryAddressConstructor());
+        builder.addMethod(memoryAddressConstructor());
 
         addConstructors(builder);
         addFunctions(builder);
@@ -99,28 +100,24 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec parentAccessor() {
-        String doc = """
-            Returns this instance as if it were its parent type. This is mostly synonymous to the Java
-            {@code super} keyword, but will set the native typeclass function pointers to the parent
-            type. When overriding a native virtual method in Java, "chaining up" with
-            {@code super.methodName()} doesn't work, because it invokes the overridden function pointer
-            again. To chain up, call {@code asParent().methodName()}. This will call the native function
-            pointer of this virtual method in the typeclass of the parent type.
-            """;
-
-        String body = """
-            $T _parent = new $T(handle());
-            _parent.callParent(true);
-            return _parent;
-            """;
-
-        ClassName className = cls.abstract_() ? cls.typeName().nestedClass(cls.name() + "Impl") : cls.typeName();
+        ClassName className = cls.abstract_()
+                ? cls.typeName().nestedClass(cls.name() + "Impl")
+                : cls.typeName();
 
         return MethodSpec.methodBuilder("asParent")
-                .addJavadoc(doc)
+                .addJavadoc("""
+                        Returns this instance as if it were its parent type. This is mostly synonymous to the Java
+                        {@code super} keyword, but will set the native typeclass function pointers to the parent
+                        type. When overriding a native virtual method in Java, "chaining up" with
+                        {@code super.methodName()} doesn't work, because it invokes the overridden function pointer
+                        again. To chain up, call {@code asParent().methodName()}. This will call the native function
+                        pointer of this virtual method in the typeclass of the parent type.
+                        """)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(cls.typeName())
-                .addCode(body, cls.typeName(), className)
+                .addStatement("$T _parent = new $T(handle())", cls.typeName(), className)
+                .addStatement("_parent.callParent(true)")
+                .addStatement("return _parent")
                 .build();
     }
 
@@ -146,5 +143,17 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             }
         }
         return spec.build();
+    }
+
+    protected MethodSpec paramSpecGetTypeMethod() {
+        return MethodSpec.methodBuilder("getType")
+                .addJavadoc("""
+                    Get the GType of the $L class
+                    @return always {@link $T.PARAM}
+                    """, cls.cType(), ClassNames.TYPES)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(ClassName.get("org.gnome.glib", "Type"))
+                .addStatement("return $T.PARAM", ClassNames.TYPES)
+                .build();
     }
 }

@@ -63,7 +63,8 @@ public class BuilderGenerator {
     public TypeSpec generateBuilderClass() {
         Class cls = (Class) rt;
         Class parentClass = cls.parentClass();
-        ClassName parentTypeName = parentClass == null ? ClassNames.BUILDER : parentClass.typeName();
+        ClassName parentTypeName = parentClass == null ? ClassNames.BUILDER
+                : parentClass.typeName().nestedClass("Builder");
 
         TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
                 .addJavadoc("""
@@ -73,7 +74,7 @@ public class BuilderGenerator {
                         """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addTypeVariable(BUILDER_B)
-                .superclass(ParameterizedTypeName.get(parentTypeName.nestedClass("Builder"), B))
+                .superclass(ParameterizedTypeName.get(parentTypeName, B))
                 .addSuperinterfaces(cls.implements_().stream()
                         .map(TypeReference::get)
                         .map(Interface.class::cast)

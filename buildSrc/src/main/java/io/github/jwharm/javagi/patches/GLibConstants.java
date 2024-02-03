@@ -14,10 +14,10 @@ public class GLibConstants implements Patch {
         if (element instanceof Namespace ns && "GLib".equals(ns.name())) {
             List<GirElement> children = ns.children().stream().map(node -> {
                 if (node instanceof Constant c && "CSET_a_2_z".equals(c.name()))
-                    return changeAttribute(c, "name", "CSET_a_2_z_lowercase");
+                    return rename(c, "CSET_a_2_z_lowercase");
                 return node;
             }).toList();
-            return new Namespace(ns.attributes(), children, ns.platforms());
+            return ns.withChildren(children);
         }
 
         return element;

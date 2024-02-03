@@ -28,7 +28,7 @@ public class HBRemoveTrailingT implements Patch {
     public GirElement patch(GirElement element) {
 
         if (element instanceof RegisteredType rt && rt.cType() != null && rt.cType().startsWith("hb_") && rt.name().endsWith("_t")) {
-            return changeAttribute(rt, "name", rt.name().substring(0, rt.name().length() - 2));
+            return rename(rt, rt.name().substring(0, rt.name().length() - 2));
         }
 
         return element;

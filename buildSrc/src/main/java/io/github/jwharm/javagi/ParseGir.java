@@ -89,7 +89,6 @@ public abstract class ParseGir extends DefaultTask {
     }
 
     private Module parse(Directory baseFolder, String moduleName) throws XMLStreamException {
-        System.out.println("Parse " + moduleName);
         GirParser parser = GirParser.getInstance();
         Repository repository = null;
         for (Integer platform : Platform.toList(Platform.ALL)) {

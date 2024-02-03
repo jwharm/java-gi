@@ -38,7 +38,8 @@ public final class Alias extends RegisteredType {
 
     @Override
     public String getTypeFunc() {
-        throw new UnsupportedOperationException("Alias has no glib:get-type");
+        if (type().isPrimitive()) return null;
+        return type().get().getTypeFunc();
     }
 
     @Override

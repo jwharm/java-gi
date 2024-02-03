@@ -59,7 +59,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
 
         else if (target instanceof Interface || target instanceof Callback)
             builder = TypeSpec.interfaceBuilder(alias.typeName())
-                    .superclass(target.typeName());
+                    .addSuperinterface(target.typeName());
 
         else if (alias.type().isPrimitive()
                 || List.of("java.lang.String", "java.lang.foreign.MemorySegment").contains(alias.type().javaType()))

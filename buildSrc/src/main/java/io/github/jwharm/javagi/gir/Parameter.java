@@ -107,7 +107,8 @@ public final class Parameter extends TypedValue {
     }
 
     public Scope scope() {
-        return Scope.from(attr("scope"));
+        Scope scope = Scope.from(attr("scope"));
+        return (scope == Scope.NOTIFIED && destroy() == null) ? Scope.FOREVER : scope;
     }
 
     public Direction direction() {

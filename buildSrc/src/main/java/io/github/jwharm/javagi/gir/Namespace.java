@@ -74,7 +74,9 @@ public final class Namespace extends GirElement implements Multiplatform, Functi
     }
 
     public ClassName typeName() {
-        return toJavaQualifiedType(name(), this);
+        String name = name();
+        if ("GObject".equals(name)) name = "GObjects";
+        return toJavaQualifiedType(name, this);
     }
 
     public String javaType() {

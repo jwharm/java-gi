@@ -412,7 +412,7 @@ class TypedValueGenerator {
             }
         }
         if (type.javaType().equals("org.gnome.glib.Type"))
-            return PartialStatement.of("$gobjects:T.gtypeGetType()",
+            return PartialStatement.of("$gobjects:T.gtypeGetType()", "gobjects",
                     ClassName.get("org.gnome.gobject", "GObjects"));
 
         return PartialStatement.of("$types:T.BOXED", "types", ClassNames.TYPES);
