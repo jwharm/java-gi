@@ -148,9 +148,10 @@ public class ClosureGenerator {
                 && (!closure.returnValue().notNull()))
             upcall.addStatement("if (_result == null) return $T.NULL", MemorySegment.class);
 
-        if (closure.returnValue().anyType() instanceof Type t && t.isGObject()
+        if (closure.returnValue().anyType() instanceof Type t && t.isGTypeInstance()
                 && closure.returnValue().transferOwnership() == TransferOwnership.FULL)
-            upcall.addStatement("_result.ref()");
+            upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
+                    ClassName.get("org.gnome.gobject", "GObject"));
 
         if (!returnsVoid) {
             var stmt = new TypedValueGenerator(closure.returnValue()).marshalJavaToNative("_result");

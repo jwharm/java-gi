@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.gir;
 
-import io.github.jwharm.javagi.patches.*;
 import io.github.jwharm.javagi.util.Patch;
 
 import javax.xml.namespace.QName;
@@ -33,6 +32,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import static io.github.jwharm.javagi.configuration.Patches.PATCHES;
+
 /**
  * Parser class to parse the GIR XML and create an immutable GIR tree.
  */
@@ -41,15 +42,6 @@ public final class GirParser {
     private static final GirParser INSTANCE = new GirParser();
     private static final List<String> SKIP_LIST = List.of("c:include", "function-macro", "package");
     private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
-    private static final List<Patch> PATCHES = List.of(
-            new GLibConstants(),
-            new GLibVariantGetType(),
-            new GLibRemovePollFDArrays(),
-            new GObjectRemoveVaMarshal(),
-            new GioWindowsFileDescriptorBased(),
-            new HBWindowsBitfields(),
-            new HBRemoveTrailingT()
-    );
 
     // Prevent instantiation
     private GirParser() {

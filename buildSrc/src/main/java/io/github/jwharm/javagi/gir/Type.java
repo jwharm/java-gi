@@ -37,6 +37,17 @@ public final class Type extends AnyType implements TypeReference {
         super(attributes, children);
     }
 
+    @Override
+    public String name() {
+        String name = attr("name");
+        return switch(name) {
+            case "GType" -> "GLib.Type";
+            case "gulong" -> overrideLongValue() ? "guint" : "gulong";
+            case "glong" -> overrideLongValue() ? "gint" : "glong";
+            default -> name;
+        };
+    }
+
     public boolean introspectable() {
         return attrBool("introspectable", true);
     }
@@ -84,9 +95,9 @@ public final class Type extends AnyType implements TypeReference {
         };
     }
 
-    public boolean isGObject() {
+    public boolean isGTypeInstance() {
         RegisteredType target = get();
-        return target != null && target.isGObject();
+        return target != null && target.checkIsGObject();
     }
 
     public boolean isActuallyAnArray() {
@@ -111,6 +122,17 @@ public final class Type extends AnyType implements TypeReference {
         }
         RegisteredType target = get();
         return target == null ? null : uncapitalize(target.namespace().name() + target.name());
+    }
+
+    private boolean overrideLongValue() {
+        GirElement parent = parent();
+        if (parent instanceof Array)
+            parent = parent.parent();
+
+        return switch (parent) {
+            case Property _, Alias _, ReturnValue _, Parameter _ -> true;
+            default -> false;
+        };
     }
 
     @Override

@@ -176,14 +176,15 @@ public class MethodGenerator {
             RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
             PartialStatement stmt = generator.marshalNativeToJava("_result", false);
-            if (target != null && target.isGObject()
+            if (target != null && target.checkIsGObject()
                     && returnValue.transferOwnership() == TransferOwnership.NONE
                     && (! "ref".equals(func.name()))) {
                 builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).format() + ";\n", stmt.arguments())
-                        .beginControlFlow("if (_object != null)")
-                        .addStatement("$T.debug($S, _object == null || _object.handle() == null ? 0 : _object.handle())",
+                        .beginControlFlow("if (_object instanceof $T _gobject)",
+                                ClassName.get("org.gnome.gobject", "GObject"))
+                        .addStatement("$T.debug($S, _gobject.handle())",
                                 ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld\\n")
-                        .addStatement("_object.ref()")
+                        .addStatement("_gobject.ref()")
                         .endControlFlow()
                         .addStatement("return _object");
             } else if (target instanceof Record record && (! List.of(

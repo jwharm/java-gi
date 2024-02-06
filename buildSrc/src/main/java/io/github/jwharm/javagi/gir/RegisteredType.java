@@ -66,10 +66,16 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
         return paramName + ".handle()";
     }
 
-    public boolean isGObject() {
-        return this instanceof Interface
-                || (this instanceof Class c && c.isInstanceOf("GObject", "Object"))
-                || (this instanceof Alias a && a.type().get() != null && a.type().get().isGObject());
+    public boolean checkIsGObject() {
+        return switch(this) {
+            case Class c -> c.isInstanceOf("GObject", "Object");
+            case Interface _ -> true;
+            case Alias a -> {
+                var target = a.type().get();
+                yield target != null && target.checkIsGObject();
+            }
+            default -> false;
+        };
     }
 
     public boolean doPlatformCheck() {

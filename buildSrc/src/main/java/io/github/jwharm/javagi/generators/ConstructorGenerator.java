@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -31,7 +32,6 @@ import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
@@ -121,12 +121,13 @@ public class ConstructorGenerator {
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
         PartialStatement stmt = generator.marshalNativeToJava("_result", false);
-        if (parent.isGObject()) {
+        if (parent.checkIsGObject()) {
             builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).format() + ";\n", stmt.arguments())
-                    .beginControlFlow("if (_object != null)")
-                    .addStatement("$T.debug($S, _object == null || _object.handle() == null ? 0 : _object.handle())",
+                    .beginControlFlow("if (_object instanceof $T _gobject)",
+                            ClassName.get("org.gnome.gobject", "GObject"))
+                    .addStatement("$T.debug($S, _gobject.handle())",
                             ClassNames.GLIB_LOGGER, "Ref " + parent.typeName() + " %ld\\n")
-                    .addStatement("_object.ref()")
+                    .addStatement("_gobject.ref()")
                     .endControlFlow()
                     .addStatement("return ($T) _object", parent.typeName());
         } else if (parent instanceof Record record) {

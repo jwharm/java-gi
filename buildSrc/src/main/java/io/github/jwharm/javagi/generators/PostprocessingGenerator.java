@@ -109,11 +109,11 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         // If the parameter has attribute transfer-ownership="full", we must register a reference, because
         // the native code is going to call un_ref() at some point while we still keep a pointer in the InstanceCache.
         // Only for GObjects where ownership is fully transferred away, unless it's an out parameter or a pointer.
-        if (target != null && target.isGObject()
+        if (target != null && target.checkIsGObject()
                 && p.transferOwnership() == TransferOwnership.FULL
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
-            builder.addStatement(checkNull() ? "if ($1L != null) $1L.ref()" : "$1L.ref()", getName());
+            builder.addStatement("if ($L instanceof _gobject) _gobject.ref()", getName());
         } else if ((target instanceof Record || target instanceof Union)
                 && p.transferOwnership() == TransferOwnership.FULL
                 && (!p.isOutParameter())

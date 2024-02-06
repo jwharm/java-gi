@@ -30,8 +30,12 @@ import java.lang.foreign.MemorySegment;
 
 public class ClassGenerator extends RegisteredTypeGenerator {
 
-    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T",
-            ClassName.get("org.gnome.gobject", "GObject"));
+    private final static ClassName GTYPE = ClassName.get("org.gnome.glib", "Type");
+    private final static ClassName GOBJECT = ClassName.get("org.gnome.gobject", "GObject");
+    private final static ClassName GOBJECTS = ClassName.get("org.gnome.gobject", "GObjects");
+    private final static ClassName TYPE_INSTANCE = ClassName.get("org.gnome.gobject", "TypeInstance");
+
+    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", GOBJECT);
 
     private final Class cls;
     private final TypeSpec.Builder builder;
@@ -55,7 +59,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if (parentClass != null)
             builder.superclass(parentClass.typeName());
         else
-            builder.superclass(ClassName.get("org.gnome.gobject", "TypeInstance"));
+            builder.superclass(TYPE_INSTANCE);
 
         for (var impl : cls.implements_())
             builder.addSuperinterface(impl.get().typeName());
@@ -92,9 +96,21 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if (cls.abstract_())
             builder.addType(implClass());
 
-        BuilderGenerator generator = new BuilderGenerator(cls);
-        builder.addMethod(generator.generateBuilderMethod());
-        builder.addType(generator.generateBuilderClass());
+        if (cls.isInstanceOf("GObject", "Object")) {
+            BuilderGenerator generator = new BuilderGenerator(cls);
+            builder.addMethod(generator.generateBuilderMethod());
+            builder.addType(generator.generateBuilderClass());
+        }
+
+        if ("GObject".equals(cls.cType())) {
+            builder.addMethod(gobjectConstructor())
+                    .addMethod(gobjectConstructorVarargs())
+                    .addMethod(gobjectGetProperty())
+                    .addMethod(gobjectSetProperty())
+                    .addMethod(gobjectConnect())
+                    .addMethod(gobjectConnectAfter())
+                    .addMethod(gobjectEmit());
+        }
 
         return builder.build();
     }
@@ -152,8 +168,142 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @return always {@link $T.PARAM}
                     """, cls.cType(), ClassNames.TYPES)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassName.get("org.gnome.glib", "Type"))
+                .returns(GTYPE)
                 .addStatement("return $T.PARAM", ClassNames.TYPES)
+                .build();
+    }
+
+    private MethodSpec gobjectConstructor() {
+        return MethodSpec.methodBuilder("newInstance")
+                .addJavadoc("""
+                        Creates a new GObject instance of the provided GType.
+                        
+                        @param objectType the GType of the new GObject
+                        @return the newly created GObject instance
+                        """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addTypeVariable(TypeVariableName.get("T", GOBJECT))
+                .returns(TypeVariableName.get("T"))
+                .addParameter(GTYPE, "objectType")
+                .addStatement("var _result = constructNew(objectType, null)")
+                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)", ClassNames.INSTANCE_CACHE, GOBJECT)
+                .addStatement("return _object")
+                .build();
+    }
+
+    private MethodSpec gobjectConstructorVarargs() {
+        return MethodSpec.methodBuilder("newInstance")
+                .addJavadoc("""
+                         Creates a new GObject instance of the provided GType and with the provided property values.
+                         
+                         @param  objectType the GType of the new GObject
+                         @param  propertyNamesAndValues pairs of property names and values (Strings and Objects)
+                         @return the newly created GObject instance
+                         @throws IllegalArgumentException invalid property name
+                        """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addTypeVariable(TypeVariableName.get("T", GOBJECT))
+                .returns(TypeVariableName.get("T"))
+                .addParameter(GTYPE, "objectType")
+                .addParameter(Object[].class, "propertyNamesAndValues")
+                .varargs(true)
+                .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)", ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectGetProperty() {
+        return MethodSpec.methodBuilder("getProperty")
+                .addJavadoc("""
+                         Get a property of an object.
+                         
+                         @param propertyName the name of the property to get
+                         @return the property value
+                         @throws IllegalArgumentException invalid property name
+                        """)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(Object.class)
+                .addParameter(String.class, "propertyName")
+                .addStatement("return $T.getProperty(this, propertyName)", ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectSetProperty() {
+        return MethodSpec.methodBuilder("setProperty")
+                .addJavadoc("""
+                         Set a property of an object.
+                         
+                         @param propertyName the name of the property to set
+                         @param value the new property value
+                         @throws IllegalArgumentException invalid property name
+                        """)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(String.class, "propertyName")
+                .addParameter(Object.class, "value")
+                .addStatement("$T.setProperty(this, propertyName, value)", ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectConnect() {
+        return MethodSpec.methodBuilder("connect")
+                .addJavadoc("""
+                       Connect a callback to a signal for this object. The handler will be called
+                       before the default handler of the signal.
+                       
+                       @param detailedSignal a string of the form "signal-name::detail"
+                       @param callback       the callback to connect
+                       @return a SignalConnection object to track, block and disconnect the signal
+                               connection
+                       """)
+                .addModifiers(Modifier.PUBLIC)
+                .addTypeVariable(TypeVariableName.get("T"))
+                .returns(ClassNames.SIGNAL_CONNECTION)
+                .addParameter(String.class, "detailedSignal")
+                .addParameter(TypeVariableName.get("T"), "callback")
+                .addStatement("return connect(detailedSignal, callback, false)")
+                .build();
+    }
+
+    private MethodSpec gobjectConnectAfter() {
+        return MethodSpec.methodBuilder("connect")
+                .addJavadoc("""
+                       Connect a callback to a signal for this object.
+                       
+                       @param detailedSignal a string of the form "signal-name::detail"
+                       @param callback       the callback to connect
+                       @param after          whether the handler should be called before or after
+                                             the default handler of the signal
+                       @return a SignalConnection object to track, block and disconnect the signal
+                               connection
+                       """)
+                .addModifiers(Modifier.PUBLIC)
+                .addTypeVariable(TypeVariableName.get("T"))
+                .returns(ClassNames.SIGNAL_CONNECTION)
+                .addParameter(String.class, "detailedSignal")
+                .addParameter(TypeVariableName.get("T"), "callback")
+                .addParameter(boolean.class, "after")
+                .addStatement("var closure = new $T(callback)", ClassNames.JAVA_CLOSURE)
+                .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)", GOBJECTS)
+                .addStatement("return new $T(handle(), handlerId)", ClassNames.SIGNAL_CONNECTION)
+                .build();
+    }
+
+    private MethodSpec gobjectEmit() {
+        return MethodSpec.methodBuilder("emit")
+                .addJavadoc("""
+                       Emits a signal from this object.
+                       
+                       @param detailedSignal a string of the form "signal-name::detail"
+                       @param params         the parameters to emit for this signal
+                       @return the return value of the signal, or {@code null} if the signal
+                               has no return value
+                       @throws IllegalArgumentException if a signal with this name is not found for the object
+                       """)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(Object.class)
+                .addParameter(String.class, "detailedSignal")
+                .addParameter(Object[].class, "params")
+                .varargs(true)
+                .addStatement("return $T.emit(this, detailedSignal, params)", ClassNames.SIGNALS)
                 .build();
     }
 }

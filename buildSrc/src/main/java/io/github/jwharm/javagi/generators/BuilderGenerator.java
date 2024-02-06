@@ -28,6 +28,8 @@ import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
+import java.lang.foreign.Arena;
+
 import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
 
 public class BuilderGenerator {
@@ -130,7 +132,7 @@ public class BuilderGenerator {
         // Method body
         PartialStatement valueSetter = generator.getValueSetter("_value", gtype, generator.getName())
                 .add(";\n");
-        return builder.addStatement("Arena _arena = getArena()")
+        return builder.addStatement("$T _arena = getArena()", Arena.class)
                 .addStatement("$1T _value = $1T.allocate(_arena)",
                         ClassName.get("org.gnome.gobject", "Value"))
                 .addNamedCode("_value.init(" + gtype.format() + ");\n", gtype.arguments())

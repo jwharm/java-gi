@@ -50,9 +50,11 @@ public final class ClassNames {
     public static final ClassName BUILDER = ClassName.get(PKG_GOBJECT, "Builder");
     public static final ClassName BUILDER_INTERFACE = ClassName.get(PKG_GOBJECT, "BuilderInterface");
     public static final ClassName INSTANCE_CACHE = ClassName.get(PKG_GOBJECT, "InstanceCache");
+    public static final ClassName JAVA_CLOSURE = ClassName.get(PKG_GOBJECT, "JavaClosure");
     public static final ClassName SIGNAL_CONNECTION = ClassName.get(PKG_GOBJECT, "SignalConnection");
 
     public static final ClassName OVERRIDES = ClassName.get(PKG_GOBJECT_TYPES, "Overrides");
+    public static final ClassName PROPERTIES = ClassName.get(PKG_GOBJECT_TYPES, "Properties");
     public static final ClassName SIGNALS = ClassName.get(PKG_GOBJECT_TYPES, "Signals");
     public static final ClassName TYPE_CACHE = ClassName.get(PKG_GOBJECT_TYPES, "TypeCache");
     public static final ClassName TYPES = ClassName.get(PKG_GOBJECT_TYPES, "Types");

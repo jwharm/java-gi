@@ -114,7 +114,7 @@ public class RegisteredTypeGenerator {
                     @param address the memory address of the native object
                     """, name())
                 .addParameter(MemorySegment.class, "address");
-        if (rt instanceof Record rec && rec.isOpaque())
+        if (rt instanceof Record rec && rec.isOpaque() || rt instanceof Union union && union.isOpaque())
             builder.addStatement("super(address)");
         else
             builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))", ClassNames.INTEROP);

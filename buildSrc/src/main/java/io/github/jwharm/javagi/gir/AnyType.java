@@ -30,16 +30,10 @@ public abstract sealed class AnyType extends GirElement permits Type, Array {
         super(attributes, children);
     }
 
-    @Override
-    public TypedValue parent() {
-        return (TypedValue) super.parent();
-    }
-
     public abstract TypeName typeName();
 
     public String name() {
-        String name = attr("name");
-        return "GType".equals(name) ? "GLib.Type" : name;
+        return attr("name");
     }
 
     public String cType() {
