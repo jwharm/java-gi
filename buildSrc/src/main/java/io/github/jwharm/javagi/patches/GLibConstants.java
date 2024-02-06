@@ -7,6 +7,11 @@ import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
 
+/**
+ * Constant names are all uppercase in Java. GLib however defines
+ * "CSET_A_2_Z" and "CSET_a_2_z". To prevent duplicate fields, the
+ * second one is renamed to "CSET_a_2_z_lowercase".
+ */
 public class GLibConstants implements Patch {
 
     @Override

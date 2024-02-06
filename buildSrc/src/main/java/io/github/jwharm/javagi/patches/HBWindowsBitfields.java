@@ -27,6 +27,10 @@ import io.github.jwharm.javagi.util.Platform;
 
 import java.util.List;
 
+/**
+ * Some HarfBuzz enums are in the Windows GIR file defined
+ * as bitfields. We change them back to enums.
+ */
 public class HBWindowsBitfields implements Patch {
 
     @Override

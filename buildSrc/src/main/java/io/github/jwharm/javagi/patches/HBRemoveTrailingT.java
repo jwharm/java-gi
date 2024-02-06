@@ -22,14 +22,15 @@ package io.github.jwharm.javagi.patches;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Patch;
 
+/**
+ * The "_t" postfix from HarfBuzz types is removed.
+ */
 public class HBRemoveTrailingT implements Patch {
 
     @Override
     public GirElement patch(GirElement element) {
-
-        if (element instanceof RegisteredType rt && rt.cType() != null && rt.cType().startsWith("hb_") && rt.name().endsWith("_t")) {
+        if (element instanceof RegisteredType rt && rt.cType() != null && rt.cType().startsWith("hb_") && rt.name().endsWith("_t"))
             return rename(rt, rt.name().substring(0, rt.name().length() - 2));
-        }
 
         return element;
     }

@@ -24,15 +24,17 @@ import io.github.jwharm.javagi.util.Platform;
 import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.gir.Namespace;
 
+/**
+ * FileDescriptorBased is an interface on Linux and a record on Windows.
+ * This means it is not considered the same type in the GIR model, and is generated twice.
+ * To prevent this, it is removed from the Windows GIR model, so only the interface remains.
+ */
 public class GioWindowsFileDescriptorBased implements Patch {
 
     @Override
     public GirElement patch(GirElement element) {
-
-        // FileDescriptorBased is an interface on Linux and a record on Windows. Remove it from the Windows GIR model.
-        if (element instanceof Namespace ns && ns.name().equals("Gio") && ns.platforms() == Platform.WINDOWS) {
+        if (element instanceof Namespace ns && ns.name().equals("Gio") && ns.platforms() == Platform.WINDOWS)
             return removeType(ns, "FileDescriptorBased");
-        }
 
         return element;
     }
