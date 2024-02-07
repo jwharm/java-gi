@@ -42,6 +42,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.zip.InflaterInputStream;
 
+import static java.nio.file.StandardOpenOption.*;
+
 /**
  * GenerateSources is a Gradle task that will generate Java source files for
  * the types defined in a GIR Module. (The Module has been created by the
@@ -75,21 +77,48 @@ public abstract class GenerateSources extends DefaultTask {
     }
 
     // Generate Java source files for a GIR repository
-    private static void generate(Module module, Directory outputDirectory) {
+    private void generate(Module module, Directory outputDirectory) {
         Namespace ns = module.lookupNamespace(module.name());
 
         // Generate class with namespace-global constants and functions
-        var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
         try {
-            generate(typeSpec, ns.packageName(), outputDirectory);
+            var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
+            writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
         } catch (Exception e) {
             System.out.println("Exception generating namespace " + ns.name() + ": " + e);
+        }
+
+        // Generate package-info.java
+        try {
+            Path path = outputDirectory
+                    .dir(ns.packageName().replace('.', File.separatorChar))
+                    .getAsFile()
+                    .toPath()
+                    .resolve("package-info.java");
+            String packageInfo = new PackageInfoGenerator(ns).generate();
+            Files.writeString(path, packageInfo,
+                    CREATE, WRITE, TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            System.out.println("Exception writing package-info.java for " + ns.name() + ": " + e);
+        }
+
+        // Generate module-info.java
+        try {
+            Path path = outputDirectory
+                    .getAsFile()
+                    .toPath()
+                    .resolve("module-info.java");
+            String moduleInfo = new ModuleInfoGenerator(ns, getPackages()).generate();
+            Files.writeString(path, moduleInfo,
+                    CREATE, WRITE, TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            System.out.println("Exception writing module-info.java for " + ns.name() + ": " + e);
         }
 
         // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
             try {
-                typeSpec = switch(rt) {
+                var typeSpec = switch(rt) {
                     case Alias a -> new AliasGenerator(a).generate();
                     case Bitfield b -> new BitfieldGenerator(b).generate();
                     case Callback c -> new CallbackGenerator(c).generate();
@@ -100,7 +129,7 @@ public abstract class GenerateSources extends DefaultTask {
                     case Union u -> new UnionGenerator(u).generate();
                     default -> null;
                 };
-                generate(typeSpec, ns.packageName(), outputDirectory);
+                writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
             } catch (Exception e) {
                 System.out.println("Exception generating " + rt.name() + ": " + e);
             }
@@ -108,7 +137,7 @@ public abstract class GenerateSources extends DefaultTask {
     }
 
     // Write a generated class into a Java file
-    private static void generate(TypeSpec typeSpec, String packageName, Directory outputDirectory)
+    private void writeJavaFile(TypeSpec typeSpec, String packageName, Directory outputDirectory)
             throws IOException {
         if (typeSpec == null) return;
 

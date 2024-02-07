@@ -116,6 +116,10 @@ public final class Namespace extends GirElement implements Multiplatform, Functi
         return filter(children(), Class.class);
     }
 
+    public List<Docsection> docsections() {
+        return filter(children(), Docsection.class);
+    }
+
     public List<Interface> interfaces() {
         return filter(children(), Interface.class);
     }
