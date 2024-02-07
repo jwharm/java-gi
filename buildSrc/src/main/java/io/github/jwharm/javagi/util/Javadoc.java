@@ -170,7 +170,7 @@ public class Javadoc {
             content = "{".repeat((int) (count2 - count1)) + content;
         else if (count1 > count2)
             content += "}".repeat((int) (count1 - count2));
-        return "<pre>{@code " + content + "</pre>";
+        return "<pre>{@code " + content + "}</pre>";
     }
 
     // Replace `text` with {@code text}
