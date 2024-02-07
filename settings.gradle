@@ -6,6 +6,7 @@ rootProject.name = 'java-gi'
 
 include 'glib'
 include 'gobject'
+include 'gmodule'
 
 /*
 include 'adw'

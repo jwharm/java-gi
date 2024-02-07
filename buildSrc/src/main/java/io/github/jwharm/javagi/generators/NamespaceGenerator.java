@@ -69,7 +69,7 @@ public class NamespaceGenerator {
         for (Integer platform : Platform.toList(ns.platforms())) {
 
             // Remove path from library name
-            String library = ns.sharedLibrary();
+            String library = ns.sharedLibrary(platform);
             if (library.contains("/"))
                 library = library.substring(library.lastIndexOf("/") + 1);
 

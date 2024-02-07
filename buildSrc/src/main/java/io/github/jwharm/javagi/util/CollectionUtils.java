@@ -60,4 +60,13 @@ public class CollectionUtils {
     public static <A, B extends A> B findAny(List<A> list, Class<B> cls) {
         return list.stream().filter(cls::isInstance).map(cls::cast).findAny().orElse(null);
     }
+
+    /**
+     * Return the union of two maps by creating a new map using {@code new HashMap(map1).putAll(map2)}
+     */
+    public static <A, B> Map<A, B> union(Map<A, B> map1, Map<A, B> map2) {
+        Map<A, B> map3 = new HashMap<>(map1);
+        map3.putAll(map2);
+        return map3;
+    }
 }

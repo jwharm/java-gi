@@ -33,10 +33,14 @@ import java.util.stream.Collectors;
 
 public final class Namespace extends GirElement implements Multiplatform, FunctionContainer {
     private int platforms;
+    private final Map<Integer, String> sharedLibraries;
 
-    public Namespace(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Namespace(Map<String, String> attributes, List<GirElement> children,
+                     int platforms, Map<Integer, String> sharedLibraries) {
         super(attributes, children);
         this.platforms = platforms;
+        this.sharedLibraries = sharedLibraries;
+        this.sharedLibraries.put(platforms, sharedLibrary());
     }
 
     @Override
@@ -56,12 +60,13 @@ public final class Namespace extends GirElement implements Multiplatform, Functi
 
     @Override
     public int platforms() {
-        return this.platforms;
+        return platforms;
     }
 
     /**
-     * Create a map of all registered types in this namespace (aliases, classes, interfaces, records, enumerations,
-     * bitfields, callbacks and boxed types), indexed by name.
+     * Create a map of all registered types in this namespace (aliases, classes,
+     * interfaces, records, enumerations, bitfields, callbacks and boxed types),
+     * indexed by name.
      */
     public Map<String, RegisteredType> registeredTypes() {
         return filter(children(), RegisteredType.class).stream().collect(
@@ -69,8 +74,12 @@ public final class Namespace extends GirElement implements Multiplatform, Functi
     }
 
     public Namespace mergeWith(Namespace other) {
-        return new Namespace(attributes(), union(children(), other.children()),
-                platforms() | other.platforms());
+        return new Namespace(
+                attributes(),
+                union(children(), other.children()),
+                platforms() | other.platforms(),
+                union(sharedLibraries, other.sharedLibraries)
+        );
     }
 
     public ClassName typeName() {
@@ -106,6 +115,14 @@ public final class Namespace extends GirElement implements Multiplatform, Functi
 
     public String sharedLibrary() {
         return attr("shared-library");
+    }
+
+    public String sharedLibrary(int platform) {
+        return sharedLibraries.get(platform);
+    }
+
+    public Map<Integer, String> sharedLibraries() {
+        return sharedLibraries;
     }
 
     public List<Alias> aliases() {

@@ -177,7 +177,7 @@ public final class GirParser {
             case "interface" -> new Interface(attributes, children, platform);
             case "member" -> new Member(attributes, children);
             case "method" -> new Method(attributes, children, platform);
-            case "namespace" -> new Namespace(attributes, children, platform);
+            case "namespace" -> new Namespace(attributes, children, platform, new HashMap<>());
             case "package" -> new Package(attributes);
             case "parameter" -> new Parameter(attributes, children);
             case "parameters" -> new Parameters(children);

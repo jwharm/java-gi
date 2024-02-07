@@ -53,7 +53,7 @@ public interface Patch {
                 .filter(node -> !(node instanceof RegisteredType type
                         && list.contains(type.name())))
                 .toList();
-        return new Namespace(ns.attributes(), children, ns.platforms());
+        return ns.withChildren(children);
     }
 
     default Namespace removeFunction(Namespace ns, String name) {

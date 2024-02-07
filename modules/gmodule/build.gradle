@@ -6,7 +6,6 @@ dependencies {
     api project(':glib')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GModule-2.0.gir'
-    urlPrefix = 'https://docs.gtk.org/glib/'
+parseGir.configure {
+    moduleName = 'GModule'
 }
