@@ -108,26 +108,32 @@ public class MethodGenerator {
         // Platform check
         if (func.doPlatformCheck())
             builder.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM, Platform.toStringLiterals(func.platforms()));
+                    ClassNames.PLATFORM,
+                    Platform.toStringLiterals(func.platforms()));
 
         // try-block for arena
         if (func.allocatesMemory())
-            builder.beginControlFlow("try (var _arena = $T.ofConfined())", Arena.class);
+            builder.beginControlFlow("try (var _arena = $T.ofConfined())",
+                    Arena.class);
 
         // Preprocessing
         if (func.parameters() != null)
             func.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length, so they must be processed last.
+                    // Array parameters may refer to other parameters for their length,
+                    // so they must be processed last.
                     .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
                     .forEach(p -> new PreprocessingGenerator(p).generate(builder));
 
         // Allocate GError
         if (func.attrs().throws_())
-            builder.addStatement("$T _gerror = _arena.allocate($T.ADDRESS)", MemorySegment.class, ValueLayout.class);
+            builder.addStatement("$T _gerror = _arena.allocate($T.ADDRESS)",
+                    MemorySegment.class,
+                    ValueLayout.class);
 
         // Declare return value
         if (!returnValue.anyType().isVoid())
-            builder.addStatement("$T _result", Conversions.getCarrierTypeName(returnValue.anyType()));
+            builder.addStatement("$T _result",
+                    Conversions.getCarrierTypeName(returnValue.anyType()));
 
         // Try-catch for function invocation
         builder.beginControlFlow("try");
@@ -151,17 +157,21 @@ public class MethodGenerator {
 
         // Override result
         if (func.returnValue().overrideValue() != null)
-            builder.addStatement("_result = $L", func.returnValue().overrideValue());
+            builder.addStatement("_result = $L",
+                    func.returnValue().overrideValue());
 
         // Catch function invocation exceptions
         builder.nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError($S, _err)",
+                        "Unexpected exception occurred: ")
                 .endControlFlow();
 
         // Throw GErrorException
         if (func.attrs().throws_())
-            builder.beginControlFlow("if ($T.isErrorSet(_gerror))", ClassNames.GERROR_EXCEPTION)
-                    .addStatement("throw new $T(_gerror)", ClassNames.GERROR_EXCEPTION)
+            builder.beginControlFlow("if ($T.isErrorSet(_gerror))",
+                            ClassNames.GERROR_EXCEPTION)
+                    .addStatement("throw new $T(_gerror)",
+                            ClassNames.GERROR_EXCEPTION)
                     .endControlFlow();
 
         // Postprocessing
@@ -169,13 +179,18 @@ public class MethodGenerator {
             for (var p : func.parameters().parameters())
                 new PostprocessingGenerator(p).generate(builder);
 
-        // Marshal return value and handle ownership transfer
+        // Private static helper method for constructors return the result as-is
         if (func instanceof Constructor) {
             builder.addStatement("return _result");
-        } else if (!returnValue.anyType().isVoid()) {
+        }
+
+        // Marshal return value and handle ownership transfer
+        else if (!returnValue.anyType().isVoid()) {
             RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
             PartialStatement stmt = generator.marshalNativeToJava("_result", false);
+
+            // Ref GObject
             if (target != null && target.checkIsGObject()
                     && returnValue.transferOwnership() == TransferOwnership.NONE
                     && (! "ref".equals(func.name()))) {
@@ -187,7 +202,10 @@ public class MethodGenerator {
                         .addStatement("_gobject.ref()")
                         .endControlFlow()
                         .addStatement("return _object");
-            } else if (target instanceof Record record && (! List.of(
+            }
+
+            // Add cleaner to struct/union pointer
+            else if (target instanceof Record record && (! List.of(
                     "org.gnome.gobject.TypeInstance",
                     "org.gnome.gobject.TypeClass",
                     "org.gnome.gobject.TypeInterface").contains(target.javaType()))) {
@@ -197,7 +215,10 @@ public class MethodGenerator {
                 new RecordGenerator(record).setFreeFunc(builder, "_instance", target.typeName());
                 builder.endControlFlow()
                         .addStatement("return _instance");
-            } else {
+            }
+
+            // No ownership transfer, just marshal the return value
+            else {
                 builder.addNamedCode(PartialStatement.of("return ").add(stmt).format() + ";\n", stmt.arguments());
             }
         }
@@ -216,7 +237,9 @@ public class MethodGenerator {
         // Result assignment
         PartialStatement invoke = new PartialStatement();
         if (!returnValue.anyType().isVoid())
-            invoke.add("_result = (" + Conversions.getCarrierTypeString(func.returnValue().anyType()) + ") ");
+            invoke.add("_result = (")
+                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
+                    .add(") ");
 
         // Function invocation
         invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L).invokeExact(",
@@ -237,25 +260,34 @@ public class MethodGenerator {
         switch (vm.parent()) {
             case Class c ->
                     builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(), $L.getMemoryLayout(), $S)",
-                            MemorySegment.class, ClassNames.OVERRIDES, toJavaSimpleType(c.typeStruct().name(),
-                                    c.namespace()), vm.name());
+                            MemorySegment.class,
+                            ClassNames.OVERRIDES,
+                            toJavaSimpleType(c.typeStruct().name(), c.namespace()), vm.name());
             case Interface i ->
                     builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(), $T.getMemoryLayout(), $S, $T.getType())",
-                            MemorySegment.class, ClassNames.OVERRIDES, i.typeStruct().typeName(),
-                            vm.name(), i.typeName());
+                            MemorySegment.class,
+                            ClassNames.OVERRIDES,
+                            i.typeStruct().typeName(),
+                            vm.name(),
+                            i.typeName());
             default -> throw new IllegalStateException("Virtual Method parent must be a class or an interface");
         }
 
         // Function pointer null-check
-        builder.addStatement("if (_func.equals($T.NULL)) throw new $T()", MemorySegment.class, NullPointerException.class);
+        builder.addStatement("if (_func.equals($T.NULL)) throw new $T()",
+                MemorySegment.class,
+                NullPointerException.class);
 
         // Result assignment
         PartialStatement invoke = new PartialStatement();
         if (!returnValue.anyType().isVoid())
-            invoke.add("_result = (" + Conversions.getCarrierTypeString(func.returnValue().anyType()) + ") ");
+            invoke.add("_result = (")
+                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
+                    .add(") ");
 
         // Function pointer invocation
-        invoke.add("$interop:T.downcallHandle(_func, _fdesc).invokeExact(", "interop", ClassNames.INTEROP)
+        invoke.add("$interop:T.downcallHandle(_func, _fdesc).invokeExact(", "interop",
+                        ClassNames.INTEROP)
                 .add(generator.marshalParameters())
                 .add(");\n");
 

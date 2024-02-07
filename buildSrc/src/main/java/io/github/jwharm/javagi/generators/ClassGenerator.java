@@ -47,8 +47,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     }
 
     public TypeSpec generate() {
-        if (cls.infoElements().doc() != null) builder.addJavadoc(new DocGenerator(cls.infoElements().doc()).generate());
-        if (cls.attrs().deprecated()) builder.addAnnotation(Deprecated.class);
+        if (cls.infoElements().doc() != null)
+            builder.addJavadoc(new DocGenerator(cls.infoElements().doc()).generate());
+        if (cls.attrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC);
         if (cls.abstract_()) builder.addModifiers(Modifier.ABSTRACT);
@@ -63,6 +65,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         for (var impl : cls.implements_())
             builder.addSuperinterface(impl.get().typeName());
+
+        if (cls.isFloating())
+            builder.addSuperinterface(ClassNames.FLOATING);
 
         builder.addStaticBlock(staticBlock());
 
@@ -102,7 +107,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             builder.addType(generator.generateBuilderClass());
         }
 
-        if ("GObject".equals(cls.cType())) {
+        if ("GObject".equals(cls.cType()))
             builder.addMethod(gobjectConstructor())
                     .addMethod(gobjectConstructorVarargs())
                     .addMethod(gobjectGetProperty())
@@ -110,7 +115,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConnect())
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
-        }
 
         return builder.build();
     }
@@ -154,7 +158,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     && m.parameters().instanceParameter() != null
                     && m.parameters().parameters().isEmpty()
                     && (m.returnValue().anyType().isVoid())) {
-                spec.addStatement("$T.setFreeFunc(handle(), $S);", ClassNames.MEMORY_CLEANER, m.attrs().cIdentifier());
+                spec.addStatement("$T.setFreeFunc(handle(), $S);",
+                        ClassNames.MEMORY_CLEANER, m.attrs().cIdentifier());
                 break;
             }
         }
@@ -164,9 +169,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     protected MethodSpec paramSpecGetTypeMethod() {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
-                    Get the GType of the $L class
-                    @return always {@link $T.PARAM}
-                    """, cls.cType(), ClassNames.TYPES)
+                        Get the GType of the $L class
+                        
+                        @return always {@link $T.PARAM}
+                        """, cls.cType(), ClassNames.TYPES)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(GTYPE)
                 .addStatement("return $T.PARAM", ClassNames.TYPES)
@@ -186,7 +192,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .returns(TypeVariableName.get("T"))
                 .addParameter(GTYPE, "objectType")
                 .addStatement("var _result = constructNew(objectType, null)")
-                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)", ClassNames.INSTANCE_CACHE, GOBJECT)
+                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)",
+                        ClassNames.INSTANCE_CACHE, GOBJECT)
                 .addStatement("return _object")
                 .build();
     }
@@ -207,7 +214,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(GTYPE, "objectType")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
-                .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)", ClassNames.PROPERTIES)
+                .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)",
+                        ClassNames.PROPERTIES)
                 .build();
     }
 
@@ -223,7 +231,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(Object.class)
                 .addParameter(String.class, "propertyName")
-                .addStatement("return $T.getProperty(this, propertyName)", ClassNames.PROPERTIES)
+                .addStatement("return $T.getProperty(this, propertyName)",
+                        ClassNames.PROPERTIES)
                 .build();
     }
 
@@ -239,7 +248,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "propertyName")
                 .addParameter(Object.class, "value")
-                .addStatement("$T.setProperty(this, propertyName, value)", ClassNames.PROPERTIES)
+                .addStatement("$T.setProperty(this, propertyName, value)",
+                        ClassNames.PROPERTIES)
                 .build();
     }
 
@@ -281,9 +291,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(String.class, "detailedSignal")
                 .addParameter(TypeVariableName.get("T"), "callback")
                 .addParameter(boolean.class, "after")
-                .addStatement("var closure = new $T(callback)", ClassNames.JAVA_CLOSURE)
-                .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)", GOBJECTS)
-                .addStatement("return new $T(handle(), handlerId)", ClassNames.SIGNAL_CONNECTION)
+                .addStatement("$1T closure = new $1T(callback)",
+                        ClassNames.JAVA_CLOSURE)
+                .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
+                        GOBJECTS)
+                .addStatement("return new $T(handle(), handlerId)",
+                        ClassNames.SIGNAL_CONNECTION)
                 .build();
     }
 
@@ -303,7 +316,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(String.class, "detailedSignal")
                 .addParameter(Object[].class, "params")
                 .varargs(true)
-                .addStatement("return $T.emit(this, detailedSignal, params)", ClassNames.SIGNALS)
+                .addStatement("return $T.emit(this, detailedSignal, params)",
+                        ClassNames.SIGNALS)
                 .build();
     }
 }

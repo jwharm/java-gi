@@ -47,13 +47,16 @@ public class CallableGenerator {
     void generateFunctionDescriptor(MethodSpec.Builder builder) {
         List<String> valueLayouts = new ArrayList<>();
 
-        boolean isVoid = callable.returnValue().anyType() instanceof Type type && type.isVoid();
-        if (!isVoid) valueLayouts.add(Conversions.getValueLayout(callable.returnValue().anyType()));
+        boolean isVoid = callable.returnValue().anyType() instanceof Type t && t.isVoid();
+        if (!isVoid)
+            valueLayouts.add(Conversions.getValueLayout(callable.returnValue().anyType()));
 
-        if (callable instanceof Signal) valueLayouts.add("ADDRESS");
+        if (callable instanceof Signal)
+            valueLayouts.add("ADDRESS");
 
         if (callable.parameters() != null) {
-            if (callable.parameters().instanceParameter() != null) valueLayouts.add("ADDRESS");
+            if (callable.parameters().instanceParameter() != null)
+                valueLayouts.add("ADDRESS");
             valueLayouts.addAll(
                     callable.parameters().parameters().stream()
                             .filter(not(Parameter::varargs))
@@ -62,13 +65,15 @@ public class CallableGenerator {
                             .toList());
         }
 
-        if (callable.throws_()) valueLayouts.add("ADDRESS");
+        if (callable.throws_())
+            valueLayouts.add("ADDRESS");
 
         if (valueLayouts.isEmpty()) {
             builder.addStatement("$1T _fdesc = $1T.ofVoid()", FunctionDescriptor.class);
         } else {
             String layouts = valueLayouts.stream()
                     .map(s -> "$2T." + s)
+                    // $Z will split long lines
                     .collect(Collectors.joining(",$Z ", "(", ")"));
             builder.addStatement("$1T _fdesc = $1T.$3L" + layouts,
                     FunctionDescriptor.class, ValueLayout.class, isVoid ? "ofVoid" : "of");
@@ -76,7 +81,9 @@ public class CallableGenerator {
     }
 
     void generateMethodParameters(MethodSpec.Builder builder) {
-        if (callable.parameters() == null) return;
+        if (callable.parameters() == null)
+            return;
+
         for (var p : callable.parameters().parameters()) {
             if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
                 continue;
@@ -111,15 +118,15 @@ public class CallableGenerator {
             stmt.add("$Z"); // emit newline
             var generator = new TypedValueGenerator(p);
 
-            // Generate null-check. But don't null-check parameters that are hidden from the Java API, or primitive values
-            if (generator.checkNull()) {
+            // Generate null-check. But don't null-check parameters that are
+            // hidden from the Java API, or primitive values
+            if (generator.checkNull())
                 stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ",
                         "memorySegment", MemorySegment.class);
-            }
 
             // callback destroy
             if (p.isDestroyNotifyParameter()) {
-                var notify = callable.parameters().parameters().stream()
+                var notify = parameters.parameters().stream()
                         .filter(q -> q.destroy() == p)
                         .findAny();
                 if (notify.isPresent()) {
@@ -131,9 +138,8 @@ public class CallableGenerator {
             }
 
             // user_data
-            else if (p.isUserDataParameter()) {
+            else if (p.isUserDataParameter())
                 stmt.add("$memorySegment:T.NULL", "memorySegment", MemorySegment.class);
-            }
 
             // Varargs
             else if (p.varargs())
@@ -142,9 +148,9 @@ public class CallableGenerator {
             // Preprocessing statement
             else if (p.isOutParameter()
                     || (p.anyType() instanceof Type type
-                    && type.get() instanceof Alias a
-                    && a.type().isPrimitive()
-                    && type.isPointer())) {
+                        && type.get() instanceof Alias a
+                        && a.type().isPrimitive()
+                        && type.isPointer())) {
                 stmt.add("_" + generator.getName() + "Pointer");
             }
 

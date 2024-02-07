@@ -55,6 +55,10 @@ public final class Interface extends RegisteredType
         return (Record) TypeReference.get(namespace(), attr("glib:type-struct"));
     }
 
+    public boolean hasProperties() {
+        return children().stream().anyMatch(Property.class::isInstance);
+    }
+
     public List<Prerequisite> prerequisites() {
         return filter(children(), Prerequisite.class);
     }

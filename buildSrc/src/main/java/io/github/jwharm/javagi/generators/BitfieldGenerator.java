@@ -46,8 +46,10 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
     }
 
     public TypeSpec generate() {
-        if (bf.infoElements().doc() != null) builder.addJavadoc(new DocGenerator(bf.infoElements().doc()).generate());
-        if (bf.attrs().deprecated()) builder.addAnnotation(Deprecated.class);
+        if (bf.infoElements().doc() != null)
+            builder.addJavadoc(new DocGenerator(bf.infoElements().doc()).generate());
+        if (bf.attrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)
                 .superclass(ClassNames.BITFIELD)
@@ -56,7 +58,8 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
                 .addMethod(orMethod())
                 .addMethod(combineMethod());
 
-        if (hasTypeMethod()) builder.addMethod(getTypeMethod());
+        if (hasTypeMethod())
+            builder.addMethod(getTypeMethod());
 
         addFunctions(builder);
         addMethods(builder);
@@ -70,7 +73,8 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
                 builder.addField(spec.build());
             } catch (NumberFormatException nfe) {
-                System.out.printf("Skipping bitfield member %s: \"%s\" is not an integer%n", m.cIdentifier(), m.value());
+                System.out.printf("Skipping bitfield member %s: \"%s\" is not an integer%n",
+                        m.cIdentifier(), m.value());
             }
         }
 
@@ -79,7 +83,8 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
 
     private MethodSpec valueConstructor() {
         return MethodSpec.constructorBuilder()
-                .addJavadoc("Create a new $L with the provided value", toJavaSimpleType(bf.name(), bf.namespace()))
+                .addJavadoc("Create a new $L with the provided value",
+                        toJavaSimpleType(bf.name(), bf.namespace()))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(TypeName.INT, "value")
                 .addStatement("super(value)")
@@ -90,6 +95,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
         return MethodSpec.methodBuilder("or")
                 .addJavadoc("""
                         Combine (bitwise OR) operation
+                        
                         @param masks one or more values to combine with
                         @return the combined value by calculating {@code this | mask}
                         """)
@@ -109,6 +115,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
         return MethodSpec.methodBuilder("combined")
                 .addJavadoc("""
                         Combine (bitwise OR) operation
+                        
                         @param mask the first value to combine
                         @param masks the other values to combine
                         @return the combined value by calculating {@code mask | masks[0] | masks[1] | ...}

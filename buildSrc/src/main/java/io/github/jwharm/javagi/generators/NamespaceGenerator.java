@@ -49,22 +49,25 @@ public class NamespaceGenerator {
 
         for (var constant : ns.constants()) {
             var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
-            if (fieldSpec != null) builder.addField(fieldSpec);
+            if (fieldSpec != null)
+                builder.addField(fieldSpec);
         }
 
-        for (Function f : ns.functions()) {
+        for (Function f : ns.functions())
             if (! f.skip())
                 builder.addMethod(new MethodGenerator(f).generate());
-        }
 
         return builder.build();
     }
 
     private CodeBlock loadLibraries() {
         CodeBlock.Builder block = CodeBlock.builder()
-                .beginControlFlow("switch ($T.getRuntimePlatform())", ClassNames.PLATFORM);
+                .beginControlFlow("switch ($T.getRuntimePlatform())",
+                        ClassNames.PLATFORM);
 
+        // Add case for each platform
         for (Integer platform : Platform.toList(ns.platforms())) {
+
             // Remove path from library name
             String library = ns.sharedLibrary();
             if (library.contains("/"))
@@ -72,13 +75,21 @@ public class NamespaceGenerator {
 
             // Multiple library names (comma-separated)
             if (library.contains(",")) {
-                block.beginControlFlow("case $S -> ", Platform.toString(platform));
+                block.beginControlFlow("case $S -> ",
+                        Platform.toString(platform));
                 for (String libName : library.split(","))
-                    block.addStatement("$T.loadLibrary($S)", ClassNames.LIB_LOAD, libName);
+                    block.addStatement("$T.loadLibrary($S)",
+                            ClassNames.LIB_LOAD,
+                            libName);
                 block.endControlFlow();
-            } else {
+            }
+
+            // Single library name
+            else {
                 block.addStatement("case $S -> $T.loadLibrary($S)",
-                        Platform.toString(platform), ClassNames.LIB_LOAD, library);
+                        Platform.toString(platform),
+                        ClassNames.LIB_LOAD,
+                        library);
             }
         }
 
@@ -96,19 +107,25 @@ public class NamespaceGenerator {
     private MethodSpec registerTypes() {
         MethodSpec.Builder spec = MethodSpec.methodBuilder("registerTypes")
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
-        for (Class c : ns.classes()) {
-            spec.addStatement("$T.register($T.getType(), $L)", ClassNames.TYPE_CACHE, c.typeName(), c.constructorName());
-        }
-        for (Interface i : ns.interfaces()) {
-            spec.addStatement("$T.register($T.getType(), $L)", ClassNames.TYPE_CACHE, i.typeName(), i.constructorName());
-        }
+
+        for (Class c : ns.classes())
+            spec.addStatement("$T.register($T.getType(), $L)",
+                    ClassNames.TYPE_CACHE, c.typeName(), c.constructorName());
+
+        for (Interface i : ns.interfaces())
+            spec.addStatement("$T.register($T.getType(), $L)",
+                    ClassNames.TYPE_CACHE, i.typeName(), i.constructorName());
+
         for (Alias a : ns.aliases()) {
             RegisteredType target = a.type().get();
             if (target instanceof Class c)
-                spec.addStatement("$T.register($T.getType(), $L)", ClassNames.TYPE_CACHE, a.typeName(), c.constructorName());
+                spec.addStatement("$T.register($T.getType(), $L)",
+                        ClassNames.TYPE_CACHE, a.typeName(), c.constructorName());
             if (target instanceof Interface i)
-                spec.addStatement("$T.register($T.getType(), $L)", ClassNames.TYPE_CACHE, a.typeName(), i.constructorName());
+                spec.addStatement("$T.register($T.getType(), $L)",
+                        ClassNames.TYPE_CACHE, a.typeName(), i.constructorName());
         }
+
         return spec.build();
     }
 }

@@ -95,7 +95,7 @@ public final class Type extends AnyType implements TypeReference {
         };
     }
 
-    public boolean isGTypeInstance() {
+    public boolean checkIsGObject() {
         RegisteredType target = get();
         return target != null && target.checkIsGObject();
     }

@@ -43,8 +43,9 @@ import java.util.*;
 import java.util.zip.InflaterInputStream;
 
 /**
- * GenerateSources is a Gradle task that will parse a GIR file (and all included GIR files)
- * and generate Java source files for the types defined in the GIR file.
+ * GenerateSources is a Gradle task that will generate Java source files for
+ * the types defined in a GIR Module. (The Module has been created by the
+ * ParseGir task.)
  */
 public abstract class GenerateSources extends DefaultTask {
 
@@ -60,30 +61,32 @@ public abstract class GenerateSources extends DefaultTask {
     @TaskAction
     void execute() {
         File inputFile = getInputFile().getAsFile().get();
-        Module module;
 
+        // Extract and deserialize the Module from the file
         try (var in = new ObjectInputStream(new InflaterInputStream(
                 new BufferedInputStream(new FileInputStream(inputFile))))) {
-            module = (Module) in.readObject();
-        } catch (Exception e) {
-            throw new TaskExecutionException(this, e);
-        }
+            Module module = (Module) in.readObject();
 
-        try {
+            // Generate the Java source files
             generate(module, getOutputDirectory().get());
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
     }
 
+    // Generate Java source files for a GIR repository
     private static void generate(Module module, Directory outputDirectory) {
         Namespace ns = module.lookupNamespace(module.name());
+
+        // Generate class with namespace-global constants and functions
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
         try {
             generate(typeSpec, ns.packageName(), outputDirectory);
         } catch (Exception e) {
             System.out.println("Exception generating namespace " + ns.name() + ": " + e);
         }
+
+        // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
             try {
                 typeSpec = switch(rt) {
@@ -100,11 +103,11 @@ public abstract class GenerateSources extends DefaultTask {
                 generate(typeSpec, ns.packageName(), outputDirectory);
             } catch (Exception e) {
                 System.out.println("Exception generating " + rt.name() + ": " + e);
-                e.printStackTrace();
             }
         }
     }
 
+    // Write a generated class into a Java file
     private static void generate(TypeSpec typeSpec, String packageName, Directory outputDirectory)
             throws IOException {
         if (typeSpec == null) return;
@@ -116,22 +119,30 @@ public abstract class GenerateSources extends DefaultTask {
                 .writeTo(outputDirectory.getAsFile());
     }
 
-    /**
-     * Return a set of package names for all directories in the src/main/java folder that
-     * contain at least one *.java file.
-     */
+    // Return a set of package names for all directories in the src/main/java
+    // folder that contain at least one *.java file. These packages will be
+    // exported in the module-info.java file.
     private Set<String> getPackages() throws IOException {
         Set<String> packages = new HashSet<>();
+
         var srcDir = getProject().getProjectDir().toPath()
                 .resolve(Path.of("src", "main", "java"));
-        if (! Files.exists(srcDir)) {
+
+        if (! Files.exists(srcDir))
             return packages;
-        }
-        Files.walkFileTree(srcDir, EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+
+        Files.walkFileTree(
+                srcDir,
+                EnumSet.noneOf(FileVisitOption.class),
+                Integer.MAX_VALUE,
+                new SimpleFileVisitor<>() {
+
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
-                    String pkg = srcDir.relativize(file.getParent()).toString()
+                    String pkg = srcDir
+                            .relativize(file.getParent())
+                            .toString()
                             .replace(srcDir.getFileSystem().getSeparator(), ".");
                     packages.add(pkg);
                 }

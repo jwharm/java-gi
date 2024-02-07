@@ -67,15 +67,18 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     .addMethod(valueConstructor(alias.type().typeName()))
                     .addMethod(arrayConstructor());
 
-        if (alias.infoElements().doc() != null) builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
-        if (alias.attrs().deprecated()) builder.addAnnotation(Deprecated.class);
+        if (alias.infoElements().doc() != null)
+            builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
+        if (alias.attrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
 
         return builder.addModifiers(Modifier.PUBLIC).build();
     }
 
     private MethodSpec valueConstructor(TypeName typeName) {
         return MethodSpec.constructorBuilder()
-                .addJavadoc("Create a new $L with the provided value", toJavaSimpleType(alias.name(), alias.namespace()))
+                .addJavadoc("Create a new $L with the provided value",
+                        toJavaSimpleType(alias.name(), alias.namespace()))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(typeName, "value")
                 .addStatement("super(value)")
@@ -102,9 +105,12 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .addParameter(MemorySegment.class, "address")
                 .addParameter(long.class, "length")
                 .addParameter(boolean.class, "free")
-                .addStatement("$T array = new $T[(int) length]", ArrayTypeName.of(alias.typeName()), alias.typeName())
-                .addStatement("long byteSize = $T.$L.byteSize()", ValueLayout.class, layout)
-                .addStatement("$T segment = address.reinterpret(byteSize * length)", MemorySegment.class)
+                .addStatement("$T array = new $T[(int) length]",
+                        ArrayTypeName.of(alias.typeName()), alias.typeName())
+                .addStatement("long byteSize = $T.$L.byteSize()",
+                        ValueLayout.class, layout)
+                .addStatement("$T segment = address.reinterpret(byteSize * length)",
+                        MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 
         if ("java.lang.String".equals(alias.type().javaType()))

@@ -78,6 +78,32 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
         };
     }
 
+    public boolean isFloating() {
+        // GObject has a ref_sink function, but we don't want to treat all
+        // GObjects as floating references.
+        if ("GObject".equals(cType()))
+            return false;
+
+        // GInitiallyUnowned is always a floating reference, and doesn't
+        // explicitly need to be marked as such.
+        if ("GInitiallyUnowned".equals(cType()))
+            return false;
+
+        // Subclasses of GInitiallyUnowned don't need to implement the
+        // `Floating` interface, because GInitiallyUnowned already does.
+        if (this instanceof Class cls
+                && cls.isInstanceOf("GObject", "InitiallyUnowned"))
+            return false;
+
+        // Any other classes that have a ref_sink method, will be treated as
+        // floating references.
+        if (this instanceof MethodContainer mc)
+            return mc.methods().stream()
+                    .anyMatch(m -> "ref_sink".equals(m.name()));
+
+        return false;
+    }
+
     public boolean doPlatformCheck() {
         return platforms() != Platform.ALL;
     }
@@ -121,6 +147,11 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
 
     @Override
     public String toString() {
-        return "%s %s %s %s".formatted(getClass().getSimpleName(), Platform.toString(platforms()), attributes(), children());
+        return "%s %s %s %s".formatted(
+                getClass().getSimpleName(),
+                Platform.toString(platforms()),
+                attributes(),
+                children()
+        );
     }
 }

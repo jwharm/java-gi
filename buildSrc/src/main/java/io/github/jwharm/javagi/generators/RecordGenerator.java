@@ -49,14 +49,18 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     }
 
     public TypeSpec generate() {
-        if (rec.infoElements().doc() != null) builder.addJavadoc(new DocGenerator(rec.infoElements().doc()).generate());
-        if (rec.attrs().deprecated()) builder.addAnnotation(Deprecated.class);
+        if (rec.infoElements().doc() != null)
+            builder.addJavadoc(new DocGenerator(rec.infoElements().doc()).generate());
+        if (rec.attrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC);
 
         if (outerClass instanceof Class c && c.generic())
             builder.addTypeVariable(GENERIC_T);
 
+        // TypeClass and TypeInterface records are generated as Java inner classes that
+        // extend the TypeClass or TypeInterface of the parent type.
         if (outerClass != null) {
             builder.addModifiers(Modifier.STATIC);
             if (rec.fields().isEmpty()) {
@@ -80,7 +84,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.superclass(ClassNames.MANAGED_INSTANCE);
         }
 
-        // TODO: implement Floating interface
+        if (rec.isFloating())
+            builder.addSuperinterface(ClassNames.FLOATING);
 
         if (outerClass == null)
             builder.addStaticBlock(staticBlock());
@@ -97,11 +102,16 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
             builder.addMethod(allocate());
+
             if (outerClass == null && hasFieldSetters())
                 builder.addMethod(allocateWithParameters());
-            for (Field f : rec.fields()) generateField(f);
+
+            for (Field f : rec.fields())
+                generateField(f);
+
             if (!rec.unions().isEmpty())
-                for (Field f : rec.unions().getFirst().fields()) generateField(f);
+                for (Field f : rec.unions().getFirst().fields())
+                    generateField(f);
         }
 
         addConstructors(builder);
@@ -121,15 +131,20 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (f.isDisguised()) return;
         FieldGenerator generator = new FieldGenerator(f);
         Callback cb  = f.callback();
+
         if (cb == null) {
             builder.addMethod(generator.generateReadMethod());
         } else {
             builder.addType(new ClosureGenerator(cb).generateFunctionalInterface());
-            // For callbacks, generate a second override method with java.lang.reflect.Method parameter
+
+            // For callbacks, generate a second override method
+            // with java.lang.reflect.Method parameter
             if (outerClass != null && cb.parameters() != null) {
-                builder.addField(FieldSpec.builder(java.lang.reflect.Method.class,
-                        "_" + generator.getName() + "Method",
-                        Modifier.PRIVATE).build()
+                builder.addField(FieldSpec.builder(
+                            java.lang.reflect.Method.class,
+                            "_" + generator.getName() + "Method",
+                            Modifier.PRIVATE)
+                        .build()
                 );
                 builder.addMethod(generator.generateOverrideMethod());
                 builder.addMethod(new ClosureGenerator(cb).generateUpcallMethod(
@@ -155,7 +170,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     && method.parameters() == null
                     && (method.returnValue().anyType().isVoid())) {
                 builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
-                        ClassNames.MEMORY_CLEANER, identifier, method.attrs().cIdentifier());
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        method.attrs().cIdentifier());
                 return;
             }
         }
@@ -163,13 +180,18 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         // Boxed types
         if (rec.getTypeFunc() != null) {
             builder.addStatement("$T.setFreeFunc($L.handle(), $S)",
-                    ClassNames.MEMORY_CLEANER, identifier, "g_boxed_free");
+                    ClassNames.MEMORY_CLEANER,
+                    identifier,
+                    "g_boxed_free");
             if (className == null)
                 builder.addStatement("$T.setBoxedType($L.handle(), getType())",
-                        ClassNames.MEMORY_CLEANER, identifier);
+                        ClassNames.MEMORY_CLEANER,
+                        identifier);
             else
                 builder.addStatement("$T.setBoxedType($L.handle(), $T.getType())",
-                        ClassNames.MEMORY_CLEANER, identifier, className);
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        className);
         }
     }
 
@@ -184,8 +206,10 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
                 .addParameter(Arena.class, "arena")
-                .addStatement("$T segment = arena.allocate(getMemoryLayout())", MemorySegment.class)
-                .addStatement("return new $T(segment)", rec.typeName())
+                .addStatement("$T segment = arena.allocate(getMemoryLayout())",
+                        MemorySegment.class)
+                .addStatement("return new $T(segment)",
+                        rec.typeName())
                 .build();
     }
 
@@ -200,19 +224,30 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                                                         
                         @param  arena to control the memory allocation scope
                         """, rec.typeName());
+
+        // Javadoc for parameters and return value
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
                 spec.addJavadoc("@param $1L $2L for the field {@code $1L}\n",
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
         );
-        spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n", rec.typeName())
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+        spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n",
+                        rec.typeName());
+
+        // Set visibility, return type, and parameters
+        spec.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
                 .addParameter(Arena.class, "arena");
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
-                spec.addParameter(new TypedValueGenerator(f).getType(), toJavaIdentifier(f.name()))
+                spec.addParameter(
+                        new TypedValueGenerator(f).getType(),
+                        toJavaIdentifier(f.name()))
         );
+
+        // Allocate the new instance
         spec.addStatement("$T _instance = allocate(arena)", rec.typeName());
+
+        // Copy the parameter values into the instance fields
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
                 spec.addStatement("_instance.$L$L($L$L)",
                         f.callback() == null ? "write" : "override",
@@ -220,6 +255,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         f.allocatesMemory() ? "arena, " : "",
                         toJavaIdentifier(f.name()))
         );
+
+        // Return the instance
         return spec.addStatement("return _instance")
                 .build();
     }

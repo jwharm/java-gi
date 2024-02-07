@@ -33,6 +33,7 @@ public final class ClassNames {
     public static final ClassName ALIAS = ClassName.get(PKG_BASE, "Alias");
     public static final ClassName BITFIELD = ClassName.get(PKG_BASE, "Bitfield");
     public static final ClassName ENUMERATION = ClassName.get(PKG_BASE, "Enumeration");
+    public static final ClassName FLOATING = ClassName.get(PKG_BASE, "Floating");
     public static final ClassName GERROR_EXCEPTION = ClassName.get(PKG_BASE, "GErrorException");
     public static final ClassName GLIB_LOGGER = ClassName.get(PKG_BASE, "GLibLogger");
     public static final ClassName MANAGED_INSTANCE = ClassName.get(PKG_BASE, "ManagedInstance");

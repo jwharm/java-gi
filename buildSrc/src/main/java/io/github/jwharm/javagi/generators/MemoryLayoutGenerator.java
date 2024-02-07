@@ -40,9 +40,14 @@ public class MemoryLayoutGenerator {
             return null;
 
         // Opaque structs have unknown memory layout and should not have an allocator
-        if (rt instanceof Class c  && (c.hasOpaqueStructFields() || c.isOpaque())) return null;
-        if (rt instanceof Record r && (r.hasOpaqueStructFields() || r.isOpaque())) return null;
-        if (rt instanceof Union u  && (u.hasOpaqueStructFields() || u.isOpaque())) return null;
+        boolean isOpaque = switch (rt) {
+            case Class c -> c.hasOpaqueStructFields() || c.isOpaque();
+            case Record r -> r.hasOpaqueStructFields() || r.isOpaque();
+            case Union u -> u.hasOpaqueStructFields() || u.isOpaque();
+            default -> false;
+        };
+        if (isOpaque)
+            return null;
 
         var fieldList = CollectionUtils.filter(rt.children(), Field.class);
         var unionList = CollectionUtils.filter(rt.children(), Union.class);
@@ -50,9 +55,9 @@ public class MemoryLayoutGenerator {
             fieldList = unionList.getFirst().fields();
 
         boolean isUnion = rt instanceof Union || !unionList.isEmpty();
-        PartialStatement fieldLayouts = generateFieldLayouts(fieldList, isUnion);
-        PartialStatement layout = PartialStatement.of("return $memoryLayout:T." + (isUnion ? "union" : "struct") + "Layout(\n$>")
-                .add(fieldLayouts)
+
+        var layout = PartialStatement.of("return $memoryLayout:T." + (isUnion ? "union" : "struct") + "Layout(\n$>")
+                .add(generateFieldLayouts(fieldList, isUnion))
                 .add("$<\n).withName(\"" + rt.cType() + "\");\n");
 
         return MethodSpec.methodBuilder("getMemoryLayout")
@@ -65,17 +70,18 @@ public class MemoryLayoutGenerator {
     }
 
     private PartialStatement generateFieldLayouts(List<Field> fieldList, boolean isUnion) {
-        PartialStatement stmt = PartialStatement.of(null, "memoryLayout", MemoryLayout.class);
+        var stmt = PartialStatement.of(null, "memoryLayout", MemoryLayout.class);
         int size = 0;
         for (Field field : fieldList) {
             if (size > 0) stmt.add(",\n");
 
-            // Get the byte size of the field. For example: int = 4 bytes, pointer = 8 bytes, char = 1 byte
+            // Get the byte size of the field, in bytes
             int s = field.getSize();
 
             // Calculate padding (except for union layouts)
             if (!isUnion) {
-                // If the previous field had a smaller byte size than this one, add padding (to a maximum of 8 bytes)
+                // If the previous field had a smaller byte-size than
+                // this one, add padding (to a maximum of 8 bytes)
                 if (size % s % 8 > 0) {
                     int padding = (s - (size % s)) % 8;
                     stmt.add("$memoryLayout:T.paddingLayout(" + padding + "),\n");
@@ -150,5 +156,4 @@ public class MemoryLayoutGenerator {
             }
         };
     }
-
 }

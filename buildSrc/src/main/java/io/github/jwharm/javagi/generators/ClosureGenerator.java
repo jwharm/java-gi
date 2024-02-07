@@ -60,7 +60,8 @@ public class ClosureGenerator {
                 .addMethod(generateRunMethod())
                 .addMethod(generateUpcallMethod(name, "upcall", "run"))
                 .addMethod(generateToCallbackMethod(name));
-        if (closure.deprecated()) builder.addAnnotation(Deprecated.class);
+        if (closure.deprecated())
+            builder.addAnnotation(Deprecated.class);
         return builder.build();
     }
 
@@ -90,84 +91,119 @@ public class ClosureGenerator {
     MethodSpec generateUpcallMethod(String methodName, String name, String methodToInvoke) {
         boolean returnsVoid = closure.returnValue().anyType().isVoid();
 
+        // Method name and return type
         MethodSpec.Builder upcall = MethodSpec.methodBuilder(name)
-                .returns(returnsVoid ? TypeName.VOID : getCarrierTypeName(closure.returnValue().anyType()));
+                .returns(returnsVoid
+                        ? TypeName.VOID
+                        : getCarrierTypeName(closure.returnValue().anyType()));
 
+        // Javadoc
         if (methodToInvoke.equals("run"))
-            upcall.addJavadoc("The {@code upcall} method is called from native code. The parameters \n")
-                    .addJavadoc("are marshaled and {@link #run} is executed.");
+            upcall.addJavadoc("""
+                    The {@code upcall} method is called from native code. The parameters
+                    are marshaled and {@link #run} is executed.
+                    """);
 
+        // Visibility
         if (methodToInvoke.equals("run"))
             upcall.addModifiers(Modifier.PUBLIC, Modifier.DEFAULT);
         else
             upcall.addModifiers(Modifier.PRIVATE);
 
+        // Add source parameter to signal callback method
         if (closure instanceof Signal signal) {
             String paramName = "source" + toCamelCase(signal.parent().name(), true);
             upcall.addParameter(TypeName.get(MemorySegment.class), paramName);
         }
 
+        // Add parameters (native carrier types)
         if (closure.parameters() != null)
             for (Parameter p : closure.parameters().parameters())
                 upcall.addParameter(getCarrierTypeName(p.anyType()), toJavaIdentifier(p.name()));
 
+        // GError** parameter
         if (closure.throws_())
             upcall.addParameter(MemorySegment.class, "_gerrorPointer");
 
-        // Generate try-catch block for reflection calls
+        // Try-catch block for reflection calls
         if (methodToInvoke.endsWith("invoke"))
             upcall.beginControlFlow("try");
 
+        // Arena for memory allocations
         if (closure.allocatesMemory())
-            upcall.beginControlFlow("try (var _arena = $T.ofConfined())", Arena.class);
+            upcall.beginControlFlow("try ($1T _arena = $1T.ofConfined())",
+                    Arena.class);
 
+        // Parameter preprocessing
         if (closure.parameters() != null)
             closure.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length, so they must be processed last.
+                    // Array parameters may refer to other parameters for their length,
+                    // so they must be processed last.
                     .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
                     .forEach(p -> new PreprocessingGenerator(p).generateUpcall(upcall));
 
+        // Try-block for exceptions
         if (closure.throws_())
             upcall.beginControlFlow("try");
 
+        // Callback invocation
         PartialStatement invoke = new PartialStatement();
         if (!returnsVoid) {
             invoke.add("var _result = ");
             if (methodToInvoke.endsWith("invoke"))
-                invoke.add("(" + new TypedValueGenerator(closure.returnValue()).getType() + ") ");
+                invoke.add("(")
+                        .add("$ret:T",
+                                "ret", new TypedValueGenerator(closure.returnValue()).getType())
+                        .add(") ");
         }
-        invoke.add(methodToInvoke).add("(").add(marshalParameters(methodToInvoke)).add(");\n");
+        invoke.add(methodToInvoke)
+                .add("(")
+                .add(marshalParameters(methodToInvoke))
+                .add(");\n");
         upcall.addNamedCode(invoke.format(), invoke.arguments());
 
+        // Parameter postprocessing
         if (closure.parameters() != null)
             for (var p : closure.parameters().parameters())
                 new PostprocessingGenerator(p).generateUpcall(upcall);
 
+        // Null-check the return value
         if ((!returnsVoid)
-                && "java.lang.foreign.MemorySegment".equals(getCarrierTypeString(closure.returnValue().anyType()))
+                && "java.lang.foreign.MemorySegment".equals(
+                        getCarrierTypeString(closure.returnValue().anyType()))
                 && (!closure.returnValue().notNull()))
-            upcall.addStatement("if (_result == null) return $T.NULL", MemorySegment.class);
+            upcall.addStatement("if (_result == null) return $T.NULL",
+                    MemorySegment.class);
 
-        if (closure.returnValue().anyType() instanceof Type t && t.isGTypeInstance()
+        // Ref returned GObjects when ownership is transferred to the caller
+        if (closure.returnValue().anyType() instanceof Type t && t.checkIsGObject()
                 && closure.returnValue().transferOwnership() == TransferOwnership.FULL)
             upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
                     ClassName.get("org.gnome.gobject", "GObject"));
 
+        // Marshal return value
         if (!returnsVoid) {
-            var stmt = new TypedValueGenerator(closure.returnValue()).marshalJavaToNative("_result");
-            upcall.addNamedCode("return " + stmt.format() + ";\n", stmt.arguments());
+            var stmt = new TypedValueGenerator(closure.returnValue())
+                    .marshalJavaToNative("_result");
+            upcall.addNamedCode("return " + stmt.format() + ";\n",
+                    stmt.arguments());
         }
 
+        // Catch exceptions and set the GError** value
         if (closure.throws_()) {
             if (methodToInvoke.endsWith("invoke")) {
-                upcall.nextControlFlow("catch ($T _ite)", InvocationTargetException.class);
-                upcall.beginControlFlow("if (_ite.getCause() instanceof $T _ge)", ClassNames.GERROR_EXCEPTION);
+                upcall.nextControlFlow("catch ($T _ite)",
+                        InvocationTargetException.class);
+                upcall.beginControlFlow("if (_ite.getCause() instanceof $T _ge)",
+                        ClassNames.GERROR_EXCEPTION);
             } else {
-                upcall.nextControlFlow("catch ($T _ge)", ClassNames.GERROR_EXCEPTION);
+                upcall.nextControlFlow("catch ($T _ge)",
+                        ClassNames.GERROR_EXCEPTION);
             }
             upcall.addStatement("$1T _gerror = new $1T(_ge.getDomain(), _ge.getCode(), _ge.getMessage())",
                     ClassName.get("org.gnome.glib", "GError"));
-            upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())", ValueLayout.class);
+            upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())",
+                    ValueLayout.class);
             if (!returnsVoid)
                 returnNull(upcall);
             if (methodToInvoke.endsWith("invoke")) {
@@ -178,6 +214,7 @@ public class ClosureGenerator {
             upcall.endControlFlow();
         }
 
+        // Close Arena scope
         if (closure.allocatesMemory())
             upcall.endControlFlow();
 
@@ -185,8 +222,11 @@ public class ClosureGenerator {
         if (methodToInvoke.endsWith("invoke")) {
             upcall.nextControlFlow("catch ($T ite)", InvocationTargetException.class);
             upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, ite.getCause().toString() + $S + $L)",
-                    ClassName.get("org.gnome.glib", "GLib"), ClassNames.CONSTANTS,
-                    ClassName.get("org.gnome.glib", "LogLevelFlags"), " in ", methodName);
+                    ClassName.get("org.gnome.glib", "GLib"),
+                    ClassNames.CONSTANTS,
+                    ClassName.get("org.gnome.glib", "LogLevelFlags"),
+                    " in ",
+                    methodName);
             if (!returnsVoid)
                 returnNull(upcall);
             upcall.nextControlFlow("catch (Exception e)");
@@ -213,7 +253,10 @@ public class ClosureGenerator {
 
             if (i > 0) stmt.add(", ");
 
-            if (p.anyType() instanceof Type t && t.isPointer() && t.get() instanceof Alias a && a.type().isPrimitive()) {
+            if (p.anyType() instanceof Type t
+                    && t.isPointer()
+                    && t.get() instanceof Alias a
+                    && a.type().isPrimitive()) {
                 stmt.add("_" + toJavaIdentifier(p.name()) + "Alias");
                 continue;
             }
@@ -224,13 +267,15 @@ public class ClosureGenerator {
             }
 
             // Invoking a method using reflection calls Method.invoke() which is variadic.
-            // If the last parameter is an array, that will trigger a compiler warning, because
-            // it is unsure if the array should be treated as varargs or not
+            // If the last parameter is an array, that will trigger a compiler warning,
+            // because it is unsure if the array should be treated as varargs or not
             if (last && methodToInvoke.endsWith("invoke"))
-                if (p.anyType() instanceof Array || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
-                    stmt.add("(Object) ");
+                if (p.anyType() instanceof Array
+                        || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
+                    stmt.add("($object:T) ", "object", Object.class);
 
-            stmt.add(new TypedValueGenerator(p).marshalNativeToJava(toJavaIdentifier(p.name()), true));
+            stmt.add(new TypedValueGenerator(p)
+                    .marshalNativeToJava(toJavaIdentifier(p.name()), true));
         }
         return stmt;
     }
@@ -238,8 +283,10 @@ public class ClosureGenerator {
     private void returnNull(MethodSpec.Builder upcall) {
         if (closure.returnValue().anyType() instanceof Type type) {
             var target = type.get();
-            if ((type.isPrimitive() || target instanceof FlaggedType || (target instanceof Alias a && a.type().isPrimitive()))
-                    && (! type.isPointer())) {
+            if ((type.isPrimitive()
+                        || target instanceof FlaggedType
+                        || (target instanceof Alias a && a.type().isPrimitive()))
+                    && (!type.isPointer())) {
                 upcall.addStatement("return 0");
                 return;
             }
@@ -251,15 +298,17 @@ public class ClosureGenerator {
         MethodSpec.Builder toCallback = MethodSpec.methodBuilder("toCallback")
                 .addJavadoc("""
                         Creates a native function pointer to the {@link #upcall} method.
+                        
                         @return the native function pointer
                         """)
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .addParameter(Arena.class, "arena")
                 .returns(MemorySegment.class);
         generator.generateFunctionDescriptor(toCallback);
-        toCallback.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
-                MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className);
-        toCallback.addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)", Linker.class);
-        return toCallback.build();
+        return toCallback.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
+                        MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className)
+                .addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
+                        Linker.class)
+                .build();
     }
 }

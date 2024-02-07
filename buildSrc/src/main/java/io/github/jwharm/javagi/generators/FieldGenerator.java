@@ -55,7 +55,8 @@ public class FieldGenerator extends TypedValueGenerator {
     private String methodName(String prefix) {
         String methodName = prefix + toCamelCase(f.name(), true);
         for (GirElement node : f.parent().children()) {
-            if (node instanceof AbstractCallable ct && methodName.equals(toJavaIdentifier(ct.name()))) {
+            if (node instanceof AbstractCallable ct
+                    && methodName.equals(toJavaIdentifier(ct.name()))) {
                 methodName += "_";
                 break;
             }
@@ -81,20 +82,25 @@ public class FieldGenerator extends TypedValueGenerator {
             spec.addStatement("$1T _arena = $1T.ofAuto()", Arena.class);
 
         // Read the memory segment of an embedded field from the struct (not a pointer)
-        if ((type != null) && (!type.isPointer()) && (target instanceof Class || target instanceof Interface)) {
-            var stmt = PartialStatement.of("return ").add(marshalNativeToJava("handle().asSlice(_offset)", false));
-            return spec.addStatement("long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement($S))", f.name())
-                    .addNamedCode(stmt.format() + ";\n", stmt.arguments())
+        if ((type != null)
+                && (!type.isPointer())
+                && (target instanceof Class || target instanceof Interface)) {
+            var calcOffset = "long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement($S))";
+            var returnSlice = PartialStatement.of("return ")
+                    .add(marshalNativeToJava("handle().asSlice(_offset)", false));
+            return spec.addStatement(calcOffset, f.name())
+                    .addNamedCode(returnSlice.format() + ";\n", returnSlice.arguments())
                     .build();
         }
 
         // Read a pointer or primitive value from the struct
         String memoryType = f.getMemoryType();
         if ("ARRAY".equals(memoryType)) memoryType = "java.lang.foreign.MemorySegment";
-        var stmt = PartialStatement.of("return ").add(marshalNativeToJava("_result", false));
-        return spec.addStatement("var _result = ($L) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())",
-                        memoryType, MemoryLayout.class, f.name())
-                .addNamedCode(stmt.format() + ";\n", stmt.arguments())
+        var getResult = "var _result = ($L) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())";
+        var returnResult = PartialStatement.of("return ")
+                .add(marshalNativeToJava("_result", false));
+        return spec.addStatement(getResult, memoryType, MemoryLayout.class, f.name())
+                .addNamedCode(returnResult.format() + ";\n", returnResult.arguments())
                 .build();
     }
 
@@ -106,21 +112,29 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName());
+
         if (f.allocatesMemory())
             spec.addParameter(Arena.class, "_arena");
+
         spec.addParameter(getType(), getName());
+
         PartialStatement stmt = marshalJavaToNative(getName())
                 .add(null,
                         "memoryLayout", MemoryLayout.class,
                         "memorySegment", MemorySegment.class,
                         "fieldName", f.name());
+
         if (checkNull())
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), (" + getName() + " == null ? $memorySegment:T.NULL : " + stmt.format() + "));\n",
+                            + ".set(handle(), (" + getName() + " == null ? $memorySegment:T.NULL : "
+                            + stmt.format() + "));\n",
                     stmt.arguments());
         else
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                    + ".set(handle(), " + stmt.format() + ");\n", stmt.arguments());
+                            + ".set(handle(), "
+                            + stmt.format() + ");\n",
+                    stmt.arguments());
+
         return spec.build();
     }
 
@@ -137,11 +151,18 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addStatement("this._$LMethod = method", getName());
         new CallableGenerator(cb).generateFunctionDescriptor(spec);
         return spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
-                        MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, f.parent().typeName(), getName() + "Upcall")
+                        MethodHandle.class,
+                        ClassNames.INTEROP,
+                        MethodHandles.class,
+                        f.parent().typeName(),
+                        getName() + "Upcall")
                 .addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         MemorySegment.class, Linker.class)
-                .addStatement("getMemoryLayout().varHandle($T.PathElement.groupElement($S))$Z.set(handle(), (method == null ? $T.NULL : _address))",
-                        MemoryLayout.class, f.name(), MemorySegment.class)
+                .addStatement("getMemoryLayout().varHandle($T.PathElement.groupElement($S))$Z"
+                                + ".set(handle(), (method == null ? $T.NULL : _address))",
+                        MemoryLayout.class,
+                        f.name(),
+                        MemorySegment.class)
                 .build();
     }
 }

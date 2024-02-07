@@ -80,7 +80,7 @@ public class BuilderGenerator {
                 .addSuperinterfaces(cls.implements_().stream()
                         .map(TypeReference::get)
                         .map(Interface.class::cast)
-                        .filter(inf -> !inf.properties().isEmpty())
+                        .filter(Interface::hasProperties)
                         .map(inf -> inf.typeName().nestedClass("Builder"))
                         .map(cn -> ParameterizedTypeName.get(cn, B))
                         .toList())
@@ -89,7 +89,10 @@ public class BuilderGenerator {
                         .addJavadoc("Default constructor for a {@code Builder} object.")
                         .build())
                 .addMethod(buildMethod())
-                .addMethods(cls.properties().stream().filter(Property::writable).map(this::setter)::iterator);
+                .addMethods(cls.properties().stream()
+                        .filter(Property::writable)
+                        .map(this::setter)
+                        ::iterator);
 
         return builder.build();
     }
@@ -107,7 +110,8 @@ public class BuilderGenerator {
     }
 
     private MethodSpec setter(Property prp) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("set" + toCamelCase(prp.name(), true))
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(
+                "set" + toCamelCase(prp.name(), true))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(BUILDER_B);
 
@@ -130,7 +134,7 @@ public class BuilderGenerator {
         builder.addParameter(generator.getType(), generator.getName());
 
         // Method body
-        PartialStatement valueSetter = generator.getValueSetter("_value", gtype, generator.getName())
+        PartialStatement valueSetter = generator.getValueSetter(gtype, generator.getName())
                 .add(";\n");
         return builder.addStatement("$T _arena = getArena()", Arena.class)
                 .addStatement("$1T _value = $1T.allocate(_arena)",
@@ -150,13 +154,13 @@ public class BuilderGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(rt.typeName())
                 .addJavadoc("""
-                                Finish building the {@code $1L} object. This will call
-                                {@link $2T#withProperties} to create a new
-                                GObject instance, which is then cast to {@code $1L}.
-                                
-                                @return a new instance of {@code $1L} with the properties
-                                        that were set in the Builder object.
-                                """, rt.typeName().simpleName(), GOBJECT);
+                        Finish building the {@code $1L} object. This will call
+                        {@link $2T#withProperties} to create a new
+                        GObject instance, which is then cast to {@code $1L}.
+                        
+                        @return a new instance of {@code $1L} with the properties
+                                that were set in the Builder object.
+                        """, rt.typeName().simpleName(), GOBJECT);
         if (rt.doPlatformCheck())
             builder.addJavadoc("@throws $T when run on an unsupported platform",
                     ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);

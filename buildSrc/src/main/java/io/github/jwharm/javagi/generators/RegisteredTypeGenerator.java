@@ -33,7 +33,7 @@ import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
 
-public class RegisteredTypeGenerator {
+public abstract class RegisteredTypeGenerator {
 
     private final RegisteredType rt;
 
@@ -46,7 +46,8 @@ public class RegisteredTypeGenerator {
     }
 
     protected CodeBlock staticBlock() {
-        return CodeBlock.of("$T.javagi$$ensureInitialized();\n", rt.namespace().typeName());
+        return CodeBlock.of("$T.javagi$$ensureInitialized();\n",
+                rt.namespace().typeName());
     }
 
     protected boolean hasTypeMethod() {
@@ -58,39 +59,42 @@ public class RegisteredTypeGenerator {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
                     Get the GType of the $L class
+                    
                     @return the GType
                     """, rt.cType())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassName.get("org.gnome.glib", "Type"))
-                .addStatement("return $T.getType($S)", ClassNames.INTEROP, rt.getTypeFunc())
+                .addStatement("return $T.getType($S)",
+                        ClassNames.INTEROP,
+                        rt.getTypeFunc())
                 .build();
     }
 
     protected void addFunctions(TypeSpec.Builder builder) {
         if (rt instanceof FunctionContainer fc)
             for (Function f : fc.functions())
-                if (! f.skip())
+                if (!f.skip())
                     builder.addMethod(new MethodGenerator(f).generate());
     }
 
     protected void addConstructors(TypeSpec.Builder builder) {
         if (rt instanceof ConstructorContainer cc)
             for (Constructor c : cc.constructors())
-                if (! c.skip())
+                if (!c.skip())
                     new ConstructorGenerator(c).generate(builder);
     }
 
     protected void addMethods(TypeSpec.Builder builder) {
         if (rt instanceof MethodContainer mc)
             for (Method m : mc.methods())
-                if (! m.skip())
+                if (!m.skip())
                     builder.addMethod(new MethodGenerator(m).generate());
     }
 
     protected void addVirtualMethods(TypeSpec.Builder builder) {
         if (rt instanceof VirtualMethodContainer vmc)
             for (VirtualMethod vm : vmc.virtualMethods())
-                if (! vm.skip())
+                if (!vm.skip())
                     builder.addMethod(new MethodGenerator(vm).generate());
     }
 
@@ -100,7 +104,7 @@ public class RegisteredTypeGenerator {
                 var generator = new SignalGenerator(s);
                 builder.addType(generator.generateFunctionalInterface());
                 builder.addMethod(generator.generateConnectMethod());
-                if (! generator.emitMethodExists())
+                if (!generator.emitMethodExists())
                     builder.addMethod(generator.generateEmitMethod());
             }
         }
@@ -110,14 +114,17 @@ public class RegisteredTypeGenerator {
         MethodSpec.Builder builder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                    Create a $L proxy instance for the provided memory address.
-                    @param address the memory address of the native object
-                    """, name())
+                        Create a $L proxy instance for the provided memory address.
+                        @param address the memory address of the native object
+                        """, name())
                 .addParameter(MemorySegment.class, "address");
-        if (rt instanceof Record rec && rec.isOpaque() || rt instanceof Union union && union.isOpaque())
+
+        if (rt instanceof Record rec && rec.isOpaque()
+                || rt instanceof Union union && union.isOpaque())
             builder.addStatement("super(address)");
         else
-            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))", ClassNames.INTEROP);
+            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
+                    ClassNames.INTEROP);
         return builder.build();
     }
 
@@ -128,12 +135,16 @@ public class RegisteredTypeGenerator {
                 .addStaticBlock(staticBlock());
 
         if (rt instanceof Interface)
-            spec.addJavadoc("The $T type represents a native instance of the $T interface.", nested, rt.typeName())
+            spec.addJavadoc("The $T type represents a native instance of the $T interface.",
+                            nested,
+                            rt.typeName())
                     .superclass(ClassName.get("org.gnome.gobject", "GObject"))
                     .addSuperinterface(rt.typeName());
 
         if (rt instanceof Class)
-            spec.addJavadoc("The $T type represents a native instance of the abstract $T class.", nested, rt.typeName())
+            spec.addJavadoc("The $T type represents a native instance of the abstract $T class.",
+                            nested,
+                            rt.typeName())
                     .superclass(rt.typeName());
 
         return spec.addMethod(MethodSpec.constructorBuilder()

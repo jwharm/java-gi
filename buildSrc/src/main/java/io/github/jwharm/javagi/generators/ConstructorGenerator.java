@@ -56,8 +56,11 @@ public class ConstructorGenerator {
     }
 
     public void generate(TypeSpec.Builder classBuilder) {
-        classBuilder.addMethod(ctor.name().equals("new") ? constructor() : namedConstructor());
-        classBuilder.addMethod(new MethodGenerator(ctor, privateMethodName).generate());
+        classBuilder.addMethod(ctor.name().equals("new")
+                ? constructor()
+                : namedConstructor());
+        classBuilder.addMethod(
+                new MethodGenerator(ctor, privateMethodName).generate());
     }
 
     private MethodSpec constructor() {
@@ -121,26 +124,40 @@ public class ConstructorGenerator {
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
         PartialStatement stmt = generator.marshalNativeToJava("_result", false);
+
+        // Ref GObject
         if (parent.checkIsGObject()) {
-            builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).format() + ";\n", stmt.arguments())
+            builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).add(";\n").format(),
+                            stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
                             ClassName.get("org.gnome.gobject", "GObject"))
                     .addStatement("$T.debug($S, _gobject.handle())",
-                            ClassNames.GLIB_LOGGER, "Ref " + parent.typeName() + " %ld\\n")
+                            ClassNames.GLIB_LOGGER,
+                            "Ref " + parent.typeName() + " %ld\\n")
                     .addStatement("_gobject.ref()")
                     .endControlFlow()
                     .addStatement("return ($T) _object", parent.typeName());
-        } else if (parent instanceof Record record) {
-            builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).add(";\n").format(), stmt.arguments())
+        }
+
+        // Add cleaner to struct/union pointer
+        else if (parent instanceof Record record) {
+            builder.addNamedCode(PartialStatement.of("var _instance = ")
+                            .add(stmt).add(";\n").format(), stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
-                    .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
+                    .addStatement("$T.takeOwnership(_instance.handle())",
+                            ClassNames.MEMORY_CLEANER);
             new RecordGenerator(record).setFreeFunc(builder, "_instance", parent.typeName());
             builder.endControlFlow()
                     .addStatement("return ($T) _instance", parent.typeName());
-        } else {
-            stmt = PartialStatement.of("return ($parentType:T) ", "parentType", parent.typeName()).add(stmt);
+        }
+
+        // No ownership transfer, just marshal the return value
+        else {
+            stmt = PartialStatement.of("return ($parentType:T) ", "parentType", parent.typeName())
+                    .add(stmt);
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
+
         return builder.build();
     }
 

@@ -83,6 +83,10 @@ public final class Class extends RegisteredType
         return (Record) TypeReference.get(namespace(), attr("glib:type-struct"));
     }
 
+    public boolean hasProperties() {
+        return children().stream().anyMatch(Property.class::isInstance);
+    }
+
     public String refFunc() {
         return attr("glib:ref-func");
     }

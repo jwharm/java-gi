@@ -33,11 +33,13 @@ import java.io.*;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import static io.github.jwharm.javagi.util.FileUtils.findFile;
-
 /**
- * GenerateSources is a Gradle task that will parse a GIR file (and all included GIR files)
- * and generate Java source files for the types defined in the GIR file.
+ * ParseGir is a Gradle task that will parse a GIR file into a Module object.
+ * It will read the Module objects it depends on, and add them to the new
+ * Module. The resulting Module is serialized to an output file.
+ * <p>
+ * When GIR files are found for multiple platforms, they will be merged into
+ * one tree.
  */
 public abstract class ParseGir extends DefaultTask {
 
@@ -88,16 +90,43 @@ public abstract class ParseGir extends DefaultTask {
         }
     }
 
-    private Module parse(Directory baseFolder, String moduleName) throws XMLStreamException {
-        GirParser parser = GirParser.getInstance();
+    // Read the GIR files for all platforms and parse them into a Repository.
+    // Return a new Module file containing this Repository.
+    private Module parse(Directory baseFolder, String moduleName)
+            throws XMLStreamException, FileNotFoundException {
         Repository repository = null;
+
         for (Integer platform : Platform.toList(Platform.ALL)) {
             try {
-                File girFile = findFile(baseFolder.dir(Platform.toString(platform)).getAsFile(), moduleName);
-                repository = parser.parse(girFile, platform, repository);
+                File girFile = findFile(
+                        baseFolder.dir(Platform.toString(platform)).getAsFile(),
+                        moduleName
+                );
+                repository = GirParser.getInstance().parse(
+                        girFile,
+                        platform,
+                        repository
+                );
             } catch (FileNotFoundException ignored) {
             }
         }
+
+        if (repository == null)
+            throw new FileNotFoundException("No GIR files found for " + moduleName);
+
         return new Module(moduleName, repository);
+    }
+
+    // Find a file in the given folder with the given filename prefix.
+    private static File findFile(File folder, String fileNamePrefix)
+            throws FileNotFoundException {
+        File[] files = folder.listFiles();
+
+        if (files != null)
+            for (File file : files)
+                if (file.isFile() && file.getName().startsWith(fileNamePrefix))
+                    return file;
+
+        throw new FileNotFoundException(fileNamePrefix + " not found in " + folder);
     }
 }

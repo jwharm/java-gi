@@ -54,13 +54,21 @@ class TypedValueGenerator {
      */
     boolean checkNull() {
         if (v instanceof InstanceParameter) return false;
+
         if (v instanceof Parameter p &&
-                (p.notNull() || p.varargs() || p.isErrorParameter() || p.isUserDataParameter() ||
-                        p.isDestroyNotifyParameter() || p.isArrayLengthParameter()))
+                (p.notNull()
+                    || p.varargs()
+                    || p.isErrorParameter()
+                    || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter()))
             return false;
-        return ! (type != null && (! type.isPointer()) && (type.isPrimitive() ||
-                target instanceof Alias a && a.type().isPrimitive() ||
-                target instanceof FlaggedType));
+
+        return ! (type != null
+                    && !type.isPointer()
+                    && (type.isPrimitive()
+                        || (target instanceof Alias a && a.type().isPrimitive())
+                        || target instanceof FlaggedType));
     }
 
     TypeName getType() {
@@ -68,23 +76,31 @@ class TypedValueGenerator {
             return ArrayTypeName.of(getType(type));
 
         if (v instanceof Field f && f.callback() != null)
-            return f.parent().typeName().nestedClass(toJavaSimpleType(f.name() + "_callback", f.namespace()));
+            return f.parent().typeName().nestedClass(
+                    toJavaSimpleType(f.name() + "_callback", f.namespace()));
 
         return getType(v.anyType());
     }
 
     private TypeName getType(AnyType anyType) {
         if (v instanceof Parameter p && p.isOutParameter())
-            return ParameterizedTypeName.get(ClassNames.OUT, anyType.typeName().box());
+            return ParameterizedTypeName.get(
+                    ClassNames.OUT,
+                    anyType.typeName().box()
+            );
 
-        if (type != null && type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
+        if (type != null
+                && type.isPointer()
+                && (type.isPrimitive() || target instanceof FlaggedType))
             return TypeName.get(MemorySegment.class);
 
         return anyType.typeName();
     }
 
     String getName() {
-        return "...".equals(v.name()) ? "varargs" : Conversions.toJavaIdentifier(v.name());
+        return "...".equals(v.name())
+                ? "varargs"
+                : Conversions.toJavaIdentifier(v.name());
     }
 
     PartialStatement marshalJavaToNative(String identifier) {
@@ -132,7 +148,9 @@ class TypedValueGenerator {
             return PartialStatement.of(identifier + " ? 1 : 0");
 
         if (target != null)
-            return PartialStatement.of(target.getInteropString(identifier, type.isPointer(), Scope.ofTypedValue(v)));
+            return PartialStatement.of(
+                    target.getInteropString(identifier, type.isPointer(), Scope.ofTypedValue(v))
+            );
 
         return PartialStatement.of(identifier);
     }
@@ -144,11 +162,19 @@ class TypedValueGenerator {
 
         Type type = (Type) array.anyType();
         RegisteredType target = type.get();
+
         boolean isBitfield = target instanceof Bitfield;
         boolean isEnumeration = target instanceof Enumeration;
         boolean isPrimitiveAlias = target instanceof Alias a && a.type().isPrimitive();
-        String targetTypeTag = isEnumeration ? "enumeration" : isBitfield ? "bitfield" : type.toTypeTag();
-        String primitiveClassName = isPrimitiveAlias ? Conversions.primitiveClassName(((Alias) target).type().javaType()) : "";
+
+        String targetTypeTag =
+                isEnumeration ? "enumeration" :
+                isBitfield ? "bitfield" :
+                type.toTypeTag();
+
+        String primitiveClassName = isPrimitiveAlias
+                ? Conversions.primitiveClassName(((Alias) target).type().javaType())
+                : "";
 
         if (isBitfield || isEnumeration || isPrimitiveAlias) {
             return PartialStatement.of(
@@ -179,7 +205,10 @@ class TypedValueGenerator {
             if (type.isActuallyAnArray())
                 return marshalNativeToJavaArray(type, null, identifier);
 
-            if (type.isPointer() && (type.isPrimitive() || target instanceof Bitfield || target instanceof Enumeration))
+            if (type.isPointer()
+                    && (type.isPrimitive()
+                        || target instanceof Bitfield
+                        || target instanceof Enumeration))
                 return PartialStatement.of(identifier);
 
             return marshalNativeToJava(type, identifier, upcall);
@@ -189,18 +218,24 @@ class TypedValueGenerator {
             return PartialStatement.of("null /* unsupported */");
 
         if (array != null && array.anyType() instanceof Type arrayType)
-            return marshalNativeToJavaArray(arrayType, array.sizeExpression(upcall), identifier);
+            return marshalNativeToJavaArray(
+                    arrayType,
+                    array.sizeExpression(upcall),
+                    identifier
+            );
 
         return PartialStatement.of("null /* unsupported */");
     }
 
     PartialStatement marshalNativeToJava(Type type, String identifier, boolean upcall) {
         String free = switch(v) {
-            case Parameter p when p.transferOwnership() == TransferOwnership.FULL -> "true";
+            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
             case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
             default -> "false";
         };
+
         String targetTypeTag = target == null ? null : type.toTypeTag();
+
         boolean isTypeClass = target instanceof Record && "TypeClass".equals(target.name());
 
         if ("java.lang.String".equals(type.javaType()))
@@ -229,17 +264,27 @@ class TypedValueGenerator {
         if (target instanceof Callback)
             return PartialStatement.of("null /* Unsupported parameter type */");
 
-        boolean hasGType = target instanceof Class || target instanceof Interface
-                || (target instanceof Alias a && (a.type().get() instanceof Class || a.type().get() instanceof Interface));
-        String cacheFunction = hasGType ? "getForType" : isTypeClass ? "getForTypeClass" : "get";
+        boolean hasGType = target instanceof Class
+                || target instanceof Interface
+                || (target instanceof Alias a
+                    && (a.type().get() instanceof Class ||
+                        a.type().get() instanceof Interface));
+
+        String cacheFunction =
+                hasGType ? "getForType" :
+                isTypeClass ? "getForTypeClass" :
+                "get";
+
         String cache = upcall ? "false" : "true";
 
-        if (target instanceof Class || target instanceof Interface || target instanceof Alias || isTypeClass) {
+        if (target instanceof Class
+                || target instanceof Interface
+                || target instanceof Alias
+                || isTypeClass)
             return PartialStatement.of(
                     "($" + targetTypeTag + ":T) $instanceCache:T." + cacheFunction + "(" + identifier + ", " + target.constructorName() + ", " + cache + ")",
                     targetTypeTag, target.typeName(),
                     "instanceCache", ClassNames.INSTANCE_CACHE);
-        }
 
         if (type.isBoolean())
             return PartialStatement.of(identifier + " != 0");
@@ -249,16 +294,20 @@ class TypedValueGenerator {
 
     private PartialStatement marshalNativeToJavaArray(Type type, String size, String identifier) {
         String free = switch(v) {
-            case Parameter p when p.transferOwnership() == TransferOwnership.FULL -> "true";
+            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
             case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
             default -> "false";
         };
+
         RegisteredType target = type.get();
         String targetTypeTag = target != null ? type.toTypeTag() : null;
+
         String primitive = type.isPrimitive() ? Conversions.primitiveClassName(type.javaType()) : null;
 
         // GArray stores the length in the len field
-        if (size == null && array != null && array.name() != null
+        if (size == null
+                && array != null
+                && array.name() != null
                 && List.of("GLib.Array", "GLib.PtrArray", "GLib.ByteArray").contains(array.name())) {
             size = "new $arrayType:T(" + identifier + ").readLen()";
         }
@@ -399,6 +448,7 @@ class TypedValueGenerator {
         RegisteredType rt = (target instanceof Alias a && (!a.type().isPrimitive()))
                 ? a.type().get()
                 : target;
+
         if (rt != null) {
             if (rt instanceof Class cls && cls.isInstanceOf("GObject", "ParamSpec"))
                 return PartialStatement.of("$types:T.PARAM", "types", ClassNames.TYPES);
@@ -411,6 +461,7 @@ class TypedValueGenerator {
                 return PartialStatement.of("$" + typeTag + ":T.getType()", typeTag, type.typeName());
             }
         }
+
         if (type.javaType().equals("org.gnome.glib.Type"))
             return PartialStatement.of("$gobjects:T.gtypeGetType()", "gobjects",
                     ClassName.get("org.gnome.gobject", "GObjects"));
@@ -418,23 +469,30 @@ class TypedValueGenerator {
         return PartialStatement.of("$types:T.BOXED", "types", ClassNames.TYPES);
     }
 
-    PartialStatement getValueSetter(String gvalueIdentifier, PartialStatement gTypeDeclaration, String payloadIdentifier) {
+    PartialStatement getValueSetter(PartialStatement gTypeDeclaration, String payloadIdentifier) {
         // First, check for fundamental classes with their own GValue setters
         if (type != null) {
-            RegisteredType rt = target instanceof Alias a  ? a.type().get() : target;
+            RegisteredType rt = target instanceof Alias a
+                    ? a.type().get()
+                    : target;
+
             if (rt instanceof Class cls && cls.setValueFunc() != null) {
                 var setter = cls.namespace().functions().stream()
                         .filter(f -> f.attrs().cIdentifier().equals(cls.setValueFunc()))
                         .findAny();
+
                 if (setter.isPresent()) {
                     Function function = setter.get();
                     String setValueFunc = Conversions.toJavaIdentifier(function.name());
                     String globalClassTag = rt.namespace().globalClassName();
-                    return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(" + gvalueIdentifier + ", " + payloadIdentifier + ")",
-                            globalClassTag, toJavaQualifiedType(rt.namespace().globalClassName(), rt.namespace()));
+                    return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
+                            globalClassTag,
+                            toJavaQualifiedType(rt.namespace().globalClassName(),
+                                    rt.namespace()));
                 }
             }
         }
+
         // Other, known types
         String setValue = switch (gTypeDeclaration.format()) {
             case "$types:T.BOOLEAN" -> "setBoolean";
@@ -460,38 +518,52 @@ class TypedValueGenerator {
                     : "setObject";
         };
         return switch(setValue) {
-            case "setEnum", "setFlags" -> PartialStatement.of(gvalueIdentifier + "." + setValue + "(" + payloadIdentifier + ".getValue())");
-            case "setBoxed" -> PartialStatement.of(gvalueIdentifier + "." + setValue + "(")
+            case "setEnum", "setFlags" -> PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ".getValue())");
+            case "setBoxed" -> PartialStatement.of("_value" + "." + setValue + "(")
                         .add(marshalJavaToNative(payloadIdentifier))
                         .add(")");
-            case "setObject" -> PartialStatement.of(gvalueIdentifier + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
+            case "setObject" -> PartialStatement.of("_value" + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
                     "gobject", ClassName.get("org.gnome.gobject", "GObject"));
-            default -> PartialStatement.of(gvalueIdentifier + "." + setValue + "(" + payloadIdentifier + ")");
+            default -> PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ")");
         };
     }
 
     FieldSpec generateConstantDeclaration() {
         final String value = ((Constant) v).value();
         try {
-            TypeName typeName = target != null ? target.typeName() : type.typeName();
-            var builder = FieldSpec.builder(typeName, toJavaConstant(v.name()),
-                    Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+            TypeName typeName = target != null
+                    ? target.typeName()
+                    : type.typeName();
+
+            var builder = FieldSpec.builder(
+                    typeName,
+                    toJavaConstant(v.name()),
+                    Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
+            );
 
             if (v.infoElements().doc() != null)
                 builder.addJavadoc(new DocGenerator(v.infoElements().doc()).generate());
 
             if (target instanceof Alias a && a.type().isPrimitive())
-                builder.initializer("new $T($L)", a.typeName(), Conversions.literal(a.type().typeName(), value));
+                builder.initializer("new $T($L)",
+                        a.typeName(),
+                        Conversions.literal(a.type().typeName(), value));
             else if (target instanceof FlaggedType)
-                builder.initializer("new $T($L)", target.typeName(), Conversions.literal(TypeName.INT, value));
+                builder.initializer("new $T($L)",
+                        target.typeName(),
+                        Conversions.literal(TypeName.INT, value));
             else
-                builder.initializer(Conversions.literal(type.typeName(), value).replace("$", "$$"));
+                builder.initializer(
+                        Conversions.literal(type.typeName(), value)
+                                .replace("$", "$$"));
 
             return builder.build();
 
         } catch (NumberFormatException nfe) {
             // Do not write anything
-            System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: Value not allowed%n", v.name(), value);
+            System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: Value not allowed%n",
+                    v.name(),
+                    value);
             return null;
         }
     }

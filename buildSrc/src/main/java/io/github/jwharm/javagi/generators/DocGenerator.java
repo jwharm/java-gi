@@ -39,7 +39,8 @@ public class DocGenerator {
 
     public String generate(boolean signalDeclaration) {
         String contents = doc.text();
-        if (contents == null || contents.isEmpty()) return "";
+        if (contents == null || contents.isEmpty())
+            return "";
 
         StringBuilder builder = new StringBuilder();
 
@@ -73,24 +74,30 @@ public class DocGenerator {
             if (! (doc.parent() instanceof Constructor c && "new".equals(c.name()))) {
                 ReturnValue rv = ct.returnValue();
                 if (rv != null && rv.infoElements().doc() != null)
-                    writeDoc(builder, Javadoc.getInstance().convert(rv.infoElements().doc()), "@return");
+                    writeDoc(builder, Javadoc.getInstance().convert(rv.infoElements().doc()),
+                            "@return");
             }
 
-            // Exceptions
+            // Throws
             if (doc.parent() instanceof AbstractCallable c) {
                 if (c.attrs().throws_())
-                    writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}", "@throws");
+                    writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}",
+                            "@throws");
                 if (c.doPlatformCheck())
                     writeDoc(builder, "UnsupportedPlatformException when run on a platform other than "
-                            + Platform.toString(c.platforms()), "@throws");
+                            + Platform.toString(c.platforms()),
+                            "@throws");
             }
         }
 
         // Signals
         if (signalDeclaration && doc.parent() instanceof Signal signal) {
-            if (signal.detailed()) writeDoc(builder, "the signal detail", "@param detail");
-            writeDoc(builder, "the signal handler", "@param handler");
-            writeDoc(builder, "a {@link SignalConnection} object to keep track of the signal connection", "@return");
+            if (signal.detailed()) writeDoc(builder, "the signal detail",
+                    "@param detail");
+            writeDoc(builder, "the signal handler",
+                    "@param handler");
+            writeDoc(builder, "a {@link SignalConnection} object to keep track of the signal connection",
+                    "@return");
         }
 
         // Deprecated
@@ -103,13 +110,18 @@ public class DocGenerator {
 
         // Property setters
         if (doc.parent() instanceof Property p) {
-            writeDoc(builder, toJavaIdentifier(p.name()) + " the value for the {@code " + p.name() + "} property", "@param");
-            writeDoc(builder, "the {@code Builder} instance is returned, to allow method chaining", "@return");
+            String identifier = toJavaIdentifier(p.name());
+            writeDoc(builder, identifier + " the value for the {@code " + p.name() + "} property",
+                    "@param");
+            writeDoc(builder, "the {@code Builder} instance is returned, to allow method chaining",
+                    "@return");
         }
 
         // Field setters
         if (doc.parent() instanceof Field f) {
-            writeDoc(builder, toJavaIdentifier(f.name()) + " the value for the {@code " + f.name() + "} field", "@param");
+            String identifier = toJavaIdentifier(f.name());
+            writeDoc(builder, identifier + " the value for the {@code " + f.name() + "} field",
+                    "@param");
         }
 
         return builder.toString();

@@ -50,8 +50,10 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
     }
 
     public TypeSpec generate() {
-        if (en.infoElements().doc() != null) builder.addJavadoc(new DocGenerator(en.infoElements().doc()).generate());
-        if (en.attrs().deprecated()) builder.addAnnotation(Deprecated.class);
+        if (en.infoElements().doc() != null)
+            builder.addJavadoc(new DocGenerator(en.infoElements().doc()).generate());
+        if (en.attrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(ClassNames.ENUMERATION)
@@ -61,7 +63,8 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                 .addMethod(staticConstructor())
                 .addMethod(getValueMethod());
 
-        if (hasTypeMethod()) builder.addMethod(getTypeMethod());
+        if (hasTypeMethod())
+            builder.addMethod(getTypeMethod());
 
         addFunctions(builder);
         addMethods(builder);
@@ -69,12 +72,14 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         List<Member> uniques = filterDuplicateValues(en.members());
         for (Member m : uniques) {
             try {
-                TypeSpec.Builder spec = TypeSpec.anonymousClassBuilder("$L", Numbers.parseInt(m.value()));
+                TypeSpec.Builder spec = TypeSpec.anonymousClassBuilder(
+                        "$L", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
                 builder.addEnumConstant(m.name().toUpperCase(), spec.build());
             } catch (NumberFormatException nfe) {
-                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n", m.cIdentifier(), m.value());
+                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
+                        m.cIdentifier(), m.value());
             }
         }
         for (Member m : en.members().stream().filter(not(uniques::contains)).toList()) {
@@ -86,7 +91,8 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
                 builder.addField(spec.build());
             } catch (NumberFormatException nfe) {
-                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n", m.cIdentifier(), m.value());
+                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
+                        m.cIdentifier(), m.value());
             }
         }
 
@@ -97,6 +103,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("""
                     Create a new $L for the provided value
+                    
                     @param value the enum value
                     """, toJavaSimpleType(en.name(), en.namespace()))
                 .addModifiers(Modifier.PRIVATE)
@@ -109,6 +116,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         MethodSpec.Builder spec = MethodSpec.methodBuilder("of")
                 .addJavadoc("""
                         Create a new $L for the provided value
+                        
                         @param value the enum value
                         @return the enum for the provided value
                         """, toJavaSimpleType(en.name(), en.namespace()))
@@ -118,8 +126,9 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                 .beginControlFlow("return switch(value)");
         for (Member m : filterDuplicateValues(en.members()))
             spec.addStatement("case $L -> $L", m.value(), m.name().toUpperCase());
-        return spec.addStatement("default -> throw new IllegalStateException($S + value)", "Unexpected value: ")
-                .endControlFlow("") // empty string to force an ;
+        return spec.addStatement("default -> throw new IllegalStateException($S + value)",
+                        "Unexpected value: ")
+                .endControlFlow("") // empty string to force a ;
                 .build();
     }
 
@@ -127,6 +136,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         return MethodSpec.methodBuilder("getValue")
                 .addJavadoc("""
                         Get the numeric value of this enum
+                        
                         @return the enum value
                         """)
                 .addAnnotation(Override.class)
