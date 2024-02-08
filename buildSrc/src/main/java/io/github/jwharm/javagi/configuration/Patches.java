@@ -7,9 +7,7 @@ import java.util.List;
 
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
-            new GLibConstants(),
-            new GLibVariantGetType(),
-            new GLibRemovePollFDArrays(),
+            new GLibPatch(),
             new GObjectRemoveVaMarshal(),
             new GObjectTypeModuleUse(),
             new GioWindowsFileDescriptorBased(),

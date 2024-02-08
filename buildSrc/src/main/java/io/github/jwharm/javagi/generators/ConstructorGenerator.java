@@ -139,6 +139,21 @@ public class ConstructorGenerator {
                     .addStatement("return ($T) _object", parent.typeName());
         }
 
+        // GVariant constructors return floating references
+        else if (ctor.attrs().cIdentifier() != null
+                && ctor.attrs().cIdentifier().startsWith("g_variant_new_")) {
+            builder.addNamedCode(PartialStatement.of("var _instance = ")
+                            .add(stmt).add(";\n").format(), stmt.arguments())
+                    .beginControlFlow("if (_instance != null)")
+                    .addStatement("_instance.refSink()")
+                    .addStatement("$T.takeOwnership(_instance.handle())",
+                            ClassNames.MEMORY_CLEANER)
+                    .addStatement("$T.setFreeFunc(_instance.handle(), $S)",
+                            ClassNames.MEMORY_CLEANER, "g_variant_unref")
+                    .endControlFlow()
+                    .addStatement("return ($T) _instance", parent.typeName());
+        }
+
         // Add cleaner to struct/union pointer
         else if (parent instanceof Record record) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
