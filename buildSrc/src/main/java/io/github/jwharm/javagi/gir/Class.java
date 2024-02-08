@@ -29,16 +29,12 @@ public final class Class extends RegisteredType
         implements ConstructorContainer, FieldContainer, FunctionContainer,
         MethodContainer, SignalContainer, VirtualMethodContainer {
 
-    private final boolean generic;
-
     public Class(Map<String, String> attributes, List<GirElement> children, int platforms) {
         super(attributes, children, platforms);
-        this.generic = false;
     }
 
     public Class(Map<String, String> attributes, List<GirElement> children, int platforms, boolean generic) {
         super(attributes, children, platforms);
-        this.generic = generic;
     }
 
     @Override
@@ -61,7 +57,7 @@ public final class Class extends RegisteredType
     }
 
     public boolean generic() {
-        return generic;
+        return attrBool("java-gi-generic", false);
     }
 
     public boolean isOpaque() {

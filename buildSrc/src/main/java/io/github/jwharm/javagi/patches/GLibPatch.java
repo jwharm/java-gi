@@ -16,7 +16,6 @@ public class GLibPatch implements Patch {
 
         if (element instanceof Namespace ns
                 && ns.name().equals("GLib")) {
-
             /*
              * Constant names are all uppercase in Java. GLib however defines
              * "CSET_A_2_Z" and "CSET_a_2_z". To prevent duplicate fields,
