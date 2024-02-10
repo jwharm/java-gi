@@ -31,7 +31,6 @@ import io.github.jwharm.javagi.gir.Record;
 
 import javax.lang.model.element.Modifier;
 
-import static io.github.jwharm.javagi.generators.ClassGenerator.GENERIC_T;
 import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
 
@@ -56,7 +55,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addModifiers(Modifier.PUBLIC);
 
-        if (outerClass instanceof Class c && c.generic())
+        if (rec.generic()
+                || (outerClass instanceof Class c && c.generic()))
             builder.addTypeVariable(GENERIC_T);
 
         // TypeClass and TypeInterface records are generated as Java inner classes that

@@ -36,6 +36,8 @@ import java.lang.foreign.ValueLayout;
 import java.util.Comparator;
 import java.util.List;
 
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GENERIC_T;
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 
 public class MethodGenerator {
@@ -43,6 +45,7 @@ public class MethodGenerator {
     private final AbstractCallable func;
     private final VirtualMethod vm;
     private final ReturnValue returnValue;
+    private final boolean generic;
     private final MethodSpec.Builder builder;
     private final CallableGenerator generator;
 
@@ -68,6 +71,12 @@ public class MethodGenerator {
             vm = null;
             returnValue = func.returnValue();
         }
+
+        generic = switch(func.parent()) {
+            case Class c -> c.generic();
+            case Record r -> r.generic();
+            default -> false;
+        };
     }
 
     public MethodSpec generate() {
@@ -93,13 +102,15 @@ public class MethodGenerator {
             builder.addModifiers(Modifier.DEFAULT);
 
         // Return type
-        if (func instanceof Constructor)
+        if (generic && returnValue.anyType().typeName().equals(GOBJECT))
+            builder.returns(GENERIC_T);
+        else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
         else
-            builder.returns(new TypedValueGenerator(func.returnValue()).getType());
+            builder.returns(new TypedValueGenerator(returnValue).getType());
 
         // Parameters
-        generator.generateMethodParameters(builder);
+        generator.generateMethodParameters(builder, generic);
 
         // Exception
         if (func.attrs().throws_())
@@ -156,9 +167,9 @@ public class MethodGenerator {
         }
 
         // Override result
-        if (func.returnValue().overrideValue() != null)
+        if (returnValue.overrideValue() != null)
             builder.addStatement("_result = $L",
-                    func.returnValue().overrideValue());
+                    returnValue.overrideValue());
 
         // Catch function invocation exceptions
         builder.nextControlFlow("catch (Throwable _err)")
@@ -188,7 +199,10 @@ public class MethodGenerator {
         else if (!returnValue.anyType().isVoid()) {
             RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
-            PartialStatement stmt = generator.marshalNativeToJava("_result", false);
+            PartialStatement stmt = PartialStatement.of("");
+            if (generic && returnValue.anyType().typeName().equals(GOBJECT))
+                stmt.add("($generic:T) ", "generic", GENERIC_T);
+            stmt.add(generator.marshalNativeToJava("_result", false));
 
             // Ref GObject
             if (target != null && target.checkIsGObject()
@@ -238,7 +252,7 @@ public class MethodGenerator {
         PartialStatement invoke = new PartialStatement();
         if (!returnValue.anyType().isVoid())
             invoke.add("_result = (")
-                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
+                    .add(Conversions.getCarrierTypeString(returnValue.anyType()))
                     .add(") ");
 
         // Function invocation
@@ -282,7 +296,7 @@ public class MethodGenerator {
         PartialStatement invoke = new PartialStatement();
         if (!returnValue.anyType().isVoid())
             invoke.add("_result = (")
-                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
+                    .add(Conversions.getCarrierTypeString(returnValue.anyType()))
                     .add(") ");
 
         // Function pointer invocation

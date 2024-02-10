@@ -24,7 +24,7 @@ public class GLibPatch implements Patch {
             ns = ns.withChildren(ns.children().stream().map(node -> {
                 if (node instanceof Constant c
                         && "CSET_a_2_z".equals(c.name()))
-                    return rename(c, "CSET_a_2_z_lowercase");
+                    return c.withAttribute("name", "CSET_a_2_z_lowercase");
                 return node;
             }).toList());
 
@@ -52,7 +52,7 @@ public class GLibPatch implements Patch {
          */
         if (element instanceof Method m
                 && "g_variant_get_type".equals(m.attrs().cIdentifier()))
-            return rename(element, "get_variant_type");
+            return m.withAttribute("name", "get_variant_type");
 
         /*
          * The functions "g_main_context_query" and "g_main_context_check" have

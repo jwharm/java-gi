@@ -33,7 +33,7 @@ import java.util.Objects;
 
 public final class Type extends AnyType implements TypeReference {
 
-    public Type(Map<String, String> attributes,List<GirElement> children) {
+    public Type(Map<String, String> attributes, List<GirElement> children) {
         super(attributes, children);
     }
 

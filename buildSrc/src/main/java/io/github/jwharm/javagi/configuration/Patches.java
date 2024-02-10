@@ -8,8 +8,7 @@ import java.util.List;
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
             new GLibPatch(),
-            new GObjectRemoveVaMarshal(),
-            new GObjectTypeModuleUse(),
+            new GObjectPatch(),
             new GioWindowsFileDescriptorBased(),
             new HBWindowsBitfields(),
             new HBRemoveTrailingT()

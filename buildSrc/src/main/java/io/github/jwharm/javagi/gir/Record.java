@@ -63,6 +63,10 @@ public final class Record extends RegisteredType
             return toJavaQualifiedType(name(), namespace());
     }
 
+    public boolean generic() {
+        return attrBool("java-gi-generic", false);
+    }
+
     public boolean isOpaque() {
         return fields().isEmpty() && unions().isEmpty();
     }

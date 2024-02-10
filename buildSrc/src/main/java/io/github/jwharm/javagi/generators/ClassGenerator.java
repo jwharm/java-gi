@@ -30,13 +30,6 @@ import java.lang.foreign.MemorySegment;
 
 public class ClassGenerator extends RegisteredTypeGenerator {
 
-    private final static ClassName GTYPE = ClassName.get("org.gnome.glib", "Type");
-    private final static ClassName GOBJECT = ClassName.get("org.gnome.gobject", "GObject");
-    private final static ClassName GOBJECTS = ClassName.get("org.gnome.gobject", "GObjects");
-    private final static ClassName TYPE_INSTANCE = ClassName.get("org.gnome.gobject", "TypeInstance");
-
-    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", GOBJECT);
-
     private final Class cls;
     private final TypeSpec.Builder builder;
 

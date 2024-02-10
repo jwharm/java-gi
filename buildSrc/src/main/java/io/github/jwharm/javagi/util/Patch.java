@@ -45,7 +45,7 @@ public interface Patch {
      *
      * @param ns    the namespace to remove the type from
      * @param names the name of the types
-     * @return the  namespace with the type removed
+     * @return      the namespace with the type removed
      */
     default Namespace removeType(Namespace ns, String... names) {
         List<String> list = Arrays.asList(names);
@@ -56,6 +56,13 @@ public interface Patch {
         return ns.withChildren(children);
     }
 
+    /**
+     * Remove the function with the provided name from the namespace.
+     *
+     * @param ns   the namespace to remove the function from
+     * @param name the name of the function
+     * @return     the namespace with the function removed
+     */
     default Namespace removeFunction(Namespace ns, String name) {
         return remove(ns, Function.class, "name", name);
     }

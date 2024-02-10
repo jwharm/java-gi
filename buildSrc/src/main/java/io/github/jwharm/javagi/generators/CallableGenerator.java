@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GENERIC_T;
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static java.util.function.Predicate.not;
 
 public class CallableGenerator {
@@ -81,6 +83,10 @@ public class CallableGenerator {
     }
 
     void generateMethodParameters(MethodSpec.Builder builder) {
+        generateMethodParameters(builder, false);
+    }
+
+    void generateMethodParameters(MethodSpec.Builder builder, boolean generic) {
         if (callable.parameters() == null)
             return;
 
@@ -93,7 +99,10 @@ public class CallableGenerator {
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
-                var spec = ParameterSpec.builder(generator.getType(), generator.getName());
+                var type = generator.getType();
+                if (generic && type.equals(GOBJECT))
+                    type = GENERIC_T;
+                var spec = ParameterSpec.builder(type, generator.getName());
                 if (p.nullable())
                     spec.addAnnotation(Nullable.class);
                 else if (p.notNull())

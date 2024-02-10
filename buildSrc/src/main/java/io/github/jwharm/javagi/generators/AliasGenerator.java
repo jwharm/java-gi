@@ -48,9 +48,16 @@ public class AliasGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         TypeSpec.Builder builder = TypeSpec.classBuilder(alias.typeName());
 
-        if (target instanceof Alias other)
+        // Alias for an alias for a primitive type
+        if (target instanceof Alias other && other.type().isPrimitive())
             builder.superclass(other.typeName())
-                    .addMethod(valueConstructor(target.typeName()));
+                    .addMethod(valueConstructor(other.type().typeName()))
+                    .addMethod(arrayConstructor(other.type()));
+
+        // Alias for an alias
+        else if (target instanceof Alias other)
+            builder.superclass(other.typeName())
+                    .addMethod(memoryAddressConstructor());
 
         else if (target instanceof Class || target instanceof Record
                 || target instanceof Boxed || target instanceof Union)
@@ -65,7 +72,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 || List.of("java.lang.String", "java.lang.foreign.MemorySegment").contains(alias.type().javaType()))
             builder.superclass(ParameterizedTypeName.get(ClassNames.ALIAS, alias.type().typeName().box()))
                     .addMethod(valueConstructor(alias.type().typeName()))
-                    .addMethod(arrayConstructor());
+                    .addMethod(arrayConstructor(alias.type()));
 
         if (alias.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
@@ -97,8 +104,8 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         return spec.build();
     }
 
-    private MethodSpec arrayConstructor() {
-        String layout = getValueLayoutPlain(alias.type());
+    private MethodSpec arrayConstructor(Type primitiveType) {
+        String layout = getValueLayoutPlain(primitiveType);
         var spec = MethodSpec.methodBuilder("fromNativeArray")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ArrayTypeName.of(alias.typeName()))
@@ -113,7 +120,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                         MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 
-        if ("java.lang.String".equals(alias.type().javaType()))
+        if ("java.lang.String".equals(primitiveType.javaType()))
             spec.addStatement("array[i] = new $T($T.getStringFrom(segment.get($T.$L, i * byteSize), free))",
                     alias.typeName(), ClassNames.INTEROP, ValueLayout.class, layout);
         else
