@@ -59,6 +59,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         for (var impl : cls.implements_())
             builder.addSuperinterface(impl.get().typeName());
 
+        if (cls.autoCloseable())
+            builder.addSuperinterface(AutoCloseable.class);
+
         if (cls.isFloating())
             builder.addSuperinterface(ClassNames.FLOATING);
 

@@ -9,7 +9,7 @@ public class Patches {
     public static final List<Patch> PATCHES = List.of(
             new GLibPatch(),
             new GObjectPatch(),
-            new GioWindowsFileDescriptorBased(),
+            new GioPatch(),
             new HBWindowsBitfields(),
             new HBRemoveTrailingT()
     );

@@ -32,7 +32,7 @@ public class GLibPatch implements Patch {
              * g_clear_error has attribute throws="1" but no gerror** parameter
              * (or any other parameters) in the gir file.
              */
-            ns = removeFunction(ns, "clear_error");
+            ns = remove(ns, Function.class, "name", "clear_error");
 
             /*
              * GPid is defined as gint on Unix vs gpointer on Windows. The

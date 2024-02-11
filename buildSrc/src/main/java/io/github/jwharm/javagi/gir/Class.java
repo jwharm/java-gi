@@ -60,6 +60,10 @@ public final class Class extends RegisteredType
         return attrBool("java-gi-generic", false);
     }
 
+    public boolean autoCloseable() {
+        return attrBool("java-gi-auto-closeable", false);
+    }
+
     public boolean isOpaque() {
         return fields().isEmpty() && unions().isEmpty();
     }

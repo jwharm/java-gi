@@ -25,7 +25,7 @@ public class GObjectPatch implements Patch {
                     "VaClosureMarshal",
                     "SignalCVaMarshaller"
             );
-            ns = removeFunction(ns, "signal_set_va_marshaller");
+            ns = remove(ns, Function.class, "name", "signal_set_va_marshaller");
 
             /*
              * GLib and GObject both define gtype as an alias to gsize. We

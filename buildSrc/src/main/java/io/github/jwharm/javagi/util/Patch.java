@@ -57,17 +57,6 @@ public interface Patch {
     }
 
     /**
-     * Remove the function with the provided name from the namespace.
-     *
-     * @param ns   the namespace to remove the function from
-     * @param name the name of the function
-     * @return     the namespace with the function removed
-     */
-    default Namespace removeFunction(Namespace ns, String name) {
-        return remove(ns, Function.class, "name", name);
-    }
-
-    /**
      * Remove the child elements with the provided attribute.
      *
      * @param elem  the element to remove the child element from
