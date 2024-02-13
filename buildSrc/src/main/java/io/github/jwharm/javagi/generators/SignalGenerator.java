@@ -196,11 +196,11 @@ public class SignalGenerator {
                 varargs.add(generator.marshalParameters());
             }
             if (!signal.returnValue().anyType().isVoid()) {
-                if (! varargs.format().isEmpty())
+                if (! varargs.format().endsWith("{"))
                     varargs.add(", ");
                 varargs.add("_result");
             }
-            varargs.add("};\n");
+            varargs.add("}");
         }
         builder.addNamedCode(varargs.format() + ";\n", varargs.arguments());
 
@@ -219,7 +219,7 @@ public class SignalGenerator {
             var layout = getValueLayout(signal.returnValue().anyType());
             var stmt = PartialStatement.of("return ", "valueLayout", ValueLayout.class);
             stmt.add(generator.marshalJavaToNative("_result.get($valueLayout:T." + layout + ", 0)"));
-            builder.addNamedCode(stmt.format(), stmt.arguments());
+            builder.addNamedCode(stmt.format() + ";\n", stmt.arguments());
         }
 
         // Log exceptions

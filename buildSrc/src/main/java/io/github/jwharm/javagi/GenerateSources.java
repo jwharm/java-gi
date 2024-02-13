@@ -31,8 +31,8 @@ import io.github.jwharm.javagi.gir.Record;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
 
@@ -40,19 +40,21 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.zip.InflaterInputStream;
 
 import static java.nio.file.StandardOpenOption.*;
 
 /**
  * GenerateSources is a Gradle task that will generate Java source files for
- * the types defined in a GIR Module. (The Module has been created by the
- * ParseGir task.)
+ * the types defined in a GIR Module. (The Module is provided by the
+ * GirParserService.)
  */
 public abstract class GenerateSources extends DefaultTask {
 
-    @InputFile
-    abstract RegularFileProperty getInputFile();
+    @ServiceReference("gir")
+    abstract Property<GirParserService> getGirParserService();
+
+    @Input
+    abstract Property<String> getNamespace();
 
     @OutputDirectory
     abstract DirectoryProperty getOutputDirectory();
@@ -62,14 +64,10 @@ public abstract class GenerateSources extends DefaultTask {
 
     @TaskAction
     void execute() {
-        File inputFile = getInputFile().getAsFile().get();
-
-        // Extract and deserialize the Module from the file
-        try (var in = new ObjectInputStream(new InflaterInputStream(
-                new BufferedInputStream(new FileInputStream(inputFile))))) {
-            Module module = (Module) in.readObject();
-
-            // Generate the Java source files
+        try {
+            GirParserService buildService = getGirParserService().get();
+            String namespace = getNamespace().get();
+            Module module = buildService.getModule(namespace);
             generate(module, getOutputDirectory().get());
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
@@ -77,62 +75,46 @@ public abstract class GenerateSources extends DefaultTask {
     }
 
     // Generate Java source files for a GIR repository
-    private void generate(Module module, Directory outputDirectory) {
+    private void generate(Module module, Directory outputDirectory) throws IOException {
         Namespace ns = module.lookupNamespace(module.name());
 
         // Generate class with namespace-global constants and functions
-        try {
-            var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
-            writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
-        } catch (Exception e) {
-            System.out.println("Exception generating namespace " + ns.name() + ": " + e);
-        }
+        var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
+        writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
 
         // Generate package-info.java
-        try {
-            Path path = outputDirectory
-                    .dir(ns.packageName().replace('.', File.separatorChar))
-                    .getAsFile()
-                    .toPath()
-                    .resolve("package-info.java");
-            String packageInfo = new PackageInfoGenerator(ns).generate();
-            Files.writeString(path, packageInfo,
-                    CREATE, WRITE, TRUNCATE_EXISTING);
-        } catch (Exception e) {
-            System.out.println("Exception writing package-info.java for " + ns.name() + ": " + e);
-        }
+        Path path = outputDirectory
+                .dir(ns.packageName().replace('.', File.separatorChar))
+                .getAsFile()
+                .toPath()
+                .resolve("package-info.java");
+        String packageInfo = new PackageInfoGenerator(ns).generate();
+        Files.writeString(path, packageInfo,
+                CREATE, WRITE, TRUNCATE_EXISTING);
 
         // Generate module-info.java
-        try {
-            Path path = outputDirectory
-                    .getAsFile()
-                    .toPath()
-                    .resolve("module-info.java");
-            String moduleInfo = new ModuleInfoGenerator(ns, getPackages()).generate();
-            Files.writeString(path, moduleInfo,
-                    CREATE, WRITE, TRUNCATE_EXISTING);
-        } catch (Exception e) {
-            System.out.println("Exception writing module-info.java for " + ns.name() + ": " + e);
-        }
+        path = outputDirectory
+                .getAsFile()
+                .toPath()
+                .resolve("module-info.java");
+        String moduleInfo = new ModuleInfoGenerator(ns, getPackages()).generate();
+        Files.writeString(path, moduleInfo,
+                CREATE, WRITE, TRUNCATE_EXISTING);
 
         // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
-            try {
-                var typeSpec = switch(rt) {
-                    case Alias a -> new AliasGenerator(a).generate();
-                    case Bitfield b -> new BitfieldGenerator(b).generate();
-                    case Callback c -> new CallbackGenerator(c).generate();
-                    case Class c -> new ClassGenerator(c).generate();
-                    case Enumeration e -> new EnumerationGenerator(e).generate();
-                    case Interface i -> new InterfaceGenerator(i).generate();
-                    case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
-                    case Union u -> new UnionGenerator(u).generate();
-                    default -> null;
-                };
-                writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
-            } catch (Exception e) {
-                System.out.println("Exception generating " + rt.name() + ": " + e);
-            }
+            typeSpec = switch(rt) {
+                case Alias a -> new AliasGenerator(a).generate();
+                case Bitfield b -> new BitfieldGenerator(b).generate();
+                case Callback c -> new CallbackGenerator(c).generate();
+                case Class c -> new ClassGenerator(c).generate();
+                case Enumeration e -> new EnumerationGenerator(e).generate();
+                case Interface i -> new InterfaceGenerator(i).generate();
+                case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
+                case Union u -> new UnionGenerator(u).generate();
+                default -> null;
+            };
+            writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
         }
     }
 

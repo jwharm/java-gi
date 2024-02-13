@@ -83,15 +83,20 @@ public final class GirParser {
      * @throws XMLStreamException    if the XML cannot be parsed
      * @throws FileNotFoundException if the specified file is not found
      */
-    public Repository parse(File file, int platform, Repository repository) throws XMLStreamException, FileNotFoundException {
-        if (!file.exists()) return repository;
+    public Repository parse(File file, int platform, Repository repository)
+            throws XMLStreamException, FileNotFoundException {
+
+        if (!file.exists())
+            return repository;
+
         XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(new FileInputStream(file));
 
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
             if (event.isStartElement())
-                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository);
+                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, null);
         }
+
         throw new IllegalStateException("Invalid XML");
     }
 
@@ -100,23 +105,33 @@ public final class GirParser {
         if (existingNode == null) return null;
 
         String elemName = qname(elem.getName());
-        if (!List.of("namespace", "alias", "boxed", "callback", "class", "bitfield", "enumeration", "interface", "record", "union").contains(elemName))
+        if (!List.of("namespace", "alias", "boxed", "callback", "class",
+                        "bitfield", "enumeration", "interface", "record", "union")
+                .contains(elemName))
             return existingNode;
 
-        // Move from repository to namespace: return the namespace node with the same name attribute.
+        // Move from repository to namespace: return the namespace node with
+        // the same name attribute.
         String name = attributes(elem).get("name");
         if (existingNode instanceof Repository repo && elemName.equals("namespace")) {
-            for (Namespace ns : repo.namespaces()) {
+            for (Namespace ns : repo.namespaces())
                 if (ns.name().equals(name)) return ns;
-            }
             return existingNode; // namespace not found in existing tree
         }
         // Move from namespace to type: return the type with the same name.
-        return (existingNode instanceof Namespace ns) ? ns.registeredTypes().get(name) : existingNode;
+        return (existingNode instanceof Namespace ns)
+                ? ns.registeredTypes().get(name)
+                : existingNode;
     }
 
     // Recursive method to parse an XML element and create a GIR tree node.
-    private GirElement parseElement(XMLEventReader eventReader, StartElement elem, int platform, GirElement existingNode) throws XMLStreamException {
+    private GirElement parseElement(XMLEventReader eventReader,
+                                    StartElement elem,
+                                    int platform,
+                                    GirElement existingNode,
+                                    String nsName)
+            throws XMLStreamException {
+
         var elemName = qname(elem.getName());
         var children = new ArrayList<GirElement>();
         var attributes = attributes(elem);
@@ -130,12 +145,16 @@ public final class GirParser {
                 StartElement startElement = event.asStartElement();
                 GirElement existingChildNode = walkTree(startElement, existingNode);
 
+                // Remember namespace name
+                if (qname(startElement.getName()).equals("namespace"))
+                    nsName = startElement.getAttributeByName(new QName("name")).getValue();
+
                 // Create new child node
-                GirElement newNode = parseElement(eventReader, startElement, platform, existingChildNode);
+                GirElement newNode = parseElement(eventReader, startElement, platform, existingChildNode, nsName);
 
                 // Apply patches
                 for (Patch patch : PATCHES)
-                    newNode = patch.patch(newNode);
+                    newNode = patch.patch(newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
                 if (existingChildNode instanceof RegisteredType existing && newNode instanceof RegisteredType created)
@@ -205,7 +224,8 @@ public final class GirParser {
 
         while (eventReader.hasNext()) {
             XMLEvent nextEvent = eventReader.nextEvent();
-            if (nextEvent.isEndElement() && qname(nextEvent.asEndElement().getName()).equals(elemName)) {
+            if (nextEvent.isEndElement()
+                    && qname(nextEvent.asEndElement().getName()).equals(elemName)) {
                 fastForward(eventReader);
                 return;
             }

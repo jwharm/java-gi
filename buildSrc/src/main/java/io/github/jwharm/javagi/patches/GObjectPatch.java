@@ -4,7 +4,6 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -12,35 +11,35 @@ import java.util.Map;
 public class GObjectPatch implements Patch {
 
     @Override
-    public GirElement patch(GirElement element) {
+    public GirElement patch(GirElement element, String namespace) {
 
-        if (element instanceof Namespace ns
-                && "GObject".equals(ns.name())) {
+        if (!"GObject".equals(namespace))
+            return element;
+
+        if (element instanceof Namespace ns) {
             /*
              * VaList parameters are excluded from the Java bindings.
              * Therefore, the VaList marshaller classes and the
              * "signal_set_va_marshaller" function are excluded too.
              */
-            ns = removeType(ns,
-                    "VaClosureMarshal",
-                    "SignalCVaMarshaller"
-            );
+            ns = remove(ns, Callback.class, "name", "VaClosureMarshal");
+            ns = remove(ns, Alias.class, "name", "SignalCVaMarshaller");
             ns = remove(ns, Function.class, "name", "signal_set_va_marshaller");
+            return ns;
+        }
 
-            /*
-             * GLib and GObject both define gtype as an alias to gsize. We
-             * change the Java class for the gtype declaration in GObject to
-             * inherit from the GLib gtype, so the instances of both classes
-             * can be used interchangeably in most cases.
-             */
-            var gtype = ns.registeredTypes().get("Type");
-            var children = new ArrayList<>(removeType(ns, "Type").children());
+        /*
+         * GLib and GObject both define gtype as an alias to gsize. We replace
+         * the gtype declaration in GObject with an alias for the GLib gtype,
+         * so it will inherit in Java and the instances of both classes can be
+         * used interchangeably in many cases.
+         */
+        if (element instanceof Alias a && "Type".equals(a.name())) {
             Type type = new Type(
                     Map.of("name", "GLib.Type", "c:type", "gtype"),
                     Collections.emptyList()
             );
-            children.add(gtype.withChildren(List.of(gtype.infoElements().doc(), type)));
-            return ns.withChildren(children);
+            return a.withChildren(List.of(a.infoElements().doc(), type));
         }
 
         /*
@@ -56,8 +55,7 @@ public class GObjectPatch implements Patch {
          * Make GWeakRef generic (replacing all GObject arguments with generic
          * type {@code <T extends GObject>}.
          */
-        if (element instanceof Record r
-                && "GWeakRef".equals(r.cType()))
+        if (element instanceof Record r && "WeakRef".equals(r.name()))
             return r.withAttribute("java-gi-generic", "1");
 
         /*
@@ -67,8 +65,7 @@ public class GObjectPatch implements Patch {
          * GObject.InitiallyUnownedClass is not a fundamental type class, but
          * extends GObject.ObjectClass.
          */
-        if (element instanceof Record r
-                && "GInitiallyUnownedClass".equals(r.cType())) {
+        if (element instanceof Record r && "InitiallyUnownedClass".equals(r.name())) {
             Type type = new Type(
                     Map.of("name", "GObject.ObjectClass", "c:type", "GObjectClass"),
                     Collections.emptyList()

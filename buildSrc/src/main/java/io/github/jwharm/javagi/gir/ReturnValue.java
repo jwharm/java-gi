@@ -32,11 +32,6 @@ public final class ReturnValue extends TypedValue {
     }
 
     @Override
-    public AbstractCallable parent() {
-        return (AbstractCallable) super.parent();
-    }
-
-    @Override
     public String name() {
         throw new UnsupportedOperationException("ReturnValue does not have a name");
     }
@@ -70,7 +65,7 @@ public final class ReturnValue extends TypedValue {
     }
 
     public Parameter closure() {
-        return parent().parameters().getAtIndex(attrInt("closure"));
+        return ((Callable) parent()).parameters().getAtIndex(attrInt("closure"));
     }
 
     public Scope scope() {
@@ -78,7 +73,7 @@ public final class ReturnValue extends TypedValue {
     }
 
     public Parameter destroy() {
-        return parent().parameters().getAtIndex(attrInt("destroy"));
+        return ((Callable) parent()).parameters().getAtIndex(attrInt("destroy"));
     }
 
     public boolean skip() {

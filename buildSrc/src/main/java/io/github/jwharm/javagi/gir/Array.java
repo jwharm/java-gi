@@ -64,7 +64,7 @@ public final class Array extends AnyType {
         return switch (parent()) {
             case Field _ -> ((FieldContainer) parent().parent()).getAtIndex(index);
             case Parameter p -> p.parent().getAtIndex(index);
-            case ReturnValue rv -> rv.parent().parameters().getAtIndex(index);
+            case ReturnValue rv -> ((Callable) rv.parent()).parameters().getAtIndex(index);
             default -> throw new AssertionError("Parent is not a Field, Parameter or ReturnValue");
         };
     }

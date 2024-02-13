@@ -371,9 +371,9 @@ public class Javadoc {
         GirElement node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
         if (node == null) return null;
 
-        String type = formatNS(node.namespace().name()) + switch(node.parent()) {
+        String type = switch(node.parent()) {
             case RegisteredType rt -> rt.javaType();
-            case Namespace ns -> ns.globalClassName();
+            case Namespace ns -> formatNS(node.namespace().name()) + ns.globalClassName();
             default -> "";
         };
 

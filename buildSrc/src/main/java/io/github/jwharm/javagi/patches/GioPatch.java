@@ -30,7 +30,11 @@ import java.util.List;
 public class GioPatch implements Patch {
 
     @Override
-    public GirElement patch(GirElement element) {
+    public GirElement patch(GirElement element, String namespace) {
+
+        if (!"Gio".equals(namespace))
+            return element;
+
         /*
          * FileDescriptorBased is an interface on Linux and a record on
          * Windows. This means it is not considered the same type in the GIR
@@ -38,9 +42,8 @@ public class GioPatch implements Patch {
          * the Windows GIR model, so only the interface remains.
          */
         if (element instanceof Namespace ns
-                && "Gio".equals(ns.name())
                 && ns.platforms() == Platform.WINDOWS)
-            return removeType(ns, "FileDescriptorBased");
+            return remove(ns, Record.class, "name", "FileDescriptorBased");
 
         /*
          * The method "g_data_input_stream_read_byte" overrides
@@ -86,9 +89,9 @@ public class GioPatch implements Patch {
          */
         if (element instanceof Class c
                 && List.of(
-                        "GFileInputStream",
-                        "GFileOutputStream",
-                        "GFileIOStream").contains(c.cType())) {
+                        "FileInputStream",
+                        "FileOutputStream",
+                        "FileIOStream").contains(c.name())) {
             for (var vm : List.of("tell", "seek", "can_truncate", "can_seek"))
                 c = remove(c, VirtualMethod.class, "name", vm);
             return c;
@@ -99,9 +102,9 @@ public class GioPatch implements Patch {
          */
         if (element instanceof Class c
                 && List.of(
-                        "GIOStream",
-                        "GInputStream",
-                        "GOutputStream").contains(c.cType()))
+                        "IOStream",
+                        "InputStream",
+                        "OutputStream").contains(c.name()))
             return c.withAttribute("java-gi-auto-closeable", "1");
 
         return element;

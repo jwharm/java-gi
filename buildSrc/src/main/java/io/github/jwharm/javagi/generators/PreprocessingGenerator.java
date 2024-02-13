@@ -160,7 +160,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     getName(),
                     ValueLayout.class,
                     layout);
-            builder.addStatement("$1T _$2LAlias = new $1T($2LParam.get($2T.$4L, 0))",
+            builder.addStatement("$1T _$2LAlias = new $1T($2LParam.get($3T.$4L, 0))",
                     type.typeName(),
                     getName(),
                     ValueLayout.class,
@@ -177,7 +177,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         // Pointer to a single value
         if (type != null) {
             String layout = getValueLayoutPlain(type);
-            builder.addStatement("$1T $2LParam = $2L.reinterpret($3T.$2L.byteSize(), _arena, null)",
+            builder.addStatement("$1T $2LParam = $2L.reinterpret($3T.$4L.byteSize(), _arena, null)",
                     MemorySegment.class,
                     getName(),
                     ValueLayout.class,
@@ -201,7 +201,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                 "outType", getType(),
                                 "out", ClassNames.OUT)
                         .add(marshalNativeToJava(type, identifier, true))
-                        .add(")");
+                        .add(");\n");
                 builder.addNamedCode(stmt.format(), stmt.arguments());
             }
         }
@@ -212,7 +212,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "outType", getType(),
                             "out", ClassNames.OUT)
                     .add(marshalNativeToJava(getName(), true))
-                    .add(")");
+                    .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }

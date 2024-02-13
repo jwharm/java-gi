@@ -7,42 +7,37 @@ import io.github.jwharm.javagi.util.Platform;
 
 import java.util.List;
 
-import static java.util.function.Predicate.not;
-
 public class GLibPatch implements Patch {
 
     @Override
-    public GirElement patch(GirElement element) {
+    public GirElement patch(GirElement element, String namespace) {
 
-        if (element instanceof Namespace ns
-                && ns.name().equals("GLib")) {
-            /*
-             * Constant names are all uppercase in Java. GLib however defines
-             * "CSET_A_2_Z" and "CSET_a_2_z". To prevent duplicate fields,
-             * the second one is renamed to "CSET_a_2_z_lowercase".
-             */
-            ns = ns.withChildren(ns.children().stream().map(node -> {
-                if (node instanceof Constant c
-                        && "CSET_a_2_z".equals(c.name()))
-                    return c.withAttribute("name", "CSET_a_2_z_lowercase");
-                return node;
-            }).toList());
+        if (!"GLib".equals(namespace))
+            return element;
 
-            /*
-             * g_clear_error has attribute throws="1" but no gerror** parameter
-             * (or any other parameters) in the gir file.
-             */
-            ns = remove(ns, Function.class, "name", "clear_error");
+        /*
+         * g_clear_error has attribute throws="1" but no gerror** parameter (or
+         * any other parameters) in the gir file.
+         */
+        if (element instanceof Namespace ns)
+            return remove(ns, Function.class, "name", "clear_error");
 
-            /*
-             * GPid is defined as gint on Unix vs gpointer on Windows. The
-             * generated Java class is an int Alias, so we remove the Windows
-             * support.
-             */
-            ns.registeredTypes().get("Pid")
-                    .setPlatforms(Platform.LINUX | Platform.MACOS);
+        /*
+         * Constant names are all uppercase in Java. GLib however defines
+         * "CSET_A_2_Z" and "CSET_a_2_z". To prevent duplicate fields, the
+         * second one is renamed to "CSET_a_2_z_lowercase".
+         */
+        if (element instanceof Constant c && "CSET_a_2_z".equals(c.name()))
+            return c.withAttribute("name", "CSET_a_2_z_lowercase");
 
-            return ns;
+        /*
+         * GPid is defined as gint on Unix vs gpointer on Windows. The
+         * generated Java class is an int Alias, so we remove the Windows
+         * support.
+         */
+        if (element instanceof Alias a && "Pid".equals(a.name())) {
+            a.setPlatforms(Platform.LINUX | Platform.MACOS);
+            return a;
         }
 
         /*
@@ -60,15 +55,11 @@ public class GLibPatch implements Patch {
          * not possible to allocate the array with the correct size. For this
          * reason, both methods are excluded.
          */
-        List<String> toRemove =
-                List.of("g_main_context_query", "g_main_context_check");
-
-        if (element instanceof Record rec
-                && "GMainContext".equals(rec.cType()))
-            return rec.withChildren(rec.children().stream().filter(not(node ->
-                    node instanceof Method m
-                            && toRemove.contains(m.attrs().cIdentifier())
-            )).toList());
+        if (element instanceof Record r && "MainContext".equals(r.name())) {
+            for (var m : List.of("query", "check"))
+                r = remove(r, Method.class, "name", m);
+            return r;
+        }
 
         return element;
     }

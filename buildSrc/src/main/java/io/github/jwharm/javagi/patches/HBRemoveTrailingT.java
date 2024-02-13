@@ -28,7 +28,7 @@ import io.github.jwharm.javagi.util.Patch;
 public class HBRemoveTrailingT implements Patch {
 
     @Override
-    public GirElement patch(GirElement element) {
+    public GirElement patch(GirElement element, String namespace) {
         if (element instanceof RegisteredType rt
                 && rt.cType() != null
                 && rt.cType().startsWith("hb_")

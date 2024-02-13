@@ -20,12 +20,8 @@
 package io.github.jwharm.javagi.util;
 
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Class;
-import io.github.jwharm.javagi.gir.Package;
-import io.github.jwharm.javagi.gir.Record;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,27 +30,13 @@ import java.util.List;
 public interface Patch {
 
     /**
-     * Apply a patch to the GIR model
-     * @param element a newly generated GIR element
+     * Apply a patch to the GIR model.
+     *
+     * @param  element   a newly generated GIR element
+     * @param  namespace the name of the namespace of the GIR element
      * @return the patched GIR element
      */
-    GirElement patch(GirElement element);
-
-    /**
-     * Remove the types with the provided names from the namespace.
-     *
-     * @param ns    the namespace to remove the type from
-     * @param names the name of the types
-     * @return      the namespace with the type removed
-     */
-    default Namespace removeType(Namespace ns, String... names) {
-        List<String> list = Arrays.asList(names);
-        List<GirElement> children = ns.children().stream()
-                .filter(node -> !(node instanceof RegisteredType type
-                        && list.contains(type.name())))
-                .toList();
-        return ns.withChildren(children);
-    }
+    GirElement patch(GirElement element, String namespace);
 
     /**
      * Remove the child elements with the provided attribute.
@@ -77,13 +59,16 @@ public interface Patch {
     }
 
     /**
-     * Change the "name" attribute of the element to the provided new name
-     * @param elem element to rename
-     * @param newName the new name
-     * @return the renamed element
-     * @param <T> the element must be a GirElement
+     * Return a copy of the parent element in which the child has been added.
+     *
+     * @param  parent the parent element
+     * @param  child  the element to add to the parent
+     * @return a copy of parent in which the child has been added
+     * @param <T> both elements must be a GirElement
      */
-    default <T extends GirElement> T rename(T elem, String newName) {
-        return elem.withAttribute("name", newName);
+    default <T extends GirElement> T add(T parent, T child) {
+        var mutableList = new ArrayList<>(parent.children());
+        mutableList.add(child);
+        return parent.withChildren(mutableList);
     }
 }

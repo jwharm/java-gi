@@ -6,6 +6,6 @@ dependencies {
     api project(':glib')
 }
 
-parseGir.configure {
-    moduleName = 'GModule'
+generateSources.configure {
+    namespace = 'GModule'
 }

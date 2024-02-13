@@ -194,13 +194,12 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 payload = marshalJavaToNative("_" + getName() + "Out.get()");
 
             var stmt = PartialStatement.of(getName())
-                    .add("Param.set($valueLayout:T.", "valueLayout",
-                            ValueLayout.class)
+                    .add("Param.set($valueLayout:T.", "valueLayout", ValueLayout.class)
                     .add(getValueLayoutPlain(type))
                     .add(", 0, ")
                     .add(payload)
                     .add(");\n");
-            builder.addStatement(stmt.format(), stmt.arguments());
+            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
 }

@@ -33,6 +33,7 @@ public final class VirtualMethod extends AbstractCallable {
         if (invoker == null) return null;
         return ((MethodContainer) parent()).methods().stream()
                 .filter(m -> m.name().equals(invoker))
-                .findAny().orElseThrow();
+                .findAny()
+                .orElse(null); // ignore invalid cross-references
     }
 }

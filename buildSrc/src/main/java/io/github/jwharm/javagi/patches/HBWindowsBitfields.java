@@ -34,7 +34,7 @@ import java.util.List;
 public class HBWindowsBitfields implements Patch {
 
     @Override
-    public GirElement patch(GirElement node) {
+    public GirElement patch(GirElement node, String namespace) {
 
         var enums = List.of(
                 "hb_aat_layout_feature_selector_t",

@@ -2,10 +2,7 @@ plugins {
     id 'java-gi.library-conventions'
 }
 
-parseGir.configure {
-    moduleName = 'GLib'
-}
-
 generateSources.configure {
+    namespace = 'GLib'
     urlPrefix = 'https://docs.gtk.org/glib/'
 }
