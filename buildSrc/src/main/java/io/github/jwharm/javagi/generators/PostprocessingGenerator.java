@@ -28,6 +28,7 @@ import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.ValueLayout;
 
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
 
 public class PostprocessingGenerator extends TypedValueGenerator {
@@ -151,8 +152,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() == TransferOwnership.FULL
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
-            builder.addStatement("if ($L instanceof _gobject) _gobject.ref()",
-                    getName());
+            builder.addStatement("if ($L instanceof $T _gobject) _gobject.ref()",
+                    getName(), GOBJECT);
         }
 
         // Same, but for structs/unions: Disable the cleaner

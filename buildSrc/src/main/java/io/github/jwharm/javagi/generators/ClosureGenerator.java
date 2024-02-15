@@ -244,6 +244,7 @@ public class ClosureGenerator {
             return stmt;
 
         List<Parameter> parameters = closure.parameters().parameters();
+        boolean first = true;
         for (int i = 0; i < parameters.size(); i++) {
             Parameter p = parameters.get(i);
             boolean last = i == parameters.size() - 1;
@@ -251,7 +252,9 @@ public class ClosureGenerator {
             if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
                 continue;
 
-            if (i > 0) stmt.add(", ");
+            if (!first)
+                stmt.add(", ");
+            first = false;
 
             if (p.anyType() instanceof Type t
                     && t.isPointer()

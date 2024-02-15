@@ -132,7 +132,7 @@ public final class Type extends AnyType implements TypeReference {
 
         return switch (parent) {
             case Property _, Alias _, ReturnValue _, Parameter _ -> true;
-            default -> false;
+            case null, default -> false;
         };
     }
 

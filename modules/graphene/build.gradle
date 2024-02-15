@@ -6,7 +6,7 @@ dependencies {
     api project(':gobject')
 }
 
-tasks.named('generateSources') {
-    girFile = 'Graphene-1.0.gir'
+generateSources.configure {
+    namespace = 'Graphene'
     urlPrefix = 'https://developer-old.gnome.org/graphene/stable/'
 }

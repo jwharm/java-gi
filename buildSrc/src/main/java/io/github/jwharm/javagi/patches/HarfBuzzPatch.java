@@ -33,20 +33,35 @@ public class HarfBuzzPatch implements Patch {
         /*
          * The "_t" postfix from HarfBuzz types is removed.
          */
-        if (element instanceof RegisteredType rt
-                && rt.cType() != null
-                && rt.cType().startsWith("hb_")
-                && rt.name().endsWith("_t")) {
-            String newName = rt.name().substring(0, rt.name().length() - 2);
-            return rt.withAttribute("name", newName);
-        }
-        if (element instanceof Type t
-                && t.cType() != null
-                && t.cType().startsWith("hb_")
+        if (!"HarfBuzz".equals(namespace)
+                && element instanceof Type t
+                && t.name() != null
+                && t.name().startsWith("HarfBuzz.")
                 && t.name().endsWith("_t")) {
             String newName = t.name().substring(0, t.name().length() - 2);
             return t.withAttribute("name", newName);
         }
+
+        if (!"HarfBuzz".equals(namespace))
+            return element;
+
+        if (element instanceof Type t
+                && t.name() != null
+                && t.name().endsWith("_t")) {
+            String newName = t.name().substring(0, t.name().length() - 2);
+            return t.withAttribute("name", newName);
+        }
+        if (element instanceof RegisteredType rt
+                && rt.name().endsWith("_t")) {
+            String newName = rt.name().substring(0, rt.name().length() - 2);
+            element = rt.withAttribute("name", newName);
+        }
+
+        /*
+         * This constant has type "language_t" which cannot be instantiated.
+         */
+        if (element instanceof Namespace ns)
+            return remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
 
         /*
          * Some HarfBuzz enums are in the Windows GIR file defined as

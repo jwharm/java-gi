@@ -21,6 +21,8 @@ package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.TypeName;
 
+import java.lang.foreign.MemorySegment;
+
 import static io.github.jwharm.javagi.util.Conversions.*;
 
 /**
@@ -33,20 +35,30 @@ public interface TypeReference {
 
     default RegisteredType get() {
         String name = name();
+        if (name == null)
+            return null;
+
         int dot = name.indexOf('.');
-        if (dot == -1) return namespace().registeredTypes().get(name);
+        if (dot == -1)
+            return namespace().registeredTypes().get(name);
+
         return namespace().parent()
                 .lookupNamespace(name.substring(0, dot))
                 .registeredTypes().get(name.substring(dot + 1));
     }
 
     default TypeName typeName() {
+        // Type without name: Unknown, fallback to MemorySegment
+        if (name() == null)
+            return TypeName.get(MemorySegment.class);
+
         var type = get();
         // A typeclass or typeinterface is an inner class
         if (type instanceof Record rec) {
             var outer = rec.isGTypeStructFor();
             if (outer != null)
-                return outer.typeName().nestedClass(toJavaSimpleType(type.name(), type.namespace()));
+                return outer.typeName().nestedClass(
+                        toJavaSimpleType(type.name(), type.namespace()));
         }
         return toJavaQualifiedType(type.name(), type.namespace());
     }
@@ -56,10 +68,12 @@ public interface TypeReference {
     }
 
     static RegisteredType get(Namespace namespace, String name) {
-        if (namespace == null || name == null) return null;
+        if (namespace == null || name == null)
+            return null;
+
         return new TypeReference() {
             public Namespace namespace() { return namespace; }
-            public String name()         { return name; }
+            public String    name()      { return name;      }
         }.get();
     }
 }

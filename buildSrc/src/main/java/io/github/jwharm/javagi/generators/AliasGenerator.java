@@ -100,6 +100,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     Create a $L proxy instance for the provided memory address.
                     @param address the memory address of the native object
                     """, name())
+                .addParameter(MemorySegment.class, "address")
                 .addStatement("super(address)");
         return spec.build();
     }

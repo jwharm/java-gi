@@ -7,6 +7,6 @@ dependencies {
     api project(':graphene')
 }
 
-tasks.named('generateSources') {
-    girFile = 'Gsk-4.0.gir'
+generateSources.configure {
+    namespace = 'Gsk'
 }
