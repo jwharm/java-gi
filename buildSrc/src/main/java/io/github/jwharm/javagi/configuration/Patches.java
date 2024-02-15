@@ -10,7 +10,7 @@ public class Patches {
             new GLibPatch(),
             new GObjectPatch(),
             new GioPatch(),
-            new HBWindowsBitfields(),
-            new HBRemoveTrailingT()
+            new PangoPatch(),
+            new HarfBuzzPatch()
     );
 }

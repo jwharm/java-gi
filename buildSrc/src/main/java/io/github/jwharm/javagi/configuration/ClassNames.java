@@ -25,6 +25,7 @@ public final class ClassNames {
     private static final String PKG_TOPLEVEL        = "io.github.jwharm.javagi";
     private static final String PKG_BASE            = "io.github.jwharm.javagi.base";
     private static final String PKG_INTEROP         = "io.github.jwharm.javagi.interop";
+    private static final String PKG_GIO             = "io.github.jwharm.javagi.gio";
     private static final String PKG_GOBJECT         = "io.github.jwharm.javagi.gobject";
     private static final String PKG_GOBJECT_TYPES   = "io.github.jwharm.javagi.gobject.types";
 
@@ -47,6 +48,8 @@ public final class ClassNames {
     public static final ClassName INTEROP = ClassName.get(PKG_INTEROP, "Interop");
     public static final ClassName LIB_LOAD = ClassName.get(PKG_INTEROP, "LibLoad");
     public static final ClassName PLATFORM = ClassName.get(PKG_INTEROP, "Platform");
+
+    public static final ClassName AUTO_CLOSEABLE = ClassName.get(PKG_GIO, "AutoCloseable");
 
     public static final ClassName BUILDER = ClassName.get(PKG_GOBJECT, "Builder");
     public static final ClassName BUILDER_INTERFACE = ClassName.get(PKG_GOBJECT, "BuilderInterface");

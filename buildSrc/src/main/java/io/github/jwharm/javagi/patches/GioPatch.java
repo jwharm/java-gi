@@ -46,6 +46,16 @@ public class GioPatch implements Patch {
             return remove(ns, Record.class, "name", "FileDescriptorBased");
 
         /*
+         * The method "g_io_module_load" overrides "g_type_module_load", but
+         * returns void instead of boolean. This is not allowed in Java.
+         * Therefore, the method in IOModule is renamed fom "load" to
+         * "load_module".
+         */
+        if (element instanceof Method m
+                && "g_io_module_load".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("name", "load_module");
+
+        /*
          * The method "g_data_input_stream_read_byte" overrides
          * "g_buffered_input_stream_read_byte", but with a different return
          * type. This is not allowed in Java. Therefore, the method in

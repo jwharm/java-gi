@@ -8,7 +8,7 @@ dependencies {
     api 'io.github.jwharm.cairobindings:cairo:1.18.1'
 }
 
-tasks.named('generateSources') {
-    girFile = 'PangoCairo-1.0.gir'
+generateSources.configure {
+    namespace = 'PangoCairo'
     urlPrefix = 'https://docs.gtk.org/Pango/'
 }

@@ -65,6 +65,7 @@ public abstract sealed class AbstractCallable extends GirElement implements Mult
 
     // If true, this callable will not be generated
     public boolean skip() {
+        if (this instanceof VirtualMethod vm && vm.parent() instanceof Interface) return true;
         if (this instanceof VirtualMethod vm && vm.invoker() != null) return true;
         if (attrs().shadowedBy() != null) return true;
         if (attrs().movedTo() != null && attrs().movedTo().contains(".")) return true;

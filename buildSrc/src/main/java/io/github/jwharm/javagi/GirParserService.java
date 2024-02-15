@@ -110,7 +110,7 @@ public abstract class GirParserService
             try {
                 File girFile = findFile(
                         baseFolder.dir(Platform.toString(platform)).getAsFile(),
-                        moduleName
+                        moduleName + "-"
                 );
                 repository = GirParser.getInstance().parse(
                         girFile,

@@ -41,6 +41,7 @@ public final class Type extends AnyType implements TypeReference {
     public String name() {
         String name = attr("name");
         return switch(name) {
+            case null -> null;
             case "GType" -> "GLib.Type";
             case "gulong" -> overrideLongValue() ? "guint" : "gulong";
             case "glong" -> overrideLongValue() ? "gint" : "glong";

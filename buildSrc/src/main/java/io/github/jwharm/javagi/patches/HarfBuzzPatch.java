@@ -19,23 +19,39 @@
 
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.gir.Bitfield;
-import io.github.jwharm.javagi.gir.Enumeration;
-import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Patch;
 import io.github.jwharm.javagi.util.Platform;
 
 import java.util.List;
 
-/**
- * Some HarfBuzz enums are in the Windows GIR file defined
- * as bitfields. We change them back to enums.
- */
-public class HBWindowsBitfields implements Patch {
+public class HarfBuzzPatch implements Patch {
 
     @Override
-    public GirElement patch(GirElement node, String namespace) {
+    public GirElement patch(GirElement element, String namespace) {
 
+        /*
+         * The "_t" postfix from HarfBuzz types is removed.
+         */
+        if (element instanceof RegisteredType rt
+                && rt.cType() != null
+                && rt.cType().startsWith("hb_")
+                && rt.name().endsWith("_t")) {
+            String newName = rt.name().substring(0, rt.name().length() - 2);
+            return rt.withAttribute("name", newName);
+        }
+        if (element instanceof Type t
+                && t.cType() != null
+                && t.cType().startsWith("hb_")
+                && t.name().endsWith("_t")) {
+            String newName = t.name().substring(0, t.name().length() - 2);
+            return t.withAttribute("name", newName);
+        }
+
+        /*
+         * Some HarfBuzz enums are in the Windows GIR file defined as
+         * bitfields. We change them back to enums.
+         */
         var enums = List.of(
                 "hb_aat_layout_feature_selector_t",
                 "hb_aat_layout_feature_type_t",
@@ -46,12 +62,11 @@ public class HBWindowsBitfields implements Patch {
                 "hb_script_t",
                 "hb_style_tag_t"
         );
-
-        // HarfBuzz Windows GIR files have enums as bitfields
-        if (node instanceof Bitfield b && b.platforms() == Platform.WINDOWS && enums.contains(b.cType())) {
+        if (element instanceof Bitfield b
+                && b.platforms() == Platform.WINDOWS
+                && enums.contains(b.cType()))
             return new Enumeration(b.attributes(), b.children(), b.platforms());
-        }
 
-        return node;
+        return element;
     }
 }

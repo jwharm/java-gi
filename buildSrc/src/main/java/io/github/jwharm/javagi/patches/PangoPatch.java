@@ -19,31 +19,38 @@
 
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.Method;
 import io.github.jwharm.javagi.util.Patch;
 
-/**
- * The "_t" postfix from HarfBuzz types is removed.
- */
-public class HBRemoveTrailingT implements Patch {
+public class PangoPatch implements Patch {
 
     @Override
     public GirElement patch(GirElement element, String namespace) {
-        if (element instanceof RegisteredType rt
-                && rt.cType() != null
-                && rt.cType().startsWith("hb_")
-                && rt.name().endsWith("_t")) {
-            String newName = rt.name().substring(0, rt.name().length() - 2);
-            return rt.withAttribute("name", newName);
-        }
 
-        if (element instanceof Type t
-                && t.cType() != null
-                && t.cType().startsWith("hb_")
-                && t.name().endsWith("_t")) {
-            String newName = t.name().substring(0, t.name().length() - 2);
-            return t.withAttribute("name", newName);
-        }
+        if (!"Pango".equals(namespace))
+            return element;
+
+        /*
+         * Unsure how to interpret this return type:
+         *
+         * <array c:type="PangoLanguage**">
+         *   <type name="Language"/>
+         * </array>
+         *
+         * Removing the method from the Java bindings for now.
+         */
+        if (element instanceof Class c
+                && "Font".equals(c.name()))
+            return remove(c, Method.class, "name", "get_languages");
+
+        /*
+         * Java-GI automatically calls ref() but this one is deprecated.
+         * We can safely remove it from the Java bindings.
+         */
+        if (element instanceof Class c && "Coverage".equals(c.name()))
+            return remove(c, Method.class, "name", "ref");
 
         return element;
     }

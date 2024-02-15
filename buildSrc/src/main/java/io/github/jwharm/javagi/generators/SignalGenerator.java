@@ -106,7 +106,7 @@ public class SignalGenerator {
     }
 
     public boolean emitMethodExists() {
-        String name = "emit_" + signal.name();
+        String name = "emit_" + signal.name().replace("-", "_");
         if (signal.parent() instanceof MethodContainer mc)
             for (var m : mc.methods())
                 if (name.equals(m.name()))
@@ -218,7 +218,7 @@ public class SignalGenerator {
             var generator = new TypedValueGenerator(signal.returnValue());
             var layout = getValueLayout(signal.returnValue().anyType());
             var stmt = PartialStatement.of("return ", "valueLayout", ValueLayout.class);
-            stmt.add(generator.marshalJavaToNative("_result.get($valueLayout:T." + layout + ", 0)"));
+            stmt.add(generator.marshalNativeToJava("_result.get($valueLayout:T." + layout + ", 0)", false));
             builder.addNamedCode(stmt.format() + ";\n", stmt.arguments());
         }
 

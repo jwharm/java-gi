@@ -10,7 +10,7 @@ dependencies {
     api 'io.github.jwharm.cairobindings:cairo:1.18.1'
 }
 
-tasks.named('generateSources') {
-    girFile = 'Gdk-4.0.gir'
+generateSources.configure {
+    namespace = 'Gdk'
     urlPrefix = 'https://docs.gtk.org/gdk4/'
 }

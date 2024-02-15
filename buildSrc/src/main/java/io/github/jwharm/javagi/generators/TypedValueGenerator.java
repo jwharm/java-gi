@@ -487,8 +487,7 @@ class TypedValueGenerator {
                     String globalClassTag = rt.namespace().globalClassName();
                     return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
                             globalClassTag,
-                            toJavaQualifiedType(rt.namespace().globalClassName(),
-                                    rt.namespace()));
+                            toJavaQualifiedType(rt.namespace().globalClassName(), rt.namespace()));
                 }
             }
         }
@@ -509,7 +508,7 @@ class TypedValueGenerator {
             case "$types:T.POINTER" -> "setPointer";
             case "$types:T.PARAM" -> "setParam";
             case "$types:T.VARIANT" -> "setVariant";
-            case "$types:T.BOXED", "Types.STRV" -> "setBoxed";
+            case "$types:T.BOXED", "$types:T.STRV" -> "setBoxed";
             case "$gobjects:T.gtypeGetType()" -> "setGtype";
             default -> type == null ? "UNKNOWN"
                     : target instanceof Enumeration ? "setEnum"

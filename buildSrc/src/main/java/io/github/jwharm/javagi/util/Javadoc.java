@@ -353,7 +353,11 @@ public class Javadoc {
     private String formatNS(String ns) {
         Namespace namespace = doc.namespace();
         if (namespace.name().equals(ns)) return "";
-        return namespace.parent().lookupNamespace(ns).packageName() + ".";
+        try {
+            return namespace.parent().lookupNamespace(ns).packageName() + ".";
+        } catch (NoSuchElementException e) {
+            return ns;
+        }
     }
 
     // Change method name to camel case Java style and prepend a "#"
@@ -387,7 +391,11 @@ public class Javadoc {
 
     // Get the Namespace node for the provided namespace prefix
     private Namespace getNamespace(String ns) {
-        return doc.namespace().parent().lookupNamespace(ns);
+        try {
+            return doc.namespace().parent().lookupNamespace(ns);
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
@@ -401,9 +409,18 @@ public class Javadoc {
     private String checkLink(String ns, String identifier) {
         try {
             var namespace = getNamespace(ns);
-            if (namespace.registeredTypes().containsKey(identifier)) return "{@link ";
+
+            if (namespace == null)
+                return "{@code ";
+
+            if (namespace.registeredTypes().containsKey(identifier))
+                return "{@link ";
+
             return namespace.functions().stream()
-                    .anyMatch(f -> identifier.equals(f.name())) ? "{@link " : "{@code ";
+                    .anyMatch(f -> identifier.equals(f.name()))
+                        ? "{@link "
+                        : "{@code ";
+
         } catch (NoSuchElementException e) {
             return checkLink(doc.namespace().name(), ns, identifier);
         }
