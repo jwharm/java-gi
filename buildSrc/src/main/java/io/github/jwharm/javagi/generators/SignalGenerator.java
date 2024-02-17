@@ -107,15 +107,10 @@ public class SignalGenerator {
 
     public boolean emitMethodExists() {
         String name = "emit_" + signal.name().replace("-", "_");
-        if (signal.parent() instanceof MethodContainer mc)
-            for (var m : mc.methods())
-                if (name.equals(m.name()))
-                    return true;
-        if (signal.parent() instanceof FunctionContainer fc)
-            for (var f : fc.functions())
-                if (name.equals(f.name()))
-                    return true;
-        return false;
+        return signal.parent().children().stream()
+                .filter(node -> node instanceof Method || node instanceof Function)
+                .map(Callable.class::cast)
+                .anyMatch(node -> name.equals(node.name()));
     }
 
     public MethodSpec generateEmitMethod() {

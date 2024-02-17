@@ -37,10 +37,10 @@ public final class Method extends AbstractCallable {
     }
 
     public VirtualMethod invokerFor() {
-        if (parent() instanceof VirtualMethodContainer parent)
-            return parent.virtualMethods().stream()
-                    .filter(vm -> this == vm.invoker())
-                    .findAny().orElse(null);
-        return null;
+        return parent().children().stream()
+                .filter(VirtualMethod.class::isInstance)
+                .map(VirtualMethod.class::cast)
+                .filter(vm -> this == vm.invoker())
+                .findAny().orElse(null);
     }
 }

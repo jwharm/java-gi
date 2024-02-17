@@ -97,11 +97,10 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
 
         // Any other classes that have a ref_sink method, will be treated as
         // floating references.
-        if (this instanceof MethodContainer mc)
-            return mc.methods().stream()
-                    .anyMatch(m -> "ref_sink".equals(m.name()));
-
-        return false;
+        return parent().children().stream()
+                .filter(Method.class::isInstance)
+                .map(Method.class::cast)
+                .anyMatch(m -> "ref_sink".equals(m.name()));
     }
 
     public boolean doPlatformCheck() {

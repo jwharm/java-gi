@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 import static io.github.jwharm.javagi.util.Conversions.replaceKnownType;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 
@@ -438,26 +439,18 @@ public class Javadoc {
         if (rt instanceof Record rec && rec.isGTypeStructFor() != null)
             return "{@code ";
 
-        if (rt instanceof VirtualMethodContainer vmc) {
-            for (VirtualMethod vm : vmc.virtualMethods()) {
+        for (VirtualMethod vm : filter(rt.children(), VirtualMethod.class))
                 if (identifier.equals(vm.name()) && (! vm.skip())) return "{@link ";
-            }
-        }
-        if (rt instanceof MethodContainer mc) {
-            for (Method m : mc.methods()) {
-                if (identifier.equals(m.name()) && (! m.skip())) return "{@link ";
-            }
-        }
-        if (rt instanceof ConstructorContainer cc) {
-            for (Constructor c : cc.constructors()) {
-                if (identifier.equals(c.name()) && (! c.skip())) return "{@link ";
-            }
-        }
-        if (rt instanceof FunctionContainer fc) {
-            for (Function f : fc.functions()) {
-                if (identifier.equals(f.name()) && (! f.skip())) return "{@link ";
-            }
-        }
+
+        for (Method m : filter(rt.children(), Method.class))
+            if (identifier.equals(m.name()) && (! m.skip())) return "{@link ";
+
+        for (Constructor c : filter(rt.children(), Constructor.class))
+            if (identifier.equals(c.name()) && (! c.skip())) return "{@link ";
+
+        for (Function f : filter(rt.children(), Function.class))
+            if (identifier.equals(f.name()) && (! f.skip())) return "{@link ";
+
         return "{@code ";
     }
 }

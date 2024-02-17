@@ -23,14 +23,6 @@ public class GLibPatch implements Patch {
             return remove(ns, Function.class, "name", "clear_error");
 
         /*
-         * Constant names are all uppercase in Java. GLib however defines
-         * "CSET_A_2_Z" and "CSET_a_2_z". To prevent duplicate fields, the
-         * second one is renamed to "CSET_a_2_z_lowercase".
-         */
-        if (element instanceof Constant c && "CSET_a_2_z".equals(c.name()))
-            return c.withAttribute("name", "CSET_a_2_z_lowercase");
-
-        /*
          * GPid is defined as gint on Unix vs gpointer on Windows. The
          * generated Java class is an int Alias, so we remove the Windows
          * support.

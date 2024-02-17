@@ -62,6 +62,10 @@ public class Conversions {
     }
 
     public static String toJavaConstant(String name) {
+        return prefixDigits(name);
+    }
+
+    public static String toJavaConstantUpperCase(String name) {
         return prefixDigits(name.toUpperCase());
     }
 

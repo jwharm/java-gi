@@ -25,9 +25,7 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Interface extends RegisteredType
-        implements ConstructorContainer, FieldContainer, FunctionContainer,
-        MethodContainer, SignalContainer, VirtualMethodContainer {
+public final class Interface extends RegisteredType implements FieldContainer {
 
     @Override
     public Namespace parent() {

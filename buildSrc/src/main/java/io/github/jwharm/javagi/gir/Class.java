@@ -25,9 +25,7 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Class extends RegisteredType
-        implements ConstructorContainer, FieldContainer, FunctionContainer,
-        MethodContainer, SignalContainer, VirtualMethodContainer {
+public final class Class extends RegisteredType implements FieldContainer {
 
     public Class(Map<String, String> attributes, List<GirElement> children, int platforms) {
         super(attributes, children, platforms);

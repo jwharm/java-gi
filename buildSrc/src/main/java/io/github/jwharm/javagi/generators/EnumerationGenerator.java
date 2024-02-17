@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static io.github.jwharm.javagi.util.Conversions.toJavaConstant;
+import static io.github.jwharm.javagi.util.Conversions.toJavaConstantUpperCase;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
 
@@ -76,7 +76,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                         "$L", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
-                builder.addEnumConstant(m.name().toUpperCase(), spec.build());
+                builder.addEnumConstant(toJavaConstantUpperCase(m.name()), spec.build());
             } catch (NumberFormatException nfe) {
                 System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
                         m.cIdentifier(), m.value());
@@ -84,7 +84,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         }
         for (Member m : en.members().stream().filter(not(uniques::contains)).toList()) {
             try {
-                var spec = FieldSpec.builder(en.typeName(), toJavaConstant(m.name()),
+                var spec = FieldSpec.builder(en.typeName(), toJavaConstantUpperCase(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("of($L)", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
@@ -125,7 +125,8 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                 .addParameter(TypeName.INT, "value")
                 .beginControlFlow("return switch(value)");
         for (Member m : filterDuplicateValues(en.members()))
-            spec.addStatement("case $L -> $L", m.value(), m.name().toUpperCase());
+            spec.addStatement("case $L -> $L",
+                    m.value(), toJavaConstantUpperCase(m.name()));
         return spec.addStatement("default -> throw new IllegalStateException($S + value)",
                         "Unexpected value: ")
                 .endControlFlow("") // empty string to force a ;

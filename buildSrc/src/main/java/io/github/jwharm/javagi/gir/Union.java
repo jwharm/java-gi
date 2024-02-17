@@ -24,8 +24,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Union extends RegisteredType
-        implements ConstructorContainer, FieldContainer, FunctionContainer, MethodContainer {
+public final class Union extends RegisteredType implements FieldContainer {
 
     @Override
     public Namespace parent() {

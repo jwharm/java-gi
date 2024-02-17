@@ -34,8 +34,8 @@ public final class Constant extends TypedValue implements Multiplatform {
     }
 
     @Override
-    public RegisteredType parent() {
-        return (RegisteredType) super.parent();
+    public Namespace parent() {
+        return (Namespace) super.parent();
     }
 
     @Override

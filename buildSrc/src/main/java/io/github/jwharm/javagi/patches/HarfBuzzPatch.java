@@ -82,6 +82,15 @@ public class HarfBuzzPatch implements Patch {
                 && enums.contains(b.cType()))
             return new Enumeration(b.attributes(), b.children(), b.platforms());
 
+        /*
+         * Return type of function "hb_font_set_var_named_instance" is wrong
+         * in the linux and windows gir files
+         */
+        if (element instanceof Type t
+                && "guint".equals(t.name())
+                && "unsigned".equals(t.cType()))
+            return t.withAttribute("c:type", "unsigned int");
+
         return element;
     }
 }

@@ -30,6 +30,8 @@ import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
 
+import static io.github.jwharm.javagi.util.CollectionUtils.filter;
+
 public abstract class RegisteredTypeGenerator {
 
     public final static ClassName GTYPE = ClassName.get("org.gnome.glib", "Type");
@@ -75,42 +77,36 @@ public abstract class RegisteredTypeGenerator {
     }
 
     protected void addFunctions(TypeSpec.Builder builder) {
-        if (rt instanceof FunctionContainer fc)
-            for (Function f : fc.functions())
-                if (!f.skip())
-                    builder.addMethod(new MethodGenerator(f).generate());
+        for (Function f : filter(rt.children(), Function.class))
+            if (!f.skip())
+                builder.addMethod(new MethodGenerator(f).generate());
     }
 
     protected void addConstructors(TypeSpec.Builder builder) {
-        if (rt instanceof ConstructorContainer cc)
-            for (Constructor c : cc.constructors())
-                if (!c.skip())
-                    new ConstructorGenerator(c).generate(builder);
+        for (Constructor c : filter(rt.children(), Constructor.class))
+            if (!c.skip())
+                new ConstructorGenerator(c).generate(builder);
     }
 
     protected void addMethods(TypeSpec.Builder builder) {
-        if (rt instanceof MethodContainer mc)
-            for (Method m : mc.methods())
-                if (!m.skip())
-                    builder.addMethod(new MethodGenerator(m).generate());
+        for (Method m : filter(rt.children(), Method.class))
+            if (!m.skip())
+                builder.addMethod(new MethodGenerator(m).generate());
     }
 
     protected void addVirtualMethods(TypeSpec.Builder builder) {
-        if (rt instanceof VirtualMethodContainer vmc)
-            for (VirtualMethod vm : vmc.virtualMethods())
-                if (!vm.skip())
-                    builder.addMethod(new MethodGenerator(vm).generate());
+        for (VirtualMethod vm : filter(rt.children(), VirtualMethod.class))
+            if (!vm.skip())
+                builder.addMethod(new MethodGenerator(vm).generate());
     }
 
     protected void addSignals(TypeSpec.Builder builder) {
-        if (rt instanceof SignalContainer sc) {
-            for (Signal s : sc.signals()) {
-                var generator = new SignalGenerator(s);
-                builder.addType(generator.generateFunctionalInterface());
-                builder.addMethod(generator.generateConnectMethod());
-                if (!generator.emitMethodExists())
-                    builder.addMethod(generator.generateEmitMethod());
-            }
+        for (Signal s : filter(rt.children(), Signal.class)) {
+            var generator = new SignalGenerator(s);
+            builder.addType(generator.generateFunctionalInterface());
+            builder.addMethod(generator.generateConnectMethod());
+            if (!generator.emitMethodExists())
+                builder.addMethod(generator.generateEmitMethod());
         }
     }
 

@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import static io.github.jwharm.javagi.util.Conversions.toJavaConstant;
+import static io.github.jwharm.javagi.util.Conversions.toJavaConstantUpperCase;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 
 public class BitfieldGenerator extends RegisteredTypeGenerator {
@@ -66,7 +66,8 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
 
         for (Member m : filterDuplicateNames(bf.members())) {
             try {
-                var spec = FieldSpec.builder(bf.typeName(), toJavaConstant(m.name()),
+                var spec = FieldSpec.builder(bf.typeName(),
+                                toJavaConstantUpperCase(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("new $T($L)", bf.typeName(), Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)

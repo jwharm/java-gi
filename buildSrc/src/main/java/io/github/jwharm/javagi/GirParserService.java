@@ -31,8 +31,9 @@ import org.gradle.api.services.BuildServiceParameters;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A Gradle build service that provides Module objects containing a GIR
@@ -47,7 +48,7 @@ public abstract class GirParserService
         DirectoryProperty getInputDirectory();
     }
 
-    private final Map<String, Repository> repositories = new HashMap<>();
+    private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
 
     /**
      * Create a new GirParserService. This will only check if the input
@@ -72,14 +73,9 @@ public abstract class GirParserService
      *
      * @param name the name of the requested Repository
      * @return a module with the Repository and its dependencies
-     *
-     * @throws XMLStreamException    the GIR file is not a valid XML file
-     * @throws FileNotFoundException a GIR file does not exist for any platform
      */
-    public Module getModule(String name)
-            throws XMLStreamException, FileNotFoundException {
-
-        Repository repository = loadRepository(name);
+    public Module getModule(String name) {
+        Repository repository = repositories.computeIfAbsent(name, this::parse);
         Module module = new Module(name, repository);
 
         for (var include : repository.includes())
@@ -88,17 +84,15 @@ public abstract class GirParserService
         return module;
     }
 
-    // Parse a GIR file and add it to the Repository cache.
-    // If the Repository was already in the cache, return the existing one.
-    private Repository loadRepository(String name)
-            throws XMLStreamException, FileNotFoundException {
-
-        if (!repositories.containsKey(name)) {
+    // Call parse(getInputDirectory(), moduleName) and wrap exceptions
+    // in runtime exceptions
+    private Repository parse(String moduleName) {
+        try {
             Directory basePath = getParameters().getInputDirectory().get();
-            repositories.put(name, parse(basePath, name));
+            return parse(basePath, moduleName);
+        } catch (XMLStreamException | FileNotFoundException e) {
+            throw new RuntimeException(e);
         }
-
-        return repositories.get(name);
     }
 
     // Read the GIR files for all platforms and parse them into a Repository.

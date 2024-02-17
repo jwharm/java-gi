@@ -29,8 +29,7 @@ import static java.util.function.Predicate.not;
 import java.util.List;
 import java.util.Map;
 
-public final class Record extends RegisteredType
-        implements ConstructorContainer, FieldContainer, FunctionContainer, MethodContainer {
+public final class Record extends RegisteredType implements FieldContainer {
 
     @Override
     public Namespace parent() {

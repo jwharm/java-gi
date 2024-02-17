@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class Namespace extends GirElement implements Multiplatform, FunctionContainer {
+public final class Namespace extends GirElement implements Multiplatform {
     private int platforms;
     private final Map<Integer, String> sharedLibraries;
 

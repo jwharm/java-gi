@@ -24,7 +24,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public abstract sealed class FlaggedType extends RegisteredType implements FunctionContainer
+public abstract sealed class FlaggedType extends RegisteredType
         permits Bitfield, Enumeration {
 
     public FlaggedType(Map<String, String> attributes, List<GirElement> children, int platforms) {
