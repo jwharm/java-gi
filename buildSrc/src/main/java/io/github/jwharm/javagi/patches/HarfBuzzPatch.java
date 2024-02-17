@@ -31,7 +31,8 @@ public class HarfBuzzPatch implements Patch {
     public GirElement patch(GirElement element, String namespace) {
 
         /*
-         * The "_t" postfix from HarfBuzz types is removed.
+         * The "_t" postfix from HarfBuzz types is removed from all <type>
+         * elements in all other repositories.
          */
         if (!"HarfBuzz".equals(namespace)
                 && element instanceof Type t
@@ -45,6 +46,11 @@ public class HarfBuzzPatch implements Patch {
         if (!"HarfBuzz".equals(namespace))
             return element;
 
+        /*
+         * The "_t" postfix is removed from the HarfBuzz repository itself:
+         * - from the <type> elements
+         * - from the type declarations (<class>, <record>, <interface>, ...)
+         */
         if (element instanceof Type t
                 && t.name() != null
                 && t.name().endsWith("_t")) {
