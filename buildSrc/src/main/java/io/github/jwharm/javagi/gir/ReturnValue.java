@@ -25,8 +25,6 @@ import java.util.Objects;
 
 public final class ReturnValue extends TypedValue {
 
-    private String overrideValue;
-
     public ReturnValue(Map<String, String> attributes, List<GirElement> children) {
         super(attributes, children);
     }
@@ -44,12 +42,8 @@ public final class ReturnValue extends TypedValue {
         };
     }
 
-    public void setOverrideValue(String overrideValue) {
-        this.overrideValue = overrideValue;
-    }
-
     public String overrideValue() {
-        return this.overrideValue;
+        return attr("java-gi-override-value");
     }
 
     public boolean introspectable() {
@@ -57,11 +51,15 @@ public final class ReturnValue extends TypedValue {
     }
 
     public boolean nullable() {
-        return "1".equals(attr("nullable")) || "1".equals(attr("allow-none")) || "1".equals(attr("optional"));
+        return "1".equals(attr("nullable"))
+                || "1".equals(attr("allow-none"))
+                || "1".equals(attr("optional"));
     }
 
     public boolean notNull() {
-        return "0".equals(attr("nullable")) || "0".equals(attr("allow-none")) || "0".equals(attr("optional"));
+        return "0".equals(attr("nullable"))
+                || "0".equals(attr("allow-none"))
+                || "0".equals(attr("optional"));
     }
 
     public Parameter closure() {

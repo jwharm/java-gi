@@ -11,6 +11,7 @@ public class Patches {
             new GObjectPatch(),
             new GioPatch(),
             new PangoPatch(),
-            new HarfBuzzPatch()
+            new HarfBuzzPatch(),
+            new GtkPatch()
     );
 }

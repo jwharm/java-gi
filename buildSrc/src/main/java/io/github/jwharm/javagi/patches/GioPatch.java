@@ -26,6 +26,7 @@ import io.github.jwharm.javagi.util.Patch;
 import io.github.jwharm.javagi.util.Platform;
 
 import java.util.List;
+import java.util.Map;
 
 public class GioPatch implements Patch {
 
@@ -116,6 +117,20 @@ public class GioPatch implements Patch {
                         "InputStream",
                         "OutputStream").contains(c.name()))
             return c.withAttribute("java-gi-auto-closeable", "1");
+
+        /*
+         * File.prefixMatches() is defined as a virtual method with invoker
+         * method hasPrefix(), but the parameters are different. Remove the
+         * invoker attribute, so they will be treated as separate methods.
+         */
+        if (element instanceof VirtualMethod vm
+                && "prefix_matches".equals(vm.name())
+                && "File".equals(vm.parameters().instanceParameter().anyType().name()))
+            return new VirtualMethod(
+                    Map.of("name", "prefix_matches"),
+                    vm.children(),
+                    vm.platforms()
+            );
 
         return element;
     }

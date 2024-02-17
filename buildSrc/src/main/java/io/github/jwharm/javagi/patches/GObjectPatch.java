@@ -39,7 +39,7 @@ public class GObjectPatch implements Patch {
                     Map.of("name", "GLib.Type", "c:type", "gtype"),
                     Collections.emptyList()
             );
-            return a.withChildren(List.of(a.infoElements().doc(), type));
+            return a.withChildren(a.infoElements().doc(), type);
         }
 
         /*
@@ -74,8 +74,22 @@ public class GObjectPatch implements Patch {
                     Map.of("name", "parent_class"),
                     List.of(type)
             );
-            return r.withChildren(List.of(r.infoElements().doc(), field));
+            return r.withChildren(r.infoElements().doc(), field);
         }
+
+        /*
+         * GObject.notify() is defined as a virtual method with an invoker
+         * method, but the parameters are different. Remove the invoker
+         * attribute, so they will be treated as separate methods.
+         */
+        if (element instanceof VirtualMethod vm
+                && "notify".equals(vm.name())
+                && "Object".equals(vm.parameters().instanceParameter().anyType().name()))
+            return new VirtualMethod(
+                    Map.of("name", "notify"),
+                    vm.children(),
+                    vm.platforms()
+            );
 
         return element;
     }

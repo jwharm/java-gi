@@ -35,7 +35,7 @@ public class Conversions {
      * Convert "identifier_name" to "identifierName"
      */
     public static String toJavaIdentifier(String typeName) {
-        return prefixDigits(replaceJavaObjectMethodNames(replaceKeywords(toCamelCase(typeName, false))));
+        return prefixDigits(replaceKeywords(toCamelCase(typeName, false)));
     }
 
     /**
@@ -122,7 +122,7 @@ public class Conversions {
 
     // Overriding java.lang.Object methods is not allowed in default methods (in interfaces),
     // so we append an underscore to those method names.
-    private static String replaceJavaObjectMethodNames(String name) {
+    public static String replaceJavaObjectMethodNames(String name) {
         for (java.lang.reflect.Method m : Object.class.getMethods()) {
             if (m.getName().equals(name)) {
                 return name + "_";

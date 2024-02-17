@@ -22,10 +22,7 @@ package io.github.jwharm.javagi.gir;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class GirElement implements Serializable {
 
@@ -152,6 +149,16 @@ public abstract class GirElement implements Serializable {
             case VirtualMethod v -> new VirtualMethod(newAttrs, v.children(), v.platforms());
             default -> throw new UnsupportedOperationException("Unsupported element: " + this);
         };
+    }
+
+    /**
+     * Replace the child elements of the element with a new list
+     * @param newChildren the new list of child elements
+     * @return a new instance of the same type as {@code elem}, with the new child elements
+     * @param <T> the element must be a GirElement
+     */
+    public <T extends GirElement> T withChildren(GirElement... newChildren) {
+        return withChildren(Arrays.asList(newChildren));
     }
 
     /**

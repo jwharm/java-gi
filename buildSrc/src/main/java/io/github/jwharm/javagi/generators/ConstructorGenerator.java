@@ -34,6 +34,7 @@ import javax.lang.model.element.Modifier;
 
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
@@ -127,10 +128,13 @@ public class ConstructorGenerator {
 
         // Ref GObject
         if (parent.checkIsGObject()) {
-            builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).add(";\n").format(),
+            builder.addNamedCode(PartialStatement.of("var _object = ")
+                                    .add(stmt)
+                                    .add(";\n")
+                                    .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
-                            ClassName.get("org.gnome.gobject", "GObject"))
+                            GOBJECT)
                     .addStatement("$T.debug($S, _gobject.handle())",
                             ClassNames.GLIB_LOGGER,
                             "Ref " + parent.typeName() + " %ld\\n")
@@ -143,7 +147,10 @@ public class ConstructorGenerator {
         else if (ctor.attrs().cIdentifier() != null
                 && ctor.attrs().cIdentifier().startsWith("g_variant_new_")) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
-                            .add(stmt).add(";\n").format(), stmt.arguments())
+                                    .add(stmt)
+                                    .add(";\n")
+                                    .format(),
+                            stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
                     .addStatement("_instance.refSink()")
                     .addStatement("$T.takeOwnership(_instance.handle())",
@@ -157,19 +164,31 @@ public class ConstructorGenerator {
         // Add cleaner to struct/union pointer
         else if (parent instanceof Record record) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
-                            .add(stmt).add(";\n").format(), stmt.arguments())
+                                    .add(stmt)
+                                    .add(";\n")
+                                    .format(),
+                            stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
                     .addStatement("$T.takeOwnership(_instance.handle())",
                             ClassNames.MEMORY_CLEANER);
-            new RecordGenerator(record).setFreeFunc(builder, "_instance", parent.typeName());
+
+            new RecordGenerator(record).setFreeFunc(
+                    builder,
+                    "_instance",
+                    parent.typeName()
+            );
+
             builder.endControlFlow()
-                    .addStatement("return ($T) _instance", parent.typeName());
+                    .addStatement("return ($T) _instance",
+                            parent.typeName());
         }
 
         // No ownership transfer, just marshal the return value
         else {
-            stmt = PartialStatement.of("return ($parentType:T) ", "parentType", parent.typeName())
-                    .add(stmt);
+            stmt = PartialStatement.of("return ($parentType:T) ",
+                            "parentType", parent.typeName())
+                    .add(stmt)
+                    .add(";\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
 
@@ -177,13 +196,17 @@ public class ConstructorGenerator {
     }
 
     private String parameterNames() {
-        if (ctor.parameters() == null) return "";
+        if (ctor.parameters() == null)
+            return "";
+
         return ctor.parameters().parameters().stream()
                 .filter(not(Parameter::isUserDataParameter))
                 .filter(not(Parameter::isDestroyNotifyParameter))
                 .filter(not(Parameter::isArrayLengthParameter))
                 .map(TypedValue::name)
-                .map(name -> "...".equals(name) ? "varargs" : Conversions.toJavaIdentifier(name))
+                .map(name -> "...".equals(name)
+                        ? "varargs"
+                        : Conversions.toJavaIdentifier(name))
                 .collect(Collectors.joining(", "));
     }
 }

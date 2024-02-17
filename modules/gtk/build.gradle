@@ -1,5 +1,3 @@
-import io.github.jwharm.javagi.patches.GtkPatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -9,8 +7,7 @@ dependencies {
     api project(':gsk')
 }
 
-tasks.named('generateSources') {
-    girFile = 'Gtk-4.0.gir'
+generateSources.configure {
+    namespace = 'Gtk'
     urlPrefix = 'https://docs.gtk.org/gtk4/'
-    patch = new GtkPatch()
 }

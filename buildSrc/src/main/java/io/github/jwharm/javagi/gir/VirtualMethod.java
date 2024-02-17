@@ -30,11 +30,18 @@ public final class VirtualMethod extends AbstractCallable {
 
     public Method invoker() {
         String invoker = attr("invoker");
-        if (invoker == null) return null;
+        if (invoker == null)
+            return null;
+
         return parent().children().stream()
                 .filter(Method.class::isInstance)
                 .map(Method.class::cast)
+                .filter(m -> invoker.equals(m.name()))
                 .findAny()
-                .orElse(null); // ignore invalid cross-references
+                .orElse(null);
+    }
+
+    public String overrideVisibility() {
+        return attr("java-gi-override-visibility");
     }
 }

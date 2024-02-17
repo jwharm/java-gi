@@ -40,7 +40,8 @@ public final class Method extends AbstractCallable {
         return parent().children().stream()
                 .filter(VirtualMethod.class::isInstance)
                 .map(VirtualMethod.class::cast)
-                .filter(vm -> this == vm.invoker())
-                .findAny().orElse(null);
+                .filter(vm -> name().equals(vm.attr("invoker")))
+                .findAny()
+                .orElse(null);
     }
 }

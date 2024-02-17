@@ -38,7 +38,7 @@ import java.util.List;
 
 import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GENERIC_T;
 import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
-import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
+import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class MethodGenerator {
 
@@ -50,7 +50,14 @@ public class MethodGenerator {
     private final CallableGenerator generator;
 
     public MethodGenerator(AbstractCallable func) {
-        this(func, Conversions.toJavaIdentifier(func.name()));
+        this(func, getName(func));
+    }
+
+    private static String getName(AbstractCallable func) {
+        String name = toJavaIdentifier(func.name());
+        return func.parent() instanceof Interface
+                ? replaceJavaObjectMethodNames(name)
+                : name;
     }
 
     public MethodGenerator(AbstractCallable func, String name) {
@@ -60,6 +67,8 @@ public class MethodGenerator {
 
         if (func instanceof Method method) {
             vm = method.invokerFor();
+            // Sometimes the return value of the invoker is not the same.
+            // In that case we choose the one that isn't void.
             if (vm != null && func.returnValue().anyType().isVoid())
                 returnValue = vm.returnValue();
             else
@@ -89,12 +98,16 @@ public class MethodGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Modifiers
-        if (func instanceof VirtualMethod && func.parent() instanceof Class)
-            builder.addModifiers(Modifier.PROTECTED);
-        else if (func instanceof Constructor)
-            builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
-        else
-            builder.addModifiers(Modifier.PUBLIC);
+        switch (func) {
+            case VirtualMethod v when v.overrideVisibility() != null ->
+                    builder.addModifiers(Modifier.valueOf(v.overrideVisibility()));
+            case VirtualMethod _ when func.parent() instanceof Class ->
+                    builder.addModifiers(Modifier.PROTECTED);
+            case Constructor _ ->
+                    builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
+            default ->
+                    builder.addModifiers(Modifier.PUBLIC);
+        }
 
         if (func instanceof Function)
             builder.addModifiers(Modifier.STATIC);
@@ -165,11 +178,6 @@ public class MethodGenerator {
         } else {
             functionNameInvocation();
         }
-
-        // Override result
-        if (returnValue.overrideValue() != null)
-            builder.addStatement("_result = $L",
-                    returnValue.overrideValue());
 
         // Catch function invocation exceptions
         builder.nextControlFlow("catch (Throwable _err)")
@@ -250,9 +258,9 @@ public class MethodGenerator {
 
         // Result assignment
         PartialStatement invoke = new PartialStatement();
-        if (!returnValue.anyType().isVoid())
+        if (!func.returnValue().anyType().isVoid())
             invoke.add("_result = (")
-                    .add(Conversions.getCarrierTypeString(returnValue.anyType()))
+                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
                     .add(") ");
 
         // Function invocation
@@ -264,10 +272,19 @@ public class MethodGenerator {
                 .add(");\n");
 
         builder.addNamedCode(invoke.format(), invoke.arguments());
+
+        // Override result with a default value
+        if (!returnValue.equals(func.returnValue())) {
+            String value = "null";
+            if ("gboolean".equals(returnValue.anyType().name()))
+                value = "1";
+            builder.addStatement("_result = $L", value);
+        }
     }
 
     private void functionPointerInvocation() {
         // Function descriptor
+        var generator = new CallableGenerator(vm);
         generator.generateFunctionDescriptor(builder);
 
         // Function pointer lookup

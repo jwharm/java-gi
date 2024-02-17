@@ -42,6 +42,7 @@ public interface Patch {
      * Remove the child elements with the provided attribute.
      *
      * @param elem  the element to remove the child element from
+     * @param type  the type of the element to remove
      * @param key   the attribute key
      * @param value the attribute value
      * @return the element with the child element removed
