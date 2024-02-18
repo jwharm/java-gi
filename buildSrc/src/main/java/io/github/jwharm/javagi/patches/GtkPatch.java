@@ -2,12 +2,10 @@ package io.github.jwharm.javagi.patches;
 
 import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.gir.Method;
-import io.github.jwharm.javagi.gir.Type;
 import io.github.jwharm.javagi.gir.VirtualMethod;
 import io.github.jwharm.javagi.util.Patch;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 
 public class GtkPatch implements Patch {
 
@@ -68,6 +66,20 @@ public class GtkPatch implements Patch {
                 && "activate_default".equals(vm.name())
                 && "Window".equals(vm.parameters().instanceParameter().anyType().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
+
+        /*
+         * The virtual methods in the GtkBuilderScope interface are not
+         * generated automatically, but they are needed by BuilderJavaScope.
+         */
+        var methods = List.of(
+                "get_type_from_name",
+                "get_type_from_function",
+                "create_closure"
+        );
+        if (element instanceof VirtualMethod vm
+                && methods.contains(vm.name())
+                && "BuilderScope".equals(vm.parameters().instanceParameter().anyType().name()))
+            return vm.withAttribute("java-gi-dont-skip", "1");
 
         return element;
     }
