@@ -66,7 +66,7 @@ public class FileTest {
                 output = new String(result);
             }
 
-            assertEquals(output, input);
+            assertEquals(input, output);
         } catch (GErrorException | IOException e) {
             fail(e);
         }
