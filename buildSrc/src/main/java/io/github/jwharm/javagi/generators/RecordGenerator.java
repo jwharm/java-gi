@@ -57,7 +57,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         if (rec.generic()
                 || (outerClass instanceof Class c && c.generic()))
-            builder.addTypeVariable(GENERIC_T);
+            builder.addTypeVariable(ClassNames.GENERIC_T);
 
         // TypeClass and TypeInterface records are generated as Java inner classes that
         // extend the TypeClass or TypeInterface of the parent type.

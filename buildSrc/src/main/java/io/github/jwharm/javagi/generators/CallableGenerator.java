@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
@@ -34,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GENERIC_T;
-import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static java.util.function.Predicate.not;
 
 public class CallableGenerator {
@@ -100,8 +99,8 @@ public class CallableGenerator {
             } else {
                 var generator = new TypedValueGenerator(p);
                 var type = generator.getType();
-                if (generic && type.equals(GOBJECT))
-                    type = GENERIC_T;
+                if (generic && type.equals(ClassNames.GOBJECT))
+                    type = ClassNames.GENERIC_T;
                 var spec = ParameterSpec.builder(type, generator.getName());
                 if (p.nullable())
                     spec.addAnnotation(Nullable.class);

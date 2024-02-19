@@ -36,8 +36,6 @@ import java.lang.foreign.ValueLayout;
 import java.util.Comparator;
 import java.util.List;
 
-import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GENERIC_T;
-import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class MethodGenerator {
@@ -120,8 +118,8 @@ public class MethodGenerator {
             builder.addModifiers(Modifier.DEFAULT);
 
         // Return type
-        if (generic && returnValue.anyType().typeName().equals(GOBJECT))
-            builder.returns(GENERIC_T);
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+            builder.returns(ClassNames.GENERIC_T);
         else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
         else
@@ -213,8 +211,8 @@ public class MethodGenerator {
             RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
             PartialStatement stmt = PartialStatement.of("");
-            if (generic && returnValue.anyType().typeName().equals(GOBJECT))
-                stmt.add("($generic:T) ", "generic", GENERIC_T);
+            if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+                stmt.add("($generic:T) ", "generic", ClassNames.GENERIC_T);
             stmt.add(generator.marshalNativeToJava("_result", false));
 
             // Ref GObject

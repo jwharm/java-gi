@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.configuration;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeVariableName;
 
 public final class ClassNames {
     private static final String PKG_TOPLEVEL        = "io.github.jwharm.javagi";
@@ -62,4 +63,13 @@ public final class ClassNames {
     public static final ClassName SIGNALS = ClassName.get(PKG_GOBJECT_TYPES, "Signals");
     public static final ClassName TYPE_CACHE = ClassName.get(PKG_GOBJECT_TYPES, "TypeCache");
     public static final ClassName TYPES = ClassName.get(PKG_GOBJECT_TYPES, "Types");
+
+    // Some frequently used class names
+    public final static ClassName GTYPE = ClassName.get("org.gnome.glib", "Type");
+    public final static ClassName GOBJECT = ClassName.get("org.gnome.gobject", "GObject");
+    public final static ClassName GOBJECTS = ClassName.get("org.gnome.gobject", "GObjects");
+    public final static ClassName TYPE_INSTANCE = ClassName.get("org.gnome.gobject", "TypeInstance");
+
+    // The type variable used for <T extends GObject>
+    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", GOBJECT);
 }

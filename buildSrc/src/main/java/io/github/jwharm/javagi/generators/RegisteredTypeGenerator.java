@@ -34,13 +34,6 @@ import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 
 public abstract class RegisteredTypeGenerator {
 
-    public final static ClassName GTYPE = ClassName.get("org.gnome.glib", "Type");
-    public final static ClassName GOBJECT = ClassName.get("org.gnome.gobject", "GObject");
-    public final static ClassName GOBJECTS = ClassName.get("org.gnome.gobject", "GObjects");
-    public final static ClassName TYPE_INSTANCE = ClassName.get("org.gnome.gobject", "TypeInstance");
-
-    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", GOBJECT);
-
     private final RegisteredType rt;
 
     public RegisteredTypeGenerator(RegisteredType rt) {

@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -34,7 +33,6 @@ import javax.lang.model.element.Modifier;
 
 import java.util.stream.Collectors;
 
-import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
@@ -144,7 +142,7 @@ public class ConstructorGenerator {
                                     .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
-                            GOBJECT)
+                            ClassNames.GOBJECT)
                     .addStatement("$T.debug($S, _gobject.handle())",
                             ClassNames.GLIB_LOGGER,
                             "Ref " + parent.typeName() + " %ld\\n")
