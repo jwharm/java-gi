@@ -95,13 +95,12 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 String valueLayout = Conversions.getValueLayoutPlain(arrayType);
 
                 // Out-parameter array
-                if (p.isOutParameter() && len != null && p.callerAllocates()) {
+                if (p.isOutParameter() && len != null) {
                     PartialStatement payload = arrayType.isPrimitive()
                             ? PartialStatement.of("_%sPointer.toArray($valueLayout:T.%s)"
                                     .formatted(getName(), valueLayout),
                                     "valueLayout", ValueLayout.class)
-                            : marshalNativeToJava(arrayType, "_%sPointer"
-                                    .formatted(getName()), false);
+                            : marshalNativeToJava("_%sPointer".formatted(getName()), false);
 
                     var stmt = PartialStatement.of(getName() + ".set(")
                             .add(payload)
