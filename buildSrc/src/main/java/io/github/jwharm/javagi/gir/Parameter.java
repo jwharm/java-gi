@@ -36,11 +36,15 @@ public final class Parameter extends TypedValue {
     }
 
     public boolean isOutParameter() {
-        if (anyType() instanceof Array a && a.unknownSize()) return false;
+        if (anyType() instanceof Array a && a.unknownSize())
+            return false;
+
         return (direction() == Direction.OUT || direction() == Direction.INOUT)
-                && (anyType() instanceof Type type && (type.isPointer() || (type.cType()) != null && type.cType().endsWith("gsize")))
-                && (!type.isProxy())
-                && (!(type.get() instanceof Alias a && a.type().isPrimitive()));
+                && (anyType() instanceof Array
+                    || (anyType() instanceof Type type
+                        && (type.isPointer() || (type.cType()) != null && type.cType().endsWith("gsize")))
+                        && (!type.isProxy())
+                        && (!(type.get() instanceof Alias a && a.type().isPrimitive())));
     }
 
     public boolean isUserDataParameter() {

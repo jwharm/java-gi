@@ -30,6 +30,7 @@ import java.lang.foreign.ValueLayout;
 
 import static io.github.jwharm.javagi.generators.RegisteredTypeGenerator.GOBJECT;
 import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
+import static io.github.jwharm.javagi.util.Conversions.primitiveClassName;
 
 public class PostprocessingGenerator extends TypedValueGenerator {
 
@@ -62,7 +63,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 var stmt = PartialStatement.of(null, "valueLayout", ValueLayout.class);
 
                 if (checkNull())
-                    stmt.add("if (").add(getName()).add(" != null) ");
+                    builder.beginControlFlow("if ($L != null)", getName());
 
                 stmt.add(getName())
                         .add((target instanceof Alias a && a.type().isPrimitive())
@@ -82,6 +83,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 }
                 stmt.add(");\n");
                 builder.addNamedCode(stmt.format(), stmt.arguments());
+
+                if (checkNull())
+                    builder.endControlFlow();
             }
 
             // Pointer to array
@@ -99,23 +103,24 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                             : marshalNativeToJava(arrayType, "_%sPointer"
                                     .formatted(getName()), false);
 
-                    var stmt = PartialStatement.of("if (%s != null) %s.set("
-                                    .formatted(getName(), getName()))
+                    var stmt = PartialStatement.of(getName() + ".set(")
                             .add(payload)
                             .add(");\n");
 
-                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                    builder.beginControlFlow("if ($L != null)", getName())
+                            .addNamedCode(stmt.format(), stmt.arguments())
+                            .endControlFlow();
                 }
 
                 // Array of primitive values
                 else if (arrayType.isPrimitive() && (!arrayType.isBoolean())) {
-                    builder.addStatement("if ($1L != null) $1L.set(_$1LPointer.get($2T.ADDRESS, 0)$Z"
-                                    + ".reinterpret($3L * $4L.byteSize(), _arena, null)$Z"
-                                    + ".toArray($4L))",
-                            getName(),
-                            ValueLayout.class,
-                            len,
-                            valueLayout);
+                    builder.beginControlFlow("if ($1L != null)", getName())
+                            .addStatement("$1L.set($2T.get$3LArrayFrom(_$1LPointer, $4L_arena, false))",
+                                    getName(),
+                                    ClassNames.INTEROP,
+                                    primitiveClassName(arrayType.javaType()),
+                                    len != null ? (len + ",") : "")
+                            .endControlFlow();
                 }
 
                 // Array of proxy objects
