@@ -6,7 +6,7 @@ dependencies {
     api project(':gobject')
 }
 
-tasks.named('generateSources') {
-    girFile = 'JavaScriptCore-6.0.gir'
+generateSources.configure {
+    namespace = 'JavaScriptCore'
     urlPrefix = 'https://webkitgtk.org/reference/jsc-glib/stable/'
 }
