@@ -4,21 +4,21 @@ plugins {
 
 rootProject.name = 'java-gi'
 
+include 'adw'
 include 'gdk'
 include 'gdkpixbuf'
 include 'gio'
 include 'glib'
 include 'gmodule'
 include 'gobject'
-include 'harfbuzz'
-include 'pango'
-include 'pangocairo'
 include 'graphene'
 include 'gsk'
 include 'gtk'
+include 'harfbuzz'
+include 'pango'
+include 'pangocairo'
 
 /*
-include 'adw'
 include 'gst'
 include 'gstaudio'
 include 'gstbase'

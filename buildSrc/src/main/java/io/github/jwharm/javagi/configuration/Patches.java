@@ -7,11 +7,12 @@ import java.util.List;
 
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
+            new AdwPatch(),
             new GLibPatch(),
-            new GObjectPatch(),
             new GioPatch(),
-            new PangoPatch(),
+            new GObjectPatch(),
+            new GtkPatch(),
             new HarfBuzzPatch(),
-            new GtkPatch()
+            new PangoPatch()
     );
 }
