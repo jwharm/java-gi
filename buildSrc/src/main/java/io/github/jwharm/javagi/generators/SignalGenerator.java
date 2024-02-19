@@ -200,7 +200,7 @@ public class SignalGenerator {
         builder.addNamedCode(varargs.format() + ";\n", varargs.arguments());
 
         // Emit the signal
-        builder.addStatement("$T.g_signal_emit_by_name.invokeExact(handle(), _name, _arena, _args)",
+        builder.addStatement("$T.g_signal_emit_by_name.invokeExact(handle(), _name, _args)",
                 ClassNames.SIGNALS);
 
         // Parameter postprocessing
