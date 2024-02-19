@@ -22,6 +22,8 @@ package io.github.jwharm.javagi.gir;
 import java.util.List;
 import java.util.Map;
 
+import static io.github.jwharm.javagi.util.CollectionUtils.findAny;
+
 public final class InstanceParameter extends TypedValue {
 
     public InstanceParameter(Map<String, String> attributes, List<GirElement> children) {
@@ -39,6 +41,10 @@ public final class InstanceParameter extends TypedValue {
     @Override
     public boolean allocatesMemory() {
         return false;
+    }
+
+    public Type type() {
+        return findAny(children(), Type.class);
     }
 
     public boolean nullable() {

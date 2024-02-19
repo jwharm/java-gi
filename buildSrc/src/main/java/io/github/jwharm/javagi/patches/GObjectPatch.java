@@ -84,7 +84,7 @@ public class GObjectPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "notify".equals(vm.name())
-                && "Object".equals(vm.parameters().instanceParameter().anyType().name()))
+                && "Object".equals(vm.parameters().instanceParameter().type().name()))
             return new VirtualMethod(
                     Map.of("name", "notify"),
                     vm.children(),

@@ -54,7 +54,7 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "play".equals(vm.name())
-                && "MediaStream".equals(vm.parameters().instanceParameter().anyType().name()))
+                && "MediaStream".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("invoker", "play");
 
         /*
@@ -64,7 +64,7 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "activate_default".equals(vm.name())
-                && "Window".equals(vm.parameters().instanceParameter().anyType().name()))
+                && "Window".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*
@@ -78,7 +78,7 @@ public class GtkPatch implements Patch {
         );
         if (element instanceof VirtualMethod vm
                 && methods.contains(vm.name())
-                && "BuilderScope".equals(vm.parameters().instanceParameter().anyType().name()))
+                && "BuilderScope".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-dont-skip", "1");
 
         return element;

@@ -125,7 +125,7 @@ public class GioPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "prefix_matches".equals(vm.name())
-                && "File".equals(vm.parameters().instanceParameter().anyType().name()))
+                && "File".equals(vm.parameters().instanceParameter().type().name()))
             return new VirtualMethod(
                     Map.of("name", "prefix_matches"),
                     vm.children(),
