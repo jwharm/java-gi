@@ -94,11 +94,11 @@ public final class Class extends RegisteredType implements FieldContainer {
     }
 
     public String setValueFunc() {
-        return attr("set-value-func");
+        return attr("glib:set-value-func");
     }
 
     public String getValueFunc() {
-        return attr("get-value-func");
+        return attr("glib:get-value-func");
     }
 
     public String cSymbolPrefix() {

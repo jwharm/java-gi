@@ -484,7 +484,7 @@ class TypedValueGenerator {
                 if (setter.isPresent()) {
                     Function function = setter.get();
                     String setValueFunc = Conversions.toJavaIdentifier(function.name());
-                    String globalClassTag = rt.namespace().globalClassName();
+                    String globalClassTag = uncapitalize(rt.namespace().globalClassName());
                     return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
                             globalClassTag,
                             toJavaQualifiedType(rt.namespace().globalClassName(), rt.namespace()));
