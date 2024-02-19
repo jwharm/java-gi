@@ -65,15 +65,45 @@ public abstract sealed class AbstractCallable extends GirElement implements Mult
 
     // If true, this callable will not be generated
     public boolean skip() {
-        if (attrBool("java-gi-dont-skip", false)) return false;
-        if (this instanceof VirtualMethod vm && vm.parent() instanceof Interface) return true;
-        if (this instanceof VirtualMethod vm && vm.invoker() != null) return true;
-        if (attrs().shadowedBy() != null) return true;
-        if (attrs().movedTo() != null && attrs().movedTo().contains(".")) return true;
-        if (parameters() != null)
-            for (Parameter parameter : parameters().parameters())
-                if (parameter.anyType() instanceof Type type && List.of("va_list", "va_list*").contains(type.cType()))
-                    return true;
+        // Explicit override: do not skip
+        if (attrBool("java-gi-dont-skip", false))
+            return false;
+
+        // Do not generate virtual methods in interfaces
+        if (this instanceof VirtualMethod vm && vm.parent() instanceof Interface)
+            return true;
+
+        // For virtual methods with an invoker method, only the invoker method
+        // is generated
+        if (this instanceof VirtualMethod vm && vm.invoker() != null)
+            return true;
+
+        // Shadowed by another method
+        if (attrs().shadowedBy() != null)
+            return true;
+
+        // Replaced by another method
+        if (attrs().movedTo() != null && attrs().movedTo().contains("."))
+            return true;
+
+        if (parameters() == null)
+            return false;
+
+        for (Parameter parameter : parameters().parameters()) {
+
+            // va_list parameters are not supported
+            if (parameter.anyType() instanceof Type type
+                    && List.of("va_list", "va_list*").contains(type.cType()))
+                return true;
+
+            // Nested arrays are not supported yet
+            if (parameter.anyType() instanceof Array array
+                    && ((array.cType() != null && array.cType().endsWith("***"))
+                        || array.anyType() instanceof Array
+                        || (array.anyType() instanceof Type t && t.isActuallyAnArray())))
+                return true;
+        }
+
         return false;
     }
 
