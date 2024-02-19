@@ -42,7 +42,8 @@ public final class Class extends RegisteredType implements FieldContainer {
 
     @Override
     public String constructorName() {
-        return abstract_() ? "%s.%sImpl::new".formatted(javaType(), toJavaSimpleType(name(), namespace()))
+        return abstract_()
+                ? "%s.%sImpl::new".formatted(javaType(), name())
                 : super.constructorName();
     }
 
