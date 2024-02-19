@@ -466,7 +466,7 @@ class TypedValueGenerator {
             return PartialStatement.of("$gobjects:T.gtypeGetType()", "gobjects",
                     ClassName.get("org.gnome.gobject", "GObjects"));
 
-        return PartialStatement.of("$types:T.BOXED", "types", ClassNames.TYPES);
+        return PartialStatement.of("$types:T.POINTER", "types", ClassNames.TYPES);
     }
 
     PartialStatement getValueSetter(PartialStatement gTypeDeclaration, String payloadIdentifier) {
@@ -516,14 +516,19 @@ class TypedValueGenerator {
                     : target instanceof Record ? "setBoxed"
                     : "setObject";
         };
+
         return switch(setValue) {
-            case "setEnum", "setFlags" -> PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ".getValue())");
-            case "setBoxed" -> PartialStatement.of("_value" + "." + setValue + "(")
+            case "setEnum", "setFlags" ->
+                    PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ".getValue())");
+            case "setBoxed", "setPointer" ->
+                    PartialStatement.of("_value" + "." + setValue + "(")
                         .add(marshalJavaToNative(payloadIdentifier))
                         .add(")");
-            case "setObject" -> PartialStatement.of("_value" + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
+            case "setObject" ->
+                    PartialStatement.of("_value" + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
                     "gobject", ClassName.get("org.gnome.gobject", "GObject"));
-            default -> PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ")");
+            default ->
+                    PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ")");
         };
     }
 

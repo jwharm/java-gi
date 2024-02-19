@@ -43,7 +43,7 @@ public final class Callback extends RegisteredType implements Callable {
 
     @Override
     public String getTypeFunc() {
-        throw new UnsupportedOperationException("Callback has no glib:get-type");
+        return null; // Callback has no glib:get-type
     }
 
     @Override
