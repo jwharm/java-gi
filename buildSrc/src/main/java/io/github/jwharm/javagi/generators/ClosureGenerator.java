@@ -67,7 +67,8 @@ public class ClosureGenerator {
 
     private String getName() {
         String name = closure.name();
-        if (closure instanceof Callback cb && cb.parent() instanceof Field)
+        if ((closure instanceof Callback cb && cb.parent() instanceof Field)
+            || (closure instanceof Signal))
             name += "Callback";
         return toJavaSimpleType(name, closure.namespace());
     }

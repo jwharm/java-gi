@@ -37,7 +37,8 @@ public final class Signal extends AbstractCallable {
     }
 
     public TypeName typeName() {
-        return parent().typeName().nestedClass(Conversions.toJavaSimpleType(name(), namespace()));
+        return parent().typeName().nestedClass(
+                Conversions.toJavaSimpleType(name() + "_callback", namespace()));
     }
 
     public boolean detailed() {
