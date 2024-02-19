@@ -90,8 +90,13 @@ public class MethodGenerator {
 
     public MethodSpec generate() {
         // Javadoc
-        if (func.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(func.infoElements().doc()).generate());
+        if (func.infoElements().doc() != null) {
+            String javadoc = new DocGenerator(func.infoElements().doc()).generate();
+            if (func.doPlatformCheck())
+                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+            else
+                builder.addJavadoc(javadoc);
+        }
 
         // Deprecated annotation
         if (func.attrs().deprecated())

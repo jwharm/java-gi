@@ -69,8 +69,13 @@ public class ConstructorGenerator {
                 .addModifiers(Modifier.PUBLIC);
 
         // Javadoc
-        if (ctor.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(ctor.infoElements().doc()).generate());
+        if (ctor.infoElements().doc() != null) {
+            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            if (ctor.doPlatformCheck())
+                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+            else
+                builder.addJavadoc(javadoc);
+        }
 
         // Deprecated annotation
         if (ctor.attrs().deprecated())
@@ -101,8 +106,13 @@ public class ConstructorGenerator {
         builder.returns(parent.typeName());
 
         // Javadoc
-        if (ctor.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(ctor.infoElements().doc()).generate());
+        if (ctor.infoElements().doc() != null) {
+            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            if (ctor.doPlatformCheck())
+                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+            else
+                builder.addJavadoc(javadoc);
+        }
 
         // Deprecated annotation
         if (ctor.attrs().deprecated())

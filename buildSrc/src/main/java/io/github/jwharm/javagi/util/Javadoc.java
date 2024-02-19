@@ -29,8 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
-import static io.github.jwharm.javagi.util.Conversions.replaceKnownType;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class Javadoc {
 
@@ -374,8 +373,8 @@ public class Javadoc {
 
         return type + switch(node) {
             case AbstractCallable c -> formatMethod(c.attrs().name());
-            case Member m -> "#" + m.name().toUpperCase();
-            case Constant c -> "#" + c.name().toUpperCase();
+            case Member m -> "#" + toJavaConstantUpperCase(m.name());
+            case Constant c -> "#" + toJavaConstant(c.name());
             default -> "";
         };
     }

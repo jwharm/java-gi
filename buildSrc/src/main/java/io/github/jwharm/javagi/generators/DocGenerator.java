@@ -84,7 +84,7 @@ public class DocGenerator {
                     writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}",
                             "@throws");
                 if (c.doPlatformCheck())
-                    writeDoc(builder, "UnsupportedPlatformException when run on a platform other than "
+                    writeDoc(builder, "$T when run on a platform other than "
                             + Platform.toString(c.platforms()),
                             "@throws");
             }
