@@ -167,7 +167,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addJavadoc("""
                         Get the GType of the $L class
                         
-                        @return always {@link $T.PARAM}
+                        @return always {@link $T#PARAM}
                         """, cls.cType(), ClassNames.TYPES)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassNames.GTYPE)
