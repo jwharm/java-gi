@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.util;
 
+import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 
@@ -54,6 +55,12 @@ public class Javadoc {
             + "|(?<p>\\n{2,})"
     ;
 
+    // A second regex to run on the results of the first one.
+    private static final String REGEX_PASS_2 =
+              "(?<emptyp><p>\\s*(?<tag><(pre|ul)>))"
+            + "|(?m)(?<blockquote>(^&gt;\\s+.*\\n?)+)"
+    ;
+
     // These are the named groups for which the conversions to Javadoc are applied.
     // Other named groups are not matched separately, but only used as parameters 
     // for the conversion functions.
@@ -61,34 +68,17 @@ public class Javadoc {
             "codeblock", "codeblock2", "code", "link", "constantref", "typeref",
             "paramref", "hyperlink", "img", "header", "bulletpoint", "strong", "em", "entity", "p");
     
-    private static final String REGEX_PASS_2 =
-              "(?<emptyp><p>\\s*(?<tag><(pre|ul)>))"
-            + "|(?m)(?<blockquote>(^&gt;\\s+.*\\n?)+)"
-    ;
-    
     private static final List<String> NAMED_GROUPS_PASS_2 = List.of("emptyp", "blockquote");
 
-    private static Javadoc instance = null;
+    // The compiled regex patterns
+    private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
+    private static final Pattern PATTERN_PASS_2 = Pattern.compile(REGEX_PASS_2);
+
     private Documentation doc;
     private boolean ul;
 
-    /**
-     * Return the singleton instance of the Javadoc class.
-     */
     public static Javadoc getInstance() {
-        if (instance == null) {
-            instance = new Javadoc();
-        }
-        return instance;
-    }
-
-    private final Pattern patternPass1;
-    private final Pattern patternPass2;
-
-    // This class is a singleton. The regex patterns are compiled only once.
-    private Javadoc() {
-        this.patternPass1 = Pattern.compile(REGEX_PASS_1);
-        this.patternPass2 = Pattern.compile(REGEX_PASS_2);
+        return new Javadoc();
     }
 
     /**
@@ -99,7 +89,7 @@ public class Javadoc {
         this.ul = false;
         
         // Conversion pass 1
-        Matcher matcher = patternPass1.matcher(doc.text());
+        Matcher matcher = PATTERN_PASS_1.matcher(doc.text());
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
             String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_1);
@@ -115,7 +105,7 @@ public class Javadoc {
         String pass1Result = output.toString();
         
         // Conversion pass 2
-        matcher = patternPass2.matcher(pass1Result);
+        matcher = PATTERN_PASS_2.matcher(pass1Result);
         output = new StringBuilder();
         while (matcher.find()) {
             String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_2);
