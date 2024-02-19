@@ -18,6 +18,7 @@ include 'gtksourceview'
 include 'harfbuzz'
 include 'pango'
 include 'pangocairo'
+include 'soup'
 
 /*
 include 'gst'
@@ -26,7 +27,6 @@ include 'gstbase'
 include 'gstpbutils'
 include 'gstvideo'
 include 'javascriptcore'
-include 'soup'
 include 'webkit'
 include 'webkitwebprocessextension'
 */

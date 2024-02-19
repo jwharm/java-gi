@@ -13,6 +13,7 @@ public class Patches {
             new GObjectPatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),
-            new PangoPatch()
+            new PangoPatch(),
+            new SoupPatch()
     );
 }
