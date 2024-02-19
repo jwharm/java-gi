@@ -48,6 +48,35 @@ public class GtkPatch implements Patch {
             return m.withAttribute("name", "get_print_settings");
 
         /*
+         * Widget.activate() is problematic for several subclasses that have
+         * their own "activate" virtual method: in Java, a child class cannot
+         * override a public method with a protected method. Rename
+         * Widget.activate() to activateWidget()
+         */
+        if (element instanceof Method m
+                && "gtk_widget_activate".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("name", "activate_widget");
+
+        /*
+         * Widget.activateAction() returns boolean.
+         * ActionGroup.activateAction() returns void.
+         * Class ApplicationWindow extends Widget and implements ActionGroup.
+         * This doesn't compile in Java. We rename Widget.activateAction()
+         * to activateActionIfExists() to resolve this.
+         *
+         * Furthermore, Widget.activateAction() is shadowed by
+         * Widget.activateActionVariant() so we have to rename the "shadows"
+         * attribute too.
+         */
+        if (element instanceof Method m
+                && "gtk_widget_activate_action".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("name", "activate_action_if_exists");
+
+        if (element instanceof Method m
+                && "gtk_widget_activate_action_variant".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("shadows", "activate_action_if_exists");
+
+        /*
          * The invoker attribute isn't set automatically in the gir file,
          * because the return values are not the same. Set the attribute
          * anyway.
@@ -58,13 +87,23 @@ public class GtkPatch implements Patch {
             return vm.withAttribute("invoker", "play");
 
         /*
-         * Virtual method Window.activateDefault() would be protected in Java,
-         * but it overrides a public method with the same name in Widget.
-         * Therefore, it must also be public.
+         * Virtual method Window.activateDefault() and
+         * Popover.activateDefault() would be protected in Java, but they
+         * override a public method with the same name in Widget. Therefore,
+         * they must also be public.
          */
         if (element instanceof VirtualMethod vm
                 && "activate_default".equals(vm.name())
-                && "Window".equals(vm.parameters().instanceParameter().type().name()))
+                && List.of("Window", "Popover").contains(
+                        vm.parameters().instanceParameter().type().name()))
+            return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
+
+        /*
+         * Same for Dialog.close() overriding Window.close()
+         */
+        if (element instanceof VirtualMethod vm
+                && "close".equals(vm.name())
+                && "Dialog".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*
