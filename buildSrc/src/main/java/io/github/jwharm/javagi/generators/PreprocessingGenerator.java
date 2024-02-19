@@ -75,11 +75,12 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     private void pointerAllocation(MethodSpec.Builder builder) {
         if (p.isOutParameter()
                 && array != null
-                && array.unknownSize()
+                && (!array.unknownSize())
                 && p.callerAllocates()) {
             PartialStatement stmt = marshalJavaToNative(getName() + ".get()")
-                    .add("memorySegment", MemorySegment.class);
-            builder.addNamedCode("$memorySegment:T _" + getName() + "Pointer = ($memorySegment:T) " + stmt.format(),
+                    .add(null, "memorySegment", MemorySegment.class);
+            builder.addNamedCode("$memorySegment:T _" + getName() + "Pointer = ($memorySegment:T) "
+                            + stmt.add(";\n").format(),
                     stmt.arguments());
         } else if (p.isOutParameter()
                 || (type != null
