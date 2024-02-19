@@ -20,7 +20,7 @@
 package io.github.jwharm.javagi;
 
 import io.github.jwharm.javagi.gir.GirParser;
-import io.github.jwharm.javagi.gir.Module;
+import io.github.jwharm.javagi.gir.Library;
 import io.github.jwharm.javagi.gir.Repository;
 import io.github.jwharm.javagi.util.Platform;
 import org.gradle.api.file.Directory;
@@ -31,9 +31,6 @@ import org.gradle.api.services.BuildServiceParameters;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A Gradle build service that provides Module objects containing a GIR
@@ -48,7 +45,7 @@ public abstract class GirParserService
         DirectoryProperty getInputDirectory();
     }
 
-    private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
+    private final Library library = new Library();
 
     /**
      * Create a new GirParserService. This will only check if the input
@@ -68,20 +65,23 @@ public abstract class GirParserService
     }
 
     /**
-     * Create and return a Module that contains the requested Repository with
+     * Create and return a Library that contains the requested Repository with
      * its dependencies.
+     * <p>
+     * When building multiple modules, the library is shared, so it will often
+     * contain more Repositories than were requested.
      *
-     * @param name the name of the requested Repository
-     * @return a module with the Repository and its dependencies
+     * @param  name the name of the requested Repository
+     * @return a Library object with the Repository and its dependencies, and
+     *         possibly other Repositories
      */
-    public Module getModule(String name) {
-        Repository repository = repositories.computeIfAbsent(name, this::parse);
-        Module module = new Module(name, repository);
+    public Library getLibrary(String name) {
+        Repository repository = library.computeIfAbsent(name, this::parse);
 
         for (var include : repository.includes())
-            module.add(getModule(include.name()));
+            getLibrary(include.name());
 
-        return module;
+        return library;
     }
 
     // Call parse(getInputDirectory(), moduleName) and wrap exceptions
@@ -117,6 +117,8 @@ public abstract class GirParserService
 
         if (repository == null)
             throw new FileNotFoundException("No GIR files found for " + moduleName);
+
+        repository.setLibrary(library);
 
         return repository;
     }

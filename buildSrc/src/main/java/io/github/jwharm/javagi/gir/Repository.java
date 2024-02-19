@@ -26,22 +26,22 @@ import java.util.Map;
 
 public final class Repository extends GirElement {
 
-    private Module module;
+    private Library library;
 
     public Repository(Map<String, String> attributes, List<GirElement> children) {
         super(attributes, children);
     }
 
-    public Module module() {
-        return this.module;
+    public Library library() {
+        return this.library;
     }
 
-    void setModule(Module module) {
-        this.module = module;
+    public void setLibrary(Library library) {
+        this.library = library;
     }
 
     public Namespace lookupNamespace(String name) {
-        return module().lookupNamespace(name);
+        return library().lookupNamespace(name);
     }
 
     @Override
@@ -50,7 +50,7 @@ public final class Repository extends GirElement {
     }
 
     public GirElement lookupCIdentifier(String cIdentifier) {
-        return module().lookupCIdentifier(cIdentifier);
+        return library().lookupCIdentifier(cIdentifier);
     }
 
     public String version() {

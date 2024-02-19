@@ -26,7 +26,7 @@ import io.github.jwharm.javagi.generators.*;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Enumeration;
-import io.github.jwharm.javagi.gir.Module;
+import io.github.jwharm.javagi.gir.Library;
 import io.github.jwharm.javagi.gir.Record;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
@@ -67,16 +67,17 @@ public abstract class GenerateSources extends DefaultTask {
         try {
             GirParserService buildService = getGirParserService().get();
             String namespace = getNamespace().get();
-            Module module = buildService.getModule(namespace);
-            generate(module, getOutputDirectory().get());
+            Library library = buildService.getLibrary(namespace);
+            generate(namespace, library, getOutputDirectory().get());
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
     }
 
     // Generate Java source files for a GIR repository
-    private void generate(Module module, Directory outputDirectory) throws IOException {
-        Namespace ns = module.lookupNamespace(module.name());
+    private void generate(String namespace, Library library, Directory outputDirectory)
+            throws IOException {
+        Namespace ns = library.lookupNamespace(namespace);
 
         // Generate class with namespace-global constants and functions
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
