@@ -68,6 +68,9 @@ public final class Field extends TypedValue {
     }
 
     private int getSize(Type type) {
+        if (type.get() instanceof Alias alias)
+            return getSize(alias.type());
+
         var typeName = type.typeName();
         if (List.of(TypeName.BYTE, TypeName.CHAR).contains(typeName))
             return 1;
