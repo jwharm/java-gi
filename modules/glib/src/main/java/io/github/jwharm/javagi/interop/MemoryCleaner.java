@@ -34,7 +34,7 @@ import java.util.Map;
  * This class keeps a cache of all memory addresses for which a Proxy object
  * was created (except for GObject instances; those are handled in the InstanceCache).
  * <p>
- * When a new Proxy object is created, the refererence count in the cache is increased.
+ * When a new Proxy object is created, the reference count in the cache is increased.
  * When a Proxy object is garbage-collected, the reference count in the cache is decreased.
  * When the reference count is 0, the memory is released using {@link GLib#free(MemorySegment)}
  * or a specialized method.
@@ -141,7 +141,7 @@ public class MemoryCleaner {
     /**
      * This record type is cached for each memory address.
      * @param owned whether this address is owned (should be cleaned)
-     * @param references the numnber of references (active Proxy objects) for this address
+     * @param references the number of references (active Proxy objects) for this address
      * @param freeFunc an (optional) specialized function that will release the native memory
      */
     private record Cached(boolean owned, int references, String freeFunc, Type boxedType, Cleaner.Cleanable cleanable) {}
@@ -200,7 +200,7 @@ public class MemoryCleaner {
                     ).invokeExact(address);
                 }
             } catch (Throwable e) {
-                throw new AssertionError("Unexpected exception occured: ", e);
+                throw new AssertionError("Unexpected exception occurred: ", e);
             }
         }
     }
