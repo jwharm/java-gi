@@ -23,6 +23,7 @@ import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Interface;
 import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
@@ -35,6 +36,7 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         super(inf);
         this.inf = inf;
         this.builder = TypeSpec.interfaceBuilder(inf.typeName());
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generate() {

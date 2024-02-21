@@ -28,6 +28,7 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
@@ -45,6 +46,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         this.rec = rec;
         this.outerClass = rec.isGTypeStructFor();
         this.builder = TypeSpec.classBuilder(rec.typeName());
+
+        if (outerClass == null)
+            this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generate() {
@@ -283,10 +287,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(MethodSpec.methodBuilder("callParent")
                 .addJavadoc("""
-                        Set the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
-                        is used to obtain the function pointer of the parent type instead of the instance class.
+                        Set the flag that determines if for virtual method calls,
+                        {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
+                        parent type instead of the instance class.
                                      
-                        @param callParent true to call the parent vfunc instead of an overrided vfunc
+                        @param callParent true to call the parent vfunc instead of an overridden vfunc
                         """)
                 .addModifiers(Modifier.PROTECTED)
                 .addParameter(boolean.class, "callParent")
@@ -295,11 +300,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(MethodSpec.methodBuilder("callParent")
                 .addJavadoc("""
-                         Returns the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
-                         is used to obtain the function pointer of the parent type instead of the instance class.
+                         Returns the flag that determines if for virtual method calls,
+                         {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
+                         parent type instead of the instance class.
                          
-                         @return true when parent vfunc is called instead of an overrided vfunc, or false when the
-                                 overrided vfunc of the instance is called.
+                         @return true when parent vfunc is called instead of an overridden vfunc, or
+                                 false when the overridden vfunc of the instance is called.
                         """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(boolean.class)

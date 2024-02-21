@@ -23,6 +23,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Union;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
@@ -35,6 +36,7 @@ public class UnionGenerator extends RegisteredTypeGenerator {
         super(union);
         this.union = union;
         this.builder = TypeSpec.classBuilder(union.typeName());
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generate() {

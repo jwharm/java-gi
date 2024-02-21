@@ -24,6 +24,7 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
@@ -47,6 +48,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         TypeSpec.Builder builder = TypeSpec.classBuilder(alias.typeName());
+        builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
 
         // Alias for an alias for a primitive type
         if (target instanceof Alias other && other.type().isPrimitive())

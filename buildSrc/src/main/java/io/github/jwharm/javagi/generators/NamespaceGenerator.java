@@ -25,6 +25,7 @@ import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
@@ -37,6 +38,7 @@ public class NamespaceGenerator {
     public NamespaceGenerator(Namespace ns) {
         this.ns = ns;
         this.builder = TypeSpec.classBuilder(ns.typeName());
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generateGlobalsClass() {

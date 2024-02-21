@@ -23,6 +23,7 @@ import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
@@ -37,6 +38,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         super(cls);
         this.cls = cls;
         this.builder = TypeSpec.classBuilder(cls.typeName());
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generate() {
@@ -149,12 +151,17 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addStatement("super(address == null ? null : $T.reinterpret(address, getMemoryLayout().byteSize()))",
                         ClassNames.INTEROP);
 
+        /*
+         * Register a free-function for this class. If the class has a method
+         * named unref() or free(), use that one. If not, the MemoryCleaner
+         * will fallback to g_free().
+         */
         for (var m : cls.methods()) {
             if (("free".equals(m.name()) || "unref".equals(m.name()))
                     && m.parameters().instanceParameter() != null
                     && m.parameters().parameters().isEmpty()
                     && (m.returnValue().anyType().isVoid())) {
-                spec.addStatement("$T.setFreeFunc(handle(), $S);",
+                spec.addStatement("$T.setFreeFunc(handle(), $S)",
                         ClassNames.MEMORY_CLEANER, m.attrs().cIdentifier());
                 break;
             }

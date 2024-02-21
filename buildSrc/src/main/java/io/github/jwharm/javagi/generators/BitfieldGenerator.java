@@ -23,6 +23,7 @@ import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Bitfield;
 import io.github.jwharm.javagi.gir.Member;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 import io.github.jwharm.javagi.util.Numbers;
 
 import javax.lang.model.element.Modifier;
@@ -43,6 +44,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
         super(bf);
         this.bf = bf;
         this.builder = TypeSpec.classBuilder(bf.typeName());
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
     }
 
     public TypeSpec generate() {

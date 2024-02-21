@@ -40,7 +40,8 @@ public class ModuleInfoGenerator {
     public String generate() {
         builder.append("""
                 module %s {
-                    requires org.jetbrains.annotations;
+                    requires static java.compiler;
+                    requires static org.jetbrains.annotations;
                 """.formatted(ns.packageName()));
 
         ns.parent().includes().stream()

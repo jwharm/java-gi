@@ -25,6 +25,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import javax.lang.model.element.Modifier;
@@ -60,8 +61,13 @@ public class ClosureGenerator {
                 .addMethod(generateRunMethod())
                 .addMethod(generateUpcallMethod(name, "upcall", "run"))
                 .addMethod(generateToCallbackMethod(name));
+
         if (closure.deprecated())
             builder.addAnnotation(Deprecated.class);
+
+        if (closure instanceof Callback cb && cb.parent() instanceof Namespace)
+            builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+
         return builder.build();
     }
 
@@ -170,8 +176,7 @@ public class ClosureGenerator {
 
         // Null-check the return value
         if ((!returnsVoid)
-                && "java.lang.foreign.MemorySegment".equals(
-                        getCarrierTypeString(closure.returnValue().anyType()))
+                && getCarrierTypeName(closure.returnValue().anyType()).equals(TypeName.get(MemorySegment.class))
                 && (!closure.returnValue().notNull()))
             upcall.addStatement("if (_result == null) return $T.NULL",
                     MemorySegment.class);
