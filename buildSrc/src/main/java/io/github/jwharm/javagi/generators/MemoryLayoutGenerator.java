@@ -128,7 +128,7 @@ public class MemoryLayoutGenerator {
             return layoutForType(alias.type());
 
         // Proxy objects with a known memory layout
-        if (new MemoryLayoutGenerator().canGenerate(target)) {
+        if (!type.isPointer() && new MemoryLayoutGenerator().canGenerate(target)) {
             String classNameTag = type.toTypeTag();
             return PartialStatement.of("$" + classNameTag + ":T.getMemoryLayout()",
                     classNameTag, type.typeName());
