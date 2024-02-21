@@ -24,7 +24,8 @@ import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.gir.*;
 
 import java.lang.foreign.MemorySegment;
-import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Small utility functions for converting between C and Java identifiers
@@ -61,15 +62,24 @@ public class Conversions {
         return prefixDigits(replaceKnownType(replaceKeywords(toCamelCase(typeName, true)), ns));
     }
 
+    /**
+     * Prefix the name with an underscore if it starts with a digit
+     */
     public static String toJavaConstant(String name) {
         return prefixDigits(name);
     }
 
+    /**
+     * Prefix the name with an underscore if it starts with a digit, and
+     * returns the result upper-cased
+     */
     public static String toJavaConstantUpperCase(String name) {
         return prefixDigits(name.toUpperCase());
     }
 
-    // Convert a "type_name" or "type-name" to "typeName" or "TypeName".
+    /**
+     * Convert a "type_name" or "type-name" to "typeName" or "TypeName".
+     */
     public static String toCamelCase(String typeName, boolean startUpperCase) {
         if (typeName == null) return null;
         StringBuilder builder = new StringBuilder();
@@ -85,49 +95,69 @@ public class Conversions {
         return builder.toString();
     }
 
+    /**
+     * Return the string with the first character upper-cased
+     */
     public static String capitalize(String string) {
-        if (string == null || string.isEmpty()) return string;
+        if (string == null || string.isEmpty())
+            return string;
+
         return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
+    /**
+     * Return the string with the first character lower-cased
+     */
     public static String uncapitalize(String string) {
-        if (string == null || string.isEmpty()) return string;
+        if (string == null || string.isEmpty())
+            return string;
+
         return string.substring(0, 1).toLowerCase() + string.substring(1);
     }
 
     // A type name starting with a digit is not allowed; prefix it with an underscore.
     private static String prefixDigits(String name) {
-        return name == null ? null : (Character.isDigit(name.charAt(0)) ? "_" + name : name);
+        return name == null ? null
+                : (Character.isDigit(name.charAt(0)) ? "_" + name : name);
     }
 
     // For types that are reserved Java keywords, append an underscore.
     private static String replaceKeywords(String name) {
-        final String[] keywords = {
+        final List<String> keywords = List.of(
                 "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
                 "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
                 "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
                 "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
                 "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
-                "const", "float", "native", "super", "while", "wait", "finalize", "null"
-        };
-        return Arrays.asList(keywords).contains(name) ? name + "_" : name;
+                "const", "float", "native", "super", "while", "wait", "finalize", "null",
+                "handle" // reserved for java-gi
+        );
+        return keywords.contains(name) ? name + "_" : name;
     }
 
-    // For types that conflict with common Java classes, prefix with C namespace
+    /**
+     * For types that conflict with common Java classes, prefix with C namespace.
+     */
     public static String replaceKnownType(String name, Namespace ns) {
-        if (ns == null) return name;
-        final String[] types = {"String", "Object", "Error", "Builder"};
-        return Arrays.stream(types).anyMatch(kw -> kw.equalsIgnoreCase(name)) ? ns.cIdentifierPrefix() + name : name;
+        if (ns == null)
+            return name;
+
+        return Stream.of("String", "Object", "Error", "Builder")
+                .anyMatch(kw -> kw.equalsIgnoreCase(name))
+                        ? ns.cIdentifierPrefix() + name
+                        : name;
     }
 
-    // Overriding java.lang.Object methods is not allowed in default methods (in interfaces),
-    // so we append an underscore to those method names.
+
+    /**
+     * Overriding java.lang.Object methods is not allowed in default methods (in interfaces),
+     * so we append an underscore to those method names.
+     */
     public static String replaceJavaObjectMethodNames(String name) {
-        for (java.lang.reflect.Method m : Object.class.getMethods()) {
-            if (m.getName().equals(name)) {
+        for (java.lang.reflect.Method m : Object.class.getMethods())
+            if (m.getName().equals(name))
                 return name + "_";
-            }
-        }
+
         return name;
     }
 
@@ -141,18 +171,20 @@ public class Conversions {
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
             case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr", "glong", "gulong" -> "long";
-            case "gdouble" -> "double";
+            case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
             case "utf8", "filename" -> "java.lang.String";
             case "gpointer", "gconstpointer" -> "java.lang.foreign.MemorySegment";
             case "gtype" -> "org.gnome.glib.GType";
-            case "long double" -> "double";
             case "valist", "va_list" -> "VaList";
             default -> null;
         };
     }
 
+    /**
+     * Return the TypeName for the given primitive type
+     */
     public static TypeName primitiveTypeName(String primitive) {
         return switch(primitive) {
             case "byte" -> TypeName.BYTE;
@@ -168,45 +200,19 @@ public class Conversions {
     }
 
     /**
-     * Convert "char" to "Character", "int" to "Integer", and uppercase all other primitive types
+     * Convert "char" to "Character", "int" to "Integer", and capitalize all other primitive types
      */
     public static String primitiveClassName(String primitive) {
         return switch(primitive) {
             case "char" -> "Character";
             case "int" -> "Integer";
-            default -> toCamelCase(primitive, true);
+            default -> capitalize(primitive);
         };
     }
 
     /**
-     * Get the type name to use when interfacing with native code
+     * Return the TypeName of the carrier type
      */
-    public static String getCarrierTypeString(AnyType t) {
-        if (t == null || t instanceof Array)
-            return "java.lang.foreign.MemorySegment";
-
-        Type type = (Type) t;
-
-        if (type.isPointer())
-            return "java.lang.foreign.MemorySegment";
-
-        if (type.isBoolean())
-            return "int";
-
-        if (type.isPrimitive() || "none".equals(t.cType()))
-            return type.javaType();
-
-        RegisteredType target = type.get();
-
-        if (target instanceof FlaggedType)
-            return "int";
-
-        if (target instanceof Alias a && a.type().isPrimitive())
-            return a.type().javaType();
-
-        return "java.lang.foreign.MemorySegment";
-    }
-
     public static TypeName getCarrierTypeName(AnyType t) {
         if (t == null || t instanceof Array)
             return TypeName.get(MemorySegment.class);
@@ -234,6 +240,35 @@ public class Conversions {
     }
 
     /**
+     * Return a type tag that can be used for the carrier type
+     */
+    public static String getCarrierTypeTag(AnyType t) {
+        if (t == null || t instanceof Array)
+            return "memorySegment";
+
+        Type type = (Type) t;
+
+        if (type.isPointer())
+            return "memorySegment";
+
+        if (type.isBoolean())
+            return "int";
+
+        if (type.isPrimitive() || "none".equals(t.cType()))
+            return toJavaBaseType(type.name());
+
+        RegisteredType target = type.get();
+
+        if (target instanceof FlaggedType)
+            return "int";
+
+        if (target instanceof Alias a && a.type().isPrimitive())
+            return getCarrierTypeTag(a.type());
+
+        return "memorySegment";
+    }
+
+    /**
      * Get the memory layout of this type. Pointer types are returned as ADDRESS.
      */
     public static String getValueLayout(AnyType anyType) {
@@ -245,7 +280,8 @@ public class Conversions {
     }
 
     /**
-     * Get the memory layout of this type. Pointers to primitive types are treated as the actual type.
+     * Get the memory layout of this type. Pointers to primitive types are
+     * treated as the actual type.
      */
     public static String getValueLayoutPlain(Type t) {
         if (t == null) {
