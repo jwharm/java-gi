@@ -11,6 +11,8 @@ public class Patches {
             new GLibPatch(),
             new GioPatch(),
             new GObjectPatch(),
+            new GstAudioPatch(),
+            new GstBasePatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),
             new PangoPatch(),

@@ -9,6 +9,6 @@ dependencies {
     api project(':gstvideo')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GstPbutils-1.0.gir'
+generateSources.configure {
+    namespace = 'GstPbutils'
 }

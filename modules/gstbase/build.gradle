@@ -1,5 +1,3 @@
-import io.github.jwharm.javagi.patches.GstBasePatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -11,7 +9,6 @@ dependencies {
     api project(':gst')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GstBase-1.0.gir'
-    patch = new GstBasePatch()
+generateSources.configure {
+    namespace = 'GstBase'
 }

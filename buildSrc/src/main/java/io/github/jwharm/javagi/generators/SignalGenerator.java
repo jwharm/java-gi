@@ -94,12 +94,12 @@ public class SignalGenerator {
 
         return builder.addStatement("var _callback = handler.toCallback($T.global())",
                         Arena.class)
-                .addStatement("var _result = (long) $1T.g_signal_connect_data.invokeExact(handle(), _name, _callback, $2T.NULL, $2T.NULL, 0)",
+                .addStatement("var _result = (long) $1T.g_signal_connect_data.invokeExact($Zhandle(), _name, _callback, $2T.NULL, $2T.NULL, 0)",
                         ClassNames.SIGNALS,
                         MemorySegment.class)
                 .addStatement("return new SignalConnection<>(handle(), _result)")
                 .nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occured: ")
+                .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occurred: ")
                 .endControlFlow()
                 .endControlFlow()
                 .build();

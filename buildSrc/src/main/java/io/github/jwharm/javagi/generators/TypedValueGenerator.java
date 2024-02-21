@@ -382,7 +382,7 @@ class TypedValueGenerator {
                     "targetType", target.typeName(),
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
-        if (type.isPrimitive() && array != null && array.anyType() instanceof Type arrayType)
+        if (type.isPrimitive() && array != null && array.anyType() instanceof Type)
             return PartialStatement.of(
                     "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", " + size + ", _arena, " + free + ")",
                     "interop", ClassNames.INTEROP,
