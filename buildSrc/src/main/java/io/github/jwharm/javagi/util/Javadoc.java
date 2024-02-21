@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.util;
 
-import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 
