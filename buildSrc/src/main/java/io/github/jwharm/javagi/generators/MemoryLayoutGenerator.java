@@ -35,18 +35,23 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class MemoryLayoutGenerator {
 
-    MethodSpec generateMemoryLayout(RegisteredType rt) {
+    // Check if a memory layout can be generated for this type
+    private boolean canGenerate(RegisteredType rt) {
         if (! (rt instanceof FieldContainer))
-            return null;
+            return false;
 
-        // Opaque structs have unknown memory layout and should not have an allocator
+        // Opaque structs have unknown memory layout
         boolean isOpaque = switch (rt) {
             case Class c -> c.hasOpaqueStructFields() || c.isOpaque();
             case Record r -> r.hasOpaqueStructFields() || r.isOpaque();
             case Union u -> u.hasOpaqueStructFields() || u.isOpaque();
             default -> false;
         };
-        if (isOpaque)
+        return !isOpaque;
+    }
+
+    MethodSpec generateMemoryLayout(RegisteredType rt) {
+        if (!canGenerate(rt))
             return null;
 
         var fieldList = CollectionUtils.filter(rt.children(), Field.class);
@@ -70,7 +75,10 @@ public class MemoryLayoutGenerator {
     }
 
     private PartialStatement generateFieldLayouts(List<Field> fieldList, boolean isUnion) {
-        var stmt = PartialStatement.of(null, "memoryLayout", MemoryLayout.class);
+        var stmt = PartialStatement.of(null,
+                "memoryLayout", MemoryLayout.class,
+                "valueLayout", ValueLayout.class
+        );
         int size = 0;
         for (Field field : fieldList) {
             if (size > 0) stmt.add(",\n");
@@ -90,70 +98,43 @@ public class MemoryLayoutGenerator {
             }
 
             // Write the memory layout declaration
-            stmt.add(getFieldLayout(field));
+            stmt.add(getFieldLayout(field)).add(".withName(\"" + field.name() + "\")");
             size += s;
         }
         return stmt;
     }
 
     private PartialStatement getFieldLayout(Field f) {
-        if (f.callback() != null)
-            return PartialStatement.of("$valueLayout:T.ADDRESS.withName(\"" + f.name() + "\")",
-                    "valueLayout", ValueLayout.class);
-
         return switch (f.anyType()) {
-            case Type type -> {
-                RegisteredType target = type.get();
-
-                // Pointers, strings and callbacks are memory addresses
-                if (type.isPointer()
-                        || "java.lang.String".equals(type.javaType())
-                        || "java.lang.foreign.MemorySegment".equals(type.javaType())
-                        || target instanceof Callback)
-                    yield PartialStatement.of("$valueLayout:T.ADDRESS.withName(\"" + f.name() + "\")",
-                            "valueLayout", ValueLayout.class);
-
-                // Bitfields and enumerations are integers
-                if (target instanceof FlaggedType)
-                    yield PartialStatement.of("$valueLayout:T.JAVA_INT.withName(\"" + f.name() + "\")",
-                            "valueLayout", ValueLayout.class);
-
-                // Primitive types and aliases
-                if (type.isPrimitive() || (target instanceof Alias a && a.type().isPrimitive()))
-                    yield PartialStatement.of("$valueLayout:T." + getValueLayout(type) + ".withName(\"" + f.name() + "\")",
-                            "valueLayout", ValueLayout.class);
-
-                // Opaque type (with unknown memory layout)
-                if (target instanceof Record rec && rec.isOpaque())
-                    yield PartialStatement.of("$valueLayout:T.ADDRESS.withName(\"" + f.name() + "\")",
-                            "valueLayout", ValueLayout.class);
-
-                // For Proxy objects we recursively get the memory layout
-                else {
-                    String classNameTag = type.toTypeTag();
-                    yield PartialStatement.of("$" + classNameTag + ":T.getMemoryLayout().withName(\"" + f.name() + "\")",
-                            classNameTag, type.typeName());
-                }
-            }
+            case null -> PartialStatement.of("$valueLayout:T.ADDRESS"); // callback
+            case Type type -> layoutForType(type);
             case Array array -> {
                 if (array.fixedSize() > 0) {
-                    Type type = (Type) array.anyType();
-                    RegisteredType target = type.get();
-                    if (target != null) {
-                        String classNameTag = type.toTypeTag();
-                        yield PartialStatement.of("$memoryLayout:T.sequenceLayout(" + array.fixedSize() + ", $" + classNameTag + ":T.getMemoryLayout()).withName(\"" + f.name() + "\")",
-                                "memoryLayout", MemoryLayout.class,
-                                classNameTag, target.typeName());
-                    } else {
-                        yield PartialStatement.of("$memoryLayout:T.sequenceLayout(" + array.fixedSize() + ", $valueLayout:T." + getValueLayout(type) + ").withName(\"" + f.name() + "\")",
-                                "memoryLayout", MemoryLayout.class,
-                                "valueLayout", ValueLayout.class);
-                    }
+                    yield PartialStatement.of("$memoryLayout:T.sequenceLayout(" + array.fixedSize() + ", ")
+                            .add(layoutForType((Type) array.anyType()))
+                            .add(")");
                 } else {
-                    yield PartialStatement.of("$valueLayout:T.ADDRESS.withName(\"" + f.name() + "\")",
-                            "valueLayout", ValueLayout.class);
+                    yield PartialStatement.of("$valueLayout:T.ADDRESS");
                 }
             }
         };
+    }
+
+    private PartialStatement layoutForType(Type type) {
+        RegisteredType target = type.get();
+
+        // Recursive lookup for aliases
+        if (target instanceof Alias alias)
+            return layoutForType(alias.type());
+
+        // Proxy objects with a known memory layout
+        if (new MemoryLayoutGenerator().canGenerate(target)) {
+            String classNameTag = type.toTypeTag();
+            return PartialStatement.of("$" + classNameTag + ":T.getMemoryLayout()",
+                    classNameTag, type.typeName());
+        }
+
+        // Plain value layout
+        return PartialStatement.of("$valueLayout:T." + getValueLayout(type));
     }
 }

@@ -29,7 +29,6 @@ import io.github.jwharm.javagi.util.PartialStatement;
 import java.lang.foreign.ValueLayout;
 
 import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
-import static io.github.jwharm.javagi.util.Conversions.primitiveClassName;
 
 public class PostprocessingGenerator extends TypedValueGenerator {
 
@@ -61,9 +60,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             if (array == null) {
                 var stmt = PartialStatement.of(null, "valueLayout", ValueLayout.class);
 
-                if (checkNull())
-                    builder.beginControlFlow("if ($L != null)", getName());
-
                 stmt.add(getName())
                         .add((target instanceof Alias a && a.type().isPrimitive())
                                 ? ".setValue("
@@ -81,66 +77,42 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     stmt.add(marshalNativeToJava(type, identifier, false));
                 }
                 stmt.add(");\n");
-                builder.addNamedCode(stmt.format(), stmt.arguments());
 
+                // Null-check
                 if (checkNull())
-                    builder.endControlFlow();
+                    builder.beginControlFlow("if ($1L != null)", getName())
+                            .addNamedCode(stmt.format(), stmt.arguments())
+                            .endControlFlow();
             }
 
             // Pointer to array
             else {
-                Type arrayType = (Type) array.anyType();
                 String len = array.sizeExpression(false);
-                String valueLayout = Conversions.getValueLayoutPlain(arrayType);
+                PartialStatement payload;
 
-                // Out-parameter array
                 if (p.isOutParameter() && len != null) {
-                    PartialStatement payload = arrayType.isPrimitive()
+                    // Out-parameter array with known length
+                    Type arrayType = (Type) array.anyType();
+                    String valueLayout = Conversions.getValueLayoutPlain(arrayType);
+                    payload = arrayType.isPrimitive()
                             ? PartialStatement.of("_%sPointer.toArray($valueLayout:T.%s)"
                                     .formatted(getName(), valueLayout),
                                     "valueLayout", ValueLayout.class)
                             : marshalNativeToJava("_%sPointer".formatted(getName()), false);
-
-                    var stmt = PartialStatement.of(getName() + ".set(")
-                            .add(payload)
-                            .add(");\n");
-
-                    builder.beginControlFlow("if ($L != null)", getName())
-                            .addNamedCode(stmt.format(), stmt.arguments())
-                            .endControlFlow();
+                } else {
+                    // Other arrays
+                    payload = marshalNativeToJava("_" + getName() + "Pointer", false);
                 }
 
-                // Array of primitive values
-                else if (arrayType.isPrimitive() && (!arrayType.isBoolean())) {
-                    builder.beginControlFlow("if ($1L != null)", getName())
-                            .addStatement("$1L.set($2T.get$3LArrayFrom(_$1LPointer, $4L_arena, false))",
-                                    getName(),
-                                    ClassNames.INTEROP,
-                                    primitiveClassName(arrayType.javaType()),
-                                    len != null ? (len + ",") : "")
-                            .endControlFlow();
-                }
+                var stmt = PartialStatement.of(getName())
+                        .add(".set(")
+                        .add(payload)
+                        .add(");\n");
 
-                // Array of proxy objects
-                else {
-                    builder.beginControlFlow("if ($L != null)",
-                                    getName())
-                            .beginControlFlow("for (int _idx = 0; _idx < $L; _idx++)",
-                                    len)
-                            .addStatement("var _object = _$LPointer.get($T.$L, _idx)",
-                                    getName(),
-                                    ValueLayout.class,
-                                    valueLayout);
-
-                    var assign = PartialStatement.of("_" + getName() + "Array[_idx] = ")
-                            .add(marshalNativeToJava(arrayType, "_object", false))
-                            .add(";\n");
-                    builder.addNamedCode(assign.format(), assign.arguments())
-                            .endControlFlow()
-                            .addStatement("$1L.set(_$1LArray)",
-                                    getName())
-                            .endControlFlow();
-                }
+                // Null-check
+                builder.beginControlFlow("if ($1L != null)", getName())
+                        .addNamedCode(stmt.format(), stmt.arguments())
+                        .endControlFlow();
             }
         }
     }

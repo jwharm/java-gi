@@ -34,8 +34,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
-import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class FieldGenerator extends TypedValueGenerator {
 
@@ -94,12 +93,11 @@ public class FieldGenerator extends TypedValueGenerator {
         }
 
         // Read a pointer or primitive value from the struct
-        String memoryType = f.getMemoryType();
-        if ("ARRAY".equals(memoryType)) memoryType = "java.lang.foreign.MemorySegment";
-        var getResult = "var _result = ($L) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())";
+        var carrierType = getCarrierTypeName(f.anyType());
+        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())";
         var returnResult = PartialStatement.of("return ")
                 .add(marshalNativeToJava("_result", false));
-        return spec.addStatement(getResult, memoryType, MemoryLayout.class, f.name())
+        return spec.addStatement(getResult, carrierType, MemoryLayout.class, f.name())
                 .addNamedCode(returnResult.format() + ";\n", returnResult.arguments())
                 .build();
     }

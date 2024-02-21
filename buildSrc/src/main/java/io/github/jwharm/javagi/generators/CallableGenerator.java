@@ -75,7 +75,7 @@ public class CallableGenerator {
             String layouts = valueLayouts.stream()
                     .map(s -> "$2T." + s)
                     // $Z will split long lines
-                    .collect(Collectors.joining(",$Z ", "(", ")"));
+                    .collect(Collectors.joining(",$W", "(", ")"));
             builder.addStatement("$1T _fdesc = $1T.$3L" + layouts,
                     FunctionDescriptor.class, ValueLayout.class, isVoid ? "ofVoid" : "of");
         }

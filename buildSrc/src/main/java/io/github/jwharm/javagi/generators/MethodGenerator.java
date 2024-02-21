@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -261,13 +262,14 @@ public class MethodGenerator {
 
         // Result assignment
         PartialStatement invoke = new PartialStatement();
-        if (!func.returnValue().anyType().isVoid())
-            invoke.add("_result = (")
-                    .add(Conversions.getCarrierTypeString(func.returnValue().anyType()))
-                    .add(") ");
+        if (!func.returnValue().anyType().isVoid()) {
+            String typeTag = getCarrierTypeTag(func.returnValue().anyType());
+            TypeName typeName = getCarrierTypeName(func.returnValue().anyType());
+            invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+        }
 
         // Function invocation
-        invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L).invokeExact(",
+        invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L)$Z.invokeExact($Z",
                         "interop", ClassNames.INTEROP,
                         "cIdentifier", func.attrs().cIdentifier(),
                         "variadic", generator.varargs())
@@ -293,12 +295,13 @@ public class MethodGenerator {
         // Function pointer lookup
         switch (vm.parent()) {
             case Class c ->
-                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(), $L.getMemoryLayout(), $S)",
+                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S)",
                             MemorySegment.class,
                             ClassNames.OVERRIDES,
-                            toJavaSimpleType(c.typeStruct().name(), c.namespace()), vm.name());
+                            c.typeStruct().typeName(),
+                            vm.name());
             case Interface i ->
-                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(), $T.getMemoryLayout(), $S, $T.getType())",
+                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S,$W$T.getType())",
                             MemorySegment.class,
                             ClassNames.OVERRIDES,
                             i.typeStruct().typeName(),
@@ -314,13 +317,14 @@ public class MethodGenerator {
 
         // Result assignment
         PartialStatement invoke = new PartialStatement();
-        if (!returnValue.anyType().isVoid())
-            invoke.add("_result = (")
-                    .add(Conversions.getCarrierTypeString(returnValue.anyType()))
-                    .add(") ");
+        if (!returnValue.anyType().isVoid()) {
+            String typeTag = getCarrierTypeTag(returnValue.anyType());
+            TypeName typeName = getCarrierTypeName(returnValue.anyType());
+            invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+        }
 
         // Function pointer invocation
-        invoke.add("$interop:T.downcallHandle(_func, _fdesc).invokeExact(", "interop",
+        invoke.add("$interop:T.downcallHandle(_func, _fdesc)$Z.invokeExact($Z", "interop",
                         ClassNames.INTEROP)
                 .add(generator.marshalParameters())
                 .add(");\n");

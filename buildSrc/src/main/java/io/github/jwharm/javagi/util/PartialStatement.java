@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.util;
 
+import com.squareup.javapoet.TypeName;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +50,14 @@ public final class PartialStatement {
         for (int i = 0; i < args.length; i += 2) {
             String key = args[i].toString();
             Object value = args[i + 1];
+
+            // Create TypeNames for all Class<?> parameters, so they will be
+            // regarded as equal when comparing them (below)
+            if (value instanceof Class<?> c)
+                value = TypeName.get(c);
+
+            // When an existing tag is reassigned to a different typename, it
+            // is almost certainly a bug
             Object previous = arguments.put(args[i].toString(), value);
             if (previous != null && (!previous.equals(value)))
                 throw new IllegalArgumentException("Argument %s overrules %s with %s"

@@ -19,8 +19,9 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.TypeName;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 
 import java.util.List;
 import java.util.Map;
@@ -46,58 +47,38 @@ public final class Field extends TypedValue {
     }
 
     /**
-     * Get the native type of this field. For example "int", "char".
-     * An array with fixed size is returned as "ARRAY", a pointer is returned as "java.lang.foreign.MemorySegment".
-     */
-    public String getMemoryType() {
-        return switch (anyType()) {
-            case null -> "java.lang.foreign.MemorySegment"; // callback
-            case Type type -> getMemoryType(type);
-            case Array array -> array.fixedSize() > 0 ? "ARRAY" : "java.lang.foreign.MemorySegment";
-        };
-    }
-
-    private String getMemoryType(Type type) {
-        RegisteredType target = type.get();
-
-        if (type.isPointer() && (type.isPrimitive() || target instanceof Bitfield || target instanceof Enumeration))
-            return "java.lang.foreign.MemorySegment";
-
-        if (type.isBoolean() || target instanceof Bitfield || target instanceof Enumeration)
-            return "int";
-
-        if (type.isPrimitive())
-            return toJavaBaseType(type.name());
-
-        if (target instanceof Alias alias && alias.type().isPrimitive())
-            return toJavaBaseType(alias.type().name());
-
-        return "java.lang.foreign.MemorySegment";
-    }
-
-    /**
      * Get the memory size of this field, in bytes
      */
     public int getSize() {
-        return getSize(getMemoryType());
+        return switch(anyType()) {
+            case null -> 8; // callback
+            case Array array -> getSize(array);
+            case Type type -> getSize(type);
+        };
     }
 
-    private int getSize(String memoryType) {
-        return switch(memoryType) {
-            case "byte", "char" -> 1;
-            case "short" -> 2;
-            case "boolean", "int", "float" -> 4;
-            case "long", "double", "java.lang.foreign.MemorySegment" -> 8;
-            case "ARRAY" -> {
-                Array array = (Array) anyType();
-                int size = switch (array.anyType()) {
-                    case Array _ -> 8;
-                    case Type type -> getSize(getMemoryType(type));
-                };
-                yield array.fixedSize() * size;
-            }
-            default -> throw new IllegalArgumentException("Unknown memory type " + memoryType);
+    private int getSize(Array array) {
+        int fixedSize = array.fixedSize();
+        if (fixedSize == -1)
+            return 8;
+        return fixedSize * switch(array.anyType()) {
+            case Array nested -> getSize(nested);
+            case Type type -> getSize(type);
         };
+    }
+
+    private int getSize(Type type) {
+        var typeName = type.typeName();
+        if (List.of(TypeName.BYTE, TypeName.CHAR).contains(typeName))
+            return 1;
+        if (TypeName.SHORT.equals(typeName))
+            return 2;
+        if (List.of(TypeName.BOOLEAN, TypeName.INT, TypeName.FLOAT).contains(typeName))
+            return 4;
+        if (type.get() instanceof FlaggedType)
+            return 4;
+        else
+            return 8;
     }
 
     /**
