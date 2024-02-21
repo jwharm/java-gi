@@ -61,7 +61,9 @@ public class MemoryLayoutGenerator {
 
         boolean isUnion = rt instanceof Union || !unionList.isEmpty();
 
-        var layout = PartialStatement.of("return $memoryLayout:T." + (isUnion ? "union" : "struct") + "Layout(\n$>")
+        // The $> and $< in the statement increase and decrease indentation
+        var layout = PartialStatement.of("return $memoryLayout:T."
+                        + (isUnion ? "union" : "struct") + "Layout(\n$>")
                 .add(generateFieldLayouts(fieldList, isUnion))
                 .add("$<\n).withName(\"" + rt.cType() + "\");\n");
 
@@ -98,7 +100,8 @@ public class MemoryLayoutGenerator {
             }
 
             // Write the memory layout declaration
-            stmt.add(getFieldLayout(field)).add(".withName(\"" + field.name() + "\")");
+            stmt.add(getFieldLayout(field))
+                    .add(".withName(\"" + field.name() + "\")");
             size += s;
         }
         return stmt;
@@ -110,7 +113,8 @@ public class MemoryLayoutGenerator {
             case Type type -> layoutForType(type);
             case Array array -> {
                 if (array.fixedSize() > 0) {
-                    yield PartialStatement.of("$memoryLayout:T.sequenceLayout(" + array.fixedSize() + ", ")
+                    yield PartialStatement.of("$memoryLayout:T.sequenceLayout("
+                                    + array.fixedSize() + ", ")
                             .add(layoutForType((Type) array.anyType()))
                             .add(")");
                 } else {
@@ -128,7 +132,8 @@ public class MemoryLayoutGenerator {
             return layoutForType(alias.type());
 
         // Proxy objects with a known memory layout
-        if (!type.isPointer() && new MemoryLayoutGenerator().canGenerate(target)) {
+        if (!type.isPointer()
+                && new MemoryLayoutGenerator().canGenerate(target)) {
             String classNameTag = type.toTypeTag();
             return PartialStatement.of("$" + classNameTag + ":T.getMemoryLayout()",
                     classNameTag, type.typeName());
