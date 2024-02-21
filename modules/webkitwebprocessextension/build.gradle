@@ -8,7 +8,7 @@ dependencies {
     api project(':soup')
 }
 
-tasks.named('generateSources') {
-    girFile = 'WebKitWebProcessExtension-6.0.gir'
+generateSources.configure {
+    namespace = 'WebKitWebProcessExtension'
     urlPrefix = 'https://webkitgtk.org/reference/webkit2gtk-web-extension/stable/'
 }

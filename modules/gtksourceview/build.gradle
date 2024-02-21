@@ -6,7 +6,7 @@ dependencies {
     api project(':gtk')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GtkSource-5.gir'
+generateSources.configure {
+    namespace = 'GtkSource'
     urlPrefix = 'https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/'
 }

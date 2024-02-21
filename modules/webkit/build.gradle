@@ -1,5 +1,3 @@
-import io.github.jwharm.javagi.patches.WebkitPatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -10,8 +8,7 @@ dependencies {
     api project(':soup')
 }
 
-tasks.named('generateSources') {
-    girFile = 'WebKit-6.0.gir'
+generateSources.configure {
+    namespace = 'WebKit'
     urlPrefix = 'https://webkitgtk.org/reference/webkit2gtk/stable/'
-    patch = new WebkitPatch()
 }

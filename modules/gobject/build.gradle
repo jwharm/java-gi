@@ -1,5 +1,3 @@
-import io.github.jwharm.javagi.patches.GObjectPatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -8,8 +6,7 @@ dependencies {
     api project(':glib')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GObject-2.0.gir'
+generateSources.configure {
+    namespace = 'GObject'
     urlPrefix = 'https://docs.gtk.org/glib/'
-    patch = new GObjectPatch()
 }

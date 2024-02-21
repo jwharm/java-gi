@@ -1,54 +1,77 @@
+/* Java-GI - Java language bindings for GObject-Introspection-based libraries
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.Patch;
-import io.github.jwharm.javagi.model.Repository;
-import io.github.jwharm.javagi.model.Type;
+import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.Patch;
+import io.github.jwharm.javagi.util.Platform;
+
+import java.util.List;
 
 public class GLibPatch implements Patch {
 
     @Override
-    public void patch(Repository repo) {
-        // Incompletely defined
-        removeFunction(repo, "clear_error");
+    public GirElement patch(GirElement element, String namespace) {
 
-        // A getType() method is generated already by java-gi
-        renameMethod(repo, "Variant", "get_type", "get_variant_type");
+        if (!"GLib".equals(namespace))
+            return element;
 
-        // GPid is defined as gint on linux vs gpointer on windows
-        Type pid = repo.namespace.registeredTypeMap.get("Pid").type;
-        pid.simpleJavaType = "int";
-        pid.qualifiedJavaType = "int";
-        pid.isPrimitive = true;
+        /*
+         * g_clear_error has attribute throws="1" but no gerror** parameter (or
+         * any other parameters) in the gir file.
+         */
+        if (element instanceof Namespace ns)
+            return remove(ns, Function.class, "name", "clear_error");
 
-        // These calls return floating references
-        setReturnFloating(findConstructor(repo, "Variant", "array"));
-        setReturnFloating(findConstructor(repo, "Variant", "boolean"));
-        setReturnFloating(findConstructor(repo, "Variant", "byte"));
-        setReturnFloating(findConstructor(repo, "Variant", "bytestring"));
-        setReturnFloating(findConstructor(repo, "Variant", "bytestring_array"));
-        setReturnFloating(findConstructor(repo, "Variant", "dict_entry"));
-        setReturnFloating(findConstructor(repo, "Variant", "double"));
-        setReturnFloating(findConstructor(repo, "Variant", "fixed_array"));
-        setReturnFloating(findConstructor(repo, "Variant", "from_bytes"));
-        setReturnFloating(findConstructor(repo, "Variant", "handle"));
-        setReturnFloating(findConstructor(repo, "Variant", "int16"));
-        setReturnFloating(findConstructor(repo, "Variant", "int32"));
-        setReturnFloating(findConstructor(repo, "Variant", "int64"));
-        setReturnFloating(findConstructor(repo, "Variant", "maybe"));
-        setReturnFloating(findConstructor(repo, "Variant", "object_path"));
-        setReturnFloating(findConstructor(repo, "Variant", "objv"));
-        setReturnFloating(findConstructor(repo, "Variant", "parsed"));
-        setReturnFloating(findConstructor(repo, "Variant", "parsed_va"));
-        setReturnFloating(findConstructor(repo, "Variant", "printf"));
-        setReturnFloating(findConstructor(repo, "Variant", "signature"));
-        setReturnFloating(findConstructor(repo, "Variant", "string"));
-        setReturnFloating(findConstructor(repo, "Variant", "strv"));
-        setReturnFloating(findConstructor(repo, "Variant", "take_string"));
-        setReturnFloating(findConstructor(repo, "Variant", "tuple"));
-        setReturnFloating(findConstructor(repo, "Variant", "uint16"));
-        setReturnFloating(findConstructor(repo, "Variant", "uint32"));
-        setReturnFloating(findConstructor(repo, "Variant", "uint64"));
-        setReturnFloating(findConstructor(repo, "Variant", "va"));
-        setReturnFloating(findConstructor(repo, "Variant", "variant"));
+        /*
+         * GPid is defined as gint on Unix vs gpointer on Windows. The
+         * generated Java class is an int Alias, so we remove the Windows
+         * support.
+         */
+        if (element instanceof Alias a && "Pid".equals(a.name())) {
+            a.setPlatforms(Platform.LINUX | Platform.MACOS);
+            return a;
+        }
+
+        /*
+         * GVariant has a method "get_type" that clashes with the "getType()"
+         * method that is generated in Java. Therefore, it is renamed to
+         * "getVariantType()".
+         */
+        if (element instanceof Method m
+                && "g_variant_get_type".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("name", "get_variant_type");
+
+        /*
+         * The functions "g_main_context_query" and "g_main_context_check" have
+         * GPollFD[] parameters. Because the size of GPollFD is unknown, it is
+         * not possible to allocate the array with the correct size. For this
+         * reason, both methods are excluded.
+         */
+        if (element instanceof Record r && "MainContext".equals(r.name())) {
+            for (var m : List.of("query", "check"))
+                r = remove(r, Method.class, "name", m);
+            return r;
+        }
+
+        return element;
     }
 }

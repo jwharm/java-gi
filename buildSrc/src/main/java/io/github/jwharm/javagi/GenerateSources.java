@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,127 +19,142 @@
 
 package io.github.jwharm.javagi;
 
-import io.github.jwharm.javagi.generator.*;
-import io.github.jwharm.javagi.model.Repository;
-import io.github.jwharm.javagi.model.Module;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.TypeSpec;
+import io.github.jwharm.javagi.configuration.LicenseNotice;
+import io.github.jwharm.javagi.generators.*;
+import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Enumeration;
+import io.github.jwharm.javagi.gir.Library;
+import io.github.jwharm.javagi.gir.Record;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static java.nio.file.StandardOpenOption.*;
+
 /**
- * GenerateSources is a Gradle task that will parse a GIR file (and all included GIR files)
- * and generate Java source files for the types defined in the GIR file.
+ * GenerateSources is a Gradle task that will generate Java source files for
+ * the types defined in a GIR Module. (The Module is provided by the
+ * GirParserService.)
  */
 public abstract class GenerateSources extends DefaultTask {
 
-    @InputDirectory
-    abstract DirectoryProperty getInputDirectory();
+    @ServiceReference("gir")
+    abstract Property<GirParserService> getGirParserService();
+
+    @Input
+    abstract Property<String> getNamespace();
 
     @OutputDirectory
     abstract DirectoryProperty getOutputDirectory();
 
-    @Input
-    abstract Property<String> getGirFile();
-
     @Input @Optional
     abstract Property<String> getUrlPrefix();
-
-    @Input @Optional
-    abstract Property<Patch> getPatch();
 
     @TaskAction
     void execute() {
         try {
-            Module linux = parse(Platform.LINUX, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-            Module windows = parse(Platform.WINDOWS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-            Module macos = parse(Platform.MACOS, getInputDirectory().get(), getGirFile().get(),
-                    getUrlPrefix().getOrNull(), getPatch().getOrNull());
-
-            Module module = new Merge().merge(linux, windows, macos);
-
-            for (Repository repository : module.repositories.values()) {
-                if (repository.generate) {
-                    Path basePath = getOutputDirectory().get().file(repository.namespace.pathName).getAsFile().toPath();
-                    repository.generate(basePath);
-                    repository.generateModuleInfo(getOutputDirectory().get().getAsFile().toPath(), getPackages());
-                }
-            }
+            GirParserService buildService = getGirParserService().get();
+            String namespace = getNamespace().get();
+            Library library = buildService.getLibrary(namespace);
+            generate(namespace, library, getOutputDirectory().get());
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
     }
 
-    private static Module parse(Platform platform, Directory sourceDirectory, String girFile, String urlPrefix, Patch patch)
-            throws SAXException, ParserConfigurationException {
-        Module module = new Module(platform);
-        Directory girPath = sourceDirectory.dir(platform.name().toLowerCase());
-        if (! girPath.getAsFile().exists()) {
-            System.out.println("Not found: " + girPath);
-            return null;
+    // Generate Java source files for a GIR repository
+    private void generate(String namespace, Library library, Directory outputDirectory)
+            throws IOException {
+        Namespace ns = library.lookupNamespace(namespace);
+
+        // Generate class with namespace-global constants and functions
+        var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
+        writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
+
+        // Generate package-info.java
+        Path path = outputDirectory
+                .dir(ns.packageName().replace('.', File.separatorChar))
+                .getAsFile()
+                .toPath()
+                .resolve("package-info.java");
+        String packageInfo = new PackageInfoGenerator(ns).generate();
+        Files.writeString(path, packageInfo,
+                CREATE, WRITE, TRUNCATE_EXISTING);
+
+        // Generate module-info.java
+        path = outputDirectory
+                .getAsFile()
+                .toPath()
+                .resolve("module-info.java");
+        String moduleInfo = new ModuleInfoGenerator(ns, getPackages()).generate();
+        Files.writeString(path, moduleInfo,
+                CREATE, WRITE, TRUNCATE_EXISTING);
+
+        // Generate classes for all registered types in this namespace
+        for (var rt : ns.registeredTypes().values()) {
+            typeSpec = switch(rt) {
+                case Alias a -> new AliasGenerator(a).generate();
+                case Bitfield b -> new BitfieldGenerator(b).generate();
+                case Callback c -> new CallbackGenerator(c).generate();
+                case Class c -> new ClassGenerator(c).generate();
+                case Enumeration e -> new EnumerationGenerator(e).generate();
+                case Interface i -> new InterfaceGenerator(i).generate();
+                case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
+                case Union u -> new UnionGenerator(u).generate();
+                default -> null;
+            };
+            writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
         }
-        GirParser parser = new GirParser(girPath.getAsFile().toPath(), module);
-
-        // Parse the GI files into Repository objects
-        try {
-            // Parse the file
-            Repository r = parser.parse(girFile);
-
-            // Check if this one has already been parsed
-            if (module.repositories.containsKey(r.namespace.name)) {
-                r = module.repositories.get(r.namespace.name);
-            } else {
-                // Add the repository to the module
-                module.repositories.put(r.namespace.name, r);
-            }
-
-            r.urlPrefix = urlPrefix;
-
-            // Flag unsupported va_list methods so they will not be generated
-            module.flagVaListFunctions();
-
-            // Link the type references to the GIR type definition across the GI repositories
-            module.link();
-
-            // Apply patch
-            if (patch != null) {
-                patch.patch(r);
-            }
-
-        } catch (IOException ignored) {
-            // Gir file not found for this platform: This will generate code with UnsupportedPlatformExceptions
-        }
-
-        return module;
     }
 
-    /**
-     * Return a set of package names for all directories in the src/main/java folder that
-     * contain at least one *.java file.
-     */
+    // Write a generated class into a Java file
+    private void writeJavaFile(TypeSpec typeSpec, String packageName, Directory outputDirectory)
+            throws IOException {
+        if (typeSpec == null) return;
+
+        JavaFile.builder(packageName, typeSpec)
+                .addFileComment(LicenseNotice.NOTICE)
+                .indent("    ")
+                .build()
+                .writeTo(outputDirectory.getAsFile());
+    }
+
+    // Return a set of package names for all directories in the src/main/java
+    // folder that contain at least one *.java file. These packages will be
+    // exported in the module-info.java file.
     private Set<String> getPackages() throws IOException {
         Set<String> packages = new HashSet<>();
+
         var srcDir = getProject().getProjectDir().toPath()
                 .resolve(Path.of("src", "main", "java"));
-        if (! Files.exists(srcDir)) {
+
+        if (! Files.exists(srcDir))
             return packages;
-        }
-        Files.walkFileTree(srcDir, EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+
+        Files.walkFileTree(
+                srcDir,
+                EnumSet.noneOf(FileVisitOption.class),
+                Integer.MAX_VALUE,
+                new SimpleFileVisitor<>() {
+
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
-                    String pkg = srcDir.relativize(file.getParent()).toString()
+                    String pkg = srcDir
+                            .relativize(file.getParent())
+                            .toString()
                             .replace(srcDir.getFileSystem().getSeparator(), ".");
                     packages.add(pkg);
                 }

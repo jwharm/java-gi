@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,178 +19,97 @@
 
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.generator.Patch;
-import io.github.jwharm.javagi.model.Field;
-import io.github.jwharm.javagi.model.Repository;
-import io.github.jwharm.javagi.model.Type;
+import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Record;
+import io.github.jwharm.javagi.util.Patch;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class GObjectPatch implements Patch {
 
     @Override
-    public void patch(Repository repo) {
-        // Remove va_list marshaller. va_list parameters are unsupported
-        removeType(repo, "VaClosureMarshal");
-        removeType(repo, "SignalCVaMarshaller");
-        removeFunction(repo, "signal_set_va_marshaller");
+    public GirElement patch(GirElement element, String namespace) {
 
-        // Override with different return type
-        renameMethod(repo, "TypeModule", "use", "use_type_module");
+        if (!"GObject".equals(namespace))
+            return element;
 
-        // Make GWeakRef a generic class
-        makeGeneric(repo, "WeakRef");
-
-        // Change GInitiallyUnownedClass struct to refer to GObjectClass. Both structs
-        // are identical, so this has no practical consequences, besides
-        // convincing the bindings generator that GObject.InitiallyUnownedClass
-        // is not a fundamental type class, but extends GObject.ObjectClass.
-        var iuc = repo.namespace.registeredTypeMap.get("InitiallyUnownedClass");
-        if (iuc != null) {
-            iuc.fieldList.clear();
-            var parent_class = new Field(iuc, "parent_class", null, null);
-            parent_class.type = new Type(parent_class, "GObject.ObjectClass", "GObjectClass");
-            parent_class.type.girElementType = "Record";
-            parent_class.type.girElementInstance = repo.namespace.registeredTypeMap.get("ObjectClass");
-            parent_class.type.init("GObject.ObjectClass");
-            iuc.fieldList.add(parent_class);
+        if (element instanceof Namespace ns) {
+            /*
+             * VaList parameters are excluded from the Java bindings.
+             * Therefore, the VaList marshaller classes and the
+             * "signal_set_va_marshaller" function are excluded too.
+             */
+            ns = remove(ns, Callback.class, "name", "VaClosureMarshal");
+            ns = remove(ns, Alias.class, "name", "SignalCVaMarshaller");
+            ns = remove(ns, Function.class, "name", "signal_set_va_marshaller");
+            return ns;
         }
 
-        // GLib and GObject both define gtype as an alias to gsize. We change the Java class for the
-        // gtype declaration in GObject to inherit from the GLib gtype, so the instances of both classes
-        // can be used interchangeably in most cases.
-        Type t = repo.namespace.registeredTypeMap.get("Type").type;
-        t.name = "GLib.Type";
-        t.cType = "gtype";
-        t.init(t.name);
+        /*
+         * GLib and GObject both define gtype as an alias to gsize. We replace
+         * the gtype declaration in GObject with an alias for the GLib gtype,
+         * so it will inherit in Java and the instances of both classes can be
+         * used interchangeably in many cases.
+         */
+        if (element instanceof Alias a && "Type".equals(a.name())) {
+            Type type = new Type(
+                    Map.of("name", "GLib.Type", "c:type", "gtype"),
+                    Collections.emptyList()
+            );
+            return a.withChildren(a.infoElements().doc(), type);
+        }
 
-        // Add methods for TypeInstance to set the flag to call the parent method
-        inject(repo, "TypeInstance", """
-        
-            private boolean callParent = false;
-        
-            /**
-             * Set the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
-             * is used to obtain the function pointer of the parent type instead of the instance class.
-             * @param callParent true if you want to call the parent vfunc instead of an overrided vfunc
-             */
-            @ApiStatus.Internal
-            protected void callParent(boolean callParent) {
-                this.callParent = callParent;
-            }
-        
-            /**
-             * Returns the flag that determines if for virtual method calls, {@code g_type_class_peek_parent()}
-             * is used to obtain the function pointer of the parent type instead of the instance class.
-             * @return true when parent vfunc is called instead of an overrided vfunc, or false when the
-             *         overrided vfunc of the instance is called.
-             */
-            @ApiStatus.Internal
-            public boolean callParent() {
-                return this.callParent;
-            }
-        """);
+        /*
+         * The method "g_type_module_use" overrides "g_type_plugin_use", but
+         * with a different return type. This is not allowed in Java.
+         * Therefore, it is renamed from "use" to "use_type_module".
+         */
+        if (element instanceof Method m
+                && "g_type_module_use".equals(m.attrs().cIdentifier()))
+            return m.withAttribute("name", "use_type_module");
 
-        // Add methods for GObject
-        inject(repo, "Object", """
-            
-            /**
-             * Creates a new GObject instance of the provided GType.
-             * @param objectType the GType of the new GObject
-             * @return the newly created GObject instance
-             */
-            public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType) {
-                var _result = constructNew(objectType, null);
-                T _object = (T) InstanceCache.getForType(_result, org.gnome.gobject.GObject::new, true);
-                return _object;
-            }
-            
-            /**
-             * Creates a new GObject instance of the provided GType and with the provided property values.
-             * @param objectType the GType of the new GObject
-             * @param propertyNamesAndValues pairs of property names and values (Strings and Objects)
-             * @return the newly created GObject instance
-             * @throws IllegalArgumentException invalid property name
-             */
-            public static <T extends GObject> T newInstance(org.gnome.glib.Type objectType, Object... propertyNamesAndValues) {
-                return Properties.newGObjectWithProperties(objectType, propertyNamesAndValues);
-            }
-            
-            /**
-             * Gets a property of an object.
-             * @param propertyName the name of the property to get
-             * @return the property value
-             * @throws IllegalArgumentException invalid property name
-             */
-            public Object getProperty(String propertyName) {
-                return Properties.getProperty(this, propertyName);
-            }
-            
-            /**
-             * Sets a property of an object.
-             * @param propertyName the name of the property to set
-             * @param value the new property value
-             * @throws IllegalArgumentException invalid property name
-             */
-            public void setProperty(String propertyName, Object value) {
-                Properties.setProperty(this, propertyName, value);
-            }
-            
-            /**
-             * Connect a callback to a signal for this object. The handler will be called
-             * before the default handler of the signal.
-             *
-             * @param detailedSignal a string of the form "signal-name::detail"
-             * @param callback       the callback to connect
-             * @return a SignalConnection object to track, block and disconnect the signal 
-             *         connection
-             */
-            public <T> SignalConnection<T> connect(String detailedSignal, T callback) {
-                return connect(detailedSignal, callback, false);
-            }
-            
-            /**
-             * Connect a callback to a signal for this object.
-             *
-             * @param detailedSignal a string of the form "signal-name::detail"
-             * @param callback       the callback to connect
-             * @param after          whether the handler should be called before or after
-             *                       the default handler of the signal
-             * @return a SignalConnection object to track, block and disconnect the signal 
-             *         connection
-             */
-            public <T> SignalConnection<T> connect(String detailedSignal, T callback, boolean after) {
-                var closure = new JavaClosure(callback);
-                int handlerId = GObjects.signalConnectClosure(this, detailedSignal, closure, after);
-                return new SignalConnection(handle(), handlerId);
-            }
-            
-            /**
-             * Emits a signal from this object.
-             * 
-             * @param detailedSignal a string of the form "signal-name::detail"
-             * @param params         the parameters to emit for this signal
-             * @return the return value of the signal, or {@code null} if the signal 
-             *         has no return value
-             * @throws IllegalArgumentException if a signal with this name is not found for the object
-             */
-            public Object emit(String detailedSignal, Object... params) {
-                return Signals.emit(this, detailedSignal, params);
-            }
-        """);
+        /*
+         * Make GWeakRef generic (replacing all GObject arguments with generic
+         * type {@code <T extends GObject>}.
+         */
+        if (element instanceof Record r && "WeakRef".equals(r.name()))
+            return r.withAttribute("java-gi-generic", "1");
 
-        inject(repo, "Value", """
-            
-            /**
-             * Return a newly allocated string using {@link GObjects#strdupValueContents(Value)},
-             * which describes the contents of a {@link Value}.
-             * The main purpose of this function is to describe {@link Value}
-             * contents for debugging output, the way in which the contents are
-             * described may change between different GLib versions.
-             * @return Newly allocated string.
-             */
-            @Override
-            public String toString() {
-                return GObjects.strdupValueContents(this);
-            }
-        """);
+        /*
+         * Change GInitiallyUnownedClass struct to refer to GObjectClass. Both
+         * structs are identical, so this has no practical consequences,
+         * besides convincing the bindings generator that
+         * GObject.InitiallyUnownedClass is not a fundamental type class, but
+         * extends GObject.ObjectClass.
+         */
+        if (element instanceof Record r && "InitiallyUnownedClass".equals(r.name())) {
+            Type type = new Type(
+                    Map.of("name", "GObject.ObjectClass", "c:type", "GObjectClass"),
+                    Collections.emptyList()
+            );
+            Field field = new Field(
+                    Map.of("name", "parent_class"),
+                    List.of(type)
+            );
+            return r.withChildren(r.infoElements().doc(), field);
+        }
+
+        /*
+         * GObject.notify() is defined as a virtual method with an invoker
+         * method, but the parameters are different. Remove the invoker
+         * attribute, so they will be treated as separate methods.
+         */
+        if (element instanceof VirtualMethod vm
+                && "notify".equals(vm.name())
+                && "Object".equals(vm.parameters().instanceParameter().type().name()))
+            return new VirtualMethod(
+                    Map.of("name", "notify"),
+                    vm.children(),
+                    vm.platforms()
+            );
+
+        return element;
     }
 }

@@ -1,4 +1,5 @@
 import org.apache.tools.ant.taskdefs.condition.Os
+import io.github.jwharm.javagi.GirParserService
 import io.github.jwharm.javagi.GenerateSources
 
 /* Common build settings for Java-GI modules:
@@ -31,7 +32,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.8.1'
+version = '0.9.0-ALPHA'
 
 java {
     if (! System.getenv('CI')) {
@@ -43,13 +44,15 @@ java {
     }
 }
 
-tasks.register('generateSources', GenerateSources) {
-    // Input directory should point to a clone of the GitHub gircore/gir-files
-    // repository. The location is set in gradle.properties. Default is '../gir-files'
-    inputDirectory = new File(rootDir, girFilesLocation)
+// Register a build service that will parse and cache GIR files
+gradle.sharedServices.registerIfAbsent("gir", GirParserService.class) {
+    it.parameters.inputDirectory = new File(rootDir, girFilesLocation)
+}
 
-    // Write generated sources to build/generated/sources/java-gi
-    outputDirectory = layout.buildDirectory.dir("generated/sources/java-gi")
+// Register the task that will generate Java sources from GIR files
+def generateSources = tasks.register('generateSources', GenerateSources)
+generateSources.configure {
+    outputDirectory = layout.buildDirectory.dir('generated/sources/java-gi')
 }
 
 // Add the generated sources to the main sourceSet

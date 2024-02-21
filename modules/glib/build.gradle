@@ -1,11 +1,8 @@
-import io.github.jwharm.javagi.patches.GLibPatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
 
-tasks.named('generateSources') {
-    girFile = 'GLib-2.0.gir'
+generateSources.configure {
+    namespace = 'GLib'
     urlPrefix = 'https://docs.gtk.org/glib/'
-    patch = new GLibPatch()
 }

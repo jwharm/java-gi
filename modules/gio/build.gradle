@@ -1,5 +1,3 @@
-import io.github.jwharm.javagi.patches.GioPatch;
-
 plugins {
     id 'java-gi.library-conventions'
 }
@@ -8,8 +6,7 @@ dependencies {
     api project(':gobject')
 }
 
-tasks.named('generateSources') {
-    girFile = 'Gio-2.0.gir'
+generateSources.configure {
+    namespace = 'Gio'
     urlPrefix = 'https://docs.gtk.org/glib/'
-    patch = new GioPatch()
 }

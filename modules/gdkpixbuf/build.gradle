@@ -7,7 +7,7 @@ dependencies {
     api project(':gio')
 }
 
-tasks.named('generateSources') {
-    girFile = 'GdkPixbuf-2.0.gir'
+generateSources.configure {
+    namespace = 'GdkPixbuf'
     urlPrefix = 'https://docs.gtk.org/gdk-pixbuf/'
 }

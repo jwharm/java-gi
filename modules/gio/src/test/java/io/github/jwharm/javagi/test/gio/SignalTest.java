@@ -39,7 +39,7 @@ public class SignalTest {
     public void connectSignal() {
         var success = new AtomicBoolean(false);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        SignalConnection<GObject.Notify> signal = app.onNotify("application-id", paramSpec -> {
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", paramSpec -> {
             success.set(true);
         });
         assertTrue(signal.isConnected());
@@ -51,7 +51,7 @@ public class SignalTest {
     public void disconnectSignal() {
         var success = new AtomicBoolean(true);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        SignalConnection<GObject.Notify> signal = app.onNotify("application-id", paramSpec -> {
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", paramSpec -> {
             success.set(false);
         });
         signal.disconnect();
@@ -64,7 +64,7 @@ public class SignalTest {
     public void blockUnblockSignal() {
         var success = new AtomicBoolean(true);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        SignalConnection<GObject.Notify> signal = app.onNotify("application-id", paramSpec -> {
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", paramSpec -> {
             success.set(false);
         });
         signal.block();
