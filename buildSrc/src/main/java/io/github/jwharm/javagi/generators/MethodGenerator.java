@@ -199,8 +199,10 @@ public class MethodGenerator {
 
         // Postprocessing
         if (func.parameters() != null)
-            for (var p : func.parameters().parameters())
-                new PostprocessingGenerator(p).generate(builder);
+            func.parameters().parameters().stream()
+                    // Process Array parameters last
+                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
+                    .forEach(p -> new PostprocessingGenerator(p).generate(builder));
 
         // Private static helper method for constructors return the result as-is
         if (func instanceof Constructor) {

@@ -83,22 +83,29 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     builder.beginControlFlow("if ($1L != null)", getName())
                             .addNamedCode(stmt.format(), stmt.arguments())
                             .endControlFlow();
+                else
+                    builder.addNamedCode(stmt.format(), stmt.arguments());
             }
 
             // Pointer to array
             else {
                 String len = array.sizeExpression(false);
                 PartialStatement payload;
+                Type arrayType = (Type) array.anyType();
+                String valueLayout = Conversions.getValueLayoutPlain(arrayType);
 
-                if (p.isOutParameter() && len != null) {
+                if (p.isOutParameter() && len != null && p.callerAllocates()) {
                     // Out-parameter array with known length
-                    Type arrayType = (Type) array.anyType();
-                    String valueLayout = Conversions.getValueLayoutPlain(arrayType);
                     payload = arrayType.isPrimitive()
                             ? PartialStatement.of("_%sPointer.toArray($valueLayout:T.%s)"
                                     .formatted(getName(), valueLayout),
                                     "valueLayout", ValueLayout.class)
                             : marshalNativeToJava("_%sPointer".formatted(getName()), false);
+                } else if (len != null && arrayType.isPrimitive() && !arrayType.isBoolean()) {
+                    // Arrays with primitive values and known length
+                    payload = PartialStatement.of("_%sPointer$Z.get(ValueLayout.ADDRESS, 0)$Z.reinterpret(%s * $valueLayout:T.%s.byteSize(), _arena, null)$Z.toArray($valueLayout:T.%s)"
+                            .formatted(getName(), len, valueLayout, valueLayout),
+                            "valueLayout", ValueLayout.class);
                 } else {
                     // Other arrays
                     payload = marshalNativeToJava("_" + getName() + "Pointer", false);
