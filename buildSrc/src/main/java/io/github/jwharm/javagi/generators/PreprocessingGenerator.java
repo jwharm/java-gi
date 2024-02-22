@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.PartialStatement;
@@ -31,8 +32,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.List;
 import java.util.Objects;
 
-import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class PreprocessingGenerator extends TypedValueGenerator {
 
@@ -75,8 +75,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     private void pointerAllocation(MethodSpec.Builder builder) {
         if (p.isOutParameter()
                 && array != null
-                && (!array.unknownSize())
-                && p.callerAllocates()) {
+                && (!array.unknownSize())) {
             PartialStatement stmt = marshalJavaToNative(getName() + ".get()")
                     .add(null, "memorySegment", MemorySegment.class);
             builder.addNamedCode("$memorySegment:T _" + getName() + "Pointer = ($memorySegment:T) "
@@ -99,14 +98,6 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // can be omitted from the Java API
     private void arrayLength(MethodSpec.Builder builder) {
         if (p.isArrayLengthParameter()) {
-            if (p.isOutParameter()) {
-                builder.addStatement("$T $L = new $T<>()",
-                        getType(),
-                        getName(),
-                        ClassNames.OUT);
-                return;
-            }
-
             // Force lossy conversion if needed
             String cast = List.of("byte", "short").contains(type.javaType())
                     ? "(" + type.javaType() + ") "
@@ -116,20 +107,44 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             Parameter arrayParam = p.parent().parameters().stream()
                     .filter(q -> q.anyType() instanceof Array a && a.length() == p)
                     .findAny()
-                    .orElseThrow();
-            String arrayParamName = toJavaIdentifier(arrayParam.name());
+                    .orElse(null);
+
+            // No initial value
+            if (arrayParam == null) {
+                if (p.isOutParameter())
+                    builder.addStatement("$1T $2L = new $3T<>()",
+                            getType(),
+                            getName(),
+                            ClassNames.OUT);
+                else
+                    builder.addStatement("$1T $2L;",
+                            getType(),
+                            getName());
+                return;
+            }
 
             // For out parameter arrays, generate "arg.get().length", with
             // null-checks for both arg and arg.get()
             String arrayLength = arrayParam.isOutParameter()
-                    ? "$3L.get() == null ? 0 : $4L$3L.get().length"
+                    ? "$3L.get() == null ? $5L : $4L$3L.get().length"
                     : "$3L.length";
 
-            builder.addStatement("$1T $2L = $3L == null ? 0 : $4L" + arrayLength,
-                    getType(),
-                    getName(),
-                    arrayParamName,
-                    cast);
+            if (p.isOutParameter()) {
+                builder.addStatement("$1T $2L = new $6T<>($3L == null ? $5L : $4L" + arrayLength + ")",
+                        getType(),
+                        getName(),
+                        toJavaIdentifier(arrayParam.name()),
+                        cast,
+                        literal(p.anyType().typeName(), "0"),
+                        ClassNames.OUT);
+            } else {
+                builder.addStatement("$1T $2L = $3L == null ? $5L : $4L" + arrayLength,
+                        getType(),
+                        getName(),
+                        toJavaIdentifier(arrayParam.name()),
+                        cast,
+                        literal(p.anyType().typeName(), "0"));
+            }
         }
     }
 

@@ -95,13 +95,6 @@ public abstract sealed class AbstractCallable extends GirElement implements Mult
             if (parameter.anyType() instanceof Type type
                     && List.of("va_list", "va_list*").contains(type.cType()))
                 return true;
-
-            // Nested arrays are not supported yet
-            if (parameter.anyType() instanceof Array array
-                    && ((array.cType() != null && array.cType().endsWith("***"))
-                        || array.anyType() instanceof Array
-                        || (array.anyType() instanceof Type t && t.isActuallyAnArray())))
-                return true;
         }
 
         return false;
