@@ -217,4 +217,17 @@ public abstract class GirElement implements Serializable {
     public String toString() {
         return "%s %s %s".formatted(getClass().getSimpleName(), attributes(), children());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GirElement that = (GirElement) o;
+        return Objects.equals(children, that.children) && Objects.equals(attributes, that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(children, attributes);
+    }
 }

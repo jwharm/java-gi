@@ -49,7 +49,12 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
                 .addSuperinterface(ClassNames.PROXY)
                 .addType(implClass());
 
-        if (hasTypeMethod()) builder.addMethod(getTypeMethod());
+        for (var prereq : inf.prerequisites())
+            if (prereq.get() instanceof Interface parent)
+                builder.addSuperinterface(parent.typeName());
+
+        if (hasTypeMethod())
+            builder.addMethod(getTypeMethod());
 
         addConstructors(builder);
         addFunctions(builder);
