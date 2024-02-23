@@ -21,7 +21,6 @@ package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.PartialStatement;
@@ -98,54 +97,56 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // can be omitted from the Java API
     private void arrayLength(MethodSpec.Builder builder) {
         if (p.isArrayLengthParameter()) {
-            // Force lossy conversion if needed
-            String cast = List.of("byte", "short").contains(type.javaType())
-                    ? "(" + type.javaType() + ") "
-                    : "";
-
-            // Find the name of the array-parameter
-            Parameter arrayParam = p.parent().parameters().stream()
-                    .filter(q -> q.anyType() instanceof Array a && a.length() == p)
-                    .findAny()
-                    .orElse(null);
-
-            // No initial value
-            if (arrayParam == null) {
-                if (p.isOutParameter())
-                    builder.addStatement("$1T $2L = new $3T<>()",
-                            getType(),
-                            getName(),
-                            ClassNames.OUT);
-                else
-                    builder.addStatement("$1T $2L;",
-                            getType(),
-                            getName());
-                return;
-            }
-
-            // For out parameter arrays, generate "arg.get().length", with
-            // null-checks for both arg and arg.get()
-            String arrayLength = arrayParam.isOutParameter()
-                    ? "$3L.get() == null ? $5L : $4L$3L.get().length"
-                    : "$3L.length";
-
             if (p.isOutParameter()) {
-                builder.addStatement("$1T $2L = new $6T<>($3L == null ? $5L : $4L" + arrayLength + ")",
+                // Set the initial value of the allocated pointer to the length of the input array
+                if (p.isArrayLengthParameter() && p.isOutParameter()) {
+                    var stmt = PartialStatement.of("_$name:LPointer.set($valueLayout:T.$layout:L, 0L,$W",
+                                    "name", getName(),
+                                    "valueLayout", ValueLayout.class,
+                                    "layout", getValueLayoutPlain(type))
+                            .add(arrayLengthStatement())
+                            .add(");\n");
+                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                }
+                // Declare an Out<> instance
+                builder.addStatement("$1T $2L = new $3T<>()",
                         getType(),
                         getName(),
-                        toJavaIdentifier(arrayParam.name()),
-                        cast,
-                        literal(p.anyType().typeName(), "0"),
                         ClassNames.OUT);
             } else {
-                builder.addStatement("$1T $2L = $3L == null ? $5L : $4L" + arrayLength,
-                        getType(),
-                        getName(),
-                        toJavaIdentifier(arrayParam.name()),
-                        cast,
-                        literal(p.anyType().typeName(), "0"));
+                // Declare a primitive value
+                var stmt = PartialStatement.of("$type:T $name:L =$W",
+                                "type", getType(),
+                                "name", getName())
+                        .add(arrayLengthStatement())
+                        .add(";\n");
+                builder.addNamedCode(stmt.format(), stmt.arguments());
             }
         }
+    }
+
+    private PartialStatement arrayLengthStatement() {
+        // Find the name of the array-parameter
+        Parameter arrayParam = p.parent().parameters().stream()
+                .filter(q -> q.anyType() instanceof Array a && a.length() == p)
+                .findAny()
+                .orElse(null);
+
+        // Fallback to default value 0 (usually when the array is in the return value)
+        if (arrayParam == null)
+            return PartialStatement.of(literal(p.anyType().typeName(), "0"));
+
+        return PartialStatement.of("$arr:L == null ? $zero:L : $cast:L",
+                        "arr", toJavaIdentifier(arrayParam.name()),
+                        "zero", literal(p.anyType().typeName(), "0"),
+                        "cast", List.of("byte", "short").contains(type.javaType())
+                                ? "(" + type.javaType() + ") "
+                                : ""
+                )
+                .add(arrayParam.isOutParameter()
+                        ? "$arr:L.get() == null ? $zero:L : $cast:L$arr:L.get().length"
+                        : "$arr:L.length"
+                );
     }
 
     // Arena for parameters with async or notified scope
