@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -31,6 +30,7 @@ import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
@@ -49,16 +49,17 @@ public class ConstructorGenerator {
 
         // Method name, without "new" prefix
         String name = ctor.name();
-        if (name.startsWith("new_")) name = name.substring(4);
+        if (name.startsWith("new_"))
+            name = name.substring(4);
         privateMethodName = toJavaIdentifier("construct_" + name);
         methodName = toJavaIdentifier(name);
     }
 
-    public void generate(TypeSpec.Builder classBuilder) {
-        classBuilder.addMethod(ctor.name().equals("new")
-                ? constructor()
-                : namedConstructor());
-        classBuilder.addMethod(
+    public Iterable<MethodSpec> generate() {
+        return List.of(
+                ctor.name().equals("new")
+                        ? constructor()
+                        : namedConstructor(),
                 new MethodGenerator(ctor, privateMethodName).generate());
     }
 

@@ -78,7 +78,7 @@ public abstract class RegisteredTypeGenerator {
     protected void addConstructors(TypeSpec.Builder builder) {
         for (Constructor c : filter(rt.children(), Constructor.class))
             if (!c.skip())
-                new ConstructorGenerator(c).generate(builder);
+                builder.addMethods(new ConstructorGenerator(c).generate());
     }
 
     protected void addMethods(TypeSpec.Builder builder) {
