@@ -23,6 +23,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Bitfield extends Multiplatform implements FlaggedType {
 
@@ -43,5 +44,22 @@ public final class Bitfield extends Multiplatform implements FlaggedType {
                     union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Bitfield) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

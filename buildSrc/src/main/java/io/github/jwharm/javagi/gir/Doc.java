@@ -20,9 +20,9 @@
 package io.github.jwharm.javagi.gir;
 
 import java.util.Map;
-import java.util.Objects;
 
 public final class Doc extends GirElement implements Documentation {
+
     private final String text;
 
     public Doc(Map<String, String> attributes, String text) {
@@ -47,14 +47,13 @@ public final class Doc extends GirElement implements Documentation {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Doc) obj;
-        return Objects.equals(this.text, that.text);
+        if (obj == this)
+            return true;
+        return obj != null && obj.getClass() == this.getClass();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(text);
+        return 1;
     }
 }

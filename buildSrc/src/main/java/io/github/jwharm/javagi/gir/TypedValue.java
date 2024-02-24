@@ -33,6 +33,14 @@ public sealed interface TypedValue
 
     InfoElements infoElements();
 
+    default String name() {
+        return attr("name");
+    }
+
+    default AnyType anyType() {
+        return findAny(children(), AnyType.class);
+    }
+
     default boolean allocatesMemory() {
         return switch(anyType()) {
             case null -> true; // callback
@@ -40,13 +48,5 @@ public sealed interface TypedValue
             case Type type -> type.isActuallyAnArray()
                     || TypeName.get(String.class).equals(type.typeName());
         };
-    }
-
-    default String name() {
-        return attr("name");
-    }
-
-    default AnyType anyType() {
-        return findAny(children(), AnyType.class);
     }
 }

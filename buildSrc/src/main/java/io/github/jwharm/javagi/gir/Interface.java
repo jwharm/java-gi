@@ -24,6 +24,7 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Interface extends Multiplatform
         implements RegisteredType, FieldContainer {
@@ -103,5 +104,22 @@ public final class Interface extends Multiplatform
 
     public List<Constant> constants() {
         return filter(children(), Constant.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Interface) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

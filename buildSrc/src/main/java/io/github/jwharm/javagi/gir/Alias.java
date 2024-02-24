@@ -24,6 +24,7 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Alias extends Multiplatform implements RegisteredType {
 
@@ -72,5 +73,22 @@ public final class Alias extends Multiplatform implements RegisteredType {
 
     public Type type() {
         return findAny(children(), Type.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Alias) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

@@ -23,7 +23,6 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public final class Callback extends Multiplatform
         implements RegisteredType, Callable {
@@ -82,22 +81,5 @@ public final class Callback extends Multiplatform
     @Override
     public boolean deprecated() {
         return infoAttrs().deprecated();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Callback) obj;
-        return  Objects.equals(this.name(), that.name()) &&
-                Objects.equals(this.cType(), that.cType()) &&
-                this.throws_() == that.throws_() &&
-                Objects.equals(this.parameters(), that.parameters()) &&
-                Objects.equals(this.returnValue(), that.returnValue());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name(), cType(), throws_(), parameters(), returnValue());
     }
 }

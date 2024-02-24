@@ -19,7 +19,10 @@
 
 package io.github.jwharm.javagi.gir;
 
-public sealed interface Documentation permits Doc, DocDeprecated, DocVersion {
+public sealed interface Documentation
+        extends Node
+        permits Doc, DocDeprecated, DocVersion {
+
     String text();
     Namespace namespace();
 }

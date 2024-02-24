@@ -21,7 +21,6 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public final class ReturnValue extends GirElement implements TypedValue {
 
@@ -86,18 +85,5 @@ public final class ReturnValue extends GirElement implements TypedValue {
 
     public TransferOwnership transferOwnership() {
         return TransferOwnership.from(attr("transfer-ownership"));
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (TypedValue) obj;
-        return Objects.equals(this.anyType(), that.anyType());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(anyType());
     }
 }

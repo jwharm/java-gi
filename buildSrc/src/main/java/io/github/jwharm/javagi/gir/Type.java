@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.TypeName;
-import io.github.jwharm.javagi.util.Conversions;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import static io.github.jwharm.javagi.util.Conversions.*;
@@ -28,7 +27,6 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public final class Type extends GirElement implements AnyType, TypeReference {
 
@@ -143,19 +141,5 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             case Property _, Alias _, ReturnValue _, Parameter _ -> true;
             case null, default -> false;
         };
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Type) obj;
-        return Objects.equals(this.name(), that.name()) &&
-                Objects.equals(this.cType(), that.cType());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name(), cType());
     }
 }

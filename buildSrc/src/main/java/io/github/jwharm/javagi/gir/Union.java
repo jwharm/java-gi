@@ -23,6 +23,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Union
         extends Multiplatform
@@ -81,5 +82,22 @@ public final class Union
 
     public List<Record> records() {
         return filter(children(), Record.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Union) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

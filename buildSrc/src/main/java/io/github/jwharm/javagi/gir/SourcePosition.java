@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gir;
 
 import java.util.Map;
-import java.util.Objects;
 
 public final class SourcePosition extends GirElement {
 
@@ -42,16 +41,13 @@ public final class SourcePosition extends GirElement {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (SourcePosition) obj;
-        return Objects.equals(this.filename(), that.filename()) &&
-                this.line() == that.line() &&
-                this.column() == that.column();
+        if (obj == this)
+            return true;
+        return obj != null && obj.getClass() == this.getClass();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(filename(), line(), column());
+        return 1;
     }
 }
