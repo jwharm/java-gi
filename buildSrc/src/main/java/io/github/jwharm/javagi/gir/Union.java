@@ -24,14 +24,16 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Union extends RegisteredType implements FieldContainer {
+public final class Union
+        extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Union(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Union(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 

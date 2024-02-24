@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public final class Member extends GirElement {
 
-    public Member(Map<String, String> attributes, List<GirElement> children) {
+    public Member(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 

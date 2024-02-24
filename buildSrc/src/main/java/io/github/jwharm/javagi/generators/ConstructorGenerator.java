@@ -77,14 +77,14 @@ public class ConstructorGenerator {
         }
 
         // Deprecated annotation
-        if (ctor.attrs().deprecated())
+        if (ctor.callableAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
         new CallableGenerator(ctor).generateMethodParameters(builder);
 
         // Exception
-        if (ctor.attrs().throws_())
+        if (ctor.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Invoke private construction method
@@ -114,14 +114,14 @@ public class ConstructorGenerator {
         }
 
         // Deprecated annotation
-        if (ctor.attrs().deprecated())
+        if (ctor.callableAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
         new CallableGenerator(ctor).generateMethodParameters(builder);
 
         // Exception
-        if (ctor.attrs().throws_())
+        if (ctor.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Platform check
@@ -153,8 +153,8 @@ public class ConstructorGenerator {
         }
 
         // GVariant constructors return floating references
-        else if (ctor.attrs().cIdentifier() != null
-                && ctor.attrs().cIdentifier().startsWith("g_variant_new_")) {
+        else if (ctor.callableAttrs().cIdentifier() != null
+                && ctor.callableAttrs().cIdentifier().startsWith("g_variant_new_")) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
                                     .add(stmt)
                                     .add(";\n")

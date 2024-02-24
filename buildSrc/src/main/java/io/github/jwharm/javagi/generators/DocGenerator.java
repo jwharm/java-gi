@@ -51,15 +51,15 @@ public class DocGenerator {
         writeDoc(builder, javadoc, null);
 
         // Version
-        if (doc.parent() instanceof RegisteredType rt && rt.attrs().version() != null)
-            writeDoc(builder, rt.attrs().version(), "@version");
+        if (doc.parent() instanceof RegisteredType rt && rt.infoAttrs().version() != null)
+            writeDoc(builder, rt.infoAttrs().version(), "@version");
 
         // Methods and functions
-        if (doc.parent() instanceof AbstractCallable ct
+        if (doc.parent() instanceof Callable func
                 && (! (doc.parent() instanceof Callback || doc.parent() instanceof Signal))) {
 
             // Param
-            Parameters parameters = ct.parameters();
+            Parameters parameters = func.parameters();
             if (parameters != null) {
                 for (Parameter p : parameters.parameters()) {
                     if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
@@ -72,22 +72,20 @@ public class DocGenerator {
 
             // Return (except for constructors)
             if (! (doc.parent() instanceof Constructor c && "new".equals(c.name()))) {
-                ReturnValue rv = ct.returnValue();
+                ReturnValue rv = func.returnValue();
                 if (rv != null && rv.infoElements().doc() != null)
                     writeDoc(builder, Javadoc.getInstance().convert(rv.infoElements().doc()),
                             "@return");
             }
 
             // Throws
-            if (doc.parent() instanceof AbstractCallable c) {
-                if (c.attrs().throws_())
-                    writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}",
-                            "@throws");
-                if (c.doPlatformCheck())
-                    writeDoc(builder, "$T when run on a platform other than "
-                            + Platform.toString(c.platforms()),
-                            "@throws");
-            }
+            if (func.callableAttrs().throws_())
+                writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}",
+                        "@throws");
+            if (func instanceof Multiplatform mp && mp.doPlatformCheck())
+                writeDoc(builder, "$T when run on a platform other than "
+                        + Platform.toString(func.platforms()),
+                        "@throws");
         }
 
         // Signals
@@ -101,9 +99,10 @@ public class DocGenerator {
         }
 
         // Deprecated
-        if (doc.parent() instanceof AbstractCallable m && m.attrs().deprecated()) {
+        if (doc.parent() instanceof Callable m && m.callableAttrs().deprecated()) {
             if (m.infoElements().docDeprecated() != null) {
-                String deprecatedJavadoc = Javadoc.getInstance().convert(m.infoElements().docDeprecated());
+                String deprecatedJavadoc = Javadoc.getInstance()
+                        .convert(m.infoElements().docDeprecated());
                 writeDoc(builder, deprecatedJavadoc, "@deprecated");
             }
         }

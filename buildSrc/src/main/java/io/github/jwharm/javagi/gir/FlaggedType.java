@@ -22,30 +22,20 @@ package io.github.jwharm.javagi.gir;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
-import java.util.Map;
 
-public abstract sealed class FlaggedType extends RegisteredType
+public sealed interface FlaggedType extends RegisteredType
         permits Bitfield, Enumeration {
 
-    public FlaggedType(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children, platforms);
-    }
-
     @Override
-    public Namespace parent() {
-        return (Namespace) super.parent();
-    }
-
-    @Override
-    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
+    default String getInteropString(String paramName, boolean isPointer, Scope scope) {
         return isPointer ? paramName : paramName + ".getValue()";
     }
 
-    public List<Member> members() {
+    default List<Member> members() {
         return filter(children(), Member.class);
     }
 
-    public List<Function> functions() {
+    default List<Function> functions() {
         return filter(children(), Function.class);
     }
 }

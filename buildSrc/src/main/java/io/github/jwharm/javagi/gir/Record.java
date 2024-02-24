@@ -29,26 +29,38 @@ import static java.util.function.Predicate.not;
 import java.util.List;
 import java.util.Map;
 
-public final class Record extends RegisteredType implements FieldContainer {
+public final class Record extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Record(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Record(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
     @Override
     public Record mergeWith(RegisteredType rt) {
         if (rt instanceof Record other) {
-            // If this record has different fields on different platforms, remove all
-            // fields to prevent generating field accessors that don't work across all platforms
+            /*
+             * If this record has different fields on different platforms,
+             * remove all fields to prevent generating field accessors that
+             * don't work across all platforms.
+             */
             if (!this.fields().equals(other.fields()))
-                return new Record(attributes(), children().stream().filter(not(Field.class::isInstance)).toList(),
+                return new Record(
+                        attributes(),
+                        children().stream()
+                                .filter(not(Field.class::isInstance))
+                                .toList(),
                         platforms() | other.platforms());
-            return new Record(attributes(), children(), platforms() | other.platforms());
+            else
+                return new Record(
+                        attributes(),
+                        children(),
+                        platforms() | other.platforms());
         }
         return this;
     }
@@ -57,7 +69,8 @@ public final class Record extends RegisteredType implements FieldContainer {
     public ClassName typeName() {
         var outerClass = isGTypeStructFor();
         if (outerClass != null)
-            return outerClass.typeName().nestedClass(toJavaSimpleType(name(), namespace()));
+            return outerClass.typeName()
+                    .nestedClass(toJavaSimpleType(name(), namespace()));
         else
             return toJavaQualifiedType(name(), namespace());
     }

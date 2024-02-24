@@ -26,7 +26,7 @@ import java.util.Objects;
 
 public final class Parameters extends GirElement {
 
-    public Parameters(List<GirElement> children) {
+    public Parameters(List<Node> children) {
         super(children);
     }
 

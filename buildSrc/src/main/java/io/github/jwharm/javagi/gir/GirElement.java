@@ -24,11 +24,11 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.io.Serializable;
 import java.util.*;
 
-public abstract class GirElement implements Serializable {
+public abstract class GirElement implements Serializable, Node {
 
-    private final List<GirElement> children;
+    private final List<Node> children;
     private final Map<String, String> attributes;
-    private GirElement parent;
+    private Node parent;
 
     GirElement() {
         this(Collections.emptyMap(), Collections.emptyList());
@@ -38,49 +38,53 @@ public abstract class GirElement implements Serializable {
         this(attributes, Collections.emptyList());
     }
 
-    GirElement(List<GirElement> children) {
+    GirElement(List<Node> children) {
         this(Collections.emptyMap(), children);
     }
 
-    GirElement(Map<String, String> attributes, List<GirElement> children) {
+    GirElement(Map<String, String> attributes, List<Node> children) {
         this.attributes = attributes;
         this.children = children;
-        for (GirElement c : children) c.parent = this;
+        for (Node c : children) c.setParent(this);
     }
 
-    protected String attr(String key) {
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+
+    public String attr(String key) {
         return attributes.get(key);
     }
 
-    protected int attrInt(String key) {
+    public int attrInt(String key) {
         String value = attr(key);
         return value == null ? -1 : Integer.parseInt(value);
     }
 
-    protected boolean attrBool(String key, boolean defaultValue) {
+    public boolean attrBool(String key, boolean defaultValue) {
         String value = attr(key);
         return value == null ? defaultValue : value.equals("1");
     }
 
-    protected InfoAttrs infoAttrs() {
+    public InfoAttrs infoAttrs() {
         return new InfoAttrs(attrBool("introspectable", true), attrBool("deprecated", false),
                 attr("deprecated-version"), attr("version"), Stability.from(attr("stability")));
     }
 
-    protected CallableAttrs callableAttrs() {
+    public CallableAttrs callableAttrs() {
         return new CallableAttrs(attrBool("introspectable", true), attrBool("deprecated", false),
                 attr("deprecated-version"), attr("version"), Stability.from(attr("stability")), attr("name"),
                 attr("c:identifier"), attr("shadowed-by"), attr("shadows"), attrBool("throws", false),
                 attr("moved-to"));
     }
 
-    protected InfoElements infoElements() {
+    public InfoElements infoElements() {
         return new InfoElements(attr("doc-version"), attr("doc-stability"), findAny(children, Doc.class),
                 findAny(children, DocDeprecated.class), findAny(children, SourcePosition.class),
                 filter(children, Attribute.class));
     }
 
-    public GirElement parent() {
+    public Node parent() {
         return parent;
     }
 
@@ -88,7 +92,7 @@ public abstract class GirElement implements Serializable {
         return attributes;
     }
 
-    public List<GirElement> children() {
+    public List<Node> children() {
         return children;
     }
 
@@ -104,7 +108,7 @@ public abstract class GirElement implements Serializable {
      * @param <T> the element must be a GirElement
      */
     @SuppressWarnings("unchecked")
-    public <T extends GirElement> T withAttribute(String attrName, String newValue) {
+    public <T extends Node> T withAttribute(String attrName, String newValue) {
         var newAttrs = new HashMap<>(attributes());
         newAttrs.put(attrName, newValue);
         return (T) switch(this) {
@@ -157,7 +161,7 @@ public abstract class GirElement implements Serializable {
      * @return a new instance of the same type as {@code elem}, with the new child elements
      * @param <T> the element must be a GirElement
      */
-    public <T extends GirElement> T withChildren(GirElement... newChildren) {
+    public <T extends Node> T withChildren(GirElement... newChildren) {
         return withChildren(Arrays.asList(newChildren));
     }
 
@@ -168,7 +172,7 @@ public abstract class GirElement implements Serializable {
      * @param <T> the element must be a GirElement
      */
     @SuppressWarnings("unchecked")
-    public <T extends GirElement> T withChildren(List<GirElement> newChildren) {
+    public <T extends Node> T withChildren(List<Node> newChildren) {
         return (T) switch(this) {
             case Alias a -> new Alias(a.attributes(), newChildren, a.platforms());
             case Array a -> new Array(a.attributes(), newChildren);

@@ -20,53 +20,36 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.ClassName;
-import io.github.jwharm.javagi.util.Platform;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
 
-public abstract sealed class RegisteredType extends GirElement implements Multiplatform
-        permits Alias, Boxed, Callback, Class, FlaggedType, Interface, Record, Union {
+public sealed interface RegisteredType
+        extends Node
+        permits Alias, Boxed, Callback, Class, FlaggedType,
+                Interface, Record, Union {
 
-    private int platforms;
+    RegisteredType mergeWith(RegisteredType rt);
+    int platforms();
+    InfoAttrs infoAttrs();
+    InfoElements infoElements();
 
-    public RegisteredType(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children);
-        this.platforms = platforms;
-    }
-
-    public abstract RegisteredType mergeWith(RegisteredType rt);
-
-    @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return this.platforms;
-    }
-
-    public ClassName typeName() {
+    default ClassName typeName() {
         return toJavaQualifiedType(name(), namespace());
     }
 
-    public String javaType() {
+    default String javaType() {
         return typeName().toString();
     }
 
-    public String constructorName() {
+    default String constructorName() {
         return javaType() + "::new";
     }
 
-    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
+    default String getInteropString(String paramName, boolean isPointer, Scope scope) {
         return paramName + ".handle()";
     }
 
-    public boolean checkIsGObject() {
+    default boolean checkIsGObject() {
         return switch(this) {
             case Class c -> c.isInstanceOf("GObject", "Object");
             case Interface _ -> true;
@@ -78,7 +61,7 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
         };
     }
 
-    public boolean isFloating() {
+    default boolean isFloating() {
         // GObject has a ref_sink function, but we don't want to treat all
         // GObjects as floating references.
         if ("GObject".equals(cType()))
@@ -103,54 +86,19 @@ public abstract sealed class RegisteredType extends GirElement implements Multip
                 .anyMatch(m -> "ref_sink".equals(m.name()));
     }
 
-    public boolean doPlatformCheck() {
-        return platforms() != Platform.ALL;
-    }
-
-    public InfoAttrs attrs() {
-        return super.infoAttrs();
-    }
-
-    public String name() {
+    default String name() {
         return attr("name");
     }
 
-    public String cType() {
+    default String cType() {
         return attr("c:type");
     }
 
-    public String glibTypeName() {
+    default String glibTypeName() {
         return attr("glib:type-name");
     }
 
-    public String getTypeFunc() {
+    default String getTypeFunc() {
         return attr("glib:get-type");
-    }
-
-    public InfoElements infoElements() {
-        return super.infoElements();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (RegisteredType) obj;
-        return Objects.equals(this.name(), that.name());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name());
-    }
-
-    @Override
-    public String toString() {
-        return "%s %s %s %s".formatted(
-                getClass().getSimpleName(),
-                Platform.toString(platforms()),
-                attributes(),
-                children()
-        );
     }
 }

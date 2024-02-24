@@ -22,31 +22,15 @@ package io.github.jwharm.javagi.gir;
 import java.util.List;
 import java.util.Map;
 
-public final class Property extends TypedValue implements Multiplatform {
-    private int platforms;
+public final class Property extends Multiplatform implements TypedValue {
 
-    public Property(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children);
-        this.platforms = platforms;
-    }
-
-    @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return platforms;
+    public Property(Map<String, String> attributes, List<Node> children, int platforms) {
+        super(attributes, children, platforms);
     }
 
     @Override
     public RegisteredType parent() {
         return (RegisteredType) super.parent();
-    }
-
-    public InfoAttrs attrs() {
-        return infoAttrs();
     }
 
     public boolean writable() {
@@ -79,10 +63,5 @@ public final class Property extends TypedValue implements Multiplatform {
 
     public TransferOwnership transferOwnership() {
         return TransferOwnership.from(attr("transfer-ownership"));
-    }
-
-    @Override
-    public InfoElements infoElements() {
-        return super.infoElements();
     }
 }

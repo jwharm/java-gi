@@ -31,14 +31,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class Namespace extends GirElement implements Multiplatform {
-    private int platforms;
+public final class Namespace extends Multiplatform {
     private final Map<Integer, String> sharedLibraries;
 
-    public Namespace(Map<String, String> attributes, List<GirElement> children,
+    public Namespace(Map<String, String> attributes, List<Node> children,
                      int platforms, Map<Integer, String> sharedLibraries) {
-        super(attributes, children);
-        this.platforms = platforms;
+        super(attributes, children, platforms);
         this.sharedLibraries = sharedLibraries;
         this.sharedLibraries.put(platforms, sharedLibrary());
     }
@@ -51,16 +49,6 @@ public final class Namespace extends GirElement implements Multiplatform {
     @Override
     public Namespace namespace() {
         return this;
-    }
-
-    @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return platforms;
     }
 
     /**
@@ -178,11 +166,15 @@ public final class Namespace extends GirElement implements Multiplatform {
     }
 
     public String packageName() {
-        return Objects.requireNonNullElse(ModuleInfo.getPackageName(name()), name());
+        return Objects.requireNonNullElse(
+                ModuleInfo.getPackageName(name()),
+                name());
     }
 
     public String docUrlPrefix() {
-        return Objects.requireNonNullElse(ModuleInfo.getDocUrlPrefix(name()), "");
+        return Objects.requireNonNullElse(
+                ModuleInfo.getDocUrlPrefix(name()),
+                "");
     }
 
     public String globalClassName() {
@@ -204,6 +196,10 @@ public final class Namespace extends GirElement implements Multiplatform {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " " + attributes() + " " + Platform.toString(platforms());
+        return "%s %s %s".formatted(
+                getClass().getSimpleName(),
+                attributes(),
+                Platform.toString(platforms())
+        );
     }
 }

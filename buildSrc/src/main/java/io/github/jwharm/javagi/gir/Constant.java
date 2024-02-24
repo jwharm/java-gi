@@ -19,33 +19,18 @@
 
 package io.github.jwharm.javagi.gir;
 
-import io.github.jwharm.javagi.util.Platform;
-
 import java.util.List;
 import java.util.Map;
 
-public final class Constant extends TypedValue implements Multiplatform {
+public final class Constant extends Multiplatform implements TypedValue {
 
-    private int platforms;
-
-    public Constant(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children);
-        this.platforms = platforms;
+    public Constant(Map<String, String> attributes, List<Node> children, int platforms) {
+        super(attributes, children, platforms);
     }
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
-    }
-
-    @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return platforms;
     }
 
     @Override
@@ -67,10 +52,5 @@ public final class Constant extends TypedValue implements Multiplatform {
 
     public String cIdentifier() {
         return attr("c:identifier");
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + " " + attributes() + " " + children() + " " + Platform.toString(platforms());
     }
 }

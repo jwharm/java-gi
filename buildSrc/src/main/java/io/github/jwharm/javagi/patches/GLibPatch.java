@@ -57,7 +57,7 @@ public class GLibPatch implements Patch {
          * "getVariantType()".
          */
         if (element instanceof Method m
-                && "g_variant_get_type".equals(m.attrs().cIdentifier()))
+                && "g_variant_get_type".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_variant_type");
 
         /*

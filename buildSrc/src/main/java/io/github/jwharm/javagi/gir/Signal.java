@@ -25,9 +25,9 @@ import io.github.jwharm.javagi.util.Conversions;
 import java.util.List;
 import java.util.Map;
 
-public final class Signal extends AbstractCallable {
+public final class Signal extends Multiplatform implements Callable {
 
-    public Signal(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Signal(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 

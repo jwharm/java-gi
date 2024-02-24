@@ -22,18 +22,17 @@ package io.github.jwharm.javagi.gir;
 import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.util.Conversions;
 
-import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
+import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Type extends AnyType implements TypeReference {
+public final class Type extends GirElement implements AnyType, TypeReference {
 
-    public Type(Map<String, String> attributes, List<GirElement> children) {
+    public Type(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 
@@ -66,16 +65,20 @@ public final class Type extends AnyType implements TypeReference {
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
             case "void" -> TypeName.VOID;
-            case "boolean", "byte", "char", "double", "float", "int", "long", "short" -> Conversions.primitiveTypeName(javaBaseType);
-            case "java.lang.String" -> TypeName.get(String.class);
-            case "java.lang.foreign.MemorySegment" -> TypeName.get(MemorySegment.class);
+            case "boolean", "byte", "char", "double", "float",
+                    "int", "long", "short" -> primitiveTypeName(javaBaseType);
+            case "String" -> TypeName.get(String.class);
+            case "MemorySegment" -> TypeName.get(MemorySegment.class);
             case null, default -> TypeReference.super.typeName();
         };
     }
 
     public boolean isPrimitive() {
         String type = toJavaBaseType(name());
-        return type != null && List.of("boolean", "byte", "char", "double", "float", "int", "long", "short")
+        if (type == null)
+            return false;
+
+        return List.of("boolean", "byte", "char", "double", "float", "int", "long", "short")
                 .contains(type);
     }
 
@@ -84,11 +87,15 @@ public final class Type extends AnyType implements TypeReference {
     }
 
     public boolean isPointer() {
-        return cType() != null && (cType().endsWith("*") || cType().endsWith("gpointer"));
+        return cType() != null
+                && (cType().endsWith("*") || cType().endsWith("gpointer"));
     }
 
     public boolean isProxy() {
-        if (cType() != null && cType().endsWith("**")) return false; // A pointer to a proxy is not a proxy
+        // A pointer to a proxy is not a proxy
+        if (cType() != null && cType().endsWith("**"))
+            return false;
+
         return switch(get()) {
             case Alias a -> a.type().isProxy();
             case Class _, Interface _, Record _, Union _ -> true;
@@ -107,10 +114,11 @@ public final class Type extends AnyType implements TypeReference {
     }
 
     /**
-     * Generate a string that uniquely identifies this type, and can be used as the
-     * name of a named argument in a JavaPoet code block.
-     * @return a name for this type that can be used as a named argument in a code block,
-     *         or {@code null} if the unique identifier could not be generated.
+     * Generate a string that uniquely identifies this type, and can be used as
+     * the name of a named argument in a JavaPoet code block.
+     * @return a name for this type that can be used as a named argument in a
+     *         code block, or {@code null} if the unique identifier could not
+     *         be generated.
      */
     public String toTypeTag() {
         String cType = cType();
@@ -122,11 +130,12 @@ public final class Type extends AnyType implements TypeReference {
             return uncapitalize(cType.substring(start, end));
         }
         RegisteredType target = get();
-        return target == null ? null : uncapitalize(target.namespace().name() + target.name());
+        return target == null ? null
+                : uncapitalize(target.namespace().name() + target.name());
     }
 
     private boolean overrideLongValue() {
-        GirElement parent = parent();
+        Node parent = parent();
         if (parent instanceof Array)
             parent = parent.parent();
 

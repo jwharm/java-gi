@@ -56,10 +56,10 @@ public class Library implements Serializable {
         throw new NoSuchElementException("No namespace with name " + name);
     }
 
-    public GirElement lookupCIdentifier(String cIdentifier) {
+    public Node lookupCIdentifier(String cIdentifier) {
         for (Repository repo : repositories.values()) {
             for (Namespace ns : repo.namespaces()) {
-                GirElement result = lookupCIdentifier(cIdentifier, ns);
+                Node result = lookupCIdentifier(cIdentifier, ns);
                 if (result != null)
                     return result;
 
@@ -73,10 +73,10 @@ public class Library implements Serializable {
         return null;
     }
 
-    private GirElement lookupCIdentifier(String cIdentifier, GirElement parent) {
-        for (AbstractCallable ct : filter(parent.children(), AbstractCallable.class))
-            if (cIdentifier.equals(ct.attr("c:identifier")))
-                return ct;
+    private Node lookupCIdentifier(String cIdentifier, Node parent) {
+        for (Callable c : filter(parent.children(), Callable.class))
+            if (cIdentifier.equals(c.attr("c:identifier")))
+                return c;
 
         for (Member m : filter(parent.children(), Member.class))
             if (cIdentifier.equals(m.attr("c:identifier")))

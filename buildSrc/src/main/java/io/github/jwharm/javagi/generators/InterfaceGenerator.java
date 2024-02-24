@@ -42,7 +42,7 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         if (inf.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(inf.infoElements().doc()).generate());
-        if (inf.attrs().deprecated())
+        if (inf.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)

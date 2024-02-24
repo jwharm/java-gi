@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public final class Array extends AnyType {
+public final class Array extends GirElement implements AnyType {
 
-    public Array(Map<String, String> attributes, List<GirElement> children) {
+    public Array(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 

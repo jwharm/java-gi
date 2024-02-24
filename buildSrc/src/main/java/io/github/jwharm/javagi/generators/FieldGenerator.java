@@ -53,9 +53,9 @@ public class FieldGenerator extends TypedValueGenerator {
 
     private String methodName(String prefix) {
         String methodName = prefix + toCamelCase(f.name(), true);
-        for (GirElement node : f.parent().children()) {
-            if (node instanceof AbstractCallable ct
-                    && methodName.equals(toJavaIdentifier(ct.name()))) {
+        for (Node node : f.parent().children()) {
+            if (node instanceof Callable func
+                    && methodName.equals(toJavaIdentifier(func.name()))) {
                 methodName += "_";
                 break;
             }

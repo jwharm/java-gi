@@ -26,9 +26,9 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Field extends TypedValue {
+public final class Field extends GirElement implements TypedValue {
 
-    public Field(Map<String, String> attributes, List<GirElement> children) {
+    public Field(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
         if ((callback() == null) == (anyType() == null))
             throw new IllegalArgumentException("Either Callback | AnyType must be set");
@@ -41,7 +41,7 @@ public final class Field extends TypedValue {
 
     @Override
     public boolean allocatesMemory() {
-        return super.allocatesMemory()
+        return TypedValue.super.allocatesMemory()
                 || (callback() != null)
                 || (anyType() instanceof Type type && type.get() instanceof Callback);
     }

@@ -25,9 +25,9 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 import java.util.List;
 import java.util.Map;
 
-public final class Alias extends RegisteredType {
+public final class Alias extends Multiplatform implements RegisteredType {
 
-    public Alias(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Alias(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -55,7 +55,7 @@ public final class Alias extends RegisteredType {
             return target.getInteropString(paramName, isPointer, scope);
 
         return switch(toJavaBaseType(type().name())) {
-            case "java.lang.String", "java.lang.foreign.MemorySegment" -> paramName + ".getValue()";
+            case "String", "MemorySegment" -> paramName + ".getValue()";
             default -> paramName + ".getValue()." + type().typeName() + "Value()";
         };
     }

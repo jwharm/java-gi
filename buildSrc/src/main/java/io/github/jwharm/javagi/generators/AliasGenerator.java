@@ -78,7 +78,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
 
         if (alias.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
-        if (alias.attrs().deprecated())
+        if (alias.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         return builder.addModifiers(Modifier.PUBLIC).build();

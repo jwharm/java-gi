@@ -28,7 +28,7 @@ public final class Repository extends GirElement {
 
     private Library library;
 
-    public Repository(Map<String, String> attributes, List<GirElement> children) {
+    public Repository(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 
@@ -49,7 +49,7 @@ public final class Repository extends GirElement {
         return null;
     }
 
-    public GirElement lookupCIdentifier(String cIdentifier) {
+    public Node lookupCIdentifier(String cIdentifier) {
         return library().lookupCIdentifier(cIdentifier);
     }
 

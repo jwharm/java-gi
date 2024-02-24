@@ -54,7 +54,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         if (rec.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(rec.infoElements().doc()).generate());
-        if (rec.attrs().deprecated())
+        if (rec.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC);
@@ -176,7 +176,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
-                        method.attrs().cIdentifier());
+                        method.callableAttrs().cIdentifier());
                 return;
             }
         }

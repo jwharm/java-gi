@@ -24,9 +24,9 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Boxed extends RegisteredType {
+public final class Boxed extends Multiplatform implements RegisteredType {
 
-    public Boxed(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Boxed(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 

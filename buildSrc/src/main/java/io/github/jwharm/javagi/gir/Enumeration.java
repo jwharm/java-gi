@@ -24,10 +24,15 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Enumeration extends FlaggedType {
+public final class Enumeration extends Multiplatform implements FlaggedType {
 
-    public Enumeration(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Enumeration(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
+    }
+
+    @Override
+    public Namespace parent() {
+        return (Namespace) super.parent();
     }
 
     public Enumeration mergeWith(RegisteredType rt) {

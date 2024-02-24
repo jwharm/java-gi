@@ -19,21 +19,22 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
-
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
-import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Callback extends RegisteredType implements Callable {
+public final class Callback extends Multiplatform
+        implements RegisteredType, Callable {
 
-    public Callback(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Callback(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
+    }
+
+    @Override
+    public String name() {
+        return RegisteredType.super.name();
     }
 
     @Override
@@ -80,7 +81,7 @@ public final class Callback extends RegisteredType implements Callable {
 
     @Override
     public boolean deprecated() {
-        return attrs().deprecated();
+        return infoAttrs().deprecated();
     }
 
     @Override

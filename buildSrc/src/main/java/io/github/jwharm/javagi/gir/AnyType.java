@@ -21,26 +21,19 @@ package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.TypeName;
 
-import java.util.List;
-import java.util.Map;
+public sealed interface AnyType extends Node permits Type, Array {
 
-public abstract sealed class AnyType extends GirElement permits Type, Array {
+    TypeName typeName();
 
-    public AnyType(Map<String, String> attributes, List<GirElement> children) {
-        super(attributes, children);
-    }
-
-    public abstract TypeName typeName();
-
-    public String name() {
+    default String name() {
         return attr("name");
     }
 
-    public String cType() {
+    default String cType() {
         return attr("c:type");
     }
 
-    public boolean isVoid() {
+    default boolean isVoid() {
         return "void".equals(cType());
     }
 }

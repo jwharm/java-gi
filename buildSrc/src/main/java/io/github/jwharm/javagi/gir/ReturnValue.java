@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class ReturnValue extends TypedValue {
+public final class ReturnValue extends GirElement implements TypedValue {
 
-    public ReturnValue(Map<String, String> attributes, List<GirElement> children) {
+    public ReturnValue(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 
@@ -38,7 +38,8 @@ public final class ReturnValue extends TypedValue {
     public boolean allocatesMemory() {
         return switch(anyType()) {
             case Array _ -> true;
-            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope()) && type.get() instanceof Callback;
+            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope())
+                    && type.get() instanceof Callback;
         };
     }
 

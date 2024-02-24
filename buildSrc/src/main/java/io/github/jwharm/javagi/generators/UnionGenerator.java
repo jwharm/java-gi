@@ -43,7 +43,7 @@ public class UnionGenerator extends RegisteredTypeGenerator {
         if (union.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(union.infoElements().doc()).generate());
 
-        if (union.attrs().deprecated())
+        if (union.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)

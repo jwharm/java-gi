@@ -54,7 +54,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         if (en.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(en.infoElements().doc()).generate());
-        if (en.attrs().deprecated())
+        if (en.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)

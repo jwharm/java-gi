@@ -27,7 +27,7 @@ import java.util.Objects;
 
 public final class Docsection extends GirElement {
 
-    public Docsection(Map<String, String> attributes, List<GirElement>children) {
+    public Docsection(Map<String, String> attributes, List<Node>children) {
         super(attributes, children);
     }
 

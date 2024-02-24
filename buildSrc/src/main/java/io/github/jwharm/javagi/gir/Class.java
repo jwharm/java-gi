@@ -25,13 +25,10 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Class extends RegisteredType implements FieldContainer {
+public final class Class extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
-    public Class(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children, platforms);
-    }
-
-    public Class(Map<String, String> attributes, List<GirElement> children, int platforms, boolean generic) {
+    public Class(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -44,7 +41,7 @@ public final class Class extends RegisteredType implements FieldContainer {
     public String constructorName() {
         return abstract_()
                 ? "%s.%sImpl::new".formatted(javaType(), name())
-                : super.constructorName();
+                : RegisteredType.super.constructorName();
     }
 
     @Override

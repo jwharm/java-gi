@@ -25,20 +25,22 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Interface extends RegisteredType implements FieldContainer {
+public final class Interface extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Interface(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Interface(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
     @Override
     public String constructorName() {
-        return "%s.%sImpl::new".formatted(javaType(), toJavaSimpleType(name(), namespace()));
+        return "%s.%sImpl::new"
+                .formatted(javaType(), toJavaSimpleType(name(), namespace()));
     }
 
     @Override

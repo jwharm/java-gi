@@ -19,20 +19,84 @@
 
 package io.github.jwharm.javagi.gir;
 
-public sealed interface Callable permits AbstractCallable, Callback {
-    String name();
-    Namespace namespace();
+import java.util.List;
+
+import static io.github.jwharm.javagi.util.CollectionUtils.findAny;
+
+public interface Callable extends Node {
+
+    int platforms();
     InfoElements infoElements();
-    Parameters parameters();
-    ReturnValue returnValue();
-    boolean throws_();
-    boolean deprecated();
+    CallableAttrs callableAttrs();
+
+    default String name() {
+        return callableAttrs().movedTo() != null ? callableAttrs().movedTo()
+                : callableAttrs().shadows() != null ? callableAttrs().shadows()
+                : callableAttrs().name();
+    }
+
+    default boolean throws_() {
+        return this.callableAttrs().throws_();
+    }
+
+    default boolean deprecated() {
+        return this.callableAttrs().deprecated();
+    }
+
+    // If true, this callable will not be generated
+    default boolean skip() {
+        // Explicit override: do not skip
+        if (attrBool("java-gi-dont-skip", false))
+            return false;
+
+        // Do not generate virtual methods in interfaces
+        if (this instanceof VirtualMethod vm
+                && vm.parent() instanceof Interface)
+            return true;
+
+        // For virtual methods with an invoker method, only the invoker method
+        // is generated
+        if (this instanceof VirtualMethod
+                vm && vm.invoker() != null)
+            return true;
+
+        // Shadowed by another method
+        if (this.callableAttrs().shadowedBy() != null)
+            return true;
+
+        // Replaced by another method
+        if (this.callableAttrs().movedTo() != null
+                && this.callableAttrs().movedTo().contains("."))
+            return true;
+
+        if (parameters() == null)
+            return false;
+
+        for (Parameter parameter : parameters().parameters()) {
+
+            // va_list parameters are not supported
+            if (parameter.anyType() instanceof Type type
+                    && List.of("va_list", "va_list*").contains(type.cType()))
+                return true;
+        }
+
+        return false;
+    }
+
+    default Parameters parameters() {
+        return findAny(children(), Parameters.class);
+    }
+
+    default ReturnValue returnValue() {
+        return findAny(children(), ReturnValue.class);
+    }
 
     default boolean allocatesMemory() {
         if (throws_() || returnValue().allocatesMemory())
             return true;
         if (parameters() != null)
-            return parameters().parameters().stream().anyMatch(Parameter::allocatesMemory);
+            return parameters().parameters().stream()
+                    .anyMatch(Parameter::allocatesMemory);
         return false;
     }
 }
