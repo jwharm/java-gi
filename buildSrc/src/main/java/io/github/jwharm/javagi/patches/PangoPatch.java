@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.patches;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.gir.Method;
+import io.github.jwharm.javagi.gir.VirtualMethod;
 import io.github.jwharm.javagi.util.Patch;
 
 public class PangoPatch implements Patch {
@@ -42,8 +43,16 @@ public class PangoPatch implements Patch {
          * Removing the method from the Java bindings for now.
          */
         if (element instanceof Class c
-                && "Font".equals(c.name()))
-            return remove(c, Method.class, "name", "get_languages");
+                && "Font".equals(c.name())) {
+            c = remove(c, Method.class, "name", "get_languages");
+
+            /*
+             * Font::getFeatures has different parameter attributes between
+             * platforms. Remove the Java binding for now.
+             */
+            c = remove(c, Method.class, "name", "get_features");
+            return remove(c, VirtualMethod.class, "name", "get_features");
+        }
 
         /*
          * Java-GI automatically calls ref() but this one is deprecated.
