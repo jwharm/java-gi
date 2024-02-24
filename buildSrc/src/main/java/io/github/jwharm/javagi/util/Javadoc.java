@@ -361,7 +361,7 @@ public class Javadoc {
 
     // Format the C identifier as a Java type (with org.package.Class#memberName syntax)
     private String formatCIdentifier(String cIdentifier) {
-        GirElement node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
+        Node node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
         if (node == null) return null;
 
         String type = switch(node.parent()) {
@@ -371,7 +371,7 @@ public class Javadoc {
         };
 
         return type + switch(node) {
-            case AbstractCallable c -> formatMethod(c.attrs().name());
+            case Callable c -> formatMethod(c.callableAttrs().name());
             case Member m -> "#" + toJavaConstantUpperCase(m.name());
             case Constant c -> "#" + toJavaConstant(c.name());
             default -> "";

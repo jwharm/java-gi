@@ -41,25 +41,25 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 public class MethodGenerator {
 
-    private final AbstractCallable func;
+    private final Callable func;
     private final VirtualMethod vm;
     private final ReturnValue returnValue;
     private final boolean generic;
     private final MethodSpec.Builder builder;
     private final CallableGenerator generator;
 
-    public MethodGenerator(AbstractCallable func) {
+    public MethodGenerator(Callable func) {
         this(func, getName(func));
     }
 
-    private static String getName(AbstractCallable func) {
+    private static String getName(Callable func) {
         String name = toJavaIdentifier(func.name());
         return func.parent() instanceof Interface
                 ? replaceJavaObjectMethodNames(name)
                 : name;
     }
 
-    public MethodGenerator(AbstractCallable func, String name) {
+    public MethodGenerator(Callable func, String name) {
         this.func = func;
         this.builder = MethodSpec.methodBuilder(name);
         this.generator = new CallableGenerator(func);
@@ -91,14 +91,14 @@ public class MethodGenerator {
         // Javadoc
         if (func.infoElements().doc() != null) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
-            if (func.doPlatformCheck())
+            if (func instanceof Multiplatform mp && mp.doPlatformCheck())
                 builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
                 builder.addJavadoc(javadoc);
         }
 
         // Deprecated annotation
-        if (func.attrs().deprecated())
+        if (func.callableAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         // Modifiers
@@ -130,11 +130,11 @@ public class MethodGenerator {
         generator.generateMethodParameters(builder, generic);
 
         // Exception
-        if (func.attrs().throws_())
+        if (func.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Platform check
-        if (func.doPlatformCheck())
+        if (func instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addStatement("$T.checkSupportedPlatform($L)",
                     ClassNames.PLATFORM,
                     Platform.toStringLiterals(func.platforms()));
@@ -153,7 +153,7 @@ public class MethodGenerator {
                     .forEach(p -> new PreprocessingGenerator(p).generate(builder));
 
         // Allocate GError
-        if (func.attrs().throws_())
+        if (func.callableAttrs().throws_())
             builder.addStatement("$T _gerror = _arena.allocate($T.ADDRESS)",
                     MemorySegment.class,
                     ValueLayout.class);
@@ -190,7 +190,7 @@ public class MethodGenerator {
                 .endControlFlow();
 
         // Throw GErrorException
-        if (func.attrs().throws_())
+        if (func.callableAttrs().throws_())
             builder.beginControlFlow("if ($T.isErrorSet(_gerror))",
                             ClassNames.GERROR_EXCEPTION)
                     .addStatement("throw new $T(_gerror)",
@@ -273,7 +273,7 @@ public class MethodGenerator {
         // Function invocation
         invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L)$Z.invokeExact($Z",
                         "interop", ClassNames.INTEROP,
-                        "cIdentifier", func.attrs().cIdentifier(),
+                        "cIdentifier", func.callableAttrs().cIdentifier(),
                         "variadic", generator.varargs())
                 .add(generator.marshalParameters())
                 .add(");\n");

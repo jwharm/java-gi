@@ -22,9 +22,9 @@ package io.github.jwharm.javagi.gir;
 import java.util.List;
 import java.util.Map;
 
-public final class Function extends AbstractCallable {
+public final class Function extends Multiplatform implements Callable {
 
-    public Function(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Function(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 }

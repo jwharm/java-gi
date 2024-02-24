@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.patches;
 
+import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Function;
 import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.gir.Method;
 import io.github.jwharm.javagi.gir.VirtualMethod;
@@ -39,7 +41,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getWindowId()
          */
         if (element instanceof Method m
-                && "gtk_application_window_get_id".equals(m.attrs().cIdentifier()))
+                && "gtk_application_window_get_id".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_window_id");
 
         /*
@@ -47,7 +49,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getArrowDirection()
          */
         if (element instanceof Method m
-                && "gtk_menu_button_get_direction".equals(m.attrs().cIdentifier()))
+                && "gtk_menu_button_get_direction".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_arrow_direction");
 
         /*
@@ -55,7 +57,7 @@ public class GtkPatch implements Patch {
          * type. Rename to getString()
          */
         if (element instanceof Method m
-                && "gtk_print_settings_get".equals(m.attrs().cIdentifier()))
+                && "gtk_print_settings_get".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_string");
 
         /*
@@ -63,7 +65,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getPrintSettings()
          */
         if (element instanceof Method m
-                && "gtk_print_unix_dialog_get_settings".equals(m.attrs().cIdentifier()))
+                && "gtk_print_unix_dialog_get_settings".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_print_settings");
 
         /*
@@ -73,7 +75,7 @@ public class GtkPatch implements Patch {
          * Widget.activate() to activateWidget()
          */
         if (element instanceof Method m
-                && "gtk_widget_activate".equals(m.attrs().cIdentifier()))
+                && "gtk_widget_activate".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "activate_widget");
 
         /*
@@ -88,11 +90,11 @@ public class GtkPatch implements Patch {
          * attribute too.
          */
         if (element instanceof Method m
-                && "gtk_widget_activate_action".equals(m.attrs().cIdentifier()))
+                && "gtk_widget_activate_action".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "activate_action_if_exists");
 
         if (element instanceof Method m
-                && "gtk_widget_activate_action_variant".equals(m.attrs().cIdentifier()))
+                && "gtk_widget_activate_action_variant".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("shadows", "activate_action_if_exists");
 
         /*
@@ -138,6 +140,25 @@ public class GtkPatch implements Patch {
                 && methods.contains(vm.name())
                 && "BuilderScope".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-dont-skip", "1");
+
+        /*
+         * The "introspectable=0" attribute is set on the function
+         * "Gtk::orderingFromCmpfunc" on Windows and macOS, but not on Linux.
+         * Make sure that it is the same on every platform.
+         */
+        if (element instanceof Function f
+                && "gtk_ordering_from_cmpfunc".equals(f.callableAttrs().cIdentifier()))
+            return f.withAttribute("introspectable", "0");
+
+        /*
+         * FontDialog::chooseFontAndFeaturesFinish has different
+         * transfer-ownership attributes between platforms. This might be
+         * caused by minor version differences. Disable the Java bindings for
+         * now.
+         */
+        if (element instanceof Class c
+            && "FontDialog".equals(c.name()))
+            return remove(c, Method.class, "name", "choose_font_and_features_finish");
 
         return element;
     }

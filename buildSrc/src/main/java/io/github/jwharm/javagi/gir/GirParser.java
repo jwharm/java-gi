@@ -35,13 +35,15 @@ import java.util.*;
 import static io.github.jwharm.javagi.configuration.Patches.PATCHES;
 
 /**
- * Parser class to parse the GIR XML and create an immutable GIR tree.
+ * Parser class to parse the GIR XML and create a GIR tree.
  */
 public final class GirParser {
 
     private static final GirParser INSTANCE = new GirParser();
-    private static final List<String> SKIP_LIST = List.of("c:include", "function-macro", "package");
-    private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
+    private static final List<String> SKIP_LIST = List.of(
+            "c:include", "function-macro", "package");
+    private static final XMLInputFactory XML_INPUT_FACTORY =
+            XMLInputFactory.newInstance();
 
     // Prevent instantiation
     private GirParser() {
@@ -89,33 +91,41 @@ public final class GirParser {
         if (!file.exists())
             return repository;
 
-        XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(new FileInputStream(file));
+        XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(
+                new FileInputStream(file));
 
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
             if (event.isStartElement())
-                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, null);
+                return (Repository) parseElement(eventReader,
+                                                 event.asStartElement(),
+                                                 platform,
+                                                 repository,
+                                                 null);
         }
 
         throw new IllegalStateException("Invalid XML");
     }
 
     // Move in the existing GIR model in parallel with the parser in the XML file
-    private GirElement walkTree(StartElement elem, GirElement existingNode) {
-        if (existingNode == null) return null;
+    private Node walkTree(StartElement elem, Node existingNode) {
+        if (existingNode == null)
+            return null;
 
         String elemName = qname(elem.getName());
         if (!List.of("namespace", "alias", "boxed", "callback", "class",
-                        "bitfield", "enumeration", "interface", "record", "union")
-                .contains(elemName))
+                        "bitfield", "enumeration", "interface", "record",
+                        "union").contains(elemName))
             return existingNode;
 
         // Move from repository to namespace: return the namespace node with
         // the same name attribute.
         String name = attributes(elem).get("name");
-        if (existingNode instanceof Repository repo && elemName.equals("namespace")) {
+        if (existingNode instanceof Repository repo
+                && elemName.equals("namespace")) {
             for (Namespace ns : repo.namespaces())
-                if (ns.name().equals(name)) return ns;
+                if (ns.name().equals(name))
+                    return ns;
             return existingNode; // namespace not found in existing tree
         }
         // Move from namespace to type: return the type with the same name.
@@ -128,12 +138,12 @@ public final class GirParser {
     private GirElement parseElement(XMLEventReader eventReader,
                                     StartElement elem,
                                     int platform,
-                                    GirElement existingNode,
+                                    Node existingNode,
                                     String nsName)
             throws XMLStreamException {
 
         var elemName = qname(elem.getName());
-        var children = new ArrayList<GirElement>();
+        var children = new ArrayList<Node>();
         var attributes = attributes(elem);
         var contents = new StringBuilder();
 
@@ -143,18 +153,18 @@ public final class GirParser {
 
             if (event.isStartElement()) {
                 StartElement startElement = event.asStartElement();
-                GirElement existingChildNode = walkTree(startElement, existingNode);
+                Node existingChildNode = walkTree(startElement, existingNode);
 
                 // Remember namespace name
                 if (qname(startElement.getName()).equals("namespace"))
                     nsName = startElement.getAttributeByName(new QName("name")).getValue();
 
                 // Create new child node
-                GirElement newNode = parseElement(eventReader, startElement, platform, existingChildNode, nsName);
+                Node newNode = parseElement(eventReader, startElement, platform, existingChildNode, nsName);
 
                 // Apply patches
                 for (Patch patch : PATCHES)
-                    newNode = patch.patch(newNode, nsName);
+                    newNode = patch.patch((GirElement) newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
                 if (existingChildNode instanceof RegisteredType existing && newNode instanceof RegisteredType created)

@@ -23,10 +23,11 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Boxed extends RegisteredType {
+public final class Boxed extends Multiplatform implements RegisteredType {
 
-    public Boxed(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Boxed(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -38,7 +39,9 @@ public final class Boxed extends RegisteredType {
     @Override
     public Boxed mergeWith(RegisteredType rt) {
         if (rt instanceof Boxed other)
-            return new Boxed(attributes(), union(children(), other.children()),
+            return new Boxed(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
@@ -49,5 +52,22 @@ public final class Boxed extends RegisteredType {
 
     public List<Function> functions() {
         return filter(children(), Function.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Boxed) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

@@ -53,7 +53,7 @@ public class GioPatch implements Patch {
          * "load_module".
          */
         if (element instanceof Method m
-                && "g_io_module_load".equals(m.attrs().cIdentifier()))
+                && "g_io_module_load".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "load_module");
 
         /*
@@ -63,7 +63,7 @@ public class GioPatch implements Patch {
          * BufferedInputStream is renamed from "read_byte" to "read_int".
          */
         if (element instanceof Method m
-                && "g_buffered_input_stream_read_byte".equals(m.attrs().cIdentifier()))
+                && "g_buffered_input_stream_read_byte".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "read_int");
 
         /*

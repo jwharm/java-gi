@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gir;
 
 import java.util.Map;
-import java.util.Objects;
 
 public final class CInclude extends GirElement {
     public CInclude(Map<String, String> attributes) {
@@ -34,18 +33,5 @@ public final class CInclude extends GirElement {
 
     public String name() {
         return attr("name");
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (CInclude) obj;
-        return Objects.equals(this.name(), that.name());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name());
     }
 }

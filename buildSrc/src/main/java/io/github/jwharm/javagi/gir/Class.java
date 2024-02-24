@@ -24,14 +24,12 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Class extends RegisteredType implements FieldContainer {
+public final class Class extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
-    public Class(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children, platforms);
-    }
-
-    public Class(Map<String, String> attributes, List<GirElement> children, int platforms, boolean generic) {
+    public Class(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -44,13 +42,15 @@ public final class Class extends RegisteredType implements FieldContainer {
     public String constructorName() {
         return abstract_()
                 ? "%s.%sImpl::new".formatted(javaType(), name())
-                : super.constructorName();
+                : RegisteredType.super.constructorName();
     }
 
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Class other)
-            return new Class(attributes(), union(children(), other.children()),
+            return new Class(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
@@ -74,8 +74,10 @@ public final class Class extends RegisteredType implements FieldContainer {
     public boolean isInstanceOf(String ns, String name) {
         if (parent().name().equals(ns) && name().equals(name))
             return true;
+
         Class parentClass = parentClass();
-        return parentClass != null && parentClass.isInstanceOf(ns, name);
+        return parentClass != null
+                && parentClass.isInstanceOf(ns, name);
     }
 
     public Record typeStruct() {
@@ -164,5 +166,22 @@ public final class Class extends RegisteredType implements FieldContainer {
 
     public List<Callback> callbacks() {
         return filter(children(), Callback.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Class) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

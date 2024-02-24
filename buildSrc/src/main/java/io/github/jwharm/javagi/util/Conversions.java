@@ -174,8 +174,8 @@ public class Conversions {
             case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
-            case "utf8", "filename" -> "java.lang.String";
-            case "gpointer", "gconstpointer" -> "java.lang.foreign.MemorySegment";
+            case "utf8", "filename" -> "String";
+            case "gpointer", "gconstpointer" -> "MemorySegment";
             case "gtype" -> "org.gnome.glib.GType";
             case "valist", "va_list" -> "VaList";
             default -> null;

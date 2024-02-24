@@ -19,50 +19,34 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.TypeName;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract sealed class TypedValue extends GirElement
+public sealed interface TypedValue
+        extends Node
         permits Constant, Field, InstanceParameter, Parameter, Property, ReturnValue {
 
-    public TypedValue(Map<String, String> attributes, List<GirElement> children) {
-        super(attributes, children);
-    }
+    InfoElements infoElements();
 
-    public boolean allocatesMemory() {
-        return switch(anyType()) {
-            case null -> true; // callback
-            case Array _ -> true;
-            case Type type -> type.isActuallyAnArray() || "java.lang.String".equals(type.javaType());
-        };
-    }
-
-    public String name() {
+    default String name() {
         return attr("name");
     }
 
-    public InfoElements infoElements() {
-        return super.infoElements();
-    }
-
-    public AnyType anyType() {
+    default AnyType anyType() {
         return findAny(children(), AnyType.class);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (TypedValue) obj;
-        return  Objects.equals(this.name(), that.name()) &&
-                Objects.equals(this.anyType(), that.anyType());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name(), anyType());
+    default boolean allocatesMemory() {
+        return switch(anyType()) {
+            case null -> true; // callback
+            case Array _ -> true;
+            case Type type -> type.isActuallyAnArray()
+                    || TypeName.get(String.class).equals(type.typeName());
+        };
     }
 }

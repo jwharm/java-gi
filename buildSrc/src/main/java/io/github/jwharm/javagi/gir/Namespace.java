@@ -31,14 +31,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class Namespace extends GirElement implements Multiplatform {
-    private int platforms;
+public final class Namespace extends Multiplatform {
+
     private final Map<Integer, String> sharedLibraries;
 
-    public Namespace(Map<String, String> attributes, List<GirElement> children,
-                     int platforms, Map<Integer, String> sharedLibraries) {
-        super(attributes, children);
-        this.platforms = platforms;
+    public Namespace(Map<String, String> attributes,
+                     List<Node> children,
+                     int platforms,
+                     Map<Integer, String> sharedLibraries) {
+        super(attributes, children, platforms);
         this.sharedLibraries = sharedLibraries;
         this.sharedLibraries.put(platforms, sharedLibrary());
     }
@@ -53,16 +54,6 @@ public final class Namespace extends GirElement implements Multiplatform {
         return this;
     }
 
-    @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return platforms;
-    }
-
     /**
      * Create a map of all registered types in this namespace (aliases, classes,
      * interfaces, records, enumerations, bitfields, callbacks and boxed types),
@@ -70,7 +61,9 @@ public final class Namespace extends GirElement implements Multiplatform {
      */
     public Map<String, RegisteredType> registeredTypes() {
         return filter(children(), RegisteredType.class).stream().collect(
-                Collectors.toMap(RegisteredType::name, java.util.function.Function.identity()));
+                Collectors.toMap(
+                        RegisteredType::name,
+                        java.util.function.Function.identity()));
     }
 
     public Namespace mergeWith(Namespace other) {
@@ -84,7 +77,9 @@ public final class Namespace extends GirElement implements Multiplatform {
 
     public ClassName typeName() {
         String name = name();
-        if ("GObject".equals(name)) name = "GObjects";
+        if ("GObject".equals(name))
+            name = "GObjects";
+
         return toJavaQualifiedType(name, this);
     }
 
@@ -178,11 +173,15 @@ public final class Namespace extends GirElement implements Multiplatform {
     }
 
     public String packageName() {
-        return Objects.requireNonNullElse(ModuleInfo.getPackageName(name()), name());
+        return Objects.requireNonNullElse(
+                ModuleInfo.getPackageName(name()),
+                name());
     }
 
     public String docUrlPrefix() {
-        return Objects.requireNonNullElse(ModuleInfo.getDocUrlPrefix(name()), "");
+        return Objects.requireNonNullElse(
+                ModuleInfo.getDocUrlPrefix(name()),
+                "");
     }
 
     public String globalClassName() {
@@ -191,8 +190,12 @@ public final class Namespace extends GirElement implements Multiplatform {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
         var that = (Namespace) obj;
         return Objects.equals(this.name(), that.name());
     }
@@ -204,6 +207,10 @@ public final class Namespace extends GirElement implements Multiplatform {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " " + attributes() + " " + Platform.toString(platforms());
+        return "%s %s %s".formatted(
+                getClass().getSimpleName(),
+                attributes(),
+                Platform.toString(platforms())
+        );
     }
 }

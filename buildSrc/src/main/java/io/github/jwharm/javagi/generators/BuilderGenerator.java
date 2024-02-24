@@ -123,7 +123,7 @@ public class BuilderGenerator {
             builder.addJavadoc(new DocGenerator(prp.infoElements().doc()).generate());
 
         // Deprecated annotation
-        if (prp.attrs().deprecated())
+        if (prp.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         // Modifiers
@@ -161,13 +161,13 @@ public class BuilderGenerator {
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
                         """, rt.typeName().simpleName(), GOBJECT);
-        if (rt.doPlatformCheck())
+        if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addJavadoc("@throws $T when run on an unsupported platform",
                     ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
 
         builder.beginControlFlow("try");
 
-        if (rt.doPlatformCheck())
+        if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addStatement("$T.checkSupportedPlatform($L)",
                     ClassNames.PLATFORM, Platform.toStringLiterals(rt.platforms()));
 

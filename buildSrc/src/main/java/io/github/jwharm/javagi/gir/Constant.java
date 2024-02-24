@@ -19,18 +19,14 @@
 
 package io.github.jwharm.javagi.gir;
 
-import io.github.jwharm.javagi.util.Platform;
-
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Constant extends TypedValue implements Multiplatform {
+public final class Constant extends Multiplatform implements TypedValue {
 
-    private int platforms;
-
-    public Constant(Map<String, String> attributes, List<GirElement> children, int platforms) {
-        super(attributes, children);
-        this.platforms = platforms;
+    public Constant(Map<String, String> attributes, List<Node> children, int platforms) {
+        super(attributes, children, platforms);
     }
 
     @Override
@@ -39,22 +35,8 @@ public final class Constant extends TypedValue implements Multiplatform {
     }
 
     @Override
-    public void setPlatforms(int platforms) {
-        this.platforms = platforms;
-    }
-
-    @Override
-    public int platforms() {
-        return platforms;
-    }
-
-    @Override
     public boolean allocatesMemory() {
         return false;
-    }
-
-    public InfoAttrs attrs() {
-        return infoAttrs();
     }
 
     public String value() {
@@ -70,7 +52,19 @@ public final class Constant extends TypedValue implements Multiplatform {
     }
 
     @Override
-    public String toString() {
-        return getClass().getSimpleName() + " " + attributes() + " " + children() + " " + Platform.toString(platforms());
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Constant) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

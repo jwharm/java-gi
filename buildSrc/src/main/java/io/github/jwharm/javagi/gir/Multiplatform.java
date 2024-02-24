@@ -19,7 +19,50 @@
 
 package io.github.jwharm.javagi.gir;
 
-public sealed interface Multiplatform permits AbstractCallable, Constant, Namespace, Property, RegisteredType {
-    int platforms();
-    void setPlatforms(int platforms);
+import io.github.jwharm.javagi.util.Platform;
+
+import java.util.List;
+import java.util.Map;
+
+public abstract sealed class Multiplatform
+        extends GirElement
+        permits Namespace, Alias, Boxed, Callback, Class, Bitfield,
+                Enumeration, Interface, Record, Union, Constructor, Function,
+                Method, Signal, VirtualMethod, Constant, Property {
+
+    private int platforms;
+
+    public Multiplatform(Map<String, String> attributes, List<Node> children, int platforms) {
+        super(attributes, children);
+        this.platforms = platforms;
+    }
+
+    public final void setPlatforms(int platforms) {
+        this.platforms = platforms;
+    }
+
+    public final int platforms() {
+        return this.platforms;
+    }
+
+    public boolean doPlatformCheck() {
+        if (platforms() == Platform.ALL) return false;
+        if (this instanceof Constructor || this instanceof Function)
+            return switch(parent()) {
+                case RegisteredType rt -> rt.platforms();
+                case Namespace ns -> ns.platforms();
+                default -> throw new IllegalStateException("Illegal parent type");
+            } != Platform.ALL;
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "%s %s %s %s".formatted(
+                getClass().getSimpleName(),
+                Platform.toString(platforms()),
+                attributes(),
+                children()
+        );
+    }
 }

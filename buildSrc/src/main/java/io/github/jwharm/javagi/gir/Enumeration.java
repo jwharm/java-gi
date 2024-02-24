@@ -23,21 +23,46 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Enumeration extends FlaggedType {
+public final class Enumeration extends Multiplatform implements FlaggedType {
 
-    public Enumeration(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Enumeration(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
+    }
+
+    @Override
+    public Namespace parent() {
+        return (Namespace) super.parent();
     }
 
     public Enumeration mergeWith(RegisteredType rt) {
         if (rt instanceof Enumeration other)
-            return new Enumeration(attributes(), union(children(), other.children()),
+            return new Enumeration(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
 
     public String errorDomain() {
         return attr("error-domain");
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Enumeration) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

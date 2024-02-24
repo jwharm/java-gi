@@ -24,9 +24,9 @@ import java.util.Map;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.findAny;
 
-public final class InstanceParameter extends TypedValue {
+public final class InstanceParameter extends GirElement implements TypedValue {
 
-    public InstanceParameter(Map<String, String> attributes, List<GirElement> children) {
+    public InstanceParameter(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
         if (anyType() instanceof Array) {
             throw new UnsupportedOperationException("InstanceParameter cannot be an array");

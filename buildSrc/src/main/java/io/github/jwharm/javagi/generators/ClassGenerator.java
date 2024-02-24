@@ -44,7 +44,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         if (cls.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(cls.infoElements().doc()).generate());
-        if (cls.attrs().deprecated())
+        if (cls.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC);
@@ -162,7 +162,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     && m.parameters().parameters().isEmpty()
                     && (m.returnValue().anyType().isVoid())) {
                 spec.addStatement("$T.setFreeFunc(handle(), $S)",
-                        ClassNames.MEMORY_CLEANER, m.attrs().cIdentifier());
+                        ClassNames.MEMORY_CLEANER, m.callableAttrs().cIdentifier());
                 break;
             }
         }

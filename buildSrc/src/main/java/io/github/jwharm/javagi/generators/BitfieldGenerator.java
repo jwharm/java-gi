@@ -50,7 +50,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
     public TypeSpec generate() {
         if (bf.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(bf.infoElements().doc()).generate());
-        if (bf.attrs().deprecated())
+        if (bf.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)

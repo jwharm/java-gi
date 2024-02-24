@@ -52,7 +52,7 @@ public interface Patch {
                                             java.lang.Class<? extends GirElement> type,
                                             String key,
                                             String value) {
-        List<GirElement> children = elem.children().stream()
+        List<Node> children = elem.children().stream()
                 .filter(node -> !(type.isInstance(node)
                         && value.equals(node.attributes().get(key))))
                 .toList();

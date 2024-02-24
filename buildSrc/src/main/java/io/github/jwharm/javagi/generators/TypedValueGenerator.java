@@ -478,7 +478,7 @@ class TypedValueGenerator {
 
             if (rt instanceof Class cls && cls.setValueFunc() != null) {
                 var setter = cls.namespace().functions().stream()
-                        .filter(f -> f.attrs().cIdentifier().equals(cls.setValueFunc()))
+                        .filter(f -> f.callableAttrs().cIdentifier().equals(cls.setValueFunc()))
                         .findAny();
 
                 if (setter.isPresent()) {

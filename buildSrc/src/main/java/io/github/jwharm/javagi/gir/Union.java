@@ -23,22 +23,27 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Union extends RegisteredType implements FieldContainer {
+public final class Union
+        extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Union(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Union(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
     @Override
     public Union mergeWith(RegisteredType rt) {
         if (rt instanceof Union other)
-            return new Union(attributes(), union(children(), other.children()),
+            return new Union(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
@@ -77,5 +82,22 @@ public final class Union extends RegisteredType implements FieldContainer {
 
     public List<Record> records() {
         return filter(children(), Record.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Union) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

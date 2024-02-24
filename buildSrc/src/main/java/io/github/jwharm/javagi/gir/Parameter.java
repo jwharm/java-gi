@@ -24,9 +24,9 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Parameter extends TypedValue {
+public final class Parameter extends GirElement implements TypedValue {
 
-    public Parameter(Map<String, String> attributes, List<GirElement> children) {
+    public Parameter(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 
@@ -39,33 +39,44 @@ public final class Parameter extends TypedValue {
         if (anyType() instanceof Array a && a.unknownSize())
             return false;
 
-        return (direction() == Direction.OUT || direction() == Direction.INOUT)
+        return (direction() == Direction.OUT
+                    || direction() == Direction.INOUT)
                 && (anyType() instanceof Array
                     || (anyType() instanceof Type type
-                        && (type.isPointer() || (type.cType()) != null && type.cType().endsWith("gsize")))
+                        && (type.isPointer()
+                            || (type.cType()) != null
+                                && type.cType().endsWith("gsize")))
                         && (!type.isProxy())
-                        && (!(type.get() instanceof Alias a && a.type().isPrimitive())));
+                        && (!(type.get() instanceof Alias a
+                                && a.type().isPrimitive())));
     }
 
     public boolean isUserDataParameter() {
         // Callback parameters: the user_data parameter has attribute "closure" set
-        if (parent().parent() instanceof Callback || parent().parent() instanceof Signal)
+        if (parent().parent() instanceof Callback
+                || parent().parent() instanceof Signal)
             return (attr("closure") != null);
 
         // Method parameters that pass a user_data pointer to a closure
-        if (anyType() instanceof Type t && List.of("gpointer", "gconstpointer").contains(t.cType())) {
+        if (anyType() instanceof Type t
+                && List.of("gpointer", "gconstpointer").contains(t.cType())) {
             return parent().parameters().stream().anyMatch(p ->
-                    p.anyType() instanceof Type type && type.get() instanceof Callback && p.closure() == this);
+                    p.anyType() instanceof Type type
+                            && type.get() instanceof Callback
+                            && p.closure() == this
+            );
         }
         return false;
     }
 
     public boolean isDestroyNotifyParameter() {
-        return (anyType() instanceof Type type) && "GDestroyNotify".equals(type.cType());
+        return (anyType() instanceof Type type)
+                && "GDestroyNotify".equals(type.cType());
     }
 
     public boolean isErrorParameter() {
-        return (anyType() instanceof Type type) && "GError**".equals(type.cType());
+        return (anyType() instanceof Type type)
+                && "GError**".equals(type.cType());
     }
 
     public boolean isArrayLengthParameter() {
@@ -74,28 +85,44 @@ public final class Parameter extends TypedValue {
                 && callable.returnValue().anyType() instanceof Array array
                 && array.length() == this)
             return true;
+
         // Check other parameters
-        return parent().parameters().stream().anyMatch(p -> p.anyType() instanceof Array a && a.length() == this);
+        return parent().parameters().stream().anyMatch(p ->
+                p.anyType() instanceof Array a && a.length() == this
+        );
     }
 
     @Override
     public boolean allocatesMemory() {
-        if (super.allocatesMemory() || isOutParameter()) return true;
+        if (TypedValue.super.allocatesMemory() || isOutParameter())
+            return true;
 
         Type type = (Type) anyType();
         RegisteredType target = type.get();
 
-        if (target instanceof Callback) return true;
-        if (type.isPointer() && target instanceof Alias a && a.type().isPrimitive()) return true;
-        return ! List.of(Scope.ASYNC, Scope.NOTIFIED, Scope.FOREVER).contains(scope());
+        if (target instanceof Callback)
+            return true;
+
+        if (type.isPointer()
+                && target instanceof Alias a && a.type().isPrimitive())
+            return true;
+
+        return !List.of(
+                Scope.ASYNC,
+                Scope.NOTIFIED,
+                Scope.FOREVER).contains(scope());
     }
 
     public boolean nullable() {
-        return "1".equals(attr("nullable")) || "1".equals(attr("allow-none")) || "1".equals(attr("optional"));
+        return "1".equals(attr("nullable"))
+                || "1".equals(attr("allow-none"))
+                || "1".equals(attr("optional"));
     }
 
     public boolean notNull() {
-        return "0".equals(attr("nullable")) || "0".equals(attr("allow-none")) || "0".equals(attr("optional"));
+        return "0".equals(attr("nullable"))
+                || "0".equals(attr("allow-none"))
+                || "0".equals(attr("optional"));
     }
 
     public boolean introspectable() {
@@ -112,7 +139,9 @@ public final class Parameter extends TypedValue {
 
     public Scope scope() {
         Scope scope = Scope.from(attr("scope"));
-        return (scope == Scope.NOTIFIED && destroy() == null) ? Scope.FOREVER : scope;
+        return (scope == Scope.NOTIFIED && destroy() == null)
+                ? Scope.FOREVER
+                : scope;
     }
 
     public Direction direction() {

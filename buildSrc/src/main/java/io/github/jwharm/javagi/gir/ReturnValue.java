@@ -21,11 +21,10 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-public final class ReturnValue extends TypedValue {
+public final class ReturnValue extends GirElement implements TypedValue {
 
-    public ReturnValue(Map<String, String> attributes, List<GirElement> children) {
+    public ReturnValue(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
 
@@ -38,7 +37,8 @@ public final class ReturnValue extends TypedValue {
     public boolean allocatesMemory() {
         return switch(anyType()) {
             case Array _ -> true;
-            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope()) && type.get() instanceof Callback;
+            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope())
+                    && type.get() instanceof Callback;
         };
     }
 
@@ -85,18 +85,5 @@ public final class ReturnValue extends TypedValue {
 
     public TransferOwnership transferOwnership() {
         return TransferOwnership.from(attr("transfer-ownership"));
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (TypedValue) obj;
-        return Objects.equals(this.anyType(), that.anyType());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(anyType());
     }
 }

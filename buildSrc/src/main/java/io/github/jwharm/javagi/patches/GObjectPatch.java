@@ -67,7 +67,7 @@ public class GObjectPatch implements Patch {
          * Therefore, it is renamed from "use" to "use_type_module".
          */
         if (element instanceof Method m
-                && "g_type_module_use".equals(m.attrs().cIdentifier()))
+                && "g_type_module_use".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "use_type_module");
 
         /*

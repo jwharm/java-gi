@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gir;
 
 import java.util.Map;
-import java.util.Objects;
 
 public final class Include extends GirElement {
 
@@ -39,19 +38,5 @@ public final class Include extends GirElement {
 
     public String version() {
         return attr("version");
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Include) obj;
-        return  Objects.equals(this.name(), that.name()) &&
-                Objects.equals(this.version(), that.version());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name(), version());
     }
 }

@@ -24,27 +24,32 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Interface extends RegisteredType implements FieldContainer {
+public final class Interface extends Multiplatform
+        implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Interface(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Interface(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
     @Override
     public String constructorName() {
-        return "%s.%sImpl::new".formatted(javaType(), toJavaSimpleType(name(), namespace()));
+        return "%s.%sImpl::new"
+                .formatted(javaType(), toJavaSimpleType(name(), namespace()));
     }
 
     @Override
     public Interface mergeWith(RegisteredType rt) {
         if (rt instanceof Interface other)
-            return new Interface(attributes(), union(children(), other.children()),
+            return new Interface(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
@@ -99,5 +104,22 @@ public final class Interface extends RegisteredType implements FieldContainer {
 
     public List<Constant> constants() {
         return filter(children(), Constant.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Interface) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

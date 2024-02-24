@@ -24,10 +24,11 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public final class Alias extends RegisteredType {
+public final class Alias extends Multiplatform implements RegisteredType {
 
-    public Alias(Map<String, String> attributes, List<GirElement> children, int platforms) {
+    public Alias(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -55,7 +56,7 @@ public final class Alias extends RegisteredType {
             return target.getInteropString(paramName, isPointer, scope);
 
         return switch(toJavaBaseType(type().name())) {
-            case "java.lang.String", "java.lang.foreign.MemorySegment" -> paramName + ".getValue()";
+            case "String", "MemorySegment" -> paramName + ".getValue()";
             default -> paramName + ".getValue()." + type().typeName() + "Value()";
         };
     }
@@ -63,12 +64,31 @@ public final class Alias extends RegisteredType {
     @Override
     public Alias mergeWith(RegisteredType rt) {
         if (rt instanceof Alias other)
-            return new Alias(attributes(), union(children(), other.children()),
+            return new Alias(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
 
     public Type type() {
         return findAny(children(), Type.class);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Alias) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

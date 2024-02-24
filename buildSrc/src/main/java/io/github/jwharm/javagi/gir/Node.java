@@ -19,19 +19,22 @@
 
 package io.github.jwharm.javagi.gir;
 
+import java.util.List;
 import java.util.Map;
 
-public final class Attribute extends GirElement {
+public interface Node {
+    Namespace namespace();
+    Node parent();
+    void setParent(Node parent);
 
-    public Attribute(Map<String, String> attributes) {
-        super(attributes);
-    }
+    List<Node> children();
+    Map<String, String> attributes();
 
-    public String name() {
-        return attr("name");
-    }
+    String attr(String key);
+    int attrInt(String key);
+    boolean attrBool(String key, boolean defaultValue);
 
-    public String value() {
-        return attr("value");
-    }
+    <T extends Node> T withAttribute(String attrName, String newValue);
+    <T extends Node> T withChildren(GirElement... newChildren);
+    <T extends Node> T withChildren(List<Node> newChildren);
 }

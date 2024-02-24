@@ -22,11 +22,10 @@ package io.github.jwharm.javagi.gir;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
-import java.util.Objects;
 
 public final class Parameters extends GirElement {
 
-    public Parameters(List<GirElement> children) {
+    public Parameters(List<Node> children) {
         super(children);
     }
 
@@ -40,18 +39,5 @@ public final class Parameters extends GirElement {
 
     Parameter getAtIndex(int index) {
         return index == -1 ? null : parameters().get(index);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Parameters) obj;
-        return  Objects.equals(this.children(), that.children());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(children());
     }
 }
