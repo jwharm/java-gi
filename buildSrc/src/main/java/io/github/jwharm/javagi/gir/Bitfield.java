@@ -38,7 +38,9 @@ public final class Bitfield extends Multiplatform implements FlaggedType {
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Bitfield other)
-            return new Bitfield(attributes(), union(children(), other.children()),
+            return new Bitfield(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }

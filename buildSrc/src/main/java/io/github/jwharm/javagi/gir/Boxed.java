@@ -38,7 +38,9 @@ public final class Boxed extends Multiplatform implements RegisteredType {
     @Override
     public Boxed mergeWith(RegisteredType rt) {
         if (rt instanceof Boxed other)
-            return new Boxed(attributes(), union(children(), other.children()),
+            return new Boxed(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }

@@ -63,7 +63,9 @@ public final class Alias extends Multiplatform implements RegisteredType {
     @Override
     public Alias mergeWith(RegisteredType rt) {
         if (rt instanceof Alias other)
-            return new Alias(attributes(), union(children(), other.children()),
+            return new Alias(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }

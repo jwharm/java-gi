@@ -21,7 +21,10 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 
-public sealed interface FieldContainer permits Class, Interface, Record, Union {
+public sealed interface FieldContainer
+        extends Node
+        permits Class, Interface, Record, Union {
+
     List<Field> fields();
 
     default Field getAtIndex(int index) {
@@ -29,19 +32,19 @@ public sealed interface FieldContainer permits Class, Interface, Record, Union {
     }
 
     /**
-     * If one of the fields directly refers to an opaque struct (recursively), we cannot
-     * generate the memory layout or allocate memory for this type
-     * @return whether on of the fields refers (recursively) to an opaque struct
+     * If one of the fields directly refers to an opaque struct (recursively),
+     * we cannot generate the memory layout or allocate memory for this type.
+     *
+     * @return whether on of the fields refers (recursively) to an opaque
+     *         struct
      */
     default boolean hasOpaqueStructFields() {
-        for (Field field : fields()) {
+        for (Field field : fields())
             if (field.anyType() instanceof Type type
                     && !type.isPointer()
                     && type.get() instanceof Class cls
-                    && (cls.isOpaque() || cls.hasOpaqueStructFields())) {
+                    && (cls.isOpaque() || cls.hasOpaqueStructFields()))
                 return true;
-            }
-        }
         return false;
     }
 }

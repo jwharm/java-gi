@@ -47,7 +47,9 @@ public final class Class extends Multiplatform
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Class other)
-            return new Class(attributes(), union(children(), other.children()),
+            return new Class(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
@@ -71,8 +73,10 @@ public final class Class extends Multiplatform
     public boolean isInstanceOf(String ns, String name) {
         if (parent().name().equals(ns) && name().equals(name))
             return true;
+
         Class parentClass = parentClass();
-        return parentClass != null && parentClass.isInstanceOf(ns, name);
+        return parentClass != null
+                && parentClass.isInstanceOf(ns, name);
     }
 
     public Record typeStruct() {

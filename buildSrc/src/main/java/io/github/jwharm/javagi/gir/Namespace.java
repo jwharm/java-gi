@@ -32,10 +32,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class Namespace extends Multiplatform {
+
     private final Map<Integer, String> sharedLibraries;
 
-    public Namespace(Map<String, String> attributes, List<Node> children,
-                     int platforms, Map<Integer, String> sharedLibraries) {
+    public Namespace(Map<String, String> attributes,
+                     List<Node> children,
+                     int platforms,
+                     Map<Integer, String> sharedLibraries) {
         super(attributes, children, platforms);
         this.sharedLibraries = sharedLibraries;
         this.sharedLibraries.put(platforms, sharedLibrary());
@@ -58,7 +61,9 @@ public final class Namespace extends Multiplatform {
      */
     public Map<String, RegisteredType> registeredTypes() {
         return filter(children(), RegisteredType.class).stream().collect(
-                Collectors.toMap(RegisteredType::name, java.util.function.Function.identity()));
+                Collectors.toMap(
+                        RegisteredType::name,
+                        java.util.function.Function.identity()));
     }
 
     public Namespace mergeWith(Namespace other) {
@@ -72,7 +77,9 @@ public final class Namespace extends Multiplatform {
 
     public ClassName typeName() {
         String name = name();
-        if ("GObject".equals(name)) name = "GObjects";
+        if ("GObject".equals(name))
+            name = "GObjects";
+
         return toJavaQualifiedType(name, this);
     }
 
@@ -183,8 +190,12 @@ public final class Namespace extends Multiplatform {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
         var that = (Namespace) obj;
         return Objects.equals(this.name(), that.name());
     }

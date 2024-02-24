@@ -67,20 +67,36 @@ public abstract class GirElement implements Serializable, Node {
     }
 
     public InfoAttrs infoAttrs() {
-        return new InfoAttrs(attrBool("introspectable", true), attrBool("deprecated", false),
-                attr("deprecated-version"), attr("version"), Stability.from(attr("stability")));
+        return new InfoAttrs(
+                attrBool("introspectable", true),
+                attrBool("deprecated", false),
+                attr("deprecated-version"),
+                attr("version"),
+                Stability.from(attr("stability")));
     }
 
     public CallableAttrs callableAttrs() {
-        return new CallableAttrs(attrBool("introspectable", true), attrBool("deprecated", false),
-                attr("deprecated-version"), attr("version"), Stability.from(attr("stability")), attr("name"),
-                attr("c:identifier"), attr("shadowed-by"), attr("shadows"), attrBool("throws", false),
+        return new CallableAttrs(
+                attrBool("introspectable", true),
+                attrBool("deprecated", false),
+                attr("deprecated-version"),
+                attr("version"),
+                Stability.from(attr("stability")),
+                attr("name"),
+                attr("c:identifier"),
+                attr("shadowed-by"),
+                attr("shadows"),
+                attrBool("throws", false),
                 attr("moved-to"));
     }
 
     public InfoElements infoElements() {
-        return new InfoElements(attr("doc-version"), attr("doc-stability"), findAny(children, Doc.class),
-                findAny(children, DocDeprecated.class), findAny(children, SourcePosition.class),
+        return new InfoElements(
+                attr("doc-version"),
+                attr("doc-stability"),
+                findAny(children, Doc.class),
+                findAny(children, DocDeprecated.class),
+                findAny(children, SourcePosition.class),
                 filter(children, Attribute.class));
     }
 
@@ -218,20 +234,29 @@ public abstract class GirElement implements Serializable, Node {
     }
 
     @Override
-    public String toString() {
-        return "%s %s %s".formatted(getClass().getSimpleName(), attributes(), children());
-    }
-
-    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+
+        if (o == null || getClass() != o.getClass())
+            return false;
+
         GirElement that = (GirElement) o;
-        return Objects.equals(children, that.children) && Objects.equals(attributes, that.attributes);
+        return Objects.equals(children, that.children)
+                && Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(children, attributes);
+    }
+
+    @Override
+    public String toString() {
+        return "%s %s %s".formatted(
+                getClass().getSimpleName(),
+                attributes(),
+                children()
+        );
     }
 }

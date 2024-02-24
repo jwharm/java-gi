@@ -37,7 +37,9 @@ public final class Enumeration extends Multiplatform implements FlaggedType {
 
     public Enumeration mergeWith(RegisteredType rt) {
         if (rt instanceof Enumeration other)
-            return new Enumeration(attributes(), union(children(), other.children()),
+            return new Enumeration(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }

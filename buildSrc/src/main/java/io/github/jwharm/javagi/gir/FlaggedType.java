@@ -23,7 +23,8 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 
-public sealed interface FlaggedType extends RegisteredType
+public sealed interface FlaggedType
+        extends RegisteredType
         permits Bitfield, Enumeration {
 
     @Override

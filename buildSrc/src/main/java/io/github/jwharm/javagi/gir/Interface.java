@@ -46,7 +46,9 @@ public final class Interface extends Multiplatform
     @Override
     public Interface mergeWith(RegisteredType rt) {
         if (rt instanceof Interface other)
-            return new Interface(attributes(), union(children(), other.children()),
+            return new Interface(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }

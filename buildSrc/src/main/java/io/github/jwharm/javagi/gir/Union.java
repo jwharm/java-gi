@@ -40,7 +40,9 @@ public final class Union
     @Override
     public Union mergeWith(RegisteredType rt) {
         if (rt instanceof Union other)
-            return new Union(attributes(), union(children(), other.children()),
+            return new Union(
+                    attributes(),
+                    union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
     }
