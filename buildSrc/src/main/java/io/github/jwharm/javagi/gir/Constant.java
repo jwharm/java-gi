@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Constant extends Multiplatform implements TypedValue {
 
@@ -38,10 +39,6 @@ public final class Constant extends Multiplatform implements TypedValue {
         return false;
     }
 
-    public InfoAttrs attrs() {
-        return infoAttrs();
-    }
-
     public String value() {
         return attr("value");
     }
@@ -52,5 +49,22 @@ public final class Constant extends Multiplatform implements TypedValue {
 
     public String cIdentifier() {
         return attr("c:identifier");
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+
+        var that = (Constant) obj;
+        return Objects.equals(this.name(), that.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name());
     }
 }

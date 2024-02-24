@@ -100,10 +100,6 @@ public final class Field extends GirElement implements TypedValue {
         return name().contains("reserved");
     }
 
-    public InfoAttrs attrs() {
-        return infoAttrs();
-    }
-
     public boolean writable() {
         return attrBool("writable", false);
     }

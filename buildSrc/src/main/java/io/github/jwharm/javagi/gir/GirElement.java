@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.gir;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static java.util.function.Predicate.not;
 
 import java.io.Serializable;
 import java.util.*;
@@ -242,13 +243,23 @@ public abstract class GirElement implements Serializable, Node {
             return false;
 
         GirElement that = (GirElement) o;
-        return Objects.equals(children, that.children)
+        return Objects.equals(withoutDocs(children),
+                              withoutDocs(that.children))
                 && Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(children, attributes);
+        return Objects.hash(withoutDocs(children), attributes);
+    }
+
+    // Exclude documentation when comparing GIR elements
+    private List<Node> withoutDocs(List<Node> list) {
+        return list.stream()
+                .filter(not(Documentation.class::isInstance))
+                .filter(not(Docsection.class::isInstance))
+                .filter(not(SourcePosition.class::isInstance))
+                .toList();
     }
 
     @Override

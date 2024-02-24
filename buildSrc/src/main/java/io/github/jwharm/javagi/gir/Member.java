@@ -34,10 +34,6 @@ public final class Member extends GirElement {
         return (FlaggedType) super.parent();
     }
 
-    public InfoAttrs attrs() {
-        return infoAttrs();
-    }
-
     public String name() {
         return attr("name");
     }

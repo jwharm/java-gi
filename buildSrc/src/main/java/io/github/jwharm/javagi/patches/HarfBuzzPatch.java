@@ -63,11 +63,17 @@ public class HarfBuzzPatch implements Patch {
             element = rt.withAttribute("name", newName);
         }
 
-        /*
-         * This constant has type "language_t" which cannot be instantiated.
-         */
-        if (element instanceof Namespace ns)
+        if (element instanceof Namespace ns) {
+            /*
+             * This function has different parameter attributes on macOS.
+             */
+            ns = remove(ns, Function.class, "name", "ot_tags_from_script_and_language");
+
+            /*
+             * This constant has type "language_t" which cannot be instantiated.
+             */
             return remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
+        }
 
         /*
          * Some HarfBuzz enums are in the Windows GIR file defined as

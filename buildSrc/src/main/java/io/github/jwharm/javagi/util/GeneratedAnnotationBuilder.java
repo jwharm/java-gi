@@ -34,8 +34,8 @@ public class GeneratedAnnotationBuilder {
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         var generatedAnnotation = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", generator.getName())
-                .addMember("date", "$S", df.format(new Date()));
+                .addMember("value", "$S", generator.getName());
+//                .addMember("date", "$S", df.format(new Date()));
 
         return generatedAnnotation.build();
     }

@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.patches;
 
+import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Function;
 import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.gir.Method;
 import io.github.jwharm.javagi.gir.VirtualMethod;
@@ -138,6 +140,25 @@ public class GtkPatch implements Patch {
                 && methods.contains(vm.name())
                 && "BuilderScope".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-dont-skip", "1");
+
+        /*
+         * The "introspectable=0" attribute is set on the function
+         * "Gtk::orderingFromCmpfunc" on Windows and macOS, but not on Linux.
+         * Make sure that it is the same on every platform.
+         */
+        if (element instanceof Function f
+                && "gtk_ordering_from_cmpfunc".equals(f.callableAttrs().cIdentifier()))
+            return f.withAttribute("introspectable", "0");
+
+        /*
+         * FontDialog::chooseFontAndFeaturesFinish has different
+         * transfer-ownership attributes between platforms. This might be
+         * caused by minor version differences. Disable the Java bindings for
+         * now.
+         */
+        if (element instanceof Class c
+            && "FontDialog".equals(c.name()))
+            return remove(c, Method.class, "name", "choose_font_and_features_finish");
 
         return element;
     }
