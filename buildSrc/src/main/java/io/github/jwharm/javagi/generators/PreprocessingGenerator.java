@@ -75,11 +75,24 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         if (p.isOutParameter()
                 && array != null
                 && (!array.unknownSize())) {
-            PartialStatement stmt = marshalJavaToNative(getName() + ".get()")
-                    .add(null, "memorySegment", MemorySegment.class);
-            builder.addNamedCode("$memorySegment:T _" + getName() + "Pointer = ($memorySegment:T) "
-                            + stmt.add(";\n").format(),
-                    stmt.arguments());
+            /*
+             * Out-parameter array with known size: If the array isn't null,
+             * copy the contents into the native memory buffer. If it is null,
+             * allocate a pointer.
+             */
+            var stmt = PartialStatement
+                    .of("$memorySegment:T _$name:LPointer = ($name:L == null || $name:L.get() == null)$W? ")
+                    .add("_arena.allocate($valueLayout:T.$layout:L)")
+                    .add("$W: ")
+                    .add("($memorySegment:T) ")
+                    .add(marshalJavaToNative(getName() + ".get()"))
+                    .add(";\n",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName(),
+                            "valueLayout", ValueLayout.class,
+                            "layout", getValueLayoutPlain(type)
+                    );
+            builder.addNamedCode(stmt.format(), stmt.arguments());
         } else if (p.isOutParameter()
                 || (type != null
                     && type.isPointer()
