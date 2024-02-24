@@ -48,7 +48,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
         super(en);
         this.en = en;
         this.builder = TypeSpec.enumBuilder(en.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {

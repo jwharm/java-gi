@@ -36,7 +36,7 @@ public class UnionGenerator extends RegisteredTypeGenerator {
         super(union);
         this.union = union;
         this.builder = TypeSpec.classBuilder(union.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {

@@ -66,7 +66,7 @@ public class ClosureGenerator {
             builder.addAnnotation(Deprecated.class);
 
         if (closure instanceof Callback cb && cb.parent() instanceof Namespace)
-            builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+            builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         return builder.build();
     }

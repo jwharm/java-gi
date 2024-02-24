@@ -38,7 +38,7 @@ public class NamespaceGenerator {
     public NamespaceGenerator(Namespace ns) {
         this.ns = ns;
         this.builder = TypeSpec.classBuilder(ns.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generateGlobalsClass() {

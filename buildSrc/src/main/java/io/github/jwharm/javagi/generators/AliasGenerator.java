@@ -48,7 +48,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         TypeSpec.Builder builder = TypeSpec.classBuilder(alias.typeName());
-        builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         // Alias for an alias for a primitive type
         if (target instanceof Alias other && other.type().isPrimitive())

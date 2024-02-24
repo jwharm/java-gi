@@ -36,7 +36,7 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         super(inf);
         this.inf = inf;
         this.builder = TypeSpec.interfaceBuilder(inf.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {

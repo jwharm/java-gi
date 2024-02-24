@@ -44,7 +44,7 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
         super(bf);
         this.bf = bf;
         this.builder = TypeSpec.classBuilder(bf.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {

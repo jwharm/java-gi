@@ -22,20 +22,12 @@ package io.github.jwharm.javagi.util;
 import com.squareup.javapoet.AnnotationSpec;
 
 import javax.annotation.processing.Generated;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 public class GeneratedAnnotationBuilder {
 
-    public static AnnotationSpec generate(Class<?> generator) {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
-
+    public static AnnotationSpec generate() {
         var generatedAnnotation = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", generator.getName());
-//                .addMember("date", "$S", df.format(new Date()));
+                .addMember("value", "$S", "io.github.jwharm.JavaGI");
 
         return generatedAnnotation.build();
     }

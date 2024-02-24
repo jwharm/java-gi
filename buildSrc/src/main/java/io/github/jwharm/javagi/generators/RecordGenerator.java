@@ -48,7 +48,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         this.builder = TypeSpec.classBuilder(rec.typeName());
 
         if (outerClass == null)
-            this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+            this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {

@@ -38,7 +38,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         super(cls);
         this.cls = cls;
         this.builder = TypeSpec.classBuilder(cls.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate(getClass()));
+        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {
