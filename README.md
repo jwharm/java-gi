@@ -1,16 +1,16 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.8.1 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.9.0 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
 
-| Library       | Java-GI 0.7.x | Java-GI 0.8.x |
-|---------------|---------------|---------------|
-| OpenJDK       | 20            | 21            |
-| GLib          | 2.76          | 2.78          |
-| GTK           | 4.10          | 4.12          |
-| LibAdwaita    | 1.3           | 1.4           |
-| GStreamer     | 1.20          | 1.22          |
-| GtkSourceview | 5.9           | 5.10          |
-| WebkitGtk     | 2.41          | 2.42          |
+| Library       | Java-GI 0.7.x | Java-GI 0.8.x and 0.9.x |
+|---------------|---------------|-------------------------|
+| OpenJDK       | 20            | 21                      |
+| GLib          | 2.76          | 2.78                    |
+| GTK           | 4.10          | 4.12                    |
+| LibAdwaita    | 1.3           | 1.4                     |
+| GStreamer     | 1.20          | 1.22                    |
+| GtkSourceview | 5.9           | 5.10                    |
+| WebkitGtk     | 2.41          | 2.42                    |
 
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 

@@ -26,7 +26,7 @@ var green = RGBA.allocate(Arena.global(), 0.0, 1.0, 0.0, 0.0);
 
 Read the OpenJDK [Arena](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Arena.html) documentation for more information.
 
-To ease the transition, in Java-GI version 0.8, the old `allocate()` methods without an Arena parameter are still available. These methods use an `Arena.ofAuto()` behind the scenes. Dealing with native memory deallocations during GC is rather ugly, so the `Arena.ofAuto()` should preferrably not be the default option. Therefore, these methods have been marked as `deprecated`, and will be removed in the next Java-GI release.
+To ease the transition, in Java-GI version 0.8.x, the old `allocate()` methods without an Arena parameter are still available. These methods use an `Arena.ofAuto()` behind the scenes. Dealing with native memory deallocations during GC is rather ugly, so the `Arena.ofAuto()` should preferrably not be the default option. Therefore, these methods have been marked as `deprecated`, and have been removed in Java-GI 0.9.0.
 
 ## Builder pattern
 
