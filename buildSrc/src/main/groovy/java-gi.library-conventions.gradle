@@ -58,12 +58,12 @@ generateSources.configure {
 // Add the generated sources to the main sourceSet
 sourceSets.main.java.srcDir(generateSources)
 
-tasks.named('compileJava') {
+tasks.named('compileJava', JavaCompile) {
     options.compilerArgs += '--enable-preview'
     options.encoding = 'UTF-8'
 }
 
-tasks.named('javadoc') {
+tasks.named('javadoc', Javadoc) {
     if (System.getenv('CI')) {
         enabled = false
     }
@@ -73,12 +73,12 @@ tasks.named('javadoc') {
     options.encoding = 'UTF-8'
 }
 
-tasks.named('compileTestJava') {
+tasks.named('compileTestJava', JavaCompile) {
     options.compilerArgs += '--enable-preview'
     options.encoding = 'UTF-8'
 }
 
-tasks.named('test') {
+tasks.named('test', Test) {
     // Don't run tests in Github action. The native libraries aren't installed.
     if (System.getenv('CI')) {
         enabled = false
