@@ -60,7 +60,7 @@ public abstract class RegisteredTypeGenerator {
                     Get the GType of the $L class
                     
                     @return the GType
-                    """, rt.cType())
+                    """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassName.get("org.gnome.glib", "Type"))
                 .addStatement("return $T.getType($S)",

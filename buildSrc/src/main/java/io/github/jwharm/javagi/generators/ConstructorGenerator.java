@@ -71,7 +71,8 @@ public class ConstructorGenerator {
         if (ctor.infoElements().doc() != null) {
             String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
             if (ctor.doPlatformCheck())
-                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
+                        .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
                 builder.addJavadoc(javadoc);
         }

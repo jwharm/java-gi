@@ -92,7 +92,8 @@ public class MethodGenerator {
         if (func.infoElements().doc() != null) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
             if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
+                        .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
                 builder.addJavadoc(javadoc);
         }

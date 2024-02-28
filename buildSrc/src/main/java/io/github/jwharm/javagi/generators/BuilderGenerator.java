@@ -70,7 +70,8 @@ public class BuilderGenerator {
 
         TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
                 .addJavadoc("""
-                        Inner class implementing a builder pattern to construct a GObject with properties
+                        Inner class implementing a builder pattern to construct a GObject with
+                        properties.
                         
                         @param <B> the type of the Builder that is returned
                         """)
@@ -155,14 +156,15 @@ public class BuilderGenerator {
                 .returns(rt.typeName())
                 .addJavadoc("""
                         Finish building the {@code $1L} object. This will call
-                        {@link $2T#withProperties} to create a new
-                        GObject instance, which is then cast to {@code $1L}.
+                        {@link $2T#withProperties} to create a new GObject instance,
+                        which is then cast to {@code $1L}.
                         
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
                         """, rt.typeName().simpleName(), GOBJECT);
         if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addJavadoc("@throws $T when run on an unsupported platform",
+            builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
+                    .addJavadoc("@throws $T when run on an unsupported platform",
                     ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
 
         builder.beginControlFlow("try");

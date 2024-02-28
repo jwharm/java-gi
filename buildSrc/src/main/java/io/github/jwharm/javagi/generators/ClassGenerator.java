@@ -124,12 +124,14 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         return MethodSpec.methodBuilder("asParent")
                 .addJavadoc("""
-                        Returns this instance as if it were its parent type. This is mostly synonymous to the Java
-                        {@code super} keyword, but will set the native typeclass function pointers to the parent
-                        type. When overriding a native virtual method in Java, "chaining up" with
-                        {@code super.methodName()} doesn't work, because it invokes the overridden function pointer
-                        again. To chain up, call {@code asParent().methodName()}. This will call the native function
-                        pointer of this virtual method in the typeclass of the parent type.
+                        Returns this instance as if it were its parent type. This is mostly
+                        synonymous to the Java {@code super} keyword, but will set the native
+                        typeclass function pointers to the parent type. When overriding a native
+                        virtual method in Java, "chaining up" with {@code super.methodName()}
+                        doesn't work, because it invokes the overridden function pointer again.
+                        To chain up, call {@code asParent().methodName()}. This will call the
+                        native function pointer of this virtual method in the typeclass of the
+                        parent type.
                         """)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(cls.typeName())
