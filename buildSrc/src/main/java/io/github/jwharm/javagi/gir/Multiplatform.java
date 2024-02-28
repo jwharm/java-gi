@@ -46,7 +46,12 @@ public abstract sealed class Multiplatform
     }
 
     public boolean doPlatformCheck() {
-        if (platforms() == Platform.ALL) return false;
+        if (platforms() == Platform.ALL)
+            return false;
+
+        if (this instanceof RegisteredType)
+            return true;
+
         if (this instanceof Constructor || this instanceof Function)
             return switch(parent()) {
                 case RegisteredType rt -> rt.platforms();
