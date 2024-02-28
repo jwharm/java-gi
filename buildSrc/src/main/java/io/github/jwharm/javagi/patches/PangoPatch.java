@@ -25,6 +25,8 @@ import io.github.jwharm.javagi.gir.Method;
 import io.github.jwharm.javagi.gir.VirtualMethod;
 import io.github.jwharm.javagi.util.Patch;
 
+import java.util.List;
+
 public class PangoPatch implements Patch {
 
     @Override
@@ -60,6 +62,20 @@ public class PangoPatch implements Patch {
          */
         if (element instanceof Class c && "Coverage".equals(c.name()))
             return remove(c, Method.class, "name", "ref");
+
+        /*
+         * FontFamily::getName, isMonospace and isVariable have a
+         * "glib:get-property" attribute on Linux, but not on Windows and
+         * macOS. We set the same attribute on all, so they are correctly
+         * merged into one method in the Java bindings.
+         */
+        if (element instanceof Method m
+                && List.of(
+                        "pango_font_family_get_name",
+                        "pango_font_family_is_monospace",
+                        "pango_font_family_is_variable"
+                ).contains(m.callableAttrs().cIdentifier()))
+            return m.withAttribute("glib:get-property", "name");
 
         return element;
     }
