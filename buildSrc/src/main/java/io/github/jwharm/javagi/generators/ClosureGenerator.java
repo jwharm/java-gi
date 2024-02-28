@@ -136,9 +136,14 @@ public class ClosureGenerator {
         if (methodToInvoke.endsWith("invoke"))
             upcall.beginControlFlow("try");
 
-        // Arena for memory allocations
+        /*
+         * In the upcall method, memory allocations are only necessary for
+         * memory segments that are returned back to the caller. Therefore,
+         * we cannot use a confined arena, but have to fall back to the "auto"
+         * arena and let the GC close it.
+         */
         if (closure.allocatesMemory())
-            upcall.beginControlFlow("try ($1T _arena = $1T.ofConfined())",
+            upcall.addStatement("$1T _arena = $1T.ofAuto()",
                     Arena.class);
 
         // Parameter preprocessing
@@ -219,10 +224,6 @@ public class ClosureGenerator {
             }
             upcall.endControlFlow();
         }
-
-        // Close Arena scope
-        if (closure.allocatesMemory())
-            upcall.endControlFlow();
 
         // Close try-catch block for reflection calls
         if (methodToInvoke.endsWith("invoke")) {

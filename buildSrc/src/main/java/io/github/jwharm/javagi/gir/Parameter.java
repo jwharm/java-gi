@@ -103,14 +103,8 @@ public final class Parameter extends GirElement implements TypedValue {
         if (target instanceof Callback)
             return true;
 
-        if (type.isPointer()
-                && target instanceof Alias a && a.type().isPrimitive())
-            return true;
-
-        return !List.of(
-                Scope.ASYNC,
-                Scope.NOTIFIED,
-                Scope.FOREVER).contains(scope());
+        return type.isPointer()
+                && target instanceof Alias a && a.type().isPrimitive();
     }
 
     public boolean nullable() {
