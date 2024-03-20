@@ -32,16 +32,20 @@ tasks.named('javadoc', Javadoc) {
 
     // Prevent "too many module declarations found" javadoc error
     exclude "**/module-info.java"
-    options.addStringOption('-add-modules', 'org.jetbrains.annotations,org.freedesktop.cairo')
 
     source subprojects.collect {
         it.sourceSets.main.allJava
     }
 
+    // Set the --add-modules and --module-path parameters for the external dependencies
+    options.addStringOption('-add-modules', 'org.jetbrains.annotations,org.freedesktop.cairo')
     classpath = files(subprojects.collect {
         it.sourceSets.main.compileClasspath.filter(file -> {
             def path = file.getAbsolutePath()
-            return path.contains('/org.jetbrains/annotations/') || path.contains('/io.github.jwharm.cairobindings/cairo/')
+            return path.contains('/org.jetbrains/annotations/')
+                || path.contains('/io.github.jwharm.cairobindings/cairo/')
+                || path.contains('\\org.jetbrains\\annotations\\')
+                || path.contains('\\io.github.jwharm.cairobindings\\cairo\\')
         })
     })
 
