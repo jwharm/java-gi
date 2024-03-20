@@ -9,5 +9,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Gtk'
-    urlPrefix = 'https://docs.gtk.org/gtk4/'
 }

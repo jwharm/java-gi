@@ -8,5 +8,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Soup'
-    urlPrefix = 'https://libsoup.org/libsoup-3.0/'
 }

@@ -10,5 +10,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'WebKit'
-    urlPrefix = 'https://webkitgtk.org/reference/webkit2gtk/stable/'
 }

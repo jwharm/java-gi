@@ -22,6 +22,7 @@ package io.github.jwharm.javagi;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.LicenseNotice;
+import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.generators.*;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -34,7 +35,6 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
-import org.gradle.api.tasks.Optional;
 
 import java.io.*;
 import java.nio.file.*;
@@ -45,7 +45,7 @@ import static java.nio.file.StandardOpenOption.*;
 
 /**
  * GenerateSources is a Gradle task that will generate Java source files for
- * the types defined in a GIR Module. (The Module is provided by the
+ * the types defined in a GIR Library. (The Library is provided by the
  * GirParserService.)
  */
 public abstract class GenerateSources extends DefaultTask {
@@ -58,9 +58,6 @@ public abstract class GenerateSources extends DefaultTask {
 
     @OutputDirectory
     abstract DirectoryProperty getOutputDirectory();
-
-    @Input @Optional
-    abstract Property<String> getUrlPrefix();
 
     @TaskAction
     void execute() {
@@ -75,17 +72,20 @@ public abstract class GenerateSources extends DefaultTask {
     }
 
     // Generate Java source files for a GIR repository
-    private void generate(String namespace, Library library, Directory outputDirectory)
-            throws IOException {
+    private void generate(String namespace,
+                          Library library,
+                          Directory outputDirectory) throws IOException {
+
         Namespace ns = library.lookupNamespace(namespace);
+        String packageName = ModuleInfo.packageName(namespace);
 
         // Generate class with namespace-global constants and functions
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
-        writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
+        writeJavaFile(typeSpec, packageName, outputDirectory);
 
         // Generate package-info.java
         Path path = outputDirectory
-                .dir(ns.packageName().replace('.', File.separatorChar))
+                .dir(packageName.replace('.', File.separatorChar))
                 .getAsFile()
                 .toPath()
                 .resolve("package-info.java");
@@ -115,13 +115,14 @@ public abstract class GenerateSources extends DefaultTask {
                 case Union u -> new UnionGenerator(u).generate();
                 default -> null;
             };
-            writeJavaFile(typeSpec, ns.packageName(), outputDirectory);
+            writeJavaFile(typeSpec, packageName, outputDirectory);
         }
     }
 
     // Write a generated class into a Java file
-    private void writeJavaFile(TypeSpec typeSpec, String packageName, Directory outputDirectory)
-            throws IOException {
+    private void writeJavaFile(TypeSpec typeSpec,
+                               String packageName,
+                               Directory outputDirectory) throws IOException {
         if (typeSpec == null) return;
 
         JavaFile.builder(packageName, typeSpec)
@@ -131,9 +132,11 @@ public abstract class GenerateSources extends DefaultTask {
                 .writeTo(outputDirectory.getAsFile());
     }
 
-    // Return a set of package names for all directories in the src/main/java
-    // folder that contain at least one *.java file. These packages will be
-    // exported in the module-info.java file.
+    /*
+     * Return a set of package names for all directories in the src/main/java
+     * folder that contain at least one *.java file. These packages will be
+     * exported in the module-info.java file.
+     */
     private Set<String> getPackages() throws IOException {
         Set<String> packages = new HashSet<>();
 

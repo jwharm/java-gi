@@ -8,5 +8,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Gio'
-    urlPrefix = 'https://docs.gtk.org/glib/'
 }

@@ -9,5 +9,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'GdkPixbuf'
-    urlPrefix = 'https://docs.gtk.org/gdk-pixbuf/'
 }

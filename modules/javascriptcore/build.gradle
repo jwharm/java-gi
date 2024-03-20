@@ -8,5 +8,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'JavaScriptCore'
-    urlPrefix = 'https://webkitgtk.org/reference/jsc-glib/stable/'
 }

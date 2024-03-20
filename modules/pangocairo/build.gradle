@@ -10,5 +10,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'PangoCairo'
-    urlPrefix = 'https://docs.gtk.org/Pango/'
 }

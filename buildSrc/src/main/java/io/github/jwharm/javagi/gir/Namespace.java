@@ -172,18 +172,6 @@ public final class Namespace extends Multiplatform {
         return filter(children(), Boxed.class);
     }
 
-    public String packageName() {
-        return Objects.requireNonNullElse(
-                ModuleInfo.getPackageName(name()),
-                name());
-    }
-
-    public String docUrlPrefix() {
-        return Objects.requireNonNullElse(
-                ModuleInfo.getDocUrlPrefix(name()),
-                "");
-    }
-
     public String globalClassName() {
         return name().equals("GObject") ? "GObjects" : name();
     }

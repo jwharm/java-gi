@@ -8,5 +8,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Graphene'
-    urlPrefix = 'https://developer-old.gnome.org/graphene/stable/'
 }

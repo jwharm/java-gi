@@ -12,5 +12,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Gdk'
-    urlPrefix = 'https://docs.gtk.org/gdk4/'
 }

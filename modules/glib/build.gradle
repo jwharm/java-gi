@@ -4,5 +4,4 @@ plugins {
 
 generateSources.configure {
     namespace = 'GLib'
-    urlPrefix = 'https://docs.gtk.org/glib/'
 }

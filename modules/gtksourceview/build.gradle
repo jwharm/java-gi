@@ -8,5 +8,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'GtkSource'
-    urlPrefix = 'https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/'
 }

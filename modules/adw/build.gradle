@@ -9,5 +9,4 @@ dependencies {
 
 generateSources.configure {
     namespace = 'Adw'
-    urlPrefix = 'https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/'
 }

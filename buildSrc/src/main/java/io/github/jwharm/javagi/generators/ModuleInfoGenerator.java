@@ -42,16 +42,16 @@ public class ModuleInfoGenerator {
                 module %s {
                     requires static java.compiler;
                     requires static org.jetbrains.annotations;
-                """.formatted(ns.packageName()));
+                """.formatted(ModuleInfo.packageName(ns.name())));
 
         ns.parent().includes().stream()
                 .map(Include::name)
-                .map(ModuleInfo::getPackageName)
+                .map(ModuleInfo::packageName)
                 // A minimal set of FreeType bindings is included in the Cairo module
                 .map(name -> name.replace("org.freedesktop.freetype", "org.freedesktop.cairo"))
                 .forEach(this::requires);
 
-        exports(ns.packageName());
+        exports(ModuleInfo.packageName(ns.name()));
         packageNames.forEach(this::exports);
 
         builder.append("}\n");

@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.util;
 
+import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 
@@ -270,7 +271,7 @@ public class Javadoc {
     // Replace "! [...](...)" image links with <img src="..." alt="...">
     private String convertImg(String img, String desc, String url) {
         String fullUrl = url;
-        if (! url.startsWith("http")) fullUrl = doc.namespace().docUrlPrefix() + url;
+        if (! url.startsWith("http")) fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
         String alt = desc.replace("\"", "\\\"");
         return "<img src=\"" + fullUrl + "\" alt=\"" + alt + "\">";
     }
@@ -343,7 +344,7 @@ public class Javadoc {
         Namespace namespace = doc.namespace();
         if (namespace.name().equals(ns)) return "";
         try {
-            return namespace.parent().lookupNamespace(ns).packageName() + ".";
+            return ModuleInfo.packageName(ns) + ".";
         } catch (NoSuchElementException e) {
             return ns;
         }
