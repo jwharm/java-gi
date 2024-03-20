@@ -18,8 +18,6 @@
  */
 package io.github.jwharm.javagi.interop;
 
-import io.github.jwharm.javagi.base.GLibLogger;
-
 import java.lang.foreign.Arena;
 import java.lang.ref.Cleaner;
 

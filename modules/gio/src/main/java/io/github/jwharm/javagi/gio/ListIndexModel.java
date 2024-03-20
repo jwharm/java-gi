@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -39,7 +39,8 @@ public class ListIndexModel extends GObject implements ListModel {
     private ArrayList<ListIndex> items = new ArrayList<>();
 
     /**
-     * Return the GType for the ListIndexModel
+     * Return the GType for the ListIndexModel.
+     *
      * @return the GType
      */
     public static Type getType() {
@@ -48,6 +49,7 @@ public class ListIndexModel extends GObject implements ListModel {
 
     /**
      * Construct a ListIndexModel for the provided memory address.
+     *
      * @param address the memory address of the instance in native memory
      */
     public ListIndexModel(MemorySegment address) {
@@ -55,7 +57,8 @@ public class ListIndexModel extends GObject implements ListModel {
     }
 
     /**
-     * Instantiate a new ListIndexModel with the provided size.
+     * Construct a new ListIndexModel with the provided size.
+     *
      * @param size the initial size of the list model
      */
     public static ListIndexModel newInstance(int size) {
@@ -65,8 +68,10 @@ public class ListIndexModel extends GObject implements ListModel {
     }
 
     /**
-     * Set the size field to the provided value, and emit the "items-changed" signal.
-     * @param size the new listmodel size
+     * Set the size field to the provided value, and emit the "items-changed"
+     * signal.
+     *
+     * @param size the new list model size
      */
     public void setSize(int size) {
         int oldSize = items.size();
@@ -77,7 +82,8 @@ public class ListIndexModel extends GObject implements ListModel {
     }
 
     /**
-     * Returns the gtype of {@link ListIndex}
+     * Get the gtype of {@link ListIndex}.
+     *
      * @return always returns the value of {@link ListIndex#gtype}
      */
     @Property(name="item-type", constructOnly = true)
@@ -86,12 +92,18 @@ public class ListIndexModel extends GObject implements ListModel {
         return ListIndex.gtype;
     }
 
+    /**
+     * No-op. The item type is always {@link ListIndex#gtype}.
+     *
+     * @param itemType ignored
+     */
     @Property(name="item-type")
     public void setItemType(Type itemType) {
     }
 
     /**
-     * Returns the size of the list model
+     * Get the size of the list model.
+     *
      * @return the value of the size field
      */
     @Property(name="n-items", type=ParamSpecUInt.class, writable=false)
@@ -101,13 +113,15 @@ public class ListIndexModel extends GObject implements ListModel {
     }
 
     /**
-     * Returns a {@link ListIndex} with the requested position as its value
-     * @param position the position of the item to fetch
+     * Returns a {@link ListIndex} with the requested position as its value.
+     *
+     * @param  position the position of the item to fetch
      * @return a {@link ListIndex} with the requested position as its value
      */
     @Override
     public GObject getItem(int position) {
-        if (position < 0 || position >= getNItems()) return null;
+        if (position < 0 || position >= getNItems())
+            return null;
         return items.get(position);
     }
 
@@ -120,7 +134,8 @@ public class ListIndexModel extends GObject implements ListModel {
         private int index;
 
         /**
-         * Return the GType for the ListIndex
+         * Return the GType for the ListIndex.
+         *
          * @return the GType
          */
         public static Type getType() {
@@ -128,7 +143,8 @@ public class ListIndexModel extends GObject implements ListModel {
         }
 
         /**
-         * Construct a new ListIndex Proxy instance
+         * Construct a new ListIndex Proxy instance.
+         *
          * @param address the memory address of the native object instance
          */
         public ListIndex(MemorySegment address) {
@@ -136,8 +152,9 @@ public class ListIndexModel extends GObject implements ListModel {
         }
 
         /**
-         * Construct a new ListIndex with the provided value
-         * @param value the value of the ListIndex instance
+         * Construct a new ListIndex with the provided value.
+         *
+         * @param  value the value of the ListIndex instance
          * @return a new ListIndex instance
          */
         public static ListIndex newInstance(int value) {
@@ -147,7 +164,8 @@ public class ListIndexModel extends GObject implements ListModel {
         }
 
         /**
-         * Get the index of this ListIndex object
+         * Get the index of this ListIndex object.
+         *
          * @return the index of this ListIndex object
          */
         public int getIndex() {

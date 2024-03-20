@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 /**
- * A Gradle build service that provides Module objects containing a GIR
+ * A Gradle build service that provides Library objects containing a GIR
  * Repository for a requested GIR file, and all GIR repositories that it
  * depends on. The build service caches all repositories so every GIR file is
  * only parsed once during a build.
@@ -84,8 +84,10 @@ public abstract class GirParserService
         return library;
     }
 
-    // Call parse(getInputDirectory(), moduleName) and wrap exceptions
-    // in runtime exceptions
+    /*
+     * Call parse(getInputDirectory(), moduleName) and wrap exceptions in
+     * runtime exceptions.
+     */
     private Repository parse(String moduleName) {
         try {
             Directory basePath = getParameters().getInputDirectory().get();
@@ -116,7 +118,8 @@ public abstract class GirParserService
         }
 
         if (repository == null)
-            throw new FileNotFoundException("No GIR files found for " + moduleName);
+            throw new FileNotFoundException("No GIR files found for %s"
+                    .formatted(moduleName));
 
         repository.setLibrary(library);
 
@@ -133,7 +136,8 @@ public abstract class GirParserService
                 if (file.isFile() && file.getName().startsWith(fileNamePrefix))
                     return file;
 
-        throw new FileNotFoundException(fileNamePrefix + " not found in " + folder);
+        throw new FileNotFoundException("%s not found in %s"
+                .formatted(fileNamePrefix, folder));
     }
 
     @Override

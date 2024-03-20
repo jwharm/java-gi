@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.util;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.*;
 
 import java.lang.foreign.MemorySegment;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Small utility functions for converting between C and Java identifiers
+ * Utility functions for converting between C and Java identifiers.
  */
 public class Conversions {
 
@@ -48,7 +49,9 @@ public class Conversions {
             var rt = TypeReference.get(ns, typeName);
             return toJavaQualifiedType(rt.name(), rt.namespace());
         }
-        return ClassName.get(ns.packageName(), toJavaSimpleType(typeName, ns));
+        return ClassName.get(
+                ModuleInfo.packageName(ns.name()),
+                toJavaSimpleType(typeName, ns));
     }
 
     /**
@@ -59,7 +62,8 @@ public class Conversions {
             var rt = TypeReference.get(ns, typeName);
             return toJavaSimpleType(rt.name(), rt.namespace());
         }
-        return prefixDigits(replaceKnownType(replaceKeywords(toCamelCase(typeName, true)), ns));
+        return prefixDigits(replaceKnownType(
+                replaceKeywords(toCamelCase(typeName, true)), ns));
     }
 
     /**
@@ -115,7 +119,10 @@ public class Conversions {
         return string.substring(0, 1).toLowerCase() + string.substring(1);
     }
 
-    // A type name starting with a digit is not allowed; prefix it with an underscore.
+    /*
+     * A type name starting with a digit is not allowed; prefix it with an
+     * underscore.
+     */
     private static String prefixDigits(String name) {
         return name == null ? null
                 : (Character.isDigit(name.charAt(0)) ? "_" + name : name);
@@ -124,19 +131,23 @@ public class Conversions {
     // For types that are reserved Java keywords, append an underscore.
     private static String replaceKeywords(String name) {
         final List<String> keywords = List.of(
-                "abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package",
-                "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
-                "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum",
-                "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char",
-                "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile",
-                "const", "float", "native", "super", "while", "wait", "finalize", "null",
-                "handle" // reserved for java-gi
+                "abstract", "continue", "for", "new", "switch", "assert",
+                "default", "goto", "package", "synchronized", "boolean", "do",
+                "if", "private", "this", "break", "double", "implements",
+                "protected", "throw", "byte", "else", "import", "public",
+                "throws", "case", "enum", "instanceof", "return", "transient",
+                "catch", "extends", "int", "short", "try", "char", "final",
+                "interface", "static", "void", "class", "finally", "long",
+                "strictfp", "volatile", "const", "float", "native", "super",
+                "while", "wait", "finalize", "null",
+                "handle" // used by java-gi
         );
         return keywords.contains(name) ? name + "_" : name;
     }
 
     /**
-     * For types that conflict with common Java classes, prefix with C namespace.
+     * For types that conflict with common Java classes, prefix with C
+     * namespace.
      */
     public static String replaceKnownType(String name, Namespace ns) {
         if (ns == null)
@@ -150,8 +161,8 @@ public class Conversions {
 
 
     /**
-     * Overriding java.lang.Object methods is not allowed in default methods (in interfaces),
-     * so we append an underscore to those method names.
+     * Overriding java.lang.Object methods is not allowed in default methods
+     * (in interfaces), so we append an underscore to those method names.
      */
     public static String replaceJavaObjectMethodNames(String name) {
         for (java.lang.reflect.Method m : Object.class.getMethods())
@@ -162,7 +173,8 @@ public class Conversions {
     }
 
     /**
-     * Convert C type declaration into Java type declaration. Return {@code null} when conversion failed.
+     * Convert C type declaration into Java type declaration. Return
+     * {@code null} when conversion failed.
      */
     public static String toJavaBaseType(String name) {
         return name == null ? null : switch (name.toLowerCase()) {
@@ -170,7 +182,8 @@ public class Conversions {
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
-            case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr", "guintptr", "glong", "gulong" -> "long";
+            case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr",
+                    "guintptr", "glong", "gulong" -> "long";
             case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
@@ -183,7 +196,7 @@ public class Conversions {
     }
 
     /**
-     * Return the TypeName for the given primitive type
+     * Return the TypeName for the given primitive type.
      */
     public static TypeName primitiveTypeName(String primitive) {
         return switch(primitive) {
@@ -195,12 +208,14 @@ public class Conversions {
             case "int" -> TypeName.INT;
             case "long" -> TypeName.LONG;
             case "short" -> TypeName.SHORT;
-            default -> throw new IllegalStateException("Unexpected value: " + primitive);
+            default -> throw new IllegalStateException("Unexpected value: %s"
+                    .formatted(primitive));
         };
     }
 
     /**
-     * Convert "char" to "Character", "int" to "Integer", and capitalize all other primitive types
+     * Convert "char" to "Character", "int" to "Integer", and capitalize all
+     * other primitive types.
      */
     public static String primitiveClassName(String primitive) {
         return switch(primitive) {
@@ -211,7 +226,7 @@ public class Conversions {
     }
 
     /**
-     * Return the TypeName of the carrier type
+     * Return the TypeName of the carrier type.
      */
     public static TypeName getCarrierTypeName(AnyType t) {
         if (t == null || t instanceof Array)
@@ -240,7 +255,7 @@ public class Conversions {
     }
 
     /**
-     * Return a type tag that can be used for the carrier type
+     * Return a type tag that can be used for the carrier type.
      */
     public static String getCarrierTypeTag(AnyType t) {
         if (t == null || t instanceof Array)
@@ -269,7 +284,8 @@ public class Conversions {
     }
 
     /**
-     * Get the memory layout of this type. Pointer types are returned as ADDRESS.
+     * Get the memory layout of this type. Pointer types are returned as
+     * "ADDRESS".
      */
     public static String getValueLayout(AnyType anyType) {
         return switch (anyType) {
@@ -304,16 +320,36 @@ public class Conversions {
      * Generate the literal representation of the provided value, according
      * to the provided type.
      */
-    public static String literal(TypeName type, String value) throws NumberFormatException {
-        if (type.equals(TypeName.BOOLEAN)) return Boolean.valueOf(value).toString();
-        if (type.equals(TypeName.BYTE)) return Numbers.parseByte(value).toString();
-        if (type.equals(TypeName.CHAR)) return "'" + value + "'";
-        if (type.equals(TypeName.DOUBLE)) return Double.valueOf(value) + "d";
-        if (type.equals(TypeName.FLOAT)) return Float.valueOf(value) + "f";
-        if (type.equals(TypeName.INT)) return Numbers.parseInt(value).toString();
-        if (type.equals(TypeName.LONG)) return Numbers.parseLong(value) + "L";
-        if (type.equals(TypeName.SHORT)) return Numbers.parseShort(value).toString();
-        if (type.equals(TypeName.get(String.class))) return '"' + value.replace("\\", "\\\\") + '"';
+    public static String literal(TypeName type, String value)
+            throws NumberFormatException {
+
+        if (type.equals(TypeName.BOOLEAN))
+            return Boolean.valueOf(value).toString();
+
+        if (type.equals(TypeName.BYTE))
+            return Numbers.parseByte(value).toString();
+
+        if (type.equals(TypeName.CHAR))
+            return "'" + value + "'";
+
+        if (type.equals(TypeName.DOUBLE))
+            return Double.valueOf(value) + "d";
+
+        if (type.equals(TypeName.FLOAT))
+            return Float.valueOf(value) + "f";
+
+        if (type.equals(TypeName.INT))
+            return Numbers.parseInt(value).toString();
+
+        if (type.equals(TypeName.LONG))
+            return Numbers.parseLong(value) + "L";
+
+        if (type.equals(TypeName.SHORT))
+            return Numbers.parseShort(value).toString();
+
+        if (type.equals(TypeName.get(String.class)))
+            return '"' + value.replace("\\", "\\\\") + '"';
+
         return value;
     }
 }

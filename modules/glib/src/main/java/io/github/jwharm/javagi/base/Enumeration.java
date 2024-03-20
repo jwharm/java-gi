@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,19 +20,21 @@
 package io.github.jwharm.javagi.base;
 
 /**
- * Base class of enumeration objects
+ * Interface implemented by all enumerations.
  */
 public interface Enumeration {
 
     /**
-     * Get the integer value of this enumeration
+     * Get the integer value of this enumeration.
+     *
      * @return the integer value of this enumeration value
      */
     int getValue();
 
     /**
-     * Compare this enumeration value with an integer
-     * @param enumeration the integer to compare this enumeration value with
+     * Compare this enumeration value with an integer.
+     *
+     * @param  enumeration the integer to compare this enumeration value with
      * @return true when {@code this.value == enumeration}
      */
     default boolean equals(int enumeration) {
@@ -40,19 +42,22 @@ public interface Enumeration {
     }
 
     /**
-     * Compare this enumeration value with another enumeration value
-     * @param enumeration another enumeration value
+     * Compare this enumeration value with another enumeration value.
+     *
+     * @param  enumeration another enumeration value
      * @return true when {@code this.value == enumeration.value}
      */
     default boolean equals(Enumeration enumeration) {
-        return enumeration != null && this.getValue() == enumeration.getValue();
+        return enumeration != null
+                && this.getValue() == enumeration.getValue();
     }
 
     /**
-     * Convenience function to transfer an array of Enumeration objects 
-     * into an array of integer values.
-     * @param array An array of Enumeration objects
-     * @return an array of the integer values of the provided Enumeration objects
+     * Convert an array of Enumeration objects into an array of integers.
+     *
+     * @param  array an array of Enumeration objects
+     * @return an array containing the integer values of the provided
+     *         Enumeration instances
      */
     static int[] getValues(Enumeration[] array) {
         int[] values = new int[array.length];

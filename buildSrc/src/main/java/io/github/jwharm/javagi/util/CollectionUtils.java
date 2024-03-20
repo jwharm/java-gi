@@ -24,14 +24,13 @@ import io.github.jwharm.javagi.gir.Multiplatform;
 import java.util.*;
 
 /**
- * Small utility functions for working with collections
+ * Utility functions for working with collections.
  */
 public class CollectionUtils {
 
     /**
-     * Return the union of two lists.
-     * Updates the {@code platforms} property of {@link Multiplatform} instances.
-     * The ordering is retained.
+     * Return the union of two lists. Updates the {@code platforms} property of
+     * {@link Multiplatform} instances. The ordering is retained.
      */
     public static <T> List<T> union(List<T> list1, List<T> list2) {
         List<T> result = new ArrayList<>(list1);
@@ -48,24 +47,31 @@ public class CollectionUtils {
     }
 
     /**
-     * Filter the list for members of the requested type.
-     * Returns an unmodifiable list.
+     * Filter the list for members of the requested type. Returns an
+     * unmodifiable list.
      */
     public static <A, B extends A> List<B> filter(List<A> list, Class<B> cls) {
-        return list.stream().filter(cls::isInstance).map(cls::cast).toList();
+        return list.stream()
+                .filter(cls::isInstance)
+                .map(cls::cast)
+                .toList();
     }
 
     /**
-     * Search the list for a member of the requested type.
-     * Returns {@code null} when not found.
+     * Search the list for a member of the requested type. Returns {@code null}
+     * when not found.
      */
     public static <A, B extends A> B findAny(List<A> list, Class<B> cls) {
-        return list.stream().filter(cls::isInstance).map(cls::cast).findAny().orElse(null);
+        return list.stream()
+                .filter(cls::isInstance)
+                .map(cls::cast)
+                .findAny()
+                .orElse(null);
     }
 
     /**
-     * Return the union of two maps by creating a new map
-     * using {@code new HashMap(map1).putAll(map2)}
+     * Return the union of two maps by creating a new map using
+     * {@code new HashMap(map1).putAll(map2)}
      */
     public static <A, B> Map<A, B> union(Map<A, B> map1, Map<A, B> map2) {
         Map<A, B> map3 = new HashMap<>(map1);

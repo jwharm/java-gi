@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -45,8 +45,8 @@ import static io.github.jwharm.javagi.gobject.types.Types.*;
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
 /**
- * This class contains functionality to register a Java class
- * as a Gtk composite template class.
+ * This class contains functionality to register a Java class as a Gtk
+ * composite template class.
  * <p>
  * To register a Java class as a "regular" GObject class, see 
  * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)}
@@ -54,27 +54,30 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 public class Types {
 
     /**
-     * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or if it is
-     * not defined, fallback to {@link io.github.jwharm.javagi.gobject.types.Types#getName(Class)}.
-     * @param cls the class that is registered as a new GType
+     * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or
+     * if it is not defined, fallback to
+     * {@link io.github.jwharm.javagi.gobject.types.Types#getName(Class)}.
+     *
+     * @param  cls the class that is registered as a new GType
      * @return the name
      */
     public static String getTemplateName(Class<?> cls) {
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String name = annotation.name();
-        if (! "".equals(name)) {
+        if (! "".equals(name))
             return name;
-        }
         return getName(cls);
     }
 
     /**
-     * Generate a memory layout for an instance struct
-     * @param cls the class from which the fields will be used to generate the memory layout
-     * @param typeName the name of the struct
+     * Generate a memory layout for an instance struct.
+     * @param  cls      the class from which the fields will be used to
+     *                  generate the memory layout
+     * @param  typeName the name of the struct
      * @return the generated memory layout
      */
     private static MemoryLayout getTemplateInstanceLayout(Class<?> cls, String typeName) {
+
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
         if (parentLayout == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -88,35 +91,35 @@ public class Types {
 
         for (Field field : cls.getDeclaredFields()) {
             if (field.isAnnotationPresent(GtkChild.class)) {
-                // Determine the name of the struct field
-                String fieldName = field.getAnnotation(GtkChild.class).name();
-                if ("".equals(fieldName)) {
-                    fieldName = field.getName();
-                }
 
-                if (field.getType().equals(boolean.class)) {
+                // Determine the name of the struct field.
+                String fieldName = field.getAnnotation(GtkChild.class).name();
+                if ("".equals(fieldName))
+                    fieldName = field.getName();
+
+                // Add the memory layout of the field to the struct.
+                if (field.getType().equals(boolean.class))
                     size = add(ValueLayout.JAVA_BOOLEAN.withName(fieldName), elements, size);
-                } else if (field.getType().equals(byte.class)) {
+                else if (field.getType().equals(byte.class))
                     size = add(ValueLayout.JAVA_BYTE.withName(fieldName), elements, size);
-                } else if (field.getType().equals(char.class)) {
+                else if (field.getType().equals(char.class))
                     size = add(ValueLayout.JAVA_CHAR.withName(fieldName), elements, size);
-                } else if (field.getType().equals(double.class)) {
+                else if (field.getType().equals(double.class))
                     size = add(ValueLayout.JAVA_DOUBLE.withName(fieldName), elements, size);
-                } else if (field.getType().equals(float.class)) {
+                else if (field.getType().equals(float.class))
                     size = add(ValueLayout.JAVA_FLOAT.withName(fieldName), elements, size);
-                } else if (field.getType().equals(int.class)) {
+                else if (field.getType().equals(int.class))
                     size = add(ValueLayout.JAVA_INT.withName(fieldName), elements, size);
-                } else if (field.getType().equals(long.class)) {
+                else if (field.getType().equals(long.class))
                     size = add(ValueLayout.JAVA_LONG.withName(fieldName), elements, size);
-                } else if (field.getType().equals(short.class)) {
+                else if (field.getType().equals(short.class))
                     size = add(ValueLayout.JAVA_SHORT.withName(fieldName), elements, size);
-                } else if (Proxy.class.isAssignableFrom(field.getType())) {
+                else if (Proxy.class.isAssignableFrom(field.getType()))
                     size = add(ValueLayout.ADDRESS.withName(fieldName), elements, size);
-                } else {
+                else
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Unsupported type '%s' of field %s\n",
                             field.getType().getSimpleName(), fieldName);
-                }
             }
         }
 
@@ -125,10 +128,12 @@ public class Types {
     }
 
     /**
-     * Add a memory layout to the list, with padding if necessary
-     * @param layout the layout to add
-     * @param elements the list of layouts so far, to which the layout will be added
-     * @param oldSize the total length of the layouts so far
+     * Add a memory layout to the list, with padding if necessary.
+     *
+     * @param  layout   the layout to add
+     * @param  elements the list of layouts so far, to which the layout will be
+     *                  added
+     * @param  oldSize  the total length of the layouts so far
      * @return the new length of the layouts
      */
     private static long add(MemoryLayout layout, ArrayList<MemoryLayout> elements, long oldSize) {
@@ -143,14 +148,18 @@ public class Types {
         return size + s;
     }
 
-    /* Returns a lambda that will:
-     * - load the ui file, and set it as template,
-     * - override the dispose() method to dispose the template,
-     * - install a JavaBuilderScope for signal handling
-     * - bind @GtkChild-annotated fields to the template.
+    /*
+     * Return a lambda that will:
+     * <ul>
+     *   <li>load the ui file, and set it as template,
+     *   <li>override the dispose() method to dispose the template,
+     *   <li>install a JavaBuilderScope for signal handling,
+     *   <li>bind @GtkChild-annotated fields to the template.
+     * </ul>
      * The lambda will be run during class initialization.
      */
     private static <T extends Widget> Consumer<GObject.ObjectClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
+
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String ui = annotation.ui();
 
@@ -164,8 +173,11 @@ public class Types {
             widgetClass.overrideDispose(Arena.global(), (object) -> {
                 ((Widget) object).disposeTemplate(typeClass.readGType());
 
-                // Chain up to the parent (GObject) dispose function.
-                // The Java binding is a protected method, so we call the C function directly.
+                /*
+                 * Chain up to the parent (GObject) dispose function. The Java
+                 * binding is a protected method, so we call the C function
+                 * directly.
+                 */
                 try {
                     var parent = GObject.ObjectClass.getMemoryLayout();
                     var func = Overrides.lookupVirtualMethodParent(object.handle(), parent, "dispose");
@@ -189,9 +201,13 @@ public class Types {
         };
     }
 
-    /* Return a lambda that will:
-     * - call gtk_widget_init_template
-     * - for all @GtkChild-annotated fields, get the template child object, and assign it to the field.
+    /*
+     * Return a lambda that will:
+     * <ul>
+     *   <li>call gtk_widget_init_template
+     *   <li>for all @GtkChild-annotated fields, get the template child object,
+     *       and assign it to the field.
+     * </ul>
      * The lambda will be run during instance initialization.
      */
     private static <T extends Widget> Consumer<T> getTemplateInstanceInit(Class<T> cls) {
@@ -200,7 +216,8 @@ public class Types {
 
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
-                    GObject child = widget.getTemplateChild(widget.readGClass().readGType(), field.getName());
+                    Type gtype = widget.readGClass().readGType();
+                    GObject child = widget.getTemplateChild(gtype, field.getName());
                     try {
                         field.set(widget, child);
                     } catch (Exception e) {
@@ -218,9 +235,9 @@ public class Types {
      * <p>
      * To register a Java class as a "regular" GObject class, see
      * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)}
-     * @param cls a @GtkTemplate-annotated class
+     * @param  cls a @GtkTemplate-annotated class
+     * @param  <W> the class must extend GtkWidget
      * @return the new GType that has been registered
-     * @param <W> the class must extend GtkWidget
      */
     private static <W extends Widget> Type registerTemplate(Class<W> cls) {
         try {
@@ -233,14 +250,15 @@ public class Types {
             TypeFlags flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
-            Consumer<GObject.ObjectClass> overridesInit = Overrides.overrideClassMethods(cls);
-            Consumer<GObject.ObjectClass> propertiesInit = Properties.installProperties(cls);
-            Consumer<GObject.ObjectClass> signalsInit = Signals.installSignals(cls);
-            Consumer<GObject.ObjectClass> templateClassInit = getTemplateClassInit(cls, instanceLayout);
+            Consumer<GObject.ObjectClass> overridesInit        = Overrides.overrideClassMethods(cls);
+            Consumer<GObject.ObjectClass> propertiesInit       = Properties.installProperties(cls);
+            Consumer<GObject.ObjectClass> signalsInit          = Signals.installSignals(cls);
+            Consumer<GObject.ObjectClass> templateClassInit    = getTemplateClassInit(cls, instanceLayout);
             Consumer<GObject.ObjectClass> userDefinedClassInit = getClassInit(cls);
 
-            // Override virtual methods, install properties and signals, and then install
-            // the template before running a user-defined class init.
+            // Override virtual methods, install properties and signals, and
+            // then install the template before running a user-defined class
+            // init.
             Consumer<GObject.ObjectClass> classInit = chain(overridesInit, propertiesInit);
             classInit = chain(classInit, signalsInit);
             classInit = chain(classInit, templateClassInit);
@@ -273,16 +291,19 @@ public class Types {
     }
 
     /**
-     * Redirects to {@link Types#registerTemplate(Class)} for {@code Widget.class} with {@link GtkTemplate}
-     * annotation, and {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)} for all other
-     * (GObject-derived) classes.
-     * @param cls the class to register as a new GType
+     * This will call {@link Types#registerTemplate(Class)} when {@code cls} is
+     * a {@code Widget.class} with {@link GtkTemplate} annotation, and
+     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)} for
+     * all other (GObject-derived) classes.
+     *
+     * @param  cls the class to register as a new GType
+     * @param  <T> the class must extend {@link org.gnome.gobject.GObject}
      * @return the new GType
-     * @param <T> the class must extend {@link org.gnome.gobject.GObject}
      */
     @SuppressWarnings("unchecked")
     public static <T extends GObject, W extends Widget> Type register(Class<T> cls) {
-        if (Widget.class.isAssignableFrom(cls) && cls.isAnnotationPresent(GtkTemplate.class)) {
+        if (Widget.class.isAssignableFrom(cls)
+                && cls.isAnnotationPresent(GtkTemplate.class)) {
             return registerTemplate((Class<W>) cls);
         } else {
             return io.github.jwharm.javagi.gobject.types.Types.register(cls);
@@ -292,22 +313,23 @@ public class Types {
     /**
      * Convenience function that redirects to
      * {@link io.github.jwharm.javagi.gobject.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, TypeFlags)}
-     * @param parentType Parent GType
-     * @param typeName name of the GType
-     * @param classLayout memory layout of the typeclass
-     * @param classInit static class initializer function
+     *
+     * @param parentType     parent GType
+     * @param typeName       name of the GType
+     * @param classLayout    memory layout of the typeclass
+     * @param classInit      static class initializer function
      * @param instanceLayout memory layout of the typeinstance
-     * @param instanceInit static instance initializer function
-     * @param constructor memory-address constructor
-     * @param flags type flags
+     * @param instanceInit   static instance initializer function
+     * @param constructor    memory-address constructor
+     * @param flags          type flags
+     * @param <T>            the instance initializer function must accept the
+     *                       result of the memory address constructor
+     * @param <TC>           the class initializer function must accept a
+     *                       parameter that is a subclass of TypeClass
      * @return the new GType
-     * @param <T>  the instance initializer function must accept the
-     *             result of the memory address constructor
-     * @param <TC> the class initializer function must accept a
-     *            parameter that is a subclass of TypeClass
      */
     public static <T extends GObject, TC extends GObject.ObjectClass> Type register(
-            org.gnome.glib.Type parentType,
+            Type parentType,
             String typeName,
             MemoryLayout classLayout,
             Consumer<TC> classInit,
@@ -317,6 +339,7 @@ public class Types {
             TypeFlags flags
     ) {
         return io.github.jwharm.javagi.gobject.types.Types.register(
-                parentType, typeName, classLayout, classInit, instanceLayout, instanceInit, constructor, flags);
+                parentType, typeName, classLayout, classInit, instanceLayout,
+                instanceInit, constructor, flags);
     }
 }

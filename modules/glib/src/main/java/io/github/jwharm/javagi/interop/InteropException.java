@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,13 +20,14 @@
 package io.github.jwharm.javagi.interop;
 
 /**
- * Thrown when an unexpected error occurs when calling a native
- * function or reading/writing from/to native memory.
+ * Thrown when an unexpected error occurs when calling a native function or
+ * reading/writing from/to native memory.
  */
 public class InteropException extends RuntimeException {
 
     /**
-     * Create an InteropException that wraps another Throwable
+     * Create an InteropException that wraps another Throwable.
+     *
      * @param cause the Throwable to wrap in the InteropException
      */
     public InteropException(Throwable cause) {
@@ -35,6 +36,7 @@ public class InteropException extends RuntimeException {
 
     /**
      * Create an InteropException with the provided message.
+     *
      * @param message the exception message.
      */
     public InteropException(String message) {

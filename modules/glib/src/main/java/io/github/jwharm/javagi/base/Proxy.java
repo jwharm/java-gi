@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -22,13 +22,14 @@ package io.github.jwharm.javagi.base;
 import java.lang.foreign.MemorySegment;
 
 /**
- * Represents an instance of a proxy object with a handle to an object 
- * in native memory.
+ * Represents an instance of a proxy object with a handle to an object in
+ * native memory.
  */
 public interface Proxy {
 
     /**
-     * Get the native memory address of the object
+     * Get the native memory address of the object.
+     *
      * @return the native memory address
      */
     MemorySegment handle();

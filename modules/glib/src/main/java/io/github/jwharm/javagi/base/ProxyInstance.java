@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -29,7 +29,9 @@ public class ProxyInstance implements Proxy {
     private final MemorySegment address;
 
     /**
-     * Create a new {@code ProxyInstance} object for an instance in native memory.
+     * Create a new {@code ProxyInstance} object for an instance in native
+     * memory.
+     *
      * @param address the memory address of the instance
      */
     public ProxyInstance(MemorySegment address) {
@@ -37,7 +39,8 @@ public class ProxyInstance implements Proxy {
     }
 
     /**
-     * Get the memory address of the instance
+     * Get the memory address of the instance.
+     *
      * @return the memory address of the instance
      */
     @Override

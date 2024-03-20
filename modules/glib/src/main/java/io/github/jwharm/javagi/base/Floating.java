@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,18 +20,19 @@
 package io.github.jwharm.javagi.base;
 
 /**
- * Classes that implement the Floating interface, have a refSink method
+ * Classes that implement the Floating interface, have a refSink method.
  */
 public interface Floating extends Proxy {
 
     /**
-     * Sink the floating reference
+     * Sink the floating reference.
+     *
      * @return the instance
      */
     Floating refSink();
 
     /**
-     * Decrease the reference count of the instance
+     * Decrease the reference count of the instance.
      */
     void unref();
 }

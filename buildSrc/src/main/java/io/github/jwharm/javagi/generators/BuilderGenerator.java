@@ -148,9 +148,6 @@ public class BuilderGenerator {
     }
 
     private MethodSpec buildMethod() {
-        ClassName GOBJECT = ClassName.get("org.gnome.gobject", "GObject");
-        ClassName GVALUE = ClassName.get("org.gnome.gobject", "Value");
-
         MethodSpec.Builder builder = MethodSpec.methodBuilder("build")
                 .addModifiers(Modifier.PUBLIC)
                 .returns(rt.typeName())
@@ -161,7 +158,7 @@ public class BuilderGenerator {
                         
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
-                        """, rt.typeName().simpleName(), GOBJECT);
+                        """, rt.typeName().simpleName(), ClassNames.GOBJECT);
         if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
                     .addJavadoc("@throws $T when run on an unsupported platform",
@@ -174,9 +171,9 @@ public class BuilderGenerator {
                     ClassNames.PLATFORM, Platform.toStringLiterals(rt.platforms()));
 
         return builder.addStatement("return ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
-                        rt.typeName(), GOBJECT)
+                        rt.typeName(), ClassNames.GOBJECT)
                 .nextControlFlow("finally")
-                .addStatement("for ($T _value : getValues()) _value.unset()", GVALUE)
+                .addStatement("for ($T _value : getValues()) _value.unset()", ClassNames.GVALUE)
                 .addStatement("getArena().close()")
                 .endControlFlow()
                 .build();

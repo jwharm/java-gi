@@ -23,6 +23,7 @@ import java.lang.foreign.MemorySegment;
 
 /**
  * Base class for type aliases of primitive values.
+ *
  * @param <T> The primitive value type
  */
 public abstract class Alias<T> {
@@ -30,7 +31,8 @@ public abstract class Alias<T> {
     private T value;
 
     /**
-     * Create a new alias with the provided value
+     * Create a new alias with the provided value.
+     *
      * @param value the initial value of the alias
      */
     public Alias(T value) {
@@ -38,7 +40,8 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Set the alias to the provided value, overwriting any existing value
+     * Set the alias to the provided value, overwriting any existing value.
+     *
      * @param value the new value
      */
     public void setValue(T value) {
@@ -46,7 +49,8 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Get the current value of the alias
+     * Get the current value of the alias.
+     *
      * @return the current value, or {@code null} if the value has not been set
      */
     public T getValue() {
@@ -54,17 +58,21 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Check if the values of this alias equals the value of the provided alias
-     * @param other another Alias instance
-     * @return true if the value of this Alias equals the value of the provided alias
+     * Check if the values of this alias equals the value of the provided alias.
+     *
+     * @param  other another Alias instance
+     * @return true if the value of this Alias equals the value of the provided
+     *         alias
      */
     @Override
     public boolean equals(Object other) {
-        return other instanceof Alias<?> alias && this.value.equals(alias.value);
+        return other instanceof Alias<?> alias
+                && this.value.equals(alias.value);
     }
 
     /**
-     * Returns the hashcode of the value
+     * Get the hashcode of the value.
+     *
      * @return hashcode of the value
      */
     @Override
@@ -73,10 +81,11 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of MemorySegment Aliases into an array
-     * of primitive MemorySegment values
-     * @param array the array of Alias objects
-     * @return an array of MemorySegment values
+     * Convert an array of MemorySegment Aliases into an array of
+     * MemorySegments.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of MemorySegments
      */
     public static MemorySegment[] getAddressValues(Alias<MemorySegment>[] array) {
         MemorySegment[] values = new MemorySegment[array.length];
@@ -87,10 +96,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Boolean Aliases into an array
-     * of primitive boolean values
-     * @param array the array of Alias objects
-     * @return an array of boolean values
+     * Convert an array of Boolean Aliases into an array of booleans.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of booleans
      */
     public static boolean[] getBooleanValues(Alias<Boolean>[] array) {
         boolean[] values = new boolean[array.length];
@@ -101,10 +110,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Byte Aliases into an array
-     * of primitive byte values
-     * @param array the array of Alias objects
-     * @return an array of byte values
+     * Convert an array of Byte Aliases into an array of bytes.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of bytes
      */
     public static byte[] getByteValues(Alias<Byte>[] array) {
         byte[] values = new byte[array.length];
@@ -115,10 +124,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Character Aliases into an array
-     * of primitive char values
-     * @param array the array of Alias objects
-     * @return an array of char values
+     * Convert an array of Character Aliases into an array of chars.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of chars
      */
     public static char[] getCharacterValues(Alias<Character>[] array) {
         char[] values = new char[array.length];
@@ -129,10 +138,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Double Aliases into an array
-     * of primitive double values
-     * @param array the array of Alias objects
-     * @return an array of double values
+     * Convert an array of Double Aliases into an array of doubles.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of doubles
      */
     public static double[] getDoubleValues(Alias<Double>[] array) {
         double[] values = new double[array.length];
@@ -143,10 +152,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Float Aliases into an array
-     * of primitive float values
-     * @param array the array of Alias objects
-     * @return an array of float values
+     * Convert an array of Float Aliases into an array of floats.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of floats
      */
     public static float[] getFloatValues(Alias<Float>[] array) {
         float[] values = new float[array.length];
@@ -157,10 +166,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Integer Aliases into an array
-     * of primitive int values
+     * Convert an array of Integer Aliases into an array of integers.
+     *
      * @param array the array of Alias objects
-     * @return an array of int values
+     * @return an array of integers.
      */
     public static int[] getIntegerValues(Alias<Integer>[] array) {
         int[] values = new int[array.length];
@@ -171,10 +180,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Long Aliases into an array
-     * of primitive long values
-     * @param array the array of Alias objects
-     * @return an array of long values
+     * Convert an array of Long Aliases into an array of longs.
+     *
+     * @param  array the array of Alias objects
+     * @return an array of longs
      */
     public static long[] getLongValues(Alias<Long>[] array) {
         long[] values = new long[array.length];
@@ -185,10 +194,10 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Convenience function to turn an array of Short Aliases into an array
-     * of primitive short values
+     * Convert an array of Short Aliases into an array of shorts.
+     *
      * @param array the array of Alias objects
-     * @return an array of short values
+     * @return an array of shorts
      */
     public static short[] getShortValues(Alias<Short>[] array) {
         short[] values = new short[array.length];

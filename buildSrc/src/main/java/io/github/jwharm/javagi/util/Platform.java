@@ -27,6 +27,7 @@ import java.util.StringJoiner;
  * Constants to identify supported platforms
  */
 public class Platform {
+
     public final static int LINUX = 1;
     public final static int WINDOWS = 1 << 1;
     public final static int MACOS = 1 << 2;

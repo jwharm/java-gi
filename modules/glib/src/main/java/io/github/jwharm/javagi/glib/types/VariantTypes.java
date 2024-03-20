@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,8 +23,8 @@ import org.gnome.glib.Variant;
 import org.gnome.glib.VariantType;
 
 /**
- * This class contains G_VARIANT_TYPE_... declarations and conversion functions from
- * Java classes to GVariant types and vice versa.
+ * This class contains G_VARIANT_TYPE_... declarations and conversion functions
+ * from Java classes to GVariant types and vice versa.
  */
 @SuppressWarnings("unused")
 public class VariantTypes {
@@ -34,41 +34,41 @@ public class VariantTypes {
     /**
      * The type of a value that can be either {@code true} or {@code false}.
      */
-    public static final VariantType BOOLEAN              = new VariantType("b");
+    public static final VariantType BOOLEAN           = new VariantType("b");
 
     /**
      * The type of an integer value that can range from 0 to 255.
      **/
-    public static final VariantType BYTE                 = new VariantType("y");
+    public static final VariantType BYTE              = new VariantType("y");
 
     /**
      * The type of an integer value that can range from -32768 to 32767.
      **/
-    public static final VariantType INT16                = new VariantType("n");
+    public static final VariantType INT16             = new VariantType("n");
 
     /**
      * The type of an integer value that can range from 0 to 65535.
      * There were about this many people living in Toronto in the 1870s.
      **/
-    public static final VariantType UINT16               = new VariantType("q");
+    public static final VariantType UINT16            = new VariantType("q");
 
     /**
      * The type of an integer value that can range from -2147483648 to
      * 2147483647.
      **/
-    public static final VariantType INT32                = new VariantType("i");
+    public static final VariantType INT32             = new VariantType("i");
 
     /**
      * The type of an integer value that can range from 0 to 4294967295.
      * That's one number for everyone who was around in the late 1970s.
      **/
-    public static final VariantType UINT32               = new VariantType("u");
+    public static final VariantType UINT32            = new VariantType("u");
 
     /**
      * The type of an integer value that can range from
      * -9223372036854775808 to 9223372036854775807.
      **/
-    public static final VariantType INT64                = new VariantType("x");
+    public static final VariantType INT64             = new VariantType("x");
 
     /**
      * The type of an integer value that can range from 0
@@ -76,7 +76,7 @@ public class VariantTypes {
      * but a Rubik's cube can have a bit more than twice as many possible
      * positions.
      **/
-    public static final VariantType UINT64               = new VariantType("t");
+    public static final VariantType UINT64            = new VariantType("t");
 
     /**
      * The type of a double precision IEEE754 floating point number.
@@ -85,12 +85,12 @@ public class VariantTypes {
      * estimated number of fundamental particles in the observable
      * universe.
      **/
-    public static final VariantType DOUBLE               = new VariantType("d");
+    public static final VariantType DOUBLE            = new VariantType("d");
 
     /**
      * The type of a string.  "" is a string.  {@code null} is not a string.
      **/
-    public static final VariantType STRING               = new VariantType("s");
+    public static final VariantType STRING            = new VariantType("s");
 
     /**
      * The type of a D-Bus object reference.  These are strings of a
@@ -101,7 +101,7 @@ public class VariantTypes {
      * use of this type.  If you are, then the D-Bus specification contains a
      * precise description of valid object paths.
      **/
-    public static final VariantType OBJECT_PATH          = new VariantType("o");
+    public static final VariantType OBJECT_PATH       = new VariantType("o");
 
     /**
      * The type of a D-Bus type signature.  These are strings of a specific
@@ -111,13 +111,13 @@ public class VariantTypes {
      * use of this type.  If you are, then the D-Bus specification contains a
      * precise description of valid signature strings.
      **/
-    public static final VariantType SIGNATURE            = new VariantType("g");
+    public static final VariantType SIGNATURE         = new VariantType("g");
 
     /**
      * The type of a box that contains any other value (including another
      * variant).
      **/
-    public static final VariantType VARIANT              = new VariantType("v");
+    public static final VariantType VARIANT           = new VariantType("v");
 
     /**
      * The type of a 32bit signed integer value, that by convention, is used
@@ -127,64 +127,64 @@ public class VariantTypes {
      * If you are not interacting with D-Bus, then there is no reason to make
      * use of this type.
      **/
-    public static final VariantType HANDLE               = new VariantType("h");
+    public static final VariantType HANDLE            = new VariantType("h");
 
     /**
      * The empty tuple type.  Has only one instance.  Known also as "triv"
      * or "void".
      **/
-    public static final VariantType UNIT                 = new VariantType("()");
+    public static final VariantType UNIT              = new VariantType("()");
 
     /**
      * An indefinite type that is a supertype of every type (including
      * itself).
      **/
-    public static final VariantType ANY                  = new VariantType("*");
+    public static final VariantType ANY               = new VariantType("*");
 
     /**
      * An indefinite type that is a supertype of every basic (ie:
      * non-container) type.
      **/
-    public static final VariantType BASIC                = new VariantType("?");
+    public static final VariantType BASIC             = new VariantType("?");
 
     /**
      * An indefinite type that is a supertype of every maybe type.
      **/
-    public static final VariantType MAYBE                = new VariantType("m*");
+    public static final VariantType MAYBE             = new VariantType("m*");
 
     /**
      * An indefinite type that is a supertype of every array type.
      **/
-    public static final VariantType ARRAY                = new VariantType("a*");
+    public static final VariantType ARRAY             = new VariantType("a*");
 
     /**
      * An indefinite type that is a supertype of every tuple type,
      * regardless of the number of items in the tuple.
      **/
-    public static final VariantType TUPLE                = new VariantType("r");
+    public static final VariantType TUPLE             = new VariantType("r");
 
     /**
      * An indefinite type that is a supertype of every dictionary entry
      * type.
      **/
-    public static final VariantType DICT_ENTRY           = new VariantType("{?*}");
+    public static final VariantType DICT_ENTRY        = new VariantType("{?*}");
 
     /**
      * An indefinite type that is a supertype of every dictionary type --
      * that is, any array type that has an element type equal to any
      * dictionary entry type.
      **/
-    public static final VariantType DICTIONARY           = new VariantType("a{?*}");
+    public static final VariantType DICTIONARY        = new VariantType("a{?*}");
 
     /**
      * The type of an array of strings.
      **/
-    public static final VariantType STRING_ARRAY         = new VariantType("as");
+    public static final VariantType STRING_ARRAY      = new VariantType("as");
 
     /**
      * The type of an array of object paths.
      **/
-    public static final VariantType OBJECT_PATH_ARRAY    = new VariantType("ao");
+    public static final VariantType OBJECT_PATH_ARRAY = new VariantType("ao");
 
     /**
      * The type of an array of bytes.  This type is commonly used to pass
@@ -192,12 +192,12 @@ public class VariantTypes {
      * convention is that the nul terminator character should be included as
      * the last character in the array.
      **/
-    public static final VariantType BYTESTRING           = new VariantType("ay");
+    public static final VariantType BYTESTRING        = new VariantType("ay");
 
     /**
      * The type of an array of byte strings (an array of arrays of bytes).
      **/
-    public static final VariantType BYTESTRING_ARRAY     = new VariantType("aay");
+    public static final VariantType BYTESTRING_ARRAY  = new VariantType("aay");
 
     /**
      * The type of a dictionary mapping strings to variants (the ubiquitous
@@ -205,36 +205,42 @@ public class VariantTypes {
      *
      * @since 2.30
      **/
-    public static final VariantType VARDICT              = new VariantType("a{sv}");
+    public static final VariantType VARDICT           = new VariantType("a{sv}");
 
     /**
-     * Return a {@link VariantType} that is suitable for the Java class of this object
-     * @param object a Java object instance
+     * Return a {@link VariantType} that is suitable for the Java class of this
+     * object.
+     *
+     * @param  object a Java object instance
      * @return the VariantType
      */
     public static VariantType objectToVariantType(Object object) {
-        return object instanceof Boolean ? BOOLEAN
-                : object instanceof Byte ? BYTE
-                : object instanceof Double ? DOUBLE
-                : object instanceof Integer ? INT32
-                : object instanceof Long ? INT64
-                : object instanceof Short ? INT16
-                : object instanceof String ? STRING
-                : null;
+        return switch(object) {
+            case Boolean _ -> BOOLEAN;
+            case Byte _    -> BYTE;
+            case Double _  -> DOUBLE;
+            case Integer _ -> INT32;
+            case Long _    -> INT64;
+            case Short _   -> INT16;
+            case String _  -> STRING;
+            default        -> null;
+        };
     }
 
     /**
-     * Return a Java class that is suitable for the {@link VariantType} of this GVariant
-     * @param variant a {@link Variant} instance
+     * Return a Java class that is suitable for the {@link VariantType} of this
+     * GVariant.
+     *
+     * @param  variant a {@link Variant} instance
      * @return the Java class
      */
     public static Class<?> variantToClass(Variant variant) {
-        return variant.isOfType(BOOLEAN) ? Boolean.class
-                : variant.isOfType(BYTE) ? Byte.class
+        return variant.isOfType(BOOLEAN)   ? Boolean.class
+                : variant.isOfType(BYTE)   ? Byte.class
                 : variant.isOfType(DOUBLE) ? Double.class
-                : variant.isOfType(INT32) ? Integer.class
-                : variant.isOfType(INT64) ? Long.class
-                : variant.isOfType(INT16) ? Short.class
+                : variant.isOfType(INT32)  ? Integer.class
+                : variant.isOfType(INT64)  ? Long.class
+                : variant.isOfType(INT16)  ? Short.class
                 : variant.isOfType(STRING) ? String.class
                 : null;
     }

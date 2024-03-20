@@ -25,15 +25,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Used to construct JavaPoet code blocks with named arguments
- * from multiple smaller parts.
+ * Used to construct JavaPoet code blocks with named arguments from multiple
+ * smaller parts.
  */
 public final class PartialStatement {
 
     private final StringBuilder format = new StringBuilder();
     private final Map<String, Object> arguments = new HashMap<>();
 
-    public PartialStatement() {
+    private PartialStatement() {
     }
 
     public static PartialStatement of(String format, Object... args) {

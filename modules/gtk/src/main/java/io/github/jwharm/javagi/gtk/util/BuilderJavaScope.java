@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -78,25 +78,34 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
     }
 
     /**
-     * Called by a GtkBuilder to create a {@link Closure} from the name that was specified in
-     * an attribute of a UI file. The {@code functionName} should refer to a method in the
-     * Java class (a {@link Buildable} instance). If that fails, as a fallback mechanism the
-     * {@link BuilderCScope#createClosure(GtkBuilder, String, BuilderClosureFlags, GObject)} is
-     * called and the result of that function is returned.
-     * @param builder the GtkBuilder instance
-     * @param functionName the function name for which a {@link Closure} will be returned
-     * @param flags options for creating the closure
-     * @param object unused
-     * @return a new {@link JavaClosure} instance for the requested {@code functionName}
+     * Called by a GtkBuilder to create a {@link Closure} from the name that
+     * was specified in an attribute of a UI file. The {@code functionName}
+     * should refer to a method in the Java class (a {@link Buildable}
+     * instance). If that fails, as a fallback mechanism the
+     * {@link BuilderCScope#createClosure(GtkBuilder, String, BuilderClosureFlags, GObject)}
+     * is called and the result of that function is returned.
+     *
+     * @param  builder      the GtkBuilder instance
+     * @param  functionName the function name for which a {@link Closure} will
+     *                      be returned
+     * @param  flags        options for creating the closure
+     * @param  object       unused
+     * @return a new {@link JavaClosure} instance for the requested
+     *         {@code functionName}
      * @throws GErrorException when an error occurs
      */
     @Override
-    public Closure createClosure(GtkBuilder builder, String functionName, BuilderClosureFlags flags, GObject object) throws GErrorException {
+    public Closure createClosure(GtkBuilder builder,
+                                 String functionName,
+                                 BuilderClosureFlags flags,
+                                 GObject object) throws GErrorException {
+
         // Get the instance object
         GObject currentObject = builder.getCurrentObject();
         if (currentObject == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot create closure for handler %s: Current object not set\n", functionName);
+                    "Cannot create closure for handler %s: Current object not set\n",
+                    functionName);
             return asParent().createClosure(builder, functionName, flags, object);
         }
 
@@ -116,6 +125,7 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
                         return false;
                     }
                 });
+
             // Signal that returns void
             } else {
                 return new JavaClosure((Runnable) () -> {
@@ -137,20 +147,23 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
     }
 
     /**
-     * Return a method with annotation "@GtkCallback name=functionName", or else a method
-     * with the exact name "functionName()".
-     * @param cls The class to search in
-     * @param functionName the name to search for
+     * Return a method with annotation {@code "@GtkCallback name=functionName"},
+     * or else a method with the exact name specified with {@code functionName}.
+     *
+     * @param  cls          the class to search in
+     * @param  functionName the name to search for
      * @return the method (if found)
      * @throws NoSuchMethodException when the method cannot be found
      */
-    private Method getMethodForName(Class<?> cls, String functionName) throws NoSuchMethodException {
+    private Method getMethodForName(Class<?> cls, String functionName)
+            throws NoSuchMethodException {
+
         // Find method with GtkCallback annotation
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(GtkCallback.class)) {
-                if (functionName.equals(m.getAnnotation(GtkCallback.class).name())) {
+                String name = m.getAnnotation(GtkCallback.class).name();
+                if (functionName.equals(name))
                     return m;
-                }
             }
         }
         // Find method using reflection
@@ -159,7 +172,8 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
 
     /**
      * See {@link BuilderCScope#getTypeFromFunction(GtkBuilder, String)}
-     * @param builder the GtkBuilder instance
+     *
+     * @param builder      the GtkBuilder instance
      * @param functionName the name of the function that will return a GType
      * @return the GType returned by {@code functionName}
      */
@@ -170,7 +184,8 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
 
     /**
      * See {@link BuilderCScope#getTypeFromName(GtkBuilder, String)}
-     * @param builder the GtkBuilder instance
+     *
+     * @param builder  the GtkBuilder instance
      * @param typeName the name of the GType
      * @return the requested GType
      */

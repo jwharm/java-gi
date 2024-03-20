@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -24,8 +24,8 @@ import io.github.jwharm.javagi.base.UnsupportedPlatformException;
 import java.util.StringJoiner;
 
 /**
- * The Platform class provides utility functions to retrieve the runtime platform and
- * and check if a function is supported on the runtime platform.
+ * The Platform class provides utility functions to retrieve the runtime
+ * platform and and check if a function is supported on the runtime platform.
  */
 public class Platform {
 
@@ -38,34 +38,48 @@ public class Platform {
     public static String getRuntimePlatform() {
         if (runtimePlatform == null) {
             String osName = System.getProperty("os.name").toLowerCase();
-            if (osName.contains("windows")) {
+            if (osName.contains("windows"))
                 runtimePlatform = "windows";
-            } else if (osName.contains("linux")) {
+            else if (osName.contains("linux"))
                 runtimePlatform = "linux";
-            } else {
+            else
                 runtimePlatform = "macos";
-            }
         }
         return runtimePlatform;
     }
 
     /**
-     * Check if the runtime platform is in the list of provided platforms; if not, throws UnsupportedPlatformException
-     * @param supportedPlatforms the platforms on which the api call is supported
-     * @throws UnsupportedPlatformException when the runtime platform does not support this api call
+     * Check if the runtime platform is in the list of provided platforms; if
+     * not, throws UnsupportedPlatformException.
+     *
+     * @param  supportedPlatforms the platforms on which the api call is
+     *                            supported
+     * @throws UnsupportedPlatformException when the runtime platform does not
+     *                                      support this api call
      */
-    public static void checkSupportedPlatform(String... supportedPlatforms) throws UnsupportedPlatformException {
-        // Check if the runtime platform is in the list of platforms where this function is available
+    public static void checkSupportedPlatform(String... supportedPlatforms)
+            throws UnsupportedPlatformException {
+
+        /*
+         * Check if the runtime platform is in the list of platforms where this
+         * function is available.
+         */
         for (var platform : supportedPlatforms) {
-            if (platform.equals(getRuntimePlatform())) {
+            if (platform.equals(getRuntimePlatform()))
                 return;
-            }
         }
-        // Runtime platform is not in list of supported platforms: throw UnsupportedPlatformException
-        StringJoiner joiner = new StringJoiner(" and ", "Unsupported API call (only available on ", ".");
+
+        /*
+         * Runtime platform is not in list of supported platforms: throw
+         * UnsupportedPlatformException.
+         */
+        StringJoiner joiner = new StringJoiner(" and ",
+                "Unsupported API call (only available on ", ".");
+
         for (var platform : supportedPlatforms) {
             joiner.add(platform);
         }
+
         throw new UnsupportedPlatformException(joiner.toString());
     }
 }

@@ -25,8 +25,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.findAny;
 
 public sealed interface Callable
         extends Node
-        permits Callback, Constructor, Function, Method, Signal,
-                VirtualMethod {
+        permits Callback, Constructor, Function, Method, Signal, VirtualMethod {
 
     int platforms();
     InfoElements infoElements();

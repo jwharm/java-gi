@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,12 +20,14 @@
 package io.github.jwharm.javagi.base;
 
 /**
- * This exception is thrown when a function is run on a platform where it is not available.
+ * This exception is thrown when a function is run on a platform where it is
+ * not available.
  */
 public class UnsupportedPlatformException extends RuntimeException {
 
     /**
-     * Create a new UnsupportedPlatformException with the provided message
+     * Create a new UnsupportedPlatformException with the provided message.
+     *
      * @param message the exception message
      */
     public UnsupportedPlatformException(String message) {

@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.gir;
 import java.util.Map;
 
 public final class CInclude extends GirElement {
+
     public CInclude(Map<String, String> attributes) {
         super(attributes);
     }

@@ -39,7 +39,8 @@ public final class Alias extends Multiplatform implements RegisteredType {
 
     @Override
     public String getTypeFunc() {
-        if (type().isPrimitive()) return null;
+        if (type().isPrimitive())
+            return null;
         return type().get().getTypeFunc();
     }
 

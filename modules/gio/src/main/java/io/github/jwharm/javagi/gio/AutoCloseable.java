@@ -28,19 +28,23 @@ import java.io.IOException;
 /**
  * An {@link java.lang.AutoCloseable} interface for GIO streams.
  * <p>
- * This interface extends {@link java.lang.AutoCloseable} and implements the {@link #close()}
- * with a {@code default} version that calls the {@link #close(Cancellable)} method. This method
- * is implemented by GIO streams ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream}
- * and {@link org.gnome.gio.OutputStream}) so they become {@code AutoCloseable} and can be used in
- * a try-with-resources block.
+ * This interface extends {@link java.lang.AutoCloseable} and implements the
+ * {@link #close()} with a {@code default} version that calls the
+ * {@link #close(Cancellable)} method. This method is implemented by GIO
+ * streams ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream}
+ * and {@link org.gnome.gio.OutputStream}) so they become
+ * {@code AutoCloseable} and can be used in a try-with-resources block.
  */
 public interface AutoCloseable extends java.lang.AutoCloseable {
 
     /**
-     * A default implementation of {@link java.lang.AutoCloseable} that calls {@link #close(Cancellable)}.
-     * The return value of {@link #close(Cancellable)} is ignored.
-     * @throws java.io.IOException An {@code IOException} that is wrapped around the {@link GErrorException}
-     *                             that is thrown by {@link #close(Cancellable)}.
+     * A default implementation of {@link java.lang.AutoCloseable} that calls
+     * {@link #close(Cancellable)}. The return value of
+     * {@link #close(Cancellable)} is ignored.
+     *
+     * @throws java.io.IOException An {@code IOException} that is wrapped
+     *                             around the {@link GErrorException} that is
+     *                             thrown by {@link #close(Cancellable)}.
      */
     default void close() throws java.io.IOException {
         try {
@@ -51,11 +55,15 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
     }
 
     /**
-     * The {@code close} method that is implemented by GLib streams ({@link org.gnome.gio.IOStream},
-     * {@link org.gnome.gio.InputStream} and {@link org.gnome.gio.OutputStream}).
-     * @param cancellable optional {@link Cancellable} object, {@code null} to ignore
+     * The {@code close} method that is implemented by GLib streams
+     * ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream} and
+     * {@link org.gnome.gio.OutputStream}).
+     *
+     * @param  cancellable optional {@link Cancellable} object, {@code null} to
+     *                     ignore
      * @return {@code true} on success, {@code false} on failure
      * @throws GErrorException See {@link org.gnome.glib.GError}
      */
-    boolean close(@Nullable org.gnome.gio.Cancellable cancellable) throws GErrorException;
+    boolean close(@Nullable org.gnome.gio.Cancellable cancellable)
+            throws GErrorException;
 }
