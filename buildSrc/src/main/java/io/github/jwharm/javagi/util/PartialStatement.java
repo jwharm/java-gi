@@ -33,7 +33,7 @@ public final class PartialStatement {
     private final StringBuilder format = new StringBuilder();
     private final Map<String, Object> arguments = new HashMap<>();
 
-    private PartialStatement() {
+    public PartialStatement() {
     }
 
     public static PartialStatement of(String format, Object... args) {
