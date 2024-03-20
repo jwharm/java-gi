@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
+import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.Namespace;
 import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.Platform;
@@ -37,11 +38,14 @@ public class PackageInfoGenerator {
     }
 
     public String generate() {
+        String description = ModuleInfo.description(ns.name());
+        if (description.isBlank())
+            description = "Java bindings for %s.".formatted(ModuleInfo.moduleName(ns.name()));
         builder.append("""
                 /**
-                 * This package contains the generated bindings for %s.
+                 * %s
                  * <p>
-                """.formatted(ns.name()));
+                """.formatted(description));
 
         if (ns.sharedLibrary() != null) {
             builder.append(" * The following native libraries are required and will be loaded:");
@@ -88,7 +92,7 @@ public class PackageInfoGenerator {
         builder.append("""
                  */
                 package %s;
-                """.formatted(ns.packageName()));
+                """.formatted(ModuleInfo.packageName(ns.name())));
 
         return builder.toString();
     }
