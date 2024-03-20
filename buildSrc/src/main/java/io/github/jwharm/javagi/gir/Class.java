@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gir;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
@@ -82,10 +81,6 @@ public final class Class extends Multiplatform
 
     public Record typeStruct() {
         return (Record) TypeReference.get(namespace(), attr("glib:type-struct"));
-    }
-
-    public boolean hasProperties() {
-        return children().stream().anyMatch(Property.class::isInstance);
     }
 
     public String refFunc() {
