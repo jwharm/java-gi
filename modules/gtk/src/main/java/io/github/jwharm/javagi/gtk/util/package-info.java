@@ -1,5 +1,4 @@
 /**
- * This package contains utility classes for use with the Gtk bindings
- * generated with java-gi.
+ * Java-GI utility classes for use with the Gtk bindings.
  */
 package io.github.jwharm.javagi.gtk.util;

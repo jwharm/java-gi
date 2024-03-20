@@ -1,4 +1,4 @@
 /**
- * This package contains general-purpose interop utilities.
+ * Java-GI global constant definitions.
  */
 package io.github.jwharm.javagi;

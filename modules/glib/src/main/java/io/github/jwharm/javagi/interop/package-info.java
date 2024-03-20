@@ -1,6 +1,6 @@
 /**
- * This package contains functionality that java-gi generated
- * bindings need to load native libraries, interoperate with native
- * functions, and allocate memory.
+ * Java-GI classes used by generated bindings to load native libraries, call
+ * native functions, allocate and release memory, and check the runtime
+ * platform.
  */
 package io.github.jwharm.javagi.interop;
