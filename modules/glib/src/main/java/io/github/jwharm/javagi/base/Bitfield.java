@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,14 +20,15 @@
 package io.github.jwharm.javagi.base;
 
 /**
- * Base class for bitfield objects
+ * Base class for bitfield objects.
  */
 public abstract class Bitfield {
 
     private final int value;
 
     /**
-     * Create a bitfield with the provided integer value
+     * Create a bitfield with the provided integer value.
+     *
      * @param value the initial value of the bitfield
      */
     public Bitfield(int value) {
@@ -35,7 +36,8 @@ public abstract class Bitfield {
     }
 
     /**
-     * Get the value of the bitfield as an integer value
+     * Get the value of the bitfield as an integer value.
+     *
      * @return the value of the bitfield
      */
     public int getValue() {
@@ -43,39 +45,48 @@ public abstract class Bitfield {
     }
 
     /**
-     * Compares the value of this bitfield with the provided int value
-     * @param bitfield an int value to compare with
-     * @return returns true when {@code this.value == bitfield}
+     * Compare the value of this bitfield with the provided int value.
+     *
+     * @param  bitfield an int value to compare with
+     * @return true when {@code this.value == bitfield}
      */
     public boolean equals(int bitfield) {
         return this.value == bitfield;
     }
 
     /**
-     * Compares the value of this bitfield with the value of the provided bitfield
-     * @param mask another bitfield
-     * @return returns true when {@code this.value == mask.value}
+     * Compare the value of this bitfield with the value of the provided
+     * bitfield.
+     *
+     * @param  mask another bitfield
+     * @return true when {@code this.value == mask.value}
      */
     public boolean equals(Bitfield mask) {
         return this.value == mask.value;
     }
 
     /**
-     * If the provided object is a {@link Bitfield} instance, the values are compared.
-     * If the provided object is an {@link Integer}, the value is compared to it.
-     * Otherwise, false is returned.
-     * @param other the object to compare the bitfield to
-     * @return true when the value of the bitfield is equal to the provided value
+     * If the provided object is a {@link Bitfield} instance, the values are
+     * compared. If the provided object is an {@link Integer}, the value is
+     * compared to it. Otherwise, false is returned.
+     *
+     * @param  other the object to compare the bitfield to
+     * @return whether the value of the bitfield is equal to the provided value
      */
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Bitfield mask) return equals(mask);
-        if (other instanceof Integer bitfield) return equals(bitfield.intValue());
+        if (other instanceof Bitfield mask)
+            return equals(mask);
+
+        if (other instanceof Integer bitfield)
+            return equals(bitfield.intValue());
+
         return false;
     }
 
     /**
-     * Returns the (integer) value of the bitfield
+     * Get the (integer) value of the bitfield.
+     *
      * @return the value of the bitfield
      */
     @Override
@@ -84,10 +95,20 @@ public abstract class Bitfield {
     }
 
     /**
-     * Convenience function to turn an array of Bitfield objects into 
-     * an array of int values
-     * @param array Array of Bitfield objects
-     * @return array of int values
+     * Get a String representation of the bitfield.
+     *
+     * @return a String {@code "Bitfield [value]"}
+     */
+    @Override
+    public String toString() {
+        return "Bitfield [%d]".formatted(value);
+    }
+
+    /**
+     * Convert an array of Bitfield objects into an array of integers.
+     *
+     * @param  array Array of Bitfield objects
+     * @return array of integers
      */
     public static int[] getValues(Bitfield[] array) {
         int[] values = new int[array.length];
