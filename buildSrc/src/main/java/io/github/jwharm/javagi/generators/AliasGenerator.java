@@ -71,10 +71,17 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     .addSuperinterface(target.typeName());
 
         else if (alias.type().isPrimitive()
-                || List.of("java.lang.String", "java.lang.foreign.MemorySegment").contains(alias.type().javaType()))
-            builder.superclass(ParameterizedTypeName.get(ClassNames.ALIAS, alias.type().typeName().box()))
+                || List.of("java.lang.String", "java.lang.foreign.MemorySegment")
+                            .contains(alias.type().javaType()))
+            builder.superclass(ParameterizedTypeName.get(
+                            ClassNames.ALIAS, alias.type().typeName().box()))
                     .addMethod(valueConstructor(alias.type().typeName()))
                     .addMethod(arrayConstructor(alias.type()));
+
+        if (target instanceof Class || target instanceof Interface
+                || target instanceof Record || target instanceof Boxed
+                || target instanceof Union)
+            builder.addMethod(fromTargetType());
 
         if (alias.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
@@ -100,11 +107,29 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                     Create a $L proxy instance for the provided memory address.
+                    
                     @param address the memory address of the native object
                     """, name())
                 .addParameter(MemorySegment.class, "address")
                 .addStatement("super(address)");
         return spec.build();
+    }
+
+    private MethodSpec fromTargetType() {
+        String name = "from" + toJavaSimpleType(target.name(), target.namespace());
+        return MethodSpec.methodBuilder(name)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addJavadoc("""
+                    Cast a $1L instance to a $2L with the same memory address.
+                    
+                    @param  alias the $1L to cast to a $2L
+                    @return a $2L with the memory address of the $1L
+                    """, target.name(), name())
+                .returns(alias.typeName())
+                .addParameter(target.typeName(), "alias")
+                .addStatement("return new $T(alias.handle())",
+                        alias.typeName())
+                .build();
     }
 
     private MethodSpec arrayConstructor(Type primitiveType) {

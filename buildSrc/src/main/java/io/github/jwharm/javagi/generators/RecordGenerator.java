@@ -231,7 +231,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         // Javadoc for parameters and return value
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
-                spec.addJavadoc("@param $1L $2L for the field {@code $1L}\n",
+                spec.addJavadoc("@param  $1L $2L for the field {@code $1L}\n",
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
         );
