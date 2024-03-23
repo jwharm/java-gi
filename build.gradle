@@ -1,20 +1,12 @@
-/* The top-level project is used to generate javadoc.
- */
+// The top-level project is used to generate javadoc.
 
 plugins {
     id 'java-library'
-    id 'idea'
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-idea {
-    module {
-        downloadSources = true
+        languageVersion = JavaLanguageVersion.of(22)
     }
 }
 
@@ -25,8 +17,6 @@ tasks.named('jar') {
 
 // Generate javadoc for all modules
 tasks.named('javadoc', Javadoc) {
-    options.addStringOption('source', '21')
-    options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
 
@@ -49,6 +39,7 @@ tasks.named('javadoc', Javadoc) {
         })
     })
 
+    // Ensure all source code is generated before the Javadoc task starts
     subprojects.forEach {
         dependsOn it.tasks.named('generateSources')
     }
