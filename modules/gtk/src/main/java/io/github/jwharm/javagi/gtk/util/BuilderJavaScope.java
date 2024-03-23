@@ -46,7 +46,8 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
  * the Java instance method {@code okButtonClicked()} will be called on
  * the widget that is being built with the {@link GtkBuilder}.
  */
-public final class BuilderJavaScope extends BuilderCScope implements BuilderScope {
+public final class BuilderJavaScope extends BuilderCScope
+        implements BuilderScope {
 
     private static final Type gtype = Types.register(BuilderJavaScope.class);
 
@@ -121,7 +122,9 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Cannot invoke method %s in class %s: %s\n",
-                                functionName, currentObject.getClass().getName(), e.getMessage());
+                                functionName,
+                                currentObject.getClass().getName(),
+                                e.getMessage());
                         return false;
                     }
                 });
@@ -134,7 +137,9 @@ public final class BuilderJavaScope extends BuilderCScope implements BuilderScop
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Cannot invoke method %s in class %s: %s\n",
-                                functionName, currentObject.getClass().getName(), e.getMessage());
+                                functionName,
+                                currentObject.getClass().getName(),
+                                e.getMessage());
                     }
                 });
             }
