@@ -13,7 +13,7 @@ It is recommended to register the new gtype in a field `gtype` like this:
 ```java
     private static final Type gtype = Types.register(MyObject.class);
     
-    public Type getType() {
+    public static Type getType() {
         return gtype;
     }
 ```

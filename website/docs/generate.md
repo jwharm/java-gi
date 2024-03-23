@@ -35,13 +35,13 @@ dependencies {
     api project(':gio')
 }
 
-tasks.named('generateSources') {
-    girFile = 'My-Gir-File-0.0.gir'
+generateSources.configure {
+    namespace = 'Insert-Namespace-Here'
 }
 ```
 
-The `generateSources` task accepts an optional `urlPrefix` argument to set an URL that is prefixed to image links.
+Configure the Java package name, description and an URL prefix for image links in the `ModuleInfo` class in the package `io.github.jwharm.javagi.configuration` in the `BuildSrc/src/main/java` directory.
 
-When neccessary, you can patch the introspection data. To do this, create a patch class implementing `PatchSet` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add a `patch = new ...Patch()` argument to the `generateSources` task. (See the [Gtk](https://github.com/jwharm/java-gi/blob/main/modules/gtk/build.gradle) buildfile for an example).
+When neccessary, you can patch the introspection data. To do this, create a patch class implementing `Patch` in the folder `buildSrc/main/java/io/github/jwharm/javagi/patches` and add it to the list in the `Patches` class.
 
 If you encounter any problems or errors, check the generated Java source code in the `java-gi/modules/{modulename}/build/generated/sources/java-gi` directory for issues. 
