@@ -97,11 +97,11 @@ public abstract class Bitfield {
     /**
      * Get a String representation of the bitfield.
      *
-     * @return a String {@code "Bitfield [value]"}
+     * @return a String {@code "ClassName [value]"}
      */
     @Override
     public String toString() {
-        return "Bitfield [%d]".formatted(value);
+        return "%s [%d]".formatted(getClass().getName(), value);
     }
 
     /**
