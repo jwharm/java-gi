@@ -19,11 +19,9 @@
 
 package io.github.jwharm.javagi.patches;
 
+import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
-import io.github.jwharm.javagi.gir.Function;
-import io.github.jwharm.javagi.gir.GirElement;
-import io.github.jwharm.javagi.gir.Method;
-import io.github.jwharm.javagi.gir.VirtualMethod;
+import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
@@ -35,6 +33,23 @@ public class GtkPatch implements Patch {
 
         if (!"Gtk".equals(namespace))
             return element;
+
+        /*
+         * Gtk.CustomLayout is a convenience class for C code that wants to
+         * avoid subclassing Gtk.LayoutManager. It is not supposed to be used
+         * by language bindings, and will never work correctly, as it doesn't
+         * have the necessary parameters and annotations to manage the lifetime
+         * of the callback functions.
+         * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially the
+         * first comment.
+         */
+        if (element instanceof Namespace ns) {
+            ns =   remove(ns, Callback.class, "name", "CustomRequestModeFunc");
+            ns =   remove(ns, Callback.class, "name", "CustomMeasureFunc");
+            ns =   remove(ns, Callback.class, "name", "CustomAllocateFunc");
+            ns =   remove(ns, Record.class,   "name", "CustomLayoutClass");
+            return remove(ns, Class.class,    "name", "CustomLayout");
+        }
 
         /*
          * ApplicationWindow.getId() overrides Buildable.getId() with a
