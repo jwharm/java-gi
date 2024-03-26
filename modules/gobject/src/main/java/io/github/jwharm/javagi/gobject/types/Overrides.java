@@ -109,7 +109,7 @@ public class Overrides {
         List<Method> methods = new ArrayList<>();
         for (Method method : cls.getDeclaredMethods()) {
             try {
-                Method virtual = parentClass.getMethod(method.getName(), method.getParameterTypes());
+                Method virtual = parentClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
                 if (! Proxy.class.isAssignableFrom(virtual.getDeclaringClass()))
                     continue;
 
@@ -123,6 +123,10 @@ public class Overrides {
             } catch (NoSuchMethodException e) {
                 continue;
             }
+
+            // Make protected methods accessible
+            method.setAccessible(true);
+
             methods.add(method);
         }
 
