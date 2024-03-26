@@ -26,6 +26,7 @@ import io.github.jwharm.javagi.gir.Union;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
+import java.lang.foreign.Arena;
 
 public class UnionGenerator extends RegisteredTypeGenerator {
 
@@ -52,8 +53,10 @@ public class UnionGenerator extends RegisteredTypeGenerator {
                 .addMethod(memoryAddressConstructor());
 
         MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(union);
-        if (memoryLayout != null)
+        if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
+            builder.addMethod(constructor());
+        }
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
@@ -62,5 +65,18 @@ public class UnionGenerator extends RegisteredTypeGenerator {
         addFunctions(builder);
 
         return builder.build();
+    }
+
+    private MethodSpec constructor() {
+        return MethodSpec.constructorBuilder()
+                .addJavadoc("""
+                        Allocate a new $1T.
+                        
+                        @param arena to control the memory allocation scope
+                        """, union.typeName())
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(Arena.class, "arena")
+                .addStatement("super(arena.allocate(getMemoryLayout()))")
+                .build();
     }
 }

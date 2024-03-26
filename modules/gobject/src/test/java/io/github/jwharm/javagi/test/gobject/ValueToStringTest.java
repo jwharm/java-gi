@@ -20,15 +20,15 @@ public class ValueToStringTest {
 
     @Test
     public void testValueToString() {
-        Value vInt = Value.allocate(Arena.ofAuto()).init(Types.INT);
+        Value vInt = new Value(Arena.ofAuto()).init(Types.INT);
         vInt.setInt(123);
         assertEquals("123", vInt.toString());
 
-        Value vBool = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
+        Value vBool = new Value(Arena.ofAuto()).init(Types.BOOLEAN);
         vBool.setBoolean(true);
         assertEquals("TRUE", vBool.toString());
 
-        Value vStr = Value.allocate(Arena.ofAuto()).init(Types.STRING);
+        Value vStr = new Value(Arena.ofAuto()).init(Types.STRING);
         vStr.setString("abc");
         assertEquals("\"abc\"", vStr.toString());
     }

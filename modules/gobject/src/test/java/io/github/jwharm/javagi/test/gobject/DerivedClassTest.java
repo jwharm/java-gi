@@ -77,8 +77,8 @@ public class DerivedClassTest {
     @Test
     public void writeAndReadProperty() {
         // With manually created GValues
-        Value input = Value.allocate(Arena.ofAuto()).init(Types.STRING);
-        Value output = Value.allocate(Arena.ofAuto()).init(Types.STRING);
+        Value input = new Value(Arena.ofAuto()).init(Types.STRING);
+        Value output = new Value(Arena.ofAuto()).init(Types.STRING);
         input.setString("test value");
 
         TestObject object = GObject.newInstance(TestObject.gtype);
@@ -98,8 +98,8 @@ public class DerivedClassTest {
     @Test
     public void writeAndReadBooleanProperty() {
         // With manually created GValues
-        Value input = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
-        Value output = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
+        Value input = new Value(Arena.ofAuto()).init(Types.BOOLEAN);
+        Value output = new Value(Arena.ofAuto()).init(Types.BOOLEAN);
         input.setBoolean(true);
         TestObject object = GObject.newInstance(TestObject.gtype);
         object.setProperty("bool-property", input);
