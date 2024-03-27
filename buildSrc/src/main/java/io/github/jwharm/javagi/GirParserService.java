@@ -39,7 +39,7 @@ import java.io.FileNotFoundException;
  * only parsed once during a build.
  */
 public abstract class GirParserService
-        implements BuildService<GirParserService.Params>, AutoCloseable {
+        implements BuildService<GirParserService.Params> {
 
     interface Params extends BuildServiceParameters {
         DirectoryProperty getInputDirectory();
@@ -138,10 +138,5 @@ public abstract class GirParserService
 
         throw new FileNotFoundException("%s not found in %s"
                 .formatted(fileNamePrefix, folder));
-    }
-
-    @Override
-    public void close() {
-        // Currently a no-op
     }
 }
