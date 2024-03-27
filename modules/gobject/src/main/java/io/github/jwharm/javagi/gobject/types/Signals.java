@@ -257,7 +257,7 @@ public class Signals {
 
         try (var arena = Arena.ofConfined()) {
             // Query the parameter details of the signal
-            SignalQuery query = SignalQuery.allocate(arena);
+            SignalQuery query = new SignalQuery(arena);
             GObjects.signalQuery(signalId.get(), query);
 
             // Create an array of Types for the parameters
@@ -269,18 +269,18 @@ public class Signals {
             var values = new Value[nParams+1];
 
             // Allocation return value
-            var returnValue = Value.allocate(arena);
+            var returnValue = new Value(arena);
             Type returnType = query.readReturnType();
             if (! Types.NONE.equals(returnType))
                 returnValue.init(returnType);
 
             // Set instance parameter
-            values[0] = Value.allocate(arena).init(gtype);
+            values[0] = new Value(arena).init(gtype);
             values[0].setObject(gobject);
 
             // Set other parameters
             for (int i = 0; i < nParams; i++) {
-                values[i+1] = Value.allocate(arena).init(paramTypes[i]);
+                values[i+1] = new Value(arena).init(paramTypes[i]);
                 ValueUtil.objectToValue(params[i], values[i+1]);
             }
 

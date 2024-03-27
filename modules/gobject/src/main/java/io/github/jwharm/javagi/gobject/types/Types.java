@@ -1094,7 +1094,7 @@ public class Types {
                             continue;
                         }
 
-                        InterfaceInfo interfaceInfo = InterfaceInfo.allocate(arena);
+                        InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
                         Consumer<TypeInterface> ifaceOverridesInit = Overrides.overrideInterfaceMethods(cls, iface);
                         Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
 

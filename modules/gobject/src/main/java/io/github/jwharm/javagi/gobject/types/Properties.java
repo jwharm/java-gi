@@ -72,7 +72,7 @@ public class Properties {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
         Type valueType = readPropertyValueType(gclass, propertyName);
         try (var arena = Arena.ofConfined()) {
-            var gvalue = Value.allocate(arena).init(valueType);
+            var gvalue = new Value(arena).init(valueType);
             ValueUtil.objectToValue(propertyValue, gvalue);
             gobject.setProperty(propertyName, gvalue);
             gvalue.unset();
@@ -92,7 +92,7 @@ public class Properties {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
         Type valueType = readPropertyValueType(gclass, propertyName);
         try (var arena = Arena.ofConfined()) {
-            var gvalue = Value.allocate(arena).init(valueType);
+            var gvalue = new Value(arena).init(valueType);
             gobject.getProperty(propertyName, gvalue);
             Object result = ValueUtil.valueToObject(gvalue);
             gvalue.unset();
@@ -150,7 +150,7 @@ public class Properties {
                 Type valueType = readPropertyValueType(objectClass, name);
 
                 // Create a GValue and write the object to it
-                Value gvalue = Value.allocate(arena).init(valueType);
+                Value gvalue = new Value(arena).init(valueType);
                 ValueUtil.objectToValue(object, gvalue);
                 values.add(gvalue);
             }

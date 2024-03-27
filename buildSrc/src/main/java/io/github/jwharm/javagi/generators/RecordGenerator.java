@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.generators;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -105,10 +106,13 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(rec);
         if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
+            builder.addMethod(constructor());
             builder.addMethod(allocate());
 
-            if (outerClass == null && hasFieldSetters())
+            if (outerClass == null && hasFieldSetters()) {
+                builder.addMethod(constructorWithParameters());
                 builder.addMethod(allocateWithParameters());
+            }
 
             for (Field f : rec.fields())
                 generateField(f);
@@ -199,14 +203,68 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         }
     }
 
+    private MethodSpec constructor() {
+        return MethodSpec.constructorBuilder()
+                .addJavadoc("""
+                        Allocate a new $1T.
+                        
+                        @param arena to control the memory allocation scope
+                        """, rec.typeName())
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(Arena.class, "arena")
+                .addStatement("super(arena.allocate(getMemoryLayout()))")
+                .build();
+    }
+
+    private MethodSpec constructorWithParameters() {
+        var spec = MethodSpec.constructorBuilder()
+                .addJavadoc("""
+                        Allocate a new $T with the fields set to the provided values.
+                        
+                        @param arena to control the memory allocation scope
+                        """, rec.typeName());
+
+        // Javadoc for parameters and return value
+        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+                spec.addJavadoc("@param $1L $2L for the field {@code $1L}\n",
+                        toJavaIdentifier(f.name()),
+                        f.callback() == null ? "value" : "callback function")
+        );
+
+        // Set visibility, return type, and parameters
+        spec.addModifiers(Modifier.PUBLIC)
+                .addParameter(Arena.class, "arena");
+        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+                spec.addParameter(
+                        new TypedValueGenerator(f).getType(),
+                        toJavaIdentifier(f.name()))
+        );
+
+        // Allocate the new instance
+        spec.addStatement("this(arena)");
+
+        // Copy the parameter values into the instance fields
+        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+                spec.addStatement("$L$L($L$L)",
+                        f.callback() == null ? "write" : "override",
+                        toCamelCase(f.name(), true),
+                        f.allocatesMemory() ? "arena, " : "",
+                        toJavaIdentifier(f.name()))
+        );
+
+        return spec.build();
+    }
+
     private MethodSpec allocate() {
         return MethodSpec.methodBuilder("allocate")
                 .addJavadoc("""
                         Allocate a new $1T.
-                                                
+                        
                         @param  arena to control the memory allocation scope
                         @return a new, uninitialized {@link $1T}
-                        """, rec.typeName())
+                        @deprecated Replaced by {@link $1T#$1T($2T)}
+                        """, rec.typeName(), Arena.class)
+                .addAnnotation(Deprecated.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
                 .addParameter(Arena.class, "arena")
@@ -225,7 +283,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         var spec = MethodSpec.methodBuilder("allocate")
                 .addJavadoc("""
                         Allocate a new $T with the fields set to the provided values.
-                                                        
+                        
                         @param  arena to control the memory allocation scope
                         """, rec.typeName());
 
@@ -237,6 +295,14 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         );
         spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n",
                         rec.typeName());
+
+        String paramTypes = rec.fields().stream()
+                .filter(not(Field::isDisguised))
+                .map(f -> ", " + new TypedValueGenerator(f).getType().toString())
+                .collect(Collectors.joining());
+        spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2T$3L)}\n",
+                        rec.typeName(), Arena.class, paramTypes)
+                        .addAnnotation(Deprecated.class);
 
         // Set visibility, return type, and parameters
         spec.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
