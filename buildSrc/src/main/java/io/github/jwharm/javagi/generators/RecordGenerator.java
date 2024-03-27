@@ -141,7 +141,13 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         Callback cb  = f.callback();
 
         if (cb == null) {
-            builder.addMethod(generator.generateReadMethod());
+            if (f.anyType() instanceof Type t && (!t.isPointer()) && t.get() instanceof Record)
+                // Copy contents from nested struct
+                builder.addMethod(generator.generateReadCopyMethod());
+            else
+                // Read pointer or primitive value
+                builder.addMethod(generator.generateReadMethod());
+
         } else {
             builder.addType(new ClosureGenerator(cb).generateFunctionalInterface());
 
@@ -162,7 +168,13 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 ));
             }
         }
-        builder.addMethod(generator.generateWriteMethod());
+
+        if (f.anyType() instanceof Type t && (!t.isPointer()) && t.get() instanceof Record)
+            // Copy contents to nested struct
+            builder.addMethod(generator.generateWriteCopyMethod());
+        else
+            // Write pointer or primitive value
+            builder.addMethod(generator.generateWriteMethod());
     }
 
     public void setFreeFunc(MethodSpec.Builder builder, String identifier, TypeName className) {

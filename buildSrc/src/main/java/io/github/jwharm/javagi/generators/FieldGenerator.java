@@ -136,6 +136,51 @@ public class FieldGenerator extends TypedValueGenerator {
         return spec.build();
     }
 
+    public MethodSpec generateReadCopyMethod() {
+        return MethodSpec.methodBuilder(methodName(READ_PREFIX))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(getType())
+                .addJavadoc("""
+                        Read the value of the field {@code $1L}.
+                        
+                        @return The value of the field {@code $1L}
+                        """, f.name())
+                .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
+                        MemoryLayout.class, f.name())
+                .addStatement("$T _slice = handle().asSlice(_offset, $T.getMemoryLayout())",
+                        MemorySegment.class, getType())
+                .addStatement("return new $T(handle().asSlice(_offset))",
+                        getType())
+                .build();
+    }
+
+    public MethodSpec generateWriteCopyMethod() {
+        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+                .addModifiers(Modifier.PUBLIC)
+                .addJavadoc("""
+                        Write a value in the field {@code $1L}.
+                        
+                        @param $2L The new value for the field {@code $1L}
+                        """, f.name(), getName())
+                .addParameter(getType(), getName())
+                .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
+                        MemoryLayout.class, f.name())
+                .addStatement("$T _slice = handle().asSlice(_offset, $T.getMemoryLayout())",
+                        MemorySegment.class, getType());
+
+        if (checkNull())
+            spec.beginControlFlow("if ($L == null)", getName())
+                    .addStatement("_slice.fill((byte) 0)")
+                    .nextControlFlow("else");
+
+        spec.addStatement("_slice.copyFrom($L.handle())", getName());
+
+        if (checkNull())
+            spec.endControlFlow();
+
+        return spec.build();
+    }
+
     public MethodSpec generateOverrideMethod() {
         var spec = MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
