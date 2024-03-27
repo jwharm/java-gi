@@ -262,8 +262,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         
                         @param  arena to control the memory allocation scope
                         @return a new, uninitialized {@link $1T}
-                        @deprecated Replaced by {@link $1T#$1T()}
-                        """, rec.typeName())
+                        @deprecated Replaced by {@link $1T#$1T($2T)}
+                        """, rec.typeName(), Arena.class)
                 .addAnnotation(Deprecated.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
