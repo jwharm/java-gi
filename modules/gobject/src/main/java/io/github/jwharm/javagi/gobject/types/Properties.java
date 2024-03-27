@@ -121,55 +121,57 @@ public class Properties {
                     .formatted(GObjects.typeName(objectType)));
 
         try (var arena = Arena.ofConfined()) {
-            for (int i = 0; i < propertyNamesAndValues.length; i++) {
+            try {
+                for (int i = 0; i < propertyNamesAndValues.length; i++) {
 
-                // Odd number of parameters?
-                if (i == propertyNamesAndValues.length - 1) {
-                    if (propertyNamesAndValues[i] == null) {
-                        // Ignore a closing null parameter (often expected by
-                        // GObject vararg functions)
-                        break;
+                    // Odd number of parameters?
+                    if (i == propertyNamesAndValues.length - 1) {
+                        if (propertyNamesAndValues[i] == null) {
+                            // Ignore a closing null parameter (often expected by
+                            // GObject vararg functions)
+                            break;
+                        }
+                        throw new IllegalArgumentException("Argument list must contain pairs of property names and values");
                     }
-                    throw new IllegalArgumentException("Argument list must contain pairs of property names and values");
+
+                    // Get the name of the property
+                    if (propertyNamesAndValues[i] instanceof String name) {
+                        names.add(name);
+                    } else {
+                        throw new IllegalArgumentException("Property name is not a String: %s"
+                                .formatted(propertyNamesAndValues[i]));
+                    }
+
+                    // The value for the property is a java object, and must be
+                    // converted to a GValue
+                    Object object = propertyNamesAndValues[++i];
+
+                    // Read the objectType of GValue that is expected for this
+                    // property
+                    Type valueType = readPropertyValueType(objectClass, name);
+
+                    // Create a GValue and write the object to it
+                    Value gvalue = new Value(arena).init(valueType);
+                    ValueUtil.objectToValue(object, gvalue);
+                    values.add(gvalue);
                 }
 
-                // Get the name of the property
-                if (propertyNamesAndValues[i] instanceof String name) {
-                    names.add(name);
-                } else {
-                    throw new IllegalArgumentException("Property name is not a String: %s"
-                            .formatted(propertyNamesAndValues[i]));
-                }
-
-                // The value for the property is a java object, and must be
-                // converted to a GValue
-                Object object = propertyNamesAndValues[++i];
-
-                // Read the objectType of GValue that is expected for this
-                // property
-                Type valueType = readPropertyValueType(objectClass, name);
-
-                // Create a GValue and write the object to it
-                Value gvalue = new Value(arena).init(valueType);
-                ValueUtil.objectToValue(object, gvalue);
-                values.add(gvalue);
+                /*
+                 * Create and return the GObject with the property names and values
+                 * The cast to T is safe: it will always return the expected
+                 * GObject-derived objectType
+                 */
+                @SuppressWarnings("unchecked")
+                T gobject = (T) GObject.withProperties(
+                        objectType,
+                        names.toArray(new String[0]),
+                        values.toArray(new Value[0])
+                );
+                return gobject;
+            } finally {
+                typeClass.unref();
+                values.forEach(Value::unset);
             }
-
-            /*
-             * Create and return the GObject with the property names and values
-             * The cast to T is safe: it will always return the expected
-             * GObject-derived objectType
-             */
-            @SuppressWarnings("unchecked")
-            T gobject = (T) GObject.withProperties(
-                    objectType,
-                    names.toArray(new String[0]),
-                    values.toArray(new Value[0])
-            );
-            return gobject;
-        } finally {
-            typeClass.unref();
-            values.forEach(Value::unset);
         }
     }
 
