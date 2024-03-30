@@ -20,8 +20,10 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.ClassName;
+import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
+import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
 
 public sealed interface RegisteredType
         extends Node
@@ -41,8 +43,13 @@ public sealed interface RegisteredType
         return typeName().toString();
     }
 
-    default String constructorName() {
-        return javaType() + "::new";
+    default String typeTag() {
+        return uncapitalize(namespace().name() + name());
+    }
+
+    default PartialStatement constructorName() {
+        return PartialStatement.of("$" + typeTag() + ":T::new",
+                typeTag(), typeName());
     }
 
     default String getInteropString(String paramName, boolean isPointer, Scope scope) {

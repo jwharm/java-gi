@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -26,6 +27,7 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
+import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
@@ -111,23 +113,29 @@ public class NamespaceGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Class c : ns.classes())
-            spec.addStatement("$T.register($T.getType(), $L)",
-                    ClassNames.TYPE_CACHE, c.typeName(), c.constructorName());
+            spec.addCode(prepareCodeBlock(c.constructorName(), c.typeName()));
 
         for (Interface i : ns.interfaces())
-            spec.addStatement("$T.register($T.getType(), $L)",
-                    ClassNames.TYPE_CACHE, i.typeName(), i.constructorName());
+            spec.addCode(prepareCodeBlock(i.constructorName(), i.typeName()));
 
         for (Alias a : ns.aliases()) {
             RegisteredType target = a.type().get();
             if (target instanceof Class c)
-                spec.addStatement("$T.register($T.getType(), $L)",
-                        ClassNames.TYPE_CACHE, a.typeName(), c.constructorName());
+                spec.addCode(prepareCodeBlock(c.constructorName(), a.typeName()));
             if (target instanceof Interface i)
-                spec.addStatement("$T.register($T.getType(), $L)",
-                        ClassNames.TYPE_CACHE, a.typeName(), i.constructorName());
+                spec.addCode(prepareCodeBlock(i.constructorName(), a.typeName()));
         }
 
         return spec.build();
+    }
+
+    private CodeBlock prepareCodeBlock(PartialStatement constructor, ClassName typeName) {
+        var stmt = PartialStatement.of("$typeCache:T.register($typeName:T.getType(), ",
+                "typeCache", ClassNames.TYPE_CACHE,
+                "typeName", typeName
+        ).add(constructor).add(");\n");
+        return CodeBlock.builder()
+                .addNamed(stmt.format(), stmt.arguments())
+                .build();
     }
 }

@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.gir;
 
+import io.github.jwharm.javagi.util.PartialStatement;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
@@ -38,9 +40,10 @@ public final class Class extends Multiplatform
     }
 
     @Override
-    public String constructorName() {
+    public PartialStatement constructorName() {
         return abstract_()
-                ? "%s.%sImpl::new".formatted(javaType(), name())
+                ? PartialStatement.of("$" + typeTag() + "Impl:T::new",
+                        typeTag() + "Impl", typeName().nestedClass(name() + "Impl"))
                 : RegisteredType.super.constructorName();
     }
 

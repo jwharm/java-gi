@@ -80,6 +80,16 @@ public final class Type extends GirElement implements AnyType, TypeReference {
                 .contains(type);
     }
 
+    public boolean isString() {
+        String type = toJavaBaseType(name());
+        return "String".equals(type);
+    }
+
+    public boolean isMemorySegment() {
+        String type = toJavaBaseType(name());
+        return "MemorySegment".equals(type);
+    }
+
     public boolean isBoolean() {
         return "gboolean".equals(name()) && (!"_Bool".equals(cType()));
     }
@@ -128,8 +138,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             return uncapitalize(cType.substring(start, end));
         }
         RegisteredType target = get();
-        return target == null ? null
-                : uncapitalize(target.namespace().name() + target.name());
+        return target == null ? null : target.typeTag();
     }
 
     private boolean overrideLongValue() {

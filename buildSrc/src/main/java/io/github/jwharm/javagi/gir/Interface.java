@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.gir;
 
+import io.github.jwharm.javagi.util.PartialStatement;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import static io.github.jwharm.javagi.util.Conversions.*;
 
@@ -39,9 +41,9 @@ public final class Interface extends Multiplatform
     }
 
     @Override
-    public String constructorName() {
-        return "%s.%sImpl::new"
-                .formatted(javaType(), toJavaSimpleType(name(), namespace()));
+    public PartialStatement constructorName() {
+        return PartialStatement.of("$" + typeTag() + "Impl:T::new",
+                typeTag() + "Impl", typeName().nestedClass(name() + "Impl"));
     }
 
     @Override
