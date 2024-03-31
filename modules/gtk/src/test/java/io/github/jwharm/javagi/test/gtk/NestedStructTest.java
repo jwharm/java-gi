@@ -24,15 +24,15 @@ public class NestedStructTest {
         float newH = 100.0001f;
 
         try (var arena = Arena.ofConfined()) {
-            var rect = new Rect(arena, new Point(arena, x, y), new Size(arena, w, h));
+            var rect = new Rect(Point.alloc().init(x, y), Size.alloc().init(w, h), arena);
 
             assertEquals(x, rect.readOrigin().readX());
             assertEquals(y, rect.readOrigin().readY());
             assertEquals(w, rect.readSize().readWidth());
             assertEquals(h, rect.readSize().readHeight());
 
-            rect.writeOrigin(new Point(arena, newX, y));
-            rect.writeSize(new Size(arena, w, newH));
+            rect.writeOrigin(Point.alloc().init(newX, y));
+            rect.writeSize(Size.alloc().init(w, newH));
 
             assertEquals(newX, rect.readOrigin().readX());
             assertEquals(y, rect.readOrigin().readY());

@@ -170,7 +170,7 @@ public class Types {
             widgetClass.setTemplateFromResource(ui);
 
             // Override GObject.dispose() to dispose the template
-            widgetClass.overrideDispose(Arena.global(), (object) -> {
+            widgetClass.overrideDispose((object) -> {
                 ((Widget) object).disposeTemplate(typeClass.readGType());
 
                 /*
@@ -186,7 +186,7 @@ public class Types {
                 } catch (Throwable _err) {
                     throw new AssertionError("Unexpected exception occurred: ", _err);
                 }
-            });
+            }, Arena.global());
 
             // Install BuilderJavaScope to call Java signal handler methods
             widgetClass.setTemplateScope(BuilderJavaScope.newInstance());

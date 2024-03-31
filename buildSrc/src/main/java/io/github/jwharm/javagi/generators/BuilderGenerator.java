@@ -138,8 +138,7 @@ public class BuilderGenerator {
         PartialStatement valueSetter = generator.getValueSetter(gtype, generator.getName())
                 .add(";\n");
         return builder.addStatement("$T _arena = getArena()", Arena.class)
-                .addStatement("$1T _value = $1T.allocate(_arena)",
-                        ClassName.get("org.gnome.gobject", "Value"))
+                .addStatement("$1T _value = new $1T(_arena)", ClassNames.GVALUE)
                 .addNamedCode("_value.init(" + gtype.format() + ");\n", gtype.arguments())
                 .addNamedCode(valueSetter.format(), valueSetter.arguments())
                 .addStatement("addBuilderProperty($S, _value)", prp.name())

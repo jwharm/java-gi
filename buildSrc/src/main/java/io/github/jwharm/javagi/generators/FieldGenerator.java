@@ -111,10 +111,11 @@ public class FieldGenerator extends TypedValueGenerator {
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName());
 
-        if (f.allocatesMemory())
-            spec.addParameter(Arena.class, "_arena");
-
         spec.addParameter(getType(), getName());
+
+        if (f.allocatesMemory())
+            spec.addJavadoc("@param arena to control the memory allocation scope\n")
+                .addParameter(Arena.class, "_arena");
 
         PartialStatement stmt = marshalJavaToNative(getName())
                 .add(null,

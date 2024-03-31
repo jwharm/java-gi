@@ -108,6 +108,7 @@ public abstract class RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Create a $L proxy instance for the provided memory address.
+                        
                         @param address the memory address of the native object
                         """, name())
                 .addParameter(MemorySegment.class, "address");

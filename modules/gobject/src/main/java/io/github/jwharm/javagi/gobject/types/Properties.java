@@ -431,7 +431,7 @@ public class Properties {
         // Return class initializer method that installs the properties.
         return (gclass) -> {
             // Override the get_property virtual method
-            gclass.overrideGetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
+            gclass.overrideGetProperty((object, propertyId, value, pspec) -> {
 
                 // Check for invalid property IDs
                 if (propertyId < 1 || propertyId >= getters.length) {
@@ -471,10 +471,10 @@ public class Properties {
                 // Convert return value to GValue
                 if (output != null)
                     ValueUtil.objectToValue(output, value);
-            });
+            }, Arena.global());
 
             // Override the set_property virtual method
-            gclass.overrideSetProperty(Arena.global(), (object, propertyId, value, pspec) -> {
+            gclass.overrideSetProperty((object, propertyId, value, pspec) -> {
 
                 // Check for invalid property IDs
                 if (propertyId < 1 || propertyId >= setters.length) {
@@ -512,7 +512,7 @@ public class Properties {
                                 cls.getName(), propertyNames.get(propertyId));
                     }
                 }
-            });
+            }, Arena.global());
 
             // Call g_class_install_properties with the generated ParamSpecs
             gclass.installProperties(pspecs);
