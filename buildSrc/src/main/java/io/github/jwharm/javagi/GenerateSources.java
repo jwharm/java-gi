@@ -104,6 +104,14 @@ public abstract class GenerateSources extends DefaultTask {
 
         // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
+
+            // Do not generate record types named "...Private" (except for
+            // GPrivate)
+            if (rt instanceof Record rec
+                    && (! "GPrivate".equals(rec.cType()))
+                    && rec.name().endsWith("Private"))
+                continue;
+
             typeSpec = switch(rt) {
                 case Alias a -> new AliasGenerator(a).generate();
                 case Bitfield b -> new BitfieldGenerator(b).generate();
