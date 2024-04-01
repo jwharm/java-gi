@@ -49,6 +49,7 @@ public final class ClassNames {
     public static final ClassName ARENA_CLOSE_ACTION = get(PKG_INTEROP, "ArenaCloseAction");
     public static final ClassName MEMORY_CLEANER = get(PKG_INTEROP, "MemoryCleaner");
     public static final ClassName INTEROP = get(PKG_INTEROP, "Interop");
+    public static final ClassName LIB_LOAD = get(PKG_INTEROP, "LibLoad");
     public static final ClassName PLATFORM = get(PKG_INTEROP, "Platform");
 
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");

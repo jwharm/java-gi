@@ -83,7 +83,7 @@ public class NamespaceGenerator {
                         Platform.toString(platform));
                 for (String libName : library.split(","))
                     block.addStatement("$T.loadLibrary($S)",
-                            ClassNames.INTEROP,
+                            ClassNames.LIB_LOAD,
                             libName);
                 block.endControlFlow();
             }
@@ -92,7 +92,7 @@ public class NamespaceGenerator {
             else {
                 block.addStatement("case $S -> $T.loadLibrary($S)",
                         Platform.toString(platform),
-                        ClassNames.INTEROP,
+                        ClassNames.LIB_LOAD,
                         library);
             }
         }

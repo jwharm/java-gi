@@ -11,7 +11,7 @@ import io.github.jwharm.javagi.GenerateSources
  * - Set JDK version
  * - Configure 'generateSources' action
  * - Enable preview features
- * - Set OS-specific JVM parameters
+ * - Set OS-specific library paths for unit tests
  * - Set common POM metadata and enable signing
  */
 
@@ -84,9 +84,20 @@ tasks.named('test', Test) {
         enabled = false
     }
 
-    // Set MacOS-specific JVM parameter
+    // Configure library path for MacOS (Homebrew) and set MacOS-specific JVM parameter
     if (Os.isFamily(Os.FAMILY_MAC)) {
+        jvmArgs += '-Djava.library.path=/opt/homebrew/lib'
         jvmArgs += '-XstartOnFirstThread'
+    }
+
+    // Configure library path for Arch, Fedora and Debian/Ubuntu
+    else if (Os.isFamily(Os.FAMILY_UNIX)) {
+        jvmArgs += '-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu'
+    }
+
+    // Configure library path for Windows (MSYS2)
+    else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        jvmArgs += '-Djava.library.path=C:/msys64/mingw64/bin'
     }
 
     useJUnitPlatform()

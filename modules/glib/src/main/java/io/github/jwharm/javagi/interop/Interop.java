@@ -51,20 +51,13 @@ public class Interop {
     private static final Map<NamedFunction, MethodHandle> namedFunctions = new HashMap<>();
     private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
 
+    private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
-    public static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
-            .or(Linker.nativeLinker().defaultLookup());
-
-    /**
-     * Load the specified library using
-     * {@link SymbolLookup#libraryLookup(String, Arena)}.
-     *
-     * @param name the name of the library
-     */
-    public static void loadLibrary(String name) {
-        Interop.symbolLookup = SymbolLookup.libraryLookup(name, Arena.global())
-                .or(Interop.symbolLookup);
+    static {
+        SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
+        symbolLookup = name -> loaderLookup.find(name).or(() ->
+                linker.defaultLookup().find(name));
     }
 
     /**
