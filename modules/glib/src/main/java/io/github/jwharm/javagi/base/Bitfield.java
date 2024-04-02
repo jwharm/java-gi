@@ -65,6 +65,16 @@ public abstract class Bitfield {
         return this.value == mask.value;
     }
 
+    public boolean test(Bitfield other) {
+        if (other == null)
+            return false;
+
+        if (!this.getClass().equals(other.getClass()))
+            return false;
+
+        return (getValue() & other.getValue()) == other.getValue();
+    }
+
     /**
      * If the provided object is a {@link Bitfield} instance, the values are
      * compared. If the provided object is an {@link Integer}, the value is
