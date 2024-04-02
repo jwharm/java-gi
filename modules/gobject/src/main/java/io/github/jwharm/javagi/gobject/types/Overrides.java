@@ -109,7 +109,7 @@ public class Overrides {
         List<Method> methods = new ArrayList<>();
         for (Method method : cls.getDeclaredMethods()) {
             try {
-                Method virtual = parentClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
+                Method virtual = findMethod(parentClass, method.getName(), method.getParameterTypes());
                 if (! Proxy.class.isAssignableFrom(virtual.getDeclaringClass()))
                     continue;
 
@@ -150,6 +150,27 @@ public class Overrides {
                 }
             }
         };
+    }
+
+    /*
+     * Try `Class::getDeclaredMethod` in the requested class and all its
+     * superclasses.
+     * Throws NoSuchMethodException if it is not found.
+     */
+    private static Method findMethod(Class<?> cls, String methodName, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        Class<?> currentClass = cls;
+        while (currentClass != null) {
+            try {
+                return currentClass.getDeclaredMethod(methodName, parameterTypes);
+            } catch (NoSuchMethodException e) {
+                // If the method is not found in the current class, try the superclass
+                currentClass = currentClass.getSuperclass();
+            }
+        }
+        // Method not found in class hierarchy
+        throw new NoSuchMethodException("Method %s not found in class hierarchy."
+                .formatted(methodName));
     }
 
     /**
