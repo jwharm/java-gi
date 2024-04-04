@@ -250,6 +250,7 @@ class TypedValueGenerator {
 
         if ((target instanceof Record && (!isTypeClass))
                 || target instanceof Union
+                || target instanceof Boxed
                 || (target instanceof Alias a && (a.type().get() instanceof Record)))
             return PartialStatement.of(
                     "$memorySegment:T.NULL.equals(" + identifier + ") ? null : new $" + targetTypeTag + ":T(" + identifier + ")",

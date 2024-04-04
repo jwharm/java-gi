@@ -114,6 +114,7 @@ public abstract class GenerateSources extends DefaultTask {
 
             typeSpec = switch(rt) {
                 case Alias a -> new AliasGenerator(a).generate();
+                case Boxed b -> new BoxedGenerator(b).generate();
                 case Bitfield b -> new BitfieldGenerator(b).generate();
                 case Callback c -> new CallbackGenerator(c).generate();
                 case Class c -> new ClassGenerator(c).generate();

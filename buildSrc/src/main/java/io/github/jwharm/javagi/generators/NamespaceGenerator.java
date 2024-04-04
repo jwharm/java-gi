@@ -126,6 +126,9 @@ public class NamespaceGenerator {
                 spec.addCode(prepareCodeBlock(i.constructorName(), a.typeName()));
         }
 
+        for (Boxed b : ns.boxeds())
+            spec.addCode(prepareCodeBlock(b.constructorName(), b.typeName()));
+
         return spec.build();
     }
 

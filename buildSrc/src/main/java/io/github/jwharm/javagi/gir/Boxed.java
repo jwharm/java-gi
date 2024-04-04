@@ -32,6 +32,11 @@ public final class Boxed extends Multiplatform implements RegisteredType {
     }
 
     @Override
+    public String name() {
+        return attr("glib:name");
+    }
+
+    @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }

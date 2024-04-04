@@ -114,6 +114,7 @@ public abstract class RegisteredTypeGenerator {
                 .addParameter(MemorySegment.class, "address");
 
         if (rt instanceof Record rec && rec.isOpaque()
+                || rt instanceof Boxed
                 || rt instanceof Union union && union.isOpaque())
             builder.addStatement("super(address)");
         else
