@@ -338,10 +338,10 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         String paramTypes = rec.fields().stream()
                 .filter(not(Field::isDisguised))
-                .map(f -> ", " + new TypedValueGenerator(f).getType().toString())
+                .map(f -> new TypedValueGenerator(f).getType().toString() + ", ")
                 .collect(Collectors.joining());
-        spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2T$3L)}\n",
-                        rec.typeName(), Arena.class, paramTypes)
+        spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2L$3T)}\n",
+                        rec.typeName(), paramTypes, Arena.class)
                         .addAnnotation(Deprecated.class);
 
         // Set visibility, return type, and parameters
@@ -368,6 +368,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
                     Get the GType of the GVariant class
+                    
                     @return the GType
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
