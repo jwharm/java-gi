@@ -12,6 +12,8 @@
 | GtkSourceview | 5.9           | 5.10                    |
 | WebkitGtk     | 2.41          | 2.42                    |
 
+**A new release, based on OpenJDK 22 and GNOME 46, is currently (april 2024) under development.**
+
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
 [For more information, visit the Java-GI website.](https://jwharm.github.io/java-gi/)
