@@ -18,7 +18,7 @@ Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.7.2 works with OpenJDK 20. Version 0.8.0 and 0.9.0 require OpenJDK 21. They have been built with the following library versions:
+Java-GI version 0.7.2 works with OpenJDK 20. Version 0.8.* and 0.9.* require OpenJDK 21. They have been built with the following library versions:
 
 | Library       | Java-GI 0.7.x | Java-GI 0.8.x and 0.9.x |
 |---------------|---------------|-------------------------|
@@ -34,7 +34,7 @@ Java bindings for there libraries are available from [Maven Central](https://cen
 
 ## API documentation
 
-Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI 0.9.0, [the Javadoc is available here](https://jwharm.github.io/java-gi/javadoc).
+Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI 0.9.1, [the Javadoc is available here](https://jwharm.github.io/java-gi/javadoc).
 
 JAR files with the Javadoc and source code, to use offline in your IDE, are available from Maven Central.
 
