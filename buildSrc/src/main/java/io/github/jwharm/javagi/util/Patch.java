@@ -65,9 +65,10 @@ public interface Patch {
      * @param  parent the parent element
      * @param  child  the element to add to the parent
      * @return a copy of parent in which the child has been added
-     * @param <T> both elements must be a GirElement
+     * @param <T> parent must be a GirElement
+     * @param <U> child must be a GirElement
      */
-    default <T extends GirElement> T add(T parent, T child) {
+    default <T extends GirElement, U extends GirElement> T add(T parent, U child) {
         var mutableList = new ArrayList<>(parent.children());
         mutableList.add(child);
         return parent.withChildren(mutableList);
