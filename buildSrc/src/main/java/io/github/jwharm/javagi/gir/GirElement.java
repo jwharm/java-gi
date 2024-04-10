@@ -24,6 +24,7 @@ import static java.util.function.Predicate.not;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class GirElement implements Serializable, Node {
 
@@ -247,21 +248,30 @@ public abstract class GirElement implements Serializable, Node {
         GirElement that = (GirElement) o;
         return Objects.equals(withoutDocs(children),
                               withoutDocs(that.children))
-                && Objects.equals(attributes, that.attributes);
+                && Objects.equals(identifyingAttributes(attributes),
+                                  identifyingAttributes(that.attributes));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(withoutDocs(children), attributes);
+        return Objects.hash(withoutDocs(children), identifyingAttributes(attributes));
     }
 
-    // Exclude documentation when comparing GIR elements
-    private List<Node> withoutDocs(List<Node> list) {
+    // Exclude documentation nodes when comparing GIR elements
+    private static List<Node> withoutDocs(List<Node> list) {
         return list.stream()
                 .filter(not(Documentation.class::isInstance))
                 .filter(not(Docsection.class::isInstance))
                 .filter(not(SourcePosition.class::isInstance))
                 .toList();
+    }
+
+    // Only include identifier attributes (names, types) when comparing GIR elements
+    private static Map<String, String> identifyingAttributes(Map<String, String> attributes) {
+        var attrs = List.of("name", "type", "c:identifier", "c:type");
+        return attributes.entrySet().stream()
+                .filter(attr -> attrs.contains(attr.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override

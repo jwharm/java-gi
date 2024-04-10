@@ -27,6 +27,7 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Type extends GirElement implements AnyType, TypeReference {
 
@@ -150,5 +151,28 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             case Property _, Alias _, ReturnValue _, Parameter _ -> true;
             case null, default -> false;
         };
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Type that = (Type) o;
+        if (this.cType() != null && that.cType() != null)
+            return this.cType().equals(that.cType());
+        else
+            return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        if (cType() != null)
+            return Objects.hash(cType());
+        else
+            return super.hashCode();
     }
 }
