@@ -31,6 +31,7 @@ import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 
@@ -79,7 +80,11 @@ class TypedValueGenerator {
             return f.parent().typeName().nestedClass(
                     toJavaSimpleType(f.name() + "_callback", f.namespace()));
 
-        return getType(v.anyType());
+        try {
+            return getType(v.anyType());
+        } catch (NullPointerException npe) {
+            throw new NoSuchElementException("Cannot find " + type);
+        }
     }
 
     private TypeName getType(AnyType anyType) {
