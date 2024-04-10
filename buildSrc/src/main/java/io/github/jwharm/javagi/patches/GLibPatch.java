@@ -24,7 +24,9 @@ import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 import io.github.jwharm.javagi.util.Platform;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GLibPatch implements Patch {
 
@@ -34,12 +36,23 @@ public class GLibPatch implements Patch {
         if (!"GLib".equals(namespace))
             return element;
 
-        /*
-         * g_clear_error has attribute throws="1" but no gerror** parameter (or
-         * any other parameters) in the gir file.
-         */
-        if (element instanceof Namespace ns)
+        if (element instanceof Namespace ns) {
+            /*
+             * GType was removed from GLib but is still used by `g_strv_get_type`
+             */
+            var gtype = new Alias(
+                    Map.of("name", "Type", "c:type", "GType"),
+                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
+                            Collections.emptyList())),
+                    ns.platforms());
+            ns = add(ns, gtype);
+
+            /*
+             * g_clear_error has attribute throws="1" but no gerror** parameter (or
+             * any other parameters) in the gir file.
+             */
             return remove(ns, Function.class, "name", "clear_error");
+        }
 
         /*
          * GPid is defined as gint on Unix vs gpointer on Windows. The
