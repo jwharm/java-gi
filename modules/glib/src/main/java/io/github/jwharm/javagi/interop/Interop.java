@@ -212,7 +212,7 @@ public class Interop {
 
     /**
      * Allocate a native string using
-     * {@link SegmentAllocator#allocateUtf8String(String)}, but return
+     * {@link SegmentAllocator#allocateFrom(String)}, but return
      * {@link MemorySegment#NULL} for a {@code null} argument.
      *
      * @param  string    the string to allocate as a native string (utf8 char*)
@@ -225,7 +225,7 @@ public class Interop {
                                                      SegmentAllocator allocator) {
         return string == null
                 ? MemorySegment.NULL
-                : allocator.allocateUtf8String(string);
+                : allocator.allocateFrom(string);
     }
 
     /**
@@ -244,7 +244,7 @@ public class Interop {
             return null;
 
         try {
-            return address.reinterpret(Long.MAX_VALUE).getUtf8String(0);
+            return address.reinterpret(Long.MAX_VALUE).getString(0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -272,7 +272,7 @@ public class Interop {
 
         String[] result = new String[length];
         for (int i = 0; i < length; i++) {
-            result[i] = array.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
+            result[i] = array.getString(i * ValueLayout.ADDRESS.byteSize());
             if (free)
                 GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
         }
@@ -307,7 +307,7 @@ public class Interop {
             MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
             if (MemorySegment.NULL.equals(ptr))
                 break;
-            result.add(ptr.getUtf8String(0));
+            result.add(ptr.getString(0));
             offset += ValueLayout.ADDRESS.byteSize();
         }
 
@@ -750,11 +750,11 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < strings.length; i++) {
             var cString = strings[i] == null ? MemorySegment.NULL
-                    : arena.allocateUtf8String(strings[i]);
+                    : arena.allocateFrom(strings[i]);
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
         }
 
@@ -801,7 +801,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_BYTE, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_BYTE, copy);
     }
 
     /**
@@ -820,7 +820,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_CHAR, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_CHAR, copy);
     }
 
     /**
@@ -839,7 +839,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_DOUBLE, copy);
     }
 
     /**
@@ -858,7 +858,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_FLOAT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_FLOAT, copy);
     }
 
     /**
@@ -876,7 +876,7 @@ public class Interop {
         int[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
-        return arena.allocateArray(ValueLayout.JAVA_INT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_INT, copy);
     }
 
     /**
@@ -895,7 +895,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_LONG, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_LONG, copy);
     }
 
     /**
@@ -914,7 +914,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_SHORT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_SHORT, copy);
     }
 
     /**
@@ -957,7 +957,7 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment memorySegment = arena.allocateArray(layout, length);
+        MemorySegment memorySegment = arena.allocate(layout, length);
 
         for (int i = 0; i < array.length; i++) {
             if (array[i] != null
@@ -994,7 +994,7 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < array.length; i++) {
             MemorySegment s = array[i] == null ? MemorySegment.NULL : array[i];

@@ -94,7 +94,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         // Read a pointer or primitive value from the struct
         var carrierType = getCarrierTypeName(f.anyType());
-        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())";
+        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle(), 0)";
         var returnResult = PartialStatement.of("return ")
                 .add(marshalNativeToJava("_result", false));
         return spec.addStatement(getResult, carrierType, MemoryLayout.class, f.name())
@@ -125,12 +125,12 @@ public class FieldGenerator extends TypedValueGenerator {
 
         if (checkNull())
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), (" + getName() + " == null ? $memorySegment:T.NULL : "
+                            + ".set(handle(), 0, (" + getName() + " == null ? $memorySegment:T.NULL : "
                             + stmt.format() + "));\n",
                     stmt.arguments());
         else
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), "
+                            + ".set(handle(), 0, "
                             + stmt.format() + ");\n",
                     stmt.arguments());
 
@@ -203,7 +203,7 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         MemorySegment.class, Linker.class)
                 .addStatement("getMemoryLayout().varHandle($T.PathElement.groupElement($S))$Z"
-                                + ".set(handle(), (method == null ? $T.NULL : _address))",
+                                + ".set(handle(), 0, (method == null ? $T.NULL : _address))",
                         MemoryLayout.class,
                         f.name(),
                         MemorySegment.class)

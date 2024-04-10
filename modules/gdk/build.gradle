@@ -7,7 +7,7 @@ dependencies {
     api project(':gio')
     api project(':pango')
     api project(':pangocairo')
-    api 'io.github.jwharm.cairobindings:cairo:1.18.1'
+    api 'io.github.jwharm.cairobindings:cairo:1.18.3'
 }
 
 generateSources.configure {
