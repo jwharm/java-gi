@@ -48,6 +48,22 @@ public class GObjectPatch implements Patch {
         }
 
         /*
+         * `TYPE_FLAG_RESERVED_ID_BIT` is defined as GType but that doesn't
+         * make sense in the Java bindings. Change it to a numeric type.
+         */
+        if (element instanceof Constant c
+                && "TYPE_FLAG_RESERVED_ID_BIT".equals(c.name())) {
+            Type type = new Type(
+                    Map.of("name", "gsize", "c:type", "gsize"),
+                    Collections.emptyList()
+            );
+            return c.withChildren(
+                    c.infoElements().doc(),
+                    c.infoElements().sourcePosition(),
+                    type);
+        }
+
+        /*
          * GLib and GObject both define gtype as an alias to gsize. We replace
          * the gtype declaration in GObject with an alias for the GLib gtype,
          * so it will inherit in Java and the instances of both classes can be
