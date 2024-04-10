@@ -78,7 +78,7 @@ public final class Array extends GirElement implements AnyType {
         if (length instanceof Parameter lp) {
             String name = toJavaIdentifier(lp.name());
             if (upcall && lp.isOutParameter())
-                return "_" + name + "Out.get()";
+                return "_" + name + "Out.get().intValue()";
             if (lp.anyType() instanceof Type type) {
                 if (type.isPointer() || lp.isOutParameter())
                     return name + ".get().intValue()";
