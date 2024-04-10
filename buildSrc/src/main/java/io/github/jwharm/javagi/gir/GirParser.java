@@ -199,6 +199,7 @@ public final class GirParser {
             case "enumeration" -> new Enumeration(attributes, children, platform);
             case "field" -> new Field(attributes, children);
             case "function" -> new Function(attributes, children, platform);
+            case "function-inline" -> new FunctionInline();
             case "function-macro" -> new FunctionMacro();
             case "implements" -> new Implements(attributes);
             case "include" -> new Include(attributes);

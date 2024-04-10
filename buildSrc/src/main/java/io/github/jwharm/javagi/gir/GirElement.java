@@ -146,6 +146,7 @@ public abstract class GirElement implements Serializable, Node {
             case Enumeration e -> new Enumeration(newAttrs, e.children(), e.platforms());
             case Field f -> new Field(newAttrs, f.children());
             case Function f -> new Function(newAttrs, f.children(), f.platforms());
+            case FunctionInline f -> f;
             case FunctionMacro f -> f;
             case Implements _ -> new Implements(newAttrs);
             case Include _ -> new Include(newAttrs);
@@ -208,6 +209,7 @@ public abstract class GirElement implements Serializable, Node {
             case Enumeration e -> new Enumeration(e.attributes(), newChildren, e.platforms());
             case Field f -> new Field(f.attributes(), newChildren);
             case Function f -> new Function(f.attributes(), newChildren, f.platforms());
+            case FunctionInline f -> f;
             case FunctionMacro f -> f;
             case Implements i -> i;
             case Include i -> i;
