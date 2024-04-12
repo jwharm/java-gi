@@ -51,8 +51,11 @@ public class ModuleInfoGenerator {
                 .map(name -> name.replace("org.freedesktop.freetype", "org.freedesktop.cairo"))
                 .forEach(this::requires);
 
-        exports(ModuleInfo.packageName(ns.name()));
-        packageNames.forEach(this::exports);
+        String modulePackageName = ModuleInfo.packageName(ns.name());
+        exports(modulePackageName);
+        packageNames.stream()
+                .filter(name -> ! name.equals(modulePackageName))
+                .forEach(this::exports);
 
         builder.append("}\n");
         return builder.toString();
