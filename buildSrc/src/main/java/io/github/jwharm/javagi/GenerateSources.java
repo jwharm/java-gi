@@ -107,9 +107,7 @@ public abstract class GenerateSources extends DefaultTask {
 
             // Do not generate record types named "...Private" (except for
             // GPrivate)
-            if (rt instanceof Record rec
-                    && (! "GPrivate".equals(rec.cType()))
-                    && rec.name().endsWith("Private"))
+            if (rt.skipJava())
                 continue;
 
             typeSpec = switch(rt) {

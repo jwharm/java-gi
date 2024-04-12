@@ -108,4 +108,8 @@ public sealed interface RegisteredType
     default String getTypeFunc() {
         return attr("glib:get-type");
     }
+
+    default boolean skipJava() {
+        return attrBool("java-gi-skip", false);
+    }
 }

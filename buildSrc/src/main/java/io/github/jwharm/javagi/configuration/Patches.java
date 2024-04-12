@@ -30,6 +30,7 @@ import java.util.List;
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
             new AdwPatch(),
+            new BasePatch(),
             new GLibPatch(),
             new GioPatch(),
             new GObjectPatch(),

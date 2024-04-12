@@ -89,9 +89,9 @@ public final class Field extends GirElement implements TypedValue {
      */
     public boolean isDisguised() {
         // Don't generate a getter/setter for a "disguised" record or private data
-        if (anyType() instanceof  Type type
+        if (anyType() instanceof Type type
                 && type.get() instanceof Record r
-                && (r.disguised() || r.name().endsWith("Private")))
+                && (r.disguised() || r.skipJava()))
             return true;
         // Don't generate a getter/setter for padding
         if ("padding".equals(name()))
