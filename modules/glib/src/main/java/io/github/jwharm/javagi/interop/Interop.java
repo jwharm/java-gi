@@ -232,6 +232,21 @@ public class Interop {
      * Copy a Java string from native memory using
      * {@code MemorySegment.getUtf8String()}. If an error occurs or when the
      * native address is NULL, null is returned.
+     * <p>
+     * The native memory is not freed.
+     *
+     * @param  address the memory address of the native String
+     *                 (a {@code NULL}-terminated {@code char*})
+     * @return a String or null
+     */
+    public static String getStringFrom(MemorySegment address) {
+        return getStringFrom(address, false);
+    }
+
+    /**
+     * Copy a Java string from native memory using
+     * {@code MemorySegment.getUtf8String()}. If an error occurs or when the
+     * native address is NULL, null is returned.
      *
      * @param  address the memory address of the native String
      *                 (a {@code NULL}-terminated {@code char*})

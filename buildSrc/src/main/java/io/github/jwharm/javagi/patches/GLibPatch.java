@@ -85,6 +85,15 @@ public class GLibPatch implements Patch {
             return r;
         }
 
+        /*
+         * GLib.List and GLib.SList are not generated from the gir data.
+         * Java-GI provides custom List and SList classes that implement
+         * java.util.List, to make them easier to use from Java.
+         */
+        if (element instanceof Record r
+                && List.of("List", "SList").contains(r.name()))
+            return r.withAttribute("java-gi-skip", "1");
+
         return element;
     }
 }

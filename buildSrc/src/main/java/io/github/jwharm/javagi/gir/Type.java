@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
@@ -61,6 +63,16 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName typeName() {
+        if (isGList()) {
+            var target = get();
+            ClassName rawType = toJavaQualifiedType(target.name(), target.namespace());
+            if (anyTypes().getFirst() instanceof Type t)
+                return ParameterizedTypeName.get(rawType, t.typeName());
+            else
+                // Fallback to pointer for a list of arrays
+                return ParameterizedTypeName.get(rawType, TypeName.get(MemorySegment.class));
+        }
+
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
             case "void" -> TypeName.VOID;
@@ -93,6 +105,11 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     public boolean isBoolean() {
         return "gboolean".equals(name()) && (!"_Bool".equals(cType()));
+    }
+
+    public boolean isGList() {
+        return name() != null
+                && List.of("GLib.List", "GLib.SList").contains(name());
     }
 
     public boolean isPointer() {
@@ -138,6 +155,13 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             if (end == -1) end = cType.length();
             return uncapitalize(cType.substring(start, end));
         }
+
+        String javaBaseType = toJavaBaseType(name());
+        if ("MemorySegment".equals(javaBaseType))
+            return "memorySegment";
+        if ("String".equals(javaBaseType))
+            return "string";
+
         RegisteredType target = get();
         return target == null ? null : target.typeTag();
     }

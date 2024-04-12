@@ -24,7 +24,6 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import javax.lang.model.element.Modifier;
@@ -105,7 +104,7 @@ class TypedValueGenerator {
     String getName() {
         return "...".equals(v.name())
                 ? "varargs"
-                : Conversions.toJavaIdentifier(v.name());
+                : toJavaIdentifier(v.name());
     }
 
     PartialStatement marshalJavaToNative(String identifier) {
@@ -178,7 +177,7 @@ class TypedValueGenerator {
                 type.toTypeTag();
 
         String primitiveClassName = isPrimitiveAlias
-                ? Conversions.primitiveClassName(((Alias) target).type().javaType())
+                ? primitiveClassName(((Alias) target).type().javaType())
                 : "";
 
         if (isBitfield || isEnumeration || isPrimitiveAlias) {
@@ -253,6 +252,24 @@ class TypedValueGenerator {
                     "$" + targetTypeTag + ":T.of(" + identifier + ")",
                     targetTypeTag, target.typeName());
 
+        if (type.isGList() && target != null) {
+            if (type.anyTypes() == null || type.anyTypes().size() > 1)
+                throw new UnsupportedOperationException("Unsupported element type: " + type);
+
+            PartialStatement elementConstructor = switch (type.anyTypes().getFirst()) {
+                case Type t when t.isString() -> PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+                case Type t when t.isMemorySegment() -> PartialStatement.of("$function:T.identity()", "function", java.util.function.Function.class);
+                case Array _ -> PartialStatement.of("$function:T.identity()", "function", java.util.function.Function.class);
+                case Type t when t.get() != null -> t.get().constructorName();
+                default -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+            };
+
+            return PartialStatement.of(
+                    "$memorySegment:T.NULL.equals(" + identifier + ") ? null : new $" + targetTypeTag + ":T(" + identifier + ", ").add(elementConstructor).add(")",
+                    "memorySegment", MemorySegment.class,
+                    targetTypeTag, type.typeName());
+        }
+
         if ((target instanceof Record && (!isTypeClass))
                 || target instanceof Union
                 || target instanceof Boxed
@@ -312,7 +329,7 @@ class TypedValueGenerator {
         RegisteredType target = type.get();
         String targetTypeTag = target != null ? type.toTypeTag() : null;
 
-        String primitive = type.isPrimitive() ? Conversions.primitiveClassName(type.javaType()) : null;
+        String primitive = type.isPrimitive() ? primitiveClassName(type.javaType()) : null;
 
         // GArray stores the length in the len field
         if (size == null
@@ -493,7 +510,7 @@ class TypedValueGenerator {
 
                 if (setter.isPresent()) {
                     Function function = setter.get();
-                    String setValueFunc = Conversions.toJavaIdentifier(function.name());
+                    String setValueFunc = toJavaIdentifier(function.name());
                     String globalClassTag = uncapitalize(rt.namespace().globalClassName());
                     return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
                             globalClassTag,
@@ -561,14 +578,14 @@ class TypedValueGenerator {
             if (target instanceof Alias a && a.type().isPrimitive())
                 builder.initializer("new $T($L)",
                         a.typeName(),
-                        Conversions.literal(a.type().typeName(), value));
+                        literal(a.type().typeName(), value));
             else if (target instanceof FlaggedType)
                 builder.initializer("new $T($L)",
                         target.typeName(),
-                        Conversions.literal(TypeName.INT, value));
+                        literal(TypeName.INT, value));
             else
                 builder.initializer(
-                        Conversions.literal(type.typeName(), value)
+                        literal(type.typeName(), value)
                                 .replace("$", "$$"));
 
             return builder.build();
