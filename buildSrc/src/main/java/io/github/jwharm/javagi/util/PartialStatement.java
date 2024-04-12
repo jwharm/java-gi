@@ -68,6 +68,9 @@ public final class PartialStatement {
     }
 
     public PartialStatement add(PartialStatement other) {
+        if (other == null)
+            return this;
+
         add(other.format());
         other.arguments().forEach((key, value) -> add(null, key, value));
         return this;
