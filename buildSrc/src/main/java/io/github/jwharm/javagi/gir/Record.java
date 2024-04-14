@@ -53,14 +53,15 @@ public final class Record extends Multiplatform
             if (!this.fields().equals(other.fields()))
                 return new Record(
                         attributes(),
-                        children().stream()
+                        union(children(), other.children())
+                                .stream()
                                 .filter(not(Field.class::isInstance))
                                 .toList(),
                         platforms() | other.platforms());
             else
                 return new Record(
                         attributes(),
-                        children(),
+                        union(children(), other.children()),
                         platforms() | other.platforms());
         }
         return this;
