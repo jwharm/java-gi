@@ -44,8 +44,8 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class InstanceCache {
 
-    public final static Map<MemorySegment, Proxy> strongReferences = new ConcurrentHashMap<>();
-    public final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new ConcurrentHashMap<>();
+    private final static Map<MemorySegment, Proxy> strongReferences = new ConcurrentHashMap<>();
+    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new ConcurrentHashMap<>();
     private static final Cleaner CLEANER = Cleaner.create();
 
     static {
