@@ -300,7 +300,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                         ClassNames.JAVA_CLOSURE)
                 .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
                         ClassNames.GOBJECTS)
-                .addStatement("return new $T(handle(), handlerId)",
+                .addStatement("return new $T(handle(), handlerId, closure)",
                         ClassNames.SIGNAL_CONNECTION)
                 .build();
     }

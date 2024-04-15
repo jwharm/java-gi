@@ -19,11 +19,13 @@
 
 package io.github.jwharm.javagi.gobject;
 
+import java.lang.foreign.MemorySegment;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.function.BooleanSupplier;
 
+import io.github.jwharm.javagi.interop.MemoryCleaner;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.gobject.Closure;
@@ -37,13 +39,22 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
  * cases (Runnable and BooleanSupplier), the callback will be invoked directly.
  */
 public class JavaClosure extends Closure {
-    
+
+    // Take ownership of the allocated memory
+    private JavaClosure(MemorySegment address) {
+        super(address);
+        ref();
+        sink();
+        MemoryCleaner.setFreeFunc(handle(), "g_closure_unref");
+        MemoryCleaner.takeOwnership(handle());
+    }
+
     /**
      * Construct a {@link Closure} for a method or lambda that takes no parameters and returns void.
      * @param callback a callback with signature {@code void run()}
      */
     public JavaClosure(Runnable callback) {
-        super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
+        this(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, paramValues, hint, data) -> callback.run());
     }
     
@@ -52,7 +63,7 @@ public class JavaClosure extends Closure {
      * @param callback a callback with signature {@code boolean run()}
      */
     public JavaClosure(BooleanSupplier callback) {
-        super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
+        this(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, paramValues, hint, data) -> {
             if (returnValue != null)
                 returnValue.setBoolean(callback.getAsBoolean());
@@ -113,7 +124,7 @@ public class JavaClosure extends Closure {
      * @param method   the method to invoke. See {@link Method#invoke(Object, Object...)}
      */
     public JavaClosure(Object instance, Method method) {
-        super(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
+        this(Closure.simple((int) Closure.getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, paramValues, hint, data) -> {
             try {
                 Object[] parameterObjects;

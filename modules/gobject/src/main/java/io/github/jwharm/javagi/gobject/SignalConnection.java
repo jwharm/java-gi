@@ -19,30 +19,55 @@
 
 package io.github.jwharm.javagi.gobject;
 
+import org.gnome.gobject.Closure;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 
 /**
- * Represents a signal connection. With a {@code SignalConnection} object, a signal connection
- * can be blocked, unblocked, and disconnected. It is also possible to check if the
- * signal is still connected.
+ * Represents a signal connection. With a {@code SignalConnection} object, a
+ * signal connection can be blocked, unblocked, and disconnected. It is also
+ * possible to check if the signal is still connected.
+ *
  * @param <T> the type of the signal
  */
 public class SignalConnection<T> {
 
     private final GObject instance;
     private final int handlerId;
+    private final Arena arena;
+    private final Closure closure;
 
     /**
-     * Create a SignalConnection instance for the provided GObject instance and handler ID
-     * @param instance the native memory address of the GObject instance
+     * Create a SignalConnection instance for the provided GObject instance and
+     * handler ID.
+     *
+     * @param instance  the native memory address of the GObject instance
      * @param handlerId the handler ID of the signal
+     * @param arena     memory arena for the signal callback
      */
-    public SignalConnection(MemorySegment instance, long handlerId) {
+    public SignalConnection(MemorySegment instance, long handlerId, Arena arena) {
         this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
         this.handlerId = (int) handlerId;
+        this.arena = arena;
+        this.closure = null;
+    }
+
+    /**
+     * Create a SignalConnection instance for the provided GObject instance and
+     * handler ID.
+     *
+     * @param instance  the native memory address of the GObject instance
+     * @param handlerId the handler ID of the signal
+     * @param closure   closure for the signal callback
+     */
+    public SignalConnection(MemorySegment instance, long handlerId, Closure closure) {
+        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
+        this.handlerId = (int) handlerId;
+        this.arena = null;
+        this.closure = closure;
     }
 
     /**
@@ -57,15 +82,14 @@ public class SignalConnection<T> {
     }
 
     /**
-     * Undoes the effect of a previous g_signal_handler_block() call.  A
-     * blocked handler is skipped during signal emissions and will not be
-     * invoked, unblocking it (for exactly the amount of times it has been
-     * blocked before) reverts its "blocked" state, so the handler will be
-     * recognized by the signal system and is called upon future or
-     * currently ongoing signal emissions (since the order in which
-     * handlers are called during signal emissions is deterministic,
-     * whether the unblocked handler in question is called as part of a
-     * currently ongoing emission depends on how far that emission has
+     * Undoes the effect of a previous {@link #block()} call.  A blocked handler
+     * is skipped during signal emissions and will not be invoked, unblocking it
+     * (for exactly the amount of times it has been blocked before) reverts its
+     * "blocked" state, so the handler will be recognized by the signal system
+     * and is called upon future or currently ongoing signal emissions (since
+     * the order in which handlers are called during signal emissions is
+     * deterministic, whether the unblocked handler in question is called as
+     * part of a currently ongoing emission depends on how far that emission has
      * proceeded yet).
      */
     public void unblock() {
@@ -75,15 +99,18 @@ public class SignalConnection<T> {
     /**
      * Disconnects a handler from an instance so it will not be called during
      * any future or currently ongoing emissions of the signal it has been
-     * connected to. The {@code handler_id} becomes invalid and may be reused.
+     * connected to. The {@code handlerId} becomes invalid and may be reused.
      */
     public void disconnect() {
         GObjects.signalHandlerDisconnect(instance, handlerId);
+        arena.close();
     }
 
     /**
      * Returns whether this signal is connected.
-     * @return whether the {@code handler_id} of this signal identifies a handler connected to the {@code instance}.
+     *
+     * @return whether the {@code handlerId} of this signal identifies a
+     *         handler connected to the instance.
      */
     public boolean isConnected() {
         return GObjects.signalHandlerIsConnected(instance, handlerId);

@@ -227,7 +227,7 @@ public class MethodGenerator {
                         .beginControlFlow("if (_object instanceof $T _gobject)",
                                 ClassName.get("org.gnome.gobject", "GObject"))
                         .addStatement("$T.debug($S, _gobject.handle())",
-                                ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld\\n")
+                                ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld")
                         .addStatement("_gobject.ref()")
                         .endControlFlow()
                         .addStatement("return _object");

@@ -147,7 +147,7 @@ public class ConstructorGenerator {
                             ClassNames.GOBJECT)
                     .addStatement("$T.debug($S, _gobject.handle())",
                             ClassNames.GLIB_LOGGER,
-                            "Ref " + parent.typeName() + " %ld\\n")
+                            "Ref " + parent.typeName() + " %ld")
                     .addStatement("_gobject.ref()")
                     .endControlFlow()
                     .addStatement("return ($T) _object", parent.typeName());

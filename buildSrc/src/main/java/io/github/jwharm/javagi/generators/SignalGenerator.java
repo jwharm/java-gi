@@ -92,12 +92,13 @@ public class SignalGenerator {
                     ClassNames.INTEROP,
                     signal.name());
 
-        return builder.addStatement("var _callback = handler.toCallback($T.global())",
+        return builder.addStatement("var _callbackArena = $T.ofConfined()",
                         Arena.class)
+                .addStatement("var _callback = handler.toCallback(_callbackArena)")
                 .addStatement("var _result = (long) $1T.g_signal_connect_data.invokeExact($Zhandle(), _name, _callback, $2T.NULL, $2T.NULL, 0)",
                         ClassNames.SIGNALS,
                         MemorySegment.class)
-                .addStatement("return new SignalConnection<>(handle(), _result)")
+                .addStatement("return new SignalConnection<>(handle(), _result, _callbackArena)")
                 .nextControlFlow("catch (Throwable _err)")
                 .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occurred: ")
                 .endControlFlow()
