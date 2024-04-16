@@ -89,7 +89,10 @@ public abstract class GirElement implements Serializable, Node {
                 attr("shadowed-by"),
                 attr("shadows"),
                 attrBool("throws", false),
-                attr("moved-to"));
+                attr("moved-to"),
+                attr("glib:async-func"),
+                attr("glib:sync-func"),
+                attr("glib:finish-func"));
     }
 
     public InfoElements infoElements() {
