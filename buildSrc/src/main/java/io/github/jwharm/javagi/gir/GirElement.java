@@ -155,6 +155,7 @@ public abstract class GirElement implements Serializable, Node {
             case Interface i -> new Interface(newAttrs, i.children(), i.platforms());
             case Member m -> new Member(newAttrs, m.children());
             case Method m -> new Method(newAttrs, m.children(), m.platforms());
+            case MethodInline m -> m;
             case Namespace n -> new Namespace(newAttrs, n.children(), n.platforms(), n.sharedLibraries());
             case Package _ -> new Package(newAttrs);
             case Parameter p -> new Parameter(newAttrs, p.children());
@@ -218,6 +219,7 @@ public abstract class GirElement implements Serializable, Node {
             case Interface i -> new Interface(i.attributes(), newChildren, i.platforms());
             case Member m -> new Member(m.attributes(), newChildren);
             case Method m -> new Method(m.attributes(), newChildren, m.platforms());
+            case MethodInline m -> m;
             case Namespace n -> new Namespace(n.attributes(), newChildren, n.platforms(), n.sharedLibraries());
             case Package p -> p;
             case Parameter p -> new Parameter(p.attributes(), newChildren);

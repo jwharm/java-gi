@@ -41,7 +41,7 @@ public final class GirParser {
 
     private static final GirParser INSTANCE = new GirParser();
     private static final List<String> SKIP_LIST = List.of(
-            "c:include", "function-macro", "package");
+            "c:include", "function-inline", "function-macro", "method-inline", "package");
     private static final XMLInputFactory XML_INPUT_FACTORY =
             XMLInputFactory.newInstance();
 
@@ -167,15 +167,18 @@ public final class GirParser {
                     newNode = patch.patch((GirElement) newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
-                if (existingChildNode instanceof RegisteredType existing && newNode instanceof RegisteredType created)
+                if (existingChildNode instanceof RegisteredType existing
+                        && newNode instanceof RegisteredType created)
                     newNode = created.mergeWith(existing);
-                else if (existingChildNode instanceof Namespace existing && newNode instanceof Namespace created)
+                else if (existingChildNode instanceof Namespace existing
+                        && newNode instanceof Namespace created)
                     newNode = created.mergeWith(existing);
 
                 children.add(newNode);
             } else if (event.isCharacters()) {
                 contents.append(event.asCharacters().getData());
-            } else if (event.isEndElement() && qname(event.asEndElement().getName()).equals(elemName)) {
+            } else if (event.isEndElement()
+                    && qname(event.asEndElement().getName()).equals(elemName)) {
                 break;
             }
         }
@@ -207,6 +210,7 @@ public final class GirParser {
             case "interface" -> new Interface(attributes, children, platform);
             case "member" -> new Member(attributes, children);
             case "method" -> new Method(attributes, children, platform);
+            case "method-inline" -> new MethodInline();
             case "namespace" -> new Namespace(attributes, children, platform, new HashMap<>());
             case "package" -> new Package(attributes);
             case "parameter" -> new Parameter(attributes, children);
