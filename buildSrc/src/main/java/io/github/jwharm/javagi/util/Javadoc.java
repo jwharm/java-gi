@@ -47,7 +47,7 @@ public class Javadoc {
             + "|(?<hyperlink>\\[(?<desc>.+?)]\\((?<url>.+?)\\))"
             + "|(?<img>!\\[(?<imgdesc>.*?)]\\((?<imgurl>.+?)\\))"
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+)\\n*"
-            + "|(?m)^\\s*(?<bulletpoint>-)\\s"
+            + "|(?m)^\\s*(?<bulletpoint>[-*])\\s"
             + "|(?<strong>\\*\\*.*?\\w\\*\\*)"
             + "|(?<em>\\*.*?\\w\\*)"
             + "|(?<entity>[<>&])"
