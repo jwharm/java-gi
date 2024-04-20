@@ -2,11 +2,11 @@
 
 Java-GI publishes pre-built bindings for a number of libraries, including GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
-- Clone the Java-GI project (`jwharm/java-gi`) from GitHub
+- Clone the Java-GI project (`jwharm/java-gi`) from GitHub. Use the `--recurse-submodules` flag to also clone the `gir-files` submodule
 - Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
 
 ```shell
-git clone https://github.com/jwharm/java-gi.git
+git clone --recurse-submodules https://github.com/jwharm/java-gi.git
 cd java-gi
 ./gradlew build
 ```
