@@ -152,8 +152,14 @@ public class Javadoc {
     }
 
     // Replace ```multi-line code blocks``` with <pre>{@code ... }</pre> blocks.
+    // The (optional) language identifier is removed.
     // For valid javadoc, we must balance all curly braces.
     private String convertCodeblock(String codeblock, String content) {
+        // Remove language identifier
+        int newline = content.indexOf('\n');
+        if (newline > 0 && newline < (content.length() - 1))
+            content = content.substring(newline + 1);
+
         long count1 = content.chars().filter(ch -> ch == '{').count();
         long count2 = content.chars().filter(ch -> ch == '}').count();
         if (count1 < count2)
