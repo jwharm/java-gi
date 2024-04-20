@@ -22,6 +22,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -79,6 +80,9 @@ tasks.named('test', Test) {
     if (System.getenv('CI')) {
         enabled = false
     }
+
+    // Log standard output and error streams when running tests
+    testLogging.showStandardStreams = true
 
     // Configure library path for MacOS (Homebrew) and set MacOS-specific JVM parameter
     if (Os.isFamily(Os.FAMILY_MAC)) {
