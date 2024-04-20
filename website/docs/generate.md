@@ -2,17 +2,16 @@
 
 Java-GI publishes pre-built bindings for a number of libraries, including GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
-- Clone the Java-GI project (`jwharm/java-gi`) and the GIR input files (`gircore/gir-files`) from GitHub
+- Clone the Java-GI project (`jwharm/java-gi`) from GitHub
 - Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
 
 ```shell
-git clone https://github.com/gircore/gir-files.git
 git clone https://github.com/jwharm/java-gi.git
 cd java-gi
 ./gradlew build
 ```
 
-The gir-files repository contains regularly updated gir files that Java-GI generates bindings from. If you clone this repository in another location, update the `girFilesLocation` path in `gradle.properties` accordingly.
+The repository contains a submodule under `ext/gir-files` that originates from `gir-core/gir-files`. It contains regularly updated gir files that Java-GI generates bindings from. If you clone this repository in another location, update the `girFilesLocation` path in `gradle.properties` accordingly.
 
 ## Generating bindings for other libraries
 
@@ -20,7 +19,7 @@ First of all, install the GObject-introspection (gir) files of the library you w
 
 Alternatively, in most Linux distributions, the gir files are usually installed with a development package, postfixed with "-dev" or "-devel". For example, the Gtk gir files on Fedora are installed by the "gtk4-devel" package. All installed gir files can normally be found in `/usr/share/gir-1.0`. However, this is not the preferred method to obtain a gir file. Distributions often patch libraries, impacting the gir file too. It's better to generate the gir file from the upstream release package. Be sure to download the release package for an actual release, and not a random snapshot.
 
-Once the gir file is available, copy it into the `gir-files` folder under the correct platform subfolder (linux, windows or macos).
+Once the gir file is available, copy it into the `ext/gir-files` repository under the correct platform subfolder (linux, windows or macos).
 
 Now you can add a Java-GI module for the library. Create a folder under `/modules`, add it to `settings.gradle`, and create a `build.gradle` file:
 
