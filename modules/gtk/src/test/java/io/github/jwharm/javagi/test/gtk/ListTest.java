@@ -12,6 +12,9 @@ import java.util.ListIterator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Test GList wrapper class
+ */
 public class ListTest {
 
     @Test
