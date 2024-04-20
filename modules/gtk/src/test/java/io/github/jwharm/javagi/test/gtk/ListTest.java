@@ -32,9 +32,8 @@ public class ListTest {
         assertEquals(10, glist.size());
 
         // Check all elements are in the glist
-        var handles = input.stream().map(Window::handle).toList();
         for (Window win : glist)
-            assertTrue(handles.contains(win.handle()));
+            assertTrue(input.contains(win));
 
         // Add and remove element at head
         Window newElem = new Window();
@@ -42,7 +41,7 @@ public class ListTest {
         iter.add(newElem);
 
         assertEquals(11, glist.size());
-        assertEquals(newElem.handle(), glist.getFirst().handle());
+        assertEquals(newElem, glist.getFirst());
 
         iter.next();
         iter.previous();
@@ -55,7 +54,7 @@ public class ListTest {
         iter.next();
         iter.add(newElem);
         iter.next();
-        assertEquals(newElem.handle(), iter.previous().handle());
+        assertEquals(newElem, iter.previous());
 
         // Empty list
         List<Window> emptyList = new WindowGroup().listWindows();
