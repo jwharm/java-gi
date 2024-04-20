@@ -265,8 +265,7 @@ class TypedValueGenerator {
             };
 
             return PartialStatement.of(
-                    "$memorySegment:T.NULL.equals(" + identifier + ") ? null : new $" + targetTypeTag + ":T(" + identifier + ", ").add(elementConstructor).add(")",
-                    "memorySegment", MemorySegment.class,
+                    "new $" + targetTypeTag + ":T(" + identifier + ", ").add(elementConstructor).add(")",
                     targetTypeTag, type.typeName());
         }
 

@@ -63,7 +63,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
      * @param make a function to construct element instances
      */
     public SList(MemorySegment address, Function<MemorySegment, E> make) {
-        this.head = new SListNode(address);
+        this.head = MemorySegment.NULL.equals(address) ? null
+                : new SListNode(address);
         this.make = make;
     }
 

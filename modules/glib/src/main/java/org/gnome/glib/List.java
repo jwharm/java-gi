@@ -60,7 +60,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
      * @param make a function to construct element instances
      */
     public List(MemorySegment address, Function<MemorySegment, E> make) {
-        this.head = new ListNode(address);
+        this.head = MemorySegment.NULL.equals(address) ? null
+                : new ListNode(address);
         this.make = make;
     }
 
