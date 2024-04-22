@@ -31,6 +31,7 @@ import io.github.jwharm.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
+import org.gnome.glib.Type;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -38,17 +39,11 @@ import io.github.jwharm.javagi.base.*;
  */
 public class Interop {
 
-    private record NamedFunction(String name,
-                                 FunctionDescriptor fdesc,
-                                 boolean variadic) {
-    }
-
     private record FunctionPointer(MemorySegment address,
                                    FunctionDescriptor fdesc,
                                    boolean variadic) {
     }
 
-    private static final Map<NamedFunction, MethodHandle> namedFunctions = new HashMap<>();
     private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
 
     private final static SymbolLookup symbolLookup;
@@ -76,8 +71,7 @@ public class Interop {
 
     /**
      * Create a method handle that is used to call the native function with
-     * the provided name and function descriptor. The method handle is cached
-     * and reused in subsequent look-ups.
+     * the provided name and function descriptor.
      *
      * @param  name     name of the native function
      * @param  fdesc    function descriptor of the native function
@@ -87,17 +81,9 @@ public class Interop {
     public static MethodHandle downcallHandle(String name,
                                               FunctionDescriptor fdesc,
                                               boolean variadic) {
-
-        var func = new NamedFunction(name, fdesc, variadic);
-        if (namedFunctions.containsKey(func))
-            return namedFunctions.get(func);
-
-        var handle = symbolLookup.find(name).map(addr -> variadic
+        return symbolLookup.find(name).map(addr -> variadic
                 ? VarargsInvoker.make(addr, fdesc)
                 : linker.downcallHandle(addr, fdesc)).orElse(null);
-
-        namedFunctions.put(func, handle);
-        return handle;
     }
 
     /**
@@ -193,7 +179,7 @@ public class Interop {
      *
      * @return the gtype from the provided get-type function
      */
-    public static org.gnome.glib.Type getType(String getTypeFunction) {
+    public static Type getType(String getTypeFunction) {
 
         if (getTypeFunction == null)
             return null;
@@ -204,7 +190,7 @@ public class Interop {
             MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
             if (handle == null)
                 return null;
-            return new org.gnome.glib.Type((long) handle.invokeExact());
+            return new Type((long) handle.invokeExact());
         } catch (Throwable err) {
             throw new AssertionError("Unexpected exception occurred: ", err);
         }

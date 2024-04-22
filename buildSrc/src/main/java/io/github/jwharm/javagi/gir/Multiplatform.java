@@ -54,8 +54,8 @@ public abstract sealed class Multiplatform
 
         if (this instanceof Constructor || this instanceof Function)
             return switch(parent()) {
-                case RegisteredType rt -> rt.platforms();
                 case Namespace ns -> ns.platforms();
+                case RegisteredType rt -> rt.platforms();
                 default -> throw new IllegalStateException("Illegal parent type");
             } != Platform.ALL;
         return false;

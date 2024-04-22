@@ -81,6 +81,9 @@ public class BitfieldGenerator extends RegisteredTypeGenerator {
             }
         }
 
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
+
         return builder.build();
     }
 

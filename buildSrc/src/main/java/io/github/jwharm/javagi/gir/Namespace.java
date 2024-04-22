@@ -24,14 +24,12 @@ import io.github.jwharm.javagi.util.Platform;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
 
-import io.github.jwharm.javagi.configuration.ModuleInfo;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class Namespace extends Multiplatform {
+public final class Namespace extends Multiplatform implements RegisteredType {
 
     private final Map<Integer, String> sharedLibraries;
 
@@ -174,6 +172,11 @@ public final class Namespace extends Multiplatform {
 
     public String globalClassName() {
         return name().equals("GObject") ? "GObjects" : name();
+    }
+
+    @Override
+    public RegisteredType mergeWith(RegisteredType rt) {
+        throw new IllegalArgumentException("Cannot merge Namespace with RegisteredType");
     }
 
     @Override

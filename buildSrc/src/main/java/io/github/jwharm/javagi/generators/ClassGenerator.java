@@ -114,6 +114,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
 
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
+
         return builder.build();
     }
 

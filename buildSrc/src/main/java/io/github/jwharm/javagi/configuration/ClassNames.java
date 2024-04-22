@@ -71,6 +71,8 @@ public final class ClassNames {
     public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
     public final static ClassName GOBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName GOBJECTS = get("org.gnome.gobject", "GObjects");
+    public final static ClassName TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
+    public final static ClassName TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
     public final static ClassName TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");
 
     // The type variable used for <T extends GObject>

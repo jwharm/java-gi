@@ -19,9 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -34,6 +32,7 @@ import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.util.Comparator;
 import java.util.List;
 
@@ -85,6 +84,20 @@ public class MethodGenerator {
             case Record r -> r.generic();
             default -> false;
         };
+    }
+
+    public FieldSpec generateNamedDowncallHandle(Modifier... modifiers) {
+        return FieldSpec.builder(
+                        MethodHandle.class,
+                        func.callableAttrs().cIdentifier(),
+                        modifiers)
+                .initializer(CodeBlock.builder()
+                        .add("$T.downcallHandle($Z$S,$W",
+                                ClassNames.INTEROP, func.callableAttrs().cIdentifier())
+                        .add(generator.generateFunctionDescriptor())
+                        .add(",$W$L)", generator.varargs())
+                        .build())
+                .build();
     }
 
     public MethodSpec generate() {
@@ -223,9 +236,10 @@ public class MethodGenerator {
             if (target != null && target.checkIsGObject()
                     && returnValue.transferOwnership() == TransferOwnership.NONE
                     && (! "ref".equals(func.name()))) {
-                builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).format() + ";\n", stmt.arguments())
+                builder.addNamedCode(PartialStatement.of("var _object = ")
+                        .add(stmt).format() + ";\n", stmt.arguments())
                         .beginControlFlow("if (_object instanceof $T _gobject)",
-                                ClassName.get("org.gnome.gobject", "GObject"))
+                                ClassNames.GOBJECT)
                         .addStatement("$T.debug($S, _gobject.handle())",
                                 ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld")
                         .addStatement("_gobject.ref()")
@@ -238,7 +252,8 @@ public class MethodGenerator {
                     "org.gnome.gobject.TypeInstance",
                     "org.gnome.gobject.TypeClass",
                     "org.gnome.gobject.TypeInterface").contains(target.javaType()))) {
-                builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).add(";\n").format(), stmt.arguments())
+                builder.addNamedCode(PartialStatement.of("var _instance = ")
+                        .add(stmt).add(";\n").format(), stmt.arguments())
                         .beginControlFlow("if (_instance != null)")
                         .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
                 new RecordGenerator(record).setFreeFunc(builder, "_instance", target.typeName());
@@ -248,7 +263,8 @@ public class MethodGenerator {
 
             // No ownership transfer, just marshal the return value
             else {
-                builder.addNamedCode(PartialStatement.of("return ").add(stmt).format() + ";\n", stmt.arguments());
+                builder.addNamedCode(PartialStatement.of("return ")
+                        .add(stmt).format() + ";\n", stmt.arguments());
             }
         }
 
@@ -260,9 +276,6 @@ public class MethodGenerator {
     }
 
     private void functionNameInvocation() {
-        // Function descriptor
-        generator.generateFunctionDescriptor(builder);
-
         // Result assignment
         PartialStatement invoke = new PartialStatement();
         if (!func.returnValue().anyType().isVoid()) {
@@ -272,10 +285,9 @@ public class MethodGenerator {
         }
 
         // Function invocation
-        invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L)$Z.invokeExact($Z",
-                        "interop", ClassNames.INTEROP,
-                        "cIdentifier", func.callableAttrs().cIdentifier(),
-                        "variadic", generator.varargs())
+        invoke.add("$helperClass:T.$cIdentifier:L.invokeExact($Z",
+                        "helperClass", ((RegisteredType) func.parent()).helperClass(),
+                        "cIdentifier", func.callableAttrs().cIdentifier())
                 .add(generator.marshalParameters())
                 .add(");\n");
 
@@ -293,7 +305,7 @@ public class MethodGenerator {
     private void functionPointerInvocation() {
         // Function descriptor
         var generator = new CallableGenerator(vm);
-        generator.generateFunctionDescriptor(builder);
+        builder.addCode(generator.generateFunctionDescriptorDeclaration());
 
         // Function pointer lookup
         switch (vm.parent()) {

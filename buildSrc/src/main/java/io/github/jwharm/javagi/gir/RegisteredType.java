@@ -28,7 +28,7 @@ import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
 public sealed interface RegisteredType
         extends Node
         permits Alias, Boxed, Callback, Class, FlaggedType,
-                Interface, Record, Union {
+                Interface, Namespace, Record, Union {
 
     RegisteredType mergeWith(RegisteredType rt);
     int platforms();
@@ -91,6 +91,10 @@ public sealed interface RegisteredType
                 .filter(Method.class::isInstance)
                 .map(Method.class::cast)
                 .anyMatch(m -> "ref_sink".equals(m.name()));
+    }
+
+    default ClassName helperClass() {
+        return typeName().nestedClass("MethodHandles");
     }
 
     default String name() {

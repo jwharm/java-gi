@@ -98,6 +98,9 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
             }
         }
 
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
+
         return builder.build();
     }
 

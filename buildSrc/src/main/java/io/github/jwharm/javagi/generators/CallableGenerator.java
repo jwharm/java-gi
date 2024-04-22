@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -45,7 +46,15 @@ public class CallableGenerator {
         this.callable = callable;
     }
 
-    void generateFunctionDescriptor(MethodSpec.Builder builder) {
+    CodeBlock generateFunctionDescriptorDeclaration() {
+        return CodeBlock.builder()
+                .add("$[$T _fdesc = ", FunctionDescriptor.class)
+                .add(generateFunctionDescriptor())
+                .add(";\n$]")
+                .build();
+    }
+
+    CodeBlock generateFunctionDescriptor() {
         List<String> valueLayouts = new ArrayList<>();
 
         boolean isVoid = callable.returnValue().anyType() instanceof Type t && t.isVoid();
@@ -70,13 +79,12 @@ public class CallableGenerator {
             valueLayouts.add("ADDRESS");
 
         if (valueLayouts.isEmpty()) {
-            builder.addStatement("$1T _fdesc = $1T.ofVoid()", FunctionDescriptor.class);
+            return CodeBlock.of("$T.ofVoid()", FunctionDescriptor.class);
         } else {
             String layouts = valueLayouts.stream()
                     .map(s -> "$2T." + s)
-                    // $Z will split long lines
                     .collect(Collectors.joining(",$W", "(", ")"));
-            builder.addStatement("$1T _fdesc = $1T.$3L" + layouts,
+            return CodeBlock.of("$1T.$3L" + layouts,
                     FunctionDescriptor.class, ValueLayout.class, isVoid ? "ofVoid" : "of");
         }
     }

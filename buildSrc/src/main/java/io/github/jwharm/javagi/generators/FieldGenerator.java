@@ -183,7 +183,7 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateOverrideMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
+        return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
                         Override virtual method {@code $L}.
                                                 
@@ -192,9 +192,9 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
                 .addParameter(java.lang.reflect.Method.class, "method")
-                .addStatement("this._$LMethod = method", getName());
-        new CallableGenerator(cb).generateFunctionDescriptor(spec);
-        return spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
+                .addStatement("this._$LMethod = method", getName())
+                .addCode(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
+                .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
                         MethodHandle.class,
                         ClassNames.INTEROP,
                         MethodHandles.class,

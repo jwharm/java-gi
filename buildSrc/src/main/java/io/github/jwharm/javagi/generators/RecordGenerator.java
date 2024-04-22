@@ -70,8 +70,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.addModifiers(Modifier.STATIC);
             if (rec.fields().isEmpty()) {
                 builder.superclass(outerClass instanceof Interface
-                        ? ClassName.get("org.gnome.gobject", "TypeInterface")
-                        : ClassName.get("org.gnome.gobject", "TypeClass"));
+                        ? ClassNames.TYPE_INTERFACE : ClassNames.TYPE_CLASS);
             } else {
                 // parent_class is always the first field, unless the struct is disguised
                 Record parentRec = (Record) ((Type) rec.fields().getFirst().anyType()).get();
@@ -128,6 +127,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         addConstructors(builder);
         addFunctions(builder);
         addMethods(builder);
+
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
 
         if ("GTypeInstance".equals(rec.cType()))
             addCallParentMethods();

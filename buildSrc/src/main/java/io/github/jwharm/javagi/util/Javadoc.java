@@ -372,8 +372,8 @@ public class Javadoc {
         if (node == null) return null;
 
         String type = switch(node.parent()) {
-            case RegisteredType rt -> rt.javaType();
             case Namespace ns -> formatNS(node.namespace().name()) + ns.globalClassName();
+            case RegisteredType rt -> rt.javaType();
             default -> "";
         };
 

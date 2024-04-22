@@ -64,6 +64,9 @@ public class UnionGenerator extends RegisteredTypeGenerator {
         addConstructors(builder);
         addFunctions(builder);
 
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
+
         return builder.build();
     }
 

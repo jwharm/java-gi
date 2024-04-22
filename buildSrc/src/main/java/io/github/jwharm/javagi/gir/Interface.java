@@ -21,8 +21,9 @@ package io.github.jwharm.javagi.gir;
 
 import io.github.jwharm.javagi.util.PartialStatement;
 
+import com.squareup.javapoet.ClassName;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,12 @@ public final class Interface extends Multiplatform
                     union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
+    }
+
+    @Override
+    public ClassName helperClass() {
+        ClassName tn = typeName();
+        return ClassName.get(tn.packageName(), tn.simpleName() + "MethodHandles");
     }
 
     public Record typeStruct() {

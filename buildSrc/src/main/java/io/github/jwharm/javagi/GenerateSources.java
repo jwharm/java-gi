@@ -123,6 +123,13 @@ public abstract class GenerateSources extends DefaultTask {
                 default -> null;
             };
             writeJavaFile(typeSpec, packageName, outputDirectory);
+
+            // Write package-private helper classes for interfaces, containing static downcall handles
+            if (rt instanceof Interface i) {
+                var generator = new InterfaceGenerator(i);
+                if (generator.hasDowncallHandles())
+                    writeJavaFile(generator.downcallHandlesClass(), packageName, outputDirectory);
+            }
         }
     }
 

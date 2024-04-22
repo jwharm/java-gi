@@ -190,7 +190,7 @@ public class ClosureGenerator {
         if (closure.returnValue().anyType() instanceof Type t && t.checkIsGObject()
                 && closure.returnValue().transferOwnership() == TransferOwnership.FULL)
             upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
-                    ClassName.get("org.gnome.gobject", "GObject"));
+                    ClassNames.GOBJECT);
 
         // Marshal return value
         if (!returnsVoid) {
@@ -305,7 +305,7 @@ public class ClosureGenerator {
     }
 
     MethodSpec generateToCallbackMethod(String className) {
-        MethodSpec.Builder toCallback = MethodSpec.methodBuilder("toCallback")
+        return MethodSpec.methodBuilder("toCallback")
                 .addJavadoc("""
                         Creates a native function pointer to the {@link #upcall} method.
                         
@@ -313,9 +313,9 @@ public class ClosureGenerator {
                         """)
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .addParameter(Arena.class, "arena")
-                .returns(MemorySegment.class);
-        generator.generateFunctionDescriptor(toCallback);
-        return toCallback.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
+                .returns(MemorySegment.class)
+                .addCode(generator.generateFunctionDescriptorDeclaration())
+                .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
                         MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className)
                 .addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         Linker.class)

@@ -25,12 +25,15 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Conversions;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
+import java.util.List;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
+import static java.util.function.Predicate.not;
 
 public abstract class RegisteredTypeGenerator {
 
@@ -133,7 +136,7 @@ public abstract class RegisteredTypeGenerator {
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
                             nested,
                             rt.typeName())
-                    .superclass(ClassName.get("org.gnome.gobject", "GObject"))
+                    .superclass(ClassNames.GOBJECT)
                     .addSuperinterface(rt.typeName());
 
         if (rt instanceof Class)
@@ -151,8 +154,36 @@ public abstract class RegisteredTypeGenerator {
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(MemorySegment.class, "address")
                         .addStatement("super(address)")
-                        .build()
-                )
+                        .build())
                 .build();
+    }
+
+    public boolean hasDowncallHandles() {
+        return (! listNamedFunctions().isEmpty());
+    }
+
+    public TypeSpec downcallHandlesClass() {
+        TypeSpec.Builder builder = TypeSpec.classBuilder(rt.helperClass())
+                .addModifiers(Modifier.FINAL);
+
+        if (rt instanceof Interface)
+            builder.addAnnotation(GeneratedAnnotationBuilder.generate());
+        else
+            builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
+
+        for (Callable c : listNamedFunctions())
+            if (!c.skip())
+                builder.addField(
+                        new MethodGenerator(c).generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL));
+
+        return builder.build();
+    }
+
+    private List<Callable> listNamedFunctions() {
+        return rt.children().stream()
+                .filter(c -> c instanceof Constructor || c instanceof Function || c instanceof Method)
+                .map(Callable.class::cast)
+                .filter(not(Callable::skip))
+                .toList();
     }
 }

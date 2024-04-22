@@ -30,16 +30,16 @@ import javax.lang.model.element.Modifier;
 public class InterfaceGenerator extends RegisteredTypeGenerator {
 
     private final Interface inf;
-    private final TypeSpec.Builder builder;
 
     public InterfaceGenerator(Interface inf) {
         super(inf);
         this.inf = inf;
-        this.builder = TypeSpec.interfaceBuilder(inf.typeName());
-        this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
     }
 
     public TypeSpec generate() {
+        TypeSpec.Builder builder = TypeSpec.interfaceBuilder(inf.typeName());
+        builder.addAnnotation(GeneratedAnnotationBuilder.generate());
+
         if (inf.infoElements().doc() != null)
             builder.addJavadoc(new DocGenerator(inf.infoElements().doc()).generate());
         if (inf.infoAttrs().deprecated())

@@ -167,11 +167,11 @@ public final class GirParser {
                     newNode = patch.patch((GirElement) newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
-                if (existingChildNode instanceof RegisteredType existing
-                        && newNode instanceof RegisteredType created)
-                    newNode = created.mergeWith(existing);
-                else if (existingChildNode instanceof Namespace existing
+                if (existingChildNode instanceof Namespace existing
                         && newNode instanceof Namespace created)
+                    newNode = created.mergeWith(existing);
+                else if (existingChildNode instanceof RegisteredType existing
+                        && newNode instanceof RegisteredType created)
                     newNode = created.mergeWith(existing);
 
                 children.add(newNode);

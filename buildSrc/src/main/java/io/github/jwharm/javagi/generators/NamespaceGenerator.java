@@ -32,12 +32,13 @@ import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
-public class NamespaceGenerator {
+public class NamespaceGenerator extends RegisteredTypeGenerator {
 
     private final Namespace ns;
     private final TypeSpec.Builder builder;
 
     public NamespaceGenerator(Namespace ns) {
+        super(ns);
         this.ns = ns;
         this.builder = TypeSpec.classBuilder(ns.typeName());
         this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
@@ -60,6 +61,9 @@ public class NamespaceGenerator {
         for (Function f : ns.functions())
             if (! f.skip())
                 builder.addMethod(new MethodGenerator(f).generate());
+
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
 
         return builder.build();
     }
