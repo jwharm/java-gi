@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.foreign.*;
 import java.util.AbstractSequentialList;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 /**
@@ -104,6 +105,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
             @Override
             public E next() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
                 last = last == null ? head : last.readNext();
                 index++;
                 direction = Direction.FORWARD;
@@ -122,6 +125,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
             @Override
             public E previous() {
+                if (!hasPrevious())
+                    throw new NoSuchElementException();
                 last = last.readPrev();
                 index--;
                 direction = Direction.BACKWARD;
