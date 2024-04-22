@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Constructor extends Multiplatform implements Callable {
 
@@ -31,5 +32,18 @@ public final class Constructor extends Multiplatform implements Callable {
     @Override
     public RegisteredType parent() {
         return (RegisteredType) super.parent();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Constructor other = (Constructor) o;
+        return Objects.equals(callableAttrs().cIdentifier(), other.callableAttrs().cIdentifier());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), callableAttrs().cIdentifier());
     }
 }

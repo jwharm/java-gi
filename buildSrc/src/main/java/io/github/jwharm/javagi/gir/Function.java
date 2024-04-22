@@ -21,10 +21,24 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Function extends Multiplatform implements Callable {
 
     public Function(Map<String, String> attributes, List<Node> children, int platforms) {
         super(attributes, children, platforms);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Function other = (Function) o;
+        return Objects.equals(callableAttrs().cIdentifier(), other.callableAttrs().cIdentifier());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), callableAttrs().cIdentifier());
     }
 }
