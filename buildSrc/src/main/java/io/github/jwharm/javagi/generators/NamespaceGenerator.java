@@ -87,7 +87,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                         Platform.toString(platform));
                 for (String libName : library.split(","))
                     block.addStatement("$T.loadLibrary($S)",
-                            ClassNames.LIB_LOAD,
+                            ClassNames.INTEROP,
                             libName);
                 block.endControlFlow();
             }
@@ -96,7 +96,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             else {
                 block.addStatement("case $S -> $T.loadLibrary($S)",
                         Platform.toString(platform),
-                        ClassNames.LIB_LOAD,
+                        ClassNames.INTEROP,
                         library);
             }
         }

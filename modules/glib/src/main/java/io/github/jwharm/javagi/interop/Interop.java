@@ -46,13 +46,24 @@ public class Interop {
 
     private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
 
-    private final static SymbolLookup symbolLookup;
     private final static Linker linker = Linker.nativeLinker();
 
-    static {
-        SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
-        symbolLookup = name -> loaderLookup.find(name).or(() ->
-                linker.defaultLookup().find(name));
+    public static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
+            .or(Linker.nativeLinker().defaultLookup());
+
+    /**
+     * Load the specified library using
+     * {@link SymbolLookup#libraryLookup(String, Arena)}.
+     *
+     * @param name the name of the library
+     */
+    public static void loadLibrary(String name) {
+        try {
+            Interop.symbolLookup = SymbolLookup.libraryLookup(name, Arena.global())
+                    .or(Interop.symbolLookup);
+        } catch (IllegalArgumentException iae) {
+            LibLoad.loadLibrary(name);
+        }
     }
 
     /**
