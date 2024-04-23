@@ -115,6 +115,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
             @Override
             public int nextIndex() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
                 return index + 1;
             }
 
@@ -135,6 +137,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
             @Override
             public int previousIndex() {
+                if (!hasPrevious())
+                    throw new NoSuchElementException();
                 return index == -1 ? -1 : index - 1;
             }
 
