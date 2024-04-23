@@ -46,7 +46,9 @@ public class Javadoc {
             + "|(?<paramref>@{1,2}[^@\\s]\\w*)"
             + "|(?<hyperlink>\\[(?<desc>.+?)]\\((?<url>.+?)\\))"
             + "|(?<img>!\\[(?<imgdesc>.*?)]\\((?<imgurl>.+?)\\))"
-            + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+)\\n*"
+            + "|(?s)(?<picture><picture.*?>.*?<img src=\"(?<pictureurl>[^\"]+?)\".+?alt=\"(?<alt>[^\"]+?)\".+?</picture>)"
+            + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+?)\\n+"
+            + "|(?m)^(?<container>:::\\s.+)\\n*"
             + "|(?m)^\\s*(?<bulletpoint>[-*])\\s"
             + "|(?<strong>\\*\\*.*?\\w\\*\\*)"
             + "|(?<em>\\*.*?\\w\\*)"
@@ -58,6 +60,7 @@ public class Javadoc {
     private static final String REGEX_PASS_2 =
               "(?<emptyp><p>\\s*(?<tag><(pre|ul)>))"
             + "|(?m)(?<blockquote>(^&gt;\\s+.*\\n?)+)"
+            + "|(?<code>`[^`]+?`)"
     ;
 
     // These are the named groups for which the conversions to Javadoc are applied.
@@ -65,9 +68,10 @@ public class Javadoc {
     // for the conversion functions.
     private static final List<String> NAMED_GROUPS_PASS_1 = List.of(
             "codeblock", "codeblock2", "code", "link", "constantref", "typeref",
-            "paramref", "hyperlink", "img", "header", "bulletpoint", "strong", "em", "entity", "p");
+            "paramref", "hyperlink", "img", "picture", "header", "container", "bulletpoint",
+            "strong", "em", "entity", "p");
     
-    private static final List<String> NAMED_GROUPS_PASS_2 = List.of("emptyp", "blockquote");
+    private static final List<String> NAMED_GROUPS_PASS_2 = List.of("emptyp", "blockquote", "code");
 
     // The compiled regex patterns
     private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
@@ -86,7 +90,7 @@ public class Javadoc {
     public String convert(Documentation doc) {
         this.doc = doc;
         this.ul = false;
-        
+
         // Conversion pass 1
         Matcher matcher = PATTERN_PASS_1.matcher(doc.text());
         StringBuilder output = new StringBuilder();
@@ -136,7 +140,9 @@ public class Javadoc {
             case "paramref" -> convertParamref(matcher.group());
             case "hyperlink" -> convertHyperlink(matcher.group(), matcher.group("desc"), matcher.group("url"));
             case "img" -> convertImg(matcher.group(), matcher.group("imgdesc"), matcher.group("imgurl"));
+            case "picture" -> convertImg(matcher.group(), matcher.group("alt"), matcher.group("pictureurl"));
             case "header" -> convertHeader(matcher.group(), matcher.group("headerlevel"));
+            case "container" -> convertContainer(matcher.group());
             case "bulletpoint" -> convertBulletpoint(matcher.group());
             case "strong" -> convertStrong(matcher.group());
             case "em" -> convertEm(matcher.group());
@@ -277,7 +283,8 @@ public class Javadoc {
     // Replace "! [...](...)" image links with <img src="..." alt="...">
     private String convertImg(String img, String desc, String url) {
         String fullUrl = url;
-        if (! url.startsWith("http")) fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
+        if (! url.startsWith("http"))
+            fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
         String alt = desc.replace("\"", "\\\"");
         return "<img src=\"" + fullUrl + "\" alt=\"" + alt + "\">";
     }
@@ -286,6 +293,12 @@ public class Javadoc {
     private String convertHeader(String header, String headerlevel) {
         int h = headerlevel.length();
         return "<strong>" + header.substring(h).trim() + "</strong><br/>\n";
+    }
+
+    // Replace "::: note" with <em>Note</em><br/>
+    private String convertContainer(String name) {
+        String title = capitalize(name.substring(3).trim());
+        return "<em>" + title + "</em><br/>\n";
     }
 
     // Replace a bullet point "- " with <li>
@@ -352,7 +365,7 @@ public class Javadoc {
         try {
             return ModuleInfo.packageName(ns) + ".";
         } catch (NoSuchElementException e) {
-            return ns;
+            return "";
         }
     }
 
@@ -403,23 +416,22 @@ public class Javadoc {
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
     // otherwise, generate a "{@code" tag.
     private String checkLink(String ns, String identifier) {
-        try {
-            var namespace = getNamespace(ns);
+        // Try [namespace.type]
+        var namespace = getNamespace(ns);
 
-            if (namespace == null)
-                return "{@code ";
-
-            if (namespace.registeredTypes().containsKey(identifier))
-                return "{@link ";
-
-            return namespace.functions().stream()
-                    .anyMatch(f -> identifier.equals(f.name()))
-                        ? "{@link "
-                        : "{@code ";
-
-        } catch (NoSuchElementException e) {
+        // Try [type.func]
+        if (namespace == null)
             return checkLink(doc.namespace().name(), ns, identifier);
-        }
+
+        // Valid [namespace.type] ?
+        if (namespace.registeredTypes().containsKey(identifier))
+            return "{@link ";
+
+        // Valid [namespace.func] ?
+        return namespace.functions().stream()
+                .anyMatch(f -> identifier.equals(f.name()))
+                    ? "{@link "
+                    : "{@code ";
     }
 
     // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,

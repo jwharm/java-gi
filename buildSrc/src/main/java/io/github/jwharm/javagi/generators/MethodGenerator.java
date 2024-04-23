@@ -102,7 +102,8 @@ public class MethodGenerator {
 
     public MethodSpec generate() {
         // Javadoc
-        if (func.infoElements().doc() != null) {
+        if ((! (func instanceof Constructor)) // not for private constructor helper methods
+                && (func.infoElements().doc() != null)) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
             if (func instanceof Multiplatform mp && mp.doPlatformCheck())
                 builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
