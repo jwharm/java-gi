@@ -162,8 +162,8 @@ You can connect to the custom signal, like this:
 
 ```java
 counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
-    System.out.println("Limit reached: " + limit));
-}
+    System.out.println("Limit reached: " + limit);
+});
 ```
 
 Because the signal declaration is an ordinary functional interface, it is equally valid to extend from a standard functional interface like `Runnable`, `BooleanSupplier`, or any other one, like (in the above example) an `IntConsumer`:
