@@ -141,15 +141,15 @@ public abstract class RegisteredTypeGenerator {
     protected TypeSpec implClass() {
         ClassName nested = rt.typeName().nestedClass(rt.name() + "Impl");
         TypeSpec.Builder spec = TypeSpec.classBuilder(nested)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addStaticBlock(staticBlock());
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
         if (rt instanceof Interface)
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
                             nested,
                             rt.typeName())
                     .superclass(ClassNames.GOBJECT)
-                    .addSuperinterface(rt.typeName());
+                    .addSuperinterface(rt.typeName())
+                    .addStaticBlock(staticBlock());
 
         if (rt instanceof Class)
             spec.addJavadoc("The $T type represents a native instance of the abstract $T class.",
