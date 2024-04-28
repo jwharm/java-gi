@@ -52,10 +52,6 @@ public sealed interface RegisteredType
                 typeTag(), typeName());
     }
 
-    default String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        return paramName + ".handle()";
-    }
-
     default boolean checkIsGObject() {
         return switch(this) {
             case Class c -> c.isInstanceOf("GObject", "Object");

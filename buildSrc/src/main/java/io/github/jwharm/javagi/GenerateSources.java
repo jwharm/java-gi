@@ -113,10 +113,9 @@ public abstract class GenerateSources extends DefaultTask {
             typeSpec = switch(rt) {
                 case Alias a -> new AliasGenerator(a).generate();
                 case Boxed b -> new BoxedGenerator(b).generate();
-                case Bitfield b -> new BitfieldGenerator(b).generate();
                 case Callback c -> new CallbackGenerator(c).generate();
                 case Class c -> new ClassGenerator(c).generate();
-                case Enumeration e -> new EnumerationGenerator(e).generate();
+                case FlaggedType f -> new FlaggedTypeGenerator(f).generate();
                 case Interface i -> new InterfaceGenerator(i).generate();
                 case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
                 case Union u -> new UnionGenerator(u).generate();

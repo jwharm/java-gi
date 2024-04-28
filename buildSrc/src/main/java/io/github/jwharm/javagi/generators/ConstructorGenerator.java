@@ -19,7 +19,10 @@
 
 package io.github.jwharm.javagi.generators;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -31,6 +34,7 @@ import io.github.jwharm.javagi.util.Platform;
 import javax.lang.model.element.Modifier;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
@@ -47,12 +51,17 @@ public class ConstructorGenerator {
         this.ctor = ctor;
         parent = ctor.parent();
 
-        // Method name, without "new" prefix
+        privateMethodName = getName(ctor, true);
+        methodName = getName(ctor, false);
+    }
+
+    public static String getName(Constructor ctor, boolean privateMethodName) {
         String name = ctor.name();
         if (name.startsWith("new_"))
             name = name.substring(4);
-        privateMethodName = toJavaIdentifier("construct_" + name);
-        methodName = toJavaIdentifier(name);
+        return privateMethodName
+                ? toJavaIdentifier("construct_" + name)
+                : toJavaIdentifier(name);
     }
 
     public Iterable<MethodSpec> generate() {
@@ -82,7 +91,7 @@ public class ConstructorGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
-        new CallableGenerator(ctor).generateMethodParameters(builder);
+        new CallableGenerator(ctor).generateMethodParameters(builder, false, true);
 
         // Exception
         if (ctor.callableAttrs().throws_())
@@ -103,7 +112,12 @@ public class ConstructorGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
         // Override the specified return type
-        builder.returns(parent.typeName());
+        TypeName returnType = parent.typeName();
+        // Wrap Bitfield return value into a Set<>
+        if (parent instanceof Bitfield)
+            returnType = ParameterizedTypeName.get(
+                    ClassName.get(Set.class), returnType);
+        builder.returns(returnType);
 
         // Javadoc
         if (ctor.infoElements().doc() != null) {
@@ -119,7 +133,7 @@ public class ConstructorGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
-        new CallableGenerator(ctor).generateMethodParameters(builder);
+        new CallableGenerator(ctor).generateMethodParameters(builder, false, true);
 
         // Exception
         if (ctor.callableAttrs().throws_())

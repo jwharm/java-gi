@@ -19,9 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Conversions;
@@ -29,11 +27,11 @@ import io.github.jwharm.javagi.util.PartialStatement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.lang.model.element.Modifier;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
@@ -89,16 +87,16 @@ public class CallableGenerator {
         }
     }
 
-    void generateMethodParameters(MethodSpec.Builder builder) {
-        generateMethodParameters(builder, false);
-    }
-
-    void generateMethodParameters(MethodSpec.Builder builder, boolean generic) {
+    void generateMethodParameters(MethodSpec.Builder builder,
+                                  boolean generic,
+                                  boolean setOfBitfield) {
         if (callable.parameters() == null)
             return;
 
         for (var p : callable.parameters().parameters()) {
-            if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
+            if (p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter())
                 continue;
 
             if (p.varargs()) {
@@ -106,9 +104,11 @@ public class CallableGenerator {
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
-                var type = generator.getType();
+                var type = generator.getType(setOfBitfield);
+
                 if (generic && type.equals(ClassNames.GOBJECT))
                     type = ClassNames.GENERIC_T;
+
                 var spec = ParameterSpec.builder(type, generator.getName());
                 if (p.nullable())
                     spec.addAnnotation(Nullable.class);
@@ -189,5 +189,80 @@ public class CallableGenerator {
     boolean varargs() {
         return callable.parameters() != null
                 && callable.parameters().parameters().stream().anyMatch(Parameter::varargs);
+    }
+    
+    public MethodSpec generateBitfieldOverload() {
+        // Check if this is a (named) constructor
+        boolean ctor = callable instanceof Constructor;
+        boolean namedCtor = ctor && (!callable.name().equals("new"));
+
+        boolean generic = MethodGenerator.isGeneric(callable);
+
+        // Method name
+        String name = ctor
+                ? ConstructorGenerator.getName((Constructor) callable, false)
+                : MethodGenerator.getName(callable);
+
+        MethodSpec.Builder builder;
+        if (ctor && (!namedCtor))
+            builder = MethodSpec.constructorBuilder();
+        else
+            builder = MethodSpec.methodBuilder(name);
+
+        // Deprecated annotation
+        if (callable.callableAttrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
+
+        // Modifiers
+        builder.addModifiers(Modifier.PUBLIC);
+        if (callable instanceof Function || namedCtor)
+            builder.addModifiers(Modifier.STATIC);
+        else if (callable.parent() instanceof Interface)
+            builder.addModifiers(Modifier.DEFAULT);
+
+        // Return type
+        if (generic && callable.returnValue().anyType().typeName().equals(ClassNames.GOBJECT))
+            builder.returns(ClassNames.GENERIC_T);
+        else if ((!ctor) || namedCtor)
+            builder.returns(new TypedValueGenerator(callable.returnValue()).getType());
+
+        // Parameters
+        generateMethodParameters(builder, generic, false);
+
+        // Exception
+        if (callable.callableAttrs().throws_())
+            builder.addException(ClassNames.GERROR_EXCEPTION);
+
+        // Call the overloaded method
+        PartialStatement stmt = PartialStatement.of("");
+        if (ctor && (!namedCtor))
+            stmt.add("this");
+        else
+            stmt.add((callable.returnValue().anyType().isVoid() ? "" : "return ") + name);
+
+        // Set parameters
+        StringJoiner params = new StringJoiner(",$W", "(", ");\n");
+        for (Parameter p : callable.parameters().parameters()) {
+            if (p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter())
+                continue;
+
+            TypedValueGenerator gen = new TypedValueGenerator(p);
+
+            if (p.isBitfield()) {
+                if (p.isOutParameter())
+                    params.add(gen.getName() + " == null ? null : new $out:T($enumSet:T.of(" + gen.getName() + ".get()))");
+                else
+                    params.add("$enumSet:T.of(" + gen.getName() + ")");
+            } else {
+                params.add(gen.getName());
+            }
+        }
+        stmt.add(params.toString(),
+                "out", ClassNames.OUT,
+                "enumSet", EnumSet.class);
+        builder.addNamedCode(stmt.format(), stmt.arguments());
+        return builder.build();
     }
 }

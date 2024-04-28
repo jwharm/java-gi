@@ -73,21 +73,33 @@ public abstract class RegisteredTypeGenerator {
     }
 
     protected void addFunctions(TypeSpec.Builder builder) {
-        for (Function f : filter(rt.children(), Function.class))
-            if (!f.skip())
+        for (Function f : filter(rt.children(), Function.class)) {
+            if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
+                if (f.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addConstructors(TypeSpec.Builder builder) {
-        for (Constructor c : filter(rt.children(), Constructor.class))
-            if (!c.skip())
+        for (Constructor c : filter(rt.children(), Constructor.class)) {
+            if (!c.skip()) {
                 builder.addMethods(new ConstructorGenerator(c).generate());
+                if (c.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(c).generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addMethods(TypeSpec.Builder builder) {
-        for (Method m : filter(rt.children(), Method.class))
-            if (!m.skip())
+        for (Method m : filter(rt.children(), Method.class)) {
+            if (!m.skip()) {
                 builder.addMethod(new MethodGenerator(m).generate());
+                if (m.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(m).generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addVirtualMethods(TypeSpec.Builder builder) {

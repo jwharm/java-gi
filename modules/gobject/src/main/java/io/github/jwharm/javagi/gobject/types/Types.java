@@ -32,6 +32,8 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.MemoryLayout;
 import java.lang.reflect.*;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -747,23 +749,7 @@ public class Types {
      * @return the declared GType
      */
     public static Type getGType(Class<?> cls) {
-        Method gtypeMethod = null;
-
-        // Find a static method that is annotated with @GType and read its value
-        for (Method method : cls.getDeclaredMethods()) {
-            if (Modifier.isStatic(method.getModifiers())
-                    && method.isAnnotationPresent(GType.class)) {
-                gtypeMethod = method;
-            }
-        }
-
-        // Find a static method with return type org.gnome.glib.Type.class
-        for (Method method : cls.getDeclaredMethods()) {
-            if (Modifier.isStatic(method.getModifiers())
-                    && method.getReturnType().equals(org.gnome.glib.Type.class)) {
-                gtypeMethod = method;
-            }
-        }
+        Method gtypeMethod = getGTypeMethod(cls);
 
         if (gtypeMethod == null) {
             // No gtype method found
@@ -782,6 +768,28 @@ public class Types {
                     cls.getName(), gtypeMethod.getName());
             return null;
         }
+    }
+
+    // Find a static method that returns the GType of this class
+    private static Method getGTypeMethod(Class<?> cls) {
+        Method gtypeMethod = null;
+
+        // Find a static method that is annotated with @GType and read its value
+        for (Method method : cls.getDeclaredMethods()) {
+            if (Modifier.isStatic(method.getModifiers())
+                    && method.isAnnotationPresent(GType.class)) {
+                gtypeMethod = method;
+            }
+        }
+
+        // Find a static method with return type org.gnome.glib.Type.class
+        for (Method method : cls.getDeclaredMethods()) {
+            if (Modifier.isStatic(method.getModifiers())
+                    && method.getReturnType().equals(Type.class)) {
+                gtypeMethod = method;
+            }
+        }
+        return gtypeMethod;
     }
 
     /**
@@ -993,15 +1001,13 @@ public class Types {
      * @param  cls the class for which to generate typeflags
      * @return the generated typeflags
      */
-    public static TypeFlags getTypeFlags(Class<?> cls) {
+    public static Set<TypeFlags> getTypeFlags(Class<?> cls) {
         // Set type flags
-        TypeFlags flags = TypeFlags.NONE;
-        if (Modifier.isAbstract(cls.getModifiers())) {
-            flags = flags.or(TypeFlags.ABSTRACT);
-        }
-        if (Modifier.isFinal(cls.getModifiers())) {
-            flags = flags.or(TypeFlags.FINAL);
-        }
+        Set<TypeFlags> flags = EnumSet.noneOf(TypeFlags.class);
+        if (Modifier.isAbstract(cls.getModifiers()))
+            flags.add(TypeFlags.ABSTRACT);
+        if (Modifier.isFinal(cls.getModifiers()))
+            flags.add(TypeFlags.FINAL);
         return flags;
     }
 
@@ -1044,13 +1050,12 @@ public class Types {
             MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
             Consumer<T> instanceInit = getInstanceInit(cls);
             Function<MemorySegment, T> constructor = getAddressConstructor(cls);
-            TypeFlags flags = getTypeFlags(cls);
+            Set<TypeFlags> flags = getTypeFlags(cls);
 
             if (parentType == null
                     || classLayout == null
                     || instanceLayout == null
-                    || constructor == null
-                    || flags == null) {
+                    || constructor == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Cannot register type %s\n", cls.getName());
                 return null;
@@ -1145,7 +1150,7 @@ public class Types {
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
             Function<MemorySegment, T> constructor,
-            TypeFlags flags
+            Set<TypeFlags> flags
     ) {
         @SuppressWarnings("unchecked")
         Type type = GObjects.typeRegisterStaticSimple(

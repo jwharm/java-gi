@@ -91,7 +91,7 @@ public class ClosureGenerator {
         if (closure.throws_())
             run.addException(ClassNames.GERROR_EXCEPTION);
 
-        generator.generateMethodParameters(run);
+        generator.generateMethodParameters(run, false, true);
         return run.build();
     }
 

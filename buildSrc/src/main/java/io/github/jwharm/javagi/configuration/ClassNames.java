@@ -35,7 +35,6 @@ public final class ClassNames {
     public static final ClassName CONSTANTS = get(PKG_TOPLEVEL, "Constants");
 
     public static final ClassName ALIAS = get(PKG_BASE, "Alias");
-    public static final ClassName BITFIELD = get(PKG_BASE, "Bitfield");
     public static final ClassName ENUMERATION = get(PKG_BASE, "Enumeration");
     public static final ClassName FLOATING = get(PKG_BASE, "Floating");
     public static final ClassName GERROR_EXCEPTION = get(PKG_BASE, "GErrorException");

@@ -58,9 +58,13 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 builder.addField(fieldSpec);
         }
 
-        for (Function f : ns.functions())
-            if (! f.skip())
+        for (Function f : ns.functions()) {
+            if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
+                if (f.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+            }
+        }
 
         if (hasDowncallHandles())
             builder.addType(downcallHandlesClass());

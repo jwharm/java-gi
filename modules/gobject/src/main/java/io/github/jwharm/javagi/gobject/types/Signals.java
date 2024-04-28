@@ -36,7 +36,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -81,7 +83,7 @@ public class Signals {
     );
 
     private record SignalDeclaration(String signalName,
-                                     SignalFlags signalFlags,
+                                     Set<SignalFlags> signalFlags,
                                      Type returnType,
                                      int nParams,
                                      Type[] paramTypes) {
@@ -98,17 +100,17 @@ public class Signals {
     /*
      * Convert the annotation parameters to SignalFlags
      */
-    private static SignalFlags getFlags(Signal signal) {
-        SignalFlags flags = new SignalFlags(0);
-        if (signal.action())      flags = flags.or(SignalFlags.ACTION);
-        if (signal.deprecated())  flags = flags.or(SignalFlags.DEPRECATED);
-        if (signal.detailed())    flags = flags.or(SignalFlags.DETAILED);
-        if (signal.mustCollect()) flags = flags.or(SignalFlags.MUST_COLLECT);
-        if (signal.noHooks())     flags = flags.or(SignalFlags.NO_HOOKS);
-        if (signal.noRecurse())   flags = flags.or(SignalFlags.NO_RECURSE);
-        if (signal.runCleanup())  flags = flags.or(SignalFlags.RUN_CLEANUP);
-        if (signal.runFirst())    flags = flags.or(SignalFlags.RUN_FIRST);
-        if (signal.runLast())     flags = flags.or(SignalFlags.RUN_LAST);
+    private static Set<SignalFlags> getFlags(Signal signal) {
+        Set<SignalFlags> flags = EnumSet.noneOf(SignalFlags.class);
+        if (signal.action())      flags.add(SignalFlags.ACTION);
+        if (signal.deprecated())  flags.add(SignalFlags.DEPRECATED);
+        if (signal.detailed())    flags.add(SignalFlags.DETAILED);
+        if (signal.mustCollect()) flags.add(SignalFlags.MUST_COLLECT);
+        if (signal.noHooks())     flags.add(SignalFlags.NO_HOOKS);
+        if (signal.noRecurse())   flags.add(SignalFlags.NO_RECURSE);
+        if (signal.runCleanup())  flags.add(SignalFlags.RUN_CLEANUP);
+        if (signal.runFirst())    flags.add(SignalFlags.RUN_FIRST);
+        if (signal.runLast())     flags.add(SignalFlags.RUN_LAST);
         return flags;
     }
     
@@ -198,7 +200,7 @@ public class Signals {
                     : signalAnnotation.name();
             
             // flags
-            SignalFlags signalFlags = getFlags(signalAnnotation);
+            Set<SignalFlags> signalFlags = getFlags(signalAnnotation);
             
             // return type
             Type returnType = inferType(sam.getReturnType());

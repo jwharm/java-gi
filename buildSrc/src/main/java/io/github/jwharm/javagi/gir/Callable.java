@@ -85,6 +85,26 @@ public sealed interface Callable
         return false;
     }
 
+    /**
+     * Return true when there is one or more bitfield parameters.
+     * An alias for a bitfield is counted as a bitfield as well.
+     * Out-parameters are not counted as bitfield parameters.
+     */
+    default boolean hasBitfieldParameters() {
+        Parameters params = parameters();
+        if (params == null)
+            return false;
+        for (Parameter p : params.parameters()) {
+            if (p.isOutParameter())
+                continue;
+            if (p.anyType() instanceof Type t && t.isPointer())
+                continue;
+            if (p.isBitfield())
+                return true;
+        }
+        return false;
+    }
+
     default Parameters parameters() {
         return findAny(children(), Parameters.class);
     }

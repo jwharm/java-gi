@@ -47,17 +47,6 @@ public final class Callback extends Multiplatform
     }
 
     @Override
-    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        String arena = scope == null ? "Arena.global()" : switch(scope) {
-            case BOUND -> "Interop.attachArena(Arena.ofConfined(), this)";
-            case CALL -> "_arena";
-            case NOTIFIED, ASYNC -> "_" + paramName + "Scope";
-            case FOREVER -> "Arena.global()";
-        };
-        return paramName + ".toCallback(" + arena + ")";
-    }
-
-    @Override
     public Callback mergeWith(RegisteredType rt) {
         // No need to merge
         return this;

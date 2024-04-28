@@ -52,8 +52,10 @@ public interface TypeReference {
         if (name() == null)
             return TypeName.get(MemorySegment.class);
 
+        // Get the target type
         var type = get();
-        // A typeclass or typeinterface is an inner class
+
+        // A TypeClass or TypeInterface is an inner class
         if (type instanceof Record rec) {
             var outer = rec.isGTypeStructFor();
             if (outer != null)

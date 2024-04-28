@@ -31,6 +31,7 @@ import io.github.jwharm.javagi.gtk.types.Types;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
@@ -83,7 +84,7 @@ public final class BuilderJavaScope extends BuilderCScope
      * was specified in an attribute of a UI file. The {@code functionName}
      * should refer to a method in the Java class (a {@link Buildable}
      * instance). If that fails, as a fallback mechanism the
-     * {@link BuilderCScope#createClosure(GtkBuilder, String, BuilderClosureFlags, GObject)}
+     * {@link BuilderCScope#createClosure(GtkBuilder, String, Set, GObject)}
      * is called and the result of that function is returned.
      *
      * @param  builder      the GtkBuilder instance
@@ -98,7 +99,7 @@ public final class BuilderJavaScope extends BuilderCScope
     @Override
     public Closure createClosure(GtkBuilder builder,
                                  String functionName,
-                                 BuilderClosureFlags flags,
+                                 Set<BuilderClosureFlags> flags,
                                  GObject object) throws GErrorException {
 
         // Get the instance object

@@ -24,7 +24,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
-import io.github.jwharm.javagi.gir.Enumeration;
+import io.github.jwharm.javagi.gir.Bitfield;
+import io.github.jwharm.javagi.gir.FlaggedType;
 import io.github.jwharm.javagi.gir.Member;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 import io.github.jwharm.javagi.util.Numbers;
@@ -39,12 +40,12 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaConstantUpperCase;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
 
-public class EnumerationGenerator extends RegisteredTypeGenerator {
+public class FlaggedTypeGenerator extends RegisteredTypeGenerator {
 
-    private final Enumeration en;
+    private final FlaggedType en;
     private final TypeSpec.Builder builder;
 
-    public EnumerationGenerator(Enumeration en) {
+    public FlaggedTypeGenerator(FlaggedType en) {
         super(en);
         this.en = en;
         this.builder = TypeSpec.enumBuilder(en.typeName());
@@ -80,8 +81,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
                 builder.addEnumConstant(toJavaConstantUpperCase(m.name()), spec.build());
             } catch (NumberFormatException nfe) {
-                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
-                        m.cIdentifier(), m.value());
+                log(m);
             }
         }
         for (Member m : en.members().stream().filter(not(uniques::contains)).toList()) {
@@ -93,8 +93,7 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                     spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
                 builder.addField(spec.build());
             } catch (NumberFormatException nfe) {
-                System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
-                        m.cIdentifier(), m.value());
+                log(m);
             }
         }
 
@@ -109,32 +108,40 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                 .addJavadoc("""
                     Create a new $L for the provided value
                     
-                    @param value the enum value
-                    """, toJavaSimpleType(en.name(), en.namespace()))
+                    @param value the $L value
+                    """, toJavaSimpleType(en.name(), en.namespace()),
+                         en instanceof Bitfield ? "bitfield" : "enum")
                 .addModifiers(Modifier.PRIVATE)
                 .addParameter(TypeName.INT, "value")
-                .addStatement("this.value = value;")
+                .addStatement("this.value = value")
                 .build();
     }
 
     private MethodSpec staticConstructor() {
         MethodSpec.Builder spec = MethodSpec.methodBuilder("of")
                 .addJavadoc("""
-                        Create a new $L for the provided value
+                        Create a new $1L for the provided value
                         
-                        @param value the enum value
-                        @return the enum for the provided value
-                        """, toJavaSimpleType(en.name(), en.namespace()))
+                        @param value the $2L value
+                        @return the $2L for the provided value
+                        """, toJavaSimpleType(en.name(), en.namespace()),
+                             en instanceof Bitfield ? "bitfield" : "enum")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(en.typeName())
                 .addParameter(TypeName.INT, "value")
                 .beginControlFlow("return switch(value)");
-        for (Member m : filterDuplicateValues(en.members()))
-            spec.addStatement("case $L -> $L",
-                    m.value(), toJavaConstantUpperCase(m.name()));
-        return spec.addStatement("default -> throw new IllegalStateException($S + value)",
-                        "Unexpected value: ")
-                .endControlFlow("") // empty string to force a ;
+        for (Member m : filterDuplicateValues(en.members())) {
+            try {
+                spec.addStatement("case $L -> $L",
+                        Numbers.parseInt(m.value()),
+                        toJavaConstantUpperCase(m.name()));
+            } catch (NumberFormatException nfe) {
+                log(m);
+            }
+        }
+        return spec.addStatement("default -> throw new $T($S + value)",
+                        IllegalStateException.class, "Unexpected value: ")
+                .endControlFlow("") // empty string to force a ";"
                 .build();
     }
 
@@ -161,5 +168,10 @@ public class EnumerationGenerator extends RegisteredTypeGenerator {
                 set.add(m.value());
             }
         return output;
+    }
+
+    private static void log(Member m) {
+        System.out.printf("Skipping enum member %s: \"%s\" is not an integer%n",
+                m.cIdentifier(), m.value());
     }
 }

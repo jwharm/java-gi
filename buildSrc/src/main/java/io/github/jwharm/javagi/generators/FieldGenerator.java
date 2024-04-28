@@ -186,7 +186,7 @@ public class FieldGenerator extends TypedValueGenerator {
         return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
                         Override virtual method {@code $L}.
-                                                
+                        
                         @param method the method to invoke
                         """, f.name())
                 .addModifiers(Modifier.PUBLIC)

@@ -51,17 +51,26 @@ public class MethodGenerator {
         this(func, getName(func));
     }
 
-    private static String getName(Callable func) {
+    public static String getName(Callable func) {
         String name = toJavaIdentifier(func.name());
         return func.parent() instanceof Interface
                 ? replaceJavaObjectMethodNames(name)
                 : name;
     }
 
+    public static boolean isGeneric(Callable func) {
+        return switch(func.parent()) {
+            case Class c -> c.generic();
+            case Record r -> r.generic();
+            default -> false;
+        };
+    }
+
     public MethodGenerator(Callable func, String name) {
         this.func = func;
         this.builder = MethodSpec.methodBuilder(name);
         this.generator = new CallableGenerator(func);
+        this.generic = isGeneric(func);
 
         if (func instanceof Method method) {
             vm = method.invokerFor();
@@ -78,12 +87,6 @@ public class MethodGenerator {
             vm = null;
             returnValue = func.returnValue();
         }
-
-        generic = switch(func.parent()) {
-            case Class c -> c.generic();
-            case Record r -> r.generic();
-            default -> false;
-        };
     }
 
     public FieldSpec generateNamedDowncallHandle(Modifier... modifiers) {
@@ -142,7 +145,7 @@ public class MethodGenerator {
             builder.returns(new TypedValueGenerator(returnValue).getType());
 
         // Parameters
-        generator.generateMethodParameters(builder, generic);
+        generator.generateMethodParameters(builder, generic, true);
 
         // Exception
         if (func.callableAttrs().throws_())

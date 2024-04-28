@@ -113,8 +113,9 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     public boolean isPointer() {
-        return cType() != null
-                && (cType().endsWith("*") || cType().endsWith("gpointer"));
+        String cType = cType();
+        return cType != null
+                && (cType.endsWith("*") || cType.endsWith("gpointer"));
     }
 
     public boolean isProxy() {

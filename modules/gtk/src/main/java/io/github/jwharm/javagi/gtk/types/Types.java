@@ -38,6 +38,7 @@ import org.gnome.gtk.Widget;
 import java.lang.foreign.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -247,7 +248,7 @@ public class Types {
             Type parentType = getGType(parentClass);
             MemoryLayout classLayout = getClassLayout(cls, typeName);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
-            TypeFlags flags = getTypeFlags(cls);
+            Set<TypeFlags> flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
             Consumer<GObject.ObjectClass> overridesInit        = Overrides.overrideClassMethods(cls);
@@ -312,7 +313,7 @@ public class Types {
 
     /**
      * Convenience function that redirects to
-     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, TypeFlags)}
+     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, Set)}
      *
      * @param parentType     parent GType
      * @param typeName       name of the GType
@@ -336,7 +337,7 @@ public class Types {
             MemoryLayout instanceLayout,
             Consumer<T> instanceInit,
             Function<MemorySegment, T> constructor,
-            TypeFlags flags
+            Set<TypeFlags> flags
     ) {
         return io.github.jwharm.javagi.gobject.types.Types.register(
                 parentType, typeName, classLayout, classInit, instanceLayout,

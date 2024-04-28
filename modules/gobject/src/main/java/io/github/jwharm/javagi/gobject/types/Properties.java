@@ -32,7 +32,9 @@ import java.lang.foreign.Arena;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
@@ -259,14 +261,14 @@ public class Properties {
     /*
      * Create a GParamFlags based on {@code @Property} annotation parameters.
      */
-    private static ParamFlags getFlags(Property property) {
-        ParamFlags flags = new ParamFlags(0);
-        if (property.readable())       flags = flags.or(ParamFlags.READABLE);
-        if (property.writable())       flags = flags.or(ParamFlags.WRITABLE);
-        if (property.construct())      flags = flags.or(ParamFlags.CONSTRUCT);
-        if (property.constructOnly())  flags = flags.or(ParamFlags.CONSTRUCT_ONLY);
-        if (property.explicitNotify()) flags = flags.or(ParamFlags.EXPLICIT_NOTIFY);
-        if (property.deprecated())     flags = flags.or(ParamFlags.DEPRECATED);
+    private static Set<ParamFlags> getFlags(Property property) {
+        EnumSet<ParamFlags> flags = EnumSet.noneOf(ParamFlags.class);
+        if (property.readable())       flags.add(ParamFlags.READABLE);
+        if (property.writable())       flags.add(ParamFlags.WRITABLE);
+        if (property.construct())      flags.add(ParamFlags.CONSTRUCT);
+        if (property.constructOnly())  flags.add(ParamFlags.CONSTRUCT_ONLY);
+        if (property.explicitNotify()) flags.add(ParamFlags.EXPLICIT_NOTIFY);
+        if (property.deprecated())     flags.add(ParamFlags.DEPRECATED);
         return flags;
     }
 

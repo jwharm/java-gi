@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -28,7 +28,6 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
-import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
@@ -131,7 +130,7 @@ public class ValueUtil {
             } else if (type.equals(Types.ENUM)) {
                 dest.setEnum(((Enumeration) src).getValue());
             } else if (type.equals(Types.FLAGS)) {
-                dest.setFlags(((Bitfield) src).getValue());
+                dest.setFlags(((Enumeration) src).getValue());
             } else if (type.equals(Types.OBJECT)) {
                 dest.setObject((GObject) src);
             } else if (type.equals(GObjects.gtypeGetType())) {

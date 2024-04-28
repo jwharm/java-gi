@@ -142,7 +142,7 @@ public class SignalGenerator {
                             .build());
 
         // Add method parameters
-        generator.generateMethodParameters(builder);
+        generator.generateMethodParameters(builder, false, true);
 
         // Arena for memory allocations
         builder.beginControlFlow("try ($1T _arena = $1T.ofConfined())",
