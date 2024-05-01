@@ -209,6 +209,16 @@ public class CallableGenerator {
         else
             builder = MethodSpec.methodBuilder(name);
 
+        // Javadoc
+        if (callable.infoElements().doc() != null) {
+            String javadoc = new DocGenerator(callable.infoElements().doc()).generate();
+            if (callable instanceof Multiplatform mp && mp.doPlatformCheck())
+                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
+                       .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+            else
+                builder.addJavadoc(javadoc);
+        }
+
         // Deprecated annotation
         if (callable.callableAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
