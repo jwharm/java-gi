@@ -9,3 +9,7 @@ nav:
     - Composite template classes: templates.md
     - Generating bindings: generate.md
 theme: readthedocs
+markdown_extensions:
+    - admonition
+    - nl2br
+    - sane_lists

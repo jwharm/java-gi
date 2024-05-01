@@ -131,7 +131,7 @@ var button2 = Button.withLabel("Open...");
 var button3 = Button.fromIconName("document-open");
 ```
 
-Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI offers a static `allocate` method that will allocate a new struct in an [Arena](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Arena.html) of your choice. You can either allocate an empty struct (`var color = RGBA.allocate(arena);`) and fill in the values later, or pass the values immediately: `var purple = RGBA.allocate(arena, 0.9f, 0.1f, 0.9f, 1.0f);`
+Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI adds constructors that will allocate a new struct in an [Arena](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Arena.html) of your choice. You can either allocate an empty struct (`var color = new RGBA();`) and fill in the values later, or pass the values immediately: `var purple = new RGBA(0.9f, 0.1f, 0.9f, 1.0f);`
 
 ### Signals, callbacks and closures
 
