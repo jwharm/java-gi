@@ -18,7 +18,7 @@ Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## Supported libraries
 
-Java-GI version 0.7.2 works with OpenJDK 20. Version 0.8.* and 0.9.* require OpenJDK 21. They have been built with the following library versions:
+Java-GI version 0.7.2 works with OpenJDK 20. Version 0.8.x and 0.9.x require OpenJDK 21. They have been built with the following library versions:
 
 | Library       | Java-GI 0.7.x | Java-GI 0.8.x and 0.9.x |
 |---------------|---------------|-------------------------|

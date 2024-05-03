@@ -6,9 +6,9 @@ When you extend a Java class from an existing GObject-derived class, Java will t
 public class MyObject extends GObject {
 ```
 
-However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new GType. You can do this manually by calling `GObjects.typeRegisterStaticSimple` and `GObjects.typeAddInterfaceStatic` (see the documentation [here](https://docs.gtk.org/gobject/func.type_register_static_simple.html) and [here](https://docs.gtk.org/gobject/func.type_add_interface_static.html)), but Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This uses reflection to determine the name, parent class, implemented interfaces and overridden methods, and registers it as a new GType.
+However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new GType. To do this, Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
 
-It is recommended to register the new gtype in a field `gtype` like this:
+It is recommended to register the new gtype in a static field `gtype` like this:
 
 ```java
     private static final Type gtype = Types.register(MyObject.class);
@@ -20,7 +20,15 @@ It is recommended to register the new gtype in a field `gtype` like this:
 
 By declaring the `gtype` as a static field in this way, it will be registered immediately when the JVM classloader initializes the Java class.
 
-When instantiating a new instance of the object, pass the `gtype` field to `GObject.newInstance`. You can simplify this with a static factory method with a descriptive name like `create` or `newInstance`:
+When instantiating a new instance of the object, pass the `gtype` to `GObject::new()`:
+
+```java
+    public MyObject() {
+        super(gtype, null);
+    }
+```
+
+Alternatively, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
 
 ```java
     public static MyObject create() {
@@ -30,7 +38,7 @@ When instantiating a new instance of the object, pass the `gtype` field to `GObj
 
 Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
 
-The constructor **must** be a static factory method; a regular constructor that calls `super(gtype, null)` **will not work** correctly.
+If your class contains GObject class or instance initializer method (see below), the constructor **must** be a static factory method; a regular constructor that calls `super(gtype, null)` **will not work** correctly with GObject initializers.
 
 Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
@@ -41,7 +49,7 @@ Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 }
 ```
 
-This constructor must exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
+This constructor should exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
 
 If your application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -130,7 +138,7 @@ public void init() {
 
 ## Signals
 
-Java-GI 0.7 added support for custom signals in Java classes that extend GObject. For example:
+You can define custom signals in Java classes that extend GObject. For example:
 
 ```java
 public class Counter extends GObject {
@@ -168,13 +176,12 @@ counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
 
 Because the signal declaration is an ordinary functional interface, it is equally valid to extend from a standard functional interface like `Runnable`, `BooleanSupplier`, or any other one, like (in the above example) an `IntConsumer`:
 
-```
-@Signal
-public interface LimitReached extends IntConsumer {}
+```java
+    @Signal
+    public interface LimitReached extends IntConsumer {}
 ```
 
 It is also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
-
 
 ## Examples
 

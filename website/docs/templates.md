@@ -56,7 +56,7 @@ The path to the UI file is treated by Java-GI as a [GResource](https://docs.gtk.
 
 Load the compiled resource bundle in Java during startup of your application:
 
-```
+```java
 import io.github.jwharm.javagi.base.GErrorException;
 import org.gnome.gio.Resource;
 

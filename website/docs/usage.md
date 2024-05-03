@@ -91,7 +91,7 @@ If you see an error about a missing library, make sure that all dependencies are
 
 In the [Java-GI examples](examples.md), the JVM arguments are setup for the system library folders of the common (RedHat/Fedora, Arch and Debian/Ubuntu) Linux distributions:
 
-```
+```groovy
 tasks.named('run') {
     jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
@@ -101,7 +101,7 @@ tasks.named('run') {
 
 On MacOS, if you installed Gtk using Homebrew, the library path is usually `/opt/homebrew/lib`. You also need to add the parameter `-XstartOnFirstThread`. So the complete task definition will look like this:
 
-```
+```groovy
 tasks.named('run') {
     jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
@@ -112,7 +112,7 @@ tasks.named('run') {
 
 On Windows, if you installed Gtk with MSYS2, the default path is `C:\msys64\mingw64\bin`. If that's the case, you can change the build file like this:
 
-```
+```groovy
 tasks.named('run') {
     jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"

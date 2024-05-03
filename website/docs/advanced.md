@@ -69,7 +69,9 @@ Nullability of parameters (as defined in the GObject-introspection attributes) i
 
 ## Arrays
 
-C functions that work with arrays, often expect the array length as an additional parameter. In the corresponding Java methods, that parameter is unnecessary, because Java-GI will set it automatically.
+Java-GI copies all array parameters into a newly allocated array in native memory. When an array is returned, the contents are copied back into a Java array. This impacts performance, so keep this in mind when working with arrays in a tight loop.
+
+C functions that work with arrays, often expect the array length as an additional parameter. In the corresponding Java methods, that parameter is omitted, because Java-GI will set it automatically.
 
 ## Out-parameters
 
@@ -78,8 +80,8 @@ Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offe
 ```java
 File file = ...
 Out<byte[]> contents = new Out<byte[]>();
-file.loadContents(null, contents, null));
-System.out.printf("Read %d bytes\n", contents.get().length);
+file.loadContents(null, contents, null);
+System.out.printf("Read %d bytes%n", contents.get().length);
 ```
 
 ## Enums and flags
@@ -96,8 +98,8 @@ When you just want to set a single flag, you can omit `Set.of()` and pass the fl
 entry.setInputHints(InputHints.NO_EMOJI);
 ```
 
-!!! tip
-    The Java `EnumSet` class can be useful when working with flags. It is optimized for use with enum types and provides useful operations like `allOf()` and `noneOf()`.
+!!! note
+    The Java `EnumSet` class can be useful when working with flags. It is specialized for use with enum types and provides useful operations like `allOf()` and `noneOf()`. It can also be much faster, in comparison to other `Set` classes.
 
 ## Varargs
 
@@ -131,16 +133,16 @@ var button = Button.withLabel("Close");
 button.onClicked(window::close);
 ```
 
-For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `Signal` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected.
+For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `SignalConnection` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected. It is useful to disconnect signals after they are no longer used, because the signal callback keeps the source object alive. Disconnecting the signal allows the related resources to be released.
 
 Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callback functions to ensure type safety.
 
 ## Closures
 
-[Closures](https://docs.gtk.org/gobject/struct.Closure.html) can be marshaled to Java methods. Similar to the `CClosure` type in C code, Java-GI offers a [JavaClosure](https://jwharm.github.io/java-gi/javadoc/io/github/jwharm/javagi/gobject/JavaClosure.html). You can create a JavaClosure for a lambda fuction or a `java.lang.reflect.Method` and then pass it to native code (for example, the last two parameters of [`GObject.bindPropertyFull()`](https://jwharm.github.io/java-gi/glib/org.gnome.glib/org/gnome/gobject/GObject.html#bindPropertyFull(java.lang.String,org.gnome.gobject.GObject,java.lang.String,org.gnome.gobject.BindingFlags,org.gnome.gobject.Closure,org.gnome.gobject.Closure))).
+[Closures](https://docs.gtk.org/gobject/struct.Closure.html) can be marshaled to Java methods. Similar to the `CClosure` type in C code, Java-GI offers a [JavaClosure](https://jwharm.github.io/java-gi/javadoc/io/github/jwharm/javagi/gobject/JavaClosure.html). You can create a JavaClosure for a lambda fuction, functional interface or `java.lang.reflect.Method`, and then pass it to native code (for example, the last two parameters of [`GObject.bindPropertyFull()`](https://jwharm.github.io/java-gi/glib/org.gnome.glib/org/gnome/gobject/GObject.html#bindPropertyFull(java.lang.String,org.gnome.gobject.GObject,java.lang.String,org.gnome.gobject.BindingFlags,org.gnome.gobject.Closure,org.gnome.gobject.Closure))).
 
 !!! warning
-    Be aware that the Java lambda or method references that is wrapped in a JavaClosure must have the correct signature, or else the application will fail at runtime. Closures cannot be type-checked by the compiler!
+    Be aware that a Java lambda or method reference that is wrapped in a JavaClosure must have the correct type signature, or else the application will fail at runtime. Closures cannot be type-checked by the compiler!
 
 ## Registering a new type
 
@@ -148,4 +150,4 @@ Registering a Java class as a new GType is documented [here](register.md).
 
 ## Creating a Gtk composite template class
 
-To create a Gtk composite template class (partially specified in a ui definition in XML or Blueprint format), read [these instructions](templates.md).
+To create a Gtk composite template class (coupled to a ui definition in XML or Blueprint format), read [these instructions](templates.md).
