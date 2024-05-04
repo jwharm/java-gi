@@ -34,7 +34,7 @@ Java bindings for there libraries are available from [Maven Central](https://cen
 
 ## API documentation
 
-Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI 0.9.1, [the Javadoc is available here](https://jwharm.github.io/java-gi/javadoc).
+Java-GI converts API documentation from GObject-Introspection to Javadoc. For the library bindings published by Java-GI 0.9.2, [the Javadoc is available here](https://jwharm.github.io/java-gi/javadoc).
 
 JAR files with the Javadoc and source code, to use offline in your IDE, are available from Maven Central.
 
