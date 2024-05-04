@@ -61,6 +61,12 @@ public class TemplateChildTest {
             // Check that the label field is set to the value from the ui file
             assertEquals(tw.label.getLabel(), "Test Label");
 
+            // Check that the "namedLabel" field (referring to the "label"
+            // element in the XML using the annotation parameter "name", is set
+            // to the expected value
+            TestWindow tw2 = GObject.newInstance(TestWindow.gtype);
+            assertEquals(tw2.namedLabel.getLabel(), "Second Label");
+
             app.quit();
         });
         app.run(null);
@@ -75,5 +81,8 @@ public class TemplateChildTest {
 
         @GtkChild
         public Label label;
+
+        @GtkChild(name="label2")
+        public Label namedLabel;
     }
 }

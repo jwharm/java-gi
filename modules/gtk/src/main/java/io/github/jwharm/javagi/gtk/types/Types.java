@@ -70,6 +70,20 @@ public class Types {
     }
 
     /**
+     * Get the {@code name} parameter of the {@code GtkChild} annotation, or
+     * if it is not defined, fallback to the name of the field.
+     *
+     * @param  field a GtkChild-annotated field
+     * @return the name
+     */
+    private static String getChildName(Field field) {
+        if (!field.isAnnotationPresent(GtkChild.class))
+            throw new IllegalArgumentException();
+        String name = field.getAnnotation(GtkChild.class).name();
+        return "".equals(name) ? field.getName() : name;
+    }
+
+    /**
      * Generate a memory layout for an instance struct.
      * @param  cls      the class from which the fields will be used to
      *                  generate the memory layout
@@ -93,9 +107,7 @@ public class Types {
             if (field.isAnnotationPresent(GtkChild.class)) {
 
                 // Determine the name of the struct field.
-                String fieldName = field.getAnnotation(GtkChild.class).name();
-                if ("".equals(fieldName))
-                    fieldName = field.getName();
+                String fieldName = getChildName(field);
 
                 // Add the memory layout of the field to the struct.
                 if (field.getType().equals(boolean.class))
@@ -193,7 +205,7 @@ public class Types {
 
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
-                    String name = field.getName();
+                    String name = getChildName(field);
                     long offset = layout.byteOffset(MemoryLayout.PathElement.groupElement(name));
                     widgetClass.bindTemplateChildFull(name, false, offset);
                 }
@@ -217,7 +229,8 @@ public class Types {
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
                     Type gtype = widget.readGClass().readGType();
-                    GObject child = widget.getTemplateChild(gtype, field.getName());
+                    String name = getChildName(field);
+                    GObject child = widget.getTemplateChild(gtype, name);
                     try {
                         field.set(widget, child);
                     } catch (Exception e) {
