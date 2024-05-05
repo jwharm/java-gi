@@ -182,44 +182,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.addMethod(generator.generateWriteMethod());
     }
 
-    public void setFreeFunc(MethodSpec.Builder builder, String identifier, TypeName className) {
-        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rec.cType()))
-            return;
-
-        if (rec.foreign())
-            return;
-
-        // Look for instance methods named "free()" and "unref()"
-        for (Method method : rec.methods()) {
-            if (List.of("free", "unref").contains(method.name())
-                    && method.parameters() == null
-                    && (method.returnValue().anyType().isVoid())) {
-                builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier,
-                        method.callableAttrs().cIdentifier());
-                return;
-            }
-        }
-
-        // Boxed types
-        if (rec.getTypeFunc() != null) {
-            builder.addStatement("$T.setFreeFunc($L.handle(), $S)",
-                    ClassNames.MEMORY_CLEANER,
-                    identifier,
-                    "g_boxed_free");
-            if (className == null)
-                builder.addStatement("$T.setBoxedType($L.handle(), getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier);
-            else
-                builder.addStatement("$T.setBoxedType($L.handle(), $T.getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier,
-                        className);
-        }
-    }
-
     private MethodSpec constructor(boolean arenaParameter) {
         var spec = MethodSpec.constructorBuilder()
                 .addJavadoc("Allocate a new $1T.\n", rec.typeName())

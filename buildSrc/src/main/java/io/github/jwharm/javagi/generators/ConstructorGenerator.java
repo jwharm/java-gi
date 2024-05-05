@@ -25,8 +25,6 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Class;
-import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
@@ -100,9 +98,20 @@ public class ConstructorGenerator {
         // Invoke private construction method
         builder.addStatement("super(constructNew($L))", parameterNames());
 
-        // Cache new instance
-        if (parent instanceof Class || parent instanceof Interface)
+        // Cache new GObject instance
+        if (parent.checkIsGObject())
             builder.addStatement("$T.put(handle(), this)", ClassNames.INSTANCE_CACHE);
+
+        // Add cleaner to struct/union pointer
+        else {
+            builder.addStatement("$T.takeOwnership(handle())",
+                            ClassNames.MEMORY_CLEANER);
+            new RegisteredTypeGenerator(parent).setFreeFunc(
+                    builder,
+                    "this",
+                    parent.typeName()
+            );
+        }
 
         return builder.build();
     }
@@ -186,7 +195,7 @@ public class ConstructorGenerator {
         }
 
         // Add cleaner to struct/union pointer
-        else if (parent instanceof Record record) {
+        else if (! parent.checkIsGObject()) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
                                     .add(stmt)
                                     .add(";\n")
@@ -196,7 +205,7 @@ public class ConstructorGenerator {
                     .addStatement("$T.takeOwnership(_instance.handle())",
                             ClassNames.MEMORY_CLEANER);
 
-            new RecordGenerator(record).setFreeFunc(
+            new RegisteredTypeGenerator(parent).setFreeFunc(
                     builder,
                     "_instance",
                     parent.typeName()

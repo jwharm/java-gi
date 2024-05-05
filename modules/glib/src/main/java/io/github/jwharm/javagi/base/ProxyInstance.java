@@ -49,6 +49,13 @@ public class ProxyInstance implements Proxy {
         return address;
     }
 
+    /**
+     * Compare two proxy instances for equality. This will compare both the type
+     * of the instances, and their memory addresses.
+     *
+     * @param  o the proxy instance to compare
+     * @return whether the instances are equal
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

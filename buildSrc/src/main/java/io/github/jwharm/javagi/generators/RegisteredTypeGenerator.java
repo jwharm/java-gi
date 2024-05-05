@@ -35,7 +35,7 @@ import java.util.List;
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 import static java.util.function.Predicate.not;
 
-public abstract class RegisteredTypeGenerator {
+public class RegisteredTypeGenerator {
 
     private final RegisteredType rt;
 
@@ -197,5 +197,43 @@ public abstract class RegisteredTypeGenerator {
                 .map(Callable.class::cast)
                 .filter(not(Callable::skip))
                 .toList();
+    }
+
+    public void setFreeFunc(MethodSpec.Builder builder, String identifier, TypeName className) {
+        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rt.cType()))
+            return;
+
+        if (rt instanceof Record rec && rec.foreign())
+            return;
+
+        // Look for instance methods named "free()" and "unref()"
+        for (Method method : filter(rt.children(), Method.class)) {
+            if (List.of("free", "unref").contains(method.name())
+                    && method.parameters() == null
+                    && (method.returnValue().anyType().isVoid())) {
+                builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        method.callableAttrs().cIdentifier());
+                return;
+            }
+        }
+
+        // Boxed types
+        if (rt.getTypeFunc() != null) {
+            builder.addStatement("$T.setFreeFunc($L.handle(), $S)",
+                    ClassNames.MEMORY_CLEANER,
+                    identifier,
+                    "g_boxed_free");
+            if (className == null)
+                builder.addStatement("$T.setBoxedType($L.handle(), getType())",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier);
+            else
+                builder.addStatement("$T.setBoxedType($L.handle(), $T.getType())",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        className);
+        }
     }
 }
