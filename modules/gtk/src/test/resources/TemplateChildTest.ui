@@ -6,6 +6,9 @@
       <object class="GtkLabel" id="label">
         <property name="label">Test Label</property>
       </object>
+      <object class="GtkLabel" id="label2">
+        <property name="label">Second Label</property>
+      </object>
     </child>
   </template>
 </interface>
