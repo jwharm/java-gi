@@ -26,6 +26,7 @@ import org.gnome.glib.Type;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,8 +48,8 @@ import java.util.Map;
  */
 public class MemoryCleaner {
 
-    private static final Map<MemorySegment, Cached> references = new HashMap<>();
     private static final Cleaner CLEANER = Cleaner.create();
+    private static final Map<MemorySegment, Cached> cache = new HashMap<>();
 
     /**
      * Register the memory address of this proxy to be cleaned when the proxy
@@ -58,19 +59,20 @@ public class MemoryCleaner {
      */
     public static void register(Proxy proxy) {
         MemorySegment address = proxy.handle();
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             if (cached == null) {
                 // Put the address in the cache
-                var cleanable = CLEANER.register(proxy, new StructFinalizer(address));
-                references.put(address, new Cached(false,
+                var finalizer = new StructFinalizer(address);
+                var cleanable = CLEANER.register(proxy, finalizer);
+                cache.put(address, new Cached(false,
                                                    1,
                                                    null,
                                                    null,
                                                    cleanable));
             } else {
                 // Already in the cache: increase the refcount
-                references.put(address, new Cached(false,
+                cache.put(address, new Cached(false,
                                          cached.references + 1,
                                                    cached.freeFunc,
                                                    cached.boxedType,
@@ -87,10 +89,10 @@ public class MemoryCleaner {
      * @param freeFunc the specialized cleanup function to call
      */
     public static void setFreeFunc(MemorySegment address, String freeFunc) {
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             if (cached != null)
-                references.put(address, new Cached(cached.owned,
+                cache.put(address, new Cached(cached.owned,
                                                    cached.references,
                                                    freeFunc,
                                                    cached.boxedType,
@@ -106,10 +108,10 @@ public class MemoryCleaner {
      * @param boxedType the boxed type
      */
     public static void setBoxedType(MemorySegment address, Type boxedType) {
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             if (cached != null)
-                references.put(address, new Cached(cached.owned,
+                cache.put(address, new Cached(cached.owned,
                                                    cached.references,
                                                    cached.freeFunc,
                                                    boxedType,
@@ -124,10 +126,10 @@ public class MemoryCleaner {
      * @param address the memory address
      */
     public static void takeOwnership(MemorySegment address) {
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             if (cached != null)
-                references.put(address, new Cached(true,
+                cache.put(address, new Cached(true,
                                                    cached.references,
                                                    cached.freeFunc,
                                                    cached.boxedType,
@@ -142,10 +144,10 @@ public class MemoryCleaner {
      * @param address the memory address
      */
     public static void yieldOwnership(MemorySegment address) {
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             if (cached != null)
-                references.put(address, new Cached(false,
+                cache.put(address, new Cached(false,
                                                    cached.references,
                                                    cached.freeFunc,
                                                    cached.boxedType,
@@ -160,8 +162,8 @@ public class MemoryCleaner {
      * @param address the memory address to free
      */
     public static void free(MemorySegment address) {
-        synchronized (references) {
-            Cached cached = references.get(address);
+        synchronized (cache) {
+            Cached cached = cache.get(address);
             cached.cleanable.clean();
         }
     }
@@ -179,8 +181,7 @@ public class MemoryCleaner {
                           int references,
                           String freeFunc,
                           Type boxedType,
-                          Cleaner.Cleanable cleanable) {
-    }
+                          Cleaner.Cleanable cleanable) {}
 
     /**
      * This callback is run by the {@link Cleaner} when a struct or union
@@ -188,18 +189,25 @@ public class MemoryCleaner {
      */
     private record StructFinalizer(MemorySegment address) implements Runnable {
 
+        private static final MethodHandle g_boxed_free = Interop.downcallHandle(
+                "g_boxed_free",
+                FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG,
+                                          ValueLayout.ADDRESS),
+                false
+        );
+
         /**
          * This method is run by the {@link Cleaner} when the last Proxy object
          * for this memory address is garbage-collected.
          */
         public void run() {
             Cached cached;
-            synchronized (references) {
-                cached = references.get(address);
+            synchronized (cache) {
+                cached = cache.get(address);
 
                 // When other references exist, decrease the refcount
                 if (cached.references > 1) {
-                    references.put(address, new Cached(cached.owned,
+                    cache.put(address, new Cached(cached.owned,
                                                        cached.references - 1,
                                                        cached.freeFunc,
                                                        cached.boxedType,
@@ -209,7 +217,7 @@ public class MemoryCleaner {
 
                 // When no other references exist, remove the address from the
                 // cache and free the memory
-                references.remove(address);
+                cache.remove(address);
             }
 
             // if we don't have ownership, we must not run free()
@@ -226,11 +234,8 @@ public class MemoryCleaner {
             try {
                 if (cached.boxedType != null) {
                     // free boxed type
-                    Interop.downcallHandle(
-                            "g_boxed_free",
-                            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
-                            false
-                    ).invokeExact(cached.boxedType.getValue(), address);
+                    long gtype = cached.boxedType.getValue();
+                    g_boxed_free.invokeExact(gtype, address);
                 } else {
                     // Run specialized free function
                     Interop.downcallHandle(

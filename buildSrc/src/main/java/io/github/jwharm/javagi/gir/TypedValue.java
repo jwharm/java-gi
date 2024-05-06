@@ -25,7 +25,8 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 public sealed interface TypedValue
         extends Node
-        permits Constant, Field, InstanceParameter, Parameter, Property, ReturnValue {
+        permits Constant, Field, InstanceParameter, Parameter, Property,
+                ReturnValue {
 
     InfoElements infoElements();
 

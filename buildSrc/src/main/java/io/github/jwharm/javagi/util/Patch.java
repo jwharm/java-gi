@@ -19,8 +19,10 @@
 
 package io.github.jwharm.javagi.util;
 
-import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.Node;
 
+import java.lang.Class;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,15 +43,15 @@ public interface Patch {
     /**
      * Remove the child elements with the provided attribute.
      *
-     * @param elem  the element to remove the child element from
-     * @param type  the type of the element to remove
-     * @param key   the attribute key
-     * @param value the attribute value
+     * @param  elem  the element to remove the child element from
+     * @param  type  the type of the element to remove
+     * @param  key   the attribute key
+     * @param  value the attribute value
+     * @param  <T> the element must be a GirElement
      * @return the element with the child element removed
-     * @param <T> the element must be a GirElement
      */
     default <T extends GirElement> T remove(T elem,
-                                            java.lang.Class<? extends GirElement> type,
+                                            Class<? extends GirElement> type,
                                             String key,
                                             String value) {
         List<Node> children = elem.children().stream()
@@ -64,11 +66,12 @@ public interface Patch {
      *
      * @param  parent the parent element
      * @param  child  the element to add to the parent
+     * @param  <T> parent must be a GirElement
+     * @param  <U> child must be a GirElement
      * @return a copy of parent in which the child has been added
-     * @param <T> parent must be a GirElement
-     * @param <U> child must be a GirElement
      */
-    default <T extends GirElement, U extends GirElement> T add(T parent, U child) {
+    default <T extends GirElement, U extends GirElement> T add(T parent,
+                                                               U child) {
         var mutableList = new ArrayList<>(parent.children());
         mutableList.add(child);
         return parent.withChildren(mutableList);

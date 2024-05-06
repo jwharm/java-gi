@@ -65,10 +65,15 @@ public final class ClassNames {
     public static final ClassName TYPES = get(PKG_GOBJECT_TYPES, "Types");
 
     // Some frequently used class names
+    public final static ClassName DESTROY_NOTIFY = get("org.gnome.glib", "DestroyNotify");
+    public final static ClassName GERROR = get("org.gnome.glib", "GError");
+    public final static ClassName GLIB = get("org.gnome.glib", "GLib");
     public final static ClassName GTYPE = get("org.gnome.glib", "Type");
-    public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
+    public final static ClassName LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
+
     public final static ClassName GOBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName GOBJECTS = get("org.gnome.gobject", "GObjects");
+    public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
     public final static ClassName TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
     public final static ClassName TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
     public final static ClassName TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");

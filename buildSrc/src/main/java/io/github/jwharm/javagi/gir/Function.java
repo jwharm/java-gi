@@ -25,7 +25,9 @@ import java.util.Objects;
 
 public final class Function extends Multiplatform implements Callable {
 
-    public Function(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Function(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -34,7 +36,8 @@ public final class Function extends Multiplatform implements Callable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Function other = (Function) o;
-        return Objects.equals(callableAttrs().cIdentifier(), other.callableAttrs().cIdentifier());
+        return Objects.equals(callableAttrs().cIdentifier(),
+                              other.callableAttrs().cIdentifier());
     }
 
     @Override

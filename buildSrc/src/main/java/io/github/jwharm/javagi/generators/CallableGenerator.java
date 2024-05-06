@@ -34,6 +34,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
 public class CallableGenerator {
@@ -55,9 +56,10 @@ public class CallableGenerator {
     CodeBlock generateFunctionDescriptor() {
         List<String> valueLayouts = new ArrayList<>();
 
-        boolean isVoid = callable.returnValue().anyType() instanceof Type t && t.isVoid();
+        var returnType = callable.returnValue().anyType();
+        boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
-            valueLayouts.add(Conversions.getValueLayout(callable.returnValue().anyType()));
+            valueLayouts.add(Conversions.getValueLayout(returnType));
 
         if (callable instanceof Signal)
             valueLayouts.add("ADDRESS");
@@ -83,7 +85,9 @@ public class CallableGenerator {
                     .map(s -> "$2T." + s)
                     .collect(Collectors.joining(",$W", "(", ")"));
             return CodeBlock.of("$1T.$3L" + layouts,
-                    FunctionDescriptor.class, ValueLayout.class, isVoid ? "ofVoid" : "of");
+                    FunctionDescriptor.class,
+                    ValueLayout.class,
+                    isVoid ? "ofVoid" : "of");
         }
     }
 
@@ -122,9 +126,12 @@ public class CallableGenerator {
     PartialStatement marshalParameters() {
         var parameters = callable.parameters();
         if (parameters == null)
-            return callable.throws_() ? PartialStatement.of("_gerror") : new PartialStatement();
+            return callable.throws_()
+                    ? PartialStatement.of("_gerror")
+                    : new PartialStatement();
 
-        PartialStatement stmt = new PartialStatement();
+        PartialStatement stmt = PartialStatement.of(null,
+                "memorySegment", MemorySegment.class);
 
         if (parameters.instanceParameter() != null)
             stmt.add("handle()");
@@ -137,8 +144,7 @@ public class CallableGenerator {
             // Generate null-check. But don't null-check parameters that are
             // hidden from the Java API, or primitive values
             if (generator.checkNull())
-                stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ",
-                        "memorySegment", MemorySegment.class);
+                stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ");
 
             // callback destroy
             if (p.isDestroyNotifyParameter()) {
@@ -146,16 +152,16 @@ public class CallableGenerator {
                         .filter(q -> q.destroy() == p)
                         .findAny();
                 if (notify.isPresent()) {
-                    String notifyName = Conversions.toJavaIdentifier(notify.get().name());
+                    String notifyName = toJavaIdentifier(notify.get().name());
                     stmt.add("_" + notifyName + "DestroyNotify.toCallback(_" + notifyName + "Scope)");
                 } else {
-                    stmt.add("$memorySegment:T.NULL", "memorySegment", MemorySegment.class);
+                    stmt.add("$memorySegment:T.NULL");
                 }
             }
 
             // user_data
             else if (p.isUserDataParameter())
-                stmt.add("$memorySegment:T.NULL", "memorySegment", MemorySegment.class);
+                stmt.add("$memorySegment:T.NULL");
 
             // Varargs
             else if (p.varargs())
@@ -187,8 +193,9 @@ public class CallableGenerator {
     }
 
     boolean varargs() {
-        return callable.parameters() != null
-                && callable.parameters().parameters().stream().anyMatch(Parameter::varargs);
+        var params = callable.parameters();
+        return params != null
+                && params.parameters().stream().anyMatch(Parameter::varargs);
     }
     
     public MethodSpec generateBitfieldOverload() {
@@ -211,12 +218,12 @@ public class CallableGenerator {
 
         // Javadoc
         if (callable.infoElements().doc() != null) {
-            String javadoc = new DocGenerator(callable.infoElements().doc()).generate();
+            String doc = new DocGenerator(callable.infoElements().doc()).generate();
             if (callable instanceof Multiplatform mp && mp.doPlatformCheck())
                 builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                       .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                       .addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
-                builder.addJavadoc(javadoc);
+                builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -231,10 +238,11 @@ public class CallableGenerator {
             builder.addModifiers(Modifier.DEFAULT);
 
         // Return type
-        if (generic && callable.returnValue().anyType().typeName().equals(ClassNames.GOBJECT))
+        var returnValue = callable.returnValue();
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
             builder.returns(ClassNames.GENERIC_T);
         else if ((!ctor) || namedCtor)
-            builder.returns(new TypedValueGenerator(callable.returnValue()).getType());
+            builder.returns(new TypedValueGenerator(returnValue).getType());
 
         // Parameters
         generateMethodParameters(builder, generic, false);
@@ -248,7 +256,7 @@ public class CallableGenerator {
         if (ctor && (!namedCtor))
             stmt.add("this");
         else
-            stmt.add((callable.returnValue().anyType().isVoid() ? "" : "return ") + name);
+            stmt.add((returnValue.anyType().isVoid() ? "" : "return ") + name);
 
         // Set parameters
         StringJoiner params = new StringJoiner(",$W", "(", ");\n");

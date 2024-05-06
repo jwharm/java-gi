@@ -34,7 +34,8 @@ public class Platform {
     public final static int ALL = LINUX | WINDOWS | MACOS;
 
     /**
-     * Generate a String representation of the specified (combination of) platform(s)
+     * Generate a String representation of the specified (combination of)
+     * platform(s)
      */
     public static String toString(int platform) {
         if (platform == ALL) return "linux, windows or macos";
@@ -46,7 +47,8 @@ public class Platform {
     }
 
     /**
-     * Generate a String representation of the specified (combination of) platform(s)
+     * Generate a String representation of the specified (combination of)
+     * platform(s)
      */
     public static String toStringLiterals(int platform) {
         var joiner = new StringJoiner(", ");

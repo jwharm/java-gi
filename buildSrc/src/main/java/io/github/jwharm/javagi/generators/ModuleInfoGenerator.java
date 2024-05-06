@@ -44,11 +44,14 @@ public class ModuleInfoGenerator {
                     requires static org.jetbrains.annotations;
                 """.formatted(ModuleInfo.packageName(ns.name())));
 
+        String freetype = "org.freedesktop.freetype";
+        String cairo = "org.freedesktop.cairo";
+
         ns.parent().includes().stream()
                 .map(Include::name)
                 .map(ModuleInfo::packageName)
                 // A minimal set of FreeType bindings is included in the Cairo module
-                .map(name -> name.replace("org.freedesktop.freetype", "org.freedesktop.cairo"))
+                .map(name -> name.replace(freetype, cairo))
                 .forEach(this::requires);
 
         String modulePackageName = ModuleInfo.packageName(ns.name());

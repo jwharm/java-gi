@@ -43,7 +43,9 @@ public class GstBasePatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "peek_next_sample".equals(vm.name())
-                && "Aggregator".equals(vm.parameters().instanceParameter().type().name()))
+                && "Aggregator".equals(vm.parameters()
+                                         .instanceParameter()
+                                         .type().name()))
             return new VirtualMethod(
                     vm.attributes(),
                     List.of(
@@ -52,7 +54,8 @@ public class GstBasePatch implements Patch {
                             vm.returnValue(),
                             new Parameters(List.of(
                                     vm.parameters().instanceParameter(),
-                                    vm.parameters().parameters().getFirst().withAttribute("name", "pad")
+                                    vm.parameters().parameters().getFirst()
+                                            .withAttribute("name", "pad")
                             ))
                     ),
                     vm.platforms()
@@ -66,7 +69,7 @@ public class GstBasePatch implements Patch {
         if (element instanceof VirtualMethod vm
                 && "query".equals(vm.name())
                 && List.of("BaseSrc", "BaseSink").contains(
-                vm.parameters().instanceParameter().type().name()))
+                            vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*

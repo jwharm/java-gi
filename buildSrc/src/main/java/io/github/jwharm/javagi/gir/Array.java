@@ -21,9 +21,9 @@ package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.TypeName;
-import io.github.jwharm.javagi.util.Conversions;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 
 import java.util.List;
@@ -42,11 +42,12 @@ public final class Array extends GirElement implements AnyType {
     }
 
     public boolean zeroTerminated() {
-        // If zero-terminated is missing, there's no length, there's no fixed size,
-        // and the name attribute is unset, then zero-terminated is true.
+        // If zero-terminated is missing, there's no length, there's no fixed
+        // size, and the name attribute is unset, then zero-terminated is true.
         if (attr("zero-terminated") != null)
             return attrBool("zero-terminated", true);
-        return Stream.of("length", "fixed-size", "name").noneMatch(attributes()::containsKey);
+        return Stream.of("length", "fixed-size", "name")
+                     .noneMatch(attributes()::containsKey);
     }
 
     public int fixedSize() {
@@ -61,10 +62,10 @@ public final class Array extends GirElement implements AnyType {
         int index = attrInt("length");
         if (index == -1) return null;
         return switch (parent()) {
-            case Field _ -> ((FieldContainer) parent().parent()).getAtIndex(index);
-            case Parameter p -> p.parent().getAtIndex(index);
+            case Field _        -> ((FieldContainer) parent().parent()).getAtIndex(index);
+            case Parameter p    -> p.parent().getAtIndex(index);
             case ReturnValue rv -> ((Callable) rv.parent()).parameters().getAtIndex(index);
-            default -> throw new AssertionError("Parent is not a Field, Parameter or ReturnValue");
+            default             -> throw new AssertionError("Parent is not a Field, Parameter or ReturnValue");
         };
     }
 
@@ -88,7 +89,7 @@ public final class Array extends GirElement implements AnyType {
             return name;
         } else if (length instanceof Field lf) {
             if (lf.anyType() instanceof Type type && (!type.isPointer()))
-                return "read" + Conversions.toCamelCase(lf.name(), true) + "()";
+                return "read" + toCamelCase(lf.name(), true) + "()";
         }
         return null;
     }

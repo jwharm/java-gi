@@ -100,9 +100,11 @@ public class GObjectPatch implements Patch {
          * GObject.InitiallyUnownedClass is not a fundamental type class, but
          * extends GObject.ObjectClass.
          */
-        if (element instanceof Record r && "InitiallyUnownedClass".equals(r.name())) {
+        if (element instanceof Record r
+                && "InitiallyUnownedClass".equals(r.name())) {
             Type type = new Type(
-                    Map.of("name", "GObject.ObjectClass", "c:type", "GObjectClass"),
+                    Map.of("name", "GObject.ObjectClass",
+                           "c:type", "GObjectClass"),
                     Collections.emptyList()
             );
             Field field = new Field(
@@ -119,7 +121,9 @@ public class GObjectPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "notify".equals(vm.name())
-                && "Object".equals(vm.parameters().instanceParameter().type().name()))
+                && "Object".equals(vm.parameters()
+                                     .instanceParameter()
+                                     .type().name()))
             return new VirtualMethod(
                     Map.of("name", "notify"),
                     vm.children(),

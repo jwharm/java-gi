@@ -36,7 +36,8 @@ public class AdwPatch implements Patch {
          * different return type. Rename to getArrowDirection()
          */
         if (element instanceof Method m
-                && "adw_split_button_get_direction".equals(m.callableAttrs().cIdentifier()))
+                && "adw_split_button_get_direction"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_arrow_direction");
 
         return element;

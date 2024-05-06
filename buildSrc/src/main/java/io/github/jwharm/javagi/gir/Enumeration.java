@@ -27,7 +27,9 @@ import java.util.Objects;
 
 public final class Enumeration extends Multiplatform implements FlaggedType {
 
-    public Enumeration(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Enumeration(Map<String, String> attributes,
+                       List<Node> children,
+                       int platforms) {
         super(attributes, children, platforms);
     }
 

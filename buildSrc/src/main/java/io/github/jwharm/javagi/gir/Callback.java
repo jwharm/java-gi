@@ -27,7 +27,9 @@ import java.util.Map;
 public final class Callback extends Multiplatform
         implements RegisteredType, Callable {
 
-    public Callback(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Callback(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 

@@ -40,7 +40,8 @@ public class GstAudioPatch implements Patch {
          */
         if (element instanceof Class c
                 && "AudioAggregator".equals(c.name()))
-            return remove(c, Property.class, "name", "output-buffer-duration-fraction");
+            return remove(c, Property.class,
+                    "name", "output-buffer-duration-fraction");
 
         /*
          * Virtual method AudioSink::stop overrides BaseSink::stop but returns

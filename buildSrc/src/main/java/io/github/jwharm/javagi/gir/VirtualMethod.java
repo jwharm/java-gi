@@ -24,7 +24,9 @@ import java.util.Map;
 
 public final class VirtualMethod extends Multiplatform implements Callable {
 
-    public VirtualMethod(Map<String, String> attributes, List<Node> children, int platforms) {
+    public VirtualMethod(Map<String, String> attributes,
+                         List<Node> children,
+                         int platforms) {
         super(attributes, children, platforms);
     }
 

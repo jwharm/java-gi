@@ -65,7 +65,7 @@ public class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassName.get("org.gnome.glib", "Type"))
+                .returns(ClassNames.GTYPE)
                 .addStatement("return $T.getType($S)",
                         ClassNames.INTEROP,
                         rt.getTypeFunc())
@@ -77,7 +77,8 @@ public class RegisteredTypeGenerator {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
                 if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(f)
+                                                .generateBitfieldOverload());
             }
         }
     }
@@ -87,7 +88,8 @@ public class RegisteredTypeGenerator {
             if (!c.skip()) {
                 builder.addMethods(new ConstructorGenerator(c).generate());
                 if (c.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(c).generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(c)
+                                                .generateBitfieldOverload());
             }
         }
     }
@@ -97,7 +99,8 @@ public class RegisteredTypeGenerator {
             if (!m.skip()) {
                 builder.addMethod(new MethodGenerator(m).generate());
                 if (m.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(m).generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(m)
+                                                .generateBitfieldOverload());
             }
         }
     }
@@ -183,30 +186,47 @@ public class RegisteredTypeGenerator {
         else
             builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
-        for (Callable c : listNamedFunctions())
-            if (!c.skip())
-                builder.addField(
-                        new MethodGenerator(c).generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL));
+        for (Callable c : listNamedFunctions()) {
+            if (!c.skip()) {
+                var gen = new MethodGenerator(c);
+                var spec = gen.generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL);
+                builder.addField(spec);
+            }
+        }
 
         return builder.build();
     }
 
     private List<Callable> listNamedFunctions() {
         return rt.children().stream()
-                .filter(c -> c instanceof Constructor || c instanceof Function || c instanceof Method)
+                .filter(c -> c instanceof Constructor
+                                || c instanceof Function
+                                || c instanceof Method)
                 .map(Callable.class::cast)
                 .filter(not(Callable::skip))
                 .toList();
     }
 
-    public void setFreeFunc(MethodSpec.Builder builder, String identifier, TypeName className) {
-        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rt.cType()))
+    public void setFreeFunc(MethodSpec.Builder builder,
+                            String identifier,
+                            TypeName className) {
+
+        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
+                .contains(rt.cType()))
             return;
 
         if (rt instanceof Record rec && rec.foreign())
             return;
 
         // Look for instance methods named "free()" and "unref()"
+        if (rt instanceof Class cls && cls.unrefFunc() != null) {
+            builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
+                    ClassNames.MEMORY_CLEANER,
+                    identifier,
+                    cls.unrefFunc());
+            return;
+        }
+
         for (Method method : filter(rt.children(), Method.class)) {
             if (List.of("free", "unref").contains(method.name())
                     && method.parameters() == null

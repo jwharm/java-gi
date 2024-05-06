@@ -45,42 +45,50 @@ public class DocGenerator {
         StringBuilder builder = new StringBuilder();
 
         // Convert docstring to javadoc
-        String javadoc = Javadoc.getInstance().convert(doc);
+        String javadoc = new Javadoc().convert(doc);
 
         // Write docstring
         writeDoc(builder, javadoc, null);
 
         // Version
-        if (doc.parent() instanceof RegisteredType rt && rt.infoAttrs().version() != null)
+        if (doc.parent() instanceof RegisteredType rt
+                && rt.infoAttrs().version() != null)
             writeDoc(builder, rt.infoAttrs().version(), "@version");
 
         // Methods and functions
         if (doc.parent() instanceof Callable func
-                && (! (doc.parent() instanceof Callback || doc.parent() instanceof Signal))) {
+                && (! (doc.parent() instanceof Callback
+                        || doc.parent() instanceof Signal))) {
 
             // Param
             Parameters parameters = func.parameters();
             if (parameters != null) {
                 for (Parameter p : parameters.parameters()) {
-                    if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
+                    if (p.isUserDataParameter()
+                            || p.isDestroyNotifyParameter()
+                            || p.isArrayLengthParameter())
                         continue;
                     if (p.infoElements().doc() != null)
-                        writeDoc(builder, Javadoc.getInstance().convert(p.infoElements().doc()),
+                        writeDoc(builder,
+                                new Javadoc().convert(p.infoElements().doc()),
                                 "@param " + (p.varargs() ? "varargs" : toJavaIdentifier(p.name())));
                 }
             }
 
             // Return (except for constructors)
-            if (! (doc.parent() instanceof Constructor c && "new".equals(c.name()))) {
+            if (! (doc.parent() instanceof Constructor c
+                    && "new".equals(c.name()))) {
                 ReturnValue rv = func.returnValue();
                 if (rv != null && rv.infoElements().doc() != null)
-                    writeDoc(builder, Javadoc.getInstance().convert(rv.infoElements().doc()),
+                    writeDoc(builder,
+                             new Javadoc().convert(rv.infoElements().doc()),
                             "@return");
             }
 
             // Throws
             if (func.callableAttrs().throws_())
-                writeDoc(builder, "GErrorException see {@link org.gnome.glib.GError}",
+                writeDoc(builder,
+                        "GErrorException see {@link org.gnome.glib.GError}",
                         "@throws");
             if (func instanceof Multiplatform mp && mp.doPlatformCheck())
                 writeDoc(builder, "$T when run on a platform other than "
@@ -99,12 +107,12 @@ public class DocGenerator {
         }
 
         // Deprecated
-        if (doc.parent() instanceof Callable m && m.callableAttrs().deprecated()) {
-            if (m.infoElements().docDeprecated() != null) {
-                String deprecatedJavadoc = Javadoc.getInstance()
-                        .convert(m.infoElements().docDeprecated());
-                writeDoc(builder, deprecatedJavadoc, "@deprecated");
-            }
+        if (doc.parent() instanceof Callable m
+                && m.callableAttrs().deprecated()
+                && m.infoElements().docDeprecated() != null) {
+            writeDoc(builder,
+                     new Javadoc().convert(m.infoElements().docDeprecated()),
+                    "@deprecated");
         }
 
         // Property setters
@@ -131,7 +139,8 @@ public class DocGenerator {
         int count = 0;
         for (String line : javadoc.trim().lines().toList()) {
             String escapedLine = line.replace("\\", "\\\\");
-            if (count == 0 && tag != null) escapedLine = tag + " " + escapedLine;
+            if (count == 0 && tag != null)
+                escapedLine = tag + " " + escapedLine;
             builder.append(escapedLine).append("\n");
             count++;
         }

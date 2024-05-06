@@ -40,7 +40,9 @@ public class SoupPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "update".equals(vm.name())
-                && "Auth".equals(vm.parameters().instanceParameter().type().name()))
+                && "Auth".equals(vm.parameters()
+                                   .instanceParameter()
+                                   .type().name()))
             return new VirtualMethod(
                     Map.of("name", "update"),
                     vm.children(),

@@ -41,7 +41,8 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         if (inf.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(inf.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(inf.infoElements().doc()).generate());
         if (inf.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
@@ -67,7 +68,8 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
             builder.addType(new RecordGenerator(typeStruct).generate());
 
         if (inf.hasProperties())
-            builder.addType(new BuilderGenerator(inf).generateBuilderInterface());
+            builder.addType(new BuilderGenerator(inf)
+                                    .generateBuilderInterface());
 
         return builder.build();
     }

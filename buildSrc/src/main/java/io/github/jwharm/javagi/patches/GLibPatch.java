@@ -38,26 +38,27 @@ public class GLibPatch implements Patch {
 
         if (element instanceof Namespace ns) {
             /*
-             * GType was removed from GLib but is still used by `g_strv_get_type`
+             * GType was removed from GLib, but is still used
+             * by `g_strv_get_type`
              */
             var gtype = new Alias(
                     Map.of("name", "Type", "c:type", "GType"),
-                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
+                    List.of(new Type(Map.of("name", "gsize",
+                                            "c:type", "gsize"),
                             Collections.emptyList())),
                     ns.platforms());
             ns = add(ns, gtype);
 
             /*
-             * g_clear_error has attribute throws="1" but no gerror** parameter (or
-             * any other parameters) in the gir file.
+             * g_clear_error has attribute throws="1" but no gerror** parameter
+             * (or any other parameters) in the gir file.
              */
             return remove(ns, Function.class, "name", "clear_error");
         }
 
         /*
-         * GPid is defined as gint on Unix vs gpointer on Windows. The
-         * generated Java class is an int Alias, so we remove the Windows
-         * support.
+         * GPid is defined as gint on Unix vs gpointer on Windows. The generated
+         * Java class is an int Alias, so we remove the Windows support.
          */
         if (element instanceof Alias a && "Pid".equals(a.name())) {
             a.setPlatforms(Platform.LINUX | Platform.MACOS);

@@ -27,7 +27,9 @@ import java.util.Objects;
 
 public final class Bitfield extends Multiplatform implements FlaggedType {
 
-    public Bitfield(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Bitfield(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 

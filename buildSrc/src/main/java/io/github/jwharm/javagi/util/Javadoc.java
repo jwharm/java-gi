@@ -63,15 +63,18 @@ public class Javadoc {
             + "|(?<code>`[^`]+?`)"
     ;
 
-    // These are the named groups for which the conversions to Javadoc are applied.
-    // Other named groups are not matched separately, but only used as parameters 
-    // for the conversion functions.
+    /*
+     * These are the named groups for which the conversions to Javadoc are
+     * applied. Other named groups are not matched separately, but only used as
+     * parameters for the conversion functions.
+     */
     private static final List<String> NAMED_GROUPS_PASS_1 = List.of(
-            "codeblock", "codeblock2", "code", "link", "constantref", "typeref",
-            "paramref", "hyperlink", "img", "picture", "header", "container", "bulletpoint",
-            "strong", "em", "entity", "p");
+            "codeblock", "codeblock2", "code", "link", "constantref",
+            "typeref", "paramref", "hyperlink", "img", "picture", "header",
+            "container", "bulletpoint", "strong", "em", "entity", "p");
     
-    private static final List<String> NAMED_GROUPS_PASS_2 = List.of("emptyp", "blockquote", "code");
+    private static final List<String> NAMED_GROUPS_PASS_2 = List.of(
+            "emptyp", "blockquote", "code");
 
     // The compiled regex patterns
     private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
@@ -80,80 +83,94 @@ public class Javadoc {
     private Documentation doc;
     private boolean ul;
 
-    public static Javadoc getInstance() {
-        return new Javadoc();
-    }
-
     /**
      * Convert comments into Javadoc.
      */
     public String convert(Documentation doc) {
         this.doc = doc;
         this.ul = false;
+        String input = doc.text();
 
         // Conversion pass 1
-        Matcher matcher = PATTERN_PASS_1.matcher(doc.text());
-        StringBuilder output = new StringBuilder();
-        while (matcher.find()) {
-            String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_1);
-            String replacement = convert(matcher, groupName);
-            matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
-        }
-        matcher.appendTail(output);
+        String output = process(PATTERN_PASS_1, NAMED_GROUPS_PASS_1, input);
+
         // If the docstring ends with a list, append </ul>
         if (ul) {
             ul = false;
-            output.append("\n</ul>");
+            output += "\n</ul>";
         }
-        String pass1Result = output.toString();
-        
+
         // Conversion pass 2
-        matcher = PATTERN_PASS_2.matcher(pass1Result);
-        output = new StringBuilder();
-        while (matcher.find()) {
-            String groupName = getMatchedGroupName(matcher, NAMED_GROUPS_PASS_2);
-            String replacement = convert(matcher, groupName);
-            matcher.appendReplacement(output, Matcher.quoteReplacement(replacement));
-        }
-        matcher.appendTail(output);
-        String pass2Result = output.toString();
+        output = process(PATTERN_PASS_2, NAMED_GROUPS_PASS_2, output);
 
         // Escape "$" to prevent errors from JavaPoet
-        return pass2Result.replace("$", "$$");
+        return output.replace("$", "$$");
+    }
+
+    private String process(Pattern pattern, List<String> groups, String input) {
+        Matcher matcher = pattern.matcher(input);
+        StringBuilder output = new StringBuilder();
+        while (matcher.find()) {
+            String group = getMatchedGroupName(matcher, groups);
+            String result = convert(matcher, group);
+            matcher.appendReplacement(output, Matcher.quoteReplacement(result));
+        }
+        matcher.appendTail(output);
+        return output.toString();
     }
 
     // Helper function to find out which named group was matched
-    private String getMatchedGroupName(Matcher matcher, List<String> groupNames) {
-        return groupNames.stream().filter((name) -> matcher.group(name) != null).findFirst().orElseThrow();
+    private String getMatchedGroupName(Matcher matcher,
+                                       List<String> groupNames) {
+        return groupNames.stream()
+                .filter((name) -> matcher.group(name) != null)
+                .findFirst()
+                .orElseThrow();
     }
 
     // Apply the relevant conversion for the provided named group
-    private String convert(Matcher matcher, String groupName) {
-        return switch(groupName) {
+    private String convert(Matcher m, String group) {
+        return switch(group) {
             // Pass 1 group names
-            case "codeblock" -> convertCodeblock(matcher.group(), matcher.group("content"));
-            case "codeblock2" -> convertCodeblock(matcher.group(), matcher.group("content2"));
-            case "code" -> convertCode(matcher.group());
-            case "link" -> convertLink(matcher.group(), matcher.group("type"), matcher.group("path"), matcher.group("part1"), matcher.group("part2"), matcher.group("part3"));
-            case "constantref" -> convertConstantref(matcher.group());
-            case "typeref" -> convertTyperef(matcher.group());
-            case "paramref" -> convertParamref(matcher.group());
-            case "hyperlink" -> convertHyperlink(matcher.group(), matcher.group("desc"), matcher.group("url"));
-            case "img" -> convertImg(matcher.group(), matcher.group("imgdesc"), matcher.group("imgurl"));
-            case "picture" -> convertImg(matcher.group(), matcher.group("alt"), matcher.group("pictureurl"));
-            case "header" -> convertHeader(matcher.group(), matcher.group("headerlevel"));
-            case "container" -> convertContainer(matcher.group());
-            case "bulletpoint" -> convertBulletpoint(matcher.group());
-            case "strong" -> convertStrong(matcher.group());
-            case "em" -> convertEm(matcher.group());
-            case "entity" -> convertEntity(matcher.group());
-            case "p" -> convertP(matcher.group());
+            case "codeblock"   -> convertCodeblock(m.group(),
+                                                   m.group("content"));
+            case "codeblock2"  -> convertCodeblock(m.group(),
+                                                   m.group("content2"));
+            case "code"        -> convertCode(m.group());
+            case "link"        -> convertLink(m.group(),
+                                              m.group("type"),
+                                              m.group("path"),
+                                              m.group("part1"),
+                                              m.group("part2"),
+                                              m.group("part3"));
+            case "constantref" -> convertConstantref(m.group());
+            case "typeref"     -> convertTyperef(m.group());
+            case "paramref"    -> convertParamref(m.group());
+            case "hyperlink"   -> convertHyperlink(m.group(),
+                                                   m.group("desc"),
+                                                   m.group("url"));
+            case "img"         -> convertImg(m.group(),
+                                             m.group("imgdesc"),
+                                             m.group("imgurl"));
+            case "picture"     -> convertImg(m.group(),
+                                             m.group("alt"),
+                                             m.group("pictureurl"));
+            case "header"      -> convertHeader(m.group(),
+                                                m.group("headerlevel"));
+            case "container"   -> convertContainer(m.group());
+            case "bulletpoint" -> convertBulletpoint(m.group());
+            case "strong"      -> convertStrong(m.group());
+            case "em"          -> convertEm(m.group());
+            case "entity"      -> convertEntity(m.group());
+            case "p"           -> convertP(m.group());
             
             // Pass 2 group names
-            case "emptyp" -> convertEmptyP(matcher.group(), matcher.group("tag"));
-            case "blockquote" -> convertBlockquote(matcher.group());
-            
-            default -> matcher.group();
+            case "emptyp"      -> convertEmptyP(m.group(),
+                                                m.group("tag"));
+            case "blockquote"  -> convertBlockquote(m.group());
+
+            // Ignored
+            default            -> m.group();
         };
     }
 
@@ -188,56 +205,89 @@ public class Javadoc {
             case "ctor":
                 if (part3 == null) {
                     if ("new".equals(part2)) {
-                        return checkLink(part1) + part1 + "#" + part1 + "}";
+                        String tag = checkLink(part1);
+                        return tag + part1 + "#" + part1 + "}";
                     } else {
-                        return checkLink(part1, part2) + part1 + formatMethod(stripNewPrefix(part2)) + "}";
+                        String tag = checkLink(part1, part2);
+                        String method = formatMethod(stripNewPrefix(part2));
+                        return tag + part1 + method + "}";
                     }
                 } else {
                     Namespace ns = getNamespace(part1);
-                    String className = (ns == null) ? part2 : replaceKnownType(part2, ns);
+                    String cls = (ns == null)
+                            ? part2
+                            : replaceKnownType(part2, ns);
                     if ("new".equals(part3)) {
-                        return checkLink(part1, part2) + formatNS(part1) + className + "#" + className + "}";
+                        String tag = checkLink(part1, part2);
+                        return tag + formatNS(part1) + cls + "#" + cls + "}";
                     } else {
-                        return checkLink(part1, part2, part3) + formatNS(part1) + className + formatMethod(stripNewPrefix(part3)) + "}";
+                        String tag = checkLink(part1, part2, part3);
+                        String method = formatMethod(stripNewPrefix(part3));
+                        return tag + formatNS(part1) + cls + method + "}";
                     }
                 }
             case "method":
             case "vfunc":
                 if (part3 == null) {
-                    return checkLink(part1, part2) + replaceKnownType(part1, doc.namespace()) + formatMethod(part2) + "}";
+                    String tag = checkLink(part1, part2);
+                    String typeName = replaceKnownType(part1, doc.namespace());
+                    String method = formatMethod(part2);
+                    return tag + typeName + method + "}";
                 } else {
+                    String tag = checkLink(part1, part2, part3);
                     Namespace ns = getNamespace(part1);
-                    return checkLink(part1, part2, part3) + formatNS(part1) + replaceKnownType(part2, ns) + formatMethod(part3) + "}";
+                    String typeName = replaceKnownType(part2, ns);
+                    String method = formatMethod(part3);
+                    return tag + formatNS(part1) + typeName + method + "}";
                 }
             case "func":
                 if (part3 == null) {
                     if (part2 == null) {
-                        return checkLink(part1) + doc.namespace().javaType() + formatMethod(part1) + "}";
+                        String tag = checkLink(part1);
+                        String ns = doc.namespace().javaType();
+                        String method = formatMethod(part1);
+                        return tag + ns + method + "}";
                     } else {
+                        String tag = checkLink(part1, part2);
                         Namespace ns = getNamespace(part1);
-                        String className = (ns == null) ? part1 : ns.globalClassName();
-                        return checkLink(part1, part2) + formatNS(part1) + className + formatMethod(part2) + "}";
+                        String className = (ns == null)
+                                ? part1
+                                : ns.globalClassName();
+                        String method = formatMethod(part2);
+                        return tag + formatNS(part1) + className + method + "}";
                     }
                 } else {
-                    return checkLink(part1, part2, part3) + formatNS(part1) + part2 + formatMethod(part3) + "}";
+                    String tag = checkLink(part1, part2, part3);
+                    String ns = formatNS(part1);
+                    String method = formatMethod(part3);
+                    return tag + ns + part2 + method + "}";
                 }
             case "iface":
             case "class":
                 if (part2 == null) {
-                    return checkLink(part1) + replaceKnownType(part1, doc.namespace()) + "}";
+                    String tag = checkLink(part1);
+                    String typeName = replaceKnownType(part1, doc.namespace());
+                    return tag + typeName + "}";
                 } else {
+                    String tag = checkLink(part1, part2);
                     Namespace ns = getNamespace(part1);
-                    return checkLink(part1, part2) + formatNS(part1) + replaceKnownType(part2, ns) + "}";
+                    String typeName = replaceKnownType(part2, ns);
+                    return tag + formatNS(part1) + typeName + "}";
                 }
             case "id":
                 name = formatCIdentifier(part1);
-                return (name == null) ? "{@code " + path + "}" : "{@link " + name + "}";
+                return (name == null)
+                        ? "{@code " + path + "}"
+                        : "{@link " + name + "}";
             default:
                 return "{@code " + path + "}";
         }
     }
 
-    // Replace %NULL, %TRUE and %FALSE with {@code true} etc, or %text with {@link text}
+    /*
+     * Replace %NULL, %TRUE and %FALSE with {@code true} etc, or %text with
+     * {@link text}
+     */
     private String convertConstantref(String ref) {
         switch (ref) {
             case "%NULL":   return "{@code null}";
@@ -254,19 +304,22 @@ public class Javadoc {
 
     // Replace #text with {@link text}
     private String convertTyperef(String ref) {
-        RegisteredType rt = TypeReference.get(doc.namespace(), ref.substring(1));
+        String type = ref.substring(1);
+        RegisteredType rt = TypeReference.get(doc.namespace(), type);
         if (rt == null) {
             return "{@code " + ref.substring(1) + "}";
         } else {
             String typeName = rt.javaType();
-            // If the link refers to the typestruct for a class, find the enclosing class and add it to the link.
+            // If the link refers to the typestruct for a class, find the
+            // enclosing class and add it to the link.
             if (rt instanceof Record rec && rec.isGTypeStructFor() != null) {
                 RegisteredType baseType = rec.isGTypeStructFor();
                 if (baseType != null) {
                     typeName = baseType.javaType() + "." + typeName;
                 }
             }
-            return "{@link " + formatNS(rt.namespace().name()) + "." + typeName + "}";
+            String ns = formatNS(rt.namespace().name());
+            return "{@link " + ns + "." + typeName + "}";
         }
     }
 
@@ -341,7 +394,10 @@ public class Javadoc {
         }
     }
     
-    // Replace <p><pre> or <p><ul> (and any whitespace in between) with just the second tag
+    /*
+     * Replace <p><pre> or <p><ul> (and any whitespace in between) with just the
+     * second tag
+     */
     private String convertEmptyP(String ph, String tag) {
         return tag;
     }
@@ -358,7 +414,10 @@ public class Javadoc {
         return "<blockquote>\n" + result + "</blockquote>";
     }
 
-    // Return the Java package name followed by "." for another (not our own) namespace
+    /*
+     * Return the Java package name followed by "." for another (not our own)
+     * namespace
+     */
     private String formatNS(String ns) {
         Namespace namespace = doc.namespace();
         if (namespace.name().equals(ns)) return "";
@@ -379,13 +438,17 @@ public class Javadoc {
         return name.startsWith("new_") ? name.substring(4) : name;
     }
 
-    // Format the C identifier as a Java type (with org.package.Class#memberName syntax)
+    /*
+     * Format the C identifier as a Java type (with org.package.Class#memberName
+     * syntax)
+     */
     private String formatCIdentifier(String cIdentifier) {
         Node node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
         if (node == null) return null;
 
         String type = switch(node.parent()) {
-            case Namespace ns -> formatNS(node.namespace().name()) + ns.globalClassName();
+            case Namespace ns -> formatNS(node.namespace().name())
+                                    + ns.globalClassName();
             case RegisteredType rt -> rt.javaType();
             default -> "";
         };
@@ -407,14 +470,18 @@ public class Javadoc {
         }
     }
 
-    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
-    // otherwise, generate a "{@code" tag.
+    /*
+     * Check if this type exists in the GIR file. If it does, generate a
+     * "{@link" tag, otherwise, generate a "{@code" tag.
+     */
     private String checkLink(String identifier) {
         return checkLink(doc.namespace().name(), identifier);
     }
 
-    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
-    // otherwise, generate a "{@code" tag.
+    /*
+     * Check if this type exists in the GIR file. If it does, generate a
+     * "{@link" tag, otherwise, generate a "{@code" tag.
+     */
     private String checkLink(String ns, String identifier) {
         // Try [namespace.type]
         var namespace = getNamespace(ns);
@@ -434,29 +501,35 @@ public class Javadoc {
                     : "{@code ";
     }
 
-    // Check if this type exists in the GIR file. If it does, generate a "{@link" tag,
-    // otherwise, generate a "{@code" tag.
+    /*
+     * Check if this type exists in the GIR file. If it does, generate a
+     * "{@link" tag, otherwise, generate a "{@code" tag.
+     */
     private String checkLink(String ns, String type, String identifier) {
         RegisteredType rt = TypeReference.get(getNamespace(ns), type);
 
         if (rt == null)
             return "{@code ";
 
-        // Generating a link to an inner class is not implemented, it is used very little
+        // Generating a link to an inner class is not implemented
         if (rt instanceof Record rec && rec.isGTypeStructFor() != null)
             return "{@code ";
 
         for (VirtualMethod vm : filter(rt.children(), VirtualMethod.class))
-                if (identifier.equals(vm.name()) && (! vm.skip())) return "{@link ";
+                if (identifier.equals(vm.name()) && (! vm.skip()))
+                    return "{@link ";
 
         for (Method m : filter(rt.children(), Method.class))
-            if (identifier.equals(m.name()) && (! m.skip())) return "{@link ";
+            if (identifier.equals(m.name()) && (! m.skip()))
+                return "{@link ";
 
         for (Constructor c : filter(rt.children(), Constructor.class))
-            if (identifier.equals(c.name()) && (! c.skip())) return "{@link ";
+            if (identifier.equals(c.name()) && (! c.skip()))
+                return "{@link ";
 
         for (Function f : filter(rt.children(), Function.class))
-            if (identifier.equals(f.name()) && (! f.skip())) return "{@link ";
+            if (identifier.equals(f.name()) && (! f.skip()))
+                return "{@link ";
 
         return "{@code ";
     }

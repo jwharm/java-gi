@@ -84,11 +84,12 @@ public class FieldGenerator extends TypedValueGenerator {
         if ((type != null)
                 && (!type.isPointer())
                 && (target instanceof Class || target instanceof Interface)) {
-            var calcOffset = "long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement($S))";
+            var calcOffset = "long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))";
             var returnSlice = PartialStatement.of("return ")
-                    .add(marshalNativeToJava("handle().asSlice(_offset)", false));
-            return spec.addStatement(calcOffset, f.name())
-                    .addNamedCode(returnSlice.format() + ";\n", returnSlice.arguments())
+                    .add(marshalNativeToJava("handle().asSlice(_offset)", false))
+                    .add(";\n");
+            return spec.addStatement(calcOffset, MemoryLayout.class, f.name())
+                    .addNamedCode(returnSlice.format(), returnSlice.arguments())
                     .build();
         }
 
@@ -96,14 +97,16 @@ public class FieldGenerator extends TypedValueGenerator {
         var carrierType = getCarrierTypeName(f.anyType());
         var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle(), 0)";
         var returnResult = PartialStatement.of("return ")
-                .add(marshalNativeToJava("_result", false));
+                .add(marshalNativeToJava("_result", false))
+                .add(";\n");
         return spec.addStatement(getResult, carrierType, MemoryLayout.class, f.name())
-                .addNamedCode(returnResult.format() + ";\n", returnResult.arguments())
+                .addNamedCode(returnResult.format(), returnResult.arguments())
                 .build();
     }
 
     public MethodSpec generateWriteMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+        var spec = MethodSpec.methodBuilder(
+                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Write a value in the field {@code $1L}.
@@ -156,7 +159,8 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateWriteCopyMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+        var spec = MethodSpec.methodBuilder(
+                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Write a value in the field {@code $1L}.
@@ -193,7 +197,8 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addParameter(Arena.class, "arena")
                 .addParameter(java.lang.reflect.Method.class, "method")
                 .addStatement("this._$LMethod = method", getName())
-                .addCode(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
+                .addCode(new CallableGenerator(cb)
+                                .generateFunctionDescriptorDeclaration())
                 .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
                         MethodHandle.class,
                         ClassNames.INTEROP,

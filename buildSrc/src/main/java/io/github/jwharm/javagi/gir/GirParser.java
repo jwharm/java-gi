@@ -39,9 +39,11 @@ import static io.github.jwharm.javagi.configuration.Patches.PATCHES;
  */
 public final class GirParser {
 
-    private static final GirParser INSTANCE = new GirParser();
     private static final List<String> SKIP_LIST = List.of(
-            "c:include", "function-inline", "function-macro", "method-inline", "package");
+            "c:include", "function-inline", "function-macro",
+            "method-inline", "package"
+    );
+    private static final GirParser INSTANCE = new GirParser();
     private static final XMLInputFactory XML_INPUT_FACTORY =
             XMLInputFactory.newInstance();
 
@@ -78,9 +80,9 @@ public final class GirParser {
     /**
      * Parse GIR XML and build the GIR model.
      *
-     * @param file       the GIR XML file
-     * @param platform   the platform of the GIR XML file
-     * @param repository an existing GIR model to merge with the new repository
+     * @param  file       the GIR XML file
+     * @param  platform   the platform of the GIR XML file
+     * @param  repository an existing GIR model to merge with the new repository
      * @return the GIR model
      * @throws XMLStreamException    if the XML cannot be parsed
      * @throws FileNotFoundException if the specified file is not found
@@ -107,7 +109,7 @@ public final class GirParser {
         throw new IllegalStateException("Invalid XML");
     }
 
-    // Move in the existing GIR model in parallel with the parser in the XML file
+    // Move in the existing GIR model in parallel with the parser in the XML
     private Node walkTree(StartElement elem, Node existingNode) {
         if (existingNode == null)
             return null;
@@ -157,10 +159,12 @@ public final class GirParser {
 
                 // Remember namespace name
                 if (qname(startElement.getName()).equals("namespace"))
-                    nsName = startElement.getAttributeByName(new QName("name")).getValue();
+                    nsName = startElement.getAttributeByName(
+                            new QName("name")).getValue();
 
                 // Create new child node
-                Node newNode = parseElement(eventReader, startElement, platform, existingChildNode, nsName);
+                Node newNode = parseElement(eventReader, startElement, platform,
+                        existingChildNode, nsName);
 
                 // Apply patches
                 for (Patch patch : PATCHES)
@@ -185,53 +189,55 @@ public final class GirParser {
 
         // Create GIR node based on the element name
         return switch (elemName) {
-            case "alias" -> new Alias(attributes, children, platform);
-            case "array" -> new Array(attributes, children);
-            case "attribute" -> new Attribute(attributes);
-            case "bitfield" -> new Bitfield(attributes, children, platform);
-            case "glib:boxed" -> new Boxed(attributes, children, platform);
-            case "callback" -> new Callback(attributes, children, platform);
-            case "c:include" -> new CInclude(attributes);
-            case "class" -> new Class(attributes, children, platform);
-            case "constant" -> new Constant(attributes, children, platform);
-            case "constructor" -> new Constructor(attributes, children, platform);
-            case "doc" -> new Doc(attributes, contents.toString().trim());
-            case "docsection" -> new Docsection(attributes, children);
-            case "doc-deprecated" -> new DocDeprecated(contents.toString().trim());
-            case "doc-version" -> new DocVersion(contents.toString().trim());
-            case "enumeration" -> new Enumeration(attributes, children, platform);
-            case "field" -> new Field(attributes, children);
-            case "function" -> new Function(attributes, children, platform);
-            case "function-inline" -> new FunctionInline();
-            case "function-macro" -> new FunctionMacro();
-            case "implements" -> new Implements(attributes);
-            case "include" -> new Include(attributes);
+            case "alias"              -> new Alias(attributes, children, platform);
+            case "array"              -> new Array(attributes, children);
+            case "attribute"          -> new Attribute(attributes);
+            case "bitfield"           -> new Bitfield(attributes, children, platform);
+            case "glib:boxed"         -> new Boxed(attributes, children, platform);
+            case "callback"           -> new Callback(attributes, children, platform);
+            case "c:include"          -> new CInclude(attributes);
+            case "class"              -> new Class(attributes, children, platform);
+            case "constant"           -> new Constant(attributes, children, platform);
+            case "constructor"        -> new Constructor(attributes, children, platform);
+            case "doc"                -> new Doc(attributes, contents.toString().trim());
+            case "docsection"         -> new Docsection(attributes, children);
+            case "doc-deprecated"     -> new DocDeprecated(contents.toString().trim());
+            case "doc-version"        -> new DocVersion(contents.toString().trim());
+            case "enumeration"        -> new Enumeration(attributes, children, platform);
+            case "field"              -> new Field(attributes, children);
+            case "function"           -> new Function(attributes, children, platform);
+            case "function-inline"    -> new FunctionInline();
+            case "function-macro"     -> new FunctionMacro();
+            case "implements"         -> new Implements(attributes);
+            case "include"            -> new Include(attributes);
             case "instance-parameter" -> new InstanceParameter(attributes, children);
-            case "interface" -> new Interface(attributes, children, platform);
-            case "member" -> new Member(attributes, children);
-            case "method" -> new Method(attributes, children, platform);
-            case "method-inline" -> new MethodInline();
-            case "namespace" -> new Namespace(attributes, children, platform, new HashMap<>());
-            case "package" -> new Package(attributes);
-            case "parameter" -> new Parameter(attributes, children);
-            case "parameters" -> new Parameters(children);
-            case "prerequisite" -> new Prerequisite(attributes);
-            case "property" -> new Property(attributes, children, platform);
-            case "record" -> new Record(attributes, children, platform);
-            case "repository" -> new Repository(attributes, children);
-            case "return-value" -> new ReturnValue(attributes, children);
-            case "glib:signal" -> new Signal(attributes, children, platform);
-            case "source-position" -> new SourcePosition(attributes);
-            case "type" -> new Type(attributes, children);
-            case "union" -> new Union(attributes, children, platform);
-            case "varargs" -> new Varargs();
-            case "virtual-method" -> new VirtualMethod(attributes, children, platform);
-            default -> throw new UnsupportedOperationException("Unsupported element: " + elemName);
+            case "interface"          -> new Interface(attributes, children, platform);
+            case "member"             -> new Member(attributes, children);
+            case "method"             -> new Method(attributes, children, platform);
+            case "method-inline"      -> new MethodInline();
+            case "namespace"          -> new Namespace(attributes, children, platform, new HashMap<>());
+            case "package"            -> new Package(attributes);
+            case "parameter"          -> new Parameter(attributes, children);
+            case "parameters"         -> new Parameters(children);
+            case "prerequisite"       -> new Prerequisite(attributes);
+            case "property"           -> new Property(attributes, children, platform);
+            case "record"             -> new Record(attributes, children, platform);
+            case "repository"         -> new Repository(attributes, children);
+            case "return-value"       -> new ReturnValue(attributes, children);
+            case "glib:signal"        -> new Signal(attributes, children, platform);
+            case "source-position"    -> new SourcePosition(attributes);
+            case "type"               -> new Type(attributes, children);
+            case "union"              -> new Union(attributes, children, platform);
+            case "varargs"            -> new Varargs();
+            case "virtual-method"     -> new VirtualMethod(attributes, children, platform);
+            default                   -> throw new UnsupportedOperationException("Unsupported element: " + elemName);
         };
     }
 
     // Skip past <c:include>, <package> and <function-macro> elements
-    private void fastForward(XMLEventReader eventReader) throws XMLStreamException {
+    private void fastForward(XMLEventReader eventReader)
+            throws XMLStreamException {
+
         var event = eventReader.peek();
         if (!event.isStartElement()) return;
         String elemName = qname(event.asStartElement().getName());
@@ -240,7 +246,8 @@ public final class GirParser {
         while (eventReader.hasNext()) {
             XMLEvent nextEvent = eventReader.nextEvent();
             if (nextEvent.isEndElement()
-                    && qname(nextEvent.asEndElement().getName()).equals(elemName)) {
+                    && qname(nextEvent.asEndElement().getName())
+                                .equals(elemName)) {
                 fastForward(eventReader);
                 return;
             }

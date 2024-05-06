@@ -27,7 +27,9 @@ import java.util.Objects;
 
 public final class Boxed extends Multiplatform implements RegisteredType {
 
-    public Boxed(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Boxed(Map<String, String> attributes,
+                 List<Node> children,
+                 int platforms) {
         super(attributes, children, platforms);
     }
 

@@ -19,8 +19,7 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
-
+import static com.squareup.javapoet.TypeName.*;
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
@@ -43,7 +42,8 @@ public final class Field extends GirElement implements TypedValue {
     public boolean allocatesMemory() {
         return TypedValue.super.allocatesMemory()
                 || (callback() != null)
-                || (anyType() instanceof Type type && type.get() instanceof Callback);
+                || (anyType() instanceof Type type
+                        && type.get() instanceof Callback);
     }
 
     /**
@@ -72,11 +72,11 @@ public final class Field extends GirElement implements TypedValue {
             return getSize(alias.type());
 
         var typeName = type.typeName();
-        if (List.of(TypeName.BYTE, TypeName.CHAR).contains(typeName))
+        if (List.of(BYTE, CHAR).contains(typeName))
             return 1;
-        if (TypeName.SHORT.equals(typeName))
+        if (SHORT.equals(typeName))
             return 2;
-        if (List.of(TypeName.BOOLEAN, TypeName.INT, TypeName.FLOAT).contains(typeName))
+        if (List.of(BOOLEAN, INT, FLOAT).contains(typeName))
             return 4;
         if (type.get() instanceof FlaggedType)
             return 4;
@@ -88,7 +88,7 @@ public final class Field extends GirElement implements TypedValue {
      * Check whether this field should not be exposed
      */
     public boolean isDisguised() {
-        // Don't generate a getter/setter for a "disguised" record or private data
+        // No getter/setter for a "disguised" record or private data
         if (anyType() instanceof Type type
                 && type.get() instanceof Record r
                 && (r.disguised() || r.skipJava()))

@@ -117,17 +117,21 @@ public abstract class GenerateSources extends DefaultTask {
                 case Class c -> new ClassGenerator(c).generate();
                 case FlaggedType f -> new FlaggedTypeGenerator(f).generate();
                 case Interface i -> new InterfaceGenerator(i).generate();
-                case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
+                case Record r when r.isGTypeStructFor() == null ->
+                        new RecordGenerator(r).generate();
                 case Union u -> new UnionGenerator(u).generate();
                 default -> null;
             };
             writeJavaFile(typeSpec, packageName, outputDirectory);
 
-            // Write package-private helper classes for interfaces, containing static downcall handles
+            // Write package-private helper classes for interfaces, containing
+            // static downcall handles
             if (rt instanceof Interface i) {
                 var generator = new InterfaceGenerator(i);
                 if (generator.hasDowncallHandles())
-                    writeJavaFile(generator.downcallHandlesClass(), packageName, outputDirectory);
+                    writeJavaFile(generator.downcallHandlesClass(),
+                                  packageName,
+                                  outputDirectory);
             }
         }
     }
@@ -155,6 +159,7 @@ public abstract class GenerateSources extends DefaultTask {
 
         var srcDir = getProject().getProjectDir().toPath()
                 .resolve(Path.of("src", "main", "java"));
+        var separator = srcDir.getFileSystem().getSeparator();
 
         if (! Files.exists(srcDir))
             return packages;
@@ -171,7 +176,7 @@ public abstract class GenerateSources extends DefaultTask {
                     String pkg = srcDir
                             .relativize(file.getParent())
                             .toString()
-                            .replace(srcDir.getFileSystem().getSeparator(), ".");
+                            .replace(separator, ".");
                     packages.add(pkg);
                 }
                 return FileVisitResult.CONTINUE;

@@ -63,7 +63,8 @@ public class GioPatch implements Patch {
          * BufferedInputStream is renamed from "read_byte" to "read_int".
          */
         if (element instanceof Method m
-                && "g_buffered_input_stream_read_byte".equals(m.callableAttrs().cIdentifier()))
+                && "g_buffered_input_stream_read_byte"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "read_int");
 
         /*
@@ -125,7 +126,9 @@ public class GioPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "prefix_matches".equals(vm.name())
-                && "File".equals(vm.parameters().instanceParameter().type().name()))
+                && "File".equals(vm.parameters()
+                                   .instanceParameter()
+                                   .type().name()))
             return new VirtualMethod(
                     Map.of("name", "prefix_matches"),
                     vm.children(),

@@ -38,14 +38,14 @@ public class PackageInfoGenerator {
     }
 
     public String generate() {
-        String description = ModuleInfo.description(ns.name());
-        if (description.isBlank())
-            description = "Java bindings for %s.".formatted(ModuleInfo.moduleName(ns.name()));
+        String desc = ModuleInfo.description(ns.name());
+        if (desc.isBlank())
+            desc = "Java bindings for " + ModuleInfo.moduleName(ns.name()) + ".";
         builder.append("""
                 /**
                  * %s
                  * <p>
-                """.formatted(description));
+                """.formatted(desc));
 
         if (ns.sharedLibrary() != null) {
             builder.append(" * The following native libraries are required and will be loaded:");

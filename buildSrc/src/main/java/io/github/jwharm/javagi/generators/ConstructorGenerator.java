@@ -19,20 +19,16 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
@@ -76,12 +72,12 @@ public class ConstructorGenerator {
 
         // Javadoc
         if (ctor.infoElements().doc() != null) {
-            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            String doc = new DocGenerator(ctor.infoElements().doc()).generate();
             if (ctor.doPlatformCheck())
                 builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                        .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                       .addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
-                builder.addJavadoc(javadoc);
+                builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -100,7 +96,8 @@ public class ConstructorGenerator {
 
         // Cache new GObject instance
         if (parent.checkIsGObject())
-            builder.addStatement("$T.put(handle(), this)", ClassNames.INSTANCE_CACHE);
+            builder.addStatement("$T.put(handle(), this)",
+                    ClassNames.INSTANCE_CACHE);
 
         // Add cleaner to struct/union pointer
         else {
@@ -122,19 +119,15 @@ public class ConstructorGenerator {
 
         // Override the specified return type
         TypeName returnType = parent.typeName();
-        // Wrap Bitfield return value into a Set<>
-        if (parent instanceof Bitfield)
-            returnType = ParameterizedTypeName.get(
-                    ClassName.get(Set.class), returnType);
         builder.returns(returnType);
 
         // Javadoc
         if (ctor.infoElements().doc() != null) {
-            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            String doc = new DocGenerator(ctor.infoElements().doc()).generate();
             if (ctor.doPlatformCheck())
-                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                builder.addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
-                builder.addJavadoc(javadoc);
+                builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -142,7 +135,8 @@ public class ConstructorGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
-        new CallableGenerator(ctor).generateMethodParameters(builder, false, true);
+        new CallableGenerator(ctor)
+                .generateMethodParameters(builder, false, true);
 
         // Exception
         if (ctor.callableAttrs().throws_())
@@ -153,7 +147,9 @@ public class ConstructorGenerator {
             builder.addStatement("$T.checkSupportedPlatform($L)",
                     ClassNames.PLATFORM, Platform.toStringLiterals(ctor.platforms()));
 
-        builder.addStatement("var _result = $L($L)", privateMethodName, parameterNames());
+        builder.addStatement("var _result = $L($L)",
+                privateMethodName,
+                parameterNames());
 
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
@@ -168,12 +164,12 @@ public class ConstructorGenerator {
                             stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
                             ClassNames.GOBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle())",
+                    .addStatement("$T.debug($S, _gobject.handle().address())",
                             ClassNames.GLIB_LOGGER,
-                            "Ref " + parent.typeName() + " %ld")
+                            "Ref " + returnType + " %ld")
                     .addStatement("_gobject.ref()")
                     .endControlFlow()
-                    .addStatement("return ($T) _object", parent.typeName());
+                    .addStatement("return ($T) _object", returnType);
         }
 
         // GVariant constructors return floating references
@@ -205,21 +201,17 @@ public class ConstructorGenerator {
                     .addStatement("$T.takeOwnership(_instance.handle())",
                             ClassNames.MEMORY_CLEANER);
 
-            new RegisteredTypeGenerator(parent).setFreeFunc(
-                    builder,
-                    "_instance",
-                    parent.typeName()
-            );
+            new RegisteredTypeGenerator(parent)
+                    .setFreeFunc(builder, "_instance", returnType);
 
             builder.endControlFlow()
-                    .addStatement("return ($T) _instance",
-                            parent.typeName());
+                   .addStatement("return ($T) _instance", returnType);
         }
 
         // No ownership transfer, just marshal the return value
         else {
             stmt = PartialStatement.of("return ($parentType:T) ",
-                            "parentType", parent.typeName())
+                            "parentType", returnType)
                     .add(stmt)
                     .add(";\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
@@ -237,9 +229,7 @@ public class ConstructorGenerator {
                 .filter(not(Parameter::isDestroyNotifyParameter))
                 .filter(not(Parameter::isArrayLengthParameter))
                 .map(TypedValue::name)
-                .map(name -> "...".equals(name)
-                        ? "varargs"
-                        : Conversions.toJavaIdentifier(name))
+                .map(n -> "...".equals(n) ? "varargs" : toJavaIdentifier(n))
                 .collect(Collectors.joining(", "));
     }
 }

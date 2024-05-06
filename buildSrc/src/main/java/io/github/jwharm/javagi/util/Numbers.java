@@ -24,22 +24,22 @@ package io.github.jwharm.javagi.util;
  */
 public class Numbers {
     public static Byte parseByte(String s) throws NumberFormatException {
-        return isNegative(s) ? Byte.parseByte(s) : (byte) Integer.parseInt(s);
+        return negative(s) ? Byte.parseByte(s) : (byte) Integer.parseInt(s);
     }
 
     public static Short parseShort(String s) throws NumberFormatException {
-        return isNegative(s) ? Short.parseShort(s) : (short) Integer.parseInt(s);
+        return negative(s) ? Short.parseShort(s) : (short) Integer.parseInt(s);
     }
 
     public static Integer parseInt(String s) throws NumberFormatException {
-        return isNegative(s) ? Integer.parseInt(s) : Integer.parseUnsignedInt(s);
+        return negative(s) ? Integer.parseInt(s) : Integer.parseUnsignedInt(s);
     }
 
     public static Long parseLong(String s) throws NumberFormatException {
-        return isNegative(s) ? Long.parseLong(s) : Long.parseUnsignedLong(s);
+        return negative(s) ? Long.parseLong(s) : Long.parseUnsignedLong(s);
     }
 
-    private static boolean isNegative(String s) {
+    private static boolean negative(String s) {
         return !s.isEmpty() && s.charAt(0) == '-';
     }
 }

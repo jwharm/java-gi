@@ -81,24 +81,24 @@ public final class BuilderJavaScope extends BuilderCScope
 
     /**
      * Called by a GtkBuilder to create a {@link Closure} from the name that
-     * was specified in an attribute of a UI file. The {@code functionName}
+     * was specified in an attribute of a UI file. The {@code function}
      * should refer to a method in the Java class (a {@link Buildable}
      * instance). If that fails, as a fallback mechanism the
      * {@link BuilderCScope#createClosure(GtkBuilder, String, Set, GObject)}
      * is called and the result of that function is returned.
      *
-     * @param  builder      the GtkBuilder instance
-     * @param  functionName the function name for which a {@link Closure} will
-     *                      be returned
-     * @param  flags        options for creating the closure
-     * @param  object       unused
+     * @param  builder  the GtkBuilder instance
+     * @param  function the function name for which a {@link Closure} will be
+     *                  returned
+     * @param  flags    options for creating the closure
+     * @param  object   unused
      * @return a new {@link JavaClosure} instance for the requested
-     *         {@code functionName}
+     *         {@code function}
      * @throws GErrorException when an error occurs
      */
     @Override
     public Closure createClosure(GtkBuilder builder,
-                                 String functionName,
+                                 String function,
                                  Set<BuilderClosureFlags> flags,
                                  GObject object) throws GErrorException {
 
@@ -107,13 +107,14 @@ public final class BuilderJavaScope extends BuilderCScope
         if (currentObject == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot create closure for handler %s: Current object not set\n",
-                    functionName);
-            return asParent().createClosure(builder, functionName, flags, object);
+                    function);
+            return asParent().createClosure(builder, function, flags, object);
         }
 
         try {
             // Find method with the right name
-            Method method = getMethodForName(currentObject.getClass(), functionName);
+            Class<? extends GObject> cls = currentObject.getClass();
+            Method method = getMethodForName(cls, function);
 
             // Signal that returns boolean
             if (method.getReturnType().equals(Boolean.TYPE)) {
@@ -123,7 +124,7 @@ public final class BuilderJavaScope extends BuilderCScope
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Cannot invoke method %s in class %s: %s\n",
-                                functionName,
+                                function,
                                 currentObject.getClass().getName(),
                                 e.getMessage());
                         return false;
@@ -138,7 +139,7 @@ public final class BuilderJavaScope extends BuilderCScope
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Cannot invoke method %s in class %s: %s\n",
-                                functionName,
+                                function,
                                 currentObject.getClass().getName(),
                                 e.getMessage());
                     }
@@ -147,8 +148,8 @@ public final class BuilderJavaScope extends BuilderCScope
         } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find method %s in class %s\n",
-                    functionName, currentObject.getClass().getName());
-            return asParent().createClosure(builder, functionName, flags, object);
+                    function, currentObject.getClass().getName());
+            return asParent().createClosure(builder, function, flags, object);
         }
     }
 

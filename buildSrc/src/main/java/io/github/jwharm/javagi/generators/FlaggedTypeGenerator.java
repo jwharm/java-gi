@@ -54,7 +54,8 @@ public class FlaggedTypeGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (en.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(en.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(en.infoElements().doc()).generate());
         if (en.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
@@ -78,19 +79,27 @@ public class FlaggedTypeGenerator extends RegisteredTypeGenerator {
                 TypeSpec.Builder spec = TypeSpec.anonymousClassBuilder(
                         "$L", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
-                    spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
+                    spec.addJavadoc(
+                            new DocGenerator(m.infoElements().doc()).generate());
                 builder.addEnumConstant(toJavaConstantUpperCase(m.name()), spec.build());
             } catch (NumberFormatException nfe) {
                 log(m);
             }
         }
-        for (Member m : en.members().stream().filter(not(uniques::contains)).toList()) {
+
+        List<Member> duplicates = en.members().stream()
+                .filter(not(uniques::contains))
+                .toList();
+        for (Member m : duplicates) {
             try {
-                var spec = FieldSpec.builder(en.typeName(), toJavaConstantUpperCase(m.name()),
+                var spec = FieldSpec.builder(
+                                en.typeName(),
+                                toJavaConstantUpperCase(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("of($L)", Numbers.parseInt(m.value()));
                 if (m.infoElements().doc() != null)
-                    spec.addJavadoc(new DocGenerator(m.infoElements().doc()).generate());
+                    spec.addJavadoc(
+                            new DocGenerator(m.infoElements().doc()).generate());
                 builder.addField(spec.build());
             } catch (NumberFormatException nfe) {
                 log(m);

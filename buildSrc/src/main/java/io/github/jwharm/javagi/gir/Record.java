@@ -38,7 +38,9 @@ public final class Record extends Multiplatform
         return (Namespace) super.parent();
     }
 
-    public Record(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Record(Map<String, String> attributes,
+                  List<Node> children,
+                  int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -85,7 +87,6 @@ public final class Record extends Multiplatform
         return fields().isEmpty() && unions().isEmpty();
     }
 
-    @Deprecated
     public boolean disguised() {
         return attrBool("disguised", false);
     }
@@ -103,7 +104,8 @@ public final class Record extends Multiplatform
     }
 
     public RegisteredType isGTypeStructFor() {
-        return TypeReference.get(namespace(), attr("glib:is-gtype-struct-for"));
+        Namespace ns = namespace();
+        return TypeReference.get(ns, attr("glib:is-gtype-struct-for"));
     }
 
     public String cSymbolPrefix() {

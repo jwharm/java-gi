@@ -36,7 +36,8 @@ public class WebKitPatch implements Patch {
          * different return type. Rename to getWebViewSettings()
          */
         if (element instanceof Method m
-                && "webkit_web_view_get_settings".equals(m.callableAttrs().cIdentifier()))
+                && "webkit_web_view_get_settings"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_web_view_settings");
 
         return element;

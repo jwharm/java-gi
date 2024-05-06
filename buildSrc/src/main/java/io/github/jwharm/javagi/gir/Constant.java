@@ -25,7 +25,9 @@ import java.util.Objects;
 
 public final class Constant extends Multiplatform implements TypedValue {
 
-    public Constant(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Constant(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 

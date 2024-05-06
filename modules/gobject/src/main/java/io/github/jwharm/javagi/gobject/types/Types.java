@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static org.gnome.gobject.GObjects.typeTestFlags;
 
 /**
  * The Types class contains GType constants, a series of static methods to
@@ -212,7 +213,8 @@ public class Types {
      *
      * @since 2.10
      */
-    public static final Type HASH_TABLE = Interop.getType("g_hash_table_get_type");
+    public static final Type HASH_TABLE =
+            Interop.getType("g_hash_table_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GRegex} reference.
@@ -227,7 +229,8 @@ public class Types {
      *
      * @since 2.30
      */
-    public static final Type MATCH_INFO = Interop.getType("g_match_info_get_type");
+    public static final Type MATCH_INFO =
+            Interop.getType("g_match_info_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GArray} reference.
@@ -242,7 +245,8 @@ public class Types {
      *
      * @since 2.22
      */
-    public static final Type BYTE_ARRAY = Interop.getType("g_byte_array_get_type");
+    public static final Type BYTE_ARRAY =
+            Interop.getType("g_byte_array_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GPtrArray}
@@ -250,7 +254,8 @@ public class Types {
      *
      * @since 2.22
      */
-    public static final Type PTR_ARRAY = Interop.getType("g_ptr_array_get_type");
+    public static final Type PTR_ARRAY =
+            Interop.getType("g_ptr_array_get_type");
 
     /**
      * The {@code GType} for {@code GBytes}.
@@ -264,7 +269,8 @@ public class Types {
      *
      * @since 2.24
      */
-    public static final Type VARIANT_TYPE = Interop.getType("g_variant_type_get_gtype");
+    public static final Type VARIANT_TYPE =
+            Interop.getType("g_variant_type_get_gtype");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GError}.
@@ -278,52 +284,60 @@ public class Types {
      *
      * @since 2.26
      */
-    public static final Type DATE_TIME = Interop.getType("g_date_time_get_type");
+    public static final Type DATE_TIME =
+            Interop.getType("g_date_time_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GTimeZone}.
      *
      * @since 2.34
      */
-    public static final Type TIME_ZONE = Interop.getType("g_time_zone_get_type");
+    public static final Type TIME_ZONE =
+            Interop.getType("g_time_zone_get_type");
 
     /**
      * The {@code GType} for {@code GIOChannel}.
      */
-    public static final Type IO_CHANNEL = Interop.getType("g_io_channel_get_type");
+    public static final Type IO_CHANNEL =
+            Interop.getType("g_io_channel_get_type");
 
     /**
      * The {@code GType} for {@code GIOCondition}.
      */
-    public static final Type IO_CONDITION = Interop.getType("g_io_condition_get_type");
+    public static final Type IO_CONDITION =
+            Interop.getType("g_io_condition_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantBuilder}.
      *
      * @since 2.30
      */
-    public static final Type VARIANT_BUILDER = Interop.getType("g_variant_builder_get_type");
+    public static final Type VARIANT_BUILDER =
+            Interop.getType("g_variant_builder_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantDict}.
      *
      * @since 2.40
      */
-    public static final Type VARIANT_DICT = Interop.getType("g_variant_dict_get_type");
+    public static final Type VARIANT_DICT =
+            Interop.getType("g_variant_dict_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainLoop}.
      *
      * @since 2.30
      */
-    public static final Type MAIN_LOOP = Interop.getType("g_main_loop_get_type");
+    public static final Type MAIN_LOOP =
+            Interop.getType("g_main_loop_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainContext}.
      *
      * @since 2.30
      */
-    public static final Type MAIN_CONTEXT = Interop.getType("g_main_context_get_type");
+    public static final Type MAIN_CONTEXT =
+            Interop.getType("g_main_context_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GSource}.
@@ -344,7 +358,8 @@ public class Types {
      *
      * @since 2.36
      */
-    public static final Type MARKUP_PARSE_CONTEXT = Interop.getType("g_markup_parse_context_get_type");
+    public static final Type MARKUP_PARSE_CONTEXT =
+            Interop.getType("g_markup_parse_context_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GKeyFile}.
@@ -358,7 +373,8 @@ public class Types {
      *
      * @since 2.40
      */
-    public static final Type MAPPED_FILE = Interop.getType("g_mapped_file_get_type");
+    public static final Type MAPPED_FILE =
+            Interop.getType("g_mapped_file_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GThread}.
@@ -379,7 +395,8 @@ public class Types {
      *
      * @since 2.44
      */
-    public static final Type OPTION_GROUP = Interop.getType("g_option_group_get_type");
+    public static final Type OPTION_GROUP =
+            Interop.getType("g_option_group_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GUri}.
@@ -400,14 +417,16 @@ public class Types {
      *
      * @since 2.70
      */
-    public static final Type PATTERN_SPEC = Interop.getType("g_pattern_spec_get_type");
+    public static final Type PATTERN_SPEC =
+            Interop.getType("g_pattern_spec_get_type");
 
     /**
      * The {@code GType} for a boxed type holding a {@code GBookmarkFile}.
      *
      * @since 2.76
      */
-    public static final Type BOOKMARK_FILE = Interop.getType("g_bookmark_file_get_type");
+    public static final Type BOOKMARK_FILE =
+            Interop.getType("g_bookmark_file_get_type");
 
     /**
      * First fundamental type number to create a new fundamental type id with
@@ -442,7 +461,7 @@ public class Types {
     /**
      * Checks if {@code type} is a fundamental type.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is fundamental
      */
     public static boolean IS_FUNDAMENTAL(Type type) {
@@ -454,7 +473,7 @@ public class Types {
      * inherited) from another type (this holds true for all non-fundamental
      * types).
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is derived
      */
     public static boolean IS_DERIVED(Type type) {
@@ -471,7 +490,7 @@ public class Types {
      * with the difference that GType interfaces are not derivable (but see
      * g_type_interface_add_prerequisite() for an alternative).
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is an interface
      */
     public static boolean IS_INTERFACE(Type type) {
@@ -493,44 +512,46 @@ public class Types {
      * interfaces, {@link org.gnome.gobject.TypeInterface} doesn’t allow for
      * subclassing.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is classed
      */
     public static boolean IS_CLASSED(Type type) {
-        return GObjects.typeTestFlags(type, TypeFundamentalFlags.CLASSED.getValue());
+        return typeTestFlags(type, TypeFundamentalFlags.CLASSED.getValue());
     }
 
     /**
      * Checks if {@code type} can be instantiated. Instantiation is the
      * process of creating an instance (object) of this type.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is instantiable
      */
     public static boolean IS_INSTANTIATABLE(Type type) {
-        return GObjects.typeTestFlags(type, TypeFundamentalFlags.INSTANTIATABLE.getValue());
+        return typeTestFlags(type,
+                             TypeFundamentalFlags.INSTANTIATABLE.getValue());
     }
 
     /**
      * Checks if {@code type} is a derivable type.  A derivable type can
      * be used as the base class of a flat (single-level) class hierarchy.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is derivable
      */
     public static boolean IS_DERIVABLE(Type type) {
-        return GObjects.typeTestFlags(type, TypeFundamentalFlags.DERIVABLE.getValue());
+        return typeTestFlags(type, TypeFundamentalFlags.DERIVABLE.getValue());
     }
 
     /**
      * Checks if {@code type} is a deep derivable type.  A deep derivable type
      * can be used as the base class of a deep (multi-level) class hierarchy.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is deep derivable
      */
     public static boolean IS_DEEP_DERIVABLE(Type type) {
-        return GObjects.typeTestFlags(type, TypeFundamentalFlags.DEEP_DERIVABLE.getValue());
+        return typeTestFlags(type,
+                             TypeFundamentalFlags.DEEP_DERIVABLE.getValue());
     }
 
     /**
@@ -538,11 +559,11 @@ public class Types {
      * instantiated and is normally used as an abstract base class for
      * derived classes.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is abstract
      */
     public static boolean IS_ABSTRACT(Type type) {
-        return GObjects.typeTestFlags(type, TypeFlags.ABSTRACT.getValue());
+        return typeTestFlags(type, TypeFlags.ABSTRACT.getValue());
     }
 
     /**
@@ -550,18 +571,18 @@ public class Types {
      * type introduces a value table, but can't be used for g_value_init() and
      * is normally used as an abstract base type for derived value types.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is an abstract value type
      */
     public static boolean IS_VALUE_ABSTRACT(Type type) {
-        return GObjects.typeTestFlags(type, TypeFlags.VALUE_ABSTRACT.getValue());
+        return typeTestFlags(type, TypeFlags.VALUE_ABSTRACT.getValue());
     }
 
     /**
      * Checks if {@code type} is a value type and can be used with
      * g_value_init().
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is a value type
      */
     public static boolean IS_VALUE_TYPE(Type type) {
@@ -569,9 +590,9 @@ public class Types {
     }
 
     /**
-     * Checks if {@code type} has a {@link org.gnome.gobject.TypeValueTable}.
+     * Checks if {@code type} has a {@link TypeValueTable}.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} has a value table
      */
     public static boolean HAS_VALUE_TABLE(Type type) {
@@ -582,24 +603,24 @@ public class Types {
      * Checks if {@code type} is a final type. A final type cannot be derived
      * any further.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if {@code type} is final
      * @since  2.70
      */
     public static boolean IS_FINAL(Type type) {
-        return GObjects.typeTestFlags(type, TypeFlags.FINAL.getValue());
+        return typeTestFlags(type, TypeFlags.FINAL.getValue());
     }
 
     /**
      * Checks if {@code type} is deprecated. Instantiating a deprecated type
      * will trigger a warning if running with {@code G_ENABLE_DIAGNOSTIC=1}.
      *
-     * @param  type A {@link org.gnome.glib.Type} value
+     * @param  type A {@link Type} value
      * @return {@code true} if the type is deprecated
      * @since  2.76
      */
     public static boolean IS_DEPRECATED(Type type) {
-        return GObjects.typeTestFlags(type, TypeFlags.DEPRECATED.getValue());
+        return typeTestFlags(type, TypeFlags.DEPRECATED.getValue());
     }
 
     /**
@@ -635,12 +656,14 @@ public class Types {
      *
      * @param  cls      the class to provide a memory layout for
      * @param  typeName the name given tot the generated memory layout
-     * @param  <T>      the class must extend {@link org.gnome.gobject.GObject}
+     * @param  <T>      the class must extend {@link GObject}
      * @return the declared memory layout, or if not found, a generated memory
      *         layout that copies the memory layout declared in the direct
      *         superclass.
      */
-    public static <T extends GObject> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
+    public static <T extends GObject>
+    MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
+
             // Get instance-memorylayout of this class
             MemoryLayout instanceLayout = getLayout(cls);
             if (instanceLayout != null)
@@ -652,7 +675,8 @@ public class Types {
 
             if (parentLayout == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Cannot find memory layout definition for class %s\n", cls.getName());
+                        "Cannot find memory layout definition for class %s\n",
+                        cls.getName());
                 return null;
             }
 
@@ -667,12 +691,14 @@ public class Types {
      *
      * @param  cls  the class that contains (or whose superclass contains) an
      *              inner TypeClass class
-     * @param  <T>  the parameter must extend {@link org.gnome.gobject.TypeInstance}
-     * @param  <TC> the returned class extends {@link org.gnome.gobject.TypeClass}
+     * @param  <T>  the parameter must extend {@link TypeInstance}
+     * @param  <TC> the returned class extends {@link TypeClass}
      * @return the TypeClass class, or null if not found
      */
     @SuppressWarnings("unchecked")
-    public static <T extends TypeInstance, TC extends TypeClass> Class<TC> getTypeClass(Class<T> cls) {
+    public static <T extends TypeInstance, TC extends TypeClass>
+    Class<TC> getTypeClass(Class<T> cls) {
+
         // Get the type-struct. This is an inner class that extends ObjectClass.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
@@ -692,7 +718,7 @@ public class Types {
      * Return the inner TypeInterface class, or null if not found.
      *
      * @param  iface the interface that contains an inner TypeInterface class
-     * @param  <TI>  the returned class extends {@link org.gnome.gobject.TypeInterface}
+     * @param  <TI>  the returned class extends {@link TypeInterface}
      * @return the TypeInterface class, or null if not found
      */
     @SuppressWarnings("unchecked")
@@ -740,10 +766,10 @@ public class Types {
     }
 
     /**
-     * Return the {@link org.gnome.glib.Type} that is returned by a static
-     * method with {@code @GType} annotation, or if that annotation is not
-     * found, by searching for a method with return type
-     * {@code org.gnome.glib.Type}, or else, return null.
+     * Return the {@link Type} that is returned by a static method with
+     * {@code @GType} annotation, or if that annotation is not found, by
+     * searching for a method with return type {@code Type}, or else, return
+     * null.
      *
      * @param  cls the class for which to return the declared GType
      * @return the declared GType
@@ -803,31 +829,32 @@ public class Types {
      */
     public static MemoryLayout getLayout(Class<?> cls) {
         // Find a method that is annotated with @MemoryLayout and execute it
-        for (Method method : cls.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Layout.class)) {
+        for (Method m : cls.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(Layout.class)) {
                 // Check method signature
-                if ((method.getParameterTypes().length != 0)
-                        || (! method.getReturnType().equals(MemoryLayout.class))) {
+                if ((m.getParameterTypes().length != 0)
+                        || (! m.getReturnType().equals(MemoryLayout.class))) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Method %s.%s does not have expected signature () -> MemoryLayout\n",
-                            cls.getName(), method.getName());
+                            cls.getName(), m.getName());
                     return null;
                 }
-                // Invoke the @MemoryLayout-annotated method and return the result
+                // Invoke the @MemoryLayout-annotated method and return the
+                // result
                 try {
-                    return (MemoryLayout) method.invoke(null);
+                    return (MemoryLayout) m.invoke(null);
                 } catch (IllegalAccessException e) {
                     // Method is not public
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "IllegalAccessException when calling %s.%s\n",
-                            cls.getName(), method.getName());
+                            cls.getName(), m.getName());
                     return null;
                 } catch (InvocationTargetException e) {
                     // Method throws an exception
                     Throwable t = e.getTargetException();
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception when calling %s.%s: %s\n",
-                            cls.getName(), method.getName(), t.toString());
+                            cls.getName(), m.getName(), t.toString());
                     return null;
                 }
             }
@@ -837,8 +864,8 @@ public class Types {
         // and execute it
         try {
             // invoke getMemoryLayout() on the class
-            Method getLayoutMethod = cls.getDeclaredMethod("getMemoryLayout");
-            return (MemoryLayout) getLayoutMethod.invoke(null);
+            Method method = cls.getDeclaredMethod("getMemoryLayout");
+            return (MemoryLayout) method.invoke(null);
 
         } catch (Exception notfound) {
             return null;
@@ -855,7 +882,9 @@ public class Types {
      * @return the memory address constructor for this class, or null if not
      *         found
      */
-    public static <T extends Proxy> Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
+    public static <T extends Proxy>
+    Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
+
         Constructor<T> ctor;
         try {
             // Get memory address constructor
@@ -892,10 +921,12 @@ public class Types {
      * of type {@link GObject}.
      *
      * @param  cls the class that declares the instance init method
-     * @param  <T> the class must extend {@link org.gnome.gobject.GObject}
+     * @param  <T> the class must extend {@link GObject}
      * @return the instance initializer, or null if not found
      */
-    public static <T extends GObject> Consumer<T> getInstanceInit(Class<T> cls) {
+    public static <T extends GObject>
+    Consumer<T> getInstanceInit(Class<T> cls) {
+
         // Find instance initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (method.isAnnotationPresent(InstanceInit.class)) {
@@ -906,7 +937,8 @@ public class Types {
                         method.invoke(inst);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception in %s instance init: %s\n", cls.getName(), e.toString());
+                                "Exception in %s instance init: %s\n",
+                                cls.getName(), e.toString());
                     }
                 };
             }
@@ -920,22 +952,25 @@ public class Types {
      * of type {@link GObject.ObjectClass}.
      *
      * @param  cls  the class that declares the class init method
-     * @param  <T>  the class must extend {@link org.gnome.gobject.GObject}
+     * @param  <T>  the class must extend {@link GObject}
      * @param  <TC> the class initializer must accept a
      *              {@link GObject.ObjectClass} parameter
      * @return the class initializer, or null if not found
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> getClassInit(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Consumer<TC> getClassInit(Class<T> cls) {
         // Find class initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (method.isAnnotationPresent(ClassInit.class)) {
-                // Create a wrapper function that calls the class initializer and logs exceptions
+                // Create a wrapper function that calls the class initializer
+                // and logs exceptions
                 return (gclass) -> {
                     try {
                         method.invoke(null, gclass);
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Exception in %s class init: %s\n", cls.getName(), e.toString());
+                                "Exception in %s class init: %s\n",
+                                cls.getName(), e.toString());
                     }
                 };
             }
@@ -949,22 +984,25 @@ public class Types {
      * parameter of the type that is specified with {@code iface}.
      *
      * @param cls  the class that declares the interface init method
-     * @param <T>  the class must extend {@link org.gnome.gobject.GObject}
+     * @param <T>  the class must extend {@link GObject}
      * @param <TI> the iface parameter must extend {@link TypeInterface}
      * @return the interface initializer, or null if not found
      */
-    public static <T extends GObject, TI extends TypeInterface> Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
+    public static <T extends GObject, TI extends TypeInterface>
+    Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
         // Find all overridden methods
         Class<TI> typeStruct = getTypeInterface(iface);
         if (typeStruct == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeInterface class for interface %s\n", iface);
+                    "Cannot find TypeInterface class for interface %s\n",
+                    iface);
             return null;
         }
         var constructor = getAddressConstructor(typeStruct);
         if (constructor == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find constructor in TypeInterface %s\n", typeStruct);
+                    "Cannot find constructor in TypeInterface %s\n",
+                    typeStruct);
             return null;
         }
 
@@ -987,7 +1025,8 @@ public class Types {
                     method.invoke(null, ifaceInstance);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Exception in %s interface init: %s\n", cls.getName(), e.toString());
+                            "Exception in %s interface init: %s\n",
+                            cls.getName(), e.toString());
                 }
             };
         }
@@ -1031,7 +1070,9 @@ public class Types {
      * @param  <T> The class must be derived from GObject
      * @return the new registered GType
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Type register(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Type register(Class<T> cls) {
+
         if (cls == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Class is null\n");
@@ -1066,9 +1107,9 @@ public class Types {
                 instanceInit = $ -> {};
 
             /*
-             * Override virtual methods and install properties and signals before
-             * running a user-defined class init. We chain the generated
-             * initializers (if not null) and default to an empty method _ -> {}.
+             * Override virtual methods and install properties and signals
+             * before running a user-defined class init. We chain the generated
+             * initializers (if not null) and default to an empty method _ -> {}
              */
             Consumer<TC> init = chain(overridesInit, propertiesInit);
             init = chain(init, signalsInit);
@@ -1100,8 +1141,10 @@ public class Types {
                         }
 
                         InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
-                        Consumer<TypeInterface> ifaceOverridesInit = Overrides.overrideInterfaceMethods(cls, iface);
-                        Consumer<TypeInterface> ifaceInit = getInterfaceInit(cls, iface);
+                        Consumer<TypeInterface> ifaceOverridesInit =
+                                Overrides.overrideInterfaceMethods(cls, iface);
+                        Consumer<TypeInterface> ifaceInit =
+                                getInterfaceInit(cls, iface);
 
                         // Override virtual methods before running a user-defined
                         // interface init
@@ -1111,8 +1154,10 @@ public class Types {
                         }
 
                         Consumer<TypeInterface> finalIfaceInit = ifaceInit;
-                        interfaceInfo.writeInterfaceInit((ti, data) -> finalIfaceInit.accept(ti), Arena.global());
-                        GObjects.typeAddInterfaceStatic(type, ifaceType, interfaceInfo);
+                        interfaceInfo.writeInterfaceInit((ti, data) ->
+                                finalIfaceInit.accept(ti), Arena.global());
+                        GObjects.typeAddInterfaceStatic(
+                                type, ifaceType, interfaceInfo);
                     }
                 }
             }
@@ -1120,7 +1165,8 @@ public class Types {
 
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s\n", cls.getName(), e.toString());
+                    "Cannot register type %s: %s\n",
+                    cls.getName(), e.toString());
             return null;
         }
     }
@@ -1142,16 +1188,16 @@ public class Types {
      *                        parameter that is a subclass of TypeClass
      * @return the new GType
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Type register(
-            org.gnome.glib.Type parentType,
-            String typeName,
-            MemoryLayout classLayout,
-            Consumer<TC> classInit,
-            MemoryLayout instanceLayout,
-            Consumer<T> instanceInit,
-            Function<MemorySegment, T> constructor,
-            Set<TypeFlags> flags
-    ) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Type register(Type parentType,
+                  String typeName,
+                  MemoryLayout classLayout,
+                  Consumer<TC> classInit,
+                  MemoryLayout instanceLayout,
+                  Consumer<T> instanceInit,
+                  Function<MemorySegment, T> constructor,
+                  Set<TypeFlags> flags) {
+
         @SuppressWarnings("unchecked")
         Type type = GObjects.typeRegisterStaticSimple(
                 parentType,
@@ -1160,8 +1206,8 @@ public class Types {
                 // The data parameter is not used.
                 (typeClass, data) -> classInit.accept((TC) typeClass),
                 (short) instanceLayout.byteSize(),
-                // The instance parameter is a type-instance of T, so construct a T proxy instance.
-                // The typeClass parameter is not used.
+                // The instance parameter is a type-instance of T, so construct
+                // a T proxy instance. The typeClass parameter is not used.
                 (instance, typeClass) -> {
                     // The instance is initially cached as TypeInstance.
                     // Overwrite it with a new T instance, and run init().

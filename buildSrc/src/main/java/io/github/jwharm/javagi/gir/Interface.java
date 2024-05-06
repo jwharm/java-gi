@@ -37,14 +37,17 @@ public final class Interface extends Multiplatform
         return (Namespace) super.parent();
     }
 
-    public Interface(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Interface(Map<String, String> attributes,
+                     List<Node> children,
+                     int platforms) {
         super(attributes, children, platforms);
     }
 
     @Override
     public PartialStatement constructorName() {
         return PartialStatement.of("$" + typeTag() + "Impl:T::new",
-                typeTag() + "Impl", typeName().nestedClass(name() + "Impl"));
+                typeTag() + "Impl",
+                typeName().nestedClass(name() + "Impl"));
     }
 
     @Override
@@ -64,7 +67,8 @@ public final class Interface extends Multiplatform
     }
 
     public Record typeStruct() {
-        return (Record) TypeReference.get(namespace(), attr("glib:type-struct"));
+        String typeStruct = attr("glib:type-struct");
+        return (Record) TypeReference.get(namespace(), typeStruct);
     }
 
     public boolean hasProperties() {

@@ -48,8 +48,11 @@ public class SignalConnection<T> {
      * @param handlerId the handler ID of the signal
      * @param arena     memory arena for the signal callback
      */
-    public SignalConnection(MemorySegment instance, long handlerId, Arena arena) {
-        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
+    public SignalConnection(MemorySegment instance,
+                            long handlerId,
+                            Arena arena) {
+        this.instance = (GObject) InstanceCache.getForType(
+                instance, GObject::new, true);
         this.handlerId = (int) handlerId;
         this.arena = arena;
         this.closure = null;
@@ -63,8 +66,11 @@ public class SignalConnection<T> {
      * @param handlerId the handler ID of the signal
      * @param closure   closure for the signal callback
      */
-    public SignalConnection(MemorySegment instance, long handlerId, Closure closure) {
-        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new, true);
+    public SignalConnection(MemorySegment instance,
+                            long handlerId,
+                            Closure closure) {
+        this.instance = (GObject) InstanceCache.getForType(
+                instance, GObject::new, true);
         this.handlerId = (int) handlerId;
         this.arena = null;
         this.closure = closure;

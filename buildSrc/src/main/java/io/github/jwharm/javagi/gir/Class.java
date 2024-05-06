@@ -30,7 +30,9 @@ import java.util.Objects;
 public final class Class extends Multiplatform
         implements RegisteredType, FieldContainer {
 
-    public Class(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Class(Map<String, String> attributes,
+                 List<Node> children,
+                 int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -43,7 +45,8 @@ public final class Class extends Multiplatform
     public PartialStatement constructorName() {
         return abstract_()
                 ? PartialStatement.of("$" + typeTag() + "Impl:T::new",
-                        typeTag() + "Impl", typeName().nestedClass(name() + "Impl"))
+                        typeTag() + "Impl",
+                        typeName().nestedClass(name() + "Impl"))
                 : RegisteredType.super.constructorName();
     }
 
@@ -83,7 +86,8 @@ public final class Class extends Multiplatform
     }
 
     public Record typeStruct() {
-        return (Record) TypeReference.get(namespace(), attr("glib:type-struct"));
+        String typeStruct = attr("glib:type-struct");
+        return (Record) TypeReference.get(namespace(), typeStruct);
     }
 
     public String refFunc() {

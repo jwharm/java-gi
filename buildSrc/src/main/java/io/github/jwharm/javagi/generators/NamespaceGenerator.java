@@ -53,7 +53,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addMethod(registerTypes());
 
         for (var constant : ns.constants()) {
-            var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
+            var fieldSpec = new TypedValueGenerator(constant)
+                                        .generateConstantDeclaration();
             if (fieldSpec != null)
                 builder.addField(fieldSpec);
         }
@@ -62,7 +63,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
                 if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(f)
+                                                .generateBitfieldOverload());
             }
         }
 
@@ -81,15 +83,15 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         for (Integer platform : Platform.toList(ns.platforms())) {
 
             // Remove path from library name
-            String library = ns.sharedLibrary(platform);
-            if (library.contains("/"))
-                library = library.substring(library.lastIndexOf("/") + 1);
+            String lib = ns.sharedLibrary(platform);
+            if (lib.contains("/"))
+                lib = lib.substring(lib.lastIndexOf("/") + 1);
 
             // Multiple library names (comma-separated)
-            if (library.contains(",")) {
+            if (lib.contains(",")) {
                 block.beginControlFlow("case $S -> ",
                         Platform.toString(platform));
-                for (String libName : library.split(","))
+                for (String libName : lib.split(","))
                     block.addStatement("$T.loadLibrary($S)",
                             ClassNames.INTEROP,
                             libName);
@@ -101,7 +103,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 block.addStatement("case $S -> $T.loadLibrary($S)",
                         Platform.toString(platform),
                         ClassNames.INTEROP,
-                        library);
+                        lib);
             }
         }
 
@@ -121,30 +123,31 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Class c : ns.classes())
-            spec.addCode(prepareCodeBlock(c.constructorName(), c.typeName()));
+            spec.addCode(register(c.constructorName(), c.typeName()));
 
         for (Interface i : ns.interfaces())
-            spec.addCode(prepareCodeBlock(i.constructorName(), i.typeName()));
+            spec.addCode(register(i.constructorName(), i.typeName()));
 
         for (Alias a : ns.aliases()) {
             RegisteredType target = a.type().get();
             if (target instanceof Class c)
-                spec.addCode(prepareCodeBlock(c.constructorName(), a.typeName()));
+                spec.addCode(register(c.constructorName(), a.typeName()));
             if (target instanceof Interface i)
-                spec.addCode(prepareCodeBlock(i.constructorName(), a.typeName()));
+                spec.addCode(register(i.constructorName(), a.typeName()));
         }
 
         for (Boxed b : ns.boxeds())
-            spec.addCode(prepareCodeBlock(b.constructorName(), b.typeName()));
+            spec.addCode(register(b.constructorName(), b.typeName()));
 
         return spec.build();
     }
 
-    private CodeBlock prepareCodeBlock(PartialStatement constructor, ClassName typeName) {
+    private CodeBlock register(PartialStatement constructor, ClassName typeName) {
         var stmt = PartialStatement.of("$typeCache:T.register($typeName:T.getType(), ",
-                "typeCache", ClassNames.TYPE_CACHE,
-                "typeName", typeName
-        ).add(constructor).add(");\n");
+                        "typeCache", ClassNames.TYPE_CACHE,
+                        "typeName", typeName)
+                .add(constructor)
+                .add(");\n");
         return CodeBlock.builder()
                 .addNamed(stmt.format(), stmt.arguments())
                 .build();

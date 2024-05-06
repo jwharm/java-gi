@@ -44,12 +44,47 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class InstanceCache {
 
-    private final static Map<MemorySegment, Proxy> strongReferences = new ConcurrentHashMap<>();
-    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences = new ConcurrentHashMap<>();
+    private final static Map<MemorySegment, Proxy> strongReferences
+            = new ConcurrentHashMap<>();
+    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences
+            = new ConcurrentHashMap<>();
     private static final Cleaner CLEANER = Cleaner.create();
+
+    private static final MethodHandle g_object_add_toggle_ref =
+            Interop.downcallHandle(
+                    "g_object_add_toggle_ref",
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
+                            ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    false);
+
+    private static final MethodHandle g_object_remove_toggle_ref =
+            Interop.downcallHandle(
+                    "g_object_remove_toggle_ref",
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
+                            ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    false);
+
+    private static final MemorySegment toggle_notify;
 
     static {
         GObjects.javagi$ensureInitialized();
+
+        // Create an upcall stub for the "handleToggleNotify" function
+        try {
+            FunctionDescriptor fdesc = FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT);
+            var handle = MethodHandles.lookup().findStatic(
+                    InstanceCache.class,
+                    "handleToggleNotify",
+                    fdesc.toMethodType()
+            );
+            toggle_notify = Linker.nativeLinker()
+                    .upcallStub(handle, fdesc, Arena.global());
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -100,7 +135,8 @@ public class InstanceCache {
             return instance;
 
         // Get constructor from the type registry
-        Function<MemorySegment, ? extends Proxy> ctor = TypeCache.getConstructor(address, fallback);
+        Function<MemorySegment, ? extends Proxy> ctor =
+                TypeCache.getConstructor(address, fallback);
         if (ctor == null)
             return null;
 
@@ -127,11 +163,12 @@ public class InstanceCache {
      * @param  address  memory address of the native object
      * @param  fallback fallback constructor to use when the type is not found
      *                  in the TypeCache
+     * @param ignored   ignored
      * @return a Proxy instance for the provided memory address
      */
     public static Proxy getForTypeClass(MemorySegment address,
                                         Function<MemorySegment, ? extends Proxy> fallback,
-                                        boolean cache) {
+                                        boolean ignored) {
         // Null check
         if (address == null || MemorySegment.NULL.equals(address)) {
             GLibLogger.debug("InstanceCache.getForTypeClass: address is NULL\n");
@@ -140,7 +177,8 @@ public class InstanceCache {
 
         // Get constructor from the type registry
         Type type = new TypeClass(address).readGType();
-        Function<MemorySegment, ? extends Proxy> ctor = TypeCache.getConstructor(type, null);
+        Function<MemorySegment, ? extends Proxy> ctor =
+                TypeCache.getConstructor(type, null);
         if (ctor == null)
             return fallback.apply(address);
 
@@ -151,12 +189,14 @@ public class InstanceCache {
             return fallback.apply(address);
 
         // Get the Java proxy TypeClass definition
-        Class<? extends TypeInstance> instanceClass = ((TypeInstance) newInstance).getClass();
+        TypeInstance typeInstance = (TypeInstance) newInstance;
+        Class<? extends TypeInstance> instanceClass = typeInstance.getClass();
         Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
         if (typeClass == null)
             return fallback.apply(address);
 
-        // Use the memory address constructor to create a new instance of the TypeClass
+        // Use the memory address constructor to create a new instance of the
+        // TypeClass
         ctor = Types.getAddressConstructor(typeClass);
         if (ctor == null)
             return fallback.apply(address);
@@ -207,59 +247,55 @@ public class InstanceCache {
      * sinked, and a toggle reference is installed.
      *
      * @param  address     the memory address of the native instance
-     * @param  newInstance the GObject instance
+     * @param  object the GObject instance
      * @return the cached GObject instance
      */
-    public static Proxy put(MemorySegment address, GObject newInstance) {
+    public static Proxy put(MemorySegment address, GObject object) {
         // Do not put a new instance if it already exists
-        if (strongReferences.containsKey(address) || weakReferences.containsKey(address))
-            return newInstance;
+        if (strongReferences.containsKey(address)
+                || weakReferences.containsKey(address))
+            return object;
 
         GLibLogger.debug("New %s %ld",
-                newInstance.getClass().getName(),
+                object.getClass().getName(),
                 address == null ? 0L : address.address());
 
         // Put the instance in the cache. If another thread did this (while we
         // were creating a new instance), putIfAbsent() will return that
         // instance.
-        Proxy existingInstance = strongReferences.putIfAbsent(address, newInstance);
+        Proxy existingInstance = strongReferences.putIfAbsent(address, object);
         if (existingInstance != null)
             return existingInstance;
 
         // Sink floating references
-        if (newInstance instanceof Floating floatingReference)
+        if (object instanceof Floating floatingReference)
             floatingReference.refSink();
-        else if (newInstance instanceof InitiallyUnowned floatingReference)
+        else if (object instanceof InitiallyUnowned floatingReference)
             floatingReference.refSink();
 
         // Setup a toggle ref
-        addToggleRef(newInstance);
-        newInstance.unref();
+        addToggleRef(object);
+        object.unref();
 
         // Register a cleaner that will remove the toggle reference
-        CLEANER.register(newInstance, new ToggleRefFinalizer(address));
+        CLEANER.register(object, new ToggleRefFinalizer(address));
 
         // Return the new instance.
-        return newInstance;
+        return object;
     }
 
     // Calls g_object_add_toggle_ref
     private static void addToggleRef(GObject object) {
         try {
-            g_object_add_toggle_ref.invokeExact(object.handle(), toggleNotifyUpcall, MemorySegment.NULL);
+            g_object_add_toggle_ref.invokeExact(
+                    object.handle(), toggle_notify, MemorySegment.NULL);
         } catch (Throwable _err) {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
     }
 
-    private static final MethodHandle g_object_add_toggle_ref = Interop.downcallHandle(
-            "g_object_add_toggle_ref",
-            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-            false
-    );
-
     // Callback function, triggered by the toggle-notify signal
-    private static void handleToggleNotify(MemorySegment data,
+    private static void handleToggleNotify(MemorySegment ignored,
                                            MemorySegment object,
                                            int isLastRef) {
         if (isLastRef != 0) {
@@ -275,25 +311,6 @@ public class InstanceCache {
         }
     }
 
-    // Upcall stub for handleToggleNotify()
-    private static final MemorySegment toggleNotifyUpcall = allocateToggleNotifyUpcall();
-
-    // Allocates the upcall stub for handleToggleNotify()
-    private static MemorySegment allocateToggleNotifyUpcall() {
-        FunctionDescriptor fdesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-                ValueLayout.ADDRESS, ValueLayout.JAVA_INT);
-        try {
-            var handle = MethodHandles.lookup().findStatic(
-                    InstanceCache.class,
-                    "handleToggleNotify",
-                    fdesc.toMethodType()
-            );
-            return Linker.nativeLinker().upcallStub(handle, fdesc, Arena.global());
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * This callback is run by the {@link Cleaner} when a
      * {@link org.gnome.gobject.GObject} instance has become unreachable, to
@@ -301,22 +318,19 @@ public class InstanceCache {
      *
      * @param address memory address of the object instance to be cleaned
      */
-    private record ToggleRefFinalizer(MemorySegment address) implements Runnable {
+    private record ToggleRefFinalizer(MemorySegment address)
+            implements Runnable {
 
         public void run() {
-            GLibLogger.debug("Unref %ld", address == null ? 0L : address.address());
+            GLibLogger.debug("Unref %ld",
+                    address == null ? 0L : address.address());
             try {
-                g_object_remove_toggle_ref.invokeExact(address, toggleNotifyUpcall, MemorySegment.NULL);
+                g_object_remove_toggle_ref.invokeExact(
+                        address, toggle_notify, MemorySegment.NULL);
             } catch (Throwable _err) {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
             InstanceCache.weakReferences.remove(address);
         }
     }
-
-    private static final MethodHandle g_object_remove_toggle_ref = Interop.downcallHandle(
-            "g_object_remove_toggle_ref",
-            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-            false
-    );
 }

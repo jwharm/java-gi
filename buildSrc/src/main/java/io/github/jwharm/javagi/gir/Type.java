@@ -63,15 +63,8 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName typeName() {
-        if (isGList()) {
-            var target = get();
-            ClassName rawType = toJavaQualifiedType(target.name(), target.namespace());
-            if (anyTypes().getFirst() instanceof Type t)
-                return ParameterizedTypeName.get(rawType, t.typeName());
-            else
-                // Fallback to pointer for a list of arrays
-                return ParameterizedTypeName.get(rawType, TypeName.get(MemorySegment.class));
-        }
+        if (isGList())
+            return glistTypeName();
 
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
@@ -84,12 +77,25 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         };
     }
 
+    private TypeName glistTypeName() {
+        var target = get();
+        var rawType = toJavaQualifiedType(target.name(), target.namespace());
+        if (anyTypes().getFirst() instanceof Type t) {
+            return ParameterizedTypeName.get(rawType, t.typeName());
+        } else {
+            // Fallback to pointer for a list of arrays
+            TypeName pointer = TypeName.get(MemorySegment.class);
+            return ParameterizedTypeName.get(rawType, pointer);
+        }
+    }
+
     public boolean isPrimitive() {
         String type = toJavaBaseType(name());
         if (type == null)
             return false;
 
-        return List.of("boolean", "byte", "char", "double", "float", "int", "long", "short")
+        return List.of("boolean", "byte", "char", "double", "float", "int",
+                        "long", "short")
                 .contains(type);
     }
 

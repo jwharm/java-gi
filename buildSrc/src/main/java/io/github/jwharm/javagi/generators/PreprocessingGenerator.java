@@ -54,7 +54,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         readOutParameter(builder);
     }
 
-    // Don't null-check parameters that are hidden from the Java API, or primitive values
+    /*
+     * Don't null-check parameters that are hidden from the Java API, or
+     * primitive values.
+     */
     private void nullCheck(MethodSpec.Builder builder) {
         if (p.notNull() &&
                 (! (p.isErrorParameter()
@@ -62,7 +65,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     || p.isDestroyNotifyParameter()
                     || p.isArrayLengthParameter()
                     || p.varargs()
-                    || (type != null && type.isPrimitive() && !type.isPointer())))) {
+                    || (type != null
+                        && type.isPrimitive()
+                        && !type.isPointer())))) {
             builder.addStatement("$T.requireNonNull($L, $S)",
                     Objects.class,
                     getName(),
@@ -106,12 +111,15 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         }
     }
 
-    // Declare a Java variable with the array length, so the length-parameter
-    // can be omitted from the Java API
+    /*
+     * Declare a Java variable with the array length, so the length-parameter
+     * can be omitted from the Java API.
+     */
     private void arrayLength(MethodSpec.Builder builder) {
         if (p.isArrayLengthParameter()) {
             if (p.isOutParameter()) {
-                // Set the initial value of the allocated pointer to the length of the input array
+                // Set the initial value of the allocated pointer to the length
+                // of the input array
                 if (p.isArrayLengthParameter() && p.isOutParameter()) {
                     var stmt = PartialStatement.of("_$name:LPointer.set($valueLayout:T.$layout:L, 0L,$W",
                                     "name", getName(),
@@ -169,7 +177,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             Arena.class,
                             getName())
                     .addStatement("final $1T _$2LDestroyNotify = $$ -> _$2LScope.close()",
-                            ClassName.get("org.gnome.glib", "DestroyNotify"),
+                            ClassNames.DESTROY_NOTIFY,
                             getName());
         else if (p.scope() == Scope.ASYNC && (!p.isDestroyNotifyParameter()))
             builder.addStatement("final $1T _$2LScope = $1T.ofConfined()",
@@ -183,7 +191,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // Read the value from a pointer to a primitive value and store it
     // in a Java Alias object
     private void readPrimitiveAliasPointer(MethodSpec.Builder builder) {
-        if (target instanceof Alias a && a.type().isPrimitive() && type.isPointer()) {
+        if (target instanceof Alias a
+                && a.type().isPrimitive()
+                && type.isPointer()) {
             String layout = getValueLayoutPlain(type);
             builder.addStatement("$1T $2LParam = $2L.reinterpret($3T.$4L.byteSize(), _arena, null)",
                     MemorySegment.class,
@@ -213,7 +223,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     ValueLayout.class,
                     layout);
 
-            if (type.isPrimitive() || target instanceof Alias a && a.type().isPrimitive()) {
+            if (type.isPrimitive()
+                    || target instanceof Alias a && a.type().isPrimitive()) {
                 builder.addStatement("$1T _$2LOut = new $3T<>($2LParam.get($4T.$5L, 0)$6L)",
                         getType(),
                         getName(),

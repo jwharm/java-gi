@@ -29,7 +29,9 @@ import java.util.Objects;
 
 public final class Alias extends Multiplatform implements RegisteredType {
 
-    public Alias(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Alias(Map<String, String> attributes,
+                 List<Node> children,
+                 int platforms) {
         super(attributes, children, platforms);
     }
 

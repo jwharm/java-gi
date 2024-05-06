@@ -23,9 +23,10 @@ import io.github.jwharm.javagi.base.ManagedInstance;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
 import java.util.AbstractSequentialList;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
@@ -110,6 +111,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                 last = last == null ? head : last.readNext();
                 index++;
                 direction = Direction.FORWARD;
+                if (last == null)
+                    throw new IllegalStateException();
                 return make.apply(last.readData());
             }
 
@@ -132,6 +135,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                 last = last.readPrev();
                 index--;
                 direction = Direction.BACKWARD;
+                if (last == null)
+                    throw new IllegalStateException();
                 return make.apply(last.readData());
             }
 
@@ -183,9 +188,9 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
     private MemorySegment getAddress(Object o) {
         return switch (o) {
             case MemorySegment m -> m;
-            case String s -> arena.allocateFrom(s);
-            case Proxy p -> p.handle();
-            default -> throw new IllegalArgumentException("Not a MemorySegment, String or Proxy");
+            case String s        -> arena.allocateFrom(s);
+            case Proxy p         -> p.handle();
+            default              -> throw new IllegalArgumentException("Not a MemorySegment, String or Proxy");
         };
     }
 
@@ -201,14 +206,14 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         return head == null ? MemorySegment.NULL : head.handle();
     }
 
-    public static class ListNode extends ManagedInstance {
+    private static class ListNode extends ManagedInstance {
 
         /**
          * Create a ListNode proxy instance for the provided memory address.
          *
          * @param address the memory address of the native object
          */
-        public ListNode(MemorySegment address) {
+        ListNode(MemorySegment address) {
             super(Interop.reinterpret(address, getMemoryLayout().byteSize()));
         }
 
@@ -216,7 +221,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
          * The memory layout of the native struct.
          * @return the memory layout
          */
-        public static MemoryLayout getMemoryLayout() {
+        static MemoryLayout getMemoryLayout() {
             return MemoryLayout.structLayout(
                     ValueLayout.ADDRESS.withName("data"),
                     ValueLayout.ADDRESS.withName("next"),
@@ -224,14 +229,37 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
             ).withName("GList");
         }
 
+        static VarHandle DATA = getMemoryLayout().varHandle(
+                MemoryLayout.PathElement.groupElement("data"));
+
+        static VarHandle NEXT = getMemoryLayout().varHandle(
+                MemoryLayout.PathElement.groupElement("next"));
+
+        static VarHandle PREV = getMemoryLayout().varHandle(
+                MemoryLayout.PathElement.groupElement("prev"));
+
+        static MethodHandle g_list_delete_link = Interop.downcallHandle(
+                "g_list_delete_link",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS), false);
+
+        static MethodHandle g_list_insert_before = Interop.downcallHandle(
+                "g_list_insert_before",
+                FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS), false);
+
+        static MethodHandle g_list_length = Interop.downcallHandle(
+                "g_list_length", FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS), false);
+
         /**
          * Read the value of the field {@code data}.
          *
          * @return The value of the field {@code data}
          */
-        public MemorySegment readData() {
-            return (MemorySegment) getMemoryLayout()
-                    .varHandle(MemoryLayout.PathElement.groupElement("data")).get(handle(), 0);
+        MemorySegment readData() {
+            return (MemorySegment) DATA.get(handle(), 0);
         }
 
         /**
@@ -239,9 +267,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @param data The new value for the field {@code data}
          */
-        public void writeData(MemorySegment data) {
-            getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("data"))
-                    .set(handle(), 0, (data == null ? MemorySegment.NULL : data));
+        void writeData(MemorySegment data) {
+            DATA.set(handle(), 0, (data == null ? MemorySegment.NULL : data));
         }
 
         /**
@@ -249,10 +276,10 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @return The value of the field {@code next}
          */
-        public ListNode readNext() {
-            var _result = (MemorySegment) getMemoryLayout()
-                    .varHandle(MemoryLayout.PathElement.groupElement("next")).get(handle(), 0);
-            return MemorySegment.NULL.equals(_result) ? null : new ListNode(_result);
+        ListNode readNext() {
+            var result = (MemorySegment) NEXT.get(handle(), 0);
+            return MemorySegment.NULL.equals(result)? null
+                    : new ListNode(result);
         }
 
         /**
@@ -260,10 +287,10 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @return The value of the field {@code prev}
          */
-        public ListNode readPrev() {
-            var _result = (MemorySegment) getMemoryLayout()
-                    .varHandle(MemoryLayout.PathElement.groupElement("prev")).get(handle(), 0);
-            return MemorySegment.NULL.equals(_result) ? null : new ListNode(_result);
+        ListNode readPrev() {
+            var result = (MemorySegment) PREV.get(handle(), 0);
+            return MemorySegment.NULL.equals(result) ? null
+                    : new ListNode(result);
         }
 
         /**
@@ -275,68 +302,64 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
          * @param  link node to delete from {@code list}
          * @return the (possibly changed) start of the {@code GList}
          */
-        public static ListNode deleteLink(ListNode list, ListNode link) {
-            MemorySegment _result;
+        static ListNode deleteLink(ListNode list, ListNode link) {
+            var listPtr = list == null ? MemorySegment.NULL : list.handle();
+            var linkPtr = link == null ? MemorySegment.NULL : link.handle();
             try {
-                FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.ADDRESS,
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-                _result = (MemorySegment) Interop.downcallHandle("g_list_delete_link", _fdesc, false)
-                        .invokeExact(
-                                (MemorySegment) (list == null ? MemorySegment.NULL : list.handle()),
-                                (MemorySegment) (link == null ? MemorySegment.NULL : link.handle()));
+                MemorySegment result = (MemorySegment) g_list_delete_link
+                        .invokeExact(listPtr, linkPtr);
+                return MemorySegment.NULL.equals(result) ? null
+                        : new ListNode(result);
             } catch (Throwable _err) {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
-            return MemorySegment.NULL.equals(_result) ? null : new ListNode(_result);
         }
 
         /**
          * Inserts a new element into the list before the given position.
          *
-         * @param  list    a pointer to a {@code GList}, this must point to the top of the list
-         * @param  sibling the list element before which the new element
-         *                 is inserted or {@code null} to insert at the end of the list
+         * @param  list    a pointer to a {@code GList}, this must point to the
+         *                 top of the list
+         * @param  sibling the list element before which the new element is
+         *                 inserted or {@code null} to insert at the end of the
+         *                 list
          * @param  data    the data for the new element
          * @return the (possibly changed) start of the {@code GList}
          */
-        public static ListNode insertBefore(ListNode list, ListNode sibling, @Nullable MemorySegment data) {
-            MemorySegment _result;
+        static ListNode insertBefore(ListNode list,
+                                            ListNode sibling,
+                                            MemorySegment data) {
+            var listPtr = list == null ? MemorySegment.NULL : list.handle();
+            var sbPtr = sibling == null ? MemorySegment.NULL : sibling.handle();
+            var dataPtr = data == null ? MemorySegment.NULL : data;
             try {
-                FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.ADDRESS,
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-                _result = (MemorySegment) Interop.downcallHandle("g_list_insert_before", _fdesc, false)
-                        .invokeExact(
-                                (MemorySegment) (list == null ? MemorySegment.NULL : list.handle()),
-                                (MemorySegment) (sibling == null ? MemorySegment.NULL : sibling.handle()),
-                                (MemorySegment) (data == null ? MemorySegment.NULL : data));
+                MemorySegment result = (MemorySegment) g_list_insert_before
+                        .invokeExact(listPtr, sbPtr, dataPtr);
+                return MemorySegment.NULL.equals(result) ? null
+                        : new ListNode(result);
             } catch (Throwable _err) {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
-            return MemorySegment.NULL.equals(_result) ? null : new ListNode(_result);
         }
 
         /**
          * Gets the number of elements in a {@code GList}.
          * <p>
-         * This function iterates over the whole list to count its elements.
-         * Use a {@code GQueue} instead of a GList if you regularly need the number
-         * of items. To check whether the list is non-empty, it is faster to check
-         * {@code list} against {@code null}.
+         * This function iterates over the whole list to count its elements. Use
+         * a {@code GQueue} instead of a GList if you regularly need the number
+         * of items. To check whether the list is non-empty, it is faster to
+         * check {@code list} against {@code null}.
          *
          * @param  list a {@code GList}, this must point to the top of the list
          * @return the number of elements in the {@code GList}
          */
-        public static int length(ListNode list) {
-            int _result;
+        static int length(ListNode list) {
+            var listPtr = list == null ? MemorySegment.NULL : list.handle();
             try {
-                FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
-                        ValueLayout.ADDRESS);
-                _result = (int) Interop.downcallHandle("g_list_length", _fdesc, false).invokeExact(
-                        (MemorySegment) (list == null ? MemorySegment.NULL : list.handle()));
+                return (int) g_list_length.invokeExact(listPtr);
             } catch (Throwable _err) {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
-            return _result;
         }
     }
 }

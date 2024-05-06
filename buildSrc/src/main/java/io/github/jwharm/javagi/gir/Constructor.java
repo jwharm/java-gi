@@ -25,7 +25,9 @@ import java.util.Objects;
 
 public final class Constructor extends Multiplatform implements Callable {
 
-    public Constructor(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Constructor(Map<String, String> attributes,
+                       List<Node> children,
+                       int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -39,7 +41,8 @@ public final class Constructor extends Multiplatform implements Callable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Constructor other = (Constructor) o;
-        return Objects.equals(callableAttrs().cIdentifier(), other.callableAttrs().cIdentifier());
+        return Objects.equals(callableAttrs().cIdentifier(),
+                              other.callableAttrs().cIdentifier());
     }
 
     @Override

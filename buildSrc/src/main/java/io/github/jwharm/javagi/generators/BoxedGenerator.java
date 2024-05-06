@@ -40,7 +40,8 @@ public class BoxedGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (boxed.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(boxed.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(boxed.infoElements().doc()).generate());
 
         if (boxed.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);

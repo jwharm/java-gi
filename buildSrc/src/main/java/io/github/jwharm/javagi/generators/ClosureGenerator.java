@@ -41,15 +41,18 @@ import java.util.Comparator;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
+import static java.util.Comparator.comparing;
 
 public class ClosureGenerator {
 
     private final Callable closure;
     private final CallableGenerator generator;
+    private final ReturnValue returnValue;
 
     public ClosureGenerator(Callable closure) {
         this.closure = closure;
         this.generator = new CallableGenerator(closure);
+        this.returnValue = closure.returnValue();
     }
 
     TypeSpec generateFunctionalInterface() {
@@ -82,7 +85,7 @@ public class ClosureGenerator {
     MethodSpec generateRunMethod() {
         MethodSpec.Builder run = MethodSpec.methodBuilder("run")
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .returns(new TypedValueGenerator(closure.returnValue()).getType());
+                .returns(new TypedValueGenerator(returnValue).getType());
 
         if (closure.deprecated())
             run.addAnnotation(Deprecated.class);
@@ -96,13 +99,13 @@ public class ClosureGenerator {
     }
 
     MethodSpec generateUpcallMethod(String methodName, String name, String methodToInvoke) {
-        boolean returnsVoid = closure.returnValue().anyType().isVoid();
+        boolean returnsVoid = returnValue.anyType().isVoid();
 
         // Method name and return type
         MethodSpec.Builder upcall = MethodSpec.methodBuilder(name)
                 .returns(returnsVoid
                         ? TypeName.VOID
-                        : getCarrierTypeName(closure.returnValue().anyType()));
+                        : getCarrierTypeName(returnValue.anyType()));
 
         // Javadoc
         if (methodToInvoke.equals("run"))
@@ -126,7 +129,8 @@ public class ClosureGenerator {
         // Add parameters (native carrier types)
         if (closure.parameters() != null)
             for (Parameter p : closure.parameters().parameters())
-                upcall.addParameter(getCarrierTypeName(p.anyType()), toJavaIdentifier(p.name()));
+                upcall.addParameter(getCarrierTypeName(p.anyType()),
+                                    toJavaIdentifier(p.name()));
 
         // GError** parameter
         if (closure.throws_())
@@ -143,16 +147,16 @@ public class ClosureGenerator {
          * arena and let the GC close it.
          */
         if (closure.allocatesMemory())
-            upcall.addStatement("$1T _arena = $1T.ofAuto()",
-                    Arena.class);
+            upcall.addStatement("$1T _arena = $1T.ofAuto()", Arena.class);
 
         // Parameter preprocessing
         if (closure.parameters() != null)
             closure.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length,
-                    // so they must be processed last.
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PreprocessingGenerator(p).generateUpcall(upcall));
+                    // Array parameters may refer to other parameters for their
+                    // length, so they must be processed last.
+                    .sorted(comparing(p -> p.anyType() instanceof Array))
+                    .map(PreprocessingGenerator::new)
+                    .forEach(p -> p.generateUpcall(upcall));
 
         // Try-block for exceptions
         if (closure.throws_())
@@ -164,14 +168,13 @@ public class ClosureGenerator {
             invoke.add("var _result = ");
             if (methodToInvoke.endsWith("invoke"))
                 invoke.add("(")
-                        .add("$ret:T",
-                                "ret", new TypedValueGenerator(closure.returnValue()).getType())
-                        .add(") ");
+                      .add("$ret:T", "ret", new TypedValueGenerator(returnValue).getType())
+                      .add(") ");
         }
         invoke.add(methodToInvoke)
-                .add("(")
-                .add(marshalParameters(methodToInvoke))
-                .add(");\n");
+              .add("(")
+              .add(marshalParameters(methodToInvoke))
+              .add(");\n");
         upcall.addNamedCode(invoke.format(), invoke.arguments());
 
         // Parameter postprocessing
@@ -181,20 +184,20 @@ public class ClosureGenerator {
 
         // Null-check the return value
         if ((!returnsVoid)
-                && getCarrierTypeName(closure.returnValue().anyType()).equals(TypeName.get(MemorySegment.class))
-                && (!closure.returnValue().notNull()))
+                && getCarrierTypeName(returnValue.anyType()).equals(TypeName.get(MemorySegment.class))
+                && (!returnValue.notNull()))
             upcall.addStatement("if (_result == null) return $T.NULL",
                     MemorySegment.class);
 
         // Ref returned GObjects when ownership is transferred to the caller
-        if (closure.returnValue().anyType() instanceof Type t && t.checkIsGObject()
-                && closure.returnValue().transferOwnership() == TransferOwnership.FULL)
+        if (returnValue.anyType() instanceof Type t && t.checkIsGObject()
+                && returnValue.transferOwnership() == TransferOwnership.FULL)
             upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
                     ClassNames.GOBJECT);
 
         // Marshal return value
         if (!returnsVoid) {
-            var stmt = new TypedValueGenerator(closure.returnValue())
+            var stmt = new TypedValueGenerator(returnValue)
                     .marshalJavaToNative("_result");
             upcall.addNamedCode("return " + stmt.format() + ";\n",
                     stmt.arguments());
@@ -212,7 +215,7 @@ public class ClosureGenerator {
                         ClassNames.GERROR_EXCEPTION);
             }
             upcall.addStatement("$1T _gerror = new $1T(_ge.getDomain(), _ge.getCode(), _ge.getMessage())",
-                    ClassName.get("org.gnome.glib", "GError"));
+                    ClassNames.GERROR);
             upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())",
                     ValueLayout.class);
             if (!returnsVoid)
@@ -227,11 +230,12 @@ public class ClosureGenerator {
 
         // Close try-catch block for reflection calls
         if (methodToInvoke.endsWith("invoke")) {
-            upcall.nextControlFlow("catch ($T ite)", InvocationTargetException.class);
+            upcall.nextControlFlow("catch ($T ite)",
+                    InvocationTargetException.class);
             upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, ite.getCause().toString() + $S + $L)",
-                    ClassName.get("org.gnome.glib", "GLib"),
+                    ClassNames.GLIB,
                     ClassNames.CONSTANTS,
-                    ClassName.get("org.gnome.glib", "LogLevelFlags"),
+                    ClassNames.LOG_LEVEL_FLAGS,
                     " in ",
                     methodName);
             if (!returnsVoid)
@@ -256,7 +260,9 @@ public class ClosureGenerator {
             Parameter p = parameters.get(i);
             boolean last = i == parameters.size() - 1;
 
-            if (p.isUserDataParameter() || p.isDestroyNotifyParameter() || p.isArrayLengthParameter())
+            if (p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter())
                 continue;
 
             if (!first)
@@ -276,22 +282,23 @@ public class ClosureGenerator {
                 continue;
             }
 
-            // Invoking a method using reflection calls Method.invoke() which is variadic.
-            // If the last parameter is an array, that will trigger a compiler warning,
-            // because it is unsure if the array should be treated as varargs or not
+            // Invoking a method using reflection calls Method.invoke() which is
+            // variadic. If the last parameter is an array, that will trigger a
+            // compiler warning, because it is unsure if the array should be
+            // treated as varargs or not.
             if (last && methodToInvoke.endsWith("invoke"))
                 if (p.anyType() instanceof Array
                         || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
                     stmt.add("($object:T) ", "object", Object.class);
 
             stmt.add(new TypedValueGenerator(p)
-                    .marshalNativeToJava(toJavaIdentifier(p.name()), true));
+                .marshalNativeToJava(toJavaIdentifier(p.name()), true));
         }
         return stmt;
     }
 
     private void returnNull(MethodSpec.Builder upcall) {
-        if (closure.returnValue().anyType() instanceof Type type) {
+        if (returnValue.anyType() instanceof Type type) {
             var target = type.get();
             if ((type.isPrimitive()
                         || target instanceof FlaggedType

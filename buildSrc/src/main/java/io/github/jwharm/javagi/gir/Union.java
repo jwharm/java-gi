@@ -34,7 +34,9 @@ public final class Union
         return (Namespace) super.parent();
     }
 
-    public Union(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Union(Map<String, String> attributes,
+                 List<Node> children,
+                 int platforms) {
         super(attributes, children, platforms);
     }
 

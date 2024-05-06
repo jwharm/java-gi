@@ -33,10 +33,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.util.Comparator;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
+import static java.util.Comparator.comparing;
 
 public class MethodGenerator {
 
@@ -74,8 +74,8 @@ public class MethodGenerator {
 
         if (func instanceof Method method) {
             vm = method.invokerFor();
-            // Sometimes the return value of the invoker is not the same.
-            // In that case we choose the one that isn't void.
+            // When the return value of the invoker is not the same, we choose
+            // the one that isn't void.
             if (vm != null && func.returnValue().anyType().isVoid())
                 returnValue = vm.returnValue();
             else
@@ -96,7 +96,8 @@ public class MethodGenerator {
                         modifiers)
                 .initializer(CodeBlock.builder()
                         .add("$T.downcallHandle($Z$S,$W",
-                                ClassNames.INTEROP, func.callableAttrs().cIdentifier())
+                                ClassNames.INTEROP,
+                                func.callableAttrs().cIdentifier())
                         .add(generator.generateFunctionDescriptor())
                         .add(",$W$L)", generator.varargs())
                         .build())
@@ -165,10 +166,11 @@ public class MethodGenerator {
         // Preprocessing
         if (func.parameters() != null)
             func.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length,
-                    // so they must be processed last.
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PreprocessingGenerator(p).generate(builder));
+                    // Array parameters may refer to other parameters for their
+                    // length, so they must be processed last.
+                    .sorted((comparing(p -> p.anyType() instanceof Array)))
+                    .map(PreprocessingGenerator::new)
+                    .forEach(p -> p.generate(builder));
 
         // Allocate GError
         if (func.callableAttrs().throws_())
@@ -188,7 +190,7 @@ public class MethodGenerator {
         if (vm != null && vm != func) {
             if (func.parent() instanceof Interface)
                 builder.beginControlFlow("if ((($T) this).callParent())",
-                        ClassName.get("org.gnome.gobject", "TypeInstance"));
+                        ClassNames.TYPE_INSTANCE);
             else
                 builder.beginControlFlow("if (callParent())");
             functionPointerInvocation();
@@ -219,8 +221,9 @@ public class MethodGenerator {
         if (func.parameters() != null)
             func.parameters().parameters().stream()
                     // Process Array parameters last
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PostprocessingGenerator(p).generate(builder));
+                    .sorted((comparing(p -> p.anyType() instanceof Array)))
+                    .map(PostprocessingGenerator::new)
+                    .forEach(p -> p.generate(builder));
 
         // Private static helper method for constructors return the result as-is
         if (func instanceof Constructor) {
@@ -229,7 +232,8 @@ public class MethodGenerator {
 
         // Marshal return value and handle ownership transfer
         else if (!returnValue.anyType().isVoid()) {
-            RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
+            RegisteredType target = returnValue.anyType() instanceof Type type
+                    ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
             PartialStatement stmt = PartialStatement.of("");
             if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
@@ -244,8 +248,9 @@ public class MethodGenerator {
                         .add(stmt).format() + ";\n", stmt.arguments())
                         .beginControlFlow("if (_object instanceof $T _gobject)",
                                 ClassNames.GOBJECT)
-                        .addStatement("$T.debug($S, _gobject.handle())",
-                                ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld")
+                        .addStatement("$T.debug($S, _gobject.handle().address())",
+                                ClassNames.GLIB_LOGGER,
+                                "Ref " + generator.getType() + " %ld")
                         .addStatement("_gobject.ref()")
                         .endControlFlow()
                         .addStatement("return _object");
