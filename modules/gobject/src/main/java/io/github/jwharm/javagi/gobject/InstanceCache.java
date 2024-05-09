@@ -64,7 +64,15 @@ public class InstanceCache {
                             ValueLayout.ADDRESS, ValueLayout.ADDRESS),
                     false);
 
+    private static final MethodHandle g_object_unref =
+            Interop.downcallHandle(
+                    "g_object_unref",
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                    false);
+
     private static final MemorySegment toggle_notify;
+
+    private static final Type GOBJECT = GObject.getType();
 
     static {
         GObjects.javagi$ensureInitialized();
@@ -148,8 +156,10 @@ public class InstanceCache {
             return null;
 
         // Cache GObjects
-        if (newInstance instanceof GObject gobject)
-            return cache ? put(address, gobject) : newInstance;
+        if (cache
+            && newInstance instanceof TypeInstance ti
+            && GObjects.typeCheckInstanceIsFundamentallyA(ti, GOBJECT))
+            return put(address, newInstance);
 
         return newInstance;
     }
@@ -236,8 +246,10 @@ public class InstanceCache {
             return null;
 
         // Cache GObjects
-        if (newInstance instanceof GObject gobject)
-            return cache ? put(address, gobject) : newInstance;
+        if (cache
+                && newInstance instanceof TypeInstance ti
+                && GObjects.typeCheckInstanceIsFundamentallyA(ti, GOBJECT))
+            return put(address, newInstance);
 
         return newInstance;
     }
@@ -250,7 +262,7 @@ public class InstanceCache {
      * @param  object the GObject instance
      * @return the cached GObject instance
      */
-    public static Proxy put(MemorySegment address, GObject object) {
+    public static Proxy put(MemorySegment address, Proxy object) {
         // Do not put a new instance if it already exists
         if (strongReferences.containsKey(address)
                 || weakReferences.containsKey(address))
@@ -275,7 +287,7 @@ public class InstanceCache {
 
         // Setup a toggle ref
         addToggleRef(object);
-        object.unref();
+        unref(object);
 
         // Register a cleaner that will remove the toggle reference
         CLEANER.register(object, new ToggleRefFinalizer(address));
@@ -285,10 +297,19 @@ public class InstanceCache {
     }
 
     // Calls g_object_add_toggle_ref
-    private static void addToggleRef(GObject object) {
+    private static void addToggleRef(Proxy object) {
         try {
             g_object_add_toggle_ref.invokeExact(
                     object.handle(), toggle_notify, MemorySegment.NULL);
+        } catch (Throwable _err) {
+            throw new AssertionError("Unexpected exception occurred: ", _err);
+        }
+    }
+
+    // Calls g_object_unref
+    private static void unref(Proxy object) {
+        try {
+            g_object_unref.invokeExact(object.handle());
         } catch (Throwable _err) {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }

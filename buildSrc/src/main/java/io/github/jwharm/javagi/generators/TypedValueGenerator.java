@@ -321,17 +321,6 @@ class TypedValueGenerator {
                     .add(")", targetTypeTag, type.typeName());
         }
 
-        if (target instanceof Class c && !c.checkIsGObject()) {
-            String impl = c.abstract_() ? "Impl" : "";
-            ClassName typeName = target.typeName();
-            if (c.abstract_())
-                typeName = typeName.nestedClass(target.name() + "Impl");
-            return PartialStatement.of(
-                    "$memorySegment:T.NULL.equals(" + identifier + ") ? null : new $" + targetTypeTag + impl + ":T(" + identifier + ")",
-                    "memorySegment", MemorySegment.class,
-                    targetTypeTag + impl, typeName);
-        }
-
         if ((target instanceof Record && (!isTypeClass))
                 || target instanceof Union
                 || target instanceof Boxed
