@@ -55,7 +55,9 @@ public sealed interface RegisteredType
     default boolean checkIsGObject() {
         return switch(this) {
             case Class c -> c.isInstanceOf("GObject", "Object");
-            case Interface _ -> true;
+            case Interface i -> i.prerequisites().stream()
+                                    .map(TypeReference::get)
+                                    .anyMatch(RegisteredType::checkIsGObject);
             case Alias a -> {
                 var target = a.type().get();
                 yield target != null && target.checkIsGObject();

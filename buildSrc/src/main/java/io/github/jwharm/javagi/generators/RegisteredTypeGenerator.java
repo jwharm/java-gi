@@ -146,11 +146,11 @@ public class RegisteredTypeGenerator {
         TypeSpec.Builder spec = TypeSpec.classBuilder(nested)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
-        if (rt instanceof Interface)
+        if (rt instanceof Interface i)
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
                             nested,
                             rt.typeName())
-                    .superclass(ClassNames.GOBJECT)
+                    .superclass(getInterfaceSuperclass(i))
                     .addSuperinterface(rt.typeName())
                     .addStaticBlock(staticBlock());
 
@@ -171,6 +171,15 @@ public class RegisteredTypeGenerator {
                         .addStatement("super(address)")
                         .build())
                 .build();
+    }
+
+    private TypeName getInterfaceSuperclass(Interface i) {
+        for (var prerequisite : i.prerequisites()) {
+            var target = prerequisite.get();
+            if (target instanceof Class)
+                return target.typeName();
+        }
+        return ClassNames.TYPE_INSTANCE;
     }
 
     public boolean hasDowncallHandles() {
