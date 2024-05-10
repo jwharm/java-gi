@@ -229,7 +229,7 @@ public class RegisteredTypeGenerator {
 
         // Look for instance methods named "free()" and "unref()"
         if (rt instanceof Class cls && cls.unrefFunc() != null) {
-            builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
+            builder.addStatement("$T.setFreeFunc(%L, %S)",
                     ClassNames.MEMORY_CLEANER,
                     identifier,
                     cls.unrefFunc());
@@ -240,7 +240,7 @@ public class RegisteredTypeGenerator {
             if (List.of("free", "unref").contains(method.name())
                     && method.parameters() == null
                     && (method.returnValue().anyType().isVoid())) {
-                builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
+                builder.addStatement("$T.setFreeFunc(%L, %S)",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
                         method.callableAttrs().cIdentifier());
@@ -249,17 +249,14 @@ public class RegisteredTypeGenerator {
         }
 
         // Boxed types
-        if (rt.getTypeFunc() != null) {
-            builder.addStatement("$T.setFreeFunc($L.handle(), $S)",
-                    ClassNames.MEMORY_CLEANER,
-                    identifier,
-                    "g_boxed_free");
+        if ((rt instanceof Record || rt instanceof Boxed || rt instanceof Union)
+                && rt.getTypeFunc() != null) {
             if (className == null)
-                builder.addStatement("$T.setBoxedType($L.handle(), getType())",
+                builder.addStatement("$T.setBoxedType($L, getType())",
                         ClassNames.MEMORY_CLEANER,
                         identifier);
             else
-                builder.addStatement("$T.setBoxedType($L.handle(), $T.getType())",
+                builder.addStatement("$T.setBoxedType($L, $T.getType())",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
                         className);

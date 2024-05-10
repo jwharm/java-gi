@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;

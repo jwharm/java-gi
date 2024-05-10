@@ -203,10 +203,9 @@ public class MethodGenerator {
             functionNameInvocation();
         }
 
-        // Catch function invocation exceptions
+        // Wrap function invocation exceptions into runtime AssertionErrors
         builder.nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)",
-                        "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow();
 
         // Throw GErrorException
@@ -257,15 +256,21 @@ public class MethodGenerator {
             }
 
             // Add cleaner to struct/union pointer
-            else if (target instanceof Record record && (! List.of(
-                    "org.gnome.gobject.TypeInstance",
-                    "org.gnome.gobject.TypeClass",
-                    "org.gnome.gobject.TypeInterface").contains(target.javaType()))) {
+            else if (((target instanceof Record record && !record.foreign())
+                        || target instanceof Boxed
+                        || target instanceof Union)
+                    && returnValue.transferOwnership() == TransferOwnership.FULL
+                    && (!List.of("org.gnome.gobject.TypeInstance",
+                                 "org.gnome.gobject.TypeClass",
+                                 "org.gnome.gobject.TypeInterface")
+                            .contains(target.javaType()))) {
                 builder.addNamedCode(PartialStatement.of("var _instance = ")
                         .add(stmt).add(";\n").format(), stmt.arguments())
                         .beginControlFlow("if (_instance != null)")
-                        .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
-                new RecordGenerator(record).setFreeFunc(builder, "_instance", target.typeName());
+                        .addStatement("$T.takeOwnership(_instance)",
+                                ClassNames.MEMORY_CLEANER);
+                new RegisteredTypeGenerator(target)
+                        .setFreeFunc(builder, "_instance", target.typeName());
                 builder.endControlFlow()
                         .addStatement("return _instance");
             }

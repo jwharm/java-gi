@@ -45,8 +45,6 @@ public class JavaClosure extends Closure {
         super(address);
         ref();
         sink();
-        MemoryCleaner.setFreeFunc(handle(), "g_closure_unref");
-        MemoryCleaner.takeOwnership(handle());
     }
 
     /**
@@ -94,37 +92,32 @@ public class JavaClosure extends Closure {
      * implements a functional interface. A functional interface is an interface
      * with exactly one abstract method.
      *
-     * @param  functionalInterfaceClass a functional interface
+     * @param  cls a functional interface
      * @return the Method reference to the method that implements the SAM
-     * @throws IllegalArgumentException if {@code functionalInterfaceClass} is
-     *                                  not a functional interface
+     * @throws IllegalArgumentException if {@code cls} is not a functional
+     *                                  interface
      */
-    public static Method getSingleMethod(Class<?> functionalInterfaceClass)
+    public static Method getSingleMethod(Class<?> cls)
             throws IllegalArgumentException {
-        // Check if the class is not an enum or array
-        if (functionalInterfaceClass.isEnum()
-                || functionalInterfaceClass.isArray()) {
-            throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface");
-        }
 
-        // Loop through all declared methods
+        if (cls.isEnum() || cls.isArray())
+            throw new IllegalArgumentException(cls + " is not a functional interface");
+
         Method samMethod = null;
-        for (Method method : functionalInterfaceClass.getDeclaredMethods()) {
-            // Check if the method is not static
-            if (Modifier.isStatic(method.getModifiers())) {
+        for (Method method : cls.getDeclaredMethods()) {
+            if (Modifier.isStatic(method.getModifiers()))
                 continue;
-            }
+
             // If there is more than one SAM, return null (ambiguous)
-            if (samMethod != null) {
-                throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface: more than one method found.");
-            }
+            if (samMethod != null)
+                throw new IllegalArgumentException(cls + " is not a functional interface: more than one method found.");
+
             samMethod = method;
         }
-
         // Check that a SAM exists
-        if (samMethod == null) {
-            throw new IllegalArgumentException(functionalInterfaceClass + " is not a functional interface: method not found.");
-        }
+        if (samMethod == null)
+            throw new IllegalArgumentException(cls + " is not a functional interface: method not found.");
+
         return samMethod;
     }
 

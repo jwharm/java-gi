@@ -152,8 +152,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
             builder.addStatement(
                     checkNull()
-                            ? "if ($1L != null) $2T.yieldOwnership($1L.handle())"
-                            : "$2T.yieldOwnership($1L.handle())",
+                            ? "if ($1L != null) $2T.yieldOwnership($1L)"
+                            : "$2T.yieldOwnership($1L)",
                     getName(),
                     ClassNames.MEMORY_CLEANER);
         }

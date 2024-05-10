@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -37,7 +36,6 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Comparator;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.*;

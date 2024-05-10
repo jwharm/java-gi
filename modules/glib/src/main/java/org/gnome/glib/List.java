@@ -19,8 +19,8 @@
 
 package org.gnome.glib;
 
-import io.github.jwharm.javagi.base.ManagedInstance;
 import io.github.jwharm.javagi.base.Proxy;
+import io.github.jwharm.javagi.base.ProxyInstance;
 import io.github.jwharm.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
 
@@ -180,11 +180,28 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         };
     }
 
+    /**
+     * Retrieve the size of the list. This is an expensive operation for
+     * long lists, because the entire length must be traversed.
+     *
+     * @return the length of the list
+     */
     @Override
     public int size() {
         return ListNode.length(head);
     }
 
+    /**
+     * Checks if the list has no elements (the head of the list is
+     * {@code null}).
+     *
+     * @return whether the list is empty
+     */
+    @Override
+    public boolean isEmpty() {
+        return head == null;
+    }
+    
     private MemorySegment getAddress(Object o) {
         return switch (o) {
             case MemorySegment m -> m;
@@ -206,7 +223,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         return head == null ? MemorySegment.NULL : head.handle();
     }
 
-    private static class ListNode extends ManagedInstance {
+    private static class ListNode extends ProxyInstance {
 
         /**
          * Create a ListNode proxy instance for the provided memory address.
@@ -311,7 +328,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                 return MemorySegment.NULL.equals(result) ? null
                         : new ListNode(result);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
 
@@ -338,7 +355,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                 return MemorySegment.NULL.equals(result) ? null
                         : new ListNode(result);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
 
@@ -358,7 +375,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
             try {
                 return (int) g_list_length.invokeExact(listPtr);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
     }

@@ -21,8 +21,6 @@ package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -35,6 +33,7 @@ import javax.lang.model.element.Modifier;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 
 public class RecordGenerator extends RegisteredTypeGenerator {
 
@@ -90,11 +89,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     builder.superclass(parentRec.typeName());
                 }
             }
-        } else if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
-                .contains(rec.cType())) {
-            builder.superclass(ClassNames.PROXY_INSTANCE);
         } else {
-            builder.superclass(ClassNames.MANAGED_INSTANCE);
+            builder.superclass(ClassNames.PROXY_INSTANCE);
         }
 
         if (rec.isFloating())
@@ -318,7 +314,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         String paramTypes = rec.fields().stream()
                 .filter(not(Field::isDisguised))
                 .map(f -> new TypedValueGenerator(f).getType().toString() + ", ")
-                .collect(Collectors.joining());
+                .collect(joining());
         spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2L$3T)}\n",
                         rec.typeName(), paramTypes, Arena.class)
                         .addAnnotation(Deprecated.class);
@@ -336,7 +332,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         String params = rec.fields().stream()
                 .filter(not(Field::isDisguised))
                 .map(f -> toJavaIdentifier(f.name()) + ", ")
-                .collect(Collectors.joining());
+                .collect(joining());
 
         return spec.addStatement("return new $T($Larena)", rec.typeName(), params)
                 .build();

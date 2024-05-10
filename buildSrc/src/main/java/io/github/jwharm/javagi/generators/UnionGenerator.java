@@ -49,7 +49,7 @@ public class UnionGenerator extends RegisteredTypeGenerator {
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)
-                .superclass(ClassNames.MANAGED_INSTANCE)
+                .superclass(ClassNames.PROXY_INSTANCE)
                 .addStaticBlock(staticBlock())
                 .addMethod(memoryAddressConstructor());
 

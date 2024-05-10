@@ -169,7 +169,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     && m.parameters().instanceParameter() != null
                     && m.parameters().parameters().isEmpty()
                     && (m.returnValue().anyType().isVoid())) {
-                spec.addStatement("$T.setFreeFunc(handle(), $S)",
+                spec.addStatement("$T.setFreeFunc(this, $S)",
                         ClassNames.MEMORY_CLEANER,
                         m.callableAttrs().cIdentifier());
                 break;

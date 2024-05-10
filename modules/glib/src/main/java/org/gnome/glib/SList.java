@@ -19,8 +19,8 @@
 
 package org.gnome.glib;
 
-import io.github.jwharm.javagi.base.ManagedInstance;
 import io.github.jwharm.javagi.base.Proxy;
+import io.github.jwharm.javagi.base.ProxyInstance;
 import io.github.jwharm.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
 
@@ -240,7 +240,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     /**
      * Represents a GLib.SList instance in native memory
      */
-    private static class SListNode extends ManagedInstance {
+    private static class SListNode extends ProxyInstance {
 
         /**
          * Create a SListNode proxy instance for the provided memory address.
@@ -335,7 +335,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 return MemorySegment.NULL.equals(result) ? null
                         : new SListNode(result);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
 
@@ -359,7 +359,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 return MemorySegment.NULL.equals(result) ? null
                         : new SListNode(result);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
 
@@ -378,7 +378,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
             try {
                 return (int) g_slist_length.invokeExact(listPtr);
             } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+                throw new AssertionError(_err);
             }
         }
     }

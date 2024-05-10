@@ -101,7 +101,7 @@ public class ConstructorGenerator {
 
         // Add cleaner to struct/union pointer
         else {
-            builder.addStatement("$T.takeOwnership(handle())",
+            builder.addStatement("$T.takeOwnership(this)",
                             ClassNames.MEMORY_CLEANER);
             new RegisteredTypeGenerator(parent).setFreeFunc(
                     builder,
@@ -182,23 +182,23 @@ public class ConstructorGenerator {
                             stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
                     .addStatement("_instance.refSink()")
-                    .addStatement("$T.takeOwnership(_instance.handle())",
+                    .addStatement("$T.takeOwnership(_instance)",
                             ClassNames.MEMORY_CLEANER)
-                    .addStatement("$T.setFreeFunc(_instance.handle(), $S)",
+                    .addStatement("$T.setFreeFunc(_instance, $S)",
                             ClassNames.MEMORY_CLEANER, "g_variant_unref")
                     .endControlFlow()
                     .addStatement("return ($T) _instance", parent.typeName());
         }
 
-        // Add cleaner to struct/union pointer
-        else if (! parent.checkIsGObject()) {
+        // Add cleaner to struct/union pointers and non-GObject TypeInstances
+        else {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
                                     .add(stmt)
                                     .add(";\n")
                                     .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
-                    .addStatement("$T.takeOwnership(_instance.handle())",
+                    .addStatement("$T.takeOwnership(_instance)",
                             ClassNames.MEMORY_CLEANER);
 
             new RegisteredTypeGenerator(parent)
@@ -206,15 +206,6 @@ public class ConstructorGenerator {
 
             builder.endControlFlow()
                    .addStatement("return ($T) _instance", returnType);
-        }
-
-        // No ownership transfer, just marshal the return value
-        else {
-            stmt = PartialStatement.of("return ($parentType:T) ",
-                            "parentType", returnType)
-                    .add(stmt)
-                    .add(";\n");
-            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
 
         return builder.build();

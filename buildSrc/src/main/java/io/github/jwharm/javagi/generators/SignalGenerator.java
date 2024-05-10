@@ -101,7 +101,7 @@ public class SignalGenerator {
                         MemorySegment.class)
                 .addStatement("return new SignalConnection<>(handle(), _result, _callbackArena)")
                 .nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()
                 .endControlFlow()
                 .build();
@@ -227,8 +227,7 @@ public class SignalGenerator {
 
         // Log exceptions
         return builder.nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)",
-                        "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()
                 .build();
     }
