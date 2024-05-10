@@ -295,7 +295,9 @@ class TypedValueGenerator {
 
         if (target instanceof Bitfield bitfield)
             return PartialStatement.of(
-                    "$interop:T.intToEnumSet($" + targetTypeTag + ":T.class, " + identifier + ")",
+                    "$interop:T.intToEnumSet($" + targetTypeTag + ":T.class, "
+                            + "$" + targetTypeTag + ":T::of, "
+                            + identifier + ")",
                     "interop", ClassNames.INTEROP,
                     targetTypeTag, bitfield.typeName());
 

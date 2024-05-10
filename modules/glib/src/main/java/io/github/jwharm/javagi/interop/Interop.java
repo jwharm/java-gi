@@ -1023,24 +1023,15 @@ public class Interop {
      * @return an EnumSet containing the enum values as set in the bitfield
      */
     public static <T extends Enum<T> & Enumeration>
-    EnumSet<T> intToEnumSet(Class<T> cls, int bitfield) {
-        try {
-            int flags = bitfield;
-            EnumSet<T> enumSet = EnumSet.noneOf(cls);
-            MethodType mt = MethodType.methodType(cls, int.class);
-            MethodHandle enumOf = MethodHandles.lookup()
-                                               .findStatic(cls, "of", mt);
-            while (flags != 0) {
-                int flag = Integer.numberOfTrailingZeros(flags);
-                    @SuppressWarnings("unchecked")
-                    T enumValue = (T) enumOf.invokeExact(flag);
-                    enumSet.add(enumValue);
-                flags -= Integer.lowestOneBit(flags);
-            }
-            return enumSet;
-        } catch (Throwable err) {
-            throw new AssertionError("Unexpected exception occurred: ", err);
+    EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
+        int flags = bitfield;
+        EnumSet<T> enumSet = EnumSet.noneOf(cls);
+        while (flags != 0) {
+            int flag = Integer.numberOfTrailingZeros(flags);
+            enumSet.add(make.apply(flag));
+            flags -= Integer.lowestOneBit(flags);
         }
+        return enumSet;
     }
 
     /**
