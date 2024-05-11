@@ -627,12 +627,8 @@ class TypedValueGenerator {
     FieldSpec generateConstantDeclaration() {
         final String value = ((Constant) v).value();
         try {
-            TypeName typeName = target != null
-                    ? target.typeName()
-                    : type.typeName();
-
             var builder = FieldSpec.builder(
-                    typeName,
+                    getType(true),
                     toJavaConstant(v.name()),
                     Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
             );
@@ -646,13 +642,12 @@ class TypedValueGenerator {
                         a.typeName(),
                         literal(a.type().typeName(), value));
             else if (target instanceof FlaggedType)
-                builder.initializer("$T.of($L)",
-                        target.typeName(),
-                        literal(TypeName.INT, value));
+                builder.initializer(
+                        marshalNativeToJava(literal(TypeName.INT, value), false)
+                                .toCodeBlock());
             else
                 builder.initializer(
-                        literal(type.typeName(), value)
-                                .replace("$", "$$"));
+                        literal(type.typeName(), value).replace("$", "$$"));
 
             return builder.build();
 

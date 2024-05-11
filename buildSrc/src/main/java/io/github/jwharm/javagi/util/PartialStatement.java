@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.util;
 
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
 import java.util.HashMap;
@@ -82,5 +83,11 @@ public final class PartialStatement {
 
     public Map<String, Object> arguments() {
         return arguments;
+    }
+
+    public CodeBlock toCodeBlock() {
+        return CodeBlock.builder()
+                .addNamed(format(), arguments())
+                .build();
     }
 }
