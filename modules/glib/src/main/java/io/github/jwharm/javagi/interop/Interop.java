@@ -1024,12 +1024,14 @@ public class Interop {
      */
     public static <T extends Enum<T> & Enumeration>
     EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
-        int flags = bitfield;
+        int n = bitfield;
         EnumSet<T> enumSet = EnumSet.noneOf(cls);
-        while (flags != 0) {
-            int flag = Integer.numberOfTrailingZeros(flags);
-            enumSet.add(make.apply(flag));
-            flags -= Integer.lowestOneBit(flags);
+        int position = 0;
+        while (n != 0) {
+            if ((n & 1) == 1)
+                enumSet.add(make.apply(1 << position));
+            position++;
+            n >>= 1;
         }
         return enumSet;
     }
