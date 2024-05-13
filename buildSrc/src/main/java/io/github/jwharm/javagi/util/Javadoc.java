@@ -50,8 +50,8 @@ public class Javadoc {
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+?)\\n+"
             + "|(?m)^(?<container>:::\\s.+)\\n*"
             + "|(?m)^\\s*(?<bulletpoint>[-*])\\s"
-            + "|(?<strong>\\*\\*.*?\\w\\*\\*)"
-            + "|(?<em>\\*.*?\\w\\*)"
+            + "|(?<strong>\\s(?<strongcontent>\\*\\*\\w+?\\*\\*)\\s)"
+            + "|(?<em>\\s(?<emcontent>\\*\\w+?\\*)\\s)"
             + "|(?<entity>[<>&])"
             + "|(?<p>\\n{2,})"
     ;
@@ -159,8 +159,10 @@ public class Javadoc {
                                                 m.group("headerlevel"));
             case "container"   -> convertContainer(m.group());
             case "bulletpoint" -> convertBulletpoint(m.group());
-            case "strong"      -> convertStrong(m.group());
-            case "em"          -> convertEm(m.group());
+            case "strong"      -> convertStrong(m.group(),
+                                                m.group("strongcontent"));
+            case "em"          -> convertEm(m.group(),
+                                            m.group("emcontent"));
             case "entity"      -> convertEntity(m.group());
             case "p"           -> convertP(m.group());
             
@@ -365,13 +367,13 @@ public class Javadoc {
     }
 
     // Replace **text** with <strong>text</strong>
-    private String convertStrong(String text) {
-        return "<strong>" + text.substring(2, text.length() - 2) + "</strong>";
+    private String convertStrong(String match, String text) {
+        return " <strong>" + text.substring(2, text.length() - 2) + "</strong> ";
     }
 
     // Replace *text* with <em>text</em>
-    private String convertEm(String text) {
-        return "<em>" + text.substring(1, text.length() - 1) + "</em>";
+    private String convertEm(String match, String text) {
+        return " <em>" + text.substring(1, text.length() - 1) + "</em> ";
     }
 
     // Replace <, > and & with &lt;, &gt; and &amp;
