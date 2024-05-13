@@ -20,7 +20,7 @@ jobs:
           python-version: '3.x'
 
       - name: Setup MkDocs
-        run: pip3 install mkdocs
+        run: pip3 install mkdocs mkdocs-material
 
       - name: Setup Java
         uses: actions/setup-java@v4
