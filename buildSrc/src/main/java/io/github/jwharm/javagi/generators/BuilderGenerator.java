@@ -52,7 +52,7 @@ public class BuilderGenerator {
         return MethodSpec.methodBuilder("builder")
                 .addJavadoc("""
                         A {@link Builder} object constructs a {@code $L}
-                        using the <em>builder pattern</em> to set property values.
+                        with the specified properties.
                         Use the various {@code set...()} methods to set properties,
                         and finish construction with {@link Builder#build()}.
                         """, rt.typeName().simpleName())
