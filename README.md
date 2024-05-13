@@ -1,28 +1,24 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Panama Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 442, currently in preview status) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.9.1 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 45:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the new [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.10 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 46:
 
-| Library       | Java-GI 0.7.x | Java-GI 0.8.x and 0.9.x |
-|---------------|---------------|-------------------------|
-| OpenJDK       | 20            | 21                      |
-| GLib          | 2.76          | 2.78                    |
-| GTK           | 4.10          | 4.12                    |
-| LibAdwaita    | 1.3           | 1.4                     |
-| GStreamer     | 1.20          | 1.22                    |
-| GtkSourceview | 5.9           | 5.10                    |
-| WebkitGtk     | 2.41          | 2.42                    |
-
-**A new release, based on OpenJDK 22 and GNOME 46, is currently (april 2024) under development.**
+| Library       | Java-GI 0.10.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.7.x |
+|---------------|----------------|-------------------------|---------------|
+| OpenJDK       | 22             | 21                      | 20            |
+| GLib          | 2.80           | 2.78                    | 2.76          |
+| GTK           | 4.14           | 4.12                    | 4.10          |
+| LibAdwaita    | 1.5            | 1.4                     | 1.3           |
+| GStreamer     | 1.22           | 1.22                    | 1.20          |
+| GtkSourceview | 5.12           | 5.10                    | 5.9           |
+| WebkitGtk     | 2.44           | 2.42                    | 2.41          |
 
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
 [For more information, visit the Java-GI website.](https://jwharm.github.io/java-gi/)
 
-## Quickstart
+## Usage
 
-- To use Java-GI in your app, add the dependency to your `gradle.build` or `pom.xml` as described [here](https://jwharm.github.io/java-gi/usage). Furthermore, you must set the Java language version to 21, and, while the Panama foreign function API is still in preview status, set the `--enable-preview` option to the compile and execution tasks. See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
-
-- Write, compile and run a GTK application:
+Let's write a small "Hello World" GTK application:
 
 ```java
 import org.gnome.gtk.*;
@@ -60,6 +56,18 @@ public class HelloWorld {
         window.setChild(box);
         window.present();
     }
+}
+```
+
+Add the Gtk dependency to your build script, for example with Gradle:
+
+```groovy
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.github.jwharm.javagi:gtk:0.10.0'
 }
 ```
 
@@ -116,7 +124,7 @@ Interfaces are mapped to Java interfaces, using `default` interface methods to c
 
 Type aliases (`typedef`s in C) for classes, records and interfaces are represented in Java with a subclass of the original type. Aliases for primitive types such as `int` or `float` are represented by simple wrapper classes.
 
-Enumeration types are represented as Java `enum` types.
+Enumerations are represented as Java `enum` types, and flag parameters are mapped to `EnumSet`.
 
 Most classes have one or more constructors. However, constructors in GTK are often overloaded, and the name contains valuable information for the user. Java-GI therefore maps constructors named "new" to regular Java constructors, and generates static factory methods for all other constructors:
 

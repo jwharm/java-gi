@@ -26,7 +26,7 @@ var p2 = new Point(20, 10, Arena.ofAuto());
 var p3 = new Point(30, 10);
 // defaults to Arena.ofAuto()
 
-var p4 = new Point(40, 10, Arena.ofGlobal());
+var p4 = new Point(40, 10, Arena.global());
 // memory will be allocated during the entire application runtime
 ```
 
