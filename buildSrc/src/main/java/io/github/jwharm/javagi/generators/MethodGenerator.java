@@ -19,9 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -34,10 +32,11 @@ import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.util.Comparator;
+import java.lang.invoke.MethodHandle;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
+import static java.util.Comparator.comparing;
 
 public class MethodGenerator {
 
@@ -52,22 +51,31 @@ public class MethodGenerator {
         this(func, getName(func));
     }
 
-    private static String getName(Callable func) {
+    public static String getName(Callable func) {
         String name = toJavaIdentifier(func.name());
         return func.parent() instanceof Interface
                 ? replaceJavaObjectMethodNames(name)
                 : name;
     }
 
+    public static boolean isGeneric(Callable func) {
+        return switch(func.parent()) {
+            case Class c -> c.generic();
+            case Record r -> r.generic();
+            default -> false;
+        };
+    }
+
     public MethodGenerator(Callable func, String name) {
         this.func = func;
         this.builder = MethodSpec.methodBuilder(name);
         this.generator = new CallableGenerator(func);
+        this.generic = isGeneric(func);
 
         if (func instanceof Method method) {
             vm = method.invokerFor();
-            // Sometimes the return value of the invoker is not the same.
-            // In that case we choose the one that isn't void.
+            // When the return value of the invoker is not the same, we choose
+            // the one that isn't void.
             if (vm != null && func.returnValue().anyType().isVoid())
                 returnValue = vm.returnValue();
             else
@@ -79,17 +87,27 @@ public class MethodGenerator {
             vm = null;
             returnValue = func.returnValue();
         }
+    }
 
-        generic = switch(func.parent()) {
-            case Class c -> c.generic();
-            case Record r -> r.generic();
-            default -> false;
-        };
+    public FieldSpec generateNamedDowncallHandle(Modifier... modifiers) {
+        return FieldSpec.builder(
+                        MethodHandle.class,
+                        func.callableAttrs().cIdentifier(),
+                        modifiers)
+                .initializer(CodeBlock.builder()
+                        .add("$T.downcallHandle($Z$S,$W",
+                                ClassNames.INTEROP,
+                                func.callableAttrs().cIdentifier())
+                        .add(generator.generateFunctionDescriptor())
+                        .add(",$W$L)", generator.varargs())
+                        .build())
+                .build();
     }
 
     public MethodSpec generate() {
         // Javadoc
-        if (func.infoElements().doc() != null) {
+        if ((! (func instanceof Constructor)) // not for private constructor helper methods
+                && (func.infoElements().doc() != null)) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
             if (func instanceof Multiplatform mp && mp.doPlatformCheck())
                 builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
@@ -128,7 +146,7 @@ public class MethodGenerator {
             builder.returns(new TypedValueGenerator(returnValue).getType());
 
         // Parameters
-        generator.generateMethodParameters(builder, generic);
+        generator.generateMethodParameters(builder, generic, true);
 
         // Exception
         if (func.callableAttrs().throws_())
@@ -148,10 +166,11 @@ public class MethodGenerator {
         // Preprocessing
         if (func.parameters() != null)
             func.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length,
-                    // so they must be processed last.
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PreprocessingGenerator(p).generate(builder));
+                    // Array parameters may refer to other parameters for their
+                    // length, so they must be processed last.
+                    .sorted((comparing(p -> p.anyType() instanceof Array)))
+                    .map(PreprocessingGenerator::new)
+                    .forEach(p -> p.generate(builder));
 
         // Allocate GError
         if (func.callableAttrs().throws_())
@@ -171,7 +190,7 @@ public class MethodGenerator {
         if (vm != null && vm != func) {
             if (func.parent() instanceof Interface)
                 builder.beginControlFlow("if ((($T) this).callParent())",
-                        ClassName.get("org.gnome.gobject", "TypeInstance"));
+                        ClassNames.TYPE_INSTANCE);
             else
                 builder.beginControlFlow("if (callParent())");
             functionPointerInvocation();
@@ -184,10 +203,9 @@ public class MethodGenerator {
             functionNameInvocation();
         }
 
-        // Catch function invocation exceptions
+        // Wrap function invocation exceptions into runtime AssertionErrors
         builder.nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)",
-                        "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow();
 
         // Throw GErrorException
@@ -202,8 +220,9 @@ public class MethodGenerator {
         if (func.parameters() != null)
             func.parameters().parameters().stream()
                     // Process Array parameters last
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PostprocessingGenerator(p).generate(builder));
+                    .sorted((comparing(p -> p.anyType() instanceof Array)))
+                    .map(PostprocessingGenerator::new)
+                    .forEach(p -> p.generate(builder));
 
         // Private static helper method for constructors return the result as-is
         if (func instanceof Constructor) {
@@ -212,7 +231,8 @@ public class MethodGenerator {
 
         // Marshal return value and handle ownership transfer
         else if (!returnValue.anyType().isVoid()) {
-            RegisteredType target = returnValue.anyType() instanceof Type type ? type.get() : null;
+            RegisteredType target = returnValue.anyType() instanceof Type type
+                    ? type.get() : null;
             var generator = new TypedValueGenerator(returnValue);
             PartialStatement stmt = PartialStatement.of("");
             if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
@@ -223,32 +243,42 @@ public class MethodGenerator {
             if (target != null && target.checkIsGObject()
                     && returnValue.transferOwnership() == TransferOwnership.NONE
                     && (! "ref".equals(func.name()))) {
-                builder.addNamedCode(PartialStatement.of("var _object = ").add(stmt).format() + ";\n", stmt.arguments())
+                builder.addNamedCode(PartialStatement.of("var _object = ")
+                        .add(stmt).format() + ";\n", stmt.arguments())
                         .beginControlFlow("if (_object instanceof $T _gobject)",
-                                ClassName.get("org.gnome.gobject", "GObject"))
-                        .addStatement("$T.debug($S, _gobject.handle())",
-                                ClassNames.GLIB_LOGGER, "Ref " + generator.getType() + " %ld\\n")
+                                ClassNames.GOBJECT)
+                        .addStatement("$T.debug($S, _gobject.handle().address())",
+                                ClassNames.GLIB_LOGGER,
+                                "Ref " + generator.getType() + " %ld")
                         .addStatement("_gobject.ref()")
                         .endControlFlow()
                         .addStatement("return _object");
             }
 
             // Add cleaner to struct/union pointer
-            else if (target instanceof Record record && (! List.of(
-                    "org.gnome.gobject.TypeInstance",
-                    "org.gnome.gobject.TypeClass",
-                    "org.gnome.gobject.TypeInterface").contains(target.javaType()))) {
-                builder.addNamedCode(PartialStatement.of("var _instance = ").add(stmt).add(";\n").format(), stmt.arguments())
+            else if (((target instanceof Record record && !record.foreign())
+                        || target instanceof Boxed
+                        || target instanceof Union)
+                    && returnValue.transferOwnership() == TransferOwnership.FULL
+                    && (!List.of("org.gnome.gobject.TypeInstance",
+                                 "org.gnome.gobject.TypeClass",
+                                 "org.gnome.gobject.TypeInterface")
+                            .contains(target.javaType()))) {
+                builder.addNamedCode(PartialStatement.of("var _instance = ")
+                        .add(stmt).add(";\n").format(), stmt.arguments())
                         .beginControlFlow("if (_instance != null)")
-                        .addStatement("$T.takeOwnership(_instance.handle())", ClassNames.MEMORY_CLEANER);
-                new RecordGenerator(record).setFreeFunc(builder, "_instance", target.typeName());
+                        .addStatement("$T.takeOwnership(_instance)",
+                                ClassNames.MEMORY_CLEANER);
+                new RegisteredTypeGenerator(target)
+                        .setFreeFunc(builder, "_instance", target.typeName());
                 builder.endControlFlow()
                         .addStatement("return _instance");
             }
 
             // No ownership transfer, just marshal the return value
             else {
-                builder.addNamedCode(PartialStatement.of("return ").add(stmt).format() + ";\n", stmt.arguments());
+                builder.addNamedCode(PartialStatement.of("return ")
+                        .add(stmt).format() + ";\n", stmt.arguments());
             }
         }
 
@@ -260,9 +290,6 @@ public class MethodGenerator {
     }
 
     private void functionNameInvocation() {
-        // Function descriptor
-        generator.generateFunctionDescriptor(builder);
-
         // Result assignment
         PartialStatement invoke = new PartialStatement();
         if (!func.returnValue().anyType().isVoid()) {
@@ -272,10 +299,9 @@ public class MethodGenerator {
         }
 
         // Function invocation
-        invoke.add("$interop:T.downcallHandle($cIdentifier:S, _fdesc, $variadic:L)$Z.invokeExact($Z",
-                        "interop", ClassNames.INTEROP,
-                        "cIdentifier", func.callableAttrs().cIdentifier(),
-                        "variadic", generator.varargs())
+        invoke.add("$helperClass:T.$cIdentifier:L.invokeExact($Z",
+                        "helperClass", ((RegisteredType) func.parent()).helperClass(),
+                        "cIdentifier", func.callableAttrs().cIdentifier())
                 .add(generator.marshalParameters())
                 .add(");\n");
 
@@ -293,7 +319,7 @@ public class MethodGenerator {
     private void functionPointerInvocation() {
         // Function descriptor
         var generator = new CallableGenerator(vm);
-        generator.generateFunctionDescriptor(builder);
+        builder.addCode(generator.generateFunctionDescriptorDeclaration());
 
         // Function pointer lookup
         switch (vm.parent()) {

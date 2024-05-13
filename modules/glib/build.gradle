@@ -5,3 +5,13 @@ plugins {
 generateSources.configure {
     namespace = 'GLib'
 }
+
+// Temporary workaround for outdated GLib gir file on Windows
+def copyGlibGir = tasks.register('copyGLibGir', Copy) {
+    from layout.buildDirectory.file("$rootDir/ext/gir-files/linux/GLib-2.0.gir")
+    into layout.buildDirectory.dir("$rootDir/ext/gir-files/windows")
+    filteringCharset = 'UTF-8'
+    filter { line -> line.replaceAll('shared-library="libgobject-2.0.so.0,libglib-2.0.so.0"',
+                                     'shared-library="libglib-2.0-0.dll,libgobject-2.0-0.dll"') }
+}
+generateSources.dependsOn(copyGlibGir)

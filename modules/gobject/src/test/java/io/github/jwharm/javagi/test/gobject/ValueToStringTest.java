@@ -23,13 +23,16 @@ public class ValueToStringTest {
         Value vInt = new Value(Arena.ofAuto()).init(Types.INT);
         vInt.setInt(123);
         assertEquals("123", vInt.toString());
+        vInt.unset();
 
         Value vBool = new Value(Arena.ofAuto()).init(Types.BOOLEAN);
         vBool.setBoolean(true);
         assertEquals("TRUE", vBool.toString());
+        vBool.unset();
 
         Value vStr = new Value(Arena.ofAuto()).init(Types.STRING);
         vStr.setString("abc");
         assertEquals("\"abc\"", vStr.toString());
+        vStr.unset();
     }
 }

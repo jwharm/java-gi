@@ -25,14 +25,17 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Conversions;
+import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
+import java.util.List;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
+import static java.util.function.Predicate.not;
 
-public abstract class RegisteredTypeGenerator {
+public class RegisteredTypeGenerator {
 
     private final RegisteredType rt;
 
@@ -62,7 +65,7 @@ public abstract class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassName.get("org.gnome.glib", "Type"))
+                .returns(ClassNames.GTYPE)
                 .addStatement("return $T.getType($S)",
                         ClassNames.INTEROP,
                         rt.getTypeFunc())
@@ -70,21 +73,36 @@ public abstract class RegisteredTypeGenerator {
     }
 
     protected void addFunctions(TypeSpec.Builder builder) {
-        for (Function f : filter(rt.children(), Function.class))
-            if (!f.skip())
+        for (Function f : filter(rt.children(), Function.class)) {
+            if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
+                if (f.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(f)
+                                                .generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addConstructors(TypeSpec.Builder builder) {
-        for (Constructor c : filter(rt.children(), Constructor.class))
-            if (!c.skip())
+        for (Constructor c : filter(rt.children(), Constructor.class)) {
+            if (!c.skip()) {
                 builder.addMethods(new ConstructorGenerator(c).generate());
+                if (c.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(c)
+                                                .generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addMethods(TypeSpec.Builder builder) {
-        for (Method m : filter(rt.children(), Method.class))
-            if (!m.skip())
+        for (Method m : filter(rt.children(), Method.class)) {
+            if (!m.skip()) {
                 builder.addMethod(new MethodGenerator(m).generate());
+                if (m.hasBitfieldParameters())
+                    builder.addMethod(new CallableGenerator(m)
+                                                .generateBitfieldOverload());
+            }
+        }
     }
 
     protected void addVirtualMethods(TypeSpec.Builder builder) {
@@ -126,15 +144,15 @@ public abstract class RegisteredTypeGenerator {
     protected TypeSpec implClass() {
         ClassName nested = rt.typeName().nestedClass(rt.name() + "Impl");
         TypeSpec.Builder spec = TypeSpec.classBuilder(nested)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addStaticBlock(staticBlock());
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
-        if (rt instanceof Interface)
+        if (rt instanceof Interface i)
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
                             nested,
                             rt.typeName())
-                    .superclass(ClassName.get("org.gnome.gobject", "GObject"))
-                    .addSuperinterface(rt.typeName());
+                    .superclass(getInterfaceSuperclass(i))
+                    .addSuperinterface(rt.typeName())
+                    .addStaticBlock(staticBlock());
 
         if (rt instanceof Class)
             spec.addJavadoc("The $T type represents a native instance of the abstract $T class.",
@@ -151,8 +169,97 @@ public abstract class RegisteredTypeGenerator {
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(MemorySegment.class, "address")
                         .addStatement("super(address)")
-                        .build()
-                )
+                        .build())
                 .build();
+    }
+
+    private TypeName getInterfaceSuperclass(Interface i) {
+        for (var prerequisite : i.prerequisites()) {
+            var target = prerequisite.get();
+            if (target instanceof Class)
+                return target.typeName();
+        }
+        return ClassNames.TYPE_INSTANCE;
+    }
+
+    public boolean hasDowncallHandles() {
+        return (! listNamedFunctions().isEmpty());
+    }
+
+    public TypeSpec downcallHandlesClass() {
+        TypeSpec.Builder builder = TypeSpec.classBuilder(rt.helperClass())
+                .addModifiers(Modifier.FINAL);
+
+        if (rt instanceof Interface)
+            builder.addAnnotation(GeneratedAnnotationBuilder.generate());
+        else
+            builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
+
+        for (Callable c : listNamedFunctions()) {
+            if (!c.skip()) {
+                var gen = new MethodGenerator(c);
+                var spec = gen.generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL);
+                builder.addField(spec);
+            }
+        }
+
+        return builder.build();
+    }
+
+    private List<Callable> listNamedFunctions() {
+        return rt.children().stream()
+                .filter(c -> c instanceof Constructor
+                                || c instanceof Function
+                                || c instanceof Method)
+                .map(Callable.class::cast)
+                .filter(not(Callable::skip))
+                .toList();
+    }
+
+    public void setFreeFunc(MethodSpec.Builder builder,
+                            String identifier,
+                            TypeName className) {
+
+        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
+                .contains(rt.cType()))
+            return;
+
+        if (rt instanceof Record rec && rec.foreign())
+            return;
+
+        // Look for instance methods named "free()" and "unref()"
+        if (rt instanceof Class cls && cls.unrefFunc() != null) {
+            builder.addStatement("$T.setFreeFunc(%L, %S)",
+                    ClassNames.MEMORY_CLEANER,
+                    identifier,
+                    cls.unrefFunc());
+            return;
+        }
+
+        for (Method method : filter(rt.children(), Method.class)) {
+            if (List.of("free", "unref").contains(method.name())
+                    && method.parameters() == null
+                    && (method.returnValue().anyType().isVoid())) {
+                builder.addStatement("$T.setFreeFunc(%L, %S)",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        method.callableAttrs().cIdentifier());
+                return;
+            }
+        }
+
+        // Boxed types
+        if ((rt instanceof Record || rt instanceof Boxed || rt instanceof Union)
+                && rt.getTypeFunc() != null) {
+            if (className == null)
+                builder.addStatement("$T.setBoxedType($L, getType())",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier);
+            else
+                builder.addStatement("$T.setBoxedType($L, $T.getType())",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        className);
+        }
     }
 }

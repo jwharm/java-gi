@@ -21,11 +21,19 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Method extends Multiplatform implements Callable {
 
-    public Method(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Method(Map<String, String> attributes,
+                  List<Node> children,
+                  int platforms) {
         super(attributes, children, platforms);
+    }
+
+    @Override
+    public RegisteredType parent() {
+        return (RegisteredType) super.parent();
     }
 
     public String setProperty() {
@@ -43,5 +51,19 @@ public final class Method extends Multiplatform implements Callable {
                 .filter(vm -> name().equals(vm.attr("invoker")))
                 .findAny()
                 .orElse(null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Method other = (Method) o;
+        return Objects.equals(callableAttrs().cIdentifier(),
+                              other.callableAttrs().cIdentifier());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), callableAttrs().cIdentifier());
     }
 }

@@ -34,32 +34,35 @@ public class Platform {
     public final static int ALL = LINUX | WINDOWS | MACOS;
 
     /**
-     * Generate a String representation of the specified (combination of) platform(s)
+     * Generate a String representation of the specified (combination of)
+     * platform(s)
      */
     public static String toString(int platform) {
-        var joiner = new StringJoiner(", ");
-        if ((platform & LINUX) > 0) joiner.add("linux");
+        if (platform == ALL) return "linux, windows or macos";
+        var joiner = new StringJoiner(" or ");
+        if ((platform & LINUX) > 0)   joiner.add("linux");
         if ((platform & WINDOWS) > 0) joiner.add("windows");
-        if ((platform & MACOS) > 0) joiner.add("macos");
+        if ((platform & MACOS) > 0)   joiner.add("macos");
         return joiner.toString();
     }
 
     /**
-     * Generate a String representation of the specified (combination of) platform(s)
+     * Generate a String representation of the specified (combination of)
+     * platform(s)
      */
     public static String toStringLiterals(int platform) {
         var joiner = new StringJoiner(", ");
-        if ((platform & LINUX) > 0) joiner.add("\"linux\"");
+        if ((platform & LINUX) > 0)   joiner.add("\"linux\"");
         if ((platform & WINDOWS) > 0) joiner.add("\"windows\"");
-        if ((platform & MACOS) > 0) joiner.add("\"macos\"");
+        if ((platform & MACOS) > 0)   joiner.add("\"macos\"");
         return joiner.toString();
     }
 
     public static List<Integer> toList(int platform) {
         List<Integer> list = new ArrayList<>(3);
-        if ((platform & LINUX) > 0) list.add(LINUX);
+        if ((platform & LINUX) > 0)   list.add(LINUX);
         if ((platform & WINDOWS) > 0) list.add(WINDOWS);
-        if ((platform & MACOS) > 0) list.add(MACOS);
+        if ((platform & MACOS) > 0)   list.add(MACOS);
         return list;
     }
 }

@@ -56,7 +56,9 @@ public class MemoryLayoutGenerator {
 
         var fieldList = CollectionUtils.filter(rt.children(), Field.class);
         var unionList = CollectionUtils.filter(rt.children(), Union.class);
-        if (fieldList.isEmpty() && !unionList.isEmpty() && !unionList.getFirst().fields().isEmpty())
+        if (fieldList.isEmpty()
+                && !unionList.isEmpty()
+                && !unionList.getFirst().fields().isEmpty())
             fieldList = unionList.getFirst().fields();
 
         boolean isUnion = rt instanceof Union || !unionList.isEmpty();
@@ -76,7 +78,8 @@ public class MemoryLayoutGenerator {
                 .build();
     }
 
-    private PartialStatement generateFieldLayouts(List<Field> fieldList, boolean isUnion) {
+    private PartialStatement generateFieldLayouts(List<Field> fieldList,
+                                                  boolean isUnion) {
         var stmt = PartialStatement.of(null,
                 "memoryLayout", MemoryLayout.class,
                 "valueLayout", ValueLayout.class
@@ -90,8 +93,8 @@ public class MemoryLayoutGenerator {
 
             // Calculate padding (except for union layouts)
             if (!isUnion) {
-                // If the previous field had a smaller byte-size than
-                // this one, add padding (to a maximum of 8 bytes)
+                // If the previous field had a smaller byte-size than this one,
+                // add padding (to a maximum of 8 bytes)
                 if (size % s % 8 > 0) {
                     int padding = (s - (size % s)) % 8;
                     stmt.add("$memoryLayout:T.paddingLayout(" + padding + "),\n");
@@ -134,9 +137,9 @@ public class MemoryLayoutGenerator {
         // Proxy objects with a known memory layout
         if (!type.isPointer()
                 && new MemoryLayoutGenerator().canGenerate(target)) {
-            String classNameTag = type.toTypeTag();
-            return PartialStatement.of("$" + classNameTag + ":T.getMemoryLayout()",
-                    classNameTag, type.typeName());
+            String tag = type.toTypeTag();
+            return PartialStatement.of("$" + tag + ":T.getMemoryLayout()",
+                    tag, type.typeName());
         }
 
         // Plain value layout

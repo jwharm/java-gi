@@ -30,10 +30,10 @@ import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.util.Comparator;
 
 import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
 import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
+import static java.util.Comparator.comparing;
 
 public class SignalGenerator {
 
@@ -64,8 +64,9 @@ public class SignalGenerator {
         if (signal.parent() instanceof Interface)
             builder.addModifiers(Modifier.DEFAULT);
 
-        if (signal.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(signal.infoElements().doc()).generate(true));
+        var doc = signal.infoElements().doc();
+        if (doc != null)
+            builder.addJavadoc(new DocGenerator(doc).generate(true));
 
         if (signal.deprecated())
             builder.addAnnotation(Deprecated.class);
@@ -92,14 +93,15 @@ public class SignalGenerator {
                     ClassNames.INTEROP,
                     signal.name());
 
-        return builder.addStatement("var _callback = handler.toCallback($T.global())",
+        return builder.addStatement("var _callbackArena = $T.ofConfined()",
                         Arena.class)
+                .addStatement("var _callback = handler.toCallback(_callbackArena)")
                 .addStatement("var _result = (long) $1T.g_signal_connect_data.invokeExact($Zhandle(), _name, _callback, $2T.NULL, $2T.NULL, 0)",
                         ClassNames.SIGNALS,
                         MemorySegment.class)
-                .addStatement("return new SignalConnection<>(handle(), _result)")
+                .addStatement("return new SignalConnection<>(handle(), _result, _callbackArena)")
                 .nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)", "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()
                 .endControlFlow()
                 .build();
@@ -108,7 +110,7 @@ public class SignalGenerator {
     public boolean emitMethodExists() {
         String name = "emit_" + signal.name().replace("-", "_");
         return signal.parent().children().stream()
-                .filter(node -> node instanceof Method || node instanceof Function)
+                .filter(n -> n instanceof Method || n instanceof Function)
                 .map(Callable.class::cast)
                 .anyMatch(node -> name.equals(node.name()));
     }
@@ -131,7 +133,8 @@ public class SignalGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Return type
-        builder.returns(new TypedValueGenerator(signal.returnValue()).getType());
+        ReturnValue returnValue = signal.returnValue();
+        builder.returns(new TypedValueGenerator(returnValue).getType());
 
         // Add source parameter for signals
         if (signal.detailed())
@@ -141,7 +144,7 @@ public class SignalGenerator {
                             .build());
 
         // Add method parameters
-        generator.generateMethodParameters(builder);
+        generator.generateMethodParameters(builder, false, true);
 
         // Arena for memory allocations
         builder.beginControlFlow("try ($1T _arena = $1T.ofConfined())",
@@ -150,17 +153,18 @@ public class SignalGenerator {
         // Parameter preprocessing
         if (signal.parameters() != null)
             signal.parameters().parameters().stream()
-                    // Array parameters may refer to other parameters for their length,
-                    // so they must be processed last.
-                    .sorted((Comparator.comparing(p -> p.anyType() instanceof Array)))
-                    .forEach(p -> new PreprocessingGenerator(p).generate(builder));
+                    // Array parameters may refer to other parameters for their
+                    // length, so they must be processed last.
+                    .sorted((comparing(p -> p.anyType() instanceof Array)))
+                    .map(PreprocessingGenerator::new)
+                    .forEach(p -> p.generate(builder));
 
         // Allocate memory for return value
-        if (!signal.returnValue().anyType().isVoid())
+        if (!returnValue.anyType().isVoid())
             builder.addStatement("$T _result = _arena.allocate($T.$L)",
                     MemorySegment.class,
                     ValueLayout.class,
-                    getValueLayout(signal.returnValue().anyType()));
+                    getValueLayout(returnValue.anyType()));
 
         // Allocate memory for signal name
         if (signal.detailed())
@@ -180,17 +184,18 @@ public class SignalGenerator {
         PartialStatement varargs = PartialStatement.of("Object[] _args = ");
 
         // Empty array when there are no parameters
-        if (signal.parameters() == null && signal.returnValue().anyType().isVoid()) {
+        if (signal.parameters() == null && returnValue.anyType().isVoid()) {
             varargs.add("new Object[0]");
         }
 
-        // Generate parameter marshaling for all parameters, to store into the array
+        // Generate parameter marshaling for all parameters, to store into the
+        // array
         else {
             varargs.add("new Object[] {");
             if (signal.parameters() != null) {
                 varargs.add(generator.marshalParameters());
             }
-            if (!signal.returnValue().anyType().isVoid()) {
+            if (!returnValue.anyType().isVoid()) {
                 if (! varargs.format().endsWith("{"))
                     varargs.add(", ");
                 varargs.add("_result");
@@ -209,18 +214,20 @@ public class SignalGenerator {
                 new PostprocessingGenerator(p).generate(builder);
 
         // Marshal the return value
-        if (!signal.returnValue().anyType().isVoid()) {
-            var generator = new TypedValueGenerator(signal.returnValue());
-            var layout = getValueLayout(signal.returnValue().anyType());
-            var stmt = PartialStatement.of("return ", "valueLayout", ValueLayout.class);
-            stmt.add(generator.marshalNativeToJava("_result.get($valueLayout:T." + layout + ", 0)", false));
-            builder.addNamedCode(stmt.format() + ";\n", stmt.arguments());
+        if (!returnValue.anyType().isVoid()) {
+            var generator = new TypedValueGenerator(returnValue);
+            var layout = getValueLayout(returnValue.anyType());
+            var identifier = "_result.get($valueLayout:T." + layout + ", 0)";
+            var stmt = PartialStatement.of("return ",
+                            "valueLayout", ValueLayout.class)
+                    .add(generator.marshalNativeToJava(identifier, false))
+                    .add(";\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
 
         // Log exceptions
         return builder.nextControlFlow("catch (Throwable _err)")
-                .addStatement("throw new AssertionError($S, _err)",
-                        "Unexpected exception occurred: ")
+                .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()
                 .build();
     }

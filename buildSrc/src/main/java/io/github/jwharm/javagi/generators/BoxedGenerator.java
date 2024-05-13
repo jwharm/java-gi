@@ -40,13 +40,14 @@ public class BoxedGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (boxed.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(boxed.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(boxed.infoElements().doc()).generate());
 
         if (boxed.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)
-                .superclass(ClassNames.MANAGED_INSTANCE)
+                .superclass(ClassNames.PROXY_INSTANCE)
                 .addStaticBlock(staticBlock())
                 .addMethod(memoryAddressConstructor());
 
@@ -54,6 +55,9 @@ public class BoxedGenerator extends RegisteredTypeGenerator {
             builder.addMethod(getTypeMethod());
 
         addFunctions(builder);
+
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
 
         return builder.build();
     }

@@ -27,11 +27,6 @@ public sealed interface FlaggedType
         extends RegisteredType
         permits Bitfield, Enumeration {
 
-    @Override
-    default String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        return isPointer ? paramName : paramName + ".getValue()";
-    }
-
     default List<Member> members() {
         return filter(children(), Member.class);
     }

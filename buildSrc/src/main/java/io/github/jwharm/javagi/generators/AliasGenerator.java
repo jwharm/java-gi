@@ -84,7 +84,8 @@ public class AliasGenerator extends RegisteredTypeGenerator {
             builder.addMethod(fromTargetType());
 
         if (alias.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(alias.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(alias.infoElements().doc()).generate());
         if (alias.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
@@ -156,8 +157,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     alias.typeName(), ValueLayout.class, layout);
 
         return spec.endControlFlow()
-                .addStatement("if (free) $T.free(address)",
-                        ClassName.get("org.gnome.glib", "GLib"))
+                .addStatement("if (free) $T.free(address)", ClassNames.GLIB)
                 .addStatement("return array")
                 .build();
     }

@@ -18,31 +18,33 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+          cache: 'pip'
 
-      - name: Install MkDocs
+      - name: Setup MkDocs
         run: pip3 install mkdocs
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: 'temurin'
 
       - name: Checkout gir-files repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'gircore/gir-files'
           ref: 'c11be30bcf7ecf0da157585d25f509378af0b0b7'
           path: 'gir-files'
 
       - name: Checkout java-gi repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'jwharm/java-gi'
           path: 'java-gi'
+          submodules: 'true'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Run Gradle build
         working-directory: java-gi/
@@ -52,13 +54,13 @@ jobs:
         working-directory: java-gi/website/
         run: mkdocs build
 
-      - name: Create Site Artifact
+      - name: Move generated Javadoc to website
         run: |
           mv java-gi/website/site site
           mv java-gi/build/docs/javadoc site/javadoc
 
       - name: Upload Site Artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'site'
 
@@ -75,4 +77,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4

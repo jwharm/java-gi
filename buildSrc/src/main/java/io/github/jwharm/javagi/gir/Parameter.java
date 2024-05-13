@@ -52,7 +52,7 @@ public final class Parameter extends GirElement implements TypedValue {
     }
 
     public boolean isUserDataParameter() {
-        // Callback parameters: the user_data parameter has attribute "closure" set
+        // Callback params: the user_data parameter has attribute "closure" set
         if (parent().parent() instanceof Callback
                 || parent().parent() instanceof Signal)
             return (attr("closure") != null);

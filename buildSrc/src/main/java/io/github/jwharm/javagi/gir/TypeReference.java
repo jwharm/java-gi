@@ -26,8 +26,9 @@ import java.lang.foreign.MemorySegment;
 import static io.github.jwharm.javagi.util.Conversions.*;
 
 /**
- * This interface is implemented by GIR elements whose name refers to a RegisteredType.
- * The {@link #get()} method will retrieve the type from the GIR model.
+ * This interface is implemented by GIR elements whose name refers to a
+ * RegisteredType. The {@link #get()} method will retrieve the type from the
+ * GIR model.
  */
 public interface TypeReference {
     Namespace namespace();
@@ -52,8 +53,10 @@ public interface TypeReference {
         if (name() == null)
             return TypeName.get(MemorySegment.class);
 
+        // Get the target type
         var type = get();
-        // A typeclass or typeinterface is an inner class
+
+        // A TypeClass or TypeInterface is an inner class
         if (type instanceof Record rec) {
             var outer = rec.isGTypeStructFor();
             if (outer != null)

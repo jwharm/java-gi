@@ -32,7 +32,9 @@ import java.lang.foreign.Arena;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
@@ -51,24 +53,29 @@ public class Properties {
      * @return the GType of the GParamSpec of the GObject property, or null if
      *         not found
      */
-    public static Type readPropertyValueType(GObject.ObjectClass objectClass, String propertyName) {
+    public static Type readPropertyValueType(GObject.ObjectClass objectClass,
+                                             String propertyName) {
         ParamSpec pspec = objectClass.findProperty(propertyName);
         if (pspec == null) {
             throw new IllegalArgumentException("Cannot find property \"%s\" for type %s\n"
-                    .formatted(propertyName, GObjects.typeName(objectClass.readGType())));
+                    .formatted(
+                            propertyName,
+                            GObjects.typeName(objectClass.readGType())));
         }
-        ParamSpec.ParamSpecClass pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
+        var pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
         return pclass == null ? null : pclass.readValueType();
     }
 
     /**
      * Set a property of an object.
      *
-     * @param  propertyName the name of the property to set
+     * @param  propertyName  the name of the property to set
      * @param  propertyValue the new property propertyValue
-     * @throws IllegalArgumentException if a property with this name is not found for the object
+     * @throws IllegalArgumentException if a property with this name is not
+     *                                  found for the object
      */
-    public static void setProperty(GObject gobject, String propertyName, Object propertyValue) {
+    public static void setProperty(GObject gobject, String propertyName,
+                                   Object propertyValue) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
         Type valueType = readPropertyValueType(gclass, propertyName);
         try (var arena = Arena.ofConfined()) {
@@ -111,7 +118,10 @@ public class Properties {
      * @throws IllegalArgumentException if a property with this name is not
      *                                  found for the object
      */
-    public static <T extends GObject> T newGObjectWithProperties(Type objectType, Object... propertyNamesAndValues) {
+    public static <T extends GObject>
+    T newGObjectWithProperties(Type objectType,
+                               Object... propertyNamesAndValues) {
+
         List<String> names = new ArrayList<>();
         List<Value> values = new ArrayList<>();
         TypeClass typeClass = TypeClass.ref(objectType);
@@ -127,8 +137,8 @@ public class Properties {
                     // Odd number of parameters?
                     if (i == propertyNamesAndValues.length - 1) {
                         if (propertyNamesAndValues[i] == null) {
-                            // Ignore a closing null parameter (often expected by
-                            // GObject vararg functions)
+                            // Ignore a closing null parameter (often expected
+                            // by GObject vararg functions)
                             break;
                         }
                         throw new IllegalArgumentException("Argument list must contain pairs of property names and values");
@@ -157,7 +167,8 @@ public class Properties {
                 }
 
                 /*
-                 * Create and return the GObject with the property names and values
+                 * Create and return the GObject with the property names and
+                 * values.
                  * The cast to T is safe: it will always return the expected
                  * GObject-derived objectType
                  */
@@ -194,15 +205,15 @@ public class Properties {
      */
     private static Class<? extends ParamSpec> inferType(Method method) {
         // Determine the Java class of the property
-        Class<?> paramClass;
+        Class<?> cls;
         if ((! method.getReturnType().equals(void.class))
                 && method.getParameterCount() == 0) {
             // Getter
-            paramClass = method.getReturnType();
+            cls = method.getReturnType();
         } else if (method.getReturnType().equals(void.class)
                 && method.getParameterCount() == 1) {
             // Setter
-            paramClass = method.getParameterTypes()[0];
+            cls = method.getParameterTypes()[0];
         } else {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Invalid property getter/setter %s in class %s\n",
@@ -211,62 +222,64 @@ public class Properties {
         }
 
         // Infer the ParamSpec from the Java class.
-        if (paramClass.equals(boolean.class) || paramClass.equals(Boolean.class))
+        if (cls.equals(boolean.class) || cls.equals(Boolean.class))
             return ParamSpecBoolean.class;
 
-        else if (paramClass.equals(byte.class) || paramClass.equals(Byte.class))
+        else if (cls.equals(byte.class) || cls.equals(Byte.class))
             return ParamSpecChar.class;
 
-        else if (paramClass.equals(char.class) || paramClass.equals(Character.class))
+        else if (cls.equals(char.class) || cls.equals(Character.class))
             return ParamSpecChar.class;
 
-        else if (paramClass.equals(double.class) || paramClass.equals(Double.class))
+        else if (cls.equals(double.class) || cls.equals(Double.class))
             return ParamSpecDouble.class;
 
-        else if (paramClass.equals(float.class) || paramClass.equals(Float.class))
+        else if (cls.equals(float.class) || cls.equals(Float.class))
             return ParamSpecFloat.class;
 
-        else if (paramClass.equals(int.class) || paramClass.equals(Integer.class))
+        else if (cls.equals(int.class) || cls.equals(Integer.class))
             return ParamSpecInt.class;
 
-        else if (paramClass.equals(long.class) || paramClass.equals(Long.class))
+        else if (cls.equals(long.class) || cls.equals(Long.class))
             return ParamSpecLong.class;
 
-        else if (paramClass.equals(String.class))
+        else if (cls.equals(String.class))
             return ParamSpecString.class;
 
-        else if (Type.class.isAssignableFrom(paramClass))
+        else if (Type.class.isAssignableFrom(cls))
             return ParamSpecGType.class;
 
         // GObject class
-        else if (GObject.class.isAssignableFrom(paramClass))
+        else if (GObject.class.isAssignableFrom(cls))
             return ParamSpecObject.class;
 
         // Struct
-        else if (ProxyInstance.class.isAssignableFrom(paramClass))
+        else if (ProxyInstance.class.isAssignableFrom(cls))
             return ParamSpecBoxed.class;
 
         // GObject interface
-        else if (Proxy.class.isAssignableFrom(paramClass))
+        else if (Proxy.class.isAssignableFrom(cls))
             return ParamSpecObject.class;
 
         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                 "Invalid property type %s in method %s in class %s\n",
-                paramClass.getName(), method.getName(), method.getDeclaringClass().getName());
+                cls.getName(),
+                method.getName(),
+                method.getDeclaringClass().getName());
         return null;
     }
 
     /*
      * Create a GParamFlags based on {@code @Property} annotation parameters.
      */
-    private static ParamFlags getFlags(Property property) {
-        ParamFlags flags = new ParamFlags(0);
-        if (property.readable())       flags = flags.or(ParamFlags.READABLE);
-        if (property.writable())       flags = flags.or(ParamFlags.WRITABLE);
-        if (property.construct())      flags = flags.or(ParamFlags.CONSTRUCT);
-        if (property.constructOnly())  flags = flags.or(ParamFlags.CONSTRUCT_ONLY);
-        if (property.explicitNotify()) flags = flags.or(ParamFlags.EXPLICIT_NOTIFY);
-        if (property.deprecated())     flags = flags.or(ParamFlags.DEPRECATED);
+    private static Set<ParamFlags> getFlags(Property property) {
+        EnumSet<ParamFlags> flags = EnumSet.noneOf(ParamFlags.class);
+        if (property.readable())       flags.add(ParamFlags.READABLE);
+        if (property.writable())       flags.add(ParamFlags.WRITABLE);
+        if (property.construct())      flags.add(ParamFlags.CONSTRUCT);
+        if (property.constructOnly())  flags.add(ParamFlags.CONSTRUCT_ONLY);
+        if (property.explicitNotify()) flags.add(ParamFlags.EXPLICIT_NOTIFY);
+        if (property.deprecated())     flags.add(ParamFlags.DEPRECATED);
         return flags;
     }
 
@@ -283,7 +296,9 @@ public class Properties {
      *              parameter
      * @return a class initializer that registers the properties
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> installProperties(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Consumer<TC> installProperties(Class<T> cls) {
+
         List<ParamSpec> propertySpecs = new ArrayList<>();
         propertySpecs.add(null); // Index 0 is reserved
 
@@ -301,7 +316,8 @@ public class Properties {
             if (p == null)
                 continue;
 
-            // Name is specified with the annotation, or infer it from the method name
+            // Name is specified with the annotation, or infer it from the
+            // method name
             String name = p.name().isEmpty()
                     ? getPropertyName(method.getName())
                     : p.name();
@@ -408,7 +424,8 @@ public class Properties {
             }
             Property property = method.getDeclaredAnnotation(Property.class);
 
-            // Name is specified with the annotation, or infer it form the method name
+            // Name is specified with the annotation, or infer it form the
+            // method name
             String name = property.name().isEmpty()
                     ? getPropertyName(method.getName())
                     : property.name();
@@ -458,7 +475,9 @@ public class Properties {
                     Throwable t = e.getTargetException();
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "%s.getProperty('%s'): %s\n",
-                            cls.getName(), propertyNames.get(propertyId), t.toString());
+                            cls.getName(),
+                            propertyNames.get(propertyId),
+                            t.toString());
                     return;
                 } catch (IllegalAccessException e) {
                     // Tried to call a private method
@@ -504,7 +523,9 @@ public class Properties {
                         Throwable t = e.getTargetException();
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "%s.setProperty('%s'): %s\n",
-                                cls.getName(), propertyNames.get(propertyId), t.toString());
+                                cls.getName(),
+                                propertyNames.get(propertyId),
+                                t.toString());
                     } catch (IllegalAccessException e) {
                         // Tried to call a private method
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,

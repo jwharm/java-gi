@@ -24,7 +24,9 @@ import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 import io.github.jwharm.javagi.util.Platform;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GLibPatch implements Patch {
 
@@ -34,17 +36,29 @@ public class GLibPatch implements Patch {
         if (!"GLib".equals(namespace))
             return element;
 
-        /*
-         * g_clear_error has attribute throws="1" but no gerror** parameter (or
-         * any other parameters) in the gir file.
-         */
-        if (element instanceof Namespace ns)
+        if (element instanceof Namespace ns) {
+            /*
+             * GType was removed from GLib, but is still used
+             * by `g_strv_get_type`
+             */
+            var gtype = new Alias(
+                    Map.of("name", "Type", "c:type", "GType"),
+                    List.of(new Type(Map.of("name", "gsize",
+                                            "c:type", "gsize"),
+                            Collections.emptyList())),
+                    ns.platforms());
+            ns = add(ns, gtype);
+
+            /*
+             * g_clear_error has attribute throws="1" but no gerror** parameter
+             * (or any other parameters) in the gir file.
+             */
             return remove(ns, Function.class, "name", "clear_error");
+        }
 
         /*
-         * GPid is defined as gint on Unix vs gpointer on Windows. The
-         * generated Java class is an int Alias, so we remove the Windows
-         * support.
+         * GPid is defined as gint on Unix vs gpointer on Windows. The generated
+         * Java class is an int Alias, so we remove the Windows support.
          */
         if (element instanceof Alias a && "Pid".equals(a.name())) {
             a.setPlatforms(Platform.LINUX | Platform.MACOS);
@@ -71,6 +85,15 @@ public class GLibPatch implements Patch {
                 r = remove(r, Method.class, "name", m);
             return r;
         }
+
+        /*
+         * GLib.List and GLib.SList are not generated from the gir data.
+         * Java-GI provides custom List and SList classes that implement
+         * java.util.List, to make them easier to use from Java.
+         */
+        if (element instanceof Record r
+                && List.of("List", "SList").contains(r.name()))
+            return r.withAttribute("java-gi-skip", "1");
 
         return element;
     }

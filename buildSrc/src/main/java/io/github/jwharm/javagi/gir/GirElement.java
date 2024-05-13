@@ -24,6 +24,7 @@ import static java.util.function.Predicate.not;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class GirElement implements Serializable, Node {
 
@@ -88,7 +89,10 @@ public abstract class GirElement implements Serializable, Node {
                 attr("shadowed-by"),
                 attr("shadows"),
                 attrBool("throws", false),
-                attr("moved-to"));
+                attr("moved-to"),
+                attr("glib:async-func"),
+                attr("glib:sync-func"),
+                attr("glib:finish-func"));
     }
 
     public InfoElements infoElements() {
@@ -118,65 +122,71 @@ public abstract class GirElement implements Serializable, Node {
     }
 
     /**
-     * Change an attribute with the provided name to the provided value
-     * @param attrName the name of the attribute
-     * @param newValue the new value for the attribute
-     * @return a new instance of the same type as {@code elem}, with the new attribute value
-     * @param <T> the element must be a GirElement
+     * Change an attribute with the provided name to the provided value.
+     *
+     * @param  attrName the name of the attribute
+     * @param  newValue the new value for the attribute
+     * @param  <T> the element must be a GirElement
+     * @return a new instance of the same type as {@code elem}, with the new
+     *         attribute value
      */
     @SuppressWarnings("unchecked")
     public <T extends Node> T withAttribute(String attrName, String newValue) {
         var newAttrs = new HashMap<>(attributes());
         newAttrs.put(attrName, newValue);
         return (T) switch(this) {
-            case Alias a -> new Alias(newAttrs, a.children(), a.platforms());
-            case Array a -> new Array(newAttrs, a.children());
-            case Attribute _ -> new Attribute(newAttrs);
-            case Bitfield b -> new Bitfield(newAttrs, b.children(), b.platforms());
-            case Boxed b -> new Boxed(newAttrs, b.children(), b.platforms());
-            case Callback c -> new Callback(newAttrs, c.children(), c.platforms());
-            case CInclude _ -> new CInclude(newAttrs);
-            case Class c -> new Class(newAttrs, c.children(), c.platforms());
-            case Constant c -> new Constant(newAttrs, c.children(), c.platforms());
-            case Constructor c -> new Constructor(newAttrs, c.children(), c.platforms());
-            case Doc d -> new Doc(newAttrs, d.text());
-            case Docsection d -> new Docsection(newAttrs, d.children());
-            case DocDeprecated d -> d;
-            case DocVersion d -> d;
-            case Enumeration e -> new Enumeration(newAttrs, e.children(), e.platforms());
-            case Field f -> new Field(newAttrs, f.children());
-            case Function f -> new Function(newAttrs, f.children(), f.platforms());
-            case FunctionMacro f -> f;
-            case Implements _ -> new Implements(newAttrs);
-            case Include _ -> new Include(newAttrs);
+            case Alias a             -> new Alias(newAttrs, a.children(), a.platforms());
+            case Array a             -> new Array(newAttrs, a.children());
+            case Attribute _         -> new Attribute(newAttrs);
+            case Bitfield b          -> new Bitfield(newAttrs, b.children(), b.platforms());
+            case Boxed b             -> new Boxed(newAttrs, b.children(), b.platforms());
+            case Callback c          -> new Callback(newAttrs, c.children(), c.platforms());
+            case CInclude _          -> new CInclude(newAttrs);
+            case Class c             -> new Class(newAttrs, c.children(), c.platforms());
+            case Constant c          -> new Constant(newAttrs, c.children(), c.platforms());
+            case Constructor c       -> new Constructor(newAttrs, c.children(), c.platforms());
+            case Doc d               -> new Doc(newAttrs, d.text());
+            case Docsection d        -> new Docsection(newAttrs, d.children());
+            case DocDeprecated d     -> d;
+            case DocVersion d        -> d;
+            case Enumeration e       -> new Enumeration(newAttrs, e.children(), e.platforms());
+            case Field f             -> new Field(newAttrs, f.children());
+            case Function f          -> new Function(newAttrs, f.children(), f.platforms());
+            case FunctionInline f    -> f;
+            case FunctionMacro f     -> f;
+            case Implements _        -> new Implements(newAttrs);
+            case Include _           -> new Include(newAttrs);
             case InstanceParameter i -> new InstanceParameter(newAttrs, i.children());
-            case Interface i -> new Interface(newAttrs, i.children(), i.platforms());
-            case Member m -> new Member(newAttrs, m.children());
-            case Method m -> new Method(newAttrs, m.children(), m.platforms());
-            case Namespace n -> new Namespace(newAttrs, n.children(), n.platforms(), n.sharedLibraries());
-            case Package _ -> new Package(newAttrs);
-            case Parameter p -> new Parameter(newAttrs, p.children());
-            case Parameters p -> p;
-            case Prerequisite _ -> new Prerequisite(newAttrs);
-            case Property p -> new Property(newAttrs, p.children(), p.platforms());
-            case Record r -> new Record(newAttrs, r.children(), r.platforms());
-            case Repository r -> new Repository(newAttrs, r.children());
-            case ReturnValue r -> new ReturnValue(newAttrs, r.children());
-            case Signal s -> new Signal(newAttrs, s.children(), s.platforms());
-            case SourcePosition _ -> new SourcePosition(newAttrs);
-            case Type t -> new Type(newAttrs, t.children());
-            case Union u -> new Union(newAttrs, u.children(), u.platforms());
-            case Varargs v -> v;
-            case VirtualMethod v -> new VirtualMethod(newAttrs, v.children(), v.platforms());
-            default -> throw new UnsupportedOperationException("Unsupported element: " + this);
+            case Interface i         -> new Interface(newAttrs, i.children(), i.platforms());
+            case Member m            -> new Member(newAttrs, m.children());
+            case Method m            -> new Method(newAttrs, m.children(), m.platforms());
+            case MethodInline m      -> m;
+            case Namespace n         -> new Namespace(newAttrs, n.children(), n.platforms(), n.sharedLibraries());
+            case Package _           -> new Package(newAttrs);
+            case Parameter p         -> new Parameter(newAttrs, p.children());
+            case Parameters p        -> p;
+            case Prerequisite _      -> new Prerequisite(newAttrs);
+            case Property p          -> new Property(newAttrs, p.children(), p.platforms());
+            case Record r            -> new Record(newAttrs, r.children(), r.platforms());
+            case Repository r        -> new Repository(newAttrs, r.children());
+            case ReturnValue r       -> new ReturnValue(newAttrs, r.children());
+            case Signal s            -> new Signal(newAttrs, s.children(), s.platforms());
+            case SourcePosition _    -> new SourcePosition(newAttrs);
+            case Type t              -> new Type(newAttrs, t.children());
+            case Union u             -> new Union(newAttrs, u.children(), u.platforms());
+            case Varargs v           -> v;
+            case VirtualMethod v     -> new VirtualMethod(newAttrs, v.children(), v.platforms());
+            default                  -> throw new UnsupportedOperationException("Unsupported element: " + this);
         };
     }
 
     /**
      * Replace the child elements of the element with a new list
-     * @param newChildren the new list of child elements
-     * @return a new instance of the same type as {@code elem}, with the new child elements
-     * @param <T> the element must be a GirElement
+     *
+     * @param  newChildren the new list of child elements
+     * @param  <T> the element must be a GirElement
+     * @return a new instance of the same type as {@code elem}, with the new
+     *         child elements
      */
     public <T extends Node> T withChildren(GirElement... newChildren) {
         return withChildren(Arrays.asList(newChildren));
@@ -184,53 +194,57 @@ public abstract class GirElement implements Serializable, Node {
 
     /**
      * Replace the child elements of the element with a new list
-     * @param newChildren the new list of child elements
-     * @return a new instance of the same type as {@code elem}, with the new child elements
-     * @param <T> the element must be a GirElement
+     *
+     * @param  newChildren the new list of child elements
+     * @param  <T> the element must be a GirElement
+     * @return a new instance of the same type as {@code elem}, with the new
+     *         child elements
      */
     @SuppressWarnings("unchecked")
     public <T extends Node> T withChildren(List<Node> newChildren) {
         return (T) switch(this) {
-            case Alias a -> new Alias(a.attributes(), newChildren, a.platforms());
-            case Array a -> new Array(a.attributes(), newChildren);
-            case Attribute a -> a;
-            case Bitfield b -> new Bitfield(b.attributes(), newChildren, b.platforms());
-            case Boxed b -> new Boxed(b.attributes(), newChildren, b.platforms());
-            case Callback c -> new Callback(c.attributes(), newChildren, c.platforms());
-            case CInclude c -> c;
-            case Class c -> new Class(c.attributes(), newChildren, c.platforms());
-            case Constant c -> new Constant(c.attributes(), newChildren, c.platforms());
-            case Constructor c -> new Constructor(c.attributes(), newChildren, c.platforms());
-            case Doc d -> d;
-            case Docsection d -> new Docsection(d.attributes(), newChildren);
-            case DocDeprecated d -> d;
-            case DocVersion d -> d;
-            case Enumeration e -> new Enumeration(e.attributes(), newChildren, e.platforms());
-            case Field f -> new Field(f.attributes(), newChildren);
-            case Function f -> new Function(f.attributes(), newChildren, f.platforms());
-            case FunctionMacro f -> f;
-            case Implements i -> i;
-            case Include i -> i;
+            case Alias a             -> new Alias(a.attributes(), newChildren, a.platforms());
+            case Array a             -> new Array(a.attributes(), newChildren);
+            case Attribute a         -> a;
+            case Bitfield b          -> new Bitfield(b.attributes(), newChildren, b.platforms());
+            case Boxed b             -> new Boxed(b.attributes(), newChildren, b.platforms());
+            case Callback c          -> new Callback(c.attributes(), newChildren, c.platforms());
+            case CInclude c          -> c;
+            case Class c             -> new Class(c.attributes(), newChildren, c.platforms());
+            case Constant c          -> new Constant(c.attributes(), newChildren, c.platforms());
+            case Constructor c       -> new Constructor(c.attributes(), newChildren, c.platforms());
+            case Doc d               -> d;
+            case Docsection d        -> new Docsection(d.attributes(), newChildren);
+            case DocDeprecated d     -> d;
+            case DocVersion d        -> d;
+            case Enumeration e       -> new Enumeration(e.attributes(), newChildren, e.platforms());
+            case Field f             -> new Field(f.attributes(), newChildren);
+            case Function f          -> new Function(f.attributes(), newChildren, f.platforms());
+            case FunctionInline f    -> f;
+            case FunctionMacro f     -> f;
+            case Implements i        -> i;
+            case Include i           -> i;
             case InstanceParameter i -> new InstanceParameter(i.attributes(), newChildren);
-            case Interface i -> new Interface(i.attributes(), newChildren, i.platforms());
-            case Member m -> new Member(m.attributes(), newChildren);
-            case Method m -> new Method(m.attributes(), newChildren, m.platforms());
-            case Namespace n -> new Namespace(n.attributes(), newChildren, n.platforms(), n.sharedLibraries());
-            case Package p -> p;
-            case Parameter p -> new Parameter(p.attributes(), newChildren);
-            case Parameters _ -> new Parameters(newChildren);
-            case Prerequisite p -> p;
-            case Property p -> new Property(p.attributes(), newChildren, p.platforms());
-            case Record r -> new Record(r.attributes(), newChildren, r.platforms());
-            case Repository r -> new Repository(r.attributes(), newChildren);
-            case ReturnValue r -> new ReturnValue(r.attributes(), newChildren);
-            case Signal s -> new Signal(s.attributes(), newChildren, s.platforms());
-            case SourcePosition s -> s;
-            case Type t -> new Type(t.attributes(), newChildren);
-            case Union u -> new Union(u.attributes(), newChildren, u.platforms());
-            case Varargs v -> v;
-            case VirtualMethod v -> new VirtualMethod(v.attributes(), newChildren, v.platforms());
-            default -> throw new UnsupportedOperationException("Unsupported element: " + this);
+            case Interface i         -> new Interface(i.attributes(), newChildren, i.platforms());
+            case Member m            -> new Member(m.attributes(), newChildren);
+            case Method m            -> new Method(m.attributes(), newChildren, m.platforms());
+            case MethodInline m      -> m;
+            case Namespace n         -> new Namespace(n.attributes(), newChildren, n.platforms(), n.sharedLibraries());
+            case Package p           -> p;
+            case Parameter p         -> new Parameter(p.attributes(), newChildren);
+            case Parameters _        -> new Parameters(newChildren);
+            case Prerequisite p      -> p;
+            case Property p          -> new Property(p.attributes(), newChildren, p.platforms());
+            case Record r            -> new Record(r.attributes(), newChildren, r.platforms());
+            case Repository r        -> new Repository(r.attributes(), newChildren);
+            case ReturnValue r       -> new ReturnValue(r.attributes(), newChildren);
+            case Signal s            -> new Signal(s.attributes(), newChildren, s.platforms());
+            case SourcePosition s    -> s;
+            case Type t              -> new Type(t.attributes(), newChildren);
+            case Union u             -> new Union(u.attributes(), newChildren, u.platforms());
+            case Varargs v           -> v;
+            case VirtualMethod v     -> new VirtualMethod(v.attributes(), newChildren, v.platforms());
+            default                  -> throw new UnsupportedOperationException("Unsupported element: " + this);
         };
     }
 
@@ -245,21 +259,31 @@ public abstract class GirElement implements Serializable, Node {
         GirElement that = (GirElement) o;
         return Objects.equals(withoutDocs(children),
                               withoutDocs(that.children))
-                && Objects.equals(attributes, that.attributes);
+                && Objects.equals(identifyingAttrs(attributes),
+                                  identifyingAttrs(that.attributes));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(withoutDocs(children), attributes);
+        return Objects.hash(withoutDocs(children), identifyingAttrs(attributes));
     }
 
-    // Exclude documentation when comparing GIR elements
-    private List<Node> withoutDocs(List<Node> list) {
+    // Exclude documentation nodes when comparing GIR elements
+    private static List<Node> withoutDocs(List<Node> list) {
         return list.stream()
                 .filter(not(Documentation.class::isInstance))
                 .filter(not(Docsection.class::isInstance))
                 .filter(not(SourcePosition.class::isInstance))
                 .toList();
+    }
+
+    // Only include identifying attributes (names, types) when comparing GIR
+    // elements
+    private static Map<String, String> identifyingAttrs(Map<String, String> attributes) {
+        var attrs = List.of("name", "type", "c:identifier", "c:type");
+        return attributes.entrySet().stream()
+                .filter(attr -> attrs.contains(attr.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override

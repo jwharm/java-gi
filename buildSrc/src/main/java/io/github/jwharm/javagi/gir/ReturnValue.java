@@ -67,7 +67,8 @@ public final class ReturnValue extends GirElement implements TypedValue {
     }
 
     public Parameter closure() {
-        return ((Callable) parent()).parameters().getAtIndex(attrInt("closure"));
+        Callable parent = (Callable) parent();
+        return parent.parameters().getAtIndex(attrInt("closure"));
     }
 
     public Scope scope() {
@@ -75,7 +76,8 @@ public final class ReturnValue extends GirElement implements TypedValue {
     }
 
     public Parameter destroy() {
-        return ((Callable) parent()).parameters().getAtIndex(attrInt("destroy"));
+        Callable parent = (Callable) parent();
+        return parent.parameters().getAtIndex(attrInt("destroy"));
     }
 
     public boolean skip() {

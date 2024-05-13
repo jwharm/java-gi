@@ -35,12 +35,10 @@ public final class ClassNames {
     public static final ClassName CONSTANTS = get(PKG_TOPLEVEL, "Constants");
 
     public static final ClassName ALIAS = get(PKG_BASE, "Alias");
-    public static final ClassName BITFIELD = get(PKG_BASE, "Bitfield");
     public static final ClassName ENUMERATION = get(PKG_BASE, "Enumeration");
     public static final ClassName FLOATING = get(PKG_BASE, "Floating");
     public static final ClassName GERROR_EXCEPTION = get(PKG_BASE, "GErrorException");
     public static final ClassName GLIB_LOGGER = get(PKG_BASE, "GLibLogger");
-    public static final ClassName MANAGED_INSTANCE = get(PKG_BASE, "ManagedInstance");
     public static final ClassName OUT = get(PKG_BASE, "Out");
     public static final ClassName PROXY = get(PKG_BASE, "Proxy");
     public static final ClassName PROXY_INSTANCE = get(PKG_BASE, "ProxyInstance");
@@ -49,7 +47,6 @@ public final class ClassNames {
     public static final ClassName ARENA_CLOSE_ACTION = get(PKG_INTEROP, "ArenaCloseAction");
     public static final ClassName MEMORY_CLEANER = get(PKG_INTEROP, "MemoryCleaner");
     public static final ClassName INTEROP = get(PKG_INTEROP, "Interop");
-    public static final ClassName LIB_LOAD = get(PKG_INTEROP, "LibLoad");
     public static final ClassName PLATFORM = get(PKG_INTEROP, "Platform");
 
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");
@@ -67,10 +64,17 @@ public final class ClassNames {
     public static final ClassName TYPES = get(PKG_GOBJECT_TYPES, "Types");
 
     // Some frequently used class names
+    public final static ClassName DESTROY_NOTIFY = get("org.gnome.glib", "DestroyNotify");
+    public final static ClassName GERROR = get("org.gnome.glib", "GError");
+    public final static ClassName GLIB = get("org.gnome.glib", "GLib");
     public final static ClassName GTYPE = get("org.gnome.glib", "Type");
-    public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
+    public final static ClassName LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
+
     public final static ClassName GOBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName GOBJECTS = get("org.gnome.gobject", "GObjects");
+    public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
+    public final static ClassName TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
+    public final static ClassName TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
     public final static ClassName TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");
 
     // The type variable used for <T extends GObject>

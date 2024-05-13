@@ -37,7 +37,8 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class TypeCache {
     
-    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister = new ConcurrentHashMap<>();
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
+            = new ConcurrentHashMap<>();
 
     /**
      * Get the constructor from the type registry for the native object
@@ -84,22 +85,23 @@ public class TypeCache {
         // Register the fallback constructor for this type. If another thread
         // did this in the meantime, putIfAbsent() will return that constructor.
         if (fallback != null) {
-            Function<MemorySegment, ? extends Proxy> ctorFromAnotherThread = typeRegister.putIfAbsent(type, fallback);
-            return Objects.requireNonNullElse(ctorFromAnotherThread, fallback);
+            var ctorFromOtherThread = typeRegister.putIfAbsent(type, fallback);
+            return Objects.requireNonNullElse(ctorFromOtherThread, fallback);
         }
         // No constructor found in the typeRegister, and no fallback provided
         return null;
     }
 
     /**
-     * Register the provided marshal function for the provided type
+     * Register the provided constructor function for the provided type
      *
-     * @param type    Type to use as key in the type register
-     * @param marshal Marshal function for this type
+     * @param type Type to use as key in the type register
+     * @param ctor Constructor function for this type
      */
-    public static void register(Type type, Function<MemorySegment, ? extends Proxy> marshal) {
+    public static void register(Type type,
+                                Function<MemorySegment, ? extends Proxy> ctor) {
         if (type != null) {
-            typeRegister.put(type, marshal);
+            typeRegister.put(type, ctor);
         }
     }
 }

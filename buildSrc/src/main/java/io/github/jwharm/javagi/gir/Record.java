@@ -38,7 +38,9 @@ public final class Record extends Multiplatform
         return (Namespace) super.parent();
     }
 
-    public Record(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Record(Map<String, String> attributes,
+                  List<Node> children,
+                  int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -53,14 +55,15 @@ public final class Record extends Multiplatform
             if (!this.fields().equals(other.fields()))
                 return new Record(
                         attributes(),
-                        children().stream()
+                        union(children(), other.children())
+                                .stream()
                                 .filter(not(Field.class::isInstance))
                                 .toList(),
                         platforms() | other.platforms());
             else
                 return new Record(
                         attributes(),
-                        children(),
+                        union(children(), other.children()),
                         platforms() | other.platforms());
         }
         return this;
@@ -84,7 +87,6 @@ public final class Record extends Multiplatform
         return fields().isEmpty() && unions().isEmpty();
     }
 
-    @Deprecated
     public boolean disguised() {
         return attrBool("disguised", false);
     }
@@ -102,7 +104,8 @@ public final class Record extends Multiplatform
     }
 
     public RegisteredType isGTypeStructFor() {
-        return TypeReference.get(namespace(), attr("glib:is-gtype-struct-for"));
+        Namespace ns = namespace();
+        return TypeReference.get(ns, attr("glib:is-gtype-struct-for"));
     }
 
     public String cSymbolPrefix() {

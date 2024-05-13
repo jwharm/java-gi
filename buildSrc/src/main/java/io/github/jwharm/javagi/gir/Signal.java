@@ -20,14 +20,17 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.TypeName;
-import io.github.jwharm.javagi.util.Conversions;
 
 import java.util.List;
 import java.util.Map;
 
+import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
+
 public final class Signal extends Multiplatform implements Callable {
 
-    public Signal(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Signal(Map<String, String> attributes,
+                  List<Node> children,
+                  int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -38,7 +41,7 @@ public final class Signal extends Multiplatform implements Callable {
 
     public TypeName typeName() {
         return parent().typeName().nestedClass(
-                Conversions.toJavaSimpleType(name() + "_callback", namespace()));
+                toJavaSimpleType(name() + "_callback", namespace()));
     }
 
     public boolean detailed() {

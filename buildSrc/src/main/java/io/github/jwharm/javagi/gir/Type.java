@@ -19,6 +19,8 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
@@ -27,6 +29,7 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Type extends GirElement implements AnyType, TypeReference {
 
@@ -60,6 +63,9 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName typeName() {
+        if (isGList())
+            return glistTypeName();
+
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
             case "void" -> TypeName.VOID;
@@ -71,12 +77,25 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         };
     }
 
+    private TypeName glistTypeName() {
+        var target = get();
+        var rawType = toJavaQualifiedType(target.name(), target.namespace());
+        if (anyTypes().getFirst() instanceof Type t) {
+            return ParameterizedTypeName.get(rawType, t.typeName());
+        } else {
+            // Fallback to pointer for a list of arrays
+            TypeName pointer = TypeName.get(MemorySegment.class);
+            return ParameterizedTypeName.get(rawType, pointer);
+        }
+    }
+
     public boolean isPrimitive() {
         String type = toJavaBaseType(name());
         if (type == null)
             return false;
 
-        return List.of("boolean", "byte", "char", "double", "float", "int", "long", "short")
+        return List.of("boolean", "byte", "char", "double", "float", "int",
+                        "long", "short")
                 .contains(type);
     }
 
@@ -94,9 +113,15 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "gboolean".equals(name()) && (!"_Bool".equals(cType()));
     }
 
+    public boolean isGList() {
+        return name() != null
+                && List.of("GLib.List", "GLib.SList").contains(name());
+    }
+
     public boolean isPointer() {
-        return cType() != null
-                && (cType().endsWith("*") || cType().endsWith("gpointer"));
+        String cType = cType();
+        return cType != null
+                && (cType.endsWith("*") || cType.endsWith("gpointer"));
     }
 
     public boolean isProxy() {
@@ -137,6 +162,13 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             if (end == -1) end = cType.length();
             return uncapitalize(cType.substring(start, end));
         }
+
+        String javaBaseType = toJavaBaseType(name());
+        if ("MemorySegment".equals(javaBaseType))
+            return "memorySegment";
+        if ("String".equals(javaBaseType))
+            return "string";
+
         RegisteredType target = get();
         return target == null ? null : target.typeTag();
     }
@@ -150,5 +182,28 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             case Property _, Alias _, ReturnValue _, Parameter _ -> true;
             case null, default -> false;
         };
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Type that = (Type) o;
+        if (this.cType() != null && that.cType() != null)
+            return this.cType().equals(that.cType());
+        else
+            return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        if (cType() != null)
+            return Objects.hash(cType());
+        else
+            return super.hashCode();
     }
 }

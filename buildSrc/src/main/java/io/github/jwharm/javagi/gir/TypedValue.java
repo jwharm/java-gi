@@ -23,13 +23,10 @@ import com.squareup.javapoet.TypeName;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 public sealed interface TypedValue
         extends Node
-        permits Constant, Field, InstanceParameter, Parameter, Property, ReturnValue {
+        permits Constant, Field, InstanceParameter, Parameter, Property,
+                ReturnValue {
 
     InfoElements infoElements();
 
@@ -48,5 +45,15 @@ public sealed interface TypedValue
             case Type type -> type.isActuallyAnArray()
                     || TypeName.get(String.class).equals(type.typeName());
         };
+    }
+
+    default boolean isBitfield() {
+        if (anyType() instanceof Type type && (!type.isPrimitive())) {
+            RegisteredType target = type.get();
+            if (target instanceof Alias alias)
+                target = alias.type().get();
+            return target instanceof Bitfield;
+        }
+        return false;
     }
 }

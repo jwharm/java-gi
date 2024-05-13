@@ -63,7 +63,7 @@ public class Library implements Serializable {
                 if (result != null)
                     return result;
 
-                for (RegisteredType rt : filter(ns.children(), RegisteredType.class)) {
+                for (var rt : filter(ns.children(), RegisteredType.class)) {
                     result = lookupCIdentifier(cIdentifier, rt);
                     if (result != null)
                         return result;

@@ -21,8 +21,6 @@ package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -35,6 +33,7 @@ import javax.lang.model.element.Modifier;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 
 public class RecordGenerator extends RegisteredTypeGenerator {
 
@@ -54,7 +53,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (rec.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(rec.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(rec.infoElements().doc()).generate());
         if (rec.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
@@ -64,17 +64,23 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 || (outerClass instanceof Class c && c.generic()))
             builder.addTypeVariable(ClassNames.GENERIC_T);
 
-        // TypeClass and TypeInterface records are generated as Java inner classes that
-        // extend the TypeClass or TypeInterface of the parent type.
+        /*
+         * TypeClass and TypeInterface records are generated as Java inner
+         * classes that extend the TypeClass or TypeInterface of the parent
+         * type.
+         */
         if (outerClass != null) {
             builder.addModifiers(Modifier.STATIC);
             if (rec.fields().isEmpty()) {
                 builder.superclass(outerClass instanceof Interface
-                        ? ClassName.get("org.gnome.gobject", "TypeInterface")
-                        : ClassName.get("org.gnome.gobject", "TypeClass"));
+                        ? ClassNames.TYPE_INTERFACE : ClassNames.TYPE_CLASS);
             } else {
-                // parent_class is always the first field, unless the struct is disguised
-                Record parentRec = (Record) ((Type) rec.fields().getFirst().anyType()).get();
+                /*
+                 * parent_class is always the first field, unless the struct is
+                 * disguised.
+                 */
+                Type type = (Type) rec.fields().getFirst().anyType();
+                Record parentRec = (Record) type.get();
                 RegisteredType parentClass = parentRec.isGTypeStructFor();
                 if (parentClass != null) {
                     String nestedClassName = toJavaSimpleType(parentRec.name(), parentRec.namespace());
@@ -83,10 +89,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     builder.superclass(parentRec.typeName());
                 }
             }
-        } else if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rec.cType())) {
-            builder.superclass(ClassNames.PROXY_INSTANCE);
         } else {
-            builder.superclass(ClassNames.MANAGED_INSTANCE);
+            builder.superclass(ClassNames.PROXY_INSTANCE);
         }
 
         if (rec.isFloating())
@@ -103,7 +107,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(memoryAddressConstructor());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(rec);
+        MethodSpec memoryLayout = new MemoryLayoutGenerator()
+                                            .generateMemoryLayout(rec);
         if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
 
@@ -129,6 +134,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         addFunctions(builder);
         addMethods(builder);
 
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
+
         if ("GTypeInstance".equals(rec.cType()))
             addCallParentMethods();
 
@@ -144,7 +152,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         Callback cb  = f.callback();
 
         if (cb == null) {
-            if (f.anyType() instanceof Type t && (!t.isPointer()) && t.get() instanceof Record)
+            if (f.anyType() instanceof Type t
+                    && (!t.isPointer())
+                    && t.get() instanceof Record)
                 // Copy contents from nested struct
                 builder.addMethod(generator.generateReadCopyMethod());
             else
@@ -152,7 +162,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 builder.addMethod(generator.generateReadMethod());
 
         } else {
-            builder.addType(new ClosureGenerator(cb).generateFunctionalInterface());
+            builder.addType(new ClosureGenerator(cb)
+                                    .generateFunctionalInterface());
 
             // For callbacks, generate a second override method
             // with java.lang.reflect.Method parameter
@@ -172,50 +183,14 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             }
         }
 
-        if (f.anyType() instanceof Type t && (!t.isPointer()) && t.get() instanceof Record)
+        if (f.anyType() instanceof Type t
+                && (!t.isPointer())
+                && t.get() instanceof Record)
             // Copy contents to nested struct
             builder.addMethod(generator.generateWriteCopyMethod());
         else
             // Write pointer or primitive value
             builder.addMethod(generator.generateWriteMethod());
-    }
-
-    public void setFreeFunc(MethodSpec.Builder builder, String identifier, TypeName className) {
-        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rec.cType()))
-            return;
-
-        if (rec.foreign())
-            return;
-
-        // Look for instance methods named "free()" and "unref()"
-        for (Method method : rec.methods()) {
-            if (List.of("free", "unref").contains(method.name())
-                    && method.parameters() == null
-                    && (method.returnValue().anyType().isVoid())) {
-                builder.addStatement("$T.setFreeFunc(%L.handle(), %S)",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier,
-                        method.callableAttrs().cIdentifier());
-                return;
-            }
-        }
-
-        // Boxed types
-        if (rec.getTypeFunc() != null) {
-            builder.addStatement("$T.setFreeFunc($L.handle(), $S)",
-                    ClassNames.MEMORY_CLEANER,
-                    identifier,
-                    "g_boxed_free");
-            if (className == null)
-                builder.addStatement("$T.setBoxedType($L.handle(), getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier);
-            else
-                builder.addStatement("$T.setBoxedType($L.handle(), $T.getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier,
-                        className);
-        }
     }
 
     private MethodSpec constructor(boolean arenaParameter) {
@@ -339,7 +314,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         String paramTypes = rec.fields().stream()
                 .filter(not(Field::isDisguised))
                 .map(f -> new TypedValueGenerator(f).getType().toString() + ", ")
-                .collect(Collectors.joining());
+                .collect(joining());
         spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2L$3T)}\n",
                         rec.typeName(), paramTypes, Arena.class)
                         .addAnnotation(Deprecated.class);
@@ -357,14 +332,13 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         String params = rec.fields().stream()
                 .filter(not(Field::isDisguised))
                 .map(f -> toJavaIdentifier(f.name()) + ", ")
-                .collect(Collectors.joining());
+                .collect(joining());
 
         return spec.addStatement("return new $T($Larena)", rec.typeName(), params)
                 .build();
     }
 
     private MethodSpec gvariantGetType() {
-        ClassName G_TYPE = ClassName.get("org.gnome.glib", "Type");
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
                     Get the GType of the GVariant class
@@ -372,9 +346,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     @return the GType
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(G_TYPE)
+                .returns(ClassNames.GTYPE)
                 // Types.VARIANT is declared in GObject. Hard-coded value as workaround
-                .addStatement("return new $T(21L << 2)", G_TYPE)
+                .addStatement("return new $T(21L << 2)", ClassNames.GTYPE)
                 .build();
     }
 
@@ -389,7 +363,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         Set the flag that determines if for virtual method calls,
                         {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
                         parent type instead of the instance class.
-                                     
+                        
                         @param callParent true to call the parent vfunc instead of an overridden vfunc
                         """)
                 .addModifiers(Modifier.PROTECTED)
@@ -399,12 +373,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(MethodSpec.methodBuilder("callParent")
                 .addJavadoc("""
-                         Returns the flag that determines if for virtual method calls,
-                         {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
-                         parent type instead of the instance class.
-                         
-                         @return true when parent vfunc is called instead of an overridden vfunc, or
-                                 false when the overridden vfunc of the instance is called.
+                        Returns the flag that determines if for virtual method calls,
+                        {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
+                        parent type instead of the instance class.
+                        
+                        @return true when parent vfunc is called instead of an overridden vfunc, or
+                                false when the overridden vfunc of the instance is called.
                         """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(boolean.class)
@@ -415,21 +389,19 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     private MethodSpec gvalueToString() {
         return MethodSpec.methodBuilder("toString")
                 .addJavadoc("""
-                                Return a newly allocated String using {@link $1T#strdupValueContents($2T)},
-                                which describes the contents of a {@link $2T}.
-                                The main purpose of this function is to describe {@link $2T}
-                                contents for debugging output, the way in which the contents are
-                                described may change between different GLib versions.
-                                                        
-                                @return the newly allocated String.
-                                """,
-                        ClassName.get("org.gnome.gobject", "GObjects"),
-                        ClassName.get("org.gnome.gobject", "Value"))
+                        Return a newly allocated String using {@link $1T#strdupValueContents($2T)},
+                        which describes the contents of a {@link $2T}.
+                        The main purpose of this function is to describe {@link $2T}
+                        contents for debugging output, the way in which the contents are
+                        described may change between different GLib versions.
+                        
+                        @return the newly allocated String.
+                        """, ClassNames.GOBJECTS, ClassNames.GVALUE)
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(String.class)
                 .addStatement("return $T.strdupValueContents(this)",
-                        ClassName.get("org.gnome.gobject", "GObjects"))
+                        ClassNames.GOBJECTS)
                 .build();
     }
 }

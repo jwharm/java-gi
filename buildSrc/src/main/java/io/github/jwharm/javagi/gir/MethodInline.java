@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -17,27 +17,10 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.github.jwharm.javagi.base;
-
-import io.github.jwharm.javagi.interop.MemoryCleaner;
-
-import java.lang.foreign.MemorySegment;
+package io.github.jwharm.javagi.gir;
 
 /**
- * Base class for ProxyInstances that will call a user-specified {@code free()}
- * function upon garbage-collection of the Java object.
+ * method-inline is unsupported
  */
-public class ManagedInstance extends ProxyInstance {
-
-    /**
-     * Create a new {@code ManagedInstance} object for an instance in native
-     * memory, and register it in the {@link MemoryCleaner} so it will be
-     * automatically cleaned during garbage collection.
-     *
-     * @param address the memory address of the instance
-     */
-    public ManagedInstance(MemorySegment address) {
-        super(address);
-        MemoryCleaner.register(this);
-    }
+public class MethodInline extends GirElement {
 }

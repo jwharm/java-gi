@@ -56,25 +56,25 @@ public class Overrides {
      * The method handle for g_type_interface_peek is used by all virtual
      * method bindings in interfaces to retrieve the interface typestruct.
      */
-    private static final MethodHandle g_type_interface_peek = Interop.downcallHandle(
-            "g_type_interface_peek",
-            FunctionDescriptor.of(
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.JAVA_LONG),
-            false
-    );
+    private static final MethodHandle g_type_interface_peek =
+            Interop.downcallHandle(
+                "g_type_interface_peek",
+                FunctionDescriptor.of(
+                        ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG),
+                false);
 
     /*
      * Method handle used to retrieve the parent gclass.
      */
-    private static final MethodHandle g_type_class_peek_parent = Interop.downcallHandle(
-            "g_type_class_peek_parent",
-            FunctionDescriptor.of(
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS),
-            false
-    );
+    private static final MethodHandle g_type_class_peek_parent =
+            Interop.downcallHandle(
+                "g_type_class_peek_parent",
+                FunctionDescriptor.of(
+                        ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS),
+                false);
 
     /*
      * Convert "methodName" to "overrideMethodName"
@@ -98,7 +98,8 @@ public class Overrides {
      * @return a lambda to run during class initialization that will register
      *         the virtual functions
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> overrideClassMethods(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Consumer<TC> overrideClassMethods(Class<T> cls) {
 
         Class<?> typeStruct = Types.getTypeClass(cls);
         if (typeStruct == null)
@@ -109,7 +110,9 @@ public class Overrides {
         List<Method> methods = new ArrayList<>();
         for (Method method : cls.getDeclaredMethods()) {
             try {
-                Method virtual = findMethod(parentClass, method.getName(), method.getParameterTypes());
+                String name = method.getName();
+                Class<?>[] paramTypes = method.getParameterTypes();
+                Method virtual = findMethod(parentClass, name, paramTypes);
                 if (! Proxy.class.isAssignableFrom(virtual.getDeclaringClass()))
                     continue;
 
@@ -138,15 +141,20 @@ public class Overrides {
             for (Method method : methods) {
                 String name = getOverrideName(method);
                 try {
-                    Method overrider = gclass.getClass().getMethod(name, Arena.class, Method.class);
+                    Method overrider = gclass.getClass()
+                            .getMethod(name, Arena.class, Method.class);
                     overrider.invoke(gclass, Arena.global(), method);
                 } catch (InvocationTargetException ite) {
                     System.err.printf("Cannot override method %s in class %s: %s\n",
-                            method.getName(), cls.getName(), ite.getTargetException().toString());
+                            method.getName(),
+                            cls.getName(),
+                            ite.getTargetException().toString());
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s in class %s: %s\n",
-                            method.getName(), cls.getName(), e.toString());
+                            method.getName(),
+                            cls.getName(),
+                            e.toString());
                 }
             }
         };
@@ -157,14 +165,17 @@ public class Overrides {
      * superclasses.
      * Throws NoSuchMethodException if it is not found.
      */
-    private static Method findMethod(Class<?> cls, String methodName, Class<?>... parameterTypes)
+    private static Method findMethod(Class<?> cls,
+                                     String methodName,
+                                     Class<?>... paramTypes)
             throws NoSuchMethodException {
         Class<?> currentClass = cls;
         while (currentClass != null) {
             try {
-                return currentClass.getDeclaredMethod(methodName, parameterTypes);
+                return currentClass.getDeclaredMethod(methodName, paramTypes);
             } catch (NoSuchMethodException e) {
-                // If the method is not found in the current class, try the superclass
+                // If the method is not found in the current class, try the
+                // superclass
                 currentClass = currentClass.getSuperclass();
             }
         }
@@ -186,7 +197,8 @@ public class Overrides {
      * @return a lambda to run during interface initialization that will
      *         register the virtual functions
      */
-    static <T extends GObject, TI extends TypeInterface> Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
+    static <T extends GObject, TI extends TypeInterface>
+    Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
 
         // Lookup the memory address constructor for the TypeInterface
         Class<TI> typeStruct = Types.getTypeInterface(iface);
@@ -229,7 +241,8 @@ public class Overrides {
                 try {
                     // upcast to the actual type
                     TI ifaceInstance = constructor.apply(giface.handle());
-                    Method overrider = typeStruct.getMethod(name, Arena.class, Method.class);
+                    Method overrider = typeStruct.getMethod(
+                            name, Arena.class, Method.class);
                     overrider.invoke(ifaceInstance, Arena.global(), method);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -253,10 +266,11 @@ public class Overrides {
     public static MemorySegment lookupVirtualMethod(MemorySegment address,
                                                     MemoryLayout classLayout,
                                                     String name) {
+        var path = MemoryLayout.PathElement.groupElement(name);
         return address
                 .get(ValueLayout.ADDRESS.withTargetLayout(classLayout), 0)
                 .get(ValueLayout.ADDRESS,
-                     classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+                     classLayout.byteOffset(path));
     }
 
     /**
@@ -264,26 +278,27 @@ public class Overrides {
      * is retrieved from the TypeClass of the parent class of the instance.
      *
      * @param  address     the memory address of the object instance
-     * @param  classLayout the memory layout of the object's TypeClass
+     * @param  layout      the memory layout of the object's TypeClass
      * @param  name        the name of the virtual method (as defined in the
      *                     TypeClass)
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethodParent(MemorySegment address,
-                                                          MemoryLayout classLayout,
+                                                          MemoryLayout layout,
                                                           String name) {
         try {
             // Get the TypeClass
             var myClass = address.get(ValueLayout.ADDRESS, 0);
 
             // Get the parent TypeClass
-            var parentClass = (MemorySegment) g_type_class_peek_parent.invoke(myClass);
+            var parentClass = (MemorySegment) g_type_class_peek_parent
+                    .invoke(myClass);
 
             // Return a pointer to the requested virtual method address in the
             // dispatch table
-            return parentClass.reinterpret(classLayout.byteSize())
-                    .get(ValueLayout.ADDRESS,
-                         classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+            var path = MemoryLayout.PathElement.groupElement(name);
+            return parentClass.reinterpret(layout.byteSize())
+                    .get(ValueLayout.ADDRESS, layout.byteOffset(path));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
@@ -310,15 +325,14 @@ public class Overrides {
             MemorySegment myClass = address.get(ValueLayout.ADDRESS, 0);
 
             // Get the TypeInterface implemented by the TypeClass
-            MemorySegment iface = (MemorySegment) g_type_interface_peek.invokeExact(
-                    myClass,
-                    ifaceType.getValue().longValue());
+            MemorySegment iface = (MemorySegment) g_type_interface_peek
+                    .invokeExact(myClass,ifaceType.getValue().longValue());
 
             // Return a pointer to the requested virtual method address in the
             // dispatch table
+            var path = MemoryLayout.PathElement.groupElement(name);
             return iface.reinterpret(classLayout.byteSize())
-                    .get(ValueLayout.ADDRESS,
-                         classLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+                    .get(ValueLayout.ADDRESS, classLayout.byteOffset(path));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
@@ -329,17 +343,16 @@ public class Overrides {
      * is retrieved from the TypeInterface with the specified GType,
      * implemented by the parent class of the instance.
      *
-     * @param  address           the memory address of the object instance
-     * @param  parentClassLayout the memory layout of the parent object's
-     *                           TypeClass
-     * @param  name              the name of the virtual method (as defined in
-     *                           the TypeInterface)
-     * @param  ifaceType         the GType of the interface that declares the
-     *                           virtual method
+     * @param  address   the memory address of the object instance
+     * @param  layout    the memory layout of the parent object's TypeClass
+     * @param  name      the name of the virtual method (as defined in the
+     *                   TypeInterface)
+     * @param  ifaceType the GType of the interface that declares the virtual
+     *                   method
      * @return a function pointer to the requested virtual method
      */
     public static MemorySegment lookupVirtualMethodParent(MemorySegment address,
-                                                          MemoryLayout parentClassLayout,
+                                                          MemoryLayout layout,
                                                           String name,
                                                           Type ifaceType) {
         try {
@@ -347,17 +360,18 @@ public class Overrides {
             var myClass = address.get(ValueLayout.ADDRESS, 0);
 
             // Get the parent TypeClass
-            var parentClass = (MemorySegment) g_type_class_peek_parent.invoke(myClass);
+            var parentClass = (MemorySegment) g_type_class_peek_parent
+                    .invoke(myClass);
 
             // Get the TypeInterface implemented by the parent TypeClass
             var parentIface = (MemorySegment) g_type_interface_peek.invokeExact(
-                    parentClass,
-                    ifaceType.getValue().longValue());
+                    parentClass,ifaceType.getValue().longValue());
 
-            // Return a pointer to the requested virtual method address in the dispatch table
-            return parentIface.reinterpret(parentClassLayout.byteSize())
-                    .get(ValueLayout.ADDRESS,
-                         parentClassLayout.byteOffset(MemoryLayout.PathElement.groupElement(name)));
+            // Return a pointer to the requested virtual method address in the
+            // dispatch table
+            var path = MemoryLayout.PathElement.groupElement(name);
+            return parentIface.reinterpret(layout.byteSize())
+                    .get(ValueLayout.ADDRESS, layout.byteOffset(path));
         } catch (Throwable t) {
             throw new InteropException(t);
         }

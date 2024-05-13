@@ -28,7 +28,7 @@ import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
 public sealed interface RegisteredType
         extends Node
         permits Alias, Boxed, Callback, Class, FlaggedType,
-                Interface, Record, Union {
+                Interface, Namespace, Record, Union {
 
     RegisteredType mergeWith(RegisteredType rt);
     int platforms();
@@ -52,14 +52,12 @@ public sealed interface RegisteredType
                 typeTag(), typeName());
     }
 
-    default String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        return paramName + ".handle()";
-    }
-
     default boolean checkIsGObject() {
         return switch(this) {
             case Class c -> c.isInstanceOf("GObject", "Object");
-            case Interface _ -> true;
+            case Interface i -> i.prerequisites().stream()
+                                    .map(TypeReference::get)
+                                    .anyMatch(RegisteredType::checkIsGObject);
             case Alias a -> {
                 var target = a.type().get();
                 yield target != null && target.checkIsGObject();
@@ -93,6 +91,10 @@ public sealed interface RegisteredType
                 .anyMatch(m -> "ref_sink".equals(m.name()));
     }
 
+    default ClassName helperClass() {
+        return typeName().nestedClass("MethodHandles");
+    }
+
     default String name() {
         return attr("name");
     }
@@ -107,5 +109,9 @@ public sealed interface RegisteredType
 
     default String getTypeFunc() {
         return attr("glib:get-type");
+    }
+
+    default boolean skipJava() {
+        return attrBool("java-gi-skip", false);
     }
 }

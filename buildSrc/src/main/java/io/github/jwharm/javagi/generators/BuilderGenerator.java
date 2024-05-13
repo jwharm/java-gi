@@ -52,12 +52,14 @@ public class BuilderGenerator {
         return MethodSpec.methodBuilder("builder")
                 .addJavadoc("""
                         A {@link Builder} object constructs a {@code $L}
-                        using the <em>builder pattern</em> to set property values.
+                        with the specified properties.
                         Use the various {@code set...()} methods to set properties,
                         and finish construction with {@link Builder#build()}.
                         """, rt.typeName().simpleName())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ParameterizedTypeName.get(builderTypeName, WildcardTypeName.subtypeOf(builderTypeName)))
+                .returns(ParameterizedTypeName.get(
+                            builderTypeName,
+                            WildcardTypeName.subtypeOf(builderTypeName)))
                 .addStatement("return new $T<>()", builderTypeName)
                 .build();
     }
@@ -121,7 +123,8 @@ public class BuilderGenerator {
 
         // Javadoc
         if (prp.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(prp.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(prp.infoElements().doc()).generate());
 
         // Deprecated annotation
         if (prp.infoAttrs().deprecated())
@@ -167,12 +170,15 @@ public class BuilderGenerator {
 
         if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM, Platform.toStringLiterals(rt.platforms()));
+                    ClassNames.PLATFORM,
+                    Platform.toStringLiterals(rt.platforms()));
 
         return builder.addStatement("return ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
-                        rt.typeName(), ClassNames.GOBJECT)
+                        rt.typeName(),
+                        ClassNames.GOBJECT)
                 .nextControlFlow("finally")
-                .addStatement("for ($T _value : getValues()) _value.unset()", ClassNames.GVALUE)
+                .addStatement("for ($T _value : getValues()) _value.unset()",
+                        ClassNames.GVALUE)
                 .addStatement("getArena().close()")
                 .endControlFlow()
                 .build();

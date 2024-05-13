@@ -2,7 +2,7 @@
 
 ## Required Java version
 
-First, download and install [JDK 21](https://jdk.java.net/21/). Java-GI uses the "Panama" Foreign Function & Memory API that is available as a preview feature in JDK 21.
+First, download and install [JDK 22](https://jdk.java.net/22/) or newer. Java-GI uses the "Panama" Foreign Function & Memory API that is only available since JDK 22.
 
 ## Dependencies
 
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.9.2'
+    implementation 'io.github.jwharm.javagi:gtk:0.10.0'
 }
 ```
 
@@ -73,13 +73,9 @@ public class HelloWorld {
 
 ## Compile and run
 
-Build and run the application with the following parameters:
+Build and run the application. The following command-line parameters are useful:
 
-- Set the Java language version: `--release 21`
-
-- While the Panama foreign function API is still in preview status, set the `--enable-preview` option both when **compiling** and **running** your application.
-
-- To suppress warnings about native access, also add `--enable-native-access=ALL-UNNAMED`.
+- Add `--enable-native-access=ALL-UNNAMED` to suppress warnings about native access.
 
 - If you encounter an error about a missing library, override the java library path with `"-Djava.library.path=/usr/lib/..."`.
 
@@ -87,35 +83,38 @@ See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/m
 
 ## Java library path
 
-If you see an error about a missing library, make sure that all dependencies are installed, and available on Java library path (the `"java.library.path"` system property). If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument, for example: `-Djava.library.path=/lib/x86_64-linux-gnu` on Debian-based systems.
+If you see an error about a missing library, make sure that all dependencies are installed. If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument. for example: `-Djava.library.path=/lib/x86_64-linux-gnu` on Debian-based systems.
 
-In the [Java-GI examples](examples.md), the JVM arguments are setup for the system library folders of the common (RedHat/Fedora, Arch and Debian/Ubuntu) Linux distributions:
+## Linux
 
-```
+On most Linux distributions, Gtk will already be installed. Java-GI will load shared libraries using `dlopen`, and fallback to the `java.library.path`. So in most cases, you can simply run your application with `--enable-native-access=ALL-UNNAMED`:
+
+```groovy
 tasks.named('run') {
-    jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
-    jvmArgs += "-Djava.library.path=/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu"
 }
 ```
 
-On MacOS, if you installed Gtk using Homebrew, the library path is usually `/opt/homebrew/lib`. You also need to add the parameter `-XstartOnFirstThread`. So the complete task definition will look like this:
+## MacOS
 
-```
+On MacOS, you can install Gtk using Homebrew, and use the parameter `-XstartOnFirstThread`. A complete Gradle `run` task will look like this:
+
+```groovy
 tasks.named('run') {
-    jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
     jvmArgs += '-Djava.library.path=/opt/homebrew/lib'
     jvmArgs += '-XstartOnFirstThread'
 }
 ```
 
-On Windows, if you installed Gtk with MSYS2, the default path is `C:\msys64\mingw64\bin`. If that's the case, you can change the build file like this:
+## Windows
 
-```
+On Windows, Gtk can be installed with MSYS2. A Gradle `run` task will look like this:
+
+```groovy
 tasks.named('run') {
-    jvmArgs += "--enable-preview"
     jvmArgs += "--enable-native-access=ALL-UNNAMED"
     jvmArgs += '-Djava.library.path=C:/msys64/mingw64/bin'
 }
 ```
+

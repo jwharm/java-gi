@@ -50,10 +50,10 @@ public class CollectionUtils {
      * Filter the list for members of the requested type. Returns an
      * unmodifiable list.
      */
+    @SuppressWarnings("unchecked") // cast is checked by cls::isInstance
     public static <A, B extends A> List<B> filter(List<A> list, Class<B> cls) {
-        return list.stream()
+        return (List<B>) list.stream()
                 .filter(cls::isInstance)
-                .map(cls::cast)
                 .toList();
     }
 
@@ -61,10 +61,10 @@ public class CollectionUtils {
      * Search the list for a member of the requested type. Returns {@code null}
      * when not found.
      */
+    @SuppressWarnings("unchecked") // cast is checked by cls::isInstance
     public static <A, B extends A> B findAny(List<A> list, Class<B> cls) {
-        return list.stream()
+        return (B) list.stream()
                 .filter(cls::isInstance)
-                .map(cls::cast)
                 .findAny()
                 .orElse(null);
     }

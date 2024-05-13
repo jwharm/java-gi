@@ -20,11 +20,9 @@
 package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Class;
-import io.github.jwharm.javagi.gir.Record;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
@@ -47,12 +45,17 @@ public class ConstructorGenerator {
         this.ctor = ctor;
         parent = ctor.parent();
 
-        // Method name, without "new" prefix
+        privateMethodName = getName(ctor, true);
+        methodName = getName(ctor, false);
+    }
+
+    public static String getName(Constructor ctor, boolean privateMethodName) {
         String name = ctor.name();
         if (name.startsWith("new_"))
             name = name.substring(4);
-        privateMethodName = toJavaIdentifier("construct_" + name);
-        methodName = toJavaIdentifier(name);
+        return privateMethodName
+                ? toJavaIdentifier("construct_" + name)
+                : toJavaIdentifier(name);
     }
 
     public Iterable<MethodSpec> generate() {
@@ -69,12 +72,12 @@ public class ConstructorGenerator {
 
         // Javadoc
         if (ctor.infoElements().doc() != null) {
-            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            String doc = new DocGenerator(ctor.infoElements().doc()).generate();
             if (ctor.doPlatformCheck())
                 builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                        .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                       .addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
-                builder.addJavadoc(javadoc);
+                builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -82,7 +85,7 @@ public class ConstructorGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
-        new CallableGenerator(ctor).generateMethodParameters(builder);
+        new CallableGenerator(ctor).generateMethodParameters(builder, false, true);
 
         // Exception
         if (ctor.callableAttrs().throws_())
@@ -91,9 +94,21 @@ public class ConstructorGenerator {
         // Invoke private construction method
         builder.addStatement("super(constructNew($L))", parameterNames());
 
-        // Cache new instance
-        if (parent instanceof Class || parent instanceof Interface)
-            builder.addStatement("$T.put(handle(), this)", ClassNames.INSTANCE_CACHE);
+        // Cache new GObject instance
+        if (parent.checkIsGObject())
+            builder.addStatement("$T.put(handle(), this)",
+                    ClassNames.INSTANCE_CACHE);
+
+        // Add cleaner to struct/union pointer
+        else {
+            builder.addStatement("$T.takeOwnership(this)",
+                            ClassNames.MEMORY_CLEANER);
+            new RegisteredTypeGenerator(parent).setFreeFunc(
+                    builder,
+                    "this",
+                    parent.typeName()
+            );
+        }
 
         return builder.build();
     }
@@ -103,15 +118,16 @@ public class ConstructorGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
         // Override the specified return type
-        builder.returns(parent.typeName());
+        TypeName returnType = parent.typeName();
+        builder.returns(returnType);
 
         // Javadoc
         if (ctor.infoElements().doc() != null) {
-            String javadoc = new DocGenerator(ctor.infoElements().doc()).generate();
+            String doc = new DocGenerator(ctor.infoElements().doc()).generate();
             if (ctor.doPlatformCheck())
-                builder.addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
+                builder.addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
             else
-                builder.addJavadoc(javadoc);
+                builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -119,7 +135,8 @@ public class ConstructorGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Parameters
-        new CallableGenerator(ctor).generateMethodParameters(builder);
+        new CallableGenerator(ctor)
+                .generateMethodParameters(builder, false, true);
 
         // Exception
         if (ctor.callableAttrs().throws_())
@@ -130,7 +147,9 @@ public class ConstructorGenerator {
             builder.addStatement("$T.checkSupportedPlatform($L)",
                     ClassNames.PLATFORM, Platform.toStringLiterals(ctor.platforms()));
 
-        builder.addStatement("var _result = $L($L)", privateMethodName, parameterNames());
+        builder.addStatement("var _result = $L($L)",
+                privateMethodName,
+                parameterNames());
 
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
@@ -145,12 +164,12 @@ public class ConstructorGenerator {
                             stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
                             ClassNames.GOBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle())",
+                    .addStatement("$T.debug($S, _gobject.handle().address())",
                             ClassNames.GLIB_LOGGER,
-                            "Ref " + parent.typeName() + " %ld\\n")
+                            "Ref " + returnType + " %ld")
                     .addStatement("_gobject.ref()")
                     .endControlFlow()
-                    .addStatement("return ($T) _object", parent.typeName());
+                    .addStatement("return ($T) _object", returnType);
         }
 
         // GVariant constructors return floating references
@@ -163,43 +182,30 @@ public class ConstructorGenerator {
                             stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
                     .addStatement("_instance.refSink()")
-                    .addStatement("$T.takeOwnership(_instance.handle())",
+                    .addStatement("$T.takeOwnership(_instance)",
                             ClassNames.MEMORY_CLEANER)
-                    .addStatement("$T.setFreeFunc(_instance.handle(), $S)",
+                    .addStatement("$T.setFreeFunc(_instance, $S)",
                             ClassNames.MEMORY_CLEANER, "g_variant_unref")
                     .endControlFlow()
                     .addStatement("return ($T) _instance", parent.typeName());
         }
 
-        // Add cleaner to struct/union pointer
-        else if (parent instanceof Record record) {
+        // Add cleaner to struct/union pointers and non-GObject TypeInstances
+        else {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
                                     .add(stmt)
                                     .add(";\n")
                                     .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
-                    .addStatement("$T.takeOwnership(_instance.handle())",
+                    .addStatement("$T.takeOwnership(_instance)",
                             ClassNames.MEMORY_CLEANER);
 
-            new RecordGenerator(record).setFreeFunc(
-                    builder,
-                    "_instance",
-                    parent.typeName()
-            );
+            new RegisteredTypeGenerator(parent)
+                    .setFreeFunc(builder, "_instance", returnType);
 
             builder.endControlFlow()
-                    .addStatement("return ($T) _instance",
-                            parent.typeName());
-        }
-
-        // No ownership transfer, just marshal the return value
-        else {
-            stmt = PartialStatement.of("return ($parentType:T) ",
-                            "parentType", parent.typeName())
-                    .add(stmt)
-                    .add(";\n");
-            builder.addNamedCode(stmt.format(), stmt.arguments());
+                   .addStatement("return ($T) _instance", returnType);
         }
 
         return builder.build();
@@ -214,9 +220,7 @@ public class ConstructorGenerator {
                 .filter(not(Parameter::isDestroyNotifyParameter))
                 .filter(not(Parameter::isArrayLengthParameter))
                 .map(TypedValue::name)
-                .map(name -> "...".equals(name)
-                        ? "varargs"
-                        : Conversions.toJavaIdentifier(name))
+                .map(n -> "...".equals(n) ? "varargs" : toJavaIdentifier(n))
                 .collect(Collectors.joining(", "));
     }
 }

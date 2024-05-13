@@ -43,7 +43,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (cls.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(cls.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(cls.infoElements().doc()).generate());
         if (cls.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
@@ -70,7 +71,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         builder.addStaticBlock(staticBlock());
 
         for (var constant : cls.constants()) {
-            var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
+            var fieldSpec = new TypedValueGenerator(constant)
+                    .generateConstantDeclaration();
             if (fieldSpec != null) builder.addField(fieldSpec);
         }
 
@@ -79,7 +81,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         else if (cls.isInstanceOf("GObject", "ParamSpec"))
             builder.addMethod(paramSpecGetTypeMethod());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(cls);
+        MethodSpec memoryLayout = new MemoryLayoutGenerator()
+                .generateMemoryLayout(cls);
         if (memoryLayout != null)
             builder.addMethod(memoryLayout);
 
@@ -113,6 +116,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConnect())
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
+
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
 
         return builder.build();
     }
@@ -163,8 +169,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     && m.parameters().instanceParameter() != null
                     && m.parameters().parameters().isEmpty()
                     && (m.returnValue().anyType().isVoid())) {
-                spec.addStatement("$T.setFreeFunc(handle(), $S)",
-                        ClassNames.MEMORY_CLEANER, m.callableAttrs().cIdentifier());
+                spec.addStatement("$T.setFreeFunc(this, $S)",
+                        ClassNames.MEMORY_CLEANER,
+                        m.callableAttrs().cIdentifier());
                 break;
             }
         }
@@ -206,12 +213,14 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConstructorVarargs() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                         Creates a new GObject instance of the provided GType and with the provided property values.
-                         
-                         @param  objectType the GType of the new GObject
-                         @param  propertyNamesAndValues pairs of property names and values (Strings and Objects)
-                         @return the newly created GObject instance
-                         @throws IllegalArgumentException invalid property name
+                        Creates a new GObject instance of the provided GType and with the
+                        provided property values.
+                        
+                        @param  objectType the GType of the new GObject
+                        @param  propertyNamesAndValues pairs of property names and values
+                                (Strings and Objects)
+                        @return the newly created GObject instance
+                        @throws IllegalArgumentException invalid property name
                         """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addTypeVariable(TypeVariableName.get("T", ClassNames.GOBJECT))
@@ -227,11 +236,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectGetProperty() {
         return MethodSpec.methodBuilder("getProperty")
                 .addJavadoc("""
-                         Get a property of an object.
-                         
-                         @param propertyName the name of the property to get
-                         @return the property value
-                         @throws IllegalArgumentException invalid property name
+                        Get a property of an object.
+                        
+                        @param  propertyName the name of the property to get
+                        @return the property value
+                        @throws IllegalArgumentException invalid property name
                         """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(Object.class)
@@ -244,11 +253,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectSetProperty() {
         return MethodSpec.methodBuilder("setProperty")
                 .addJavadoc("""
-                         Set a property of an object.
-                         
-                         @param propertyName the name of the property to set
-                         @param value the new property value
-                         @throws IllegalArgumentException invalid property name
+                        Set a property of an object.
+                        
+                        @param  propertyName the name of the property to set
+                        @param  value the new property value
+                        @throws IllegalArgumentException invalid property name
                         """)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "propertyName")
@@ -261,13 +270,13 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConnect() {
         return MethodSpec.methodBuilder("connect")
                 .addJavadoc("""
-                       Connect a callback to a signal for this object. The handler will be called
-                       before the default handler of the signal.
+                       Connect a callback to a signal for this object. The handler will be
+                       called before the default handler of the signal.
                        
-                       @param detailedSignal a string of the form "signal-name::detail"
-                       @param callback       the callback to connect
-                       @return a SignalConnection object to track, block and disconnect the signal
-                               connection
+                       @param  detailedSignal a string of the form "signal-name::detail"
+                       @param  callback       the callback to connect
+                       @return a SignalConnection object to track, block and disconnect the
+                               signal connection
                        """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
@@ -285,10 +294,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                        
                        @param detailedSignal a string of the form "signal-name::detail"
                        @param callback       the callback to connect
-                       @param after          whether the handler should be called before or after
-                                             the default handler of the signal
-                       @return a SignalConnection object to track, block and disconnect the signal
-                               connection
+                       @param after          whether the handler should be called before or
+                                             after the default handler of the signal
+                       @return a SignalConnection object to track, block and disconnect the
+                               signal connection
                        """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
@@ -300,7 +309,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                         ClassNames.JAVA_CLOSURE)
                 .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
                         ClassNames.GOBJECTS)
-                .addStatement("return new $T(handle(), handlerId)",
+                .addStatement("return new $T(handle(), handlerId, closure)",
                         ClassNames.SIGNAL_CONNECTION)
                 .build();
     }
@@ -310,11 +319,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addJavadoc("""
                        Emits a signal from this object.
                        
-                       @param detailedSignal a string of the form "signal-name::detail"
-                       @param params         the parameters to emit for this signal
+                       @param  detailedSignal a string of the form "signal-name::detail"
+                       @param  params         the parameters to emit for this signal
                        @return the return value of the signal, or {@code null} if the signal
                                has no return value
-                       @throws IllegalArgumentException if a signal with this name is not found for the object
+                       @throws IllegalArgumentException if a signal with this name is not found
+                               for the object
                        """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(Object.class)

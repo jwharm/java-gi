@@ -25,6 +25,7 @@ public enum TransferOwnership {
     FULL;      // "full"
 
     public static TransferOwnership from(String value) {
-        return value == null ? null : TransferOwnership.valueOf(value.toUpperCase());
+        return value == null ? null
+                : TransferOwnership.valueOf(value.toUpperCase());
     }
 }

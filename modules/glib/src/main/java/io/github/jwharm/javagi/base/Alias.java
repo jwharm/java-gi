@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.base;
 
 import java.lang.foreign.MemorySegment;
+import java.util.Objects;
 
 /**
  * Base class for type aliases of primitive values.
@@ -58,26 +59,29 @@ public abstract class Alias<T> {
     }
 
     /**
-     * Check if the values of this alias equals the value of the provided alias.
+     * Compare two aliases for equality. This will compare both the type of the
+     * aliases, and their values.
      *
-     * @param  other another Alias instance
-     * @return true if the value of this Alias equals the value of the provided
-     *         alias
+     * @param  o the alias to compare
+     * @return whether the aliases are equal
      */
     @Override
-    public boolean equals(Object other) {
-        return other instanceof Alias<?> alias
-                && this.value.equals(alias.value);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Alias<?> alias = (Alias<?>) o;
+        return Objects.equals(value, alias.value);
     }
 
     /**
-     * Get the hashcode of the value.
+     * Calculate the hashcode of the value of the alias. When the value is
+     * {@code null}, this will return 0.
      *
-     * @return hashcode of the value
+     * @return the hashcode of the value of the alias
      */
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return Objects.hashCode(value);
     }
 
     /**

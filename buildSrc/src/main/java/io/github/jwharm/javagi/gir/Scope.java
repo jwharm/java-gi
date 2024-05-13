@@ -21,16 +21,18 @@ package io.github.jwharm.javagi.gir;
 
 public enum Scope {
     /**
-     * Valid until the GDestroyNotify argument is called. Can be called multiple times before the GDestroyNotify is
-     * called.
+     * Valid until the GDestroyNotify argument is called. Can be called multiple
+     * times before the GDestroyNotify is called.
      */
     NOTIFIED, // "notified"
     /**
-     * Only valid for the duration of the first callback invocation. Can only be called once.
+     * Only valid for the duration of the first callback invocation. Can only be
+     * called once.
      */
     ASYNC,    // "async"
     /**
-     * Only valid for the duration of the call. Can be called multiple times during the call.
+     * Only valid for the duration of the call. Can be called multiple times
+     * during the call.
      */
     CALL,     // "call"
     /**
@@ -57,11 +59,12 @@ public enum Scope {
      * Get the Scope of a value:
      * <ul>
      * <li>Field: Always {@link #CALL}
-     * <li>Parameter: The value of the {@code "scope"} attribute if present, else {@link #BOUND}, except for
-     * constructor and function parameters: in that case {@link #FOREVER}.
+     * <li>Parameter: The value of the {@code "scope"} attribute if present,
+     *     else {@link #BOUND}, except for constructor and function parameters:
+     *     in that case {@link #FOREVER}.
      * </ul>
      *
-     * @param value the value to get the scope for
+     * @param  value the value to get the scope for
      * @return the scope as described above
      */
     public static Scope ofTypedValue(TypedValue value) {

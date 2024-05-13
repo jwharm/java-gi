@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -28,22 +28,23 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
-import io.github.jwharm.javagi.base.Bitfield;
 import io.github.jwharm.javagi.base.Enumeration;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
 /**
- * Utility functions to convert a {@link Value} to and from a Java {@link Object}.
+ * Utility functions to convert a {@link Value} to and from a Java Object.
  */
 public class ValueUtil {
     
     /**
-     * Read the GType from the GValue, call the corresponding getter (using the methods defined 
-     * in the {@link Value} proxy class), and return the result.
+     * Read the GType from the GValue, call the corresponding getter (using the
+     * methods defined in the {@link Value} proxy class), and return the result.
+     *
      * @param  src a GValue instance.
-     * @return     a Java object (or boxed primitive value) that has been marshaled from the
-     *             GValue, or {@code null} if {@code src} is null.
+     * @return     a Java object (or boxed primitive value) that has been
+     *             marshaled from the GValue, or {@code null} if {@code src} is
+     *             null.
      */
     public static Object valueToObject(Value src) {
         if (src == null) {
@@ -56,56 +57,40 @@ public class ValueUtil {
             return null;
         }
 
-        if (type.equals(Types.BOOLEAN)) {
-            return src.getBoolean();
-        } else if (type.equals(Types.CHAR)) {
-            return src.getSchar();
-        } else if (type.equals(Types.DOUBLE)) {
-            return src.getDouble();
-        } else if (type.equals(Types.FLOAT)) {
-            return src.getFloat();
-        } else if (type.equals(Types.INT)) {
-            return src.getInt();
-        } else if (type.equals(Types.LONG)) {
-            return src.getLong();
-        } else if (type.equals(Types.STRING)) {
-            return src.getString();
-        } else if (type.equals(Types.ENUM)) {
-            return src.getEnum();
-        } else if (type.equals(Types.FLAGS)) {
-            return src.getFlags();
-        } else if (type.equals(Types.OBJECT)) {
-            return src.getObject();
-        } else if (type.equals(GObjects.gtypeGetType())) {
-            return src.getGtype();
-        } else if (type.equals(Types.POINTER)) {
-            return src.getPointer();
-        } else if (type.equals(Types.PARAM)) {
-            return src.getParam();
-        } else {
-            // Boxed value
-            return src.getBoxed();
-        }
+        if (type.equals(Types.BOOLEAN))           return src.getBoolean();
+        if (type.equals(Types.CHAR))              return src.getSchar();
+        if (type.equals(Types.DOUBLE))            return src.getDouble();
+        if (type.equals(Types.FLOAT))             return src.getFloat();
+        if (type.equals(Types.INT))               return src.getInt();
+        if (type.equals(Types.LONG))              return src.getLong();
+        if (type.equals(Types.STRING))            return src.getString();
+        if (type.equals(Types.ENUM))              return src.getEnum();
+        if (type.equals(Types.FLAGS))             return src.getFlags();
+        if (type.equals(Types.OBJECT))            return src.getObject();
+        if (type.equals(GObjects.gtypeGetType())) return src.getGtype();
+        if (type.equals(Types.POINTER))           return src.getPointer();
+        if (type.equals(Types.PARAM))             return src.getParam();
+
+        return src.getBoxed();
     }
 
     /**
-     * Read the GType of the {@code dest} GValue and set the {@code src} object (or boxed primitive 
-     * value) as its value using the corresponding setter in the {@link Value} proxy class.
-     * @param src  the Java Object (or boxed primitive value) to put in the GValue. Should not be 
-     *             {@code null}
+     * Read the GType of the {@code dest} GValue and set the {@code src} object
+     * (or boxed primitive value) as its value using the corresponding setter in
+     * the {@link Value} proxy class.
+     *
+     * @param src  the Java Object (or boxed primitive value) to put in the
+     *             GValue. Should not be {@code null}
      * @param dest the GValue to write to. Should not be {@code null}
      */
     public static void objectToValue(Object src, Value dest) {
-        if (src == null || dest == null) {
+        if (src == null || dest == null)
             return;
-        }
-        
+
         Type type = dest.readGType();
-        
-        if (type == null) {
+        if (type == null)
             return;
-        }
-        
+
         try {
             if (type.equals(Types.BOOLEAN)) {
                 dest.setBoolean((Boolean) src);
@@ -131,7 +116,7 @@ public class ValueUtil {
             } else if (type.equals(Types.ENUM)) {
                 dest.setEnum(((Enumeration) src).getValue());
             } else if (type.equals(Types.FLAGS)) {
-                dest.setFlags(((Bitfield) src).getValue());
+                dest.setFlags(((Enumeration) src).getValue());
             } else if (type.equals(Types.OBJECT)) {
                 dest.setObject((GObject) src);
             } else if (type.equals(GObjects.gtypeGetType())) {

@@ -32,7 +32,9 @@ public abstract sealed class Multiplatform
 
     private int platforms;
 
-    public Multiplatform(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Multiplatform(Map<String, String> attributes,
+                         List<Node> children,
+                         int platforms) {
         super(attributes, children);
         this.platforms = platforms;
     }
@@ -54,9 +56,9 @@ public abstract sealed class Multiplatform
 
         if (this instanceof Constructor || this instanceof Function)
             return switch(parent()) {
+                case Namespace ns      -> ns.platforms();
                 case RegisteredType rt -> rt.platforms();
-                case Namespace ns -> ns.platforms();
-                default -> throw new IllegalStateException("Illegal parent type");
+                default                -> throw new IllegalStateException("Illegal parent type");
             } != Platform.ALL;
         return false;
     }

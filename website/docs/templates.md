@@ -54,9 +54,24 @@ The `@GtkCallback` annotation is mostly useful for overriding the method's name.
 
 The path to the UI file is treated by Java-GI as a [GResource](https://docs.gtk.org/gio/struct.Resource.html) identifier. Template UI files (and other resources) are compiled in a GResource bundle with the command-line tool `glib-compile-resources`. This program should be included in the GTK development packages for your operating system (for example, on Ubuntu, install `libglib2.0-dev`).
 
+`glib-compile-resources` can be run from the command prompt, or as a Gradle task:
+
+```groovy
+tasks.register('compileResources') {
+    exec {
+        workingDir 'src/main/resources'
+        commandLine 'glib-compile-resources', 'example.gresource.xml'
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn compileResources
+}
+```
+
 Load the compiled resource bundle in Java during startup of your application:
 
-```
+```java
 import io.github.jwharm.javagi.base.GErrorException;
 import org.gnome.gio.Resource;
 
@@ -71,3 +86,4 @@ import org.gnome.gio.Resource;
     
         ...
 ```
+

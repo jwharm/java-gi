@@ -84,26 +84,29 @@ public class FieldGenerator extends TypedValueGenerator {
         if ((type != null)
                 && (!type.isPointer())
                 && (target instanceof Class || target instanceof Interface)) {
-            var calcOffset = "long _offset = getMemoryLayout().byteOffset(MemoryLayout.PathElement.groupElement($S))";
+            var calcOffset = "long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))";
             var returnSlice = PartialStatement.of("return ")
-                    .add(marshalNativeToJava("handle().asSlice(_offset)", false));
-            return spec.addStatement(calcOffset, f.name())
-                    .addNamedCode(returnSlice.format() + ";\n", returnSlice.arguments())
+                    .add(marshalNativeToJava("handle().asSlice(_offset)", false))
+                    .add(";\n");
+            return spec.addStatement(calcOffset, MemoryLayout.class, f.name())
+                    .addNamedCode(returnSlice.format(), returnSlice.arguments())
                     .build();
         }
 
         // Read a pointer or primitive value from the struct
         var carrierType = getCarrierTypeName(f.anyType());
-        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle())";
+        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle(), 0)";
         var returnResult = PartialStatement.of("return ")
-                .add(marshalNativeToJava("_result", false));
+                .add(marshalNativeToJava("_result", false))
+                .add(";\n");
         return spec.addStatement(getResult, carrierType, MemoryLayout.class, f.name())
-                .addNamedCode(returnResult.format() + ";\n", returnResult.arguments())
+                .addNamedCode(returnResult.format(), returnResult.arguments())
                 .build();
     }
 
     public MethodSpec generateWriteMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+        var spec = MethodSpec.methodBuilder(
+                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Write a value in the field {@code $1L}.
@@ -125,12 +128,12 @@ public class FieldGenerator extends TypedValueGenerator {
 
         if (checkNull())
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), (" + getName() + " == null ? $memorySegment:T.NULL : "
+                            + ".set(handle(), 0, (" + getName() + " == null ? $memorySegment:T.NULL : "
                             + stmt.format() + "));\n",
                     stmt.arguments());
         else
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), "
+                            + ".set(handle(), 0, "
                             + stmt.format() + ");\n",
                     stmt.arguments());
 
@@ -156,7 +159,8 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateWriteCopyMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+        var spec = MethodSpec.methodBuilder(
+                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Write a value in the field {@code $1L}.
@@ -183,18 +187,19 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateOverrideMethod() {
-        var spec = MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
+        return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
                         Override virtual method {@code $L}.
-                                                
+                        
                         @param method the method to invoke
                         """, f.name())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
                 .addParameter(java.lang.reflect.Method.class, "method")
-                .addStatement("this._$LMethod = method", getName());
-        new CallableGenerator(cb).generateFunctionDescriptor(spec);
-        return spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
+                .addStatement("this._$LMethod = method", getName())
+                .addCode(new CallableGenerator(cb)
+                                .generateFunctionDescriptorDeclaration())
+                .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
                         MethodHandle.class,
                         ClassNames.INTEROP,
                         MethodHandles.class,
@@ -203,7 +208,7 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         MemorySegment.class, Linker.class)
                 .addStatement("getMemoryLayout().varHandle($T.PathElement.groupElement($S))$Z"
-                                + ".set(handle(), (method == null ? $T.NULL : _address))",
+                                + ".set(handle(), 0, (method == null ? $T.NULL : _address))",
                         MemoryLayout.class,
                         f.name(),
                         MemorySegment.class)

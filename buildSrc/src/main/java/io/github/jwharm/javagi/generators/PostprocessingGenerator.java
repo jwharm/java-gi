@@ -23,7 +23,6 @@ import com.squareup.javapoet.MethodSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.ValueLayout;
@@ -66,7 +65,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                                 : ".set(");
 
                 String identifier = "_%sPointer.get($valueLayout:T.%s, 0)"
-                        .formatted(getName(), Conversions.getValueLayoutPlain(type));
+                        .formatted(getName(), getValueLayoutPlain(type));
 
                 if ((target instanceof Alias a && a.type().isPrimitive())
                         || (type.isPrimitive() && type.isPointer())) {
@@ -92,7 +91,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 String len = array.sizeExpression(false);
                 PartialStatement payload;
                 Type arrayType = (Type) array.anyType();
-                String valueLayout = Conversions.getValueLayoutPlain(arrayType);
+                String valueLayout = getValueLayoutPlain(arrayType);
 
                 if (p.isOutParameter() && len != null && p.callerAllocates()) {
                     // Out-parameter array with known length
@@ -100,10 +99,16 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                             ? PartialStatement.of("_%sPointer.toArray($valueLayout:T.%s)"
                                     .formatted(getName(), valueLayout),
                                     "valueLayout", ValueLayout.class)
-                            : marshalNativeToJava("_%sPointer".formatted(getName()), false);
-                } else if (len != null && arrayType.isPrimitive() && !arrayType.isBoolean()) {
+                            : marshalNativeToJava("_%sPointer"
+                                    .formatted(getName()), false);
+                } else if (len != null
+                            && arrayType.isPrimitive()
+                            && !arrayType.isBoolean()) {
                     // Arrays with primitive values and known length
-                    payload = PartialStatement.of("_%sPointer$Z.get(ValueLayout.ADDRESS, 0)$Z.reinterpret(%s * $valueLayout:T.%s.byteSize(), _arena, null)$Z.toArray($valueLayout:T.%s)"
+                    payload = PartialStatement.of(("_%sPointer$Z"
+                                    + ".get(ValueLayout.ADDRESS, 0)$Z"
+                                    + ".reinterpret(%s * $valueLayout:T.%s.byteSize(), _arena, null)$Z"
+                                    + ".toArray($valueLayout:T.%s)")
                             .formatted(getName(), len, valueLayout, valueLayout),
                             "valueLayout", ValueLayout.class);
                 } else {
@@ -134,8 +139,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() == TransferOwnership.FULL
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
-            builder.addStatement("if ($L instanceof $T _gobject) _gobject.ref()",
-                    getName(), ClassNames.GOBJECT);
+            builder.beginControlFlow("if ($L instanceof $T _gobject)",
+                            getName(), ClassNames.GOBJECT)
+                   .addStatement("_gobject.ref()")
+                   .endControlFlow();
         }
 
         // Same, but for structs/unions: Disable the cleaner
@@ -145,15 +152,17 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
             builder.addStatement(
                     checkNull()
-                            ? "if ($1L != null) $2T.yieldOwnership($1L.handle())"
-                            : "$2T.yieldOwnership($1L.handle())",
+                            ? "if ($1L != null) $2T.yieldOwnership($1L)"
+                            : "$2T.yieldOwnership($1L)",
                     getName(),
                     ClassNames.MEMORY_CLEANER);
         }
     }
 
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
-        if (target instanceof Alias a && a.type().isPrimitive() && type.isPointer())
+        if (target instanceof Alias a
+                && a.type().isPrimitive()
+                && type.isPointer())
             builder.addStatement("$1LParam.set($2T.$3L, 0, _$1LAlias.getValue())",
                     getName(),
                     ValueLayout.class,
@@ -166,7 +175,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         if (type != null) {
             PartialStatement payload;
-            if (type.isPrimitive() || (target instanceof Alias a && a.type().isPrimitive())) {
+            if (type.isPrimitive()
+                    || (target instanceof Alias a && a.type().isPrimitive())) {
                 payload = PartialStatement.of("_" + getName() + "Out.get()");
                 if (type.isBoolean())
                     payload.add(" ? 1 : 0");
@@ -177,7 +187,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 payload = marshalJavaToNative("_" + getName() + "Out.get()");
 
             var stmt = PartialStatement.of(getName())
-                    .add("Param.set($valueLayout:T.", "valueLayout", ValueLayout.class)
+                    .add("Param.set($valueLayout:T.",
+                            "valueLayout", ValueLayout.class)
                     .add(getValueLayoutPlain(type))
                     .add(", 0, ")
                     .add(payload)

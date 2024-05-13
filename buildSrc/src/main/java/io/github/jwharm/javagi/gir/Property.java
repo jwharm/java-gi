@@ -25,7 +25,9 @@ import java.util.Objects;
 
 public final class Property extends Multiplatform implements TypedValue {
 
-    public Property(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Property(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 

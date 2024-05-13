@@ -27,7 +27,9 @@ import java.util.Map;
 public final class Callback extends Multiplatform
         implements RegisteredType, Callable {
 
-    public Callback(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Callback(Map<String, String> attributes,
+                    List<Node> children,
+                    int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -44,17 +46,6 @@ public final class Callback extends Multiplatform
     @Override
     public String getTypeFunc() {
         return null; // Callback has no glib:get-type
-    }
-
-    @Override
-    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        String arena = scope == null ? "Arena.global()" : switch(scope) {
-            case BOUND -> "Interop.attachArena(Arena.ofConfined(), this)";
-            case CALL -> "_arena";
-            case NOTIFIED, ASYNC -> "_" + paramName + "Scope";
-            case FOREVER -> "Arena.global()";
-        };
-        return paramName + ".toCallback(" + arena + ")";
     }
 
     @Override

@@ -31,6 +31,7 @@ import io.github.jwharm.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
+import org.gnome.glib.Type;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -38,26 +39,24 @@ import io.github.jwharm.javagi.base.*;
  */
 public class Interop {
 
-    private record NamedFunction(String name,
-                                 FunctionDescriptor fdesc,
-                                 boolean variadic) {
-    }
+    private final static int UNBOUNDED = Integer.MAX_VALUE;
+    private final static Linker LINKER = Linker.nativeLinker();
+    public static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
+            .or(Linker.nativeLinker().defaultLookup());
 
-    private record FunctionPointer(MemorySegment address,
-                                   FunctionDescriptor fdesc,
-                                   boolean variadic) {
-    }
-
-    private static final Map<NamedFunction, MethodHandle> namedFunctions = new HashMap<>();
-    private static final Map<FunctionPointer, MethodHandle> functionPointers = new HashMap<>();
-
-    private final static SymbolLookup symbolLookup;
-    private final static Linker linker = Linker.nativeLinker();
-
-    static {
-        SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
-        symbolLookup = name -> loaderLookup.find(name).or(() ->
-                linker.defaultLookup().find(name));
+    /**
+     * Load the specified library using
+     * {@link SymbolLookup#libraryLookup(String, Arena)}.
+     *
+     * @param name the name of the library
+     */
+    public static void loadLibrary(String name) {
+        try {
+            symbolLookup = SymbolLookup.libraryLookup(name, Arena.global())
+                                       .or(Interop.symbolLookup);
+        } catch (IllegalArgumentException iae) {
+            LibLoad.loadLibrary(name);
+        }
     }
 
     /**
@@ -76,8 +75,7 @@ public class Interop {
 
     /**
      * Create a method handle that is used to call the native function with
-     * the provided name and function descriptor. The method handle is cached
-     * and reused in subsequent look-ups.
+     * the provided name and function descriptor.
      *
      * @param  name     name of the native function
      * @param  fdesc    function descriptor of the native function
@@ -87,23 +85,14 @@ public class Interop {
     public static MethodHandle downcallHandle(String name,
                                               FunctionDescriptor fdesc,
                                               boolean variadic) {
-
-        var func = new NamedFunction(name, fdesc, variadic);
-        if (namedFunctions.containsKey(func))
-            return namedFunctions.get(func);
-
-        var handle = symbolLookup.find(name).map(addr -> variadic
-                ? VarargsInvoker.make(addr, fdesc)
-                : linker.downcallHandle(addr, fdesc)).orElse(null);
-
-        namedFunctions.put(func, handle);
-        return handle;
+        return symbolLookup.find(name).map(addr -> variadic
+                ? VarargsInvoker.create(addr, fdesc)
+                : LINKER.downcallHandle(addr, fdesc)).orElse(null);
     }
 
     /**
      * Create a method handle that is used to call the native function at the
-     * provided memory address. The method handle is cached and reused in
-     * subsequent look-ups.
+     * provided memory address.
      *
      * @param  symbol memory address of the native function
      * @param  fdesc  function descriptor of the native function
@@ -111,15 +100,7 @@ public class Interop {
      */
     public static MethodHandle downcallHandle(MemorySegment symbol,
                                               FunctionDescriptor fdesc) {
-
-        var func = new FunctionPointer(symbol, fdesc, false);
-
-        if (functionPointers.containsKey(func))
-            return functionPointers.get(func);
-
-        var handle = linker.downcallHandle(symbol, fdesc);
-        functionPointers.put(func, handle);
-        return handle;
+        return LINKER.downcallHandle(symbol, fdesc);
     }
 
     /**
@@ -193,7 +174,7 @@ public class Interop {
      *
      * @return the gtype from the provided get-type function
      */
-    public static org.gnome.glib.Type getType(String getTypeFunction) {
+    public static Type getType(String getTypeFunction) {
 
         if (getTypeFunction == null)
             return null;
@@ -204,7 +185,7 @@ public class Interop {
             MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
             if (handle == null)
                 return null;
-            return new org.gnome.glib.Type((long) handle.invokeExact());
+            return new Type((long) handle.invokeExact());
         } catch (Throwable err) {
             throw new AssertionError("Unexpected exception occurred: ", err);
         }
@@ -212,20 +193,35 @@ public class Interop {
 
     /**
      * Allocate a native string using
-     * {@link SegmentAllocator#allocateUtf8String(String)}, but return
+     * {@link SegmentAllocator#allocateFrom(String)}, but return
      * {@link MemorySegment#NULL} for a {@code null} argument.
      *
      * @param  string    the string to allocate as a native string (utf8 char*)
      *                   (can be {@code null})
-     * @param  allocator the segment allocator to use
+     * @param  alloc the segment allocator to use
      * @return the allocated MemorySegment with the native utf8 string, or
      *         {@link MemorySegment#NULL}
      */
     public static MemorySegment allocateNativeString(String string,
-                                                     SegmentAllocator allocator) {
+                                                     SegmentAllocator alloc) {
         return string == null
                 ? MemorySegment.NULL
-                : allocator.allocateUtf8String(string);
+                : alloc.allocateFrom(string);
+    }
+
+    /**
+     * Copy a Java string from native memory using
+     * {@code MemorySegment.getUtf8String()}. If an error occurs or when the
+     * native address is NULL, null is returned.
+     * <p>
+     * The native memory is not freed.
+     *
+     * @param  address the memory address of the native String
+     *                 (a {@code NULL}-terminated {@code char*})
+     * @return a String or null
+     */
+    public static String getStringFrom(MemorySegment address) {
+        return getStringFrom(address, false);
     }
 
     /**
@@ -244,7 +240,7 @@ public class Interop {
             return null;
 
         try {
-            return address.reinterpret(Long.MAX_VALUE).getUtf8String(0);
+            return address.reinterpret(Long.MAX_VALUE).getString(0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -267,12 +263,13 @@ public class Interop {
             return null;
 
         MemorySegment array = address;
+        long size = ValueLayout.ADDRESS.byteSize();
         if (array.byteSize() == 0)
-            array = address.reinterpret(ValueLayout.ADDRESS.byteSize() * length);
+            array = address.reinterpret(size * length);
 
         String[] result = new String[length];
         for (int i = 0; i < length; i++) {
-            result[i] = array.getUtf8String(i * ValueLayout.ADDRESS.byteSize());
+            result[i] = array.getString(i * size);
             if (free)
                 GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
         }
@@ -307,7 +304,7 @@ public class Interop {
             MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
             if (MemorySegment.NULL.equals(ptr))
                 break;
-            result.add(ptr.getUtf8String(0));
+            result.add(ptr.getString(0));
             offset += ValueLayout.ADDRESS.byteSize();
         }
 
@@ -332,9 +329,10 @@ public class Interop {
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
 
+        long size = ValueLayout.ADDRESS.byteSize();
         MemorySegment array = address;
         if (array.byteSize() == 0)
-            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+            array = address.reinterpret(size * length);
 
         MemorySegment[] result = new MemorySegment[length];
         for (int i = 0; i < length; i++) {
@@ -557,7 +555,7 @@ public class Interop {
                                             boolean free) {
 
         // Find the null byte
-        MemorySegment array = address.reinterpret(Integer.MAX_VALUE, arena, null);
+        MemorySegment array = address.reinterpret(UNBOUNDED, arena, null);
         long idx = 0;
         while (array.get(ValueLayout.JAVA_INT, idx) != 0) {
             idx++;
@@ -623,9 +621,10 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address,
-                                                          Class<T> cls,
-                                                          Function<MemorySegment, T> make) {
+    public static <T extends Proxy> T[]
+    getProxyArrayFrom(MemorySegment address,
+                      Class<T> cls,
+                      Function<MemorySegment, T> make) {
 
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
@@ -635,7 +634,8 @@ public class Interop {
             array = address.reinterpret(Long.MAX_VALUE);
 
         long offset = 0;
-        while (!MemorySegment.NULL.equals(array.get(ValueLayout.ADDRESS, offset))) {
+        while (!MemorySegment.NULL.equals(
+                        array.get(ValueLayout.ADDRESS, offset))) {
             offset += ValueLayout.ADDRESS.byteSize();
         }
 
@@ -653,17 +653,19 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[] getProxyArrayFrom(MemorySegment address,
-                                                          int length,
-                                                          Class<T> cls,
-                                                          Function<MemorySegment, T> make) {
+    public static <T extends Proxy> T[]
+    getProxyArrayFrom(MemorySegment address,
+                      int length,
+                      Class<T> cls,
+                      Function<MemorySegment, T> make) {
 
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
 
+        long size = AddressLayout.ADDRESS.byteSize();
         MemorySegment array = address;
         if (array.byteSize() == 0)
-            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+            array = address.reinterpret(size * length);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -683,11 +685,12 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[] getStructArrayFrom(MemorySegment address,
-                                                           int length,
-                                                           Class<T> cls,
-                                                           Function<MemorySegment, T> make,
-                                                           MemoryLayout layout) {
+    public static <T extends Proxy> T[]
+    getStructArrayFrom(MemorySegment address,
+                       int length,
+                       Class<T> cls,
+                       Function<MemorySegment, T> make,
+                       MemoryLayout layout) {
 
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
@@ -725,9 +728,10 @@ public class Interop {
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
 
+        long size = AddressLayout.ADDRESS.byteSize();
         MemorySegment array = address;
         if (array.byteSize() == 0)
-            array = address.reinterpret(AddressLayout.ADDRESS.byteSize() * length);
+            array = address.reinterpret(size * length);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -750,16 +754,17 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < strings.length; i++) {
             var cString = strings[i] == null ? MemorySegment.NULL
-                    : arena.allocateUtf8String(strings[i]);
+                    : arena.allocateFrom(strings[i]);
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, strings.length, MemorySegment.NULL);
+            memorySegment.setAtIndex(
+                    ValueLayout.ADDRESS, strings.length, MemorySegment.NULL);
 
         return memorySegment;
     }
@@ -801,7 +806,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_BYTE, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_BYTE, copy);
     }
 
     /**
@@ -820,7 +825,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_CHAR, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_CHAR, copy);
     }
 
     /**
@@ -839,7 +844,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_DOUBLE, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_DOUBLE, copy);
     }
 
     /**
@@ -858,7 +863,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_FLOAT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_FLOAT, copy);
     }
 
     /**
@@ -876,7 +881,7 @@ public class Interop {
         int[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
-        return arena.allocateArray(ValueLayout.JAVA_INT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_INT, copy);
     }
 
     /**
@@ -895,7 +900,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_LONG, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_LONG, copy);
     }
 
     /**
@@ -914,7 +919,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateArray(ValueLayout.JAVA_SHORT, copy);
+        return arena.allocateFrom(ValueLayout.JAVA_SHORT, copy);
     }
 
     /**
@@ -957,7 +962,7 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment memorySegment = arena.allocateArray(layout, length);
+        MemorySegment memorySegment = arena.allocate(layout, length);
 
         for (int i = 0; i < array.length; i++) {
             if (array[i] != null
@@ -969,13 +974,14 @@ public class Interop {
                         .copyFrom(element);
             } else {
                 // Fill the array with zeros
-                memorySegment.asSlice(i * layout.byteSize(), layout.byteSize())
-                        .fill((byte) 0);
+                long size = layout.byteSize();
+                memorySegment.asSlice(i * size, size).fill((byte) 0);
             }
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
+            memorySegment.setAtIndex(
+                    ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
 
         return memorySegment;
     }
@@ -994,7 +1000,7 @@ public class Interop {
                                                     Arena arena) {
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = arena.allocateArray(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < array.length; i++) {
             MemorySegment s = array[i] == null ? MemorySegment.NULL : array[i];
@@ -1002,225 +1008,60 @@ public class Interop {
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
+            memorySegment.setAtIndex(
+                    ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
 
         return memorySegment;
     }
 
-    // Adapted from code that was generated by JExtract
-    private record VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
-
-        private static final MethodHandle INVOKE_MH;
-        private static final SegmentAllocator THROWING_ALLOCATOR = (_, _) -> {
-            throw new AssertionError("should not reach here");
-        };
-
-        static {
-            try {
-                INVOKE_MH = MethodHandles.lookup().findVirtual(
-                        VarargsInvoker.class,
-                        "invoke",
-                        MethodType.methodType(Object.class, SegmentAllocator.class, Object[].class)
-                );
-            } catch (ReflectiveOperationException e) {
-                throw new InteropException(e);
-            }
+    /**
+     * Create an EnumSet of class `cls` from the provided bitfield
+     *
+     * @param  <T>      an enum implementing the Java-GI Enumeration interface
+     * @param  cls      the class of the enum
+     * @param  bitfield the integer containing the bitfield
+     * @return an EnumSet containing the enum values as set in the bitfield
+     */
+    public static <T extends Enum<T> & Enumeration>
+    EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
+        int n = bitfield;
+        EnumSet<T> enumSet = EnumSet.noneOf(cls);
+        int position = 0;
+        while (n != 0) {
+            if ((n & 1) == 1)
+                enumSet.add(make.apply(1 << position));
+            position++;
+            n >>= 1;
         }
+        return enumSet;
+    }
 
-        /**
-         * Create a MethodHandle with the correct signature
-         */
-        static MethodHandle make(MemorySegment symbol, FunctionDescriptor function) {
-            VarargsInvoker invoker = new VarargsInvoker(symbol, function);
-            MethodHandle handle = INVOKE_MH.bindTo(invoker)
-                    .asCollector(Object[].class, function.argumentLayouts().size() + 1);
+    /**
+     * Create a bitfield from the provided Set of enums
+     *
+     * @param  <T> an enum implementing the Java-GI Enumeration interface
+     * @param  set the set of enums
+     * @return the resulting bitfield
+     */
+    public static <T extends Enum<T> & Enumeration>
+    int enumSetToInt(Set<T> set) {
+        int bitfield = 0;
+        for (T value : set)
+            bitfield |= value.getValue();
+        return bitfield;
+    }
 
-            MethodType mtype = MethodType.methodType(
-                    function.returnLayout().isPresent()
-                            ? carrier(function.returnLayout().get(), true)
-                            : void.class);
-            for (MemoryLayout layout : function.argumentLayouts()) {
-                mtype = mtype.appendParameterTypes(carrier(layout, false));
-            }
-            mtype = mtype.appendParameterTypes(Object[].class);
-
-            boolean needsAllocator = function.returnLayout().isPresent()
-                    && function.returnLayout().get() instanceof GroupLayout;
-
-            if (needsAllocator)
-                mtype = mtype.insertParameterTypes(0, SegmentAllocator.class);
-            else
-                handle = MethodHandles.insertArguments(handle, 0, THROWING_ALLOCATOR);
-
-            return handle.asType(mtype);
-        }
-
-        /*
-         * Get the carrier associated with this layout. For GroupLayouts and
-         * the return layout, the carrier is always MemorySegment.class.
-         */
-        private static Class<?> carrier(MemoryLayout layout, boolean ret) {
-            if (layout instanceof ValueLayout valLayout)
-                return (ret || valLayout.carrier() != MemorySegment.class)
-                        ? valLayout.carrier()
-                        : MemorySegment.class;
-            else if (layout instanceof GroupLayout)
-                return MemorySegment.class;
-            throw new AssertionError("Cannot get here!");
-        }
-
-        /*
-         * This method is used from a MethodHandle (INVOKE_MH).
-         */
-        @SuppressWarnings("unused")
-        private Object invoke(SegmentAllocator allocator, Object[] args)
-                throws Throwable {
-
-            // one trailing Object[]
-            int nNamedArgs = function.argumentLayouts().size();
-            // The last argument is the array of vararg collector
-            Object[] unnamedArgs = (Object[]) args[args.length - 1];
-
-            int argsCount = nNamedArgs + unnamedArgs.length;
-            MemoryLayout[] argLayouts = new MemoryLayout[argsCount];
-
-            int pos;
-            for (pos = 0; pos < nNamedArgs; pos++) {
-                argLayouts[pos] = function.argumentLayouts().get(pos);
-            }
-
-            // Unwrap the Java-GI types to their address or primitive value
-            Object[] unwrappedArgs = new Object[unnamedArgs.length];
-            for (int i = 0; i < unnamedArgs.length; i++) {
-                unwrappedArgs[i] = unwrapJavagiTypes(unnamedArgs[i]);
-            }
-
-            for (Object o : unwrappedArgs) {
-                argLayouts[pos] = variadicLayout(normalize(o.getClass()));
-                pos++;
-            }
-
-            FunctionDescriptor f = (function.returnLayout().isEmpty())
-                    ? FunctionDescriptor.ofVoid(argLayouts)
-                    : FunctionDescriptor.of(function.returnLayout().get(), argLayouts);
-            MethodHandle mh = linker.downcallHandle(symbol, f);
-            boolean needsAllocator = function.returnLayout().isPresent()
-                    && function.returnLayout().get() instanceof GroupLayout;
-
-            if (needsAllocator)
-                mh = mh.bindTo(allocator);
-
-            /*
-             * Flatten argument list so that it can be passed to an asSpreader
-             * MethodHandle.
-             */
-            Object[] allArgs = new Object[nNamedArgs + unwrappedArgs.length];
-            System.arraycopy(args, 0, allArgs, 0, nNamedArgs);
-            System.arraycopy(unwrappedArgs, 0, allArgs, nNamedArgs, unwrappedArgs.length);
-
-            return mh.asSpreader(Object[].class, argsCount).invoke(allArgs);
-        }
-
-        private static Class<?> unboxIfNeeded(Class<?> c) {
-            if (c == Boolean.class)
-                return boolean.class;
-            else if (c == Void.class)
-                return void.class;
-            else if (c == Byte.class)
-                return byte.class;
-            else if (c == Character.class)
-                return char.class;
-            else if (c == Short.class)
-                return short.class;
-            else if (c == Integer.class)
-                return int.class;
-            else if (c == Long.class)
-                return long.class;
-            else if (c == Float.class)
-                return float.class;
-            else if (c == Double.class)
-                return double.class;
-            return c;
-        }
-
-        private Class<?> promote(Class<?> c) {
-            if (c == byte.class
-                    || c == char.class
-                    || c == short.class
-                    || c == int.class)
-                return long.class;
-            else if (c == float.class)
-                return double.class;
-            return c;
-        }
-
-        private Class<?> normalize(Class<?> c) {
-            c = unboxIfNeeded(c);
-            if (c.isPrimitive())
-                return promote(c);
-            if (MemorySegment.class.isAssignableFrom(c))
-                return MemorySegment.class;
-            throw new IllegalArgumentException("Invalid type for ABI: " + c.getTypeName());
-        }
-
-        private MemoryLayout variadicLayout(Class<?> c) {
-            if (c == long.class)
-                return ValueLayout.JAVA_LONG;
-            else if (c == double.class)
-                return ValueLayout.JAVA_DOUBLE;
-            else if (MemorySegment.class.isAssignableFrom(c))
-                return ValueLayout.ADDRESS;
-            throw new IllegalArgumentException("Unhandled variadic argument class: " + c);
-        }
-
-        /*
-         * Unwrap the Java-GI types to their memory address or primitive value.
-         * Arrays are allocated to native memory as-is (no additional NULL is
-         * appended: the caller must do this).
-         */
-        private Object unwrapJavagiTypes(Object o) {
-            return switch(o) {
-                case null -> MemorySegment.NULL;
-                case MemorySegment[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case boolean[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case byte[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case char[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case double[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case float[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case int[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case long[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case short[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case Proxy[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case String[] values ->
-                        allocateNativeArray(values, false, Arena.ofAuto()).address();
-                case Boolean bool ->
-                        bool ? 1 : 0;
-                case String string ->
-                        allocateNativeString(string, Arena.ofAuto()).address();
-                case Alias<?> alias ->
-                        alias.getValue();
-                case Bitfield bitfield ->
-                        bitfield.getValue();
-                case Bitfield[] bitfields ->
-                        Bitfield.getValues(bitfields);
-                case Enumeration enumeration ->
-                        enumeration.getValue();
-                case Enumeration[] enumerations ->
-                        Enumeration.getValues(enumerations);
-                case Proxy proxy ->
-                        proxy.handle();
-                default -> o;
-            };
-        }
+    /**
+     * Convert an array of enums into an array of integers.
+     *
+     * @param  array an array of enums
+     * @return an array containing the integer values of the provided
+     *         Enumeration instances
+     */
+    public static int[] getValues(Enumeration[] array) {
+        int[] values = new int[array.length];
+        for (int i = 0; i < array.length; i++)
+            values[i] = array[i].getValue();
+        return values;
     }
 }

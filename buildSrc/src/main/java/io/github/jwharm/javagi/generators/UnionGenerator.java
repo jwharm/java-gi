@@ -42,17 +42,19 @@ public class UnionGenerator extends RegisteredTypeGenerator {
 
     public TypeSpec generate() {
         if (union.infoElements().doc() != null)
-            builder.addJavadoc(new DocGenerator(union.infoElements().doc()).generate());
+            builder.addJavadoc(
+                    new DocGenerator(union.infoElements().doc()).generate());
 
         if (union.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
         builder.addModifiers(Modifier.PUBLIC)
-                .superclass(ClassNames.MANAGED_INSTANCE)
+                .superclass(ClassNames.PROXY_INSTANCE)
                 .addStaticBlock(staticBlock())
                 .addMethod(memoryAddressConstructor());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator().generateMemoryLayout(union);
+        MethodSpec memoryLayout = new MemoryLayoutGenerator()
+                                            .generateMemoryLayout(union);
         if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
             builder.addMethod(constructor());
@@ -63,6 +65,9 @@ public class UnionGenerator extends RegisteredTypeGenerator {
 
         addConstructors(builder);
         addFunctions(builder);
+
+        if (hasDowncallHandles())
+            builder.addType(downcallHandlesClass());
 
         return builder.build();
     }

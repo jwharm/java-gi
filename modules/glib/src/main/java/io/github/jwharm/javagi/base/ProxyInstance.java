@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.base;
 
 import java.lang.foreign.MemorySegment;
+import java.util.Objects;
 
 /**
  * Base type for a Java proxy object to an instance in native memory.
@@ -46,5 +47,25 @@ public class ProxyInstance implements Proxy {
     @Override
     public MemorySegment handle() {
         return address;
+    }
+
+    /**
+     * Compare two proxy instances for equality. This will compare both the type
+     * of the instances, and their memory addresses.
+     *
+     * @param  o the proxy instance to compare
+     * @return whether the instances are equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProxyInstance that = (ProxyInstance) o;
+        return Objects.equals(address, that.address);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(address);
     }
 }

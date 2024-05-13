@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    api project(':gmodule')
     api project(':gobject')
 }
 

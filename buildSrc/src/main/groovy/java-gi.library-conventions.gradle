@@ -2,16 +2,16 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import io.github.jwharm.javagi.GirParserService
 import io.github.jwharm.javagi.GenerateSources
 
-/* Common build settings for Java-GI modules:
+/*
+ * Common build settings for Java-GI modules:
  * 
- * - Load java-library and maven-publish plugins
+ * - Load plugins
  * - Set maven repositories
  * - Load common dependencies
  * - Set group and Java-GI version number
  * - Set JDK version
  * - Configure 'generateSources' action
- * - Enable preview features
- * - Set OS-specific library paths for unit tests
+ * - Set OS-specific library paths and parameters for unit tests
  * - Set common POM metadata and enable signing
  */
 
@@ -22,17 +22,18 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
     compileOnly 'org.jetbrains:annotations:24.+'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.9.2'
+version = '0.10.0'
 
 java {
     if (! System.getenv('CI')) {
@@ -40,7 +41,7 @@ java {
     }
     withSourcesJar()
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(22)
     }
 }
 
@@ -59,7 +60,6 @@ generateSources.configure {
 sourceSets.main.java.srcDir(generateSources)
 
 tasks.named('compileJava', JavaCompile) {
-    options.compilerArgs += '--enable-preview'
     options.encoding = 'UTF-8'
 }
 
@@ -67,14 +67,11 @@ tasks.named('javadoc', Javadoc) {
     if (System.getenv('CI')) {
         enabled = false
     }
-    options.addStringOption('source', '21')
-    options.addBooleanOption('-enable-preview', true)
     options.addStringOption('Xdoclint:none', '-quiet')
     options.encoding = 'UTF-8'
 }
 
 tasks.named('compileTestJava', JavaCompile) {
-    options.compilerArgs += '--enable-preview'
     options.encoding = 'UTF-8'
 }
 
@@ -83,6 +80,9 @@ tasks.named('test', Test) {
     if (System.getenv('CI')) {
         enabled = false
     }
+
+    // Log standard output and error streams when running tests
+    testLogging.showStandardStreams = true
 
     // Configure library path for MacOS (Homebrew) and set MacOS-specific JVM parameter
     if (Os.isFamily(Os.FAMILY_MAC)) {
@@ -101,7 +101,6 @@ tasks.named('test', Test) {
     }
 
     useJUnitPlatform()
-    jvmArgs += '--enable-preview'
     jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 

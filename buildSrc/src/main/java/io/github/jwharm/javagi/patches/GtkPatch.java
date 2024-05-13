@@ -56,7 +56,8 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getWindowId()
          */
         if (element instanceof Method m
-                && "gtk_application_window_get_id".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_application_window_get_id"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_window_id");
 
         /*
@@ -64,7 +65,8 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getArrowDirection()
          */
         if (element instanceof Method m
-                && "gtk_menu_button_get_direction".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_menu_button_get_direction"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_arrow_direction");
 
         /*
@@ -72,7 +74,8 @@ public class GtkPatch implements Patch {
          * type. Rename to getString()
          */
         if (element instanceof Method m
-                && "gtk_print_settings_get".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_print_settings_get"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_string");
 
         /*
@@ -80,7 +83,8 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getPrintSettings()
          */
         if (element instanceof Method m
-                && "gtk_print_unix_dialog_get_settings".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_print_unix_dialog_get_settings"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_print_settings");
 
         /*
@@ -90,7 +94,8 @@ public class GtkPatch implements Patch {
          * Widget.activate() to activateWidget()
          */
         if (element instanceof Method m
-                && "gtk_widget_activate".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_widget_activate"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "activate_widget");
 
         /*
@@ -105,11 +110,13 @@ public class GtkPatch implements Patch {
          * attribute too.
          */
         if (element instanceof Method m
-                && "gtk_widget_activate_action".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_widget_activate_action"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "activate_action_if_exists");
 
         if (element instanceof Method m
-                && "gtk_widget_activate_action_variant".equals(m.callableAttrs().cIdentifier()))
+                && "gtk_widget_activate_action_variant"
+                            .equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("shadows", "activate_action_if_exists");
 
         /*
@@ -119,7 +126,9 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "play".equals(vm.name())
-                && "MediaStream".equals(vm.parameters().instanceParameter().type().name()))
+                && "MediaStream".equals(vm.parameters()
+                                          .instanceParameter()
+                                          .type().name()))
             return vm.withAttribute("invoker", "play");
 
         /*
@@ -139,7 +148,9 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "close".equals(vm.name())
-                && "Dialog".equals(vm.parameters().instanceParameter().type().name()))
+                && "Dialog".equals(vm.parameters()
+                                     .instanceParameter()
+                                     .type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*
@@ -153,7 +164,9 @@ public class GtkPatch implements Patch {
         );
         if (element instanceof VirtualMethod vm
                 && methods.contains(vm.name())
-                && "BuilderScope".equals(vm.parameters().instanceParameter().type().name()))
+                && "BuilderScope".equals(vm.parameters()
+                                           .instanceParameter()
+                                           .type().name()))
             return vm.withAttribute("java-gi-dont-skip", "1");
 
         /*
@@ -162,7 +175,8 @@ public class GtkPatch implements Patch {
          * Make sure that it is the same on every platform.
          */
         if (element instanceof Function f
-                && "gtk_ordering_from_cmpfunc".equals(f.callableAttrs().cIdentifier()))
+                && "gtk_ordering_from_cmpfunc"
+                            .equals(f.callableAttrs().cIdentifier()))
             return f.withAttribute("introspectable", "0");
 
         /*
@@ -172,7 +186,7 @@ public class GtkPatch implements Patch {
          * now.
          */
         if (element instanceof Class c
-            && "FontDialog".equals(c.name()))
+                && "FontDialog".equals(c.name()))
             return remove(c, Method.class, "name", "choose_font_and_features_finish");
 
         return element;

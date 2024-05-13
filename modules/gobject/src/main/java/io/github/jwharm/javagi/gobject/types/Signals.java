@@ -36,7 +36,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -56,36 +58,31 @@ public class Signals {
      * The method handle for g_signal_connect_data is used by all generated
      * signal-connection methods.
      */
-    public static final MethodHandle g_signal_connect_data = Interop.downcallHandle(
-            "g_signal_connect_data",
-            FunctionDescriptor.of(
-                    ValueLayout.JAVA_LONG,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.JAVA_INT
-            ),
-            false
-    );
+    public static final MethodHandle g_signal_connect_data =
+            Interop.downcallHandle(
+                "g_signal_connect_data",
+                FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT),
+                false);
 
     /**
      * The method handle for g_signal_emit_by_name is used by all generated
      * signal-emission methods.
      */
-    public static final MethodHandle g_signal_emit_by_name = Interop.downcallHandle(
-            "g_signal_emit_by_name",
-            FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-            true
-    );
+    public static final MethodHandle g_signal_emit_by_name =
+            Interop.downcallHandle(
+                "g_signal_emit_by_name",
+                FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                true);
 
     private record SignalDeclaration(String signalName,
-                                     SignalFlags signalFlags,
+                                     Set<SignalFlags> signalFlags,
                                      Type returnType,
                                      int nParams,
-                                     Type[] paramTypes) {
-    }
+                                     Type[] paramTypes) {}
 
     /*
      * Convert "CamelCase" to "kebab-case"
@@ -98,17 +95,17 @@ public class Signals {
     /*
      * Convert the annotation parameters to SignalFlags
      */
-    private static SignalFlags getFlags(Signal signal) {
-        SignalFlags flags = new SignalFlags(0);
-        if (signal.action())      flags = flags.or(SignalFlags.ACTION);
-        if (signal.deprecated())  flags = flags.or(SignalFlags.DEPRECATED);
-        if (signal.detailed())    flags = flags.or(SignalFlags.DETAILED);
-        if (signal.mustCollect()) flags = flags.or(SignalFlags.MUST_COLLECT);
-        if (signal.noHooks())     flags = flags.or(SignalFlags.NO_HOOKS);
-        if (signal.noRecurse())   flags = flags.or(SignalFlags.NO_RECURSE);
-        if (signal.runCleanup())  flags = flags.or(SignalFlags.RUN_CLEANUP);
-        if (signal.runFirst())    flags = flags.or(SignalFlags.RUN_FIRST);
-        if (signal.runLast())     flags = flags.or(SignalFlags.RUN_LAST);
+    private static Set<SignalFlags> getFlags(Signal signal) {
+        Set<SignalFlags> flags = EnumSet.noneOf(SignalFlags.class);
+        if (signal.action())      flags.add(SignalFlags.ACTION);
+        if (signal.deprecated())  flags.add(SignalFlags.DEPRECATED);
+        if (signal.detailed())    flags.add(SignalFlags.DETAILED);
+        if (signal.mustCollect()) flags.add(SignalFlags.MUST_COLLECT);
+        if (signal.noHooks())     flags.add(SignalFlags.NO_HOOKS);
+        if (signal.noRecurse())   flags.add(SignalFlags.NO_RECURSE);
+        if (signal.runCleanup())  flags.add(SignalFlags.RUN_CLEANUP);
+        if (signal.runFirst())    flags.add(SignalFlags.RUN_FIRST);
+        if (signal.runLast())     flags.add(SignalFlags.RUN_LAST);
         return flags;
     }
     
@@ -174,7 +171,9 @@ public class Signals {
      *             parameter
      * @return a class initializer that registers the signals
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass> Consumer<TC> installSignals(Class<T> cls) {
+    public static <T extends GObject, TC extends GObject.ObjectClass>
+    Consumer<TC> installSignals(Class<T> cls) {
+
         List<SignalDeclaration> signalDeclarations = new ArrayList<>();
         
         for (var iface : cls.getDeclaredClasses()) {
@@ -198,7 +197,7 @@ public class Signals {
                     : signalAnnotation.name();
             
             // flags
-            SignalFlags signalFlags = getFlags(signalAnnotation);
+            Set<SignalFlags> signalFlags = getFlags(signalAnnotation);
             
             // return type
             Type returnType = inferType(sam.getReturnType());
@@ -225,8 +224,15 @@ public class Signals {
         // Return class initializer method that installs the signals.
         return (gclass) -> {
             for (var sig : signalDeclarations) {
-                GObjects.signalNewv(sig.signalName, gclass.readGType(), sig.signalFlags,
-                        null, null, null, sig.returnType, sig.paramTypes);
+                GObjects.signalNewv(
+                        sig.signalName,
+                        gclass.readGType(),
+                        sig.signalFlags,
+                        null,
+                        null,
+                        null,
+                        sig.returnType,
+                        sig.paramTypes);
             }
         };
     }
@@ -242,7 +248,9 @@ public class Signals {
      * @throws IllegalArgumentException if a signal with this name is not found
      *                                  for the object
      */
-    public static Object emit(GObject gobject, String detailedSignal, Object... params) {
+    public static Object emit(GObject gobject,
+                              String detailedSignal,
+                              Object... params) {
         Type gtype = Types.getGType(gobject.getClass());
 
         // Parse the detailed signal name into a signal id and detail quark
@@ -308,25 +316,23 @@ public class Signals {
      * implements a functional interface. A functional interface is an
      * interface with exactly one abstract method.
      *
-     * @param  functionalInterfaceClass a functional interface
+     * @param  cls a functional interface
      * @return the Method reference to the method that implements the SAM
-     * @throws IllegalArgumentException if {@code functionalInterfaceClass} is
-     *                                  not a functional interface
+     * @throws IllegalArgumentException if {@code cls} is not a functional
+     *                                  interface
      */
-    public static Method getSingleAbstractMethod(Class<?> functionalInterfaceClass)
+    public static Method getSingleAbstractMethod(Class<?> cls)
             throws IllegalArgumentException {
 
         // Check if the class is not an enum or array
-        if ((! functionalInterfaceClass.isInterface())
-                || functionalInterfaceClass.isEnum()
-                || functionalInterfaceClass.isArray()) {
+        if ((! cls.isInterface()) || cls.isEnum() || cls.isArray()) {
             throw new IllegalArgumentException("%s is not a functional interface"
-                    .formatted(functionalInterfaceClass));
+                    .formatted(cls));
         }
 
         // Loop through all declared methods
         Method samMethod = null;
-        for (Method method : functionalInterfaceClass.getMethods()) {
+        for (Method method : cls.getMethods()) {
 
             // Check if the method is not static
             if (Modifier.isStatic(method.getModifiers()))
@@ -339,7 +345,7 @@ public class Signals {
             // If there is more than one SAM, return null (ambiguous)
             if (samMethod != null)
                 throw new IllegalArgumentException("%s is not a functional interface: more than one abstract method found."
-                        .formatted(functionalInterfaceClass));
+                        .formatted(cls));
 
             samMethod = method;
         }
@@ -347,7 +353,7 @@ public class Signals {
         // Check that a SAM exists
         if (samMethod == null)
             throw new IllegalArgumentException("%s is not a functional interface: abstract method not found."
-                    .formatted(functionalInterfaceClass));
+                    .formatted(cls));
 
         return samMethod;
     }

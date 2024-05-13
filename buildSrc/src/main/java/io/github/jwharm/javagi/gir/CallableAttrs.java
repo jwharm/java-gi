@@ -32,6 +32,9 @@ public record CallableAttrs(
         String shadowedBy,
         String shadows,
         boolean throws_,
-        String movedTo
+        String movedTo,
+        String asyncFunc,
+        String syncFunc,
+        String finishFunc
 ) implements Serializable {
 }

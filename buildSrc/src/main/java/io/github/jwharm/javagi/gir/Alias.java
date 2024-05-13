@@ -22,7 +22,6 @@ package io.github.jwharm.javagi.gir;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,9 @@ import java.util.Objects;
 
 public final class Alias extends Multiplatform implements RegisteredType {
 
-    public Alias(Map<String, String> attributes, List<Node> children, int platforms) {
+    public Alias(Map<String, String> attributes,
+                 List<Node> children,
+                 int platforms) {
         super(attributes, children, platforms);
     }
 
@@ -50,18 +51,6 @@ public final class Alias extends Multiplatform implements RegisteredType {
     public PartialStatement constructorName() {
         RegisteredType target = type().get();
         return target == null ? null : target.constructorName();
-    }
-
-    @Override
-    public String getInteropString(String paramName, boolean isPointer, Scope scope) {
-        RegisteredType target = type().get();
-        if (target != null)
-            return target.getInteropString(paramName, isPointer, scope);
-
-        return switch(toJavaBaseType(type().name())) {
-            case "String", "MemorySegment" -> paramName + ".getValue()";
-            default -> paramName + ".getValue()." + type().typeName() + "Value()";
-        };
     }
 
     @Override
