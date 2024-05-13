@@ -45,6 +45,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Windows GLib gir file workaround
+        working-directory: java-gi/
+        run: |
+          rm ext/gir-files/windows/GLib-2.0.gir
+          ./gradlew :glib:copyGLibGir
+
       - name: Run Gradle build
         working-directory: java-gi/
         run: ./gradlew build javadoc
