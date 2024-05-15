@@ -72,6 +72,14 @@ class TypedValueGenerator {
                         || target instanceof FlaggedType));
     }
 
+    String doFree() {
+        return switch(v) {
+            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
+            case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
+            default -> "false";
+        };
+    }
+
     TypeName getType() {
         return getType(true);
     }
@@ -261,8 +269,12 @@ class TypedValueGenerator {
             return marshalNativeToJava(type, identifier, upcall);
         }
 
-        if (array != null && array.anyType() instanceof Array)
-            return PartialStatement.of("null /* unsupported */");
+        if (array != null && array.anyType() instanceof Array inner
+                && inner.anyType() instanceof Type t
+                && t.isString())
+            return PartialStatement.of(
+                    "$interop:T.getStrvArrayFrom(" + identifier + ", " + doFree() + ")",
+                    "interop", ClassNames.INTEROP);
 
         if (array != null && array.anyType() instanceof Type arrayType)
             return marshalNativeToJavaArray(
@@ -277,12 +289,7 @@ class TypedValueGenerator {
     PartialStatement marshalNativeToJava(Type type,
                                          String identifier,
                                          boolean upcall) {
-        String free = switch(v) {
-            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
-            case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
-            default -> "false";
-        };
-
+        String free = doFree();
         String targetTypeTag = target == null ? null : type.toTypeTag();
 
         boolean isTypeClass = target instanceof Record
@@ -376,12 +383,7 @@ class TypedValueGenerator {
     private PartialStatement marshalNativeToJavaArray(Type type,
                                                       String size,
                                                       String identifier) {
-        String free = switch(v) {
-            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
-            case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
-            default -> "false";
-        };
-
+        String free = doFree();
         RegisteredType target = type.get();
         String targetTypeTag = target != null ? type.toTypeTag() : null;
 

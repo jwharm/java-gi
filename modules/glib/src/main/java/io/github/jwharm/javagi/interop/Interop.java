@@ -32,6 +32,7 @@ import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
 import org.gnome.glib.Type;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -39,7 +40,8 @@ import org.gnome.glib.Type;
  */
 public class Interop {
 
-    private final static int UNBOUNDED = Integer.MAX_VALUE;
+    private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
+    private final static long LONG_UNBOUNDED = Long.MAX_VALUE;
     private final static Linker LINKER = Linker.nativeLinker();
     public static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
@@ -240,7 +242,7 @@ public class Interop {
             return null;
 
         try {
-            return address.reinterpret(Long.MAX_VALUE).getString(0);
+            return address.reinterpret(LONG_UNBOUNDED).getString(0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -275,7 +277,7 @@ public class Interop {
         }
 
         if (free)
-            GLib.free(array);
+            GLib.strfreev(array);
 
         return result;
     }
@@ -294,14 +296,14 @@ public class Interop {
             return null;
 
         MemorySegment array = address;
-        if (array.byteSize() == 0) {
-            array = address.reinterpret(Long.MAX_VALUE);
-        }
+        if (array.byteSize() == 0)
+            array = address.reinterpret(LONG_UNBOUNDED);
 
         ArrayList<String> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset)
+                    .reinterpret(LONG_UNBOUNDED);
             if (MemorySegment.NULL.equals(ptr))
                 break;
             result.add(ptr.getString(0));
@@ -309,9 +311,43 @@ public class Interop {
         }
 
         if (free)
-            GLib.free(address);
+            GLib.strfreev(array);
 
         return result.toArray(new String[0]);
+    }
+
+    /**
+     * Read {@code NULL}-terminated arrays of Strings from a
+     * {@code NULL}-terminated array in native memory.
+     *
+     * @param  address address of the memory segment
+     * @param  free    if the strings and the array must be freed
+     * @return two-dimensional array of Strings
+     */
+    public static String[][] getStrvArrayFrom(MemorySegment address,
+                                              boolean free) {
+        if (address == null || MemorySegment.NULL.equals(address))
+            return null;
+
+        MemorySegment array = address;
+        if (array.byteSize() == 0)
+            array = address.reinterpret(LONG_UNBOUNDED);
+
+        ArrayList<String[]> result = new ArrayList<>();
+
+        long offset = 0;
+        while (true) {
+            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            if (MemorySegment.NULL.equals(ptr))
+                break;
+            result.add(getStringArrayFrom(ptr, free));
+            offset += ValueLayout.ADDRESS.byteSize();
+        }
+
+        if (free)
+            GLib.free(address);
+
+        return result.toArray(new String[0][0]);
     }
 
     /**
@@ -363,7 +399,7 @@ public class Interop {
 
         MemorySegment array = address;
         if (array.byteSize() == 0)
-            array = address.reinterpret(Long.MAX_VALUE);
+            array = address.reinterpret(LONG_UNBOUNDED);
 
         ArrayList<MemorySegment> result = new ArrayList<>();
         long offset = 0;
@@ -441,7 +477,7 @@ public class Interop {
                                           Arena arena,
                                           boolean free) {
         // Find the null byte
-        MemorySegment array = address.reinterpret(Long.MAX_VALUE, arena, null);
+        MemorySegment array = address.reinterpret(LONG_UNBOUNDED, arena, null);
         long idx = 0;
         while (array.get(ValueLayout.JAVA_BYTE, idx) != 0) {
             idx++;
@@ -555,7 +591,7 @@ public class Interop {
                                             boolean free) {
 
         // Find the null byte
-        MemorySegment array = address.reinterpret(UNBOUNDED, arena, null);
+        MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
         while (array.get(ValueLayout.JAVA_INT, idx) != 0) {
             idx++;
@@ -631,7 +667,7 @@ public class Interop {
 
         MemorySegment array = address;
         if (array.byteSize() == 0)
-            array = address.reinterpret(Long.MAX_VALUE);
+            array = address.reinterpret(LONG_UNBOUNDED);
 
         long offset = 0;
         while (!MemorySegment.NULL.equals(
