@@ -87,6 +87,26 @@ public class GLibPatch implements Patch {
         }
 
         /*
+         * g_strfreev is nicely specified in the Gir file to take an array
+         * of Strings. However, this makes Java-GI generate code to allocate
+         * a new memory segment from a Java String[] parameter. So we patch
+         * it to expect a pointer (a MemorySegment parameter in Java).
+         */
+        if (element instanceof Function f
+                && "g_strfreev".equals(f.callableAttrs().cIdentifier())) {
+            Parameter current = f.parameters().parameters().getFirst();
+            Parameter replacement = current.withChildren(
+                    current.infoElements().doc(),
+                    new Type(Map.of("name", "gpointer", "c:type", "gpointer"),
+                            Collections.emptyList()));
+            return f.withChildren(
+                    f.infoElements().doc(),
+                    f.infoElements().sourcePosition(),
+                    f.returnValue(),
+                    f.parameters().withChildren(replacement));
+        }
+
+        /*
          * GLib.List and GLib.SList are not generated from the gir data.
          * Java-GI provides custom List and SList classes that implement
          * java.util.List, to make them easier to use from Java.
