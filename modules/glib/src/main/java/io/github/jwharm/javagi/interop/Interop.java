@@ -32,7 +32,8 @@ import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
 import org.gnome.glib.Type;
-import org.jetbrains.annotations.Nullable;
+
+import static java.lang.foreign.MemorySegment.NULL;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -206,9 +207,7 @@ public class Interop {
      */
     public static MemorySegment allocateNativeString(String string,
                                                      SegmentAllocator alloc) {
-        return string == null
-                ? MemorySegment.NULL
-                : alloc.allocateFrom(string);
+        return string == null ? NULL : alloc.allocateFrom(string);
     }
 
     /**
@@ -238,7 +237,7 @@ public class Interop {
      */
     public static String getStringFrom(MemorySegment address, boolean free) {
 
-        if (MemorySegment.NULL.equals(address))
+        if (NULL.equals(address))
             return null;
 
         try {
@@ -261,24 +260,22 @@ public class Interop {
                                               int length,
                                               boolean free) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
         long size = ValueLayout.ADDRESS.byteSize();
-        if (array.byteSize() == 0)
-            array = address.reinterpret(size * length);
+        MemorySegment array = reinterpret(address, size * length);
 
         String[] result = new String[length];
         for (int i = 0; i < length; i++) {
-            result[i] = array.getString(i * size);
+            MemorySegment ptr = array.getAtIndex(ValueLayout.ADDRESS, i);
+            result[i] = getStringFrom(ptr);
             if (free)
                 GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
         }
 
         if (free)
-            GLib.strfreev(array);
-
+            GLib.free(array);
         return result;
     }
 
@@ -292,21 +289,18 @@ public class Interop {
      */
     public static String[] getStringArrayFrom(MemorySegment address,
                                               boolean free) {
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(LONG_UNBOUNDED);
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
 
         ArrayList<String> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset)
-                    .reinterpret(LONG_UNBOUNDED);
-            if (MemorySegment.NULL.equals(ptr))
+            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            if (NULL.equals(ptr))
                 break;
-            result.add(ptr.getString(0));
+            result.add(getStringFrom(ptr));
             offset += ValueLayout.ADDRESS.byteSize();
         }
 
@@ -326,19 +320,16 @@ public class Interop {
      */
     public static String[][] getStrvArrayFrom(MemorySegment address,
                                               boolean free) {
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(LONG_UNBOUNDED);
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
 
         ArrayList<String[]> result = new ArrayList<>();
-
         long offset = 0;
         while (true) {
             MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
-            if (MemorySegment.NULL.equals(ptr))
+            if (NULL.equals(ptr))
                 break;
             result.add(getStringArrayFrom(ptr, free));
             offset += ValueLayout.ADDRESS.byteSize();
@@ -355,27 +346,22 @@ public class Interop {
      *
      * @param  address address of the memory segment
      * @param  length  length of the array
-     * @param  free    if the addresses and the array must be freed
+     * @param  free    if the array must be freed
      * @return array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
                                                       int length,
                                                       boolean free) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
         long size = ValueLayout.ADDRESS.byteSize();
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(size * length);
+        MemorySegment array = reinterpret(address, size * length);
 
         MemorySegment[] result = new MemorySegment[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
             result[i] = array.getAtIndex(ValueLayout.ADDRESS, i);
-            if (free)
-                GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
-        }
 
         if (free)
             GLib.free(address);
@@ -388,24 +374,22 @@ public class Interop {
      * memory.
      *
      * @param  address address of the memory segment
-     * @param  free    if the addresses and the array must be freed
+     * @param  free    if the array must be freed
      * @return array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
                                                       boolean free) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(LONG_UNBOUNDED);
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
 
         ArrayList<MemorySegment> result = new ArrayList<>();
         long offset = 0;
         while (true) {
             MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
-            if (MemorySegment.NULL.equals(ptr))
+            if (NULL.equals(ptr))
                 break;
             result.add(ptr);
             offset += ValueLayout.ADDRESS.byteSize();
@@ -657,20 +641,18 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[]
-    getProxyArrayFrom(MemorySegment address,
-                      Class<T> cls,
-                      Function<MemorySegment, T> make) {
+    public static <T extends Proxy>
+    T[] getProxyArrayFrom(MemorySegment address,
+                          Class<T> cls,
+                          Function<MemorySegment, T> make) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(LONG_UNBOUNDED);
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
 
         long offset = 0;
-        while (!MemorySegment.NULL.equals(
+        while (!NULL.equals(
                         array.get(ValueLayout.ADDRESS, offset))) {
             offset += ValueLayout.ADDRESS.byteSize();
         }
@@ -689,19 +671,17 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[]
-    getProxyArrayFrom(MemorySegment address,
-                      int length,
-                      Class<T> cls,
-                      Function<MemorySegment, T> make) {
+    public static <T extends Proxy>
+    T[] getProxyArrayFrom(MemorySegment address,
+                          int length,
+                          Class<T> cls,
+                          Function<MemorySegment, T> make) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
         long size = AddressLayout.ADDRESS.byteSize();
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(size * length);
+        MemorySegment array = reinterpret(address, size * length);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -721,19 +701,17 @@ public class Interop {
      * @param  <T>     the type of the Proxy instances
      * @return array of Proxy instances
      */
-    public static <T extends Proxy> T[]
-    getStructArrayFrom(MemorySegment address,
-                       int length,
-                       Class<T> cls,
-                       Function<MemorySegment, T> make,
-                       MemoryLayout layout) {
+    public static <T extends Proxy>
+    T[] getStructArrayFrom(MemorySegment address,
+                           int length,
+                           Class<T> cls,
+                           Function<MemorySegment, T> make,
+                           MemoryLayout layout) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(layout.byteSize() * length);
+        MemorySegment array = reinterpret(address, layout.byteSize() * length);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         List<MemorySegment> elements = array.elements(layout).toList();
@@ -761,13 +739,11 @@ public class Interop {
                                                  Class<T> cls,
                                                  Function<Integer, T> make) {
 
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return null;
 
         long size = AddressLayout.ADDRESS.byteSize();
-        MemorySegment array = address;
-        if (array.byteSize() == 0)
-            array = address.reinterpret(size * length);
+        MemorySegment array = reinterpret(address, size * length);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -793,14 +769,12 @@ public class Interop {
         var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < strings.length; i++) {
-            var cString = strings[i] == null ? MemorySegment.NULL
-                    : arena.allocateFrom(strings[i]);
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, cString);
+            var s = strings[i] == null ? NULL : arena.allocateFrom(strings[i]);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(
-                    ValueLayout.ADDRESS, strings.length, MemorySegment.NULL);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, strings.length, NULL);
 
         return memorySegment;
     }
@@ -973,9 +947,7 @@ public class Interop {
 
         MemorySegment[] addressArray = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
-            addressArray[i] = array[i] == null
-                    ? MemorySegment.NULL
-                    : array[i].handle();
+            addressArray[i] = array[i] == null ? NULL : array[i].handle();
         }
 
         return allocateNativeArray(addressArray, zeroTerminated, arena);
@@ -997,29 +969,26 @@ public class Interop {
                                                     boolean zeroTerminated,
                                                     Arena arena) {
 
+        long size = layout.byteSize();
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment memorySegment = arena.allocate(layout, length);
+        MemorySegment segment = arena.allocate(layout, length);
 
         for (int i = 0; i < array.length; i++) {
-            if (array[i] != null
-                    && (!MemorySegment.NULL.equals(array[i].handle()))) {
+            if (array[i] != null && (!NULL.equals(array[i].handle()))) {
                 // Copy array element to the native array
                 MemorySegment element = array[i].handle()
                         .reinterpret(layout.byteSize(), arena, null);
-                memorySegment.asSlice(i * layout.byteSize())
-                        .copyFrom(element);
+                segment.asSlice(i * layout.byteSize()).copyFrom(element);
             } else {
-                // Fill the array with zeros
-                long size = layout.byteSize();
-                memorySegment.asSlice(i * size, size).fill((byte) 0);
+                // Fill the array slice with zeros
+                segment.asSlice(i * size, size).fill((byte) 0);
             }
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(
-                    ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
+            segment.set(ValueLayout.ADDRESS, length * size, NULL);
 
-        return memorySegment;
+        return segment;
     }
 
     /**
@@ -1039,13 +1008,12 @@ public class Interop {
         var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
 
         for (int i = 0; i < array.length; i++) {
-            MemorySegment s = array[i] == null ? MemorySegment.NULL : array[i];
+            MemorySegment s = array[i] == null ? NULL : array[i];
             memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(
-                    ValueLayout.ADDRESS, array.length, MemorySegment.NULL);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, NULL);
 
         return memorySegment;
     }
@@ -1059,7 +1027,9 @@ public class Interop {
      * @return an EnumSet containing the enum values as set in the bitfield
      */
     public static <T extends Enum<T> & Enumeration>
-    EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
+    EnumSet<T> intToEnumSet(Class<T> cls,
+                            Function<Integer, T> make,
+                            int bitfield) {
         int n = bitfield;
         EnumSet<T> enumSet = EnumSet.noneOf(cls);
         int position = 0;
@@ -1082,8 +1052,8 @@ public class Interop {
     public static <T extends Enum<T> & Enumeration>
     int enumSetToInt(Set<T> set) {
         int bitfield = 0;
-        for (T value : set)
-            bitfield |= value.getValue();
+        for (T element : set)
+            bitfield |= element.getValue();
         return bitfield;
     }
 
