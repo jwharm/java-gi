@@ -183,7 +183,7 @@ public class Conversions {
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar" -> "int";
             case "gint64", "gssize", "gsize", "goffset", "guint64", "gintptr",
-                    "guintptr", "glong", "gulong" -> "long";
+                    "guintptr", "glong", "gulong", "time_t" -> "long";
             case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
