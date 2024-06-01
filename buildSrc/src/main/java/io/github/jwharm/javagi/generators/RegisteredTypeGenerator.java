@@ -125,10 +125,10 @@ public class RegisteredTypeGenerator {
         MethodSpec.Builder builder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                        Create a $L proxy instance for the provided memory address.
-                        
-                        @param address the memory address of the native object
-                        """, name())
+                    Create a $L proxy instance for the provided memory address.
+                    
+                    @param address the memory address of the native object
+                    """, name())
                 .addParameter(MemorySegment.class, "address");
 
         if (rt instanceof Record rec && rec.isOpaque()
@@ -179,7 +179,7 @@ public class RegisteredTypeGenerator {
             if (target instanceof Class)
                 return target.typeName();
         }
-        return ClassNames.TYPE_INSTANCE;
+        return ClassNames.GOBJECT;
     }
 
     public boolean hasDowncallHandles() {

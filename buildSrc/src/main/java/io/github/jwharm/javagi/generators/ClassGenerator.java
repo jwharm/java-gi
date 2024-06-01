@@ -130,15 +130,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         return MethodSpec.methodBuilder("asParent")
                 .addJavadoc("""
-                        Returns this instance as if it were its parent type. This is mostly
-                        synonymous to the Java {@code super} keyword, but will set the native
-                        typeclass function pointers to the parent type. When overriding a native
-                        virtual method in Java, "chaining up" with {@code super.methodName()}
-                        doesn't work, because it invokes the overridden function pointer again.
-                        To chain up, call {@code asParent().methodName()}. This will call the
-                        native function pointer of this virtual method in the typeclass of the
-                        parent type.
-                        """)
+                    Returns this instance as if it were its parent type. This is mostly
+                    synonymous to the Java {@code super} keyword, but will set the native
+                    typeclass function pointers to the parent type. When overriding a native
+                    virtual method in Java, "chaining up" with {@code super.methodName()}
+                    doesn't work, because it invokes the overridden function pointer again.
+                    To chain up, call {@code asParent().methodName()}. This will call the
+                    native function pointer of this virtual method in the typeclass of the
+                    parent type.
+                    """)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(cls.typeName())
                 .addStatement("$T _parent = new $T(handle())", cls.typeName(), className)
@@ -153,10 +153,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                     Create a $L proxy instance for the provided memory address.
+                    
                     @param address the memory address of the native object
                     """, name())
                 .addParameter(MemorySegment.class, "address")
-                .addStatement("super(address == null ? null : $T.reinterpret(address, getMemoryLayout().byteSize()))",
+                .addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
                         ClassNames.INTEROP);
 
         /*
@@ -181,10 +182,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     protected MethodSpec paramSpecGetTypeMethod() {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
-                        Get the GType of the $L class
-                        
-                        @return always {@link $T#PARAM}
-                        """, cls.cType(), ClassNames.TYPES)
+                    Get the GType of the $L class
+                    
+                    @return always {@link $T#PARAM}
+                    """, cls.cType(), ClassNames.TYPES)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassNames.GTYPE)
                 .addStatement("return $T.PARAM", ClassNames.TYPES)
@@ -194,11 +195,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConstructor() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                        Creates a new GObject instance of the provided GType.
-                        
-                        @param objectType the GType of the new GObject
-                        @return the newly created GObject instance
-                        """)
+                    Creates a new GObject instance of the provided GType.
+                    
+                    @param objectType the GType of the new GObject
+                    @return the newly created GObject instance
+                    """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addTypeVariable(TypeVariableName.get("T", ClassNames.GOBJECT))
                 .returns(TypeVariableName.get("T"))
@@ -213,15 +214,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConstructorVarargs() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                        Creates a new GObject instance of the provided GType and with the
-                        provided property values.
-                        
-                        @param  objectType the GType of the new GObject
-                        @param  propertyNamesAndValues pairs of property names and values
-                                (Strings and Objects)
-                        @return the newly created GObject instance
-                        @throws IllegalArgumentException invalid property name
-                        """)
+                    Creates a new GObject instance of the provided GType and with the
+                    provided property values.
+                    
+                    @param  objectType the GType of the new GObject
+                    @param  propertyNamesAndValues pairs of property names and values
+                            (Strings and Objects)
+                    @return the newly created GObject instance
+                    @throws IllegalArgumentException invalid property name
+                    """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addTypeVariable(TypeVariableName.get("T", ClassNames.GOBJECT))
                 .returns(TypeVariableName.get("T"))
@@ -236,12 +237,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectGetProperty() {
         return MethodSpec.methodBuilder("getProperty")
                 .addJavadoc("""
-                        Get a property of an object.
-                        
-                        @param  propertyName the name of the property to get
-                        @return the property value
-                        @throws IllegalArgumentException invalid property name
-                        """)
+                    Get a property of an object.
+                    
+                    @param  propertyName the name of the property to get
+                    @return the property value
+                    @throws IllegalArgumentException invalid property name
+                    """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(Object.class)
                 .addParameter(String.class, "propertyName")
@@ -253,12 +254,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectSetProperty() {
         return MethodSpec.methodBuilder("setProperty")
                 .addJavadoc("""
-                        Set a property of an object.
-                        
-                        @param  propertyName the name of the property to set
-                        @param  value the new property value
-                        @throws IllegalArgumentException invalid property name
-                        """)
+                    Set a property of an object.
+                    
+                    @param  propertyName the name of the property to set
+                    @param  value the new property value
+                    @throws IllegalArgumentException invalid property name
+                    """)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "propertyName")
                 .addParameter(Object.class, "value")
@@ -270,14 +271,14 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConnect() {
         return MethodSpec.methodBuilder("connect")
                 .addJavadoc("""
-                       Connect a callback to a signal for this object. The handler will be
-                       called before the default handler of the signal.
-                       
-                       @param  detailedSignal a string of the form "signal-name::detail"
-                       @param  callback       the callback to connect
-                       @return a SignalConnection object to track, block and disconnect the
-                               signal connection
-                       """)
+                    Connect a callback to a signal for this object. The handler will be
+                    called before the default handler of the signal.
+                    
+                    @param  detailedSignal a string of the form "signal-name::detail"
+                    @param  callback       the callback to connect
+                    @return a SignalConnection object to track, block and disconnect the
+                            signal connection
+                    """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
                 .returns(ClassNames.SIGNAL_CONNECTION)
@@ -290,15 +291,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConnectAfter() {
         return MethodSpec.methodBuilder("connect")
                 .addJavadoc("""
-                       Connect a callback to a signal for this object.
-                       
-                       @param detailedSignal a string of the form "signal-name::detail"
-                       @param callback       the callback to connect
-                       @param after          whether the handler should be called before or
-                                             after the default handler of the signal
-                       @return a SignalConnection object to track, block and disconnect the
-                               signal connection
-                       """)
+                    Connect a callback to a signal for this object.
+                    
+                    @param detailedSignal a string of the form "signal-name::detail"
+                    @param callback       the callback to connect
+                    @param after          whether the handler should be called before or
+                                          after the default handler of the signal
+                    @return a SignalConnection object to track, block and disconnect the
+                            signal connection
+                    """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
                 .returns(ClassNames.SIGNAL_CONNECTION)
@@ -317,15 +318,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectEmit() {
         return MethodSpec.methodBuilder("emit")
                 .addJavadoc("""
-                       Emits a signal from this object.
-                       
-                       @param  detailedSignal a string of the form "signal-name::detail"
-                       @param  params         the parameters to emit for this signal
-                       @return the return value of the signal, or {@code null} if the signal
-                               has no return value
-                       @throws IllegalArgumentException if a signal with this name is not found
-                               for the object
-                       """)
+                    Emits a signal from this object.
+                    
+                    @param  detailedSignal a string of the form "signal-name::detail"
+                    @param  params         the parameters to emit for this signal
+                    @return the return value of the signal, or {@code null} if the signal
+                            has no return value
+                    @throws IllegalArgumentException if a signal with this name is not found
+                            for the object
+                    """)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(Object.class)
                 .addParameter(String.class, "detailedSignal")

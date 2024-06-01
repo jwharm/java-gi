@@ -83,7 +83,7 @@ When a virtual method is not available as a regular instance method, you can saf
 
 ## Properties
 
-You can define GObject properties with the `@Property` annotation on the getter and setter methods. You must annotate both the getter and setter methods (if applicable). The `@Property` annotation can optionally specify the `name` parameter; all other parameters are optional.
+You can define GObject properties with the `@Property` annotation on the getter and setter methods. You must annotate both the getter and setter methods (if applicable). All `@Property` annotation parameters are optional.
 
 Example definition of an `int` property with name `n-items`:
 
