@@ -179,7 +179,7 @@ public class RegisteredTypeGenerator {
             if (target instanceof Class)
                 return target.typeName();
         }
-        return ClassNames.TYPE_INSTANCE;
+        return ClassNames.GOBJECT;
     }
 
     public boolean hasDowncallHandles() {
