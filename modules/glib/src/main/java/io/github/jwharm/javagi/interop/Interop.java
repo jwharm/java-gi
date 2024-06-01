@@ -484,7 +484,8 @@ public class Interop {
                                                Arena arena,
                                                boolean free) {
 
-        char[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_CHAR.byteSize();
+        char[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_CHAR);
 
         if (free)
@@ -507,7 +508,8 @@ public class Interop {
                                               Arena arena,
                                               boolean free) {
 
-        double[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_DOUBLE.byteSize();
+        double[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_DOUBLE);
 
         if (free)
@@ -530,7 +532,8 @@ public class Interop {
                                             Arena arena,
                                             boolean free) {
 
-        float[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_FLOAT.byteSize();
+        float[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_FLOAT);
 
         if (free)
@@ -553,7 +556,8 @@ public class Interop {
                                             Arena arena,
                                             boolean free) {
 
-        int[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_INT.byteSize();
+        int[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_INT);
 
         if (free)
@@ -577,7 +581,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.get(ValueLayout.JAVA_INT, idx) != 0) {
+        while (array.getAtIndex(ValueLayout.JAVA_INT, idx) != 0) {
             idx++;
         }
 
@@ -598,7 +602,8 @@ public class Interop {
                                           Arena arena,
                                           boolean free) {
 
-        long[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_LONG.byteSize();
+        long[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_LONG);
 
         if (free)
@@ -621,7 +626,8 @@ public class Interop {
                                             Arena arena,
                                             boolean free) {
 
-        short[] array = address.reinterpret(length, arena, null)
+        long size = ValueLayout.JAVA_SHORT.byteSize();
+        short[] array = address.reinterpret(length * size, arena, null)
                 .toArray(ValueLayout.JAVA_SHORT);
 
         if (free)
