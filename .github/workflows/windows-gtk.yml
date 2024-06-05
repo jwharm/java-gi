@@ -21,14 +21,14 @@ jobs:
           choco uninstall -y mingw strawberryperl cmake.install llvm
           pip install meson ninja
       - name: Clone GTK tree
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag }}
           repository: 'GNOME/gtk'
           submodules: recursive
       - name: Perform Build
         run: |
-          meson setup build --prefix ${{ github.workspace }}\dist --buildtype release -Db_pie=true -Db_lto=true -Dbuild-tests=false -Dmedia-gstreamer=disabled
+          meson setup build --prefix ${{ github.workspace }}\dist --buildtype release -Db_pie=true -Dbuild-tests=false -Dmedia-gstreamer=disabled -Dvulkan=disabled --vsenv
           meson compile -C build
           meson install -C build
           cd dist\bin
@@ -36,15 +36,15 @@ jobs:
           7z a ..\..\executable.zip *.exe
           cd ..\..
       - name: Library artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libraries
           path: |
             dist\bin\*.dll
       - name: Application artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: libraries
+          name: applications
           path: |
             dist\bin\*.exe
       - name: Generate Release
