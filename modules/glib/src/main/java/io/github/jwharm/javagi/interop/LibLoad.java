@@ -22,6 +22,8 @@ package io.github.jwharm.javagi.interop;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -79,12 +81,16 @@ public class LibLoad {
                 continue;
             }
 
+            Set<String> possibleNames = new HashSet<>();
+            possibleNames.add(name);
+            if (Platform.getRuntimePlatform().equals("windows") && name.startsWith("lib")) {
+                possibleNames.add(name.substring(3));
+            }
             // Find the file with the requested library name
             for (Path path : files) {
                 try {
                     String fn = path.getFileName().toString();
-                    if (fn.equals(name)) {
-
+                    if (possibleNames.contains(fn)) {
                         // Load the library
                         System.load(path.toString());
                         return;
