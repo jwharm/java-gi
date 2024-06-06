@@ -242,7 +242,8 @@ public class MethodGenerator {
             // Ref GObject
             if (target != null && target.checkIsGObject()
                     && returnValue.transferOwnership() == TransferOwnership.NONE
-                    && (! "ref".equals(func.name()))) {
+                    && (! "ref".equals(func.name()))
+                    && (! "ref_sink".equals(func.name()))) {
                 builder.addNamedCode(PartialStatement.of("var _object = ")
                         .add(stmt).format() + ";\n", stmt.arguments())
                         .beginControlFlow("if (_object instanceof $T _gobject)",
