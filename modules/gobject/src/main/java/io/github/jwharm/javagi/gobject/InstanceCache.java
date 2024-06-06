@@ -24,7 +24,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -44,10 +43,37 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class InstanceCache {
 
-    private final static Map<MemorySegment, Proxy> strongReferences
+    private sealed interface Ref permits Ref.Strong, Ref.Weak {
+
+        record Strong(Proxy proxy) implements Ref {
+            public Proxy get() {
+                return proxy;
+            }
+        }
+
+        record Weak(WeakReference<Proxy> proxy) implements Ref {
+            Weak(Proxy proxy) {
+                this(new WeakReference<>(proxy));
+            }
+            public Proxy get() {
+                return proxy == null ? null : proxy.get();
+            }
+        }
+
+        Proxy get();
+
+        default Ref asWeak() {
+            return this instanceof Weak ? this : new Weak(get());
+        }
+
+        default Ref asStrong() {
+            return this instanceof Strong ? this : new Strong(get());
+        }
+    }
+
+    private static final ConcurrentHashMap<MemorySegment, Ref> references
             = new ConcurrentHashMap<>();
-    private final static Map<MemorySegment, WeakReference<Proxy>> weakReferences
-            = new ConcurrentHashMap<>();
+
     private static final Cleaner CLEANER = Cleaner.create();
 
     private static final MethodHandle g_object_add_toggle_ref =
@@ -109,16 +135,8 @@ public class InstanceCache {
             return null;
 
         // Get instance from cache
-        Proxy instance = strongReferences.get(address);
-        if (instance != null)
-            return instance;
-
-        WeakReference<Proxy> weakRef = weakReferences.get(address);
-        if (weakRef != null && weakRef.get() != null)
-            return weakRef.get();
-
-        // Not found
-        return null;
+        Ref ref = references.get(address);
+        return ref == null ? null : ref.get();
     }
 
     /**
@@ -256,7 +274,7 @@ public class InstanceCache {
     
     /**
      * Add the new GObject instance to the cache. Floating references are
-     * sinked, and a toggle reference is installed.
+     * sunk, and a toggle reference is installed.
      *
      * @param  address     the memory address of the native instance
      * @param  object the GObject instance
@@ -264,8 +282,7 @@ public class InstanceCache {
      */
     public static Proxy put(MemorySegment address, Proxy object) {
         // Do not put a new instance if it already exists
-        if (strongReferences.containsKey(address)
-                || weakReferences.containsKey(address))
+        if (references.containsKey(address))
             return object;
 
         GLibLogger.debug("New %s %ld",
@@ -275,9 +292,9 @@ public class InstanceCache {
         // Put the instance in the cache. If another thread did this (while we
         // were creating a new instance), putIfAbsent() will return that
         // instance.
-        Proxy existingInstance = strongReferences.putIfAbsent(address, object);
+        Ref existingInstance = references.putIfAbsent(address, new Ref.Strong(object));
         if (existingInstance != null)
-            return existingInstance;
+            return existingInstance.get();
 
         // Sink floating references
         if (object instanceof Floating floatingReference)
@@ -319,23 +336,17 @@ public class InstanceCache {
     private static void handleToggleNotify(MemorySegment ignored,
                                            MemorySegment object,
                                            int isLastRef) {
-        if (isLastRef != 0) {
-            Proxy proxy = strongReferences.remove(object);
-            GLibLogger.debug("Toggle %ld to weak reference (is last ref)",
-                    object == null ? 0 : object.address());
-            weakReferences.put(object, new WeakReference<>(proxy));
-        } else {
-            WeakReference<Proxy> proxy = weakReferences.remove(object);
-            GLibLogger.debug("Toggle %ld to strong reference",
-                    object == null ? 0 : object.address());
-            strongReferences.put(object, proxy.get());
-        }
+        GLibLogger.debug("Toggle %ld, is_last_ref=%d",
+                object == null ? 0 : object.address(), isLastRef);
+        if (isLastRef != 0)
+            references.computeIfPresent(object, (_, v) -> v.asWeak());
+        else
+            references.computeIfPresent(object, (_, v) -> v.asStrong());
     }
 
     /**
-     * This callback is run by the {@link Cleaner} when a
-     * {@link org.gnome.gobject.GObject} instance has become unreachable, to
-     * remove the toggle reference.
+     * This callback is run by the {@link Cleaner} when a {@link GObject}
+     * instance has become unreachable, to remove the toggle reference.
      *
      * @param address memory address of the object instance to be cleaned
      */
@@ -343,15 +354,17 @@ public class InstanceCache {
             implements Runnable {
 
         public void run() {
-            GLibLogger.debug("Unref %ld",
-                    address == null ? 0L : address.address());
+            if (address == null)
+                return;
+
+            GLibLogger.debug("Unref %ld", address.address());
             try {
                 g_object_remove_toggle_ref.invokeExact(
                         address, toggle_notify, MemorySegment.NULL);
             } catch (Throwable _err) {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
-            InstanceCache.weakReferences.remove(address);
+            InstanceCache.references.remove(address);
         }
     }
 }
