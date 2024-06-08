@@ -34,6 +34,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
@@ -59,14 +60,15 @@ public class CallableGenerator {
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
-            valueLayouts.add(Conversions.getValueLayout(returnType));
+            valueLayouts.add(getValueLayout(returnType));
 
         if (callable instanceof Signal)
             valueLayouts.add("ADDRESS");
 
         if (callable.parameters() != null) {
-            if (callable.parameters().instanceParameter() != null)
-                valueLayouts.add("ADDRESS");
+            var iParam = callable.parameters().instanceParameter();
+            if (iParam != null)
+                valueLayouts.add(getValueLayout(iParam.anyType()));
             valueLayouts.addAll(
                     callable.parameters().parameters().stream()
                             .filter(not(Parameter::varargs))
