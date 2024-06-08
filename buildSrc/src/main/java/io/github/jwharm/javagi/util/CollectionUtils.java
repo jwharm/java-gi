@@ -22,6 +22,8 @@ package io.github.jwharm.javagi.util;
 import io.github.jwharm.javagi.gir.Multiplatform;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility functions for working with collections.
@@ -77,5 +79,18 @@ public class CollectionUtils {
         Map<A, B> map3 = new HashMap<>(map1);
         map3.putAll(map2);
         return map3;
+    }
+
+    /**
+     * Similar to {@link List#of}, but ignores {@code null} arguments.
+     */
+    @SafeVarargs
+    public static <T> List<T> listOfNonNull(T... elements) {
+        if (elements == null)
+            return Collections.emptyList();
+
+        return Stream.of(elements)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }

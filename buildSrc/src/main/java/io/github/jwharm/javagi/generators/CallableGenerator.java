@@ -133,9 +133,16 @@ public class CallableGenerator {
         PartialStatement stmt = PartialStatement.of(null,
                 "memorySegment", MemorySegment.class);
 
-        if (parameters.instanceParameter() != null)
-            stmt.add("handle()");
+        // Marshal instance parameter
+        InstanceParameter iParam = parameters.instanceParameter();
+        if (iParam != null) {
+            if (iParam.type().get() instanceof FlaggedType)
+                stmt.add("getValue()"); // method in Enumeration class
+            else
+                stmt.add("handle()");   // method in regular TypeInstance class
+        }
 
+        // Marshal other parameters
         for (Parameter p : parameters.parameters()) {
             if (!stmt.format().isEmpty()) stmt.add(", ");
             stmt.add("$Z"); // emit newline
@@ -146,7 +153,7 @@ public class CallableGenerator {
             if (generator.checkNull())
                 stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ");
 
-            // callback destroy
+            // Callback destroy
             if (p.isDestroyNotifyParameter()) {
                 var notify = parameters.parameters().stream()
                         .filter(q -> q.destroy() == p)
@@ -159,7 +166,7 @@ public class CallableGenerator {
                 }
             }
 
-            // user_data
+            // User_data
             else if (p.isUserDataParameter())
                 stmt.add("$memorySegment:T.NULL");
 
