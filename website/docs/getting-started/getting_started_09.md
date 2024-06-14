@@ -71,7 +71,7 @@ public void startup() {
 ...
 ```
 
-[Full source](part4)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part4)
 
 Our preferences menu item does not do anything yet, but the Quit menu item is fully functional. Note that it can also be activated by the usual Ctrl-Q shortcut. The shortcut was added with {{ javadoc('Application.setAccelsForAction') }}.
 

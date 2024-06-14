@@ -110,7 +110,7 @@ public void init() {
 ...
 ```
 
-[Full source](part8)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part8)
 
 What our application looks like now:
 
