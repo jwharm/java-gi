@@ -2,7 +2,7 @@
 
 ## Required Java version
 
-First, download and install [JDK 22](https://jdk.java.net/22/) or newer. Java-GI uses the "Panama" Foreign Function & Memory API that is only available since JDK 22.
+To use Java-GI, download and install [JDK 22](https://jdk.java.net/22/) or newer. Java-GI uses the "Panama" Foreign Function & Memory API that is only available since JDK 22.
 
 ## Dependencies
 
@@ -73,7 +73,7 @@ public class HelloWorld {
 
 ## Compile and run
 
-Build and run the application. The following command-line parameters are useful:
+Build and run the application using your IDE or build tool of choice. The following command-line parameters are useful:
 
 - Add `--enable-native-access=ALL-UNNAMED` to suppress warnings about native access.
 
@@ -81,11 +81,13 @@ Build and run the application. The following command-line parameters are useful:
 
 See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
-## Java library path
+## Further reading
 
-If you see an error about a missing library, make sure that all dependencies are installed. If necessary, you can override the Java library path with the `-Djava.library.path=` JVM argument. for example: `-Djava.library.path=/lib/x86_64-linux-gnu` on Debian-based systems.
+For more advanced instructions on using Java-GI consult [this page](advanced.md), and read about subclassing GObject classes with Java-GI [here](register.md). If you're new to Gtk development, read the [Gtk "Getting started" guide](getting-started/getting_started_00.md) that has been translated to use Java for all code examples. 
 
-## Linux
+## Platform-specific notes
+
+### Linux
 
 On most Linux distributions, Gtk will already be installed. Java-GI will load shared libraries using `dlopen`, and fallback to the `java.library.path`. So in most cases, you can simply run your application with `--enable-native-access=ALL-UNNAMED`:
 
@@ -95,9 +97,9 @@ tasks.named('run') {
 }
 ```
 
-## MacOS
+### MacOS
 
-On MacOS, you can install Gtk using Homebrew, and use the parameter `-XstartOnFirstThread`. A complete Gradle `run` task will look like this:
+On MacOS, you can install Gtk using Homebrew. Gtk needs to run on the main thread, therefore you need to set the parameter `-XstartOnFirstThread`. A complete Gradle `run` task will look like this:
 
 ```groovy
 tasks.named('run') {
@@ -107,7 +109,7 @@ tasks.named('run') {
 }
 ```
 
-## Windows
+### Windows
 
 On Windows, Gtk can be installed with MSYS2. A Gradle `run` task will look like this:
 

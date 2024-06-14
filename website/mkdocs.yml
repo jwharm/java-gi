@@ -7,6 +7,21 @@ nav:
     - Examples: examples.md
     - Registering new types: register.md
     - Composite template classes: templates.md
+    - Getting started guide:
+        - Introduction: getting-started/getting_started_00.md
+        - Basics: getting-started/getting_started_01.md
+        - Hello, world: getting-started/getting_started_02.md
+        - Packing: getting-started/getting_started_03.md
+        - Custom drawing: getting-started/getting_started_04.md
+        - Building user interfaces: getting-started/getting_started_05.md
+        - Building applications: getting-started/getting_started_06.md
+        - Populating the window: getting-started/getting_started_07.md
+        - Opening files: getting-started/getting_started_08.md
+        - A menu: getting-started/getting_started_09.md
+        - A preferences dialog: getting-started/getting_started_10.md
+        - Adding a search bar: getting-started/getting_started_11.md
+        - Adding a side bar: getting-started/getting_started_12.md
+        - Properties: getting-started/getting_started_13.md
     - Generating bindings: generate.md
 
 theme:
@@ -44,3 +59,10 @@ markdown_extensions:
   - admonition
   - pymdownx.superfences
   - pymdownx.details
+  - attr_list
+  - def_list
+
+plugins:
+  - search
+  - macros
+
