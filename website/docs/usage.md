@@ -81,6 +81,16 @@ Build and run the application using your IDE or build tool of choice. The follow
 
 See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
 
+!!! tip "Use an IDE"
+    An Integrated Development Environment (IDE) with support for Java is the most efficient way to develop software in Java. IDEs will help setup a project and build configuration, navigate and refactor source code, detect problems and suggest improvements. The most commonly used Java IDEs are:
+    
+    * [JetBrains IntelliJ IDEA](https://www.jetbrains.com/idea/)
+    * [Eclipse IDE](https://eclipseide.org/)
+    * [Apache NetBeans](https://netbeans.apache.org/)
+    * [Visual Studio Code with a Java extension](https://code.visualstudio.com/docs/languages/java)
+    
+    If you often work from the command line, [SDKMAN!](https://sdkman.io/) will proove useful to manage your installed SDKs and build tools.
+
 ## Further reading
 
 For more advanced instructions on using Java-GI consult [this page](advanced.md), and read about subclassing GObject classes with Java-GI [here](register.md). If you're new to Gtk development, read the [Gtk "Getting started" guide](getting-started/getting_started_00.md) that has been translated to use Java for all code examples. 
