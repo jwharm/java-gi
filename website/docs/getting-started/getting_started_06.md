@@ -138,7 +138,7 @@ Exec=@bindir@/exampleapp
 
 Note that `@bindir@` needs to be replaced with the actual path to the binary before this desktop file can be used.
 
-[Full source](part1)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part1)
 
 Here is what we've achieved so far:
 

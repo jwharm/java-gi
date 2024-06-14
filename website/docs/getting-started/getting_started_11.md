@@ -83,7 +83,7 @@ public void searchTextChanged() {
 ...
 ```
 
-[Full source](part7)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part7)
 
 With the search bar, our application now looks like this:
 

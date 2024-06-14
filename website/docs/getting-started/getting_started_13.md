@@ -52,7 +52,7 @@ public void init() {
 ...
 ```
 
-We also need a function that counts the lines of the currently active tab, and updates the `lines` label. See the [full source](part9)
+We also need a function that counts the lines of the currently active tab, and updates the `lines` label. See the [full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part9)
  if you are interested in the details.
 
 This brings our example application to this appearance:

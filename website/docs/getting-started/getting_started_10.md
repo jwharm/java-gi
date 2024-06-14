@@ -185,7 +185,7 @@ public void preferencesActivated(Variant parameter) {
 ...
 ```
 
-[Full source](part6)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part6)
 
 After all this work, our application can now show a preference dialog like this:
 

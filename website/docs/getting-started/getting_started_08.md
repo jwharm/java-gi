@@ -78,7 +78,7 @@ Lastly, we add a {{ javadoc('Gtk.StackSwitcher') }} to the titlebar area in the 
 </child>
 ```
 
-[Full source](part3)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part3)
 
 The stack switcher gets all its information it needs to display tabs from the stack that it belongs to. Here, we are passing the label to show for each file as the last argument to the {{ javadoc('Stack.addTitled') }} method.
 

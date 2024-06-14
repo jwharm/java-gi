@@ -81,7 +81,7 @@ public class ExampleMainClass {
 }
 ```
 
-[Full source](part2)
+[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part2)
 
 !!! note
     The `Resource.load()` method throws a `GErrorException`. This exception indicates that the native GTK function signaled an error in a `GError` out-parameter.
