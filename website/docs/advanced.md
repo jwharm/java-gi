@@ -151,3 +151,21 @@ Registering a Java class as a new GType is documented [here](register.md).
 ## Creating a Gtk composite template class
 
 To create a Gtk composite template class (coupled to a ui definition in XML or Blueprint format), read [these instructions](templates.md).
+
+## GNOME Builder
+
+![Screenshot of GNOME Builder with JDTLS](img/gnome-builder-screenshot.png)
+
+A great tool for developing GNOME applications is GNOME Builder. Builder primarily supports C, JavaScript, Rust, Python and Vala applications, but you can use it to develop Java applications as well, if you have the Eclipse JDT language server (JDTLS) installed.
+
+!!! warning
+    In my limited experience this is still very unpolished and fragile. For any serieus work, by all means use a well-supported Java IDE.
+
+1. Install GNOME Builder. Preferably the newest release from Flathub, but at least version 44.
+2. Download JDTLS [here](https://download.eclipse.org/jdtls/milestones/). Pick the latest milestone version and download the file `jdt-language-server-...-tar.gz`.
+3. Extract the downloaded file into a local directory.
+4. Add the `[jdtls folder]/jdtls/bin` to your `$PATH`. The easiest way to do that, is with a symlink like this: `ln -s ~/Downloads/jdt-language-server-1.35.0-202404251256/bin/jdtls ~/.local/bin/jdtls`
+5. Start GNOME Builder and open a Java project.
+6. Open a `.java` file. Builder will spawn the JDT language server and will display "Initialize Workspace". This might take a few minutes.
+7. When the initialization has completed, you can develop and build your Java project with GNOME Builder.
+
