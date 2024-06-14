@@ -49,7 +49,6 @@ out/
 ## Eclipse
 ##############################
 .settings/
-bin/
 tmp/
 .metadata
 .classpath
@@ -66,7 +65,6 @@ local.properties
 ## NetBeans
 ##############################
 nbproject/private/
-build/
 nbbuild/
 dist/
 nbdist/
@@ -85,14 +83,10 @@ nb-configuration.xml
 .DS_Store
 
 ##############################
-## JVM crash logs
-##############################
-hs_err_pid*
-
-##############################
-## Site files from mkdocs
+## MkDocs
 ##############################
 website/site/
+__pycache__
 
 ##############################
 ## Compiled GResource files
