@@ -25,14 +25,13 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: 21
+          java-version: 22
           distribution: 'temurin'
 
       - name: Checkout gir-files repository
         uses: actions/checkout@v4
         with:
           repository: 'gircore/gir-files'
-          ref: 'c11be30bcf7ecf0da157585d25f509378af0b0b7'
           path: 'gir-files'
 
       - name: Checkout java-gi repository
