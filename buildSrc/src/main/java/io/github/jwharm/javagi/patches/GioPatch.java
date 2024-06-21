@@ -36,15 +36,29 @@ public class GioPatch implements Patch {
         if (!"Gio".equals(namespace))
             return element;
 
-        /*
-         * FileDescriptorBased is an interface on Linux and a record on
-         * Windows. This means it is not considered the same type in the GIR
-         * model, and is generated twice. To prevent this, it is removed from
-         * the Windows GIR model, so only the interface remains.
-         */
         if (element instanceof Namespace ns
-                && ns.platforms() == Platform.WINDOWS)
+                && ns.platforms() == Platform.WINDOWS) {
+
+            /*
+             * Win32NetworkMonitor is a record type with only two fields: a
+             * pointer to the parent instance and a pointer to the private data.
+             * This results in constructors that clash with the default java-gi
+             * Proxy constructor. Technically this is a bug in java-gi, but it
+             * occurs only for the Win32NetworkMonitor type and this type has no
+             * functionality in the Java bindings: no fields, no methods,
+             * nothing useful. So we remove it from the Java bindings for now.
+             */
+            ns = remove(ns, Record.class, "name", "Win32NetworkMonitor");
+            ns = remove(ns, Record.class, "name", "Win32NetworkMonitorClass");
+
+            /*
+             * FileDescriptorBased is an interface on Linux and a record on
+             * Windows. This means it is not considered the same type in the GIR
+             * model, and is generated twice. To prevent this, it is removed
+             * from the Windows GIR model, so only the interface remains.
+             */
             return remove(ns, Record.class, "name", "FileDescriptorBased");
+        }
 
         /*
          * The method "g_io_module_load" overrides "g_type_module_load", but

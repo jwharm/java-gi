@@ -34,6 +34,7 @@ import java.lang.foreign.ValueLayout;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
@@ -59,14 +60,15 @@ public class CallableGenerator {
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
-            valueLayouts.add(Conversions.getValueLayout(returnType));
+            valueLayouts.add(getValueLayout(returnType));
 
         if (callable instanceof Signal)
             valueLayouts.add("ADDRESS");
 
         if (callable.parameters() != null) {
-            if (callable.parameters().instanceParameter() != null)
-                valueLayouts.add("ADDRESS");
+            var iParam = callable.parameters().instanceParameter();
+            if (iParam != null)
+                valueLayouts.add(getValueLayout(iParam.anyType()));
             valueLayouts.addAll(
                     callable.parameters().parameters().stream()
                             .filter(not(Parameter::varargs))
@@ -133,9 +135,16 @@ public class CallableGenerator {
         PartialStatement stmt = PartialStatement.of(null,
                 "memorySegment", MemorySegment.class);
 
-        if (parameters.instanceParameter() != null)
-            stmt.add("handle()");
+        // Marshal instance parameter
+        InstanceParameter iParam = parameters.instanceParameter();
+        if (iParam != null) {
+            if (iParam.type().get() instanceof FlaggedType)
+                stmt.add("getValue()"); // method in Enumeration class
+            else
+                stmt.add("handle()");   // method in regular TypeInstance class
+        }
 
+        // Marshal other parameters
         for (Parameter p : parameters.parameters()) {
             if (!stmt.format().isEmpty()) stmt.add(", ");
             stmt.add("$Z"); // emit newline
@@ -146,7 +155,7 @@ public class CallableGenerator {
             if (generator.checkNull())
                 stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ");
 
-            // callback destroy
+            // Callback destroy
             if (p.isDestroyNotifyParameter()) {
                 var notify = parameters.parameters().stream()
                         .filter(q -> q.destroy() == p)
@@ -159,7 +168,7 @@ public class CallableGenerator {
                 }
             }
 
-            // user_data
+            // User_data
             else if (p.isUserDataParameter())
                 stmt.add("$memorySegment:T.NULL");
 
