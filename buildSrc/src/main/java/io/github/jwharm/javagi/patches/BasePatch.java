@@ -1,6 +1,6 @@
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 
