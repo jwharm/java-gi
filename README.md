@@ -73,7 +73,7 @@ dependencies {
 
 The result:
 
-![Screenshot of a simple Java-GI HelloWorld app](images/simple-helloworld.png)
+![Screenshot of a simple Java-GI HelloWorld app](docs/img/simple-helloworld.png)
 
 ## Examples
 
@@ -112,7 +112,7 @@ public @Nullable java.lang.String getIconName() {
     ...
 ```
 
-![Javadoc screenshot](images/javadoc.png)
+![Javadoc screenshot](docs/img/javadoc.png)
 
 The Javadoc is published [online](https://jwharm.github.io/java-gi/javadoc).
 
