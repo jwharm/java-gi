@@ -6,7 +6,7 @@ dependencies {
     api project(':gobject')
     api project(':gio')
     api project(':harfbuzz')
-    api 'io.github.jwharm.cairobindings:cairo:1.18.3'
+    api libs.cairo
 }
 
 generateSources.configure {

@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     api project(':gobject')
-    api 'io.github.jwharm.cairobindings:cairo:1.18.3'
+    api libs.cairo
 }
 
 generateSources.configure {

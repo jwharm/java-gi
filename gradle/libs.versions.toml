@@ -1,0 +1,13 @@
+[versions]
+v_cairo = "1.18.3"
+v_javapoet = "1.13.0"
+v_annotations = "24.1.0"
+v_junit = "5.10.2"
+
+[libraries]
+cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "v_cairo" }
+javapoet = { module = "com.squareup:javapoet", version.ref = "v_javapoet" }
+annotations = { module = "org.jetbrains:annotations", version.ref = "v_annotations" }
+junit-jupiter = {module = "org.junit.jupiter:junit-jupiter", version.ref = "v_junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
