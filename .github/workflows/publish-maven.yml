@@ -49,12 +49,12 @@ jobs:
         run: ./gradlew build javadoc
 
       - name: Run Mkdocs build
-        working-directory: java-gi/website/
+        working-directory: java-gi/
         run: mkdocs build
 
       - name: Move generated Javadoc to website
         run: |
-          mv java-gi/website/site site
+          mv java-gi/site site
           mv java-gi/build/docs/javadoc site/javadoc
 
       - name: Upload Site Artifact
