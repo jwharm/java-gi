@@ -64,5 +64,6 @@ markdown_extensions:
 
 plugins:
   - search
-  - macros
+  - macros:
+      module_name: docs/macros/mkdocs-macros
 
