@@ -32,6 +32,8 @@ import io.github.jwharm.javagi.base.GLibLogger;
 import io.github.jwharm.javagi.gobject.types.TypeCache;
 import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.interop.Interop;
+import org.gnome.glib.GLib;
+import org.gnome.glib.MainContext;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
@@ -346,7 +348,8 @@ public class InstanceCache {
 
     /**
      * This callback is run by the {@link Cleaner} when a {@link GObject}
-     * instance has become unreachable, to remove the toggle reference.
+     * instance has become unreachable, to remove the toggle reference. The
+     * reference is removed in the default GLib MainContext.
      *
      * @param address memory address of the object instance to be cleaned
      */
@@ -357,6 +360,15 @@ public class InstanceCache {
             if (address == null)
                 return;
 
+            // g_object_remove_toggle_ref must be called from the main context
+            var defaultContext = MainContext.default_();
+            if (defaultContext != null)
+                defaultContext.invoke(this::removeToggleRef);
+            else
+                removeToggleRef();
+        }
+
+        private boolean removeToggleRef() {
             GLibLogger.debug("Unref %ld", address.address());
             try {
                 g_object_remove_toggle_ref.invokeExact(
@@ -365,6 +377,7 @@ public class InstanceCache {
                 throw new AssertionError("Unexpected exception occurred: ", _err);
             }
             InstanceCache.references.remove(address);
+            return GLib.SOURCE_REMOVE;
         }
     }
 }
