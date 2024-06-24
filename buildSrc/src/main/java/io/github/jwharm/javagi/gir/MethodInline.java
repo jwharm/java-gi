@@ -22,5 +22,5 @@ package io.github.jwharm.javagi.gir;
 /**
  * method-inline is unsupported
  */
-public class MethodInline extends GirElement {
+public final class MethodInline extends GirElement {
 }

@@ -28,7 +28,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 /**
  * This class contains a map of all loaded GIR repositories.
  */
-public class Library implements Serializable {
+public final class Library implements Serializable {
 
     private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
 
