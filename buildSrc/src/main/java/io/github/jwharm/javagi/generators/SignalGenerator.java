@@ -67,6 +67,8 @@ public class SignalGenerator {
         var doc = signal.infoElements().doc();
         if (doc != null)
             builder.addJavadoc(new DocGenerator(doc).generate(true));
+        builder.addJavadoc("@see $LCallback#run\n",
+                toCamelCase(signal.name(), true));
 
         if (signal.deprecated())
             builder.addAnnotation(Deprecated.class);
