@@ -10,3 +10,9 @@ dependencies {
     implementation libs.javapoet
     implementation libs.annotations
 }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(22)
+    }
+}
