@@ -201,6 +201,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
             builder.beginControlFlow("if ($L instanceof $T _gobject)",
                             getName(), ClassNames.GOBJECT)
+                    .addStatement("$T.debug($S, _gobject.handle().address())",
+                            ClassNames.GLIB_LOGGER,
+                            "Ref " + type.typeName() + " %ld")
                     .addStatement("_gobject.ref()")
                     .endControlFlow();
         }
