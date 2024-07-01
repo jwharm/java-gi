@@ -2,7 +2,7 @@
 v_cairo = "1.18.3"
 v_javapoet = "1.13.0"
 v_annotations = "24.1.0"
-v_junit = "5.10.2"
+v_junit = "5.10.3"
 
 [libraries]
 cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "v_cairo" }
