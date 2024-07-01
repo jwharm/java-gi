@@ -283,20 +283,14 @@ public class InstanceCache {
      * @return the cached GObject instance
      */
     public static Proxy put(MemorySegment address, Proxy object) {
-        // Do not put a new instance if it already exists
-        if (references.containsKey(address))
-            return object;
+        // If it was already cached, putIfAbsent() will return the existing one
+        Ref existing = references.putIfAbsent(address, new Ref.Strong(object));
+        if (existing != null)
+            return existing.get();
 
         GLibLogger.debug("New %s %ld",
                 object.getClass().getName(),
                 address == null ? 0L : address.address());
-
-        // Put the instance in the cache. If another thread did this (while we
-        // were creating a new instance), putIfAbsent() will return that
-        // instance.
-        Ref existingInstance = references.putIfAbsent(address, new Ref.Strong(object));
-        if (existingInstance != null)
-            return existingInstance.get();
 
         // Sink floating references
         if (object instanceof Floating floatingReference)
