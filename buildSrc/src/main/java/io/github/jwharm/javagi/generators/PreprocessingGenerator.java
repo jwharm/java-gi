@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.Arena;
@@ -46,6 +47,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         pointerAllocation(builder);
         arrayLength(builder);
         scope(builder);
+        transferOwnership(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -185,6 +187,36 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     .addStatement("if ($2L != null) $1T.CLEANER.register($2L, new $1T(_$2LScope))",
                             ClassNames.ARENA_CLOSE_ACTION,
                             getName());
+    }
+
+    // If the parameter has attribute transfer-ownership="full", we must
+    // register a reference, because the native code is going to call unref()
+    // at some point while we still keep a pointer in the InstanceCache.
+    private void transferOwnership(MethodSpec.Builder builder) {
+        // GObjects where ownership is fully transferred away (unless it's an
+        // out parameter or a pointer)
+        if (target != null && target.checkIsGObject()
+                && p.transferOwnership() == TransferOwnership.FULL
+                && (!p.isOutParameter())
+                && (type.cType() == null || (! type.cType().endsWith("**")))) {
+            builder.beginControlFlow("if ($L instanceof $T _gobject)",
+                            getName(), ClassNames.GOBJECT)
+                    .addStatement("_gobject.ref()")
+                    .endControlFlow();
+        }
+
+        // Same, but for structs/unions: Disable the cleaner
+        else if ((target instanceof Record || target instanceof Union)
+                && p.transferOwnership() == TransferOwnership.FULL
+                && (!p.isOutParameter())
+                && (type.cType() == null || (! type.cType().endsWith("**")))) {
+            builder.addStatement(
+                    checkNull()
+                            ? "if ($1L != null) $2T.yieldOwnership($1L)"
+                            : "$2T.yieldOwnership($1L)",
+                    getName(),
+                    ClassNames.MEMORY_CLEANER);
+        }
     }
 
     // Read the value from a pointer to a primitive value and store it
