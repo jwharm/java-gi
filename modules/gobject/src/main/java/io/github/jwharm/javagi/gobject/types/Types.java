@@ -844,17 +844,16 @@ public class Types {
                 try {
                     return (MemoryLayout) m.invoke(null);
                 } catch (IllegalAccessException e) {
-                    // Method is not public
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "IllegalAccessException when calling %s.%s\n",
                             cls.getName(), m.getName());
                     return null;
                 } catch (InvocationTargetException e) {
-                    // Method throws an exception
-                    Throwable t = e.getTargetException();
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception when calling %s.%s: %s\n",
-                            cls.getName(), m.getName(), t.toString());
+                            cls.getName(),
+                            m.getName(),
+                            e.getTargetException().toString());
                     return null;
                 }
             }
@@ -904,7 +903,7 @@ public class Types {
             } catch (InvocationTargetException ite) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Exception in constructor for class %s: %s\n",
-                        cls.getName(), ite.getCause().toString());
+                        cls.getName(), ite.getTargetException().toString());
                 return null;
             } catch (Exception e) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -935,10 +934,25 @@ public class Types {
                 return (inst) -> {
                     try {
                         method.invoke(inst);
+                    } catch (InvocationTargetException ite) {
+                        Throwable t = ite.getTargetException();
+                        if (t instanceof ExceptionInInitializerError eiie) {
+                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                    "ExceptionInInitializerError in %s instance init: %s\n",
+                                    cls.getName(),
+                                    eiie.getCause().toString());
+                        } else {
+                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                    "InvocationTargetException in %s instance init: %s\n",
+                                    cls.getName(),
+                                    ite.getTargetException().toString());
+                        }
+                    } catch (ExceptionInInitializerError eiie) {
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s instance init: %s\n",
-                                cls.getName(), e.toString());
+                                cls.getName(),
+                                e.toString());
                     }
                 };
             }
@@ -967,10 +981,16 @@ public class Types {
                 return (gclass) -> {
                     try {
                         method.invoke(null, gclass);
+                    } catch (InvocationTargetException ite) {
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "Exception in %s class init: %s\n",
+                                cls.getName(),
+                                ite.getTargetException().toString());
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s class init: %s\n",
-                                cls.getName(), e.toString());
+                                cls.getName(),
+                                e.toString());
                     }
                 };
             }

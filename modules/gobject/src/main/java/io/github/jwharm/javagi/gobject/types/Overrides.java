@@ -145,7 +145,8 @@ public class Overrides {
                             .getMethod(name, Arena.class, Method.class);
                     overrider.invoke(gclass, Arena.global(), method);
                 } catch (InvocationTargetException ite) {
-                    System.err.printf("Cannot override method %s in class %s: %s\n",
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Cannot override method %s in class %s: %s\n",
                             method.getName(),
                             cls.getName(),
                             ite.getTargetException().toString());
@@ -244,10 +245,20 @@ public class Overrides {
                     Method overrider = typeStruct.getMethod(
                             name, Arena.class, Method.class);
                     overrider.invoke(ifaceInstance, Arena.global(), method);
+                } catch (InvocationTargetException ite) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Cannot override method %s from interface %s in class %s: %s\n",
+                            method.getName(),
+                            iface.getName(),
+                            cls.getName(),
+                            ite.getTargetException().toString());
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Cannot override method %s from interface %s in class %s: %s\n",
-                            method.getName(), iface.getName(), cls.getName(), e.toString());
+                            method.getName(),
+                            iface.getName(),
+                            cls.getName(),
+                            e.toString());
                 }
             }
         };
