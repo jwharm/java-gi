@@ -947,7 +947,6 @@ public class Types {
                                     cls.getName(),
                                     ite.getTargetException().toString());
                         }
-                    } catch (ExceptionInInitializerError eiie) {
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s instance init: %s\n",
