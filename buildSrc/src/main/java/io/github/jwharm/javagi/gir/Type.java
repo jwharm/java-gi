@@ -113,6 +113,11 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "gboolean".equals(name()) && (!"_Bool".equals(cType()));
     }
 
+    public boolean isLong() {
+        String cType = cType();
+        return "glong".equals(cType) || "gulong".equals(cType);
+    }
+
     public boolean isGList() {
         return name() != null
                 && List.of("GLib.List", "GLib.SList").contains(name());

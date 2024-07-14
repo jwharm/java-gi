@@ -228,7 +228,7 @@ public class Conversions {
     /**
      * Return the TypeName of the carrier type.
      */
-    public static TypeName getCarrierTypeName(AnyType t) {
+    public static TypeName getCarrierTypeName(AnyType t, boolean longAsInt) {
         if (t == null || t instanceof Array)
             return TypeName.get(MemorySegment.class);
 
@@ -238,6 +238,9 @@ public class Conversions {
             return TypeName.get(MemorySegment.class);
 
         if (type.isBoolean())
+            return TypeName.INT;
+
+        if (type.isLong() && longAsInt)
             return TypeName.INT;
 
         if (type.isPrimitive() || "none".equals(t.cType()))
@@ -287,11 +290,12 @@ public class Conversions {
      * Get the memory layout of this type. Pointer types are returned as
      * "ADDRESS".
      */
-    public static String getValueLayout(AnyType anyType) {
+    public static String getValueLayout(AnyType anyType, boolean longAsInt) {
         return switch (anyType) {
             case null -> "ADDRESS";
             case Array _ -> "ADDRESS";
-            case Type t -> t.isPointer() ? "ADDRESS" : getValueLayoutPlain(t);
+            case Type t -> t.isPointer() ? "ADDRESS"
+                                         : getValueLayoutPlain(t, longAsInt);
         };
     }
 
@@ -299,7 +303,7 @@ public class Conversions {
      * Get the memory layout of this type. Pointers to primitive types are
      * treated as the actual type.
      */
-    public static String getValueLayoutPlain(Type t) {
+    public static String getValueLayoutPlain(Type t, boolean longAsInt) {
         if (t == null) {
             return "ADDRESS";
         }
@@ -307,11 +311,14 @@ public class Conversions {
         if (target instanceof FlaggedType || t.isBoolean()) {
             return "JAVA_INT";
         }
+        if (t.isLong() && longAsInt) {
+            return "JAVA_INT";
+        }
         if (t.isPrimitive()) {
             return "JAVA_" + t.javaType().toUpperCase();
         }
         if (target instanceof Alias a && a.type().isPrimitive()) {
-            return getValueLayoutPlain(a.type());
+            return getValueLayoutPlain(a.type(), longAsInt);
         }
         return "ADDRESS";
     }

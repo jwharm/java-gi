@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
@@ -63,23 +64,46 @@ public class MemoryLayoutGenerator {
 
         boolean isUnion = rt instanceof Union || !unionList.isEmpty();
 
-        // The $> and $< in the statement increase and decrease indentation
-        var layout = PartialStatement.of("return $memoryLayout:T."
-                        + (isUnion ? "union" : "struct") + "Layout(\n$>")
-                .add(generateFieldLayouts(fieldList, isUnion))
-                .add("$<\n).withName(\"" + rt.cType() + "\");\n");
+        boolean hasLongFields = rt.deepMatch(
+                n -> n instanceof Type t && t.isLong(), Callback.class);
 
-        return MethodSpec.methodBuilder("getMemoryLayout")
+        var method = MethodSpec.methodBuilder("getMemoryLayout")
                 .addJavadoc("The memory layout of the native struct.\n")
                 .addJavadoc("@return the memory layout\n")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(MemoryLayout.class)
-                .addNamedCode(layout.format(), layout.arguments())
-                .build();
+                .returns(MemoryLayout.class);
+
+        // When there are `long` fields, generate 32-bit and 64-bit layout
+        if (hasLongFields) {
+            method.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
+            var layout = generateMemoryLayout(rt.cType(), fieldList, isUnion, true);
+            method.addNamedCode(layout.format(), layout.arguments())
+                  .nextControlFlow("else");
+            layout = generateMemoryLayout(rt.cType(), fieldList, isUnion, false);
+            method.addNamedCode(layout.format(), layout.arguments())
+                  .endControlFlow();
+        } else {
+            var layout = generateMemoryLayout(rt.cType(), fieldList, isUnion, false);
+            method.addNamedCode(layout.format(), layout.arguments());
+        }
+
+        return method.build();
+    }
+
+    private PartialStatement generateMemoryLayout(String name,
+                                                  List<Field> fieldList,
+                                                  boolean isUnion,
+                                                  boolean longAsInt) {
+        // The $> and $< in the statement increase and decrease indentation
+        return PartialStatement.of("return $memoryLayout:T."
+                        + (isUnion ? "union" : "struct") + "Layout(\n$>")
+                .add(generateFieldLayouts(fieldList, isUnion, longAsInt))
+                .add("$<\n).withName(\"" + name + "\");\n");
     }
 
     private PartialStatement generateFieldLayouts(List<Field> fieldList,
-                                                  boolean isUnion) {
+                                                  boolean isUnion,
+                                                  boolean longAsInt) {
         var stmt = PartialStatement.of(null,
                 "memoryLayout", MemoryLayout.class,
                 "valueLayout", ValueLayout.class
@@ -89,7 +113,7 @@ public class MemoryLayoutGenerator {
             if (size > 0) stmt.add(",\n");
 
             // Get the byte size of the field, in bytes
-            int s = field.getSize();
+            int s = field.getSize(longAsInt);
 
             // Calculate padding (except for union layouts)
             if (!isUnion) {
@@ -103,22 +127,23 @@ public class MemoryLayoutGenerator {
             }
 
             // Write the memory layout declaration
-            stmt.add(getFieldLayout(field))
+            stmt.add(getFieldLayout(field, longAsInt))
                     .add(".withName(\"" + field.name() + "\")");
             size += s;
         }
         return stmt;
     }
 
-    private PartialStatement getFieldLayout(Field f) {
+    private PartialStatement getFieldLayout(Field f, boolean longAsInt) {
         return switch (f.anyType()) {
             case null -> PartialStatement.of("$valueLayout:T.ADDRESS"); // callback
-            case Type type -> layoutForType(type);
+            case Type type -> layoutForType(type, longAsInt);
             case Array array -> {
                 if (array.fixedSize() > 0) {
+                    var type = (Type) array.anyType();
                     yield PartialStatement.of("$memoryLayout:T.sequenceLayout("
                                     + array.fixedSize() + ", ")
-                            .add(layoutForType((Type) array.anyType()))
+                            .add(layoutForType(type, longAsInt))
                             .add(")");
                 } else {
                     yield PartialStatement.of("$valueLayout:T.ADDRESS");
@@ -127,22 +152,22 @@ public class MemoryLayoutGenerator {
         };
     }
 
-    private PartialStatement layoutForType(Type type) {
+    private PartialStatement layoutForType(Type type, boolean longAsInt) {
         RegisteredType target = type.get();
 
         // Recursive lookup for aliases
         if (target instanceof Alias alias)
-            return layoutForType(alias.type());
+            return layoutForType(alias.type(), longAsInt);
 
         // Proxy objects with a known memory layout
-        if (!type.isPointer()
-                && new MemoryLayoutGenerator().canGenerate(target)) {
+        if (!type.isPointer() && canGenerate(target)) {
             String tag = type.toTypeTag();
             return PartialStatement.of("$" + tag + ":T.getMemoryLayout()",
                     tag, type.typeName());
         }
 
         // Plain value layout
-        return PartialStatement.of("$valueLayout:T." + getValueLayout(type));
+        String layout = getValueLayout(type, longAsInt);
+        return PartialStatement.of("$valueLayout:T." + layout);
     }
 }

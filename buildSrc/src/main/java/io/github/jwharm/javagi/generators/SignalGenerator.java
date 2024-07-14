@@ -161,12 +161,20 @@ public class SignalGenerator {
                     .map(PreprocessingGenerator::new)
                     .forEach(p -> p.generate(builder));
 
+        // Determine ValueLayout for return value
+        var returnLayout = PartialStatement.of(
+                generator.generateValueLayout(returnValue.anyType()),
+                "interop", ClassNames.INTEROP,
+                "valueLayout", ValueLayout.class);
+
         // Allocate memory for return value
-        if (!returnValue.anyType().isVoid())
-            builder.addStatement("$T _result = _arena.allocate($T.$L)",
-                    MemorySegment.class,
-                    ValueLayout.class,
-                    getValueLayout(returnValue.anyType()));
+        if (!returnValue.anyType().isVoid()) {
+            var stmt = PartialStatement.of("$[$memorySegment:T _result = _arena.allocate(",
+                            "memorySegment", MemorySegment.class)
+                    .add(returnLayout)
+                    .add(");\n$]");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
+        }
 
         // Allocate memory for signal name
         if (signal.detailed())
@@ -195,7 +203,7 @@ public class SignalGenerator {
         else {
             varargs.add("new Object[] {");
             if (signal.parameters() != null) {
-                varargs.add(generator.marshalParameters());
+                varargs.add(generator.marshalParameters(true));
             }
             if (!returnValue.anyType().isVoid()) {
                 if (! varargs.format().endsWith("{"))
@@ -218,12 +226,12 @@ public class SignalGenerator {
         // Marshal the return value
         if (!returnValue.anyType().isVoid()) {
             var generator = new TypedValueGenerator(returnValue);
-            var layout = getValueLayout(returnValue.anyType());
-            var identifier = "_result.get($valueLayout:T." + layout + ", 0)";
+            var identifier = "_result.get(" + returnLayout.format() + ", 0)";
             var stmt = PartialStatement.of("return ",
                             "valueLayout", ValueLayout.class)
                     .add(generator.marshalNativeToJava(identifier, false))
                     .add(";\n");
+            stmt.arguments().putAll(returnLayout.arguments());
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
 

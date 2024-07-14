@@ -86,29 +86,29 @@ public class PreprocessingGenerator extends TypedValueGenerator {
              * copy the contents into the native memory buffer. If it is null,
              * allocate a pointer.
              */
-            var stmt = PartialStatement
-                    .of("$memorySegment:T _$name:LPointer = ($name:L == null || $name:L.get() == null)$W? ")
-                    .add("_arena.allocate($valueLayout:T.$layout:L)")
-                    .add("$W: ")
+            var stmt = PartialStatement.of(
+                            "$memorySegment:T _$name:LPointer = ($name:L == null || $name:L.get() == null)$W? ",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName())
+                    .add("_arena.allocate(")
+                    .add(generateValueLayoutPlain(type))
+                    .add(")$W: ")
                     .add("($memorySegment:T) ")
                     .add(marshalJavaToNative(getName() + ".get()"))
-                    .add(";\n",
-                            "memorySegment", MemorySegment.class,
-                            "name", getName(),
-                            "valueLayout", ValueLayout.class,
-                            "layout", getValueLayoutPlain(type)
-                    );
+                    .add(";\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         } else if (p.isOutParameter()
                 || (type != null
                     && type.isPointer()
                     && target instanceof Alias a
                     && a.type().isPrimitive())) {
-            builder.addStatement("$T _$LPointer = _arena.allocate($T.$L)",
-                    MemorySegment.class,
-                    getName(),
-                    ValueLayout.class,
-                    getValueLayoutPlain(type));
+            var stmt = PartialStatement.of(
+                            "$memorySegment:T _$name:LPointer = _arena.allocate(",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName())
+                    .add(generateValueLayoutPlain(type))
+                    .add(");\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
 
@@ -122,10 +122,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 // Set the initial value of the allocated pointer to the length
                 // of the input array
                 if (p.isArrayLengthParameter() && p.isOutParameter()) {
-                    var stmt = PartialStatement.of("_$name:LPointer.set($valueLayout:T.$layout:L, 0L,$W",
-                                    "name", getName(),
-                                    "valueLayout", ValueLayout.class,
-                                    "layout", getValueLayoutPlain(type))
+                    var stmt = PartialStatement.of("_$name:LPointer.set(",
+                                    "name", getName())
+                            .add(generateValueLayoutPlain(type))
+                            .add(", 0L,$W")
                             .add(arrayLengthStatement())
                             .add(");\n");
                     builder.addNamedCode(stmt.format(), stmt.arguments());
@@ -228,17 +228,21 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         if (target instanceof Alias a
                 && a.type().isPrimitive()
                 && type.isPointer()) {
-            String layout = getValueLayoutPlain(type);
-            builder.addStatement("$1T $2LParam = $2L.reinterpret($3T.$4L.byteSize(), _arena, null)",
-                    MemorySegment.class,
-                    getName(),
-                    ValueLayout.class,
-                    layout);
-            builder.addStatement("$1T _$2LAlias = new $1T($2LParam.get($3T.$4L, 0))",
-                    type.typeName(),
-                    getName(),
-                    ValueLayout.class,
-                    layout);
+            var stmt = PartialStatement.of(
+                            "$memorySegment:T $name:LParam = $name:L.reinterpret(",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName())
+                    .add(generateValueLayoutPlain(type))
+                    .add(".byteSize(), _arena, null);\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
+
+            stmt = PartialStatement.of(
+                            "$aliasType:T _$name:LAlias = new $aliasType:T($name:LParam.get(",
+                            "aliasType", type.typeName(),
+                            "name", getName())
+                    .add(generateValueLayoutPlain(type))
+                    .add(", 0));\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
 
@@ -250,28 +254,32 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
         // Pointer to a single value
         if (type != null) {
-            String layout = getValueLayoutPlain(type);
-            builder.addStatement("$1T $2LParam = $2L.reinterpret($3T.$4L.byteSize(), _arena, null)",
-                    MemorySegment.class,
-                    getName(),
-                    ValueLayout.class,
-                    layout);
+            var stmt = PartialStatement.of(
+                            "$memorySegment:T $name:LParam = $name:L.reinterpret(",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName())
+                    .add(generateValueLayoutPlain(type))
+                    .add(".byteSize(), _arena, null);\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
 
             if (type.isPrimitive()
                     || target instanceof Alias a && a.type().isPrimitive()) {
-                builder.addStatement("$1T _$2LOut = new $3T<>($2LParam.get($4T.$5L, 0)$6L)",
-                        getType(),
-                        getName(),
-                        ClassNames.OUT,
-                        ValueLayout.class,
-                        layout,
-                        type.isBoolean() ? " != 0" : "");
+                stmt = PartialStatement.of(
+                                "$outType:T _$name:LOut = new $out:T<>($name:LParam.get(",
+                                "outType", getType(),
+                                "name", getName(),
+                                "out", ClassNames.OUT)
+                        .add(generateValueLayoutPlain(type))
+                        .add(", 0)")
+                        .add(type.isBoolean() ? " != 0" : "")
+                        .add(");\n");
+                builder.addNamedCode(stmt.format(), stmt.arguments());
             } else {
                 String identifier = getName() + "Param";
                 if (target instanceof FlaggedType)
                     identifier += ".get($valueLayout:T.JAVA_INT, 0)";
 
-                var stmt = PartialStatement.of("$outType:T _" + getName() + "Out = new $out:T<>(",
+                stmt = PartialStatement.of("$outType:T _" + getName() + "Out = new $out:T<>(",
                                 "valueLayout", ValueLayout.class,
                                 "outType", getType(),
                                 "out", ClassNames.OUT)

@@ -96,7 +96,7 @@ tasks.named('test', Test) {
 
     // Configure library path for Windows (MSYS2)
     else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        jvmArgs += '-Djava.library.path=C:/msys64/mingw64/bin'
+        jvmArgs += '-Djava.library.path=C:/dev/msys64/mingw64/bin'
     }
 
     useJUnitPlatform()

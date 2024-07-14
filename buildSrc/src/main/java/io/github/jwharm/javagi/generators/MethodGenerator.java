@@ -34,6 +34,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.Comparator.comparing;
@@ -181,7 +182,7 @@ public class MethodGenerator {
         // Declare return value
         if (!returnValue.anyType().isVoid())
             builder.addStatement("$T _result",
-                    Conversions.getCarrierTypeName(returnValue.anyType()));
+                    Conversions.getCarrierTypeName(returnValue.anyType(), true));
 
         // Try-catch for function invocation
         builder.beginControlFlow("try");
@@ -291,19 +292,40 @@ public class MethodGenerator {
     }
 
     private void functionNameInvocation() {
+        Predicate<Node> predicate = n -> n instanceof Type t && t.isLong();
+        if (func.deepMatch(predicate, Callback.class)) {
+            builder.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
+            functionNameInvocation(false);
+            builder.nextControlFlow("else");
+            functionNameInvocation(true);
+            builder.endControlFlow();
+        } else {
+            functionNameInvocation(false);
+        }
+    }
+
+    private void functionNameInvocation(boolean longAsInt) {
         // Result assignment
         PartialStatement invoke = new PartialStatement();
-        if (!func.returnValue().anyType().isVoid()) {
-            String typeTag = getCarrierTypeTag(func.returnValue().anyType());
-            TypeName typeName = getCarrierTypeName(func.returnValue().anyType());
-            invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+        var returnType = func.returnValue().anyType();
+        if (!returnType.isVoid()) {
+            if (longAsInt && returnType instanceof Type t && t.isLong()) {
+                // First cast to long, this is used by the MethodHandle to
+                // determine the return type. Then cast to int, because that is
+                // returned to the caller.
+                invoke.add("_result = (int) (long) ");
+            } else {
+                String typeTag = getCarrierTypeTag(func.returnValue().anyType());
+                TypeName typeName = getCarrierTypeName(func.returnValue().anyType(), false);
+                invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+            }
         }
 
         // Function invocation
         invoke.add("$helperClass:T.$cIdentifier:L.invokeExact($Z",
                         "helperClass", ((RegisteredType) func.parent()).helperClass(),
                         "cIdentifier", func.callableAttrs().cIdentifier())
-                .add(generator.marshalParameters())
+                .add(generator.marshalParameters(longAsInt))
                 .add(");\n");
 
         builder.addNamedCode(invoke.format(), invoke.arguments());
@@ -318,6 +340,19 @@ public class MethodGenerator {
     }
 
     private void functionPointerInvocation() {
+        Predicate<Node> predicate = n -> n instanceof Type t && t.isLong();
+        if (func.deepMatch(predicate, Callback.class)) {
+            builder.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
+            functionPointerInvocation(true);
+            builder.nextControlFlow("else");
+            functionPointerInvocation(false);
+            builder.endControlFlow();
+        } else {
+            functionPointerInvocation(false);
+        }
+    }
+
+    private void functionPointerInvocation(boolean longAsInt) {
         // Function descriptor
         var generator = new CallableGenerator(vm);
         builder.addCode(generator.generateFunctionDescriptorDeclaration());
@@ -347,16 +382,26 @@ public class MethodGenerator {
 
         // Result assignment
         PartialStatement invoke = new PartialStatement();
-        if (!returnValue.anyType().isVoid()) {
-            String typeTag = getCarrierTypeTag(returnValue.anyType());
-            TypeName typeName = getCarrierTypeName(returnValue.anyType());
-            invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+        var returnType = returnValue.anyType();
+        if (!returnType.isVoid()) {
+            if (longAsInt && returnType instanceof Type t && t.isLong()) {
+                // First cast to long, this is used by the MethodHandle to
+                // determine the return type. Then cast to int, because that is
+                // returned to the caller.
+                invoke.add("_result = (int) (long) ");
+            } else {
+                String typeTag = getCarrierTypeTag(returnValue.anyType());
+                TypeName typeName = getCarrierTypeName(returnValue.anyType(),
+                        false);
+                invoke.add("_result = ($" + typeTag + ":T) ", typeTag,
+                        typeName);
+            }
         }
 
         // Function pointer invocation
         invoke.add("$interop:T.downcallHandle(_func, _fdesc)$Z.invokeExact($Z", "interop",
                         ClassNames.INTEROP)
-                .add(generator.marshalParameters())
+                .add(generator.marshalParameters(longAsInt))
                 .add(");\n");
 
         builder.addNamedCode(invoke.format(), invoke.arguments());

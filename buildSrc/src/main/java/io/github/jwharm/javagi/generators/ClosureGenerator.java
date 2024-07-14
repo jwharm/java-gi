@@ -103,7 +103,7 @@ public class ClosureGenerator {
         MethodSpec.Builder upcall = MethodSpec.methodBuilder(name)
                 .returns(returnsVoid
                         ? TypeName.VOID
-                        : getCarrierTypeName(returnValue.anyType()));
+                        : getCarrierTypeName(returnValue.anyType(), false));
 
         // Javadoc
         if (methodToInvoke.equals("run"))
@@ -127,7 +127,7 @@ public class ClosureGenerator {
         // Add parameters (native carrier types)
         if (closure.parameters() != null)
             for (Parameter p : closure.parameters().parameters())
-                upcall.addParameter(getCarrierTypeName(p.anyType()),
+                upcall.addParameter(getCarrierTypeName(p.anyType(), false),
                                     toJavaIdentifier(p.name()));
 
         // GError** parameter
@@ -182,7 +182,7 @@ public class ClosureGenerator {
 
         // Null-check the return value
         if ((!returnsVoid)
-                && getCarrierTypeName(returnValue.anyType()).equals(TypeName.get(MemorySegment.class))
+                && getCarrierTypeName(returnValue.anyType(), false).equals(TypeName.get(MemorySegment.class))
                 && (!returnValue.notNull()))
             upcall.addStatement("if (_result == null) return $T.NULL",
                     MemorySegment.class);
