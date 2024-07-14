@@ -29,6 +29,7 @@ import io.github.jwharm.javagi.util.PartialStatement;
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -660,5 +661,14 @@ class TypedValueGenerator {
                     value);
             return null;
         }
+    }
+
+    PartialStatement generateValueLayoutPlain(Type type) {
+        String stmt = (type != null && type.isLong())
+                ? "($interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG)"
+                : "$valueLayout:T." + getValueLayoutPlain(type, false);
+        return PartialStatement.of(stmt,
+                "interop", ClassNames.INTEROP,
+                "valueLayout", ValueLayout.class);
     }
 }

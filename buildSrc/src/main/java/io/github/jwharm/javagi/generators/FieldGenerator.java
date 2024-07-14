@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
@@ -66,9 +67,14 @@ public class FieldGenerator extends TypedValueGenerator {
     public MethodSpec generateReadMethod() {
         // To read from ...** fields, you must provide the length of the array.
         boolean isArray = type != null && type.isActuallyAnArray();
+
+        // Override the type of long values
+        boolean isLong = type != null && type.isLong();
+        TypeName typeName = isLong ? TypeName.INT : getType();
+
         var spec = MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(getType())
+                .returns(typeName)
                 .addJavadoc("Read the value of the field {@code $L}.\n\n", f.name());
         if (isArray)
             spec.addJavadoc("@param length the number of {@code $L} to read", f.name());
@@ -94,7 +100,7 @@ public class FieldGenerator extends TypedValueGenerator {
         }
 
         // Read a pointer or primitive value from the struct
-        var carrierType = getCarrierTypeName(f.anyType());
+        var carrierType = getCarrierTypeName(f.anyType(), true);
         var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle(), 0)";
         var returnResult = PartialStatement.of("return ")
                 .add(marshalNativeToJava("_result", false))
@@ -114,7 +120,10 @@ public class FieldGenerator extends TypedValueGenerator {
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName());
 
-        spec.addParameter(getType(), getName());
+        // Override the type of long values
+        boolean isLong = type != null && type.isLong();
+        TypeName typeName = isLong ? TypeName.INT : getType();
+        spec.addParameter(typeName, getName());
 
         if (f.allocatesMemory())
             spec.addJavadoc("@param _arena to control the memory allocation scope\n")

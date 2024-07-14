@@ -22,7 +22,6 @@ package io.github.jwharm.javagi.generators;
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.util.Conversions;
 import io.github.jwharm.javagi.util.PartialStatement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,11 +31,11 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 
 public class CallableGenerator {
 
@@ -55,42 +54,47 @@ public class CallableGenerator {
     }
 
     CodeBlock generateFunctionDescriptor() {
-        List<String> valueLayouts = new ArrayList<>();
+        List<String> layouts = new ArrayList<>();
 
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
-            valueLayouts.add(getValueLayout(returnType));
+            layouts.add(generateValueLayout(returnType));
 
         if (callable instanceof Signal)
-            valueLayouts.add("ADDRESS");
+            layouts.add("$valueLayout:T.ADDRESS");
 
         if (callable.parameters() != null) {
             var iParam = callable.parameters().instanceParameter();
             if (iParam != null)
-                valueLayouts.add(getValueLayout(iParam.anyType()));
-            valueLayouts.addAll(
+                layouts.add(generateValueLayout(iParam.anyType()));
+            layouts.addAll(
                     callable.parameters().parameters().stream()
                             .filter(not(Parameter::varargs))
                             .map(Parameter::anyType)
-                            .map(Conversions::getValueLayout)
+                            .map(this::generateValueLayout)
                             .toList());
         }
 
         if (callable.throws_())
-            valueLayouts.add("ADDRESS");
+            layouts.add("$valueLayout:T.ADDRESS");
 
-        if (valueLayouts.isEmpty()) {
+        if (layouts.isEmpty())
             return CodeBlock.of("$T.ofVoid()", FunctionDescriptor.class);
-        } else {
-            String layouts = valueLayouts.stream()
-                    .map(s -> "$2T." + s)
-                    .collect(Collectors.joining(",$W", "(", ")"));
-            return CodeBlock.of("$1T.$3L" + layouts,
-                    FunctionDescriptor.class,
-                    ValueLayout.class,
-                    isVoid ? "ofVoid" : "of");
-        }
+
+        return PartialStatement.of("$functionDescriptor:T."
+                        + (isVoid ? "ofVoid" : "of"))
+                .add(layouts.stream().collect(joining(",$W", "(", ")")),
+                        "functionDescriptor", FunctionDescriptor.class,
+                        "valueLayout", ValueLayout.class,
+                        "interop", ClassNames.INTEROP)
+                .toCodeBlock();
+    }
+
+    String generateValueLayout(AnyType anyType) {
+        return anyType instanceof Type type && type.isLong()
+                ? "$interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG"
+                : "$valueLayout:T." + getValueLayout(anyType, false);
     }
 
     void generateMethodParameters(MethodSpec.Builder builder,
@@ -125,7 +129,7 @@ public class CallableGenerator {
         }
     }
 
-    PartialStatement marshalParameters() {
+    PartialStatement marshalParameters(boolean intAsLong) {
         var parameters = callable.parameters();
         if (parameters == null)
             return callable.throws_()
@@ -154,6 +158,10 @@ public class CallableGenerator {
             // hidden from the Java API, or primitive values
             if (generator.checkNull())
                 stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ");
+
+            // cast int parameter to a long
+            if (intAsLong && p.anyType() instanceof Type t && t.isLong())
+                stmt.add("(long) ");
 
             // Callback destroy
             if (p.isDestroyNotifyParameter()) {

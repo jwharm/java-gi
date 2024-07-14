@@ -66,6 +66,16 @@ public class GLibPatch implements Patch {
         }
 
         /*
+         * GThreadFunctions contains a virtual function pointer with a "gulong"
+         * parameter, which can cause problems on Windows. GThreadFunctions is
+         * deprecated, so we can safely remove the Windows support.
+         */
+        if (element instanceof Record r && "ThreadFunctions".equals(r.name())) {
+            r.setPlatforms(Platform.LINUX | Platform.MACOS);
+            return r;
+        }
+
+        /*
          * GVariant has a method "get_type" that clashes with the "getType()"
          * method that is generated in Java. Therefore, it is renamed to
          * "getVariantType()".

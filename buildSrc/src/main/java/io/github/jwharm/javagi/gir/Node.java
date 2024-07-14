@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.gir;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public interface Node {
     Namespace namespace();
@@ -37,4 +38,22 @@ public interface Node {
     <T extends Node> T withAttribute(String attrName, String newValue);
     <T extends Node> T withChildren(GirElement... newChildren);
     <T extends Node> T withChildren(List<Node> newChildren);
+
+    /**
+     * Apply the predicate on this node and its children recursively, and
+     * return whether a match was found.
+     *
+     * @param  predicate the predicate to apply
+     * @param  skip      skip nodes of this type and their children
+     * @return whether the predicate matched for this node or one of its
+     *         children (recursively)
+     */
+    default boolean deepMatch(Predicate<? super Node> predicate,
+                              java.lang.Class<? extends Node> skip) {
+        if (skip.isAssignableFrom(this.getClass()))
+            return false;
+        if (predicate.test(this))
+            return true;
+        return children().stream().anyMatch(c -> c.deepMatch(predicate, skip));
+    }
 }

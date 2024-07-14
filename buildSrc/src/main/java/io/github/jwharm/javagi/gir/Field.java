@@ -48,28 +48,29 @@ public final class Field extends GirElement implements TypedValue {
 
     /**
      * Get the memory size of this field, in bytes
+     * @param longAsInt when true, long is 4 bytes, else long is 8 bytes
      */
-    public int getSize() {
+    public int getSize(boolean longAsInt) {
         return switch(anyType()) {
             case null -> 8; // callback
-            case Array array -> getSize(array);
-            case Type type -> getSize(type);
+            case Array array -> getSize(array, longAsInt);
+            case Type type -> getSize(type, longAsInt);
         };
     }
 
-    private int getSize(Array array) {
+    private int getSize(Array array, boolean longAsInt) {
         int fixedSize = array.fixedSize();
         if (fixedSize == -1)
             return 8;
         return fixedSize * switch(array.anyType()) {
-            case Array nested -> getSize(nested);
-            case Type type -> getSize(type);
+            case Array nested -> getSize(nested, longAsInt);
+            case Type type -> getSize(type, longAsInt);
         };
     }
 
-    private int getSize(Type type) {
+    private int getSize(Type type, boolean longAsInt) {
         if (type.get() instanceof Alias alias)
-            return getSize(alias.type());
+            return getSize(alias.type(), longAsInt);
 
         var typeName = type.typeName();
         if (List.of(BYTE, CHAR).contains(typeName))
@@ -79,6 +80,8 @@ public final class Field extends GirElement implements TypedValue {
         if (List.of(BOOLEAN, INT, FLOAT).contains(typeName))
             return 4;
         if (type.get() instanceof FlaggedType)
+            return 4;
+        if (type.isLong() && longAsInt)
             return 4;
         else
             return 8;

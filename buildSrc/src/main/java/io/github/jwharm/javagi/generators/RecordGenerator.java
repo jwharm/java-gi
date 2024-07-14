@@ -28,6 +28,7 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
+import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
@@ -208,6 +209,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addStatement("super($T.ofAuto().allocate(getMemoryLayout()))",
                     Arena.class);
 
+        // Platform check
+        if (rec.doPlatformCheck())
+            spec.addStatement("$T.checkSupportedPlatform($L)",
+                    ClassNames.PLATFORM, Platform.toStringLiterals(rec.platforms()));
+
         return spec.build();
     }
 
@@ -227,7 +233,10 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
                     .addParameter(
-                        new TypedValueGenerator(f).getType(),
+                        // Override the type of long values
+                        f.anyType() instanceof Type t && t.isLong()
+                                ? TypeName.INT
+                                : new TypedValueGenerator(f).getType(),
                         toJavaIdentifier(f.name()))
         );
 
@@ -260,6 +269,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         toCamelCase(f.name(), true),
                         toJavaIdentifier(f.name()));
         });
+
+        // Platform check
+        if (rec.doPlatformCheck())
+            spec.addStatement("$T.checkSupportedPlatform($L)",
+                    ClassNames.PLATFORM, Platform.toStringLiterals(rec.platforms()));
 
         return spec.build();
     }
@@ -325,7 +339,10 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addParameter(Arena.class, "arena");
         rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
                 spec.addParameter(
-                        new TypedValueGenerator(f).getType(),
+                        // Override the type of long values
+                        f.anyType() instanceof Type t && t.isLong()
+                                ? TypeName.INT
+                                : new TypedValueGenerator(f).getType(),
                         toJavaIdentifier(f.name()))
         );
 

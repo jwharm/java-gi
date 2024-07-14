@@ -134,7 +134,8 @@ public class AliasGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec arrayConstructor(Type primitiveType) {
-        String layout = getValueLayoutPlain(primitiveType);
+        String layout = getValueLayoutPlain(primitiveType, false);
+
         var spec = MethodSpec.methodBuilder("fromNativeArray")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ArrayTypeName.of(alias.typeName()))
@@ -142,10 +143,17 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .addParameter(long.class, "length")
                 .addParameter(boolean.class, "free")
                 .addStatement("$T array = new $T[(int) length]",
-                        ArrayTypeName.of(alias.typeName()), alias.typeName())
-                .addStatement("long byteSize = $T.$L.byteSize()",
-                        ValueLayout.class, layout)
-                .addStatement("$T segment = address.reinterpret(byteSize * length)",
+                        ArrayTypeName.of(alias.typeName()), alias.typeName());
+
+        if (primitiveType.isLong()) {
+            spec.addStatement("long byteSize = $1T.longAsInt() ? $2T.JAVA_INT.byteSize() : $2T.JAVA_LONG.byteSize()",
+                    ClassNames.INTEROP, ValueLayout.class);
+        } else {
+            spec.addStatement("long byteSize = $T.$L.byteSize()",
+                    ValueLayout.class, layout);
+        }
+
+        spec.addStatement("$T segment = address.reinterpret(byteSize * length)",
                         MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 

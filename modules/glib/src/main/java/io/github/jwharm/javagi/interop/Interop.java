@@ -42,10 +42,20 @@ import static java.lang.foreign.MemorySegment.NULL;
 public class Interop {
 
     private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
+
     private final static long LONG_UNBOUNDED = Long.MAX_VALUE;
+
+    private final static boolean LONG_AS_INT = Linker.nativeLinker()
+            .canonicalLayouts().get("long").equals(ValueLayout.JAVA_INT);
+
     private final static Linker LINKER = Linker.nativeLinker();
-    public static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
+
+    private static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
+
+    public static boolean longAsInt() {
+        return LONG_AS_INT;
+    }
 
     /**
      * Load the specified library using
@@ -53,7 +63,7 @@ public class Interop {
      *
      * @param name the name of the library
      */
-    public static void loadLibrary(String name) {
+    public static synchronized void loadLibrary(String name) {
         try {
             symbolLookup = SymbolLookup.libraryLookup(name, Arena.global())
                                        .or(Interop.symbolLookup);
