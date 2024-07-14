@@ -25,8 +25,6 @@ import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.ValueLayout;
 
-import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
-
 public class PostprocessingGenerator extends TypedValueGenerator {
 
     private final Parameter p;

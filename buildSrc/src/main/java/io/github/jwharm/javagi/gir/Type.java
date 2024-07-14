@@ -19,7 +19,6 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 

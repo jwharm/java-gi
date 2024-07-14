@@ -31,7 +31,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
 import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
 import static java.util.Comparator.comparing;
 
