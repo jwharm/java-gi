@@ -134,6 +134,23 @@ public class GioPatch implements Patch {
             return c.withAttribute("java-gi-auto-closeable", "1");
 
         /*
+         * Make GListModel and GListStore generic (replacing all GObject
+         * arguments with generic type {@code <T extends GObject>}).
+         */
+        if (element instanceof Interface i && "ListModel".equals(i.name())
+                || element instanceof Class c && "ListStore".equals(c.name()))
+            return element.withAttribute("java-gi-generic", "1");
+
+        /*
+         * Because GListStore implements GListModel, which is patched to
+         * implement java.util.List, its `void remove(int)` method conflicts
+         * with List's `boolean remove(int)`. Rename to `removeItem()`.
+         */
+        if (element instanceof Method m
+                && "g_list_store_remove".equals(m.callableAttrs().cIdentifier()))
+            return element.withAttribute("name", "remove_item");
+
+        /*
          * File.prefixMatches() is defined as a virtual method with invoker
          * method hasPrefix(), but the parameters are different. Remove the
          * invoker attribute, so they will be treated as separate methods.

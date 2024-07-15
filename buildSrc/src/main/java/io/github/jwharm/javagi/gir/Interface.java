@@ -60,6 +60,10 @@ public final class Interface extends Multiplatform
         return this;
     }
 
+    public boolean generic() {
+        return attrBool("java-gi-generic", false);
+    }
+
     @Override
     public ClassName helperClass() {
         ClassName tn = typeName();

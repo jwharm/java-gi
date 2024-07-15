@@ -189,6 +189,21 @@ public class GtkPatch implements Patch {
                 && "FontDialog".equals(c.name()))
             return remove(c, Method.class, "name", "choose_font_and_features_finish");
 
+        /*
+         * Because these classes implement GListModel, which is patched to
+         * implement java.util.List, their `void remove(int)` method conflicts
+         * with List's `boolean remove(int)`. Rename to `removeItem()`.
+         */
+        if (element instanceof Method m
+                && "gtk_multi_filter_remove".equals(m.callableAttrs().cIdentifier()))
+            return element.withAttribute("name", "remove_filter");
+        else if (element instanceof Method m
+                && "gtk_string_list_remove".equals(m.callableAttrs().cIdentifier()))
+            return element.withAttribute("name", "remove_string");
+        else if (element instanceof Method m
+                && "gtk_multi_sorter_remove".equals(m.callableAttrs().cIdentifier()))
+            return element.withAttribute("name", "remove_sorter");
+
         return element;
     }
 }

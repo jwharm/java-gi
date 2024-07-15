@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.generators;
 
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Interface;
@@ -50,9 +51,22 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
                 .addSuperinterface(ClassNames.PROXY)
                 .addType(implClass());
 
+        // Add "extends" clause for all prerequisite interfaces.
+        // For generic interfaces, add "<GObject>" generic type.
         for (var prereq : inf.prerequisites())
-            if (prereq.get() instanceof Interface parent)
-                builder.addSuperinterface(parent.typeName());
+            if (prereq.get() instanceof Interface iface)
+                builder.addSuperinterface(iface.generic()
+                        ? ParameterizedTypeName.get(iface.typeName(),
+                        ClassNames.GOBJECT)
+                        : iface.typeName());
+
+        if ("GListModel".equals(inf.cType()))
+            builder.addSuperinterface(
+                    ParameterizedTypeName.get(ClassNames.LIST_MODEL_LIST,
+                                                ClassNames.GENERIC_T));
+
+        if (inf.generic())
+            builder.addTypeVariable(ClassNames.GENERIC_T);
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());

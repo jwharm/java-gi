@@ -88,7 +88,7 @@ public class GObjectPatch implements Patch {
 
         /*
          * Make GWeakRef generic (replacing all GObject arguments with generic
-         * type {@code <T extends GObject>}.
+         * type {@code <T extends GObject>}).
          */
         if (element instanceof Record r && "WeakRef".equals(r.name()))
             return r.withAttribute("java-gi-generic", "1");

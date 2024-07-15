@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.generators;
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Interface;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 
@@ -59,8 +60,14 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         else
             builder.superclass(ClassNames.TYPE_INSTANCE);
 
+        // Add "implements" clause for all implemented interfaces.
+        // For generic interfaces, add "<GObject>" generic type.
         for (var impl : cls.implements_())
-            builder.addSuperinterface(impl.get().typeName());
+            if (impl.get() instanceof Interface iface)
+                builder.addSuperinterface(iface.generic()
+                        ? ParameterizedTypeName.get(iface.typeName(),
+                                                    ClassNames.GOBJECT)
+                        : iface.typeName());
 
         if (cls.autoCloseable())
             builder.addSuperinterface(ClassNames.AUTO_CLOSEABLE);

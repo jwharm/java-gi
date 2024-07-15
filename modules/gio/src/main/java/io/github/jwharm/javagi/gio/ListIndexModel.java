@@ -33,7 +33,8 @@ import org.gnome.gobject.*;
  * index of a list item instead of an actual item. The index can be used
  * to retrieve Java objects from a regular {@link java.util.List}.
  */
-public class ListIndexModel extends GObject implements ListModel {
+public class ListIndexModel extends GObject
+        implements ListModel<ListIndexModel.ListIndex> {
 
     private static final Type gtype = Types.register(ListIndexModel.class);
     private ArrayList<ListIndex> items = new ArrayList<>();
@@ -119,7 +120,7 @@ public class ListIndexModel extends GObject implements ListModel {
      * @return a {@link ListIndex} with the requested position as its value
      */
     @Override
-    public GObject getItem(int position) {
+    public ListIndex getItem(int position) {
         if (position < 0 || position >= getNItems())
             return null;
         return items.get(position);
