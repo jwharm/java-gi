@@ -61,7 +61,14 @@ public final class Class extends Multiplatform
     }
 
     public boolean generic() {
-        return attrBool("java-gi-generic", false);
+        if (attrBool("java-gi-generic", false))
+            return true;
+
+        for (var impl : implements_())
+            if (impl.get().generic())
+                return true;
+
+        return false;
     }
 
     public boolean autoCloseable() {

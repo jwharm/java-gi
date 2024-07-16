@@ -61,7 +61,14 @@ public final class Interface extends Multiplatform
     }
 
     public boolean generic() {
-        return attrBool("java-gi-generic", false);
+        if (attrBool("java-gi-generic", false))
+            return true;
+
+        for (var prereq : prerequisites())
+            if (prereq.get() instanceof Interface i && i.generic())
+                return true;
+
+        return false;
     }
 
     @Override
@@ -77,6 +84,10 @@ public final class Interface extends Multiplatform
 
     public boolean hasProperties() {
         return children().stream().anyMatch(Property.class::isInstance);
+    }
+
+    public boolean listInterface() {
+        return attrBool("java-gi-list-interface", false);
     }
 
     public List<Prerequisite> prerequisites() {

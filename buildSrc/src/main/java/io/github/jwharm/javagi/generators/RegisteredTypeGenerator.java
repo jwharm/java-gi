@@ -146,15 +146,16 @@ public class RegisteredTypeGenerator {
         TypeSpec.Builder spec = TypeSpec.classBuilder(nested)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
-        if (rt instanceof Interface i) {
-            TypeName superInterface = i.generic()
+        TypeName base = rt.generic()
                 ? ParameterizedTypeName.get(rt.typeName(), ClassNames.GOBJECT)
                 : rt.typeName();
+
+        if (rt instanceof Interface i) {
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
                             nested,
                             rt.typeName())
                     .superclass(getInterfaceSuperclass(i))
-                    .addSuperinterface(superInterface)
+                    .addSuperinterface(base)
                     .addStaticBlock(staticBlock());
         }
 
@@ -162,7 +163,7 @@ public class RegisteredTypeGenerator {
             spec.addJavadoc("The $T type represents a native instance of the abstract $T class.",
                             nested,
                             rt.typeName())
-                    .superclass(rt.typeName());
+                    .superclass(base);
 
         return spec.addMethod(MethodSpec.constructorBuilder()
                         .addJavadoc("""
@@ -178,11 +179,12 @@ public class RegisteredTypeGenerator {
     }
 
     private TypeName getInterfaceSuperclass(Interface i) {
-        for (var prerequisite : i.prerequisites()) {
-            var target = prerequisite.get();
-            if (target instanceof Class)
-                return target.typeName();
-        }
+        for (var prerequisite : i.prerequisites())
+            if (prerequisite.get() instanceof Class c)
+                return c.generic()
+                        ? ParameterizedTypeName.get(c.typeName(),
+                                                    ClassNames.GOBJECT)
+                        : c.typeName();
         return ClassNames.GOBJECT;
     }
 

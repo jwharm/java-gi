@@ -57,12 +57,12 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
             if (prereq.get() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
                         ? ParameterizedTypeName.get(iface.typeName(),
-                        ClassNames.GOBJECT)
+                                                ClassNames.GENERIC_T)
                         : iface.typeName());
 
-        if ("GListModel".equals(inf.cType()))
+        if (inf.listInterface())
             builder.addSuperinterface(
-                    ParameterizedTypeName.get(ClassNames.LIST_MODEL_LIST,
+                    ParameterizedTypeName.get(ClassNames.LIST_MODEL_JAVA_LIST,
                                                 ClassNames.GENERIC_T));
 
         if (inf.generic())

@@ -37,7 +37,7 @@ import java.util.ListIterator;
  *
  * @param <E> The item type must be a GObject.
  */
-public interface ListModelList<E extends GObject> extends List<E> {
+public interface ListModelJavaList<E extends GObject> extends List<E> {
 
     int getNItems();
     E getItem(int position);
@@ -319,7 +319,7 @@ public interface ListModelList<E extends GObject> extends List<E> {
         if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
 
-        return new ListModelList<>() {
+        return new ListModelJavaList<>() {
             @Override
             public int getNItems() {
                 return toIndex - fromIndex;
@@ -327,7 +327,7 @@ public interface ListModelList<E extends GObject> extends List<E> {
 
             @Override
             public E getItem(int position) {
-                return ListModelList.this.getItem(position + fromIndex);
+                return ListModelJavaList.this.getItem(position + fromIndex);
             }
         };
     }

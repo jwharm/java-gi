@@ -60,12 +60,8 @@ public class MethodGenerator {
     }
 
     public static boolean isGeneric(Callable func) {
-        return switch(func.parent()) {
-            case Class c -> c.generic();
-            case Interface i -> i.generic();
-            case Record r -> r.generic();
-            default -> false;
-        };
+        return func.parent() instanceof RegisteredType rt
+                && rt.generic();
     }
 
     public MethodGenerator(Callable func, String name) {

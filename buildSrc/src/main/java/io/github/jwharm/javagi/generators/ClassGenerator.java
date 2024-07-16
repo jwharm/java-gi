@@ -56,7 +56,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         Class parentClass = cls.parentClass();
         if (parentClass != null)
-            builder.superclass(parentClass.typeName());
+            builder.superclass(parentClass.generic()
+                    ? ParameterizedTypeName.get(parentClass.typeName(),
+                                                    ClassNames.GENERIC_T)
+                    : parentClass.typeName());
         else
             builder.superclass(ClassNames.TYPE_INSTANCE);
 
@@ -66,7 +69,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             if (impl.get() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
                         ? ParameterizedTypeName.get(iface.typeName(),
-                                                    ClassNames.GOBJECT)
+                                                    ClassNames.GENERIC_T)
                         : iface.typeName());
 
         if (cls.autoCloseable())

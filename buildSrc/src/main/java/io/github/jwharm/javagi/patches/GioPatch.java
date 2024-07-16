@@ -137,8 +137,11 @@ public class GioPatch implements Patch {
          * Make GListModel and GListStore generic (replacing all GObject
          * arguments with generic type {@code <T extends GObject>}).
          */
-        if (element instanceof Interface i && "ListModel".equals(i.name())
-                || element instanceof Class c && "ListStore".equals(c.name()))
+        if (element instanceof Interface i && "ListModel".equals(i.name()))
+            return element.withAttribute("java-gi-generic", "1")
+                          .withAttribute("java-gi-list-interface", "1");
+
+        if (element instanceof Class c && "ListStore".equals(c.name()))
             return element.withAttribute("java-gi-generic", "1");
 
         /*

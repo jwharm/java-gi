@@ -50,7 +50,7 @@ public final class ClassNames {
     public static final ClassName PLATFORM = get(PKG_INTEROP, "Platform");
 
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");
-    public static final ClassName LIST_MODEL_LIST = get(PKG_GIO, "ListModelList");
+    public static final ClassName LIST_MODEL_JAVA_LIST = get(PKG_GIO, "ListModelJavaList");
 
     public static final ClassName BUILDER = get(PKG_GOBJECT, "Builder");
     public static final ClassName BUILDER_INTERFACE = get(PKG_GOBJECT, "BuilderInterface");

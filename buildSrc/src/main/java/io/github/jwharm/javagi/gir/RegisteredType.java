@@ -35,6 +35,10 @@ public sealed interface RegisteredType
     InfoAttrs infoAttrs();
     InfoElements infoElements();
 
+    default boolean generic() {
+        return false;
+    }
+
     default ClassName typeName() {
         return toJavaQualifiedType(name(), namespace());
     }
