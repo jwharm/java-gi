@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.stream.Stream;
 
 import com.squareup.javapoet.*;
 import io.github.jwharm.javagi.configuration.ClassNames;
@@ -149,6 +150,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     private void generateField(Field f) {
         if (f.isDisguised()) return;
+        if (f.bits() != -1) return;
         FieldGenerator generator = new FieldGenerator(f);
         Callback cb  = f.callback();
 
@@ -217,6 +219,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         return spec.build();
     }
 
+    private Stream<Field> streamAccessibleFields() {
+        return rec.fields().stream()
+                .filter(not(Field::isDisguised))
+                .filter(f -> f.bits() == -1);
+    }
+
     private MethodSpec constructorWithParameters(boolean arenaParameter) {
         var spec = MethodSpec.constructorBuilder()
                 .addJavadoc("Allocate a new $T with the fields set to the provided values.\n",
@@ -228,7 +236,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     Arena.class);
         spec.addJavadoc("\n");
 
-        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+        streamAccessibleFields().forEach(f ->
                 spec.addJavadoc("@param $1L $2L for the field {@code $1L}\n",
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
@@ -251,7 +259,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             spec.addStatement("this($T.ofAuto())", Arena.class);
 
         // Copy the parameter values into the instance fields
-        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f -> {
+        streamAccessibleFields().forEach(f -> {
             if (f.allocatesMemory() && arenaParameter)
                 spec.addStatement("$L$L($L, arena)",
                         f.callback() == null ? "write" : "override",
@@ -304,8 +312,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     }
 
     private boolean hasFieldSetters() {
-        return rec.fields().stream()
-                .anyMatch(not(f -> f.isDisguised() || f.callback() != null));
+        return streamAccessibleFields().anyMatch(f -> f.callback() == null);
     }
 
     private MethodSpec allocateWithParameters() {
@@ -317,7 +324,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         """, rec.typeName());
 
         // Javadoc for parameters and return value
-        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+        streamAccessibleFields().forEach(f ->
                 spec.addJavadoc("@param  $1L $2L for the field {@code $1L}\n",
                         toJavaIdentifier(f.name()),
                         f.callback() == null ? "value" : "callback function")
@@ -325,8 +332,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n",
                         rec.typeName());
 
-        String paramTypes = rec.fields().stream()
-                .filter(not(Field::isDisguised))
+        String paramTypes = streamAccessibleFields()
                 .map(f -> new TypedValueGenerator(f).getType().toString() + ", ")
                 .collect(joining());
         spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2L$3T)}\n",
@@ -337,7 +343,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         spec.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(rec.typeName())
                 .addParameter(Arena.class, "arena");
-        rec.fields().stream().filter(not(Field::isDisguised)).forEach(f ->
+        streamAccessibleFields().forEach(f ->
                 spec.addParameter(
                         // Override the type of long values
                         f.anyType() instanceof Type t && t.isLong()
@@ -346,8 +352,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         toJavaIdentifier(f.name()))
         );
 
-        String params = rec.fields().stream()
-                .filter(not(Field::isDisguised))
+        String params = streamAccessibleFields()
                 .map(f -> toJavaIdentifier(f.name()) + ", ")
                 .collect(joining());
 

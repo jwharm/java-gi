@@ -109,11 +109,29 @@ public class MemoryLayoutGenerator {
                 "valueLayout", ValueLayout.class
         );
         int size = 0;
-        for (Field field : fieldList) {
-            if (size > 0) stmt.add(",\n");
-
-            // Get the byte size of the field, in bytes
+        int bitfieldPosition = 0;
+        for (int i = 0; i < fieldList.size(); i++) {
+            Field field = fieldList.get(i);
+            // Get the size of the field, in bytes
             int s = field.getSize(longAsInt);
+
+            // Bitfield?
+            int bits = field.bits();
+            if (bits > 0) {
+                bitfieldPosition += bits;
+                boolean last = (i + 1 == fieldList.size()
+                        || fieldList.get(i + 1).bits() == -1);
+
+                if (last || bitfieldPosition > (s * 8)) {
+                    if (size > 0) stmt.add(",\n");
+                    size += s;
+                    stmt.add("$memoryLayout:T.paddingLayout(" + s + ") /* bitfield */");
+                    bitfieldPosition = last ? 0 : bits;
+                }
+                continue;
+            }
+
+            if (size > 0) stmt.add(",\n");
 
             // Calculate padding (except for union layouts)
             if (!isUnion) {
