@@ -319,16 +319,44 @@ class TypedValueGenerator {
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
             PartialStatement elementConstructor = switch (type.anyTypes().getFirst()) {
-                case Type t when t.isString()        -> PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
-                case Type t when t.isMemorySegment() -> PartialStatement.of("$function:T.identity()", "function", java.util.function.Function.class);
-                case Array _                         -> PartialStatement.of("$function:T.identity()", "function", java.util.function.Function.class);
+                case Type t when t.isString()        -> PartialStatement.of("(_p -> $interop:T.getStringFrom(_p))", "interop", ClassNames.INTEROP);
+                case Type t when t.isMemorySegment() -> PartialStatement.of("(_p -> _p)");
+                case Array _                         -> PartialStatement.of("(_p -> _p)");
                 case Type t when t.get() != null     -> t.get().constructorName();
                 default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
             };
 
-            return PartialStatement.of("new $" + targetTypeTag + ":T(" + identifier + ", ")
-                    .add(elementConstructor)
-                    .add(")", targetTypeTag, type.typeName());
+            PartialStatement elementDestructor = switch (type.anyTypes().getFirst()) {
+                case Array _                         -> PartialStatement.of("(_ -> {}) /* unsupported */");
+                case Type t when t.isString()        -> null;
+                case Type t when t.isMemorySegment() -> PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
+                case Type t when t.get() != null     -> t.get().destructorName();
+                default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+            };
+
+            // Get parent node (parameter, return value, ...)
+            Node parent = type.parent();
+            while (parent instanceof AnyType)
+                parent = parent.parent();
+
+            // Find out how ownership is transferred
+            var transferOwnership = switch(parent) {
+                case Parameter p -> p.transferOwnership();
+                case InstanceParameter ip -> ip.transferOwnership();
+                case ReturnValue rv -> rv.transferOwnership();
+                case Property p -> p.transferOwnership();
+                default -> throw new IllegalStateException();
+            };
+
+            var stmt = PartialStatement.of("new $" + targetTypeTag + ":T(" + identifier + ", ",
+                            targetTypeTag, type.typeName())
+                    .add(elementConstructor);
+
+            if (elementDestructor != null)
+                stmt.add(", ").add(elementDestructor);
+            stmt.add(", " + (transferOwnership == TransferOwnership.FULL))
+                .add(")");
+            return stmt;
         }
 
         if ((target instanceof Record && (!isTypeClass))

@@ -20,12 +20,14 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.ClassName;
+import io.github.jwharm.javagi.configuration.ClassNames;
+import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
-import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
-import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
+import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
 
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,15 +35,34 @@ import java.util.Objects;
 public final class Record extends Multiplatform
         implements RegisteredType, FieldContainer {
 
+    public Record(Map<String, String> attributes,
+                  List<Node> children,
+                  int platforms) {
+        super(attributes, children, platforms);
+    }
+
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Record(Map<String, String> attributes,
-                  List<Node> children,
-                  int platforms) {
-        super(attributes, children, platforms);
+    @Override
+    public PartialStatement destructorName() {
+        Callable freeFunc = freeFunction();
+        if (freeFunc == null)
+            return PartialStatement.of("(_ -> {})");
+
+        String tag = ((RegisteredType) freeFunc.parent()).typeTag();
+
+        if ("g_boxed_free".equals(freeFunc.callableAttrs().cIdentifier()))
+            return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
+                    tag, typeName(),
+                    "gobjects", ClassNames.GOBJECTS,
+                    "memorySegment", MemorySegment.class);
+
+        return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
+                tag, typeName(),
+                "freeFunc", toJavaIdentifier(freeFunc.name()));
     }
 
     @Override
@@ -112,12 +133,61 @@ public final class Record extends Multiplatform
         return attr("c:symbol-prefix");
     }
 
-    public String copyFunction() {
-        return attr("copy-function");
+    public Callable copyFunction() {
+        // copy-function specified in annotation
+        String func = attr("copy-function");
+        if (func != null)
+            return children().stream()
+                    .filter(Callable.class::isInstance)
+                    .map(Callable.class::cast)
+                    .filter(c -> func.equals(c.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // boxed types: use g_boxed_copy
+        if (getTypeFunc() != null)
+            return namespace().parent().lookupNamespace("GObject").functions()
+                    .stream()
+                    .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // use heuristics: find instance method `copy()` or `ref()`
+        for (var m : methods())
+            if ("ref".equals(m.name()) || "copy".equals(m.name())
+                    && m.parameters().parameters().isEmpty())
+                return m;
+
+        return null;
     }
 
-    public String freeFunction() {
-        return attr("free-function");
+    public Callable freeFunction() {
+        // free-function specified in annotation
+        String func = attr("free-function");
+        if (func != null)
+            return children().stream()
+                    .filter(Callable.class::isInstance)
+                    .map(Callable.class::cast)
+                    .filter(c -> func.equals(c.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // boxed types: use g_boxed_free
+        if (getTypeFunc() != null)
+            return namespace().parent().lookupNamespace("GObject").functions()
+                    .stream()
+                    .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // use heuristics: find function or method `free()` or `unref()`
+        for (var n : children())
+            if (n instanceof Callable c)
+                if ("unref".equals(c.name()) || "free".equals(c.name())
+                        && c.parameters().parameters().isEmpty())
+                    return c;
+
+        return null;
     }
 
     public List<Field> fields() {

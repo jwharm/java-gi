@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.gir;
 
 import com.squareup.javapoet.ClassName;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
@@ -54,6 +55,10 @@ public sealed interface RegisteredType
     default PartialStatement constructorName() {
         return PartialStatement.of("$" + typeTag() + ":T::new",
                 typeTag(), typeName());
+    }
+
+    default PartialStatement destructorName() {
+        return PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
     }
 
     default boolean checkIsGObject() {

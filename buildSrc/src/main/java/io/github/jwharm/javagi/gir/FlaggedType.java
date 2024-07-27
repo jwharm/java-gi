@@ -19,6 +19,9 @@
 
 package io.github.jwharm.javagi.gir;
 
+import io.github.jwharm.javagi.configuration.ClassNames;
+import io.github.jwharm.javagi.util.PartialStatement;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
@@ -26,6 +29,17 @@ import java.util.List;
 public sealed interface FlaggedType
         extends RegisteredType
         permits Bitfield, Enumeration {
+
+    @Override
+    default PartialStatement constructorName() {
+        return PartialStatement.of("$" + typeTag() + ":T::of",
+                typeTag(), typeName());
+    }
+
+    @Override
+    default PartialStatement destructorName() {
+        return PartialStatement.of("(_ -> {})");
+    }
 
     default List<Member> members() {
         return filter(children(), Member.class);

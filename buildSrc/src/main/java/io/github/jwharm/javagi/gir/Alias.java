@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.gir;
 
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
@@ -51,6 +52,12 @@ public final class Alias extends Multiplatform implements RegisteredType {
     public PartialStatement constructorName() {
         RegisteredType target = type().get();
         return target == null ? null : target.constructorName();
+    }
+
+    @Override
+    public PartialStatement destructorName() {
+        RegisteredType target = type().get();
+        return target == null ? null : target.destructorName();
     }
 
     @Override

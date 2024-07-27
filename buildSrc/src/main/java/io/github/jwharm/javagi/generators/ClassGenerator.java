@@ -172,21 +172,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         /*
          * Register a free-function for this class. If the class has a method
-         * named unref() or free(), use that one. If not, the MemoryCleaner
-         * will fallback to g_free().
+         * named unref(), use that one. If not, the MemoryCleaner will fallback
+         * to g_free().
          */
         if (! cls.isInstanceOf("GObject", "Object")) {
-            for (var m : cls.methods()) {
-                if (("free".equals(m.name()) || "unref".equals(m.name()))
-                        && m.parameters().instanceParameter() != null
-                        && m.parameters().parameters().isEmpty()
-                        && (m.returnValue().anyType().isVoid())) {
-                    spec.addStatement("$T.setFreeFunc(this, $S)",
-                            ClassNames.MEMORY_CLEANER,
-                            m.callableAttrs().cIdentifier());
-                    break;
-                }
-            }
+            var m = cls.unrefFunc();
+            if (m != null)
+                spec.addStatement("$T.setFreeFunc(this, $S)",
+                        ClassNames.MEMORY_CLEANER,
+                        m.callableAttrs().cIdentifier());
         }
         return spec.build();
     }

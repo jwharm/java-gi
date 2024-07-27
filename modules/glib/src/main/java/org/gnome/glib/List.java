@@ -27,9 +27,11 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.lang.ref.Cleaner;
 import java.util.AbstractSequentialList;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -45,35 +47,76 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         GLib.javagi$ensureInitialized();
     }
 
+    // Used to dispose the list and, optionally, its items
+    private static final Cleaner CLEANER = Cleaner.create();
+
     // The Arena is used to allocate native Strings
     private final Arena arena = Arena.ofAuto();
 
     // Used to construct a Java instance for a native object
     private final Function<MemorySegment, E> make;
 
+    // Used to free a removed object
+    private final Consumer<E> free;
+
     // The current head of the List. It is a mutable field, because add/remove
     // operations on an List can change/remove the head
     private ListNode head;
+
+    // Ownership is "container" (memory of item is not managed) or "full"
+    private final boolean fullOwnership;
 
     /**
      * Create a new {@code GLib.List} wrapper.
      *
      * @param address the memory address of the head element of the List
      * @param make a function to construct element instances
+     * @param free          a function to free element instances. If
+     *                      {@code fullOwnership} is {@code false}, this can
+     *                      safely be set to {@code null}.
+     * @param fullOwnership whether to free element instances automatically
      */
-    public List(MemorySegment address, Function<MemorySegment, E> make) {
+    public List(MemorySegment address,
+                Function<MemorySegment, E> make,
+                Consumer<E> free,
+                boolean fullOwnership) {
         this.head = MemorySegment.NULL.equals(address) ? null
                 : new ListNode(address);
         this.make = make;
+        this.free = free;
+        this.fullOwnership = fullOwnership;
+
+        var finalizer = new List.Finalizer<>(address, make, free, fullOwnership);
+        CLEANER.register(this, finalizer);
     }
 
     /**
      * Create a wrapper for a new, empty {@code GLib.List}.
      *
      * @param make a function to construct element instances
+     * @param free          a function to free element instances. If
+     *                      {@code fullOwnership} is {@code false}, this can
+     *                      safely be set to {@code null}.
+     * @param fullOwnership whether to free element instances automatically
      */
-    public List(Function<MemorySegment, E> make) {
-        this(null, make);
+    public List(Function<MemorySegment, E> make,
+                Consumer<E> free,
+                boolean fullOwnership) {
+        this(null, make, free, fullOwnership);
+    }
+
+    /**
+     * Create a new {@code GLib.List} wrapper.
+     *
+     * @param address       the memory address of the head element of the List
+     * @param make          a function to construct element instances
+     * @param fullOwnership whether to free element instances automatically
+     *                      with {@link GLib#free}
+     */
+    public List(MemorySegment address,
+                Function<MemorySegment, E> make,
+                boolean fullOwnership) {
+        this(address, make, null, fullOwnership);
     }
 
     /**
@@ -157,12 +200,29 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                     case FORWARD -> previous();
                 }
                 head = ListNode.deleteLink(head, node);
+
+                var data = node.readData();
+                if (fullOwnership && data != null) {
+                    if (free == null)
+                        GLib.free(data);
+                    else
+                        free.accept(make.apply(data));
+                }
             }
 
             @Override
             public void set(E e) {
                 if (last == null)
                     throw new IllegalStateException();
+
+                var data = last.readData();
+                if (fullOwnership && data != null) {
+                    if (free == null)
+                        GLib.free(data);
+                    else
+                        free.accept(make.apply(data));
+                }
+
                 last.writeData(getAddress(e));
             }
 
@@ -269,6 +329,10 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         static MethodHandle g_list_length = Interop.downcallHandle(
                 "g_list_length", FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS), false);
+
+        static MethodHandle g_list_free = Interop.downcallHandle(
+                "g_list_free", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                false);
 
         /**
          * Read the value of the field {@code data}.
@@ -377,6 +441,44 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
+        }
+
+        /**
+         * Frees all of the memory used by a {@code GList}. The freed elements
+         * are returned to the slice allocator.
+         *
+         * @param list The first link of a {@code GList}.
+         */
+        static void free(ListNode list) {
+            var listPtr = list == null ? MemorySegment.NULL : list.handle();
+            try {
+                g_list_free.invokeExact(listPtr);
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+        }
+    }
+
+    private record Finalizer<E>(MemorySegment address,
+                                Function<MemorySegment, E> make,
+                                Consumer<E> free,
+                                boolean fullOwnership) implements Runnable {
+        public void run() {
+            if (address == null || MemorySegment.NULL.equals(address))
+                return;
+
+            if (fullOwnership) {
+                var node = new ListNode(address);
+                do {
+                    if (free == null)
+                        GLib.free(node.readData());
+                    else
+                        free.accept(make.apply(node.readData()));
+                    node = node.readNext();
+                } while (node != null);
+            }
+
+            ListNode.free(new ListNode(address));
         }
     }
 }

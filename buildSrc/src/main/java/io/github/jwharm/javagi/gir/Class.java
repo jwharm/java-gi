@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.gir;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,18 @@ public final class Class extends Multiplatform
                         typeTag() + "Impl",
                         typeName().nestedClass(name() + "Impl"))
                 : RegisteredType.super.constructorName();
+    }
+
+    @Override
+    public PartialStatement destructorName() {
+        String tag = typeTag();
+        Method unrefFunc = unrefFunc();
+        if (unrefFunc == null)
+            return PartialStatement.of("(_ -> {})");
+
+        return PartialStatement.of("$" + tag + ":T::$unrefFunc:L",
+                tag, typeName(),
+                "unrefFunc", toJavaIdentifier(unrefFunc.name()));
     }
 
     @Override
@@ -97,12 +110,46 @@ public final class Class extends Multiplatform
         return (Record) TypeReference.get(namespace(), typeStruct);
     }
 
-    public String refFunc() {
-        return attr("glib:ref-func");
+    public Method refFunc() {
+        // ref-func specified in annotation
+        String func = attr("glib:ref-func");
+        if (func != null)
+            return methods().stream()
+                    .filter(m -> func.equals(m.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // use heuristics: find instance method `void ref()`
+        for (var m : methods())
+            if ("ref".equals(m.name())
+                    && m.parameters().parameters().isEmpty()
+                    && m.returnValue().anyType().isVoid())
+                return m;
+
+        // try parent class
+        var parentClass = parentClass();
+        return parentClass == null ? null : parentClass.refFunc();
     }
 
-    public String unrefFunc() {
-        return attr("glib:unref-func");
+    public Method unrefFunc() {
+        // ref-func specified in annotation
+        String func = attr("glib:unref-func");
+        if (func != null)
+            return methods().stream()
+                    .filter(m -> func.equals(m.callableAttrs().cIdentifier()))
+                    .findAny()
+                    .orElse(null);
+
+        // use heuristics: find instance method `void unref()`
+        for (var m : methods())
+            if ("unref".equals(m.name())
+                    && m.parameters().parameters().isEmpty()
+                    && m.returnValue().anyType().isVoid())
+                return m;
+
+        // try parent class
+        var parentClass = parentClass();
+        return parentClass == null ? null : parentClass.unrefFunc();
     }
 
     public String setValueFunc() {

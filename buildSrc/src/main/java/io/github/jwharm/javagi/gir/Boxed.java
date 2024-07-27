@@ -19,8 +19,12 @@
 
 package io.github.jwharm.javagi.gir;
 
+import io.github.jwharm.javagi.configuration.ClassNames;
+import io.github.jwharm.javagi.util.PartialStatement;
+
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +55,15 @@ public final class Boxed extends Multiplatform implements RegisteredType {
                     union(children(), other.children()),
                     platforms() | other.platforms());
         return this;
+    }
+
+    @Override
+    public PartialStatement destructorName() {
+        var tag = typeTag();
+        return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
+                tag, typeName(),
+                "gobjects", ClassNames.GOBJECTS,
+                "memorySegment", MemorySegment.class);
     }
 
     public String cSymbolPrefix() {

@@ -19,11 +19,15 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import com.squareup.javapoet.ClassName;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 
 import java.util.List;
 import java.util.Map;
@@ -51,6 +55,19 @@ public final class Interface extends Multiplatform
     }
 
     @Override
+    public PartialStatement destructorName() {
+        Class base = prerequisiteBaseClass();
+        String tag = base.typeTag();
+        Method unrefFunc = base.unrefFunc();
+        if (unrefFunc == null)
+            return PartialStatement.of("(_ -> {})");
+        
+        return PartialStatement.of("(_p -> (($" + tag + ":T) _p).$unrefFunc:L())",
+                tag, base.typeName(),
+                "unrefFunc", toJavaIdentifier(unrefFunc.name()));
+    }
+
+    @Override
     public Interface mergeWith(RegisteredType rt) {
         if (rt instanceof Interface other)
             return new Interface(
@@ -75,6 +92,17 @@ public final class Interface extends Multiplatform
     public ClassName helperClass() {
         ClassName tn = typeName();
         return ClassName.get(tn.packageName(), tn.simpleName() + "MethodHandles");
+    }
+
+    /**
+     * Get the prerequisite base class that can implement this interface.
+     * If no class is specified as a prerequisite, return GObject.
+     */
+    public Class prerequisiteBaseClass() {
+        for (var prerequisite : prerequisites())
+            if (prerequisite.get() instanceof Class c)
+                return c;
+        return (Class) TypeReference.get(namespace(), "GObject.Object");
     }
 
     public Record typeStruct() {

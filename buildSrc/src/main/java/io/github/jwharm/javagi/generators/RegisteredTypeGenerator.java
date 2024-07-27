@@ -33,6 +33,7 @@ import java.lang.foreign.MemorySegment;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
+import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
 public class RegisteredTypeGenerator {
@@ -179,13 +180,10 @@ public class RegisteredTypeGenerator {
     }
 
     private TypeName getInterfaceSuperclass(Interface i) {
-        for (var prerequisite : i.prerequisites())
-            if (prerequisite.get() instanceof Class c)
-                return c.generic()
-                        ? ParameterizedTypeName.get(c.typeName(),
-                                                    ClassNames.GOBJECT)
-                        : c.typeName();
-        return ClassNames.GOBJECT;
+        Class c = i.prerequisiteBaseClass();
+        return c.generic()
+                ? ParameterizedTypeName.get(c.typeName(), ClassNames.GOBJECT)
+                : c.typeName();
     }
 
     public boolean hasDowncallHandles() {
@@ -204,7 +202,8 @@ public class RegisteredTypeGenerator {
         for (Callable c : listNamedFunctions()) {
             if (!c.skip()) {
                 var gen = new MethodGenerator(c);
-                var spec = gen.generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL);
+                var spec = gen.generateNamedDowncallHandle(
+                        Modifier.STATIC, Modifier.FINAL);
                 builder.addField(spec);
             }
         }
@@ -233,25 +232,17 @@ public class RegisteredTypeGenerator {
         if (rt instanceof Record rec && rec.foreign())
             return;
 
-        // Look for instance methods named "free()" and "unref()"
-        if (rt instanceof Class cls && cls.unrefFunc() != null) {
-            builder.addStatement("$T.setFreeFunc(%L, %S)",
-                    ClassNames.MEMORY_CLEANER,
-                    identifier,
-                    cls.unrefFunc());
-            return;
-        }
-
-        for (Method method : filter(rt.children(), Method.class)) {
-            if (List.of("free", "unref").contains(method.name())
-                    && method.parameters() == null
-                    && (method.returnValue().anyType().isVoid())) {
-                builder.addStatement("$T.setFreeFunc(%L, %S)",
+        // Class with unref method
+        if (rt instanceof Class cls) {
+            var unrefFunc = cls.unrefFunc();
+            if (unrefFunc != null) {
+                String cIdentifier = unrefFunc.callableAttrs().cIdentifier();
+                builder.addStatement("$T.setFreeFunc($L, $S)",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
-                        method.callableAttrs().cIdentifier());
-                return;
+                        toJavaIdentifier(cIdentifier));
             }
+            return;
         }
 
         // Boxed types
@@ -266,6 +257,18 @@ public class RegisteredTypeGenerator {
                         ClassNames.MEMORY_CLEANER,
                         identifier,
                         className);
+        }
+
+        // Record with free-function
+        else if (rt instanceof Record rec) {
+            var freeFunc = rec.freeFunction();
+            if (freeFunc != null) {
+                String cIdentifier = freeFunc.callableAttrs().cIdentifier();
+                builder.addStatement("$T.setFreeFunc($L, $S)",
+                        ClassNames.MEMORY_CLEANER,
+                        identifier,
+                        toJavaIdentifier(cIdentifier));
+            }
         }
     }
 }
