@@ -12,64 +12,146 @@ Make sure that the native GLib, Gtk and/or GStreamer libraries are installed on 
 
 - GStreamer: Follow the [installation instructions](https://gstreamer.freedesktop.org/documentation/installing/).
 
-Next, add the dependencies. For example, if you use Gradle:
+Next, add the dependencies. For example, to add Gtk as a dependency:
 
-```groovy
-repositories {
-    mavenCentral()
-}
+=== "Maven"
 
-dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.10.2'
-}
-```
+    ```xml
+    <dependency>
+      <groupId>io.github.jwharm.javagi</groupId>
+      <artifactId>gtk</artifactId>
+      <version>0.10.2</version>
+    </dependency>
+    ```
 
-This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gst`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://github.com/jwharm/java-gi/tree/main/modules).
+=== "Gradle (Groovy)"
+
+    ```groovy
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation 'io.github.jwharm.javagi:gtk:0.10.2'
+    }
+    ```
+
+=== "Gradle (Kotlin)"
+
+    ```groovy
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation("io.github.jwharm.javagi:gtk:0.10.2")
+    }
+    ```
+
+=== "Scala SBT"
+
+    ```scala
+    libraryDependencies += "io.github.jwharm.javagi" % "gtk" % "0.10.2"
+    ```
+
+=== "Leiningen"
+
+    ```clojure
+    [io.github.jwharm.javagi/gtk "0.10.2"]
+    ```
+
+=== "bld"
+
+    ```java
+    repositories = List.of(MAVEN_CENTRAL);
+    scope(main)
+        .include(dependency("io.github.jwharm.javagi",
+                            "gtk",
+                            version(0,10,2)));
+    ```
+
+This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gst`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=io.github.jwharm.javagi).
 
 ## Application code
 
 An example Gtk application with a "Hello world" button can be created as follows:
 
-```java
-package io.github.jwharm.javagi.examples.helloworld;
+=== "Java"
 
-import org.gnome.gtk.*;
-import org.gnome.gio.ApplicationFlags;
+    ```java
+    package io.github.jwharm.javagi.examples.helloworld;
 
-public class HelloWorld {
+    import org.gnome.gtk.*;
+    import org.gnome.gio.ApplicationFlags;
 
-    public static void main(String[] args) {
-        new HelloWorld(args);
-    }
-    
-    private final Application app;
-    
-    public HelloWorld(String[] args) {
-        app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
-        app.onActivate(this::activate);
-        app.run(args);
-    }
-    
-    public void activate() {
-        var window = new ApplicationWindow(app);
-        window.setTitle("GTK from Java");
-        window.setDefaultSize(300, 200);
+    public class HelloWorld {
+
+        public static void main(String[] args) {
+            new HelloWorld(args);
+        }
         
-        var box = Box.builder()
+        private final Application app;
+        
+        public HelloWorld(String[] args) {
+            app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
+            app.onActivate(this::activate);
+            app.run(args);
+        }
+        
+        public void activate() {
+            var window = new ApplicationWindow(app);
+            window.setTitle("GTK from Java");
+            window.setDefaultSize(300, 200);
+            
+            var box = Box.builder()
+                .setOrientation(Orientation.VERTICAL)
+                .setHalign(Align.CENTER)
+                .setValign(Align.CENTER)
+                .build();
+            
+            var button = Button.withLabel("Hello world!");
+            button.onClicked(window::close);
+            
+            box.append(button);
+            window.setChild(box);
+            window.present();
+        }
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    package io.github.jwharm.javagi.examples
+
+    import org.gnome.gio.ApplicationFlags
+    import org.gnome.gtk.*
+
+    fun main(args: Array<String>) {
+        val app = Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS)
+        app.onActivate { activate(app) }
+        app.run(args)
+    }
+
+    private fun activate(app: Application) {
+        val window = ApplicationWindow(app)
+        window.title = "GTK from Kotlin"
+        window.setDefaultSize(300, 200)
+
+        val box = Box.builder()
             .setOrientation(Orientation.VERTICAL)
             .setHalign(Align.CENTER)
             .setValign(Align.CENTER)
-            .build();
-        
-        var button = Button.withLabel("Hello world!");
-        button.onClicked(window::close);
-        
-        box.append(button);
-        window.setChild(box);
-        window.present();
+            .build()
+
+        val button = Button.withLabel("Hello world!")
+        button.onClicked(window::close)
+
+        box.append(button)
+        window.child = box
+        window.present()
     }
-}
-```
+    ```
 
 ## Compile and run
 
@@ -101,32 +183,78 @@ For more advanced instructions on using Java-GI consult [this page](advanced.md)
 
 On most Linux distributions, Gtk will already be installed. Java-GI will load shared libraries using `dlopen`, and fallback to the `java.library.path`. So in most cases, you can simply run your application with `--enable-native-access=ALL-UNNAMED`:
 
-```groovy
-tasks.named('run') {
-    jvmArgs += "--enable-native-access=ALL-UNNAMED"
-}
-```
+=== "Gradle (Groovy)"
+
+    ```groovy
+    application {
+        applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
+        mainClass = ...
+    }
+    ```
+
+=== "Gradle (Kotlin)"
+
+    ```kotlin
+    application {
+        applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+        mainClass = ...
+    }
+    ```
 
 ### MacOS
 
 On MacOS, you can install Gtk using Homebrew. Gtk needs to run on the main thread, therefore you need to set the parameter `-XstartOnFirstThread`. A complete Gradle `run` task will look like this:
 
-```groovy
-tasks.named('run') {
-    jvmArgs += "--enable-native-access=ALL-UNNAMED"
-    jvmArgs += '-Djava.library.path=/opt/homebrew/lib'
-    jvmArgs += '-XstartOnFirstThread'
-}
-```
+=== "Gradle (Groovy)"
+
+    ```groovy
+    application {
+        applicationDefaultJvmArgs = [
+            '--enable-native-access=ALL-UNNAMED',
+            '-Djava.library.path=/opt/homebrew/lib',
+            '-XstartOnFirstThread'
+        ]
+        mainClass = ...
+    }
+    ```
+
+=== "Gradle (Kotlin)"
+
+    ```kotlin
+    application {
+        applicationDefaultJvmArgs = listOf(
+            "--enable-native-access=ALL-UNNAMED",
+            "-Djava.library.path=/opt/homebrew/lib",
+            "-XstartOnFirstThread"
+        )
+        mainClass = ...
+    }
+    ```
 
 ### Windows
 
 On Windows, Gtk can be installed with MSYS2. A Gradle `run` task will look like this:
 
-```groovy
-tasks.named('run') {
-    jvmArgs += "--enable-native-access=ALL-UNNAMED"
-    jvmArgs += '-Djava.library.path=C:/msys64/mingw64/bin'
-}
-```
+=== "Gradle (Groovy)"
 
+    ```groovy
+    application {
+        applicationDefaultJvmArgs = [
+            '--enable-native-access=ALL-UNNAMED',
+            '-Djava.library.path=C:/msys64/mingw64/bin',
+        ]
+        mainClass = ...
+    }
+    ```
+
+=== "Gradle (Kotlin)"
+
+    ```kotlin
+    application {
+        applicationDefaultJvmArgs = listOf(
+            "--enable-native-access=ALL-UNNAMED",
+            "-Djava.library.path=C:/msys64/mingw64/bin",
+        )
+        mainClass = ...
+    }
+    ```

@@ -5,11 +5,21 @@ Java-GI publishes pre-built bindings for a number of libraries, including GLib, 
 - Clone the Java-GI project (`jwharm/java-gi`) from GitHub. Use the `--recurse-submodules` flag to also clone the `gir-files` submodule
 - Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
 
-```
-git clone --recurse-submodules https://github.com/jwharm/java-gi.git
-cd java-gi
-./gradlew build
-```
+=== "Linux & macOS"
+
+    ```
+    git clone --recurse-submodules https://github.com/jwharm/java-gi.git
+    cd java-gi
+    ./gradlew build
+    ```
+
+=== "Windows"
+
+    ```
+    git clone --recurse-submodules https://github.com/jwharm/java-gi.git
+    cd java-gi
+    gradlew build
+    ```
 
 The repository contains a Git submodule under `ext/gir-files` that originates from `gir-core/gir-files`. It contains regularly updated gir files for Linux, Windows and MacOS that Java-GI generates bindings from. If you clone this repository in another location, update the `girFilesLocation` path in `gradle.properties` accordingly.
 

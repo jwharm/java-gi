@@ -4,27 +4,57 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
 
 ## Example
 
-```java
-@GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
-public class HelloWindow extends ApplicationWindow {
+=== "Java"
 
-    private static final Type gtype = Types.register(HelloWindow.class);
-
-    @GtkChild
-    public HeaderBar header_bar;
-
-    @GtkChild
-    public Label label;
+    ```java
+    import io.github.jwharm.javagi.gtk.types.Types;
     
-    @GtkCallback
-    public void buttonClicked() {
+    @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
+    public class HelloWindow extends ApplicationWindow {
+
+        private static final Type gtype = Types.register(HelloWindow.class);
+
+        @GtkChild
+        public HeaderBar header_bar;
+
+        @GtkChild
+        public Label label;
+        
+        @GtkCallback
+        public void buttonClicked() {
+            ...
+        }
+
         ...
-    }
+    ```
 
-    ...
-```
+=== "Kotlin"
 
-In the above class, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file.
+    ```kotlin
+    import io.github.jwharm.javagi.gtk.types.Types
+    
+    @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
+    class HelloWindow : ApplicationWindow {
+        companion object {
+            val gtype: Type = Types.register<HelloWindow, Widget>(HelloWindow::class.java)
+        }
+
+        @GtkChild
+        lateinit var header_bar: HeaderBar
+
+        @GtkChild
+        lateinit var label: Label
+        
+        @GtkCallback
+        fun buttonClicked() {
+            ...
+        }
+        
+        ...
+    ```
+
+
+In the above class, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file. During class initialization, the fields are set to the associated widget.
 
 Because the registration of composite template classes uses reflection, you must add the following `exports` statement to your `module-info.java` file:
 
@@ -56,34 +86,67 @@ The path to the UI file is treated by Java-GI as a [GResource](https://docs.gtk.
 
 `glib-compile-resources` can be run from the command prompt, or as a Gradle task:
 
-```groovy
-tasks.register('compileResources') {
-    exec {
-        workingDir 'src/main/resources'
-        commandLine 'glib-compile-resources', 'example.gresource.xml'
-    }
-}
+=== "Gradle (Groovy)"
 
-tasks.named('compileJava') {
-    dependsOn compileResources
-}
-```
+    ```groovy
+    tasks.register('compileResources') {
+        exec {
+            workingDir 'src/main/resources'
+            commandLine 'glib-compile-resources', 'example.gresource.xml'
+        }
+    }
+
+    tasks.named('compileJava') {
+        dependsOn compileResources
+    }
+    ```
+
+=== "Gradle (Kotlin)"
+
+    ```kotlin
+    tasks.register<Exec>("compileResources") {
+        exec {
+            workingDir("src/main/resources")
+            commandLine("glib-compile-resources", "example.gresource.xml")
+        }
+    }
+
+    tasks.named<KotlinCompile>("compileKotlin") {
+        dependsOn("compileResources")
+    }
+    ```
 
 Load the compiled resource bundle in Java during startup of your application:
 
-```java
-import io.github.jwharm.javagi.base.GErrorException;
-import org.gnome.gio.Resource;
+=== "Java"
 
-...
+    ```java
+    import io.github.jwharm.javagi.base.GErrorException;
+    import org.gnome.gio.Resource;
 
-    public static void main(String[] args) throws GErrorException {
+    ...
+
+        public static void main(String[] args) throws GErrorException {
+        
+            ...
+            
+            Resource resource = Resource.load("path/to/the/compiled/resource/bundle");
+            resource.resourcesRegister();
+        
+            ...
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import org.gnome.gio.Resource
+    
+    fun main() {
     
         ...
         
-        Resource resource = Resource.load("path/to/the/compiled/resource/bundle");
-        resource.resourcesRegister();
-    
+        val resource = Resource.load("path/to/the/compiled/resource/bundle")
+        resource.resourcesRegister()
+        
         ...
-```
-
+    ```

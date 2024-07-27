@@ -2,39 +2,81 @@
 
 When you extend a Java class from an existing GObject-derived class, Java will treat it as a subclass of GObject:
 
-```java
-public class MyObject extends GObject {
-```
+=== "Java"
+
+    ```java
+    public class MyObject extends GObject {
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    class MyObject : GObject {
+    ```
+
 
 However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new GType. To do this, Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
 
 It is recommended to register the new gtype in a static field `gtype` like this:
 
-```java
-    private static final Type gtype = Types.register(MyObject.class);
-    
-    public static Type getType() {
-        return gtype;
-    }
-```
+=== "Java"
+
+    ```java
+        private static final Type gtype = Types.register(MyObject.class);
+        
+        public static Type getType() {
+            return gtype;
+        }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+        companion object {
+            val gtype: Type = Types.register<MyObject, ObjectClass>(MyObject::class.java)
+        }
+    ```
+
 
 By declaring the `gtype` as a static field in this way, it will be registered immediately when the JVM classloader initializes the Java class.
 
 When instantiating a new instance of the object, pass the `gtype` to `GObject::new()`:
 
-```java
-    public MyObject() {
-        super(gtype, null);
-    }
-```
+=== "Java"
+
+    ```java
+        public MyObject() {
+            super(gtype, null);
+        }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+        constructor() : super(gtype, null)
+    ```
 
 Alternatively, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
 
-```java
-    public static MyObject create() {
-        return GObject.newInstance(gtype);
-    }
-```
+=== "Java"
+
+    ```java
+        public static MyObject create() {
+            return GObject.newInstance(gtype);
+        }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+        companion object {
+            val gtype: Type = ...
+            
+            fun create(): MyObject {
+                return newInstance(gtype)
+            }
+        }
+    ```
 
 Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
 
@@ -42,16 +84,25 @@ If your class contains GObject class or instance initializer method (see below),
 
 Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
-```java
-    public MyObject(MemorySegment address) {
-        super(address);
+=== "Java"
+
+    ```java
+        public MyObject(MemorySegment address) {
+            super(address);
+        }
     }
-}
-```
+    ```
 
-This constructor should exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
+=== "Kotlin"
 
-If your application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
+    ```kotlin
+        constructor(address: MemorySegment?) : super(address)
+    }
+    ```
+
+Ignore warnings that the constructor appears unused: This constructor should exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
+
+If your Java application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
 ```
 module my.module.name {
@@ -63,11 +114,21 @@ module my.module.name {
 
 A GType has a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You can query the name of a GType using `GObjects.typeName()`). When a Java class is registered as a GType, the package and class name are used to generate a unique GType name. You can override this with a specific name using the `@RegisteredType` attribute:
 
-```java
-@RegisteredType(name="MyExampleObject")
-public class MyObject extends GObject {
-    ...
-```
+=== "Java"
+
+    ```java
+    @RegisteredType(name="MyExampleObject")
+    public class MyObject extends GObject {
+        ...
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    @RegisteredType(name="MyExampleObject")
+    class MyObject : GObject {
+        ...
+    ```
 
 If you don't intend to override the name of the GType, you can safely omit the `@RegisteredType` annotation.
 
@@ -87,19 +148,29 @@ You can define GObject properties with the `@Property` annotation on the getter 
 
 Example definition of an `int` property with name `n-items`:
 
-```java
-private int size;
+=== "Java"
 
-@Property
-public int getNItems() {
-    return size;
-}
+    ```java
+    private int size;
 
-@Property
-public void setNItems(int nItems) {
-    size = nItems;
-}
-```
+    @Property
+    public int getNItems() {
+        return size;
+    }
+
+    @Property
+    public void setNItems(int nItems) {
+        size = nItems;
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    var size: Int = 0
+        @Property get
+        @Property set
+    ```
 
 The `@Property` annotation accepts the following parameters:
 
@@ -122,64 +193,135 @@ When the type is not specified, it will be inferred from the parameter or return
 
 To implement a custom class initializer or instance initializer function, use the `@ClassInit` and `@InstanceInit` attributes:
 
-```java
-// (Optional) class initialization function    
-@ClassInit
-public static void classInit(GObject.ObjectClass typeClass) {
-    ...
-}
+=== "Java"
 
-// (Optional) instance initialization function    
-@InstanceInit
-public void init() {
-    ...
-}
-```
+    ```java
+    // (Optional) class initialization function    
+    @ClassInit
+    public static void classInit(GObject.ObjectClass typeClass) {
+        ...
+    }
+
+    // (Optional) instance initialization function    
+    @InstanceInit
+    public void init() {
+        ...
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    companion object {
+        ...
+        
+        // (Optional) class initialization function    
+        @ClassInit
+        fun classInit(typeClass: ObjectClass) {
+            ...
+        }
+    }
+
+    // (Optional) instance initialization function    
+    @InstanceInit
+    fun init() {
+        ...
+    }
+    ```
 
 ## Signals
 
 You can define custom signals in Java classes that extend GObject. For example:
 
-```java
-public class Counter extends GObject {
+=== "Java"
 
-    // register the type
-    private static final Type gtype = Types.register(Counter.class);
-    
-    // declare the signal
-    @Signal
-    public interface LimitReached {
-        public void run(int limit);
-    }
+    ```java
+    public class Counter extends GObject {
 
-    public void count() {
-        num++;
-        if (num == limit) {
-            // emit the signal
-            emit("limit-reached", limit);
+        // register the type
+        private static final Type gtype = Types.register(Counter.class);
+        
+        // declare the signal
+        @Signal
+        public interface LimitReached {
+            void run(int limit);
         }
+
+        public void count() {
+            num++;
+            if (num == limit) {
+                // emit the signal
+                emit("limit-reached", limit);
+            }
+        }
+        
+        ...
     }
-    
-    ...
-}
-```
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    class Counter: GObject {
+        companion object {
+            // register the type
+            val gtype: Type = Types.register<Counter, ObjectClass>(Counter::class.java)
+            
+        }
+        
+        // declare the signal
+        @Signal
+        interface LimitReached {
+            fun run(limit: Int)
+        }
+        
+        fun count() {
+            num++
+            if (num == limit) {
+                // emit the signal
+                emit("limit-reached", limit)
+            }
+        }
+        
+        ...
+    }
+    ```
 
 The "limit-reached" signal in the example is declared with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
 
 You can connect to the custom signal, like this:
 
-```java
-counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
-    System.out.println("Limit reached: " + limit);
-});
-```
+=== "Java"
+
+    ```java
+    counter.connect("limit-reached", (Counter.LimitReached) (limit) -> {
+        System.out.println("Limit reached: " + limit);
+    });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    counter.connect("limit-reached") { limit: Int ->
+        println("Limit reached: $limit")
+    }
+    ```
 
 Because the signal declaration is an ordinary functional interface, it is equally valid to extend from a standard functional interface like `Runnable`, `BooleanSupplier`, or any other one, like (in the above example) an `IntConsumer`:
 
-```java
-    @Signal
-    public interface LimitReached extends IntConsumer {}
-```
+=== "Java"
+
+    ```java
+        @Signal
+        public interface LimitReached extends IntConsumer {}
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+        @Signal
+        interface LimitReached : IntConsumer
+    ```
 
 It is also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
 
