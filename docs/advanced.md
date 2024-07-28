@@ -151,7 +151,7 @@ Enumerations and flags (bitfields) are available as Java enums. To combine multi
     entry.setInputHints(Set.of(InputHints.WORD_COMPLETION, InputHints.NO_SPELLCHECK));
     ```
 
-=== "kotlin"
+=== "Kotlin"
 
     ```kotlin
     entry.inputHints = setOf(InputHints.WORD_COMPLETION, InputHints.NO_SPELLCHECK)

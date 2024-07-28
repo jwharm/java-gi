@@ -151,7 +151,7 @@ Example definition of an `int` property with name `n-items`:
 === "Java"
 
     ```java
-    private int size;
+    private int size = 0;
 
     @Property
     public int getNItems() {
@@ -262,11 +262,11 @@ You can define custom signals in Java classes that extend GObject. For example:
 === "Kotlin"
 
     ```kotlin
-    class Counter: GObject {
+    class Counter : GObject {
+
+        // register the type
         companion object {
-            // register the type
             val gtype: Type = Types.register<Counter, ObjectClass>(Counter::class.java)
-            
         }
         
         // declare the signal

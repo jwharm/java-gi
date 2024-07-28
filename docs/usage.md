@@ -79,7 +79,7 @@ An example Gtk application with a "Hello world" button can be created as follows
 === "Java"
 
     ```java
-    package io.github.jwharm.javagi.examples.helloworld;
+    package my.example.helloapp;
 
     import org.gnome.gtk.*;
     import org.gnome.gio.ApplicationFlags;
@@ -90,15 +90,13 @@ An example Gtk application with a "Hello world" button can be created as follows
             new HelloWorld(args);
         }
         
-        private final Application app;
-        
         public HelloWorld(String[] args) {
-            app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
-            app.onActivate(this::activate);
+            var app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
+            app.onActivate(() -> activate(app));
             app.run(args);
         }
         
-        public void activate() {
+        public void activate(Application app) {
             var window = new ApplicationWindow(app);
             window.setTitle("GTK from Java");
             window.setDefaultSize(300, 200);
@@ -122,7 +120,7 @@ An example Gtk application with a "Hello world" button can be created as follows
 === "Kotlin"
 
     ```kotlin
-    package io.github.jwharm.javagi.examples
+    package my.example.helloapp
 
     import org.gnome.gio.ApplicationFlags
     import org.gnome.gtk.*
