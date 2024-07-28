@@ -2,15 +2,15 @@
 
 **Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the new [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.10 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 46:
 
-| Library       | Java-GI 0.10.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.7.x |
-|---------------|----------------|-------------------------|---------------|
-| OpenJDK       | 22             | 21                      | 20            |
-| GLib          | 2.80           | 2.78                    | 2.76          |
-| GTK           | 4.14           | 4.12                    | 4.10          |
-| LibAdwaita    | 1.5            | 1.4                     | 1.3           |
-| GStreamer     | 1.22           | 1.22                    | 1.20          |
-| GtkSourceview | 5.12           | 5.10                    | 5.9           |
-| WebkitGtk     | 2.44           | 2.42                    | 2.41          |
+| Library       | Java-GI 0.7.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.10.x |
+|---------------|---------------|-------------------------|----------------|
+| OpenJDK       | 20            | 21                      | 22             |
+| GLib          | 2.76          | 2.78                    | 2.80           |
+| GTK           | 4.10          | 4.12                    | 4.14           |
+| LibAdwaita    | 1.3           | 1.4                     | 1.5            |
+| GStreamer     | 1.20          | 1.22                    | 1.22           |
+| GtkSourceview | 5.9           | 5.10                    | 5.12           |
+| WebkitGtk     | 2.41          | 2.42                    | 2.44           |
 
 Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
 
@@ -97,20 +97,7 @@ Memory management of native resources is automatically taken care of. Java-GI us
 
 All API docstrings are translated into Javadoc, so they are directly available in your IDE.
 
-As an example, the generated documentation of `gtk_button_get_icon_name` contains links to other methods, and specifies the return value. This is all translated to valid Javadoc:
-
-```java
-/**
- * Returns the icon name of the button.
- * <p>
- * If the icon name has not been set with {@link Button#setIconName}
- * the return value will be {@code null}. This will be the case if you create
- * an empty button with {@link Button#Button} to use as a container.
- * @return The icon name set via {@link Button#setIconName}
- */
-public @Nullable java.lang.String getIconName() {
-    ...
-```
+As an example, the generated documentation of `gtk_button_get_icon_name` contains links to other methods, and specifies the return value. This is all translated to valid Javadoc.
 
 ![Javadoc screenshot](docs/img/javadoc.png)
 
@@ -166,7 +153,7 @@ public class MyWidget extends Widget {
     public static Type gtype = Types.register(MyWidget.class);
 
     // Construct new instance
-    public MyWidget newInstance() {
+    public static MyWidget newInstance() {
         return GObject.newInstance(gtype);
     }
 
@@ -282,7 +269,7 @@ Java-GI generates builders for all classes. In a builder, you can set the proper
 try {
     file.replaceContents(contents, null, false, FileCreateFlags.NONE, null, null);
 } catch (GErrorException e) {
-    e.printStackTrace();
+    ... // handle exception
 }
 ```
 
@@ -300,4 +287,3 @@ The bindings are still under active development and have not been thoroughly tes
 
 - Java does not distinguish between signed and unsigned data types. Be extra careful when native code returns, for example, a `guint`.
 - Java-GI makes heavy use of [Cleaners](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ref/Cleaner.html) to free memory or decrease an object's refcount. Cleaners are triggered during garbage collection of a Java instance. However, Java doesn't guarantee when, and if, the GC will run, and what it will clean, leading to memory leaks.
-- Some functions (like `Gio.DesktopAppInfo.search`) work with nested arrays (`gchar***`). Marshalling these arrays from and to Java `String[][]` values isn't supported yet.
