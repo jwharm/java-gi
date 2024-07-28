@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.gnome.glib.Type;
+import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeInstance;
 
 import io.github.jwharm.javagi.base.Proxy;
@@ -77,8 +78,14 @@ public class TypeCache {
         // Find the constructor in the typeRegister and return it
         if (type != null) {
             Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
-            if (ctor != null) {
+            if (ctor != null)
                 return ctor;
+
+            // Check implemented interfaces
+            for (var iface : GObjects.typeInterfaces(type)) {
+                ctor = typeRegister.get(iface);
+                if (ctor != null)
+                    return ctor;
             }
         }
 
