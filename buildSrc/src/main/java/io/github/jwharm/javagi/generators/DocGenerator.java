@@ -28,6 +28,7 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 public class DocGenerator {
 
     private final Doc doc;
+    private boolean firstTag = true;
 
     public DocGenerator(Doc doc) {
         this.doc = doc;
@@ -136,6 +137,13 @@ public class DocGenerator {
 
     // Write documentation, with an optional tag, and escape backslashes
     private void writeDoc(StringBuilder builder, String javadoc, String tag) {
+        // Write an empty line between the doc and the tags
+        if (firstTag && tag != null) {
+            if (!builder.isEmpty())
+                builder.append("\n");
+            firstTag = false;
+        }
+
         int count = 0;
         for (String line : javadoc.trim().lines().toList()) {
             String escapedLine = line.replace("\\", "\\\\");
