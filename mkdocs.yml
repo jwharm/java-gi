@@ -53,6 +53,9 @@ theme:
   icon:
     logo: material/coffee
 
+  features:
+    - content.tabs.link
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
