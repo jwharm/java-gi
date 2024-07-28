@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import static io.github.jwharm.javagi.gir.TransferOwnership.FULL;
+import static io.github.jwharm.javagi.gir.TransferOwnership.NONE;
 import static io.github.jwharm.javagi.util.Conversions.*;
 
 class TypedValueGenerator {
@@ -75,8 +77,8 @@ class TypedValueGenerator {
 
     String doFree() {
         return switch(v) {
-            case Parameter    p when  p.transferOwnership() == TransferOwnership.FULL -> "true";
-            case ReturnValue rv when rv.transferOwnership() == TransferOwnership.FULL -> "true";
+            case Parameter    p when  p.transferOwnership() != NONE -> "true";
+            case ReturnValue rv when rv.transferOwnership() != NONE -> "true";
             default -> "false";
         };
     }
@@ -213,8 +215,7 @@ class TypedValueGenerator {
 
         // When ownership is transferred, we must not free the allocated
         // memory -> use global scope
-        String allocator = (v instanceof Parameter p
-                            && p.transferOwnership() == TransferOwnership.FULL)
+        String allocator = (v instanceof Parameter p && p.transferOwnership() != NONE)
                 ? "$arena:T.global()" : "_arena";
 
         Type type = (Type) array.anyType();
@@ -354,7 +355,7 @@ class TypedValueGenerator {
 
             if (elementDestructor != null)
                 stmt.add(", ").add(elementDestructor);
-            stmt.add(", " + (transferOwnership == TransferOwnership.FULL))
+            stmt.add(", " + (transferOwnership == FULL))
                 .add(")");
             return stmt;
         }
@@ -427,6 +428,7 @@ class TypedValueGenerator {
                 && List.of("GLib.Array", "GLib.PtrArray", "GLib.ByteArray")
                        .contains(array.name())) {
             size = "new $arrayType:T(" + identifier + ").readLen()";
+            identifier = "$interop:T.dereference(" + identifier + ")";
         }
 
         // Null-terminated array
@@ -496,6 +498,7 @@ class TypedValueGenerator {
         if (target instanceof Alias a && a.type().isPrimitive())
             return PartialStatement.of(
                     "$targetType:T.fromNativeArray(" + identifier + ", " + size + ", " + free + ")",
+                    "interop", ClassNames.INTEROP,
                     "targetType", target.typeName(),
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 

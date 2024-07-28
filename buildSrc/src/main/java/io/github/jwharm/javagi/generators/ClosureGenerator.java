@@ -189,7 +189,7 @@ public class ClosureGenerator {
 
         // Ref returned GObjects when ownership is transferred to the caller
         if (returnValue.anyType() instanceof Type t && t.checkIsGObject()
-                && returnValue.transferOwnership() == TransferOwnership.FULL)
+                && returnValue.transferOwnership() != TransferOwnership.NONE)
             upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
                     ClassNames.GOBJECT);
 

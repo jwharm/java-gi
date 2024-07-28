@@ -258,7 +258,7 @@ public class MethodGenerator {
             else if (((target instanceof Record record && !record.foreign())
                         || target instanceof Boxed
                         || target instanceof Union)
-                    && returnValue.transferOwnership() == TransferOwnership.FULL
+                    && returnValue.transferOwnership() != TransferOwnership.NONE
                     && (!List.of("org.gnome.gobject.TypeInstance",
                                  "org.gnome.gobject.TypeClass",
                                  "org.gnome.gobject.TypeInterface")

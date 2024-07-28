@@ -196,7 +196,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         // GObjects where ownership is fully transferred away (unless it's an
         // out parameter or a pointer)
         if (target != null && target.checkIsGObject()
-                && p.transferOwnership() == TransferOwnership.FULL
+                && p.transferOwnership() != TransferOwnership.NONE
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
             builder.beginControlFlow("if ($L instanceof $T _gobject)",
@@ -210,7 +210,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
         // Same, but for structs/unions: Disable the cleaner
         else if ((target instanceof Record || target instanceof Union)
-                && p.transferOwnership() == TransferOwnership.FULL
+                && p.transferOwnership() != TransferOwnership.NONE
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
             builder.addStatement(

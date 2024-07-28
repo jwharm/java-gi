@@ -183,6 +183,22 @@ public class Interop {
     }
 
     /**
+     * Dereference a pointer
+     *
+     * @param  pointer the pointer to dereference
+     * @return the value of the pointer, or {@code null} in case of a pointer to
+     *         {@code NULL}.
+     */
+    public static MemorySegment dereference(MemorySegment pointer) {
+        if (pointer == null || NULL.equals(pointer))
+            return NULL;
+
+        return pointer
+                .reinterpret(ValueLayout.ADDRESS.byteSize())
+                .get(ValueLayout.ADDRESS, 0);
+    }
+
+    /**
      * Get a GType by executing the provided get-type function.
      *
      * @return the gtype from the provided get-type function

@@ -24,8 +24,11 @@ public enum TransferOwnership {
     CONTAINER, // "container"
     FULL;      // "full"
 
+    /**
+     * Defaults to "none" when unspecified
+     */
     public static TransferOwnership from(String value) {
-        return value == null ? null
+        return value == null ? NONE
                 : TransferOwnership.valueOf(value.toUpperCase());
     }
 }
