@@ -255,7 +255,9 @@ public class MethodGenerator {
             }
 
             // Add cleaner to struct/union pointer
-            else if (((target instanceof Record record && !record.foreign())
+            else if (((target instanceof Record record
+                            && !record.foreign()
+                            && !record.checkIsGList())
                         || target instanceof Boxed
                         || target instanceof Union)
                     && returnValue.transferOwnership() != TransferOwnership.NONE

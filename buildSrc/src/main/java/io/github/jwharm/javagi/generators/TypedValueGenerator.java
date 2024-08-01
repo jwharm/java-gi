@@ -315,7 +315,7 @@ class TypedValueGenerator {
                     "$" + targetTypeTag + ":T.of(" + identifier + ")",
                     targetTypeTag, target.typeName());
 
-        if (type.isGList() && target != null) {
+        if (type.checkIsGList() && target != null) {
             if (type.anyTypes() == null || type.anyTypes().size() > 1)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 

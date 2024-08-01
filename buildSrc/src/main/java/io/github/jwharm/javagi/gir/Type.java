@@ -62,7 +62,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName typeName() {
-        if (isGList())
+        if (checkIsGList())
             return glistTypeName();
 
         String javaBaseType = toJavaBaseType(name());
@@ -117,11 +117,6 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "glong".equals(cType) || "gulong".equals(cType);
     }
 
-    public boolean isGList() {
-        return name() != null
-                && List.of("GLib.List", "GLib.SList").contains(name());
-    }
-
     public boolean isPointer() {
         String cType = cType();
         return cType != null
@@ -143,6 +138,11 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     public boolean checkIsGObject() {
         RegisteredType target = get();
         return target != null && target.checkIsGObject();
+    }
+
+    public boolean checkIsGList() {
+        RegisteredType target = get();
+        return target != null && target.checkIsGList();
     }
 
     public boolean isActuallyAnArray() {

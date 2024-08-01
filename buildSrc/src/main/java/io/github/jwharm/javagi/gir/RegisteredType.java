@@ -23,6 +23,8 @@ import com.squareup.javapoet.ClassName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
+import java.util.List;
+
 import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
 import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
 
@@ -61,6 +63,7 @@ public sealed interface RegisteredType
         return PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
     }
 
+    /** Return true if this class is GObject or is derived from GObject */
     default boolean checkIsGObject() {
         return switch(this) {
             case Class c -> c.isInstanceOf("GObject", "Object");
@@ -71,6 +74,11 @@ public sealed interface RegisteredType
             }
             default -> false;
         };
+    }
+
+    /** Return true if this is GList or GSList */
+    default boolean checkIsGList() {
+        return cType() != null && List.of("GList", "GSList").contains(cType());
     }
 
     default boolean isFloating() {
