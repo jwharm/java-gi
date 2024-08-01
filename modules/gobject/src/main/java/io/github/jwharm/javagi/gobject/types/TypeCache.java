@@ -21,7 +21,6 @@ package io.github.jwharm.javagi.gobject.types;
 
 import java.lang.foreign.MemorySegment;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -30,6 +29,10 @@ import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeInstance;
 
 import io.github.jwharm.javagi.base.Proxy;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static io.github.jwharm.javagi.gobject.types.Types.IS_FUNDAMENTAL;
 
 /**
  * A register of GTypes with a Java constructor for each GType.
@@ -66,6 +69,11 @@ public class TypeCache {
     
     /**
      * Get the constructor from the type registry for the provided GType.
+     * If it isn't found, we are probably dealing with an anonymous subclass or
+     * interface implementation. So we try to find a constructor for the parent
+     * type and the implemented interfaces. If that works, it is registered as
+     * the constructor for the GType and returned. Otherwise, the provided
+     * fallback constructor is registered and returned.
      *
      * @param type     the GType for which the constructor was registered
      * @param fallback if none was found, this constructor will be registered
@@ -73,29 +81,59 @@ public class TypeCache {
      * @return         the constructor, or {@code null} if address is
      *                 {@code null} or a null-pointer
      */
-    public static Function<MemorySegment, ? extends Proxy> getConstructor(Type type,
-                                                                          Function<MemorySegment, ? extends Proxy> fallback) {
+    public static Function<MemorySegment, ? extends Proxy> getConstructor(
+            @NotNull Type type,
+            @Nullable Function<MemorySegment, ? extends Proxy> fallback) {
         // Find the constructor in the typeRegister and return it
-        if (type != null) {
-            Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
-            if (ctor != null)
-                return ctor;
+        Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
+        if (ctor != null)
+            return ctor;
 
-            // Check implemented interfaces
-            for (var iface : GObjects.typeInterfaces(type)) {
-                ctor = typeRegister.get(iface);
-                if (ctor != null)
-                    return ctor;
+        // Get the class of the fallback constructor. Whatever constructor we
+        // return, must produce instances derived from this class.
+        var cls = fallback == null ? null : fallback.apply(null).getClass();
+
+        // Check parent type, unless it is a fundamental type (like GObject),
+        // which would be the most generic and useless type we can use. So in
+        // that case we first try all other available options.
+        var parent = GObjects.typeParent(type);
+        if (!IS_FUNDAMENTAL(parent)) {
+            var result = tryConstruct(cls, parent);
+            if (result != null)
+                return result;
+        }
+
+        // Check implemented interfaces
+        for (var iface : GObjects.typeInterfaces(type)) {
+            var result = tryConstruct(cls, iface);
+            if (result != null)
+                return result;
+        }
+
+        // Register the fallback constructor for this type
+        if (fallback != null) {
+            typeRegister.put(type, fallback);
+            return fallback;
+        }
+
+        // No fallback was provided, return parent (fundamental type)
+        return tryConstruct(null, parent);
+    }
+
+    // Register and return the constructor registered for {@code type}, if it
+    // produces an instance of {@code base}.
+    private static Function<MemorySegment, ? extends Proxy>
+    tryConstruct(Class<?> base, Type type) {
+        var ctor = typeRegister.get(type);
+        if (base == null)
+            return ctor;
+
+        if (ctor != null) {
+            if (base.isAssignableFrom(ctor.apply(null).getClass())) {
+                typeRegister.put(type, ctor);
+                return ctor;
             }
         }
-
-        // Register the fallback constructor for this type. If another thread
-        // did this in the meantime, putIfAbsent() will return that constructor.
-        if (fallback != null) {
-            var ctorFromOtherThread = typeRegister.putIfAbsent(type, fallback);
-            return Objects.requireNonNullElse(ctorFromOtherThread, fallback);
-        }
-        // No constructor found in the typeRegister, and no fallback provided
         return null;
     }
 
