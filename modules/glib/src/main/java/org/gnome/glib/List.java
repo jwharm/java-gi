@@ -467,18 +467,29 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
             if (address == null || MemorySegment.NULL.equals(address))
                 return;
 
-            if (fullOwnership) {
-                var node = new ListNode(address);
-                do {
-                    if (free == null)
-                        GLib.free(node.readData());
-                    else
-                        free.accept(make.apply(node.readData()));
-                    node = node.readNext();
-                } while (node != null);
-            }
+            // The calls to GLib.free() and ListNode.free() must run on the
+            // main thread, not in the Cleaner thread.
+            SourceFunc action = () -> {
+                if (fullOwnership) {
+                    var node = new ListNode(address);
+                    do {
+                        if (free == null)
+                            GLib.free(node.readData());
+                        else
+                            free.accept(make.apply(node.readData()));
+                        node = node.readNext();
+                    } while (node != null);
+                }
 
-            ListNode.free(new ListNode(address));
+                ListNode.free(new ListNode(address));
+                return GLib.SOURCE_REMOVE;
+            };
+
+            var mainContext = MainContext.default_();
+            if (mainContext != null)
+                mainContext.invoke(action);
+            else
+                action.run();
         }
     }
 }
