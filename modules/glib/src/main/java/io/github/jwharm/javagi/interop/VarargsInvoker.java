@@ -27,6 +27,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.Set;
 
 import static io.github.jwharm.javagi.interop.Interop.*;
 
@@ -105,30 +106,42 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
         for (pos = 0; pos < nNamedArgs; pos++)
             argLayouts[pos] = fdesc.argumentLayouts().get(pos);
 
-        // Marshal the Java-GI types to a pointer or primitive value
-        Object[] marshaledVarargs = new Object[nVarargs];
-        for (int i = 0; i < nVarargs; i++)
-            marshaledVarargs[i] = marshalArgument(varargs[i]);
+        /*
+         * Create a memory allocation arena for marshaling Java arrays to native
+         * arrays. The memory will be deallocated immediately after the function
+         * call returned.
+         */
+        try (var arena = Arena.ofConfined()) {
 
-        // Fill in the varargs memory layouts
-        for (Object o : marshaledVarargs) {
-            argLayouts[pos] = variadicLayout(o.getClass());
-            pos++;
+            // Marshal the Java-GI types to a pointer or primitive value
+            Object[] marshaledVarargs = new Object[nVarargs];
+            for (int i = 0; i < nVarargs; i++)
+                marshaledVarargs[i] = marshalArgument(varargs[i], arena);
+
+            // Fill in the varargs memory layouts
+            for (Object o : marshaledVarargs) {
+                argLayouts[pos] = variadicLayout(o.getClass());
+                pos++;
+            }
+
+            // Create the function descriptor
+            FunctionDescriptor f = fdesc.returnLayout().map(
+                    layout -> FunctionDescriptor.of(layout, argLayouts)).orElseGet(
+                    ()     -> FunctionDescriptor.ofVoid(argLayouts));
+            Linker.Option fva = Linker.Option.firstVariadicArg(nNamedArgs);
+            MethodHandle mh = Interop.downcallHandle(symbol, f, fva);
+
+            // Flatten the fixed and variadic arguments in one array
+            Object[] allArgs = new Object[argsCount];
+            System.arraycopy(args, 0, allArgs, 0, nNamedArgs);
+            System.arraycopy(marshaledVarargs, 0, allArgs, nNamedArgs, nVarargs);
+
+            // Create a handle that spreads the array into positional arguments
+            var spreader = mh.asSpreader(Object[].class, argsCount);
+
+            // Invoke the handle
+            return spreader.invoke(allArgs);
         }
-
-        // Create the function descriptor
-        FunctionDescriptor f = fdesc.returnLayout().map(
-                layout -> FunctionDescriptor.of(layout, argLayouts)).orElseGet(
-                ()     -> FunctionDescriptor.ofVoid(argLayouts));
-        Linker.Option fva = Linker.Option.firstVariadicArg(nNamedArgs);
-        MethodHandle mh = Interop.downcallHandle(symbol, f, fva);
-
-        Object[] allArgs = new Object[argsCount];
-        System.arraycopy(args, 0, allArgs, 0, nNamedArgs);
-        System.arraycopy(marshaledVarargs, 0, allArgs, nNamedArgs, nVarargs);
-
-        // Return a handle that spreads the array into positional arguments
-        return mh.asSpreader(Object[].class, argsCount).invoke(allArgs);
     }
 
     /*
@@ -149,7 +162,7 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
         if (MemorySegment.class.isAssignableFrom(c))
             return ValueLayout.ADDRESS;
 
-        throw new IllegalArgumentException("Invalid type for ABI: "
+        throw new InteropException("Unsupported variadic argument type: "
                 + c.getTypeName());
     }
 
@@ -158,44 +171,66 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
      * Arrays are allocated to native memory as-is (no additional NULL is
      * appended: the caller must do this).
      */
-    private Object marshalArgument(Object o) {
+    private Object marshalArgument(Object o, Arena arena) {
         return switch(o) {
-            case null -> MemorySegment.NULL;
+            case null ->
+                    MemorySegment.NULL;
             case MemorySegment[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case boolean[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case byte[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case char[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case double[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case float[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case int[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case long[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case short[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case Proxy[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case String[] arr ->
-                    allocateNativeArray(arr, false, Arena.ofAuto()).address();
+                    allocateNativeArray(arr, false, arena).address();
             case Boolean bool ->
                     bool ? 1 : 0;
             case String string ->
-                    allocateNativeString(string, Arena.ofAuto()).address();
+                    allocateNativeString(string, arena).address();
             case Alias<?> alias ->
                     alias.getValue();
+            case Set<?> flags ->
+                    enumSetToInt(flags);
             case Enumeration enumeration ->
                     enumeration.getValue();
             case Enumeration[] enumerations ->
                     getValues(enumerations);
             case Proxy proxy ->
                     proxy.handle();
-            default -> o;
+            case Byte _, Character _, Double _, Float _, Integer _, Short _, Long _ ->
+                    o;
+            default ->
+                    throw new InteropException("Unsupported variadic argument type: "
+                            + o.getClass().getTypeName());
         };
+    }
+
+    /*
+     * The only type of Set we can marshal to a native function parameter, is a
+     * Set<Enum & Enumeration>. Any other Set argument will throw an exception.
+     */
+    private static int enumSetToInt(Set<?> set) {
+        int bitfield = 0;
+        for (var element : set)
+            if (element instanceof Enum<?> && element instanceof Enumeration e)
+                bitfield |= e.getValue();
+            else
+                throw new InteropException("Unsupported variadic argument type: Set of "
+                        + element.getClass().getTypeName());
+        return bitfield;
     }
 }
