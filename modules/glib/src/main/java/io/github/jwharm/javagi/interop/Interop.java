@@ -107,13 +107,15 @@ public class Interop {
      * Create a method handle that is used to call the native function at the
      * provided memory address.
      *
-     * @param  symbol memory address of the native function
-     * @param  fdesc  function descriptor of the native function
+     * @param  symbol  memory address of the native function
+     * @param  fdesc   function descriptor of the native function
+     * @param  options linker options
      * @return the newly created MethodHandle
      */
     public static MethodHandle downcallHandle(MemorySegment symbol,
-                                              FunctionDescriptor fdesc) {
-        return LINKER.downcallHandle(symbol, fdesc);
+                                              FunctionDescriptor fdesc,
+                                              Linker.Option... options) {
+        return LINKER.downcallHandle(symbol, fdesc, options);
     }
 
     /**
