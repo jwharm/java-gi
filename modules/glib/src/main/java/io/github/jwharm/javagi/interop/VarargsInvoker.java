@@ -33,21 +33,16 @@ import static io.github.jwharm.javagi.interop.Interop.*;
 /**
  * Generate a MethodHandle for a variadic function.
  */
-record VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
+record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
 
     private static final MethodHandle METHOD_HANDLE;
-    private static final SegmentAllocator THROW = (_, _) -> {
-        throw new AssertionError("should not reach here");
-    };
 
     static {
         try {
             METHOD_HANDLE = MethodHandles.lookup().findVirtual(
                     VarargsInvoker.class,
                     "invoke",
-                    MethodType.methodType(Object.class,
-                            SegmentAllocator.class,
-                            Object[].class)
+                    MethodType.methodType(Object.class, Object[].class)
             );
         } catch (ReflectiveOperationException e) {
             throw new InteropException(e);
@@ -55,32 +50,23 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
     }
 
     /**
-     * Create a MethodHandle with the correct signature
+     * Create a MethodHandle with the base parameters and a placeholder for the
+     * varargs.
      */
     static MethodHandle create(MemorySegment symbol,
-                               FunctionDescriptor function) {
-        VarargsInvoker invoker = new VarargsInvoker(symbol, function);
-        int arrayLength = function.argumentLayouts().size() + 1;
+                               FunctionDescriptor baseDesc) {
+        VarargsInvoker invoker = new VarargsInvoker(symbol, baseDesc);
         MethodHandle handle = METHOD_HANDLE.bindTo(invoker)
-                .asCollector(Object[].class, arrayLength);
+                .asVarargsCollector(Object[].class);
 
         MethodType mtype = MethodType.methodType(
-                function.returnLayout().isPresent()
-                        ? carrier(function.returnLayout().get(), true)
+                baseDesc.returnLayout().isPresent()
+                        ? carrier(baseDesc.returnLayout().get(), true)
                         : void.class);
-        for (MemoryLayout layout : function.argumentLayouts()) {
+        for (MemoryLayout layout : baseDesc.argumentLayouts())
             mtype = mtype.appendParameterTypes(carrier(layout, false));
-        }
+
         mtype = mtype.appendParameterTypes(Object[].class);
-
-        boolean needsAllocator = function.returnLayout().isPresent()
-                && function.returnLayout().get() instanceof GroupLayout;
-
-        if (needsAllocator)
-            mtype = mtype.insertParameterTypes(0, SegmentAllocator.class);
-        else
-            handle = MethodHandles.insertArguments(handle, 0, THROW);
-
         return handle.asType(mtype);
     }
 
@@ -99,107 +85,80 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor function) {
     }
 
     /*
-     * This method is used from a MethodHandle (INVOKE_MH).
+     * Invoked by METHOD_HANDLE.
      */
     @SuppressWarnings("unused")
-    private Object invoke(SegmentAllocator allocator, Object[] args)
-            throws Throwable {
-
-        // one trailing Object[]
-        int nNamedArgs = function.argumentLayouts().size();
+    private Object invoke(Object[] args) throws Throwable {
         // The last argument is the array of vararg collector
-        Object[] unnamedArgs = (Object[]) args[args.length - 1];
+        Object[] varargs = (Object[]) args[args.length - 1];
 
-        int argsCount = nNamedArgs + unnamedArgs.length;
+        // number of fixed and variable arguments
+        int nNamedArgs = fdesc.argumentLayouts().size();
+        int nVarargs = varargs.length;
+
+        // create array of memory layouts
+        int argsCount = nNamedArgs + nVarargs;
         MemoryLayout[] argLayouts = new MemoryLayout[argsCount];
 
+        // Fill in the named memory layouts
         int pos;
-        for (pos = 0; pos < nNamedArgs; pos++) {
-            argLayouts[pos] = function.argumentLayouts().get(pos);
-        }
+        for (pos = 0; pos < nNamedArgs; pos++)
+            argLayouts[pos] = fdesc.argumentLayouts().get(pos);
 
-        // Unwrap the Java-GI types to their address or primitive value
-        Object[] unwrappedArgs = new Object[unnamedArgs.length];
-        for (int i = 0; i < unnamedArgs.length; i++) {
-            unwrappedArgs[i] = unwrapJavagiTypes(unnamedArgs[i]);
-        }
+        // Marshal the Java-GI types to a pointer or primitive value
+        Object[] marshaledVarargs = new Object[nVarargs];
+        for (int i = 0; i < nVarargs; i++)
+            marshaledVarargs[i] = marshalArgument(varargs[i]);
 
-        for (Object o : unwrappedArgs) {
-            argLayouts[pos] = variadicLayout(normalize(o.getClass()));
+        // Fill in the varargs memory layouts
+        for (Object o : marshaledVarargs) {
+            argLayouts[pos] = variadicLayout(o.getClass());
             pos++;
         }
 
-        FunctionDescriptor f = function.returnLayout().map(
+        // Create the function descriptor
+        FunctionDescriptor f = fdesc.returnLayout().map(
                 layout -> FunctionDescriptor.of(layout, argLayouts)).orElseGet(
                 ()     -> FunctionDescriptor.ofVoid(argLayouts));
-        MethodHandle mh = Interop.downcallHandle(symbol, f);
-        boolean needsAllocator = function.returnLayout().isPresent()
-                && function.returnLayout().get() instanceof GroupLayout;
+        Linker.Option fva = Linker.Option.firstVariadicArg(nNamedArgs);
+        MethodHandle mh = Interop.downcallHandle(symbol, f, fva);
 
-        if (needsAllocator)
-            mh = mh.bindTo(allocator);
-
-        /*
-         * Flatten argument list so that it can be passed to an asSpreader
-         * MethodHandle.
-         */
-        int length = unwrappedArgs.length;
-        Object[] allArgs = new Object[nNamedArgs + length];
+        Object[] allArgs = new Object[argsCount];
         System.arraycopy(args, 0, allArgs, 0, nNamedArgs);
-        System.arraycopy(unwrappedArgs, 0, allArgs, nNamedArgs, length);
+        System.arraycopy(marshaledVarargs, 0, allArgs, nNamedArgs, nVarargs);
 
+        // Return a handle that spreads the array into positional arguments
         return mh.asSpreader(Object[].class, argsCount).invoke(allArgs);
     }
 
-    private static Class<?> unboxIfNeeded(Class<?> c) {
-        if (c == Boolean.class)   return boolean.class;
-        if (c == Void.class)      return void.class;
-        if (c == Byte.class)      return byte.class;
-        if (c == Character.class) return char.class;
-        if (c == Short.class)     return short.class;
-        if (c == Integer.class)   return int.class;
-        if (c == Long.class)      return long.class;
-        if (c == Float.class)     return float.class;
-        if (c == Double.class)    return double.class;
-        return c;
-    }
+    /*
+     * Apply default argument promotions per C spec. Note that all primitives
+     * are boxed, since they are passed through an Object[].
+     */
+    private static MemoryLayout variadicLayout(Class<?> c) {
+        if (c == Boolean.class || c == Byte.class || c == Character.class
+                || c == Short.class || c == Integer.class)
+            return ValueLayout.JAVA_INT;
 
-    private Class<?> promote(Class<?> c) {
-        if (c == byte.class
-                || c == char.class
-                || c == short.class
-                || c == int.class)
-            return long.class;
-        if (c == float.class)
-            return double.class;
-        return c;
-    }
-
-    private Class<?> normalize(Class<?> c) {
-        c = unboxIfNeeded(c);
-        if (c.isPrimitive())
-            return promote(c);
-        if (MemorySegment.class.isAssignableFrom(c))
-            return MemorySegment.class;
-        throw new IllegalArgumentException("Invalid type for ABI: " + c.getTypeName());
-    }
-
-    private MemoryLayout variadicLayout(Class<?> c) {
-        if (c == long.class)
+        if (c == Long.class)
             return ValueLayout.JAVA_LONG;
-        if (c == double.class)
+
+        if (c == Float.class || c == Double.class)
             return ValueLayout.JAVA_DOUBLE;
+
         if (MemorySegment.class.isAssignableFrom(c))
             return ValueLayout.ADDRESS;
-        throw new IllegalArgumentException("Unhandled variadic argument class: " + c);
+
+        throw new IllegalArgumentException("Invalid type for ABI: "
+                + c.getTypeName());
     }
 
     /*
-     * Unwrap the Java-GI types to their memory address or primitive value.
+     * Marshal the Java-GI types to their memory address or primitive value.
      * Arrays are allocated to native memory as-is (no additional NULL is
      * appended: the caller must do this).
      */
-    private Object unwrapJavagiTypes(Object o) {
+    private Object marshalArgument(Object o) {
         return switch(o) {
             case null -> MemorySegment.NULL;
             case MemorySegment[] arr ->
