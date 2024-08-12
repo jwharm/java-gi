@@ -34,21 +34,37 @@ public class GtkPatch implements Patch {
         if (!"Gtk".equals(namespace))
             return element;
 
-        /*
-         * Gtk.CustomLayout is a convenience class for C code that wants to
-         * avoid subclassing Gtk.LayoutManager. It is not supposed to be used
-         * by language bindings, and will never work correctly, as it doesn't
-         * have the necessary parameters and annotations to manage the lifetime
-         * of the callback functions.
-         * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially the
-         * first comment.
-         */
         if (element instanceof Namespace ns) {
-            ns =   remove(ns, Callback.class, "name", "CustomRequestModeFunc");
-            ns =   remove(ns, Callback.class, "name", "CustomMeasureFunc");
-            ns =   remove(ns, Callback.class, "name", "CustomAllocateFunc");
-            ns =   remove(ns, Record.class,   "name", "CustomLayoutClass");
-            return remove(ns, Class.class,    "name", "CustomLayout");
+
+            /*
+             * Gtk.CustomLayout is a convenience class for C code that wants to
+             * avoid subclassing Gtk.LayoutManager. It is not supposed to be used
+             * by language bindings, and will never work correctly, as it doesn't
+             * have the necessary parameters and annotations to manage the lifetime
+             * of the callback functions.
+             * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially the
+             * first comment.
+             */
+            ns = remove(ns, Callback.class, "name", "CustomRequestModeFunc");
+            ns = remove(ns, Callback.class, "name", "CustomMeasureFunc");
+            ns = remove(ns, Callback.class, "name", "CustomAllocateFunc");
+            ns = remove(ns, Record.class,   "name", "CustomLayoutClass");
+            ns = remove(ns, Class.class,    "name", "CustomLayout");
+
+            /*
+             * The functions StyleContext::addProviderForDisplay and
+             * StyleContext::removeProviderForDisplay are moved to the Gtk
+             * global class. The originals are marked as deprecated (see below)
+             * because they are defined in the deprecated class "StyleContext".
+             */
+            for (var cls : ns.classes().stream()
+                    .filter(c -> "StyleContext".equals(c.name()))
+                    .toList())
+                for (var func : cls.functions())
+                    ns = add(ns, func.withAttribute("deprecated", "0")
+                            .withAttribute("name", "style_context_" + func.name()));
+
+            return ns;
         }
 
         /*
@@ -178,6 +194,19 @@ public class GtkPatch implements Patch {
                 && "gtk_ordering_from_cmpfunc"
                             .equals(f.callableAttrs().cIdentifier()))
             return f.withAttribute("introspectable", "0");
+
+        /*
+         * Mark StyleContext::addProviderForDisplay and
+         * StyleContext::removeProviderForDisplay as deprecated. They are moved
+         * to the Gtk global class.
+         */
+        var functions = List.of(
+                "gtk_style_context_add_provider_for_display",
+                "gtk_style_context_remove_provider_for_display"
+        );
+        if (element instanceof Function f
+                && functions.contains(f.callableAttrs().cIdentifier()))
+            return f.withAttribute("deprecated", "1");
 
         /*
          * FontDialog::chooseFontAndFeaturesFinish has different
