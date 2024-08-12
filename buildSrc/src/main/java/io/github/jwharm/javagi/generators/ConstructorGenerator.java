@@ -92,7 +92,9 @@ public class ConstructorGenerator {
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Invoke private construction method
-        builder.addStatement("super(constructNew($L))", parameterNames());
+        // Use this() instead of super() to reinterpret the handle to the size
+        // of the memory layout
+        builder.addStatement("this(constructNew($L))", parameterNames());
 
         // Cache new GObject instance
         if (parent.checkIsGObject())
