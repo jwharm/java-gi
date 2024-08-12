@@ -32,7 +32,7 @@ dependencies {
 }
 
 group = 'io.github.jwharm.javagi'
-version = '0.11.0-PREVIEW'
+version = '0.11.0-SNAPSHOT'
 
 java {
     if (! System.getenv('CI')) {
