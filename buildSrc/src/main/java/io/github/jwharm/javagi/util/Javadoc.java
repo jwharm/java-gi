@@ -81,13 +81,32 @@ public class Javadoc {
     private static final Pattern PATTERN_PASS_2 = Pattern.compile(REGEX_PASS_2);
 
     private Documentation doc;
+    private InstanceParameter instanceParameter;
     private boolean ul;
+
+    // Lookup the instance parameter that this docstring might refer to, so
+    // the reference to the parameter can be replaced with "this [type]".
+    private InstanceParameter findInstanceParameter(Node node) {
+        return switch (node.parent()) {
+            case InstanceParameter p ->
+                    p;
+            case Parameter p ->
+                    p.parent().instanceParameter();
+            case ReturnValue rv when rv.parent() instanceof Callable c ->
+                    findInstanceParameter(c);
+            case Callable c when c.parameters() != null ->
+                    c.parameters().instanceParameter();
+            default ->
+                    null;
+        };
+    }
 
     /**
      * Convert comments into Javadoc.
      */
     public String convert(Documentation doc) {
         this.doc = doc;
+        this.instanceParameter = findInstanceParameter(doc);
         this.ul = false;
         String input = doc.text();
 
@@ -325,9 +344,14 @@ public class Javadoc {
         }
     }
 
-    // Replace @text with {@code text}
+    // Replace reference to instance parameter with "this [type]" and other
+    // parameters with {@code parameterName}
     private String convertParamref(String ref) {
-        return "{@code " + ref.substring(ref.lastIndexOf('@') + 1) + "}";
+        String paramName = ref.substring(ref.lastIndexOf('@') + 1);
+        if (instanceParameter != null
+                && instanceParameter.name().equals(paramName))
+            return "this " + instanceParameter.type().name();
+        return "{@code " + toJavaIdentifier(paramName) + "}";
     }
 
     // Replace "[...](...)" with <a href="...">...</a>
