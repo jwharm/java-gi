@@ -48,7 +48,7 @@ public final class Class extends Multiplatform
                 ? PartialStatement.of("$" + typeTag() + "Impl:T::new",
                         typeTag() + "Impl",
                         typeName().nestedClass(name() + "Impl"))
-                : RegisteredType.super.constructorName();
+                : FieldContainer.super.constructorName();
     }
 
     @Override

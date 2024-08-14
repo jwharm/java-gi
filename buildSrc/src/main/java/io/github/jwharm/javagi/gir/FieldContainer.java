@@ -22,7 +22,7 @@ package io.github.jwharm.javagi.gir;
 import java.util.List;
 
 public sealed interface FieldContainer
-        extends Node
+        extends RegisteredType
         permits Class, Interface, Record, Union {
 
     List<Field> fields();
