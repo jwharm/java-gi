@@ -130,10 +130,26 @@ public final class GirParser {
                     return ns;
             return existingNode; // namespace not found in existing tree
         }
+
         // Move from namespace to type: return the type with the same name.
-        return (existingNode instanceof Namespace ns)
-                ? ns.registeredTypes().get(name)
-                : existingNode;
+        if (existingNode instanceof Namespace ns)
+            return ns.registeredTypes().get(name);
+
+        // Nested struct/union types
+        if ("record".equals(elemName))
+            return existingNode.children().stream()
+                    .filter(Record.class::isInstance)
+                    .filter(r -> Objects.equals(name, r.attr("name")))
+                    .findFirst()
+                    .orElseThrow();
+        if ("union".equals(elemName))
+            return existingNode.children().stream()
+                    .filter(Union.class::isInstance)
+                    .filter(r -> Objects.equals(name, r.attr("name")))
+                    .findFirst()
+                    .orElseThrow();
+
+        return existingNode;
     }
 
     // Recursive method to parse an XML element and create a GIR tree node.
