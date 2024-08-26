@@ -151,6 +151,43 @@ An example Gtk application with a "Hello world" button can be created as follows
     }
     ```
 
+=== "Scala"
+
+    ```scala
+    package my.example.helloapp
+     
+    import org.gnome.gtk.*
+    import org.gnome.gio.ApplicationFlags
+     
+    class HelloWorld {
+        def activate(app: Application) = {
+            var window = new ApplicationWindow(app)
+            window.setTitle("GTK from Scala")
+
+            var box = new Box(Orientation.VERTICAL, 1) {
+                setHalign(Align.CENTER)
+                setValign(Align.CENTER)
+            }
+
+            var button = Button.withLabel("Hello world!")
+            button.onClicked{() => window.close}
+
+            box.append(button)
+            window.setChild(box)
+            window.present()
+        }
+    }
+
+    object HelloWorld {
+        def main(args: Array[String]) = {
+            val app = Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS)
+            app.onActivate(() => HelloWorld().activate(app))
+            app.run(args);
+            ()
+        }
+    }
+    ```
+
 ## Compile and run
 
 Build and run the application using your IDE or build tool of choice. The following command-line parameters are useful:
