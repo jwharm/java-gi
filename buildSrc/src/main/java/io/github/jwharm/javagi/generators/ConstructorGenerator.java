@@ -28,11 +28,13 @@ import io.github.jwharm.javagi.util.Platform;
 
 import javax.lang.model.element.Modifier;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 
 public class ConstructorGenerator {
 
@@ -59,11 +61,19 @@ public class ConstructorGenerator {
     }
 
     public Iterable<MethodSpec> generate() {
-        return List.of(
-                ctor.name().equals("new")
-                        ? constructor()
-                        : namedConstructor(),
-                new MethodGenerator(ctor, privateMethodName).generate());
+        MethodSpec constructor = ctor.name().equals("new")
+                ? constructor()
+                : namedConstructor();
+
+        MethodSpec helperMethod = new MethodGenerator(ctor, privateMethodName)
+                .generate();
+
+        if (unnamedConstructorWithOneNullableArg()) {
+            MethodSpec overload = generateNoArgConstructor();
+            return List.of(constructor, overload, helperMethod);
+        } else {
+            return List.of(constructor, helperMethod);
+        }
     }
 
     private MethodSpec constructor() {
@@ -94,7 +104,7 @@ public class ConstructorGenerator {
         // Invoke private construction method
         // Use this() instead of super() to reinterpret the handle to the size
         // of the memory layout
-        builder.addStatement("this(constructNew($L))", parameterNames());
+        builder.addStatement("this(constructNew($L))", javaParameterNames());
 
         // Cache new GObject instance
         if (parent.checkIsGObject())
@@ -151,7 +161,7 @@ public class ConstructorGenerator {
 
         builder.addStatement("var _result = $L($L)",
                 privateMethodName,
-                parameterNames());
+                javaParameterNames());
 
         // Marshal return value and handle ownership transfer
         var generator = new TypedValueGenerator(ctor.returnValue());
@@ -213,16 +223,60 @@ public class ConstructorGenerator {
         return builder.build();
     }
 
-    private String parameterNames() {
+    private List<Parameter> javaParameters() {
         if (ctor.parameters() == null)
-            return "";
+            return Collections.emptyList();
 
         return ctor.parameters().parameters().stream()
                 .filter(not(Parameter::isUserDataParameter))
                 .filter(not(Parameter::isDestroyNotifyParameter))
                 .filter(not(Parameter::isArrayLengthParameter))
+                .toList();
+    }
+
+    private String javaParameterNames() {
+        return javaParameters().stream()
                 .map(TypedValue::name)
                 .map(n -> "...".equals(n) ? "varargs" : toJavaIdentifier(n))
-                .collect(Collectors.joining(", "));
+                .collect(joining(", "));
+    }
+
+    private boolean unnamedConstructorWithOneNullableArg() {
+        if (! "new".equals(ctor.name()))
+            return false;
+
+        var params = javaParameters();
+        return params.size() == 1 && params.getFirst().nullable();
+    }
+
+    /*
+     * A class with a constructor with one nullable parameter, for example
+     * `org.gnome.gtk.Frame#Frame(@Nullable String label)` introduces ambiguity
+     * with the default MemorySegment constructor when passing a null argument.
+     * For these cases, we add a no-argument constructor.
+     */
+    private MethodSpec generateNoArgConstructor() {
+        MethodSpec.Builder builder = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PUBLIC);
+
+        var generator = new TypedValueGenerator(javaParameters().getFirst());
+        String className = toJavaSimpleType(ctor.parent().name(), ctor.namespace());
+
+        // Javadoc
+        builder.addJavadoc("Calls {@link $1L#$1L($2L)} with $3L = {@code null}",
+                className, generator.getType(), generator.getName());
+
+        // Deprecated annotation
+        if (ctor.callableAttrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
+
+        // Exception
+        if (ctor.callableAttrs().throws_())
+            builder.addException(ClassNames.GERROR_EXCEPTION);
+
+        // Call overloaded constructor
+        builder.addStatement("this(($T) null)", generator.getType());
+
+        return builder.build();
     }
 }
