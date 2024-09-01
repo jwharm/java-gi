@@ -33,6 +33,7 @@ import org.gnome.glib.GLib;
 import io.github.jwharm.javagi.base.*;
 import org.gnome.glib.Type;
 
+import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
 
 /**
@@ -198,6 +199,20 @@ public class Interop {
         return pointer
                 .reinterpret(ValueLayout.ADDRESS.byteSize())
                 .get(ValueLayout.ADDRESS, 0);
+    }
+
+    /**
+     * First reinterpret the memory segments so they have equal size, then copy
+     * {@code src} into {@code dst}.
+     *
+     * @param src source memory segment
+     * @param dst destination memory segment
+     */
+    public static void copy(MemorySegment src, MemorySegment dst) {
+        long size = max(src.byteSize(), dst.byteSize());
+        src.reinterpret(size);
+        dst.reinterpret(size);
+        dst.copyFrom(src);
     }
 
     /**
