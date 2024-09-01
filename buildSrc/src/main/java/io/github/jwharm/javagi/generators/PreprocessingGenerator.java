@@ -209,7 +209,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         }
 
         // Same, but for structs/unions: Disable the cleaner
-        else if ((target instanceof Record || target instanceof Union)
+        else if ((target instanceof StandardLayoutType)
                 && p.transferOwnership() != TransferOwnership.NONE
                 && (!p.isOutParameter())
                 && (type.cType() == null || (! type.cType().endsWith("**")))) {
