@@ -37,7 +37,7 @@ public class MemoryLayoutGenerator {
 
     // Check if a memory layout can be generated for this type.
     // Opaque structs have unknown memory layout.
-    private boolean canGenerate(FieldContainer rt) {
+    public boolean canGenerate(FieldContainer rt) {
         boolean isOpaque = switch (rt) {
             case Class c -> c.hasOpaqueStructFields() || c.isOpaque();
             case Record r -> r.hasOpaqueStructFields() || r.isOpaque();
