@@ -229,58 +229,7 @@ public class MethodGenerator {
 
         // Marshal return value and handle ownership transfer
         else if (!returnValue.anyType().isVoid()) {
-            RegisteredType target = returnValue.anyType() instanceof Type type
-                    ? type.get() : null;
-            var generator = new TypedValueGenerator(returnValue);
-            PartialStatement stmt = PartialStatement.of("");
-            if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
-                stmt.add("($generic:T) ", "generic", ClassNames.GENERIC_T);
-            stmt.add(generator.marshalNativeToJava("_result", false));
-
-            // Ref GObject
-            if (target != null && target.checkIsGObject()
-                    && returnValue.transferOwnership() == TransferOwnership.NONE
-                    && (! "ref".equals(func.name()))
-                    && (! "ref_sink".equals(func.name()))) {
-                builder.addNamedCode(PartialStatement.of("var _object = ")
-                        .add(stmt).format() + ";\n", stmt.arguments())
-                        .beginControlFlow("if (_object instanceof $T _gobject)",
-                                ClassNames.GOBJECT)
-                        .addStatement("$T.debug($S, _gobject.handle().address())",
-                                ClassNames.GLIB_LOGGER,
-                                "Ref " + generator.getType() + " %ld")
-                        .addStatement("_gobject.ref()")
-                        .endControlFlow()
-                        .addStatement("return _object");
-            }
-
-            // Add cleaner to struct/union pointer
-            else if (((target instanceof Record record
-                            && !record.foreign()
-                            && !record.checkIsGList())
-                        || target instanceof Boxed
-                        || target instanceof Union)
-                    && returnValue.transferOwnership() != TransferOwnership.NONE
-                    && (!List.of("org.gnome.gobject.TypeInstance",
-                                 "org.gnome.gobject.TypeClass",
-                                 "org.gnome.gobject.TypeInterface")
-                            .contains(target.javaType()))) {
-                builder.addNamedCode(PartialStatement.of("var _instance = ")
-                        .add(stmt).add(";\n").format(), stmt.arguments())
-                        .beginControlFlow("if (_instance != null)")
-                        .addStatement("$T.takeOwnership(_instance)",
-                                ClassNames.MEMORY_CLEANER);
-                new RegisteredTypeGenerator(target)
-                        .setFreeFunc(builder, "_instance", target.typeName());
-                builder.endControlFlow()
-                        .addStatement("return _instance");
-            }
-
-            // No ownership transfer, just marshal the return value
-            else {
-                builder.addNamedCode(PartialStatement.of("return ")
-                        .add(stmt).format() + ";\n", stmt.arguments());
-            }
+            generateOwnershipTransfer();
         }
 
         // End try-block for arena
@@ -288,6 +237,145 @@ public class MethodGenerator {
             builder.endControlFlow();
 
         return builder.build();
+    }
+
+    private void generateOwnershipTransfer() {
+        // Prepare a statement that marshals the return value to Java
+        RegisteredType target = returnValue.anyType() instanceof Type type
+                ? type.get() : null;
+        var generator = new TypedValueGenerator(returnValue);
+        PartialStatement stmt = PartialStatement.of("");
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+            stmt.add("($generic:T) ", "generic", ClassNames.GENERIC_T);
+        stmt.add(generator.marshalNativeToJava("_result", false));
+
+        // Ref GObject when ownership is not transferred
+        if (target != null && target.checkIsGObject()
+                && returnValue.transferOwnership() == TransferOwnership.NONE
+                // don't call ref() from ref() itself
+                && (! "ref".equals(func.name()))
+                && (! "ref_sink".equals(func.name()))) {
+            builder.addNamedCode(PartialStatement.of("var _object = ")
+                    .add(stmt).format() + ";\n", stmt.arguments())
+                    .beginControlFlow("if (_object instanceof $T _gobject)",
+                            ClassNames.GOBJECT)
+                    .addStatement("$T.debug($S, _gobject.handle().address())",
+                            ClassNames.GLIB_LOGGER,
+                            "Ref " + generator.getType() + " %ld")
+                    .addStatement("_gobject.ref()")
+                    .endControlFlow()
+                    .addStatement("return _object");
+        }
+
+        // Add cleaner to struct/union pointer.
+        // * Exclude foreign types
+        // * GList/GSList have their own cleaner
+        // * GTypeInstance/Class/Interface are special cases
+        else if (((target instanceof Record record
+                        && !record.foreign()
+                        && !record.checkIsGList())
+                    || target instanceof Boxed
+                    || target instanceof Union)
+                && (!List.of("org.gnome.gobject.TypeInstance",
+                             "org.gnome.gobject.TypeClass",
+                             "org.gnome.gobject.TypeInterface")
+                        .contains(target.javaType()))) {
+
+            // With ownership transfer: Don't copy/ref the struct
+            if (returnValue.transferOwnership() != TransferOwnership.NONE) {
+                builder.addNamedCode(PartialStatement.of("var _instance = ")
+                                .add(stmt).add(";\n").format(), stmt.arguments())
+                        .beginControlFlow("if (_instance == null)")
+                        .addStatement("return null")
+                        .endControlFlow();
+            }
+            // No ownership transfer: Copy/ref the struct
+            else {
+                // First check for NULL
+                builder.beginControlFlow("if (_result == null || _result.equals($T.NULL))",
+                        MemorySegment.class)
+                        .addStatement("return null")
+                        .endControlFlow();
+
+                // Lookup the copy/ref function and the memory layout
+                var slt = (StandardLayoutType) target;
+                var copyFunc = slt.copyFunction();
+                var hasMemoryLayout = slt instanceof FieldContainer fc
+                        && new MemoryLayoutGenerator().canGenerate(fc);
+
+                // Don't automatically copy the return values of GLib functions
+                var skipNamespace = List.of("GLib", "GModule")
+                        .contains(target.namespace().name());
+
+                // No copy function, and unknown size: copying is impossible
+                if (skipNamespace || (!hasMemoryLayout && copyFunc == null)) {
+                    builder.addNamedCode(PartialStatement.of("var _instance = ")
+                            .add(stmt)
+                            .add(";\n").format(), stmt.arguments());
+                }
+
+                // No copy function, but know memory layout size: malloc() a new
+                // struct, and copy the contents manually
+                else if (hasMemoryLayout && copyFunc == null) {
+
+                    builder.addStatement("$T _copy = $T.malloc($T.getMemoryLayout().byteSize())",
+                            MemorySegment.class,
+                            ClassNames.GLIB,
+                            returnValue.anyType().typeName());
+                    stmt = PartialStatement.of("var _instance = ")
+                            .add(generator.marshalNativeToJava("_copy", false))
+                            .add(";\n");
+                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                    builder.addStatement("$T.copy(_result, _instance.handle())",
+                            ClassNames.INTEROP);
+                }
+
+                // Copy function is an instance method
+                else if (copyFunc instanceof Method m) {
+                    builder.addNamedCode(PartialStatement.of("var _instance = ")
+                            .add(stmt)
+                            .add("." + getName(m) + "()")
+                            .add(";\n").format(), stmt.arguments());
+                }
+
+                // Copy function is a function (static method)
+                else if (copyFunc instanceof Function f
+                        && f.parent() instanceof RegisteredType rt) {
+                    // Call g_boxed_copy
+                    if ("g_boxed_copy".equals(f.callableAttrs().cIdentifier())) {
+                        builder.addStatement(
+                                "_result = $T.$L($T.getType(), _result)",
+                                rt.typeName(),
+                                getName(f),
+                                returnValue.anyType().typeName());
+                        builder.addNamedCode(
+                                PartialStatement.of("var _instance = ")
+                                        .add(stmt).add(";\n")
+                                        .format(),
+                                stmt.arguments());
+                    }
+                    // Call the copy/ref function
+                    else {
+                        builder.addStatement("var _instance = $T.$L(_instance)",
+                                rt.typeName(),
+                                getName(f));
+                    }
+                }
+            }
+
+            // Register the returned instance with the memory cleaner
+            builder.addStatement("$T.takeOwnership(_instance)",
+                    ClassNames.MEMORY_CLEANER);
+            new RegisteredTypeGenerator(target)
+                    .setFreeFunc(builder, "_instance", target.typeName());
+            builder.addStatement("return _instance");
+        }
+
+        // No ownership transfer, just marshal the return value
+        else {
+            builder.addNamedCode(PartialStatement.of("return ")
+                    .add(stmt).format() + ";\n", stmt.arguments());
+        }
     }
 
     private void functionNameInvocation() {
