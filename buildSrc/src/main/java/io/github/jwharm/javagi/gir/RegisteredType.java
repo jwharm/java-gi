@@ -30,8 +30,8 @@ import static io.github.jwharm.javagi.util.Conversions.uncapitalize;
 
 public sealed interface RegisteredType
         extends Node
-        permits Alias, Boxed, Callback, Class, FlaggedType,
-                Interface, Namespace, Record, Union, FieldContainer {
+        permits Alias, Callback, Class, FlaggedType,
+                Interface, Namespace, StandardLayoutType, FieldContainer {
 
     RegisteredType mergeWith(RegisteredType rt);
     int platforms();

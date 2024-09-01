@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Boxed extends Multiplatform implements RegisteredType {
+public final class Boxed extends Multiplatform implements StandardLayoutType {
 
     public Boxed(Map<String, String> attributes,
                  List<Node> children,
@@ -66,8 +66,33 @@ public final class Boxed extends Multiplatform implements RegisteredType {
                 "memorySegment", MemorySegment.class);
     }
 
-    public String cSymbolPrefix() {
-        return attr("c:symbol-prefix");
+    @Override
+    public Callable copyFunction() {
+        // copy-function specified in annotation
+        var callable = StandardLayoutType.super.copyFunction();
+        if (callable != null)
+            return callable;
+
+        // use g_boxed_copy
+        return namespace().parent().lookupNamespace("GObject").functions()
+                .stream()
+                .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
+                .findAny()
+                .orElse(null);
+    }
+
+    public Callable freeFunction() {
+        // free-function specified in annotation
+        var callable = StandardLayoutType.super.freeFunction();
+        if (callable != null)
+            return callable;
+
+        // use g_boxed_free
+        return namespace().parent().lookupNamespace("GObject").functions()
+                .stream()
+                .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
+                .findAny()
+                .orElse(null);
     }
 
     public List<Function> functions() {

@@ -236,11 +236,10 @@ public class RegisteredTypeGenerator {
         if (rt instanceof Class cls) {
             var unrefFunc = cls.unrefFunc();
             if (unrefFunc != null) {
-                String cIdentifier = unrefFunc.callableAttrs().cIdentifier();
                 builder.addStatement("$T.setFreeFunc($L, $S)",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
-                        toJavaIdentifier(cIdentifier));
+                        unrefFunc.callableAttrs().cIdentifier());
             }
             return;
         }
@@ -259,15 +258,14 @@ public class RegisteredTypeGenerator {
                         className);
         }
 
-        // Record with free-function
-        else if (rt instanceof Record rec) {
-            var freeFunc = rec.freeFunction();
+        // Record or union with free-function
+        else if (rt instanceof StandardLayoutType slt) {
+            var freeFunc = slt.freeFunction();
             if (freeFunc != null) {
-                String cIdentifier = freeFunc.callableAttrs().cIdentifier();
                 builder.addStatement("$T.setFreeFunc($L, $S)",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
-                        toJavaIdentifier(cIdentifier));
+                        freeFunc.callableAttrs().cIdentifier());
             }
         }
     }

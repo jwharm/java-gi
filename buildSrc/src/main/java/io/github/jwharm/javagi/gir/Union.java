@@ -27,7 +27,7 @@ import java.util.Objects;
 
 public final class Union
         extends Multiplatform
-        implements RegisteredType, FieldContainer {
+        implements StandardLayoutType, FieldContainer {
 
     @Override
     public Namespace parent() {
@@ -52,18 +52,6 @@ public final class Union
 
     public boolean isOpaque() {
         return fields().isEmpty() && records().isEmpty();
-    }
-
-    public String cSymbolPrefix() {
-        return attr("c:symbol-prefix");
-    }
-
-    public String copyFunction() {
-        return attr("copy-function");
-    }
-
-    public String freeFunction() {
-        return attr("free-function");
     }
 
     public List<Field> fields() {

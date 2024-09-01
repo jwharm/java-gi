@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class Record extends Multiplatform
-        implements RegisteredType, FieldContainer {
+        implements StandardLayoutType, FieldContainer {
 
     public Record(Map<String, String> attributes,
                   List<Node> children,
@@ -129,20 +129,12 @@ public final class Record extends Multiplatform
         return TypeReference.get(ns, attr("glib:is-gtype-struct-for"));
     }
 
-    public String cSymbolPrefix() {
-        return attr("c:symbol-prefix");
-    }
-
+    @Override
     public Callable copyFunction() {
         // copy-function specified in annotation
-        String func = attr("copy-function");
-        if (func != null)
-            return children().stream()
-                    .filter(Callable.class::isInstance)
-                    .map(Callable.class::cast)
-                    .filter(c -> func.equals(c.callableAttrs().cIdentifier()))
-                    .findAny()
-                    .orElse(null);
+        var callable = StandardLayoutType.super.copyFunction();
+        if (callable != null)
+            return callable;
 
         // boxed types: use g_boxed_copy
         if (getTypeFunc() != null)
@@ -163,14 +155,9 @@ public final class Record extends Multiplatform
 
     public Callable freeFunction() {
         // free-function specified in annotation
-        String func = attr("free-function");
-        if (func != null)
-            return children().stream()
-                    .filter(Callable.class::isInstance)
-                    .map(Callable.class::cast)
-                    .filter(c -> func.equals(c.callableAttrs().cIdentifier()))
-                    .findAny()
-                    .orElse(null);
+        var callable = StandardLayoutType.super.freeFunction();
+        if (callable != null)
+            return callable;
 
         // boxed types: use g_boxed_free
         if (getTypeFunc() != null)
