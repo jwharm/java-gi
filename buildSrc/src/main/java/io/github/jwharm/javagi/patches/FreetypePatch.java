@@ -17,30 +17,19 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.github.jwharm.javagi.configuration;
+package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.patches.*;
+import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.util.Patch;
 
-import java.util.List;
+public class FreetypePatch implements Patch {
+    @Override
+    public GirElement patch(GirElement element, String namespace) {
 
-/**
- * Defines the list of patches that are applied to all GIR elements.
- */
-public class Patches {
-    public static final List<Patch> PATCHES = List.of(
-            new AdwPatch(),
-            new BasePatch(),
-            new FreetypePatch(),
-            new GLibPatch(),
-            new GioPatch(),
-            new GObjectPatch(),
-            new GstAudioPatch(),
-            new GstBasePatch(),
-            new GtkPatch(),
-            new HarfBuzzPatch(),
-            new PangoPatch(),
-            new SoupPatch(),
-            new WebKitPatch()
-    );
+        if (!"freetype2".equals(namespace))
+            return element;
+
+        // Mark all Freetype nodes as foreign
+        return element.withAttribute("foreign", "1");
+    }
 }
