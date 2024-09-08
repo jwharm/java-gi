@@ -284,18 +284,25 @@ public class MethodGenerator {
             // With ownership transfer: Don't copy/ref the struct
             if (returnValue.transferOwnership() != TransferOwnership.NONE) {
                 builder.addNamedCode(PartialStatement.of("var _instance = ")
-                                .add(stmt).add(";\n").format(), stmt.arguments())
-                        .beginControlFlow("if (_instance == null)")
-                        .addStatement("return null")
-                        .endControlFlow();
+                                .add(stmt).add(";\n").format(),
+                                stmt.arguments())
+                        .beginControlFlow("if (_instance != null)")
+                        .addStatement("$T.takeOwnership(_instance)",
+                                ClassNames.MEMORY_CLEANER);
+                new RegisteredTypeGenerator(target)
+                        .setFreeFunc(builder, "_instance", target.typeName());
+                builder.endControlFlow();
             }
+
             // No ownership transfer: Copy/ref the struct
             else {
                 // First check for NULL
-                builder.beginControlFlow("if (_result == null || _result.equals($T.NULL))",
-                        MemorySegment.class)
-                        .addStatement("return null")
-                        .endControlFlow();
+                if (returnValue.nullable()) {
+                    builder.beginControlFlow("if (_result == null || _result.equals($T.NULL))",
+                                    MemorySegment.class)
+                            .addStatement("return null")
+                            .endControlFlow();
+                }
 
                 // Lookup the copy/ref function and the memory layout
                 var slt = (StandardLayoutType) target;
@@ -309,15 +316,15 @@ public class MethodGenerator {
 
                 // No copy function, and unknown size: copying is impossible
                 if (skipNamespace || (!hasMemoryLayout && copyFunc == null)) {
-                    builder.addNamedCode(PartialStatement.of("var _instance = ")
+                    builder.addNamedCode(PartialStatement.of("return ")
                             .add(stmt)
                             .add(";\n").format(), stmt.arguments());
+                    return;
                 }
 
                 // No copy function, but know memory layout size: malloc() a new
                 // struct, and copy the contents manually
-                else if (hasMemoryLayout && copyFunc == null) {
-
+                if (hasMemoryLayout && copyFunc == null) {
                     builder.addStatement("$T _copy = $T.malloc($T.getMemoryLayout().byteSize())",
                             MemorySegment.class,
                             ClassNames.GLIB,
@@ -361,13 +368,14 @@ public class MethodGenerator {
                                 getName(f));
                     }
                 }
+
+                // Register the returned instance with the memory cleaner
+                builder.addStatement("$T.takeOwnership(_instance)",
+                        ClassNames.MEMORY_CLEANER);
+                new RegisteredTypeGenerator(target)
+                        .setFreeFunc(builder, "_instance", target.typeName());
             }
 
-            // Register the returned instance with the memory cleaner
-            builder.addStatement("$T.takeOwnership(_instance)",
-                    ClassNames.MEMORY_CLEANER);
-            new RegisteredTypeGenerator(target)
-                    .setFreeFunc(builder, "_instance", target.typeName());
             builder.addStatement("return _instance");
         }
 
