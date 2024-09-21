@@ -115,6 +115,20 @@ public class GObjectPatch implements Patch {
         }
 
         /*
+         * CClosure construction functions return floating references. There's
+         * specific code in java-gi to ref_sink GInitiallyUnowned and GVariant,
+         * but as CClosure shouldn't be used from Java anyway, we remove these
+         * functions.
+         */
+        if (element instanceof Record r
+                && "CClosure".equals(r.name())) {
+            for (var fun : r.functions())
+                if (fun.name().startsWith("new"))
+                    r = remove (r, Function.class, "name", fun.name());
+            return r;
+        }
+
+        /*
          * GObject.notify() is defined as a virtual method with an invoker
          * method, but the parameters are different. Remove the invoker
          * attribute, so they will be treated as separate methods.
