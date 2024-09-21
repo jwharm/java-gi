@@ -322,9 +322,17 @@ public class MethodGenerator {
                     return;
                 }
 
+                // don't copy the result of ref() or copy()
+                if ("ref".equals(func.name()) || "copy".equals(func.name())
+                        || (copyFunc != null && copyFunc.name().equals(func.name()))) {
+                    builder.addNamedCode(PartialStatement.of("var _instance = ")
+                            .add(stmt)
+                            .add(";\n").format(), stmt.arguments());
+                }
+
                 // No copy function, but know memory layout size: malloc() a new
                 // struct, and copy the contents manually
-                if (hasMemoryLayout && copyFunc == null) {
+                else if (hasMemoryLayout && copyFunc == null) {
                     builder.addStatement("$T _copy = $T.malloc($T.getMemoryLayout().byteSize())",
                             MemorySegment.class,
                             ClassNames.GLIB,
