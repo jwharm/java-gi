@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.util.stream.Stream;
 
 import com.squareup.javapoet.*;
@@ -35,7 +34,6 @@ import javax.lang.model.element.Modifier;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.joining;
 
 public class RecordGenerator extends RegisteredTypeGenerator {
 
@@ -116,13 +114,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
             if (noNewConstructor())
                 builder.addMethod(constructor(true))
-                       .addMethod(constructor(false))
-                       .addMethod(allocate());
+                       .addMethod(constructor(false));
 
             if (outerClass == null && hasFieldSetters() && noNewConstructor())
                 builder.addMethod(constructorWithParameters(true))
-                       .addMethod(constructorWithParameters(false))
-                       .addMethod(allocateWithParameters());
+                       .addMethod(constructorWithParameters(false));
 
             for (Field f : rec.fields())
                 generateField(f);
@@ -286,26 +282,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         return spec.build();
     }
 
-    private MethodSpec allocate() {
-        return MethodSpec.methodBuilder("allocate")
-                .addJavadoc("""
-                        Allocate a new $1T.
-                        
-                        @param  arena to control the memory allocation scope
-                        @return a new, uninitialized {@link $1T}
-                        @deprecated Replaced by {@link $1T#$1T($2T)}
-                        """, rec.typeName(), Arena.class)
-                .addAnnotation(Deprecated.class)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(rec.typeName())
-                .addParameter(Arena.class, "arena")
-                .addStatement("$T segment = arena.allocate(getMemoryLayout())",
-                        MemorySegment.class)
-                .addStatement("return new $T(segment)",
-                        rec.typeName())
-                .build();
-    }
-
     private boolean noNewConstructor() {
         return rec.constructors().stream()
                 .noneMatch(c -> c.name().equals("new"));
@@ -313,51 +289,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     private boolean hasFieldSetters() {
         return streamAccessibleFields().anyMatch(f -> f.callback() == null);
-    }
-
-    private MethodSpec allocateWithParameters() {
-        var spec = MethodSpec.methodBuilder("allocate")
-                .addJavadoc("""
-                        Allocate a new $T with the fields set to the provided values.
-                        
-                        @param  arena to control the memory allocation scope
-                        """, rec.typeName());
-
-        // Javadoc for parameters and return value
-        streamAccessibleFields().forEach(f ->
-                spec.addJavadoc("@param  $1L $2L for the field {@code $1L}\n",
-                        toJavaIdentifier(f.name()),
-                        f.callback() == null ? "value" : "callback function")
-        );
-        spec.addJavadoc("@return a new {@link $T} with the fields set to the provided values\n",
-                        rec.typeName());
-
-        String paramTypes = streamAccessibleFields()
-                .map(f -> new TypedValueGenerator(f).getType().toString() + ", ")
-                .collect(joining());
-        spec.addJavadoc("@deprecated Replaced by {@link $1T#$1T($2L$3T)}\n",
-                        rec.typeName(), paramTypes, Arena.class)
-                        .addAnnotation(Deprecated.class);
-
-        // Set visibility, return type, and parameters
-        spec.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(rec.typeName())
-                .addParameter(Arena.class, "arena");
-        streamAccessibleFields().forEach(f ->
-                spec.addParameter(
-                        // Override the type of long values
-                        f.anyType() instanceof Type t && t.isLong()
-                                ? TypeName.INT
-                                : new TypedValueGenerator(f).getType(),
-                        toJavaIdentifier(f.name()))
-        );
-
-        String params = streamAccessibleFields()
-                .map(f -> toJavaIdentifier(f.name()) + ", ")
-                .collect(joining());
-
-        return spec.addStatement("return new $T($Larena)", rec.typeName(), params)
-                .build();
     }
 
     private MethodSpec gvariantGetType() {
