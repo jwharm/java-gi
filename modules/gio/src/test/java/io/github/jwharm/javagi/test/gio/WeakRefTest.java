@@ -23,8 +23,6 @@ import org.gnome.gio.SimpleAction;
 import org.gnome.gobject.WeakRef;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.Arena;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -36,8 +34,7 @@ public class WeakRefTest {
     public void createWeakRef() {
         SimpleAction gobject = new SimpleAction("test", null);
 
-        @SuppressWarnings("unchecked")
-        WeakRef<SimpleAction> weakRef = WeakRef.allocate(Arena.ofAuto());
+        WeakRef<SimpleAction> weakRef = new WeakRef<>();
         weakRef.init(gobject);
 
         SimpleAction action2 = weakRef.get();

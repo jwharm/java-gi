@@ -26,8 +26,6 @@ import org.gnome.gobject.GObject;
 import org.gnome.gobject.Value;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.Arena;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -39,7 +37,7 @@ public class ValueTest {
     @Test
     public void booleanValue() {
         boolean b = true;
-        Value boolValue = Value.allocate(Arena.ofAuto()).init(Types.BOOLEAN);
+        Value boolValue = new Value().init(Types.BOOLEAN);
         boolValue.setBoolean(b);
         assertEquals(boolValue.getBoolean(), b);
     }
@@ -47,7 +45,7 @@ public class ValueTest {
     @Test
     public void doubleValue() {
         double d = 12345.6789;
-        Value doubleValue = Value.allocate(Arena.ofAuto()).init(Types.DOUBLE);
+        Value doubleValue = new Value().init(Types.DOUBLE);
         doubleValue.setDouble(d);
         assertEquals(doubleValue.getDouble(), d);
     }
@@ -55,7 +53,7 @@ public class ValueTest {
     @Test
     public void floatValue() {
         float f = 12.345f;
-        Value floatValue = Value.allocate(Arena.ofAuto()).init(Types.FLOAT);
+        Value floatValue = new Value().init(Types.FLOAT);
         floatValue.setFloat(f);
         assertEquals(floatValue.getFloat(), f);
     }
@@ -63,7 +61,7 @@ public class ValueTest {
     @Test
     public void intValue() {
         int i = 15;
-        Value intValue = Value.allocate(Arena.ofAuto()).init(Types.INT);
+        Value intValue = new Value().init(Types.INT);
         intValue.setInt(i);
         assertEquals(intValue.getInt(), i);
     }
@@ -72,7 +70,7 @@ public class ValueTest {
     public void longValue() {
         // long values are marshaled to int, for Windows compatibility.
         int i = 15;
-        Value longValue = Value.allocate(Arena.ofAuto()).init(Types.LONG);
+        Value longValue = new Value().init(Types.LONG);
         longValue.setLong(i);
         assertEquals(longValue.getLong(), i);
     }
@@ -80,7 +78,7 @@ public class ValueTest {
     @Test
     public void stringValue() {
         String s = "Test";
-        Value strValue = Value.allocate(Arena.ofAuto()).init(Types.STRING);
+        Value strValue = new Value().init(Types.STRING);
         strValue.setString(s);
         assertEquals(strValue.getString(), s);
     }
@@ -89,7 +87,7 @@ public class ValueTest {
     public void objectValue() {
         // value.getObject() == o, because getObject() will retrieve o from the InstanceCache
         GObject o = new SimpleAction("test", null);
-        Value objValue = Value.allocate(Arena.ofAuto()).init(Types.OBJECT);
+        Value objValue = new Value().init(Types.OBJECT);
         objValue.setObject(o);
         assertEquals(objValue.getObject(), o);
     }
@@ -98,7 +96,7 @@ public class ValueTest {
     public void boxedValue() {
         // compare a boxed value with its duplicate
         Date date = Date.dmy(new DateDay((byte) 3), DateMonth.JUNE, new DateYear((short) 2023));
-        Value boxedValue = Value.allocate(Arena.ofAuto()).init(Date.getType());
+        Value boxedValue = new Value().init(Date.getType());
         boxedValue.setBoxed(date.handle());
         var copy = boxedValue.dupBoxed();
         assertNotNull(copy);
