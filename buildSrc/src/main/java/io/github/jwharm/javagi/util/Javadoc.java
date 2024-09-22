@@ -87,7 +87,7 @@ public class Javadoc {
     // Lookup the instance parameter that this docstring might refer to, so
     // the reference to the parameter can be replaced with "this [type]".
     private InstanceParameter findInstanceParameter(Node node) {
-        return switch (node.parent()) {
+        return switch (node) {
             case InstanceParameter p ->
                     p;
             case Parameter p ->
