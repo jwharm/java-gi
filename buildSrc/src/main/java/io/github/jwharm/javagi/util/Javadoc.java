@@ -106,7 +106,7 @@ public class Javadoc {
      */
     public String convert(Documentation doc) {
         this.doc = doc;
-        this.instanceParameter = findInstanceParameter(doc);
+        this.instanceParameter = findInstanceParameter(doc.parent());
         this.ul = false;
         String input = doc.text();
 
