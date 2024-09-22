@@ -57,7 +57,6 @@ public final class ClassNames {
     public static final ClassName BUILDER_INTERFACE = get(PKG_GOBJECT, "BuilderInterface");
     public static final ClassName INSTANCE_CACHE = get(PKG_GOBJECT, "InstanceCache");
     public static final ClassName JAVA_CLOSURE = get(PKG_GOBJECT, "JavaClosure");
-    public static final ClassName SIGNAL_CONNECTION = get(PKG_GOBJECT, "SignalConnection");
 
     public static final ClassName OVERRIDES = get(PKG_GOBJECT_TYPES, "Overrides");
     public static final ClassName PROPERTIES = get(PKG_GOBJECT_TYPES, "Properties");
@@ -66,7 +65,6 @@ public final class ClassNames {
     public static final ClassName TYPES = get(PKG_GOBJECT_TYPES, "Types");
 
     // Some frequently used class names
-    public final static ClassName DESTROY_NOTIFY = get("org.gnome.glib", "DestroyNotify");
     public final static ClassName GERROR = get("org.gnome.glib", "GError");
     public final static ClassName GLIB = get("org.gnome.glib", "GLib");
     public final static ClassName GTYPE = get("org.gnome.glib", "Type");
