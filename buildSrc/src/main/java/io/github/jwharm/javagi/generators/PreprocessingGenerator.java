@@ -22,7 +22,6 @@ package io.github.jwharm.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.Arena;
@@ -176,9 +175,6 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         if (p.scope() == Scope.NOTIFIED && p.destroy() != null)
             builder.addStatement("final $1T _$2LScope = $1T.ofConfined()",
                             Arena.class,
-                            getName())
-                    .addStatement("final $1T _$2LDestroyNotify = $$ -> _$2LScope.close()",
-                            ClassNames.DESTROY_NOTIFY,
                             getName());
         else if (p.scope() == Scope.ASYNC && (!p.isDestroyNotifyParameter()))
             builder.addStatement("final $1T _$2LScope = $1T.ofConfined()",

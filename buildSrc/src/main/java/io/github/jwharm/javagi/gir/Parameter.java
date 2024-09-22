@@ -63,10 +63,23 @@ public final class Parameter extends GirElement implements TypedValue {
             return parent().parameters().stream().anyMatch(p ->
                     p.anyType() instanceof Type type
                             && type.get() instanceof Callback
-                            && p.closure() == this
-            );
+                            && p.closure() == this);
         }
         return false;
+    }
+
+    public boolean isUserDataParameterForDestroyNotify() {
+        return parent().parameters().stream().anyMatch(p ->
+                p.anyType() instanceof Type type
+                        && type.get() instanceof Callback
+                        && p.scope() == Scope.NOTIFIED
+                        && p.closure() == this
+                        && p.destroy() != null);
+    }
+
+    public Parameter getRelatedCallbackParameter() {
+        return parent().parameters().stream().filter(p ->
+                p.closure() == this).findAny().orElseThrow();
     }
 
     public boolean isDestroyNotifyParameter() {

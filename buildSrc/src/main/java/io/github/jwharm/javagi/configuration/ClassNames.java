@@ -44,6 +44,7 @@ public final class ClassNames {
     public static final ClassName PROXY_INSTANCE = get(PKG_BASE, "ProxyInstance");
     public static final ClassName UNSUPPORTED_PLATFORM_EXCEPTION = get(PKG_BASE, "UnsupportedPlatformException");
 
+    public static final ClassName ARENAS = get(PKG_INTEROP, "Arenas");
     public static final ClassName ARENA_CLOSE_ACTION = get(PKG_INTEROP, "ArenaCloseAction");
     public static final ClassName MEMORY_CLEANER = get(PKG_INTEROP, "MemoryCleaner");
     public static final ClassName INTEROP = get(PKG_INTEROP, "Interop");

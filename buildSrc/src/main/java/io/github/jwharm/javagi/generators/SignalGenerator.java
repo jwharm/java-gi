@@ -55,10 +55,7 @@ public class SignalGenerator {
     public MethodSpec generateConnectMethod() {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(connectMethod)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(ParameterizedTypeName.get(
-                        ClassNames.SIGNAL_CONNECTION,
-                        signal.typeName()
-                ));
+                .returns(int.class);
 
         if (signal.parent() instanceof Interface)
             builder.addModifiers(Modifier.DEFAULT);
@@ -94,13 +91,16 @@ public class SignalGenerator {
                     ClassNames.INTEROP,
                     signal.name());
 
-        return builder.addStatement("var _callbackArena = $T.ofConfined()",
+        return builder.addStatement("var _callbackArena = $T.ofShared()",
                         Arena.class)
-                .addStatement("var _callback = handler.toCallback(_callbackArena)")
-                .addStatement("var _result = (long) $1T.g_signal_connect_data.invokeExact($Zhandle(), _name, _callback, $2T.NULL, $2T.NULL, 0)",
+                .addStatement("return (int) (long) $1T.g_signal_connect_data.invokeExact("
+                                + "$Zhandle(),"
+                                + "$W_name,$Whandler.toCallback(_callbackArena),"
+                                + "$W$2T.cacheArena(_callbackArena),"
+                                + "$W$2T.CLOSE_CB_SYM,"
+                                + "$W0)",
                         ClassNames.SIGNALS,
-                        MemorySegment.class)
-                .addStatement("return new SignalConnection<>(handle(), _result, _callbackArena)")
+                        ClassNames.ARENAS)
                 .nextControlFlow("catch (Throwable _err)")
                 .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()

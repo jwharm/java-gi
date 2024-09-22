@@ -33,7 +33,6 @@ import java.lang.foreign.ValueLayout;
 import java.util.*;
 
 import static io.github.jwharm.javagi.util.Conversions.getValueLayout;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 
@@ -153,11 +152,12 @@ public class CallableGenerator {
             if (!stmt.format().isEmpty()) stmt.add(", ");
             stmt.add("$Z"); // emit newline
             var generator = new TypedValueGenerator(p);
+            var name = generator.getName();
 
             // Generate null-check. But don't null-check parameters that are
             // hidden from the Java API, or primitive values
             if (generator.checkNull())
-                stmt.add("($memorySegment:T) (" + generator.getName() + " == null ? $memorySegment:T.NULL : ");
+                stmt.add("($memorySegment:T) (" + name + " == null ? $memorySegment:T.NULL : ");
 
             // cast int parameter to a long
             if (intAsLong && p.anyType() instanceof Type t && t.isLong())
@@ -169,11 +169,19 @@ public class CallableGenerator {
                         .filter(q -> q.destroy() == p)
                         .findAny();
                 if (notify.isPresent()) {
-                    String notifyName = toJavaIdentifier(notify.get().name());
-                    stmt.add("_" + notifyName + "DestroyNotify.toCallback(_" + notifyName + "Scope)");
+                    stmt.add("$arenas:T.CLOSE_CB_SYM",
+                            "arenas", ClassNames.ARENAS);
                 } else {
                     stmt.add("$memorySegment:T.NULL");
                 }
+            }
+
+            // User_data for destroy_notify
+            else if (p.isUserDataParameterForDestroyNotify()) {
+                var cbParam = p.getRelatedCallbackParameter();
+                var cbName = new TypedValueGenerator(cbParam).getName();
+                stmt.add("$arenas:T.cacheArena(_" + cbName + "Scope)",
+                        "arenas", ClassNames.ARENAS);
             }
 
             // User_data
@@ -190,12 +198,12 @@ public class CallableGenerator {
                         && type.get() instanceof Alias a
                         && a.type().isPrimitive()
                         && type.isPointer())) {
-                stmt.add("_" + generator.getName() + "Pointer");
+                stmt.add("_" + name + "Pointer");
             }
 
             // Custom interop
             else
-                stmt.add(generator.marshalJavaToNative(generator.getName()));
+                stmt.add(generator.marshalJavaToNative(name));
 
             // Closing parentheses for null-check
             if (generator.checkNull())

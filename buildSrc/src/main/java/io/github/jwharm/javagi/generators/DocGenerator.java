@@ -103,7 +103,7 @@ public class DocGenerator {
                     "@param detail");
             writeDoc(builder, "the signal handler",
                     "@param handler");
-            writeDoc(builder, "a {@link SignalConnection} object to keep track of the signal connection",
+            writeDoc(builder, "a signal handler ID to keep track of the signal connection",
                     "@return");
         }
 
