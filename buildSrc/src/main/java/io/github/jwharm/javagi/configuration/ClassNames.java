@@ -54,6 +54,7 @@ public final class ClassNames {
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");
     public static final ClassName LIST_MODEL_JAVA_LIST = get(PKG_GIO, "ListModelJavaList");
 
+    public static final ClassName BINDING_BUILDER = get(PKG_GOBJECT, "BindingBuilder");
     public static final ClassName BUILDER = get(PKG_GOBJECT, "Builder");
     public static final ClassName BUILDER_INTERFACE = get(PKG_GOBJECT, "BuilderInterface");
     public static final ClassName INSTANCE_CACHE = get(PKG_GOBJECT, "InstanceCache");

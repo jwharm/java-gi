@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -60,7 +60,7 @@ public class ClosureTest {
         // Create a property binding to run "timesTwo" every time the "num" property on n1 or n2 is changed
         // Keep a reference to the Binding object instance alive, or else the property binding will be disconnected
         @SuppressWarnings("unused")
-        Binding binding = n1.bindPropertyFull("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
+        Binding binding = n1.bindPropertyWithClosures("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
 
         // Set the "num" property of n1 to 10
         n1.setProperty("num", 10);
@@ -81,7 +81,7 @@ public class ClosureTest {
         // Create a property binding to run "timesTwo" every time the "num" property on n1 or n2 is changed
         // Keep a reference to the Binding object instance alive, or else the property binding will be disconnected
         @SuppressWarnings("unused")
-        Binding binding = n1.bindPropertyFull("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
+        Binding binding = n1.bindPropertyWithClosures("num", n2, "num", BindingFlags.BIDIRECTIONAL, closure, closure);
 
         // Set the "num" property of n1 to 10
         n1.setProperty("num", -25);

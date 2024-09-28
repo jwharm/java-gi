@@ -22,7 +22,6 @@ package io.github.jwharm.javagi.gobject;
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
-import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
@@ -31,6 +30,9 @@ import org.gnome.gobject.*;
 import io.github.jwharm.javagi.base.Enumeration;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static io.github.jwharm.javagi.gobject.types.Types.*;
+import static org.gnome.gobject.GObjects.gtypeGetType;
+import static org.gnome.gobject.GObjects.typeIsA;
 
 /**
  * Utility functions to convert a {@link Value} to and from a Java Object.
@@ -53,24 +55,33 @@ public class ValueUtil {
         
         Type type = src.readGType();
         
-        if (type == null || type.equals(Types.NONE)) {
+        if (type == null || type.equals(NONE)) {
             return null;
         }
 
-        if (type.equals(Types.BOOLEAN))           return src.getBoolean();
-        if (type.equals(Types.CHAR))              return src.getSchar();
-        if (type.equals(Types.DOUBLE))            return src.getDouble();
-        if (type.equals(Types.FLOAT))             return src.getFloat();
-        if (type.equals(Types.INT))               return src.getInt();
-        if (type.equals(Types.LONG))              return src.getLong();
-        if (type.equals(Types.STRING))            return src.getString();
-        if (type.equals(Types.ENUM))              return src.getEnum();
-        if (type.equals(Types.FLAGS))             return src.getFlags();
-        if (type.equals(Types.OBJECT))            return src.getObject();
-        if (type.equals(GObjects.gtypeGetType())) return src.getGtype();
-        if (type.equals(Types.POINTER))           return src.getPointer();
-        if (type.equals(Types.PARAM))             return src.getParam();
+        // Fundamental types
+        if (type.equals(BOOLEAN))        return src.getBoolean();
+        if (type.equals(CHAR))           return src.getSchar();
+        if (type.equals(DOUBLE))         return src.getDouble();
+        if (type.equals(FLOAT))          return src.getFloat();
+        if (type.equals(INT))            return src.getInt();
+        if (type.equals(LONG))           return src.getLong();
+        if (type.equals(STRING))         return src.getString();
+        if (type.equals(ENUM))           return src.getEnum();
+        if (type.equals(FLAGS))          return src.getFlags();
+        if (type.equals(OBJECT))         return src.getObject();
+        if (type.equals(POINTER))        return src.getPointer();
+        if (type.equals(PARAM))          return src.getParam();
 
+        // GType
+        if (type.equals(gtypeGetType())) return src.getGtype();
+
+        // Derived types
+        if (typeIsA(type, OBJECT))       return src.getObject();
+        if (typeIsA(type, ENUM))         return src.getEnum();
+        if (typeIsA(type, FLAGS))        return src.getFlags();
+
+        // Boxed types
         return src.getBoxed();
     }
 
@@ -79,30 +90,31 @@ public class ValueUtil {
      * (or boxed primitive value) as its value using the corresponding setter in
      * the {@link Value} proxy class.
      *
-     * @param src  the Java Object (or boxed primitive value) to put in the
-     *             GValue. Should not be {@code null}
-     * @param dest the GValue to write to. Should not be {@code null}
+     * @param  src  the Java Object (or boxed primitive value) to put in the
+     *              GValue. Should not be {@code null}
+     * @param  dest the GValue to write to. Should not be {@code null}
+     * @return {@code true} if the value was set, and {@code false} otherwise.
      */
-    public static void objectToValue(Object src, Value dest) {
+    public static boolean objectToValue(Object src, Value dest) {
         if (src == null || dest == null)
-            return;
+            return false;
 
         Type type = dest.readGType();
         if (type == null)
-            return;
+            return false;
 
         try {
-            if (type.equals(Types.BOOLEAN)) {
+            if (type.equals(BOOLEAN)) {
                 dest.setBoolean((Boolean) src);
-            } else if (type.equals(Types.CHAR)) {
+            } else if (type.equals(CHAR)) {
                 dest.setSchar((Byte) src);
-            } else if (type.equals(Types.DOUBLE)) {
+            } else if (type.equals(DOUBLE)) {
                 dest.setDouble((Double) src);
-            } else if (type.equals(Types.FLOAT)) {
+            } else if (type.equals(FLOAT)) {
                 dest.setFloat((Float) src);
-            } else if (type.equals(Types.INT)) {
+            } else if (type.equals(INT)) {
                 dest.setInt((Integer) src);
-            } else if (type.equals(Types.LONG)) {
+            } else if (type.equals(LONG)) {
                 // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
                 // Use reflection to bypass the type checker
                 for (Method m : Value.class.getDeclaredMethods()) {
@@ -111,19 +123,19 @@ public class ValueUtil {
                         break;
                     }
                 }
-            } else if (type.equals(Types.STRING)) {
+            } else if (type.equals(STRING)) {
                 dest.setString((String) src);
-            } else if (type.equals(Types.ENUM)) {
+            } else if (type.equals(ENUM)) {
                 dest.setEnum(((Enumeration) src).getValue());
-            } else if (type.equals(Types.FLAGS)) {
+            } else if (type.equals(FLAGS)) {
                 dest.setFlags(((Enumeration) src).getValue());
-            } else if (type.equals(Types.OBJECT)) {
+            } else if (type.equals(OBJECT)) {
                 dest.setObject((GObject) src);
-            } else if (type.equals(GObjects.gtypeGetType())) {
+            } else if (type.equals(gtypeGetType())) {
                 dest.setGtype((Type) src);
-            } else if (type.equals(Types.POINTER)) {
+            } else if (type.equals(POINTER)) {
                 dest.setPointer((MemorySegment) src);
-            } else if (type.equals(Types.PARAM)) {
+            } else if (type.equals(PARAM)) {
                 dest.setParam((ParamSpec) src);
             } else {
                 // Boxed value
@@ -138,6 +150,9 @@ public class ValueUtil {
                     GObjects.typeName(type),
                     e.toString()
             );
+            return false;
         }
+
+        return true;
     }
 }

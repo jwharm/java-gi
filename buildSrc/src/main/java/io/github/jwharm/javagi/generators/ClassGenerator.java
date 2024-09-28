@@ -123,6 +123,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConstructorVarargs())
                     .addMethod(gobjectGetProperty())
                     .addMethod(gobjectSetProperty())
+                    .addMethod(gobjectBindProperty())
                     .addMethod(gobjectConnect())
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
@@ -271,6 +272,62 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(Object.class, "value")
                 .addStatement("$T.setProperty(this, propertyName, value)",
                         ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectBindProperty() {
+        var S = TypeVariableName.get("S");
+        var T = TypeVariableName.get("T");
+        return MethodSpec.methodBuilder("bindProperty")
+                .addJavadoc("""
+                    Creates a binding between {@code sourceProperty} on this Object and
+                    {@code targetProperty} on {@code target}.
+                    <p>
+                    Whenever the {@code sourceProperty} is changed the {@code targetProperty}
+                    is updated using the same value. For instance:
+                    <pre>{@code   action.bindProperty ("active", widget, "sensitive").build();
+                    }</pre>
+                    <p>
+                    Will result in the "sensitive" property of the widget {@code GObject}
+                    instance to be updated with the same value of the "active" property of
+                    the action {@code GObject} instance.
+                    <p>
+                    If {@link BindingBuilder#bidirectional()} is set then the binding will
+                    be mutual: if {@code targetProperty} on {@code target} changes then the
+                    {@code sourceProperty} on this Object will be updated as well.
+                    <p>
+                    The binding will automatically be removed when either the this Object
+                    or the {@code target} instances are finalized. To remove the binding
+                    without affecting the this Object and the {@code target} you can just
+                    call {@code unref()} on the returned {@code Binding} instance.
+                    <p>
+                    Removing the binding by calling {@code unref()} on it must only be done
+                    if the binding, this GObject and {@code target} are only used from a
+                    single thread and it is clear that both this GObject and {@code target}
+                    outlive the binding. Especially it is not safe to rely on this if the
+                    binding, this GObject or {@code target} can be finalized from different
+                    threads. Keep another reference to the binding and use
+                    {@link Binding#unbind()} instead to be on the safe side.
+                    <p>
+                    A {@code GObject} can have multiple bindings.
+                    
+                    @param  sourceProperty the property on this Object to bind
+                    @param  target         the target {@code GObject}
+                    @param  targetProperty the property on {@code target} to bind
+                    @param  flags          flags to pass to {@code GBinding}
+                    @return the {@code GBinding} instance representing the binding between
+                            the two {@code GObject} instances. The binding is released
+                            whenever the {@code GBinding} reference count reaches zero.
+                    """)
+                .addModifiers(Modifier.PUBLIC)
+                .addTypeVariable(S)
+                .addTypeVariable(T)
+                .returns(ParameterizedTypeName.get(ClassNames.BINDING_BUILDER, S, T))
+                .addParameter(String.class, "sourceProperty")
+                .addParameter(ClassNames.GOBJECT, "target")
+                .addParameter(String.class, "targetProperty")
+                .addStatement("return new $T<S, T>(this, sourceProperty, target, targetProperty)",
+                        ClassNames.BINDING_BUILDER)
                 .build();
     }
 
