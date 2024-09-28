@@ -25,6 +25,7 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -70,7 +71,7 @@ public class BuilderGenerator {
         ClassName parentTypeName = parentClass == null ? ClassNames.BUILDER
                 : parentClass.typeName().nestedClass("Builder");
 
-        TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
+        return TypeSpec.classBuilder("Builder")
                 .addJavadoc("""
                         Inner class implementing a builder pattern to construct a GObject with
                         properties.
@@ -95,9 +96,11 @@ public class BuilderGenerator {
                 .addMethods(cls.properties().stream()
                         .filter(Property::writable)
                         .map(this::setter)
-                        ::iterator);
-
-        return builder.build();
+                        ::iterator)
+                .addMethods(cls.signals().stream()
+                        .map(this::connector)
+                        ::iterator)
+                .build();
     }
 
     public TypeSpec generateBuilderInterface() {
@@ -149,6 +152,44 @@ public class BuilderGenerator {
                 .build();
     }
 
+    private MethodSpec connector(Signal signal) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(
+                "on" + toCamelCase(signal.name(), true))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(BUILDER_B);
+
+        // Javadoc
+        if (signal.infoElements().doc() != null)
+            builder.addJavadoc(
+                    new DocGenerator(signal.infoElements().doc()).generate());
+
+        // Deprecated annotation
+        if (signal.infoAttrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
+
+        // Modifiers
+        if (signal.parent() instanceof Interface)
+            builder.addModifiers(Modifier.DEFAULT);
+
+        // Parameters
+        if (signal.detailed())
+            builder.addParameter(
+                    ParameterSpec.builder(String.class, "detail")
+                            .addAnnotation(Nullable.class)
+                            .build());
+
+        builder.addParameter(signal.typeName(), "handler");
+
+        // Method body
+        if (signal.detailed())
+            builder.addStatement("connect($S, detail, handler)", signal.name());
+        else
+            builder.addStatement("connect($S, handler)", signal.name());
+        builder.addStatement("return (B) this");
+
+        return builder.build();
+    }
+
     private MethodSpec buildMethod() {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("build")
                 .addModifiers(Modifier.PUBLIC)
@@ -173,9 +214,11 @@ public class BuilderGenerator {
                     ClassNames.PLATFORM,
                     Platform.toStringLiterals(rt.platforms()));
 
-        return builder.addStatement("return ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
+        return builder.addStatement("var _instance = ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
                         rt.typeName(),
                         ClassNames.GOBJECT)
+                .addStatement("connectSignals(_instance.handle())")
+                .addStatement("return _instance")
                 .nextControlFlow("finally")
                 .addStatement("for ($T _value : getValues()) _value.unset()",
                         ClassNames.GVALUE)

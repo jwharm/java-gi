@@ -56,6 +56,7 @@ public class ClosureGenerator {
     TypeSpec generateFunctionalInterface() {
         String name = getName();
         TypeSpec.Builder builder = TypeSpec.interfaceBuilder(name)
+                .addSuperinterface(ClassNames.FUNCTION_POINTER)
                 .addJavadoc("Functional interface declaration of the {@code $L} callback.\n", name)
                 .addAnnotation(FunctionalInterface.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)

@@ -19,21 +19,36 @@
 
 package io.github.jwharm.javagi.gobject;
 
+import io.github.jwharm.javagi.base.FunctionPointer;
+import io.github.jwharm.javagi.gobject.types.Signals;
+import io.github.jwharm.javagi.interop.Arenas;
+import io.github.jwharm.javagi.interop.Interop;
+import org.gnome.gobject.ConnectFlags;
 import org.gnome.gobject.Value;
 
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 
 /**
- * Base class for all inner {@code Builder} classes inside GObject proxy classes.
+ * Base class for all inner {@code Builder} classes inside GObject proxy
+ * classes.
+ *
  * @param <S> the type of the Builder that is returned
  */
 @SuppressWarnings("rawtypes")
 public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
-     * Memory scope of allocated gvalues. It will be closed after the enclosing
-     * builder instance has been built.
+     * Represents a signal that must be connected after the object is
+     * constructed. The name is the detailed name of the signal.
+     */
+    private record ConnectRequest(String name, FunctionPointer callback) {
+    }
+
+    /**
+     * Memory scope of allocated GValues and strings. It will be closed after
+     * the enclosing builder instance has been built.
      */
     private final Arena arena = Arena.ofConfined();
 
@@ -48,7 +63,13 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
     private final ArrayList<Value> values = new ArrayList<>();
 
     /**
+     * List of all signals that must be connected
+     */
+    private final ArrayList<ConnectRequest> connectRequests = new ArrayList<>();
+
+    /**
      * Get the arena for allocating memory in this builder
+     *
      * @return the arena for allocating memory in this builder
      */
     @Override
@@ -58,7 +79,8 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
      * Add the provided property name and value to the builder
-     * @param name name of the property
+     *
+     * @param name  name of the property
      * @param value value of the property (a {@code GValue})
      */
     @Override
@@ -68,7 +90,55 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
     }
 
     /**
+     * Add the provided signal to the builder
+     *
+     * @param name     the signal name
+     * @param callback the signal callback
+     */
+    @Override
+    public void connect(String name, FunctionPointer callback) {
+        connectRequests.add(new ConnectRequest(name, callback));
+    }
+
+    /**
+     * Add the provided detailed signal to the builder
+     *
+     * @param name     the signal name
+     * @param detail   the signal detail
+     * @param callback the signal callback
+     */
+    @Override
+    public void connect(String name, String detail, FunctionPointer callback) {
+        boolean isDetailed = detail != null && detail.isBlank();
+        String fullName = name + (isDetailed ? "" : ("::" + detail));
+        connectRequests.add(new ConnectRequest(fullName, callback));
+    }
+
+    /**
+     * Connect the requested signals to the newly created object
+     *
+     * @param handle pointer to the newly created object
+     */
+    public void connectSignals(MemorySegment handle) {
+        for (var s : connectRequests) {
+            try {
+                var _callbackArena = Arena.ofShared();
+                var result = (long) Signals.g_signal_connect_data.invokeExact(
+                        handle,
+                        Interop.allocateNativeString(s.name, arena),
+                        s.callback.toCallback(_callbackArena),
+                        Arenas.cacheArena(_callbackArena),
+                        Arenas.CLOSE_CB_SYM,
+                        ConnectFlags.DEFAULT.getValue());
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+        }
+    }
+
+    /**
      * Get the property names
+     *
      * @return a {@code String} array of property names
      */
     public String[] getNames() {
@@ -77,10 +147,10 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
      * Get the property values
+     *
      * @return a {@code GValue} array of property names
      */
     public Value[] getValues() {
         return values.toArray(new Value[0]);
     }
-
 }

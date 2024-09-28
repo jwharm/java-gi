@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.gobject;
 
+import io.github.jwharm.javagi.base.FunctionPointer;
 import org.gnome.gobject.Value;
 
 import java.lang.foreign.Arena;
@@ -30,14 +31,33 @@ public interface BuilderInterface {
 
     /**
      * Get the arena for allocating memory in this builder
+     *
      * @return the arena for allocating memory in this builder
      */
     Arena getArena();
 
     /**
      * Add the provided property name and value to the builder
-     * @param name name of the property
+     *
+     * @param name  name of the property
      * @param value value of the property (a {@code GValue})
      */
     void addBuilderProperty(String name, Value value);
+
+    /**
+     * Add the provided signal to the builder
+     *
+     * @param name     the signal name
+     * @param callback the signal callback
+     */
+    void connect(String name, FunctionPointer callback);
+
+    /**
+     * Add the provided detailed signal to the builder
+     *
+     * @param name     the signal name
+     * @param detail   the signal detail
+     * @param callback the signal callback
+     */
+    void connect(String name, String detail, FunctionPointer callback);
 }
