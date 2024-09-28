@@ -636,12 +636,20 @@ public class Types {
     public static String getName(Class<?> cls) {
         // Default type name: fully qualified Java class name
         String typeNameInput = cls.getName();
+        String namespace = "";
+
+        // Check for a Namespace annotation on the package
+        if (cls.getPackage().isAnnotationPresent(Namespace.class)) {
+            var annotation = cls.getPackage().getAnnotation(Namespace.class);
+            namespace = annotation.name();
+            typeNameInput = namespace + cls.getSimpleName();
+        }
 
         // Check for an annotation that overrides the type name
         if (cls.isAnnotationPresent(RegisteredType.class)) {
             var annotation = cls.getAnnotation(RegisteredType.class);
             if (! "".equals(annotation.name())) {
-                typeNameInput = annotation.name();
+                typeNameInput = namespace + annotation.name();
             }
         }
 
