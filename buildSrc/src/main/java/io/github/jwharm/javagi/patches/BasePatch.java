@@ -72,6 +72,23 @@ public class BasePatch implements Patch {
             return e.withChildren(children);
         }
 
+        /*
+         * Some methods are shadowed by methods that take closures. This makes
+         * for a worse API in java-gi, and can also lead to issues with
+         * different parameter names when combining virtual methods with their
+         * invoker method in one Java method. Remove the shadowing.
+         */
+        if (element instanceof Method m
+                && m.callableAttrs().shadowedBy() != null
+                && m.callableAttrs().shadowedBy().endsWith("_with_closures")) {
+            return m.withAttribute("shadowed-by", null);
+        }
+        if (element instanceof Method m
+                && m.callableAttrs().shadows() != null
+                && m.attr("name").endsWith("_with_closures")) {
+            return m.withAttribute("shadows", null);
+        }
+
         return element;
     }
 }
