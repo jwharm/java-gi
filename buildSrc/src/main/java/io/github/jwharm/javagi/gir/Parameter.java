@@ -120,6 +120,10 @@ public final class Parameter extends GirElement implements TypedValue {
                 && target instanceof Alias a && a.type().isPrimitive();
     }
 
+    public boolean isLastParameter() {
+        return this == parent().parameters().getLast();
+    }
+
     public boolean nullable() {
         return "1".equals(attr("nullable"))
                 || "1".equals(attr("allow-none"))

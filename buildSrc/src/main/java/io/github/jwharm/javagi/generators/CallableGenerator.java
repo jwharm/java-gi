@@ -115,6 +115,15 @@ public class CallableGenerator {
                 var generator = new TypedValueGenerator(p);
                 var type = generator.getType(setOfBitfield);
 
+                // Trailing flags parameter can be variadic
+                if ((!setOfBitfield)
+                        && p.isBitfield()
+                        && p.isLastParameter()
+                        && (!p.isOutParameter())) {
+                    type = ArrayTypeName.of(type);
+                    builder.varargs(true);
+                }
+
                 if (generic && type.equals(ClassNames.GOBJECT))
                     type = ClassNames.GENERIC_T;
 
@@ -292,14 +301,19 @@ public class CallableGenerator {
                 continue;
 
             TypedValueGenerator gen = new TypedValueGenerator(p);
+            String paramName = gen.getName();
 
             if (p.isBitfield()) {
-                if (p.isOutParameter())
-                    params.add(gen.getName() + " == null ? null : new $out:T($enumSet:T.of(" + gen.getName() + ".get()))");
-                else
-                    params.add("$enumSet:T.of(" + gen.getName() + ")");
+                if (p.isOutParameter()) {
+                    params.add(paramName + " == null ? null : new $out:T($enumSet:T.of(" + paramName + ".get()))");
+                } else if (p.isLastParameter()) {
+                    params.add("(" + paramName + " == null ? null : (" + paramName + ".length == 0) ? $enumSet:T.noneOf($typeName:T.class) : $enumSet:T.of(" + paramName + "[0], " + paramName + "))");
+                    stmt.add(null, "typeName", gen.getType(false));
+                } else {
+                    params.add("$enumSet:T.of(" + paramName + ")");
+                }
             } else {
-                params.add(gen.getName());
+                params.add(paramName);
             }
         }
         stmt.add(params.toString(),
