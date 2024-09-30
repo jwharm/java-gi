@@ -31,6 +31,7 @@ import org.gnome.gtk.Application;
 import org.gnome.gtk.Label;
 import org.gnome.gtk.ApplicationWindow;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.lang.foreign.MemorySegment;
 
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test that a @GtkChild field in a Gtk template class is setup
  */
+@Isolated
 public class TemplateChildTest {
 
     @Test
