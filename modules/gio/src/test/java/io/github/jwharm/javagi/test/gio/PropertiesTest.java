@@ -26,7 +26,10 @@ import org.gnome.gio.ApplicationFlags;
 import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the patched GObject methods to get and set properties,
@@ -57,5 +60,26 @@ public class PropertiesTest {
                 "flags", ApplicationFlags.DEFAULT_FLAGS);
         String applicationId = (String) Properties.getProperty(app, "application-id");
         assertEquals("io.github.jwharm.javagi.test.Application", applicationId);
+    }
+
+    @Test
+    public void builder() {
+        AtomicBoolean notified = new AtomicBoolean(false);
+        Application app = Application.builder()
+                .setApplicationId("javagi.test.Application1")
+                .setFlags(Set.of(ApplicationFlags.IS_SERVICE))
+                .onNotify("application-id", _ -> {
+                    notified.set(true);
+                })
+                .build();
+
+        // Assert that the properties are set
+        assertEquals("javagi.test.Application1", app.getApplicationId());
+        assertEquals(Set.of(ApplicationFlags.IS_SERVICE), app.getFlags());
+
+        // Assert that the "notify" signal is connected
+        assertFalse(notified.get());
+        app.setApplicationId("javagi.test.Application2");
+        assertTrue(notified.get());
     }
 }

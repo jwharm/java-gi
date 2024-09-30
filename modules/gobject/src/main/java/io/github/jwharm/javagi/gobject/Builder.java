@@ -109,7 +109,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      */
     @Override
     public void connect(String name, String detail, FunctionPointer callback) {
-        boolean isDetailed = detail != null && detail.isBlank();
+        boolean isDetailed = detail != null && !detail.isBlank();
         String fullName = name + (isDetailed ? "" : ("::" + detail));
         connectRequests.add(new ConnectRequest(fullName, callback));
     }
