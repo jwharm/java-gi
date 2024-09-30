@@ -1,7 +1,7 @@
 [versions]
 v_cairo = "1.18.4"
 v_javapoet = "1.13.0"
-v_annotations = "24.1.0"
+v_annotations = "25.0.0"
 v_junit = "5.11.1"
 
 [libraries]
