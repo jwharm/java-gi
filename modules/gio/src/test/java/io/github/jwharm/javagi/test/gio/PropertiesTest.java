@@ -78,6 +78,9 @@ public class PropertiesTest {
         assertEquals(Set.of(ApplicationFlags.IS_SERVICE), app.getFlags());
 
         // Assert that the "notify" signal is connected
+        // only for the specified property
+        assertFalse(notified.get());
+        app.setFlags(ApplicationFlags.DEFAULT_FLAGS);
         assertFalse(notified.get());
         app.setApplicationId("javagi.test.Application2");
         assertTrue(notified.get());
