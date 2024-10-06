@@ -96,9 +96,17 @@ public final class Field extends GirElement implements TypedValue {
                 && type.get() instanceof Record r
                 && (r.disguised() || r.skipJava()))
             return true;
+
+        // Don't generate a getter/setter for the parent_class field (the first
+        // field of a type struct).
+        if (((FieldContainer) parent()).fields().getFirst() == this
+                && parent().attr("glib:is-gtype-struct-for") != null)
+            return true;
+
         // Don't generate a getter/setter for padding
         if ("padding".equals(name()))
             return true;
+
         // Don't generate a getter/setter for reserved space
         return name().contains("reserved");
     }
