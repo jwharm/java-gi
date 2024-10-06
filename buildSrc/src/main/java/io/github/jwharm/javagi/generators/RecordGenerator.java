@@ -148,8 +148,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (f.isDisguised()) return;
         if (f.bits() != -1) return;
         FieldGenerator generator = new FieldGenerator(f);
-        Callback cb  = f.callback();
+        Callback cb = f.callback();
 
+        // Generate read-method
         if (cb == null) {
             if (f.anyType() instanceof Type t
                     && (!t.isPointer())
@@ -159,36 +160,42 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             else
                 // Read pointer or primitive value
                 builder.addMethod(generator.generateReadMethod());
+        }
 
-        } else {
-            builder.addType(new ClosureGenerator(cb)
-                                    .generateFunctionalInterface());
-
-            // For callbacks, generate a second override method
-            // with java.lang.reflect.Method parameter
-            if (outerClass != null && cb.parameters() != null) {
-                builder.addField(FieldSpec.builder(
+        /*
+         * For vfunc callbacks (in GObject type classes), generate an override
+         * method with java.lang.reflect.Method parameter.
+         *
+         * Check for "cb.parameters() != null" because some callbacks are
+         * incompletely specified in the gir data. Example: Gio FileIface
+         * callback field "_query_settable_attributes_async"
+         */
+        else if (outerClass != null && cb.parameters() != null) {
+            builder.addField(FieldSpec.builder(
                             java.lang.reflect.Method.class,
                             "_" + generator.getName() + "Method",
                             Modifier.PRIVATE)
-                        .build()
-                );
-                builder.addMethod(generator.generateOverrideMethod());
-                builder.addMethod(new ClosureGenerator(cb).generateUpcallMethod(
-                        "_" + generator.getName() + "Method",
-                        generator.getName() + "Upcall",
-                        "this._" + generator.getName() + "Method.invoke"
-                ));
-            }
+                    .build());
+            builder.addMethod(generator.generateOverrideMethod());
+            builder.addMethod(new ClosureGenerator(cb).generateUpcallMethod(
+                    "_" + generator.getName() + "Method",
+                    generator.getName() + "Upcall",
+                    "this._" + generator.getName() + "Method.invoke"));
+        }
+
+        // For other callback fields, generate a functional interface.
+        else {
+            builder.addType(new ClosureGenerator(cb)
+                                    .generateFunctionalInterface());
         }
 
         if (f.anyType() instanceof Type t
                 && (!t.isPointer())
                 && t.get() instanceof Record)
-            // Copy contents to nested struct
+            // Generate write-method to copy contents to nested struct
             builder.addMethod(generator.generateWriteCopyMethod());
-        else
-            // Write pointer or primitive value
+        else if (cb == null || outerClass == null)
+            // Generate write/override method for a pointer or primitive value
             builder.addMethod(generator.generateWriteMethod());
     }
 

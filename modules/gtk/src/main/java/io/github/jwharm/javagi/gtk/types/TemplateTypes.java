@@ -19,7 +19,9 @@
 
 package io.github.jwharm.javagi.gtk.types;
 
+import io.github.jwharm.javagi.base.FunctionPointer;
 import io.github.jwharm.javagi.base.Proxy;
+import io.github.jwharm.javagi.gobject.InstanceCache;
 import io.github.jwharm.javagi.gobject.types.Overrides;
 import io.github.jwharm.javagi.gobject.types.Properties;
 import io.github.jwharm.javagi.gobject.types.Signals;
@@ -35,6 +37,8 @@ import org.gnome.gobject.TypeFlags;
 import org.gnome.gtk.Widget;
 
 import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Set;
@@ -196,7 +200,7 @@ public class TemplateTypes {
             widgetClass.setTemplateFromResource(ui);
 
             // Override GObject.dispose() to dispose the template
-            widgetClass.overrideDispose((object) -> {
+            overrideDispose(widgetClass, (object) -> {
                 ((Widget) object).disposeTemplate(typeClass.readGType());
 
                 /*
@@ -379,5 +383,25 @@ public class TemplateTypes {
         return io.github.jwharm.javagi.gobject.types.Types.register(
                 parentType, typeName, classLayout, classInit, instanceLayout,
                 instanceInit, constructor, flags);
+    }
+
+    private static void overrideDispose(Proxy instance, DisposeCallback dispose, Arena _arena) {
+        GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("dispose"))
+                .set(instance.handle(), 0, (dispose == null ? MemorySegment.NULL : dispose.toCallback(_arena)));
+    }
+
+    @FunctionalInterface
+    public interface DisposeCallback extends FunctionPointer {
+        void run(GObject object);
+
+        default void upcall(MemorySegment object) {
+            run((GObject) InstanceCache.getForType(object, GObject::new, false));
+        }
+
+        default MemorySegment toCallback(Arena arena) {
+            FunctionDescriptor _fdesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+            MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), DisposeCallback.class, _fdesc);
+            return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena);
+        }
     }
 }

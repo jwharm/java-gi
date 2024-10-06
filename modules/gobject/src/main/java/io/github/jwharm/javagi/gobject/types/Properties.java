@@ -19,16 +19,21 @@
 
 package io.github.jwharm.javagi.gobject.types;
 
+import io.github.jwharm.javagi.base.FunctionPointer;
+import io.github.jwharm.javagi.gobject.InstanceCache;
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.base.ProxyInstance;
 import io.github.jwharm.javagi.gobject.ValueUtil;
+import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
-import java.lang.foreign.Arena;
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -448,7 +453,7 @@ public class Properties {
         // Return class initializer method that installs the properties.
         return (gclass) -> {
             // Override the get_property virtual method
-            gclass.overrideGetProperty((object, propertyId, value, pspec) -> {
+            overrideGetProperty(gclass, (object, propertyId, value, _) -> {
 
                 // Check for invalid property IDs
                 if (propertyId < 1 || propertyId >= getters.length) {
@@ -493,7 +498,7 @@ public class Properties {
             }, Arena.global());
 
             // Override the set_property virtual method
-            gclass.overrideSetProperty((object, propertyId, value, pspec) -> {
+            overrideSetProperty(gclass, (object, propertyId, value, _) -> {
 
                 // Check for invalid property IDs
                 if (propertyId < 1 || propertyId >= setters.length) {
@@ -538,5 +543,59 @@ public class Properties {
             // Call g_class_install_properties with the generated ParamSpecs
             gclass.installProperties(pspecs);
         };
+    }
+
+    private static void overrideGetProperty(Proxy instance, GetPropertyCallback getProperty, Arena _arena) {
+        GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("get_property"))
+                .set(instance.handle(), 0, (getProperty == null ? MemorySegment.NULL : getProperty.toCallback(_arena)));
+    }
+
+    private static void overrideSetProperty(Proxy instance, SetPropertyCallback setProperty, Arena _arena) {
+        GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("set_property"))
+                .set(instance.handle(), 0, (setProperty == null ? MemorySegment.NULL : setProperty.toCallback(_arena)));
+    }
+
+    /**
+     * Functional interface declaration of the {@code GetPropertyCallback} callback.
+     */
+    @FunctionalInterface
+    public interface GetPropertyCallback extends FunctionPointer {
+        void run(GObject object, int propertyId, Value value, ParamSpec pspec);
+
+        default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
+            run((GObject) InstanceCache.getForType(object, GObject::new, false),
+                    propertyId,
+                    MemorySegment.NULL.equals(value) ? null : new Value(value),
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new, false));
+        }
+
+        default MemorySegment toCallback(Arena arena) {
+            FunctionDescriptor _fdesc = FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS);
+            MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(),GetPropertyCallback.class, _fdesc);
+            return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena);
+        }
+    }
+
+    /**
+     * Functional interface declaration of the {@code SetPropertyCallback} callback.
+     */
+    @FunctionalInterface
+    public interface SetPropertyCallback extends FunctionPointer {
+        void run(GObject object, int propertyId, Value value, ParamSpec pspec);
+
+        default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
+            run((GObject) InstanceCache.getForType(object, GObject::new, false),
+                    propertyId,
+                    MemorySegment.NULL.equals(value) ? null : new Value(value),
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new, false));
+        }
+
+        default MemorySegment toCallback(Arena arena) {
+            FunctionDescriptor _fdesc = FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS);
+            MethodHandle _handle = Interop.upcallHandle(MethodHandles.lookup(), SetPropertyCallback.class, _fdesc);
+            return Linker.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena);
+        }
     }
 }
