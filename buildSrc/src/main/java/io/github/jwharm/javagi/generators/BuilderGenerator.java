@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.Arena;
+import java.util.EnumSet;
 
 import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
 
@@ -97,6 +98,11 @@ public class BuilderGenerator {
                         .filter(Property::writable)
                         .map(this::setter)
                         ::iterator)
+                .addMethods(cls.properties().stream()
+                        .filter(Property::writable)
+                        .filter(TypedValue::isBitfield)
+                        .map(this::setterVarargs)
+                        ::iterator)
                 .addMethods(cls.signals().stream()
                         .map(this::connector)
                         ::iterator)
@@ -111,6 +117,11 @@ public class BuilderGenerator {
                 .addMethods(((Interface) rt).properties().stream()
                         .filter(Property::writable)
                         .map(this::setter)
+                        ::iterator)
+                .addMethods(((Interface) rt).properties().stream()
+                        .filter(Property::writable)
+                        .filter(TypedValue::isBitfield)
+                        .map(this::setterVarargs)
                         ::iterator)
                 .build();
     }
@@ -150,6 +161,45 @@ public class BuilderGenerator {
                 .addStatement("addBuilderProperty($S, _value)", prp.name())
                 .addStatement("return (B) this")
                 .build();
+    }
+
+    // Generates a second setter method for bitfield (flag) properties, where
+    // the argument is a vararg instead of a Set<>. It redirects to the original
+    // setter.
+    private MethodSpec setterVarargs(Property prp) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(
+                        "set" + toCamelCase(prp.name(), true))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(BUILDER_B);
+
+        TypedValueGenerator generator = new TypedValueGenerator(prp);
+
+        // Javadoc
+        if (prp.infoElements().doc() != null)
+            builder.addJavadoc(
+                    new DocGenerator(prp.infoElements().doc()).generate());
+
+        // Deprecated annotation
+        if (prp.infoAttrs().deprecated())
+            builder.addAnnotation(Deprecated.class);
+
+        // Modifiers
+        if (prp.parent() instanceof Interface)
+            builder.addModifiers(Modifier.DEFAULT);
+
+        // Parameter
+        var type = generator.getType(false);
+        var name = generator.getName();
+        builder.addParameter(ArrayTypeName.of(type), name);
+        builder.varargs(true);
+
+        // Method body
+        var setter = "set" + toCamelCase(prp.name(), true);
+        var param = "(" + name + " == null ? null : (" + name + ".length == 0) ? $enumSet:T.noneOf($typeName:T.class) : $enumSet:T.of(" + name + "[0], " + name + "))";
+        var stmt = PartialStatement.of("return " + setter + "(" + param + ");",
+                "typeName", type,
+                "enumSet", EnumSet.class);
+        return builder.addNamedCode(stmt.format(), stmt.arguments()).build();
     }
 
     private MethodSpec connector(Signal signal) {
