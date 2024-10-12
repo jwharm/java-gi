@@ -19,46 +19,29 @@
 
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Callable;
+import io.github.jwharm.javagi.gir.Function;
+import io.github.jwharm.javagi.gir.GirElement;
 import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
 
-public class GstAudioPatch implements Patch {
+public class GstVideoPatch implements Patch {
 
     @Override
     public GirElement patch(GirElement element, String namespace) {
 
-        if (!"GstAudio".equals(namespace))
+        if (!"GstVideo".equals(namespace))
             return element;
 
         /*
-         * Property "output-buffer-duration-fraction" has type "Gst.Fraction".
-         * A Gst.Fraction cannot automatically be put into a GValue, so we
-         * cannot generate a builder setter in Java.
-         */
-        if (element instanceof Class c
-                && "AudioAggregator".equals(c.name()))
-            return remove(c, Property.class,
-                    "name", "output-buffer-duration-fraction");
-
-        /*
-         * Virtual method AudioSink::stop overrides BaseSink::stop but returns
-         * void instead of boolean. This is not allowed in Java, so it is
-         * removed from the Java bindings.
-         */
-        if (element instanceof Class c
-                && "AudioSink".equals(c.name()))
-            return remove(c, VirtualMethod.class, "name", "stop");
-
-        /*
-         * AudioInfo::fromCaps clashes with AudioInfo::newFromCaps because the
-         * "new" prefix is removed in Java-GI. The same happens in DsdInfo.
-         * Change the name of these methods to "updateFromCaps".
+         * VideoInfo::fromCaps clashes with VideoInfo::newFromCaps because the
+         * "new" prefix is removed in Java-GI. The same happens in
+         * VideoInfoDmaDrm. Change the name to "updateFromCaps".
          */
         if (element instanceof Function f
-                && List.of("gst_audio_info_from_caps", "gst_dsd_info_from_caps")
+                && List.of("gst_video_info_from_caps",
+                           "gst_video_info_dma_drm_from_caps")
                        .contains(f.callableAttrs().cIdentifier()))
             return f.withAttribute("name", "update_from_caps");
 

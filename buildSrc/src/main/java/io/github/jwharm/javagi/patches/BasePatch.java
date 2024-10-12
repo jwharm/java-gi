@@ -27,22 +27,26 @@ public class BasePatch implements Patch {
             return element.withAttribute("java-gi-skip", "1");
 
         /*
-         * Enumerations cannot have methods in GObject-Introspection, but this
-         * is allowed in Java. We change all functions where the first parameter
-         * is of the enclosing enumeration into methods with an instance
+         * Change all functions where the first parameter is of the enclosing
+         * type (class, record, enumeration, ...) into methods with an instance
          * parameter.
          */
-        if (element instanceof Enumeration e
-                && e.children().stream().anyMatch(Function.class::isInstance)) {
+        if (element instanceof RegisteredType e
+                && (! (e instanceof Namespace))
+                && e.children().stream().anyMatch(child -> child instanceof Function func
+                        && func.parameters() != null
+                        && func.parameters().parameters().getFirst().anyType() instanceof Type t
+                        && (e.name().equals(t.name()) || (namespace + "." + e.name()).equals(t.name()))
+                )) {
 
-            // Create a new list of nodes for the enumeration/bitfield,
+            // Create a new list of nodes for the type,
             // replacing functions by methods when possible.
             List<Node> children = new ArrayList<>();
             for (Node child : e.children()) {
                 if (child instanceof Function func
                         && func.parameters() != null
                         && func.parameters().parameters().getFirst().anyType() instanceof Type t
-                        && e.name().equals(t.name())) {
+                        && (e.name().equals(t.name()) || (namespace + "." + e.name()).equals(t.name()))) {
 
                     // Create new <parameters> element for method
                     var pList = func.parameters().parameters();
@@ -52,13 +56,28 @@ public class BasePatch implements Patch {
                     ArrayList<Node> paramList = new ArrayList<>(pOthers);
                     paramList.addFirst(pInstance);
 
+                    // Update references to parameter indexes
+                    for (var p : pOthers) {
+                        for (var at : p.attributes().keySet())
+                            if (at.equals("destroy") || at.equals("closure"))
+                                p.attributes().put(at, "" + (p.attrInt(at) - 1));
+                        if (p.anyType() instanceof Array array && array.attr("length") != null)
+                            array.attributes().put("length", "" + (array.attrInt("length") - 1));
+                    }
+                    var rt = func.returnValue();
+                    for (var at : rt.attributes().keySet())
+                        if (at.equals("destroy") || at.equals("closure"))
+                            rt.attributes().put(at, "" + (rt.attrInt(at) - 1));
+                    if (rt.anyType() instanceof Array array && array.attr("length") != null)
+                        array.attributes().put("length", "" + (array.attrInt("length") - 1));
+
                     // Construct <method> element
                     Method method = new Method(
                             func.attributes(),
                             listOfNonNull(
                                     func.infoElements().doc(),
                                     func.infoElements().sourcePosition(),
-                                    func.returnValue(),
+                                    rt,
                                     new Parameters(paramList)),
                             func.platforms());
 

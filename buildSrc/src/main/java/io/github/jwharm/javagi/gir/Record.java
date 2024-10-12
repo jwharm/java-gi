@@ -30,6 +30,7 @@ import static java.util.function.Predicate.not;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public final class Record extends Multiplatform
@@ -138,11 +139,15 @@ public final class Record extends Multiplatform
 
         // boxed types: use g_boxed_copy
         if (getTypeFunc() != null)
-            return namespace().parent().lookupNamespace("GObject").functions()
-                    .stream()
-                    .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
-                    .findAny()
-                    .orElse(null);
+            try {
+                return namespace().parent().lookupNamespace("GObject").functions()
+                        .stream()
+                        .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
+                        .findAny()
+                        .orElse(null);
+            } catch (NoSuchElementException ignored) {
+                // GObject namespace is not imported: g_boxed_copy not available
+            }
 
         // use heuristics: find instance method `copy()` or `ref()`
         for (var m : methods())
@@ -161,11 +166,15 @@ public final class Record extends Multiplatform
 
         // boxed types: use g_boxed_free
         if (getTypeFunc() != null)
-            return namespace().parent().lookupNamespace("GObject").functions()
-                    .stream()
-                    .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
-                    .findAny()
-                    .orElse(null);
+            try {
+                return namespace().parent().lookupNamespace("GObject").functions()
+                        .stream()
+                        .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
+                        .findAny()
+                        .orElse(null);
+            } catch (NoSuchElementException ignored) {
+                // GObject namespace is not imported: g_boxed_free not available
+            }
 
         // use heuristics: find function or method `free()` or `unref()`
         for (var n : children())

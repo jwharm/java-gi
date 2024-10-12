@@ -36,6 +36,7 @@ public class Patches {
             new GioPatch(),
             new GObjectPatch(),
             new GstAudioPatch(),
+            new GstVideoPatch(),
             new GstBasePatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),
