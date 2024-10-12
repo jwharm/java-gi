@@ -55,12 +55,12 @@ public class GstAudioPatch implements Patch {
         /*
          * AudioInfo::fromCaps clashes with AudioInfo::newFromCaps because the
          * "new" prefix is removed in Java-GI. The same happens in DsdInfo.
-         * Change the name of these methods to "updateFromCaps".
+         * Change the name of these methods to "withCaps".
          */
         if (element instanceof Function f
                 && List.of("gst_audio_info_from_caps", "gst_dsd_info_from_caps")
                        .contains(f.callableAttrs().cIdentifier()))
-            return f.withAttribute("name", "update_from_caps");
+            return f.withAttribute("name", "with_caps");
 
         return element;
     }

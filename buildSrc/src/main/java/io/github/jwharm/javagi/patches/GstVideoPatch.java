@@ -37,13 +37,13 @@ public class GstVideoPatch implements Patch {
         /*
          * VideoInfo::fromCaps clashes with VideoInfo::newFromCaps because the
          * "new" prefix is removed in Java-GI. The same happens in
-         * VideoInfoDmaDrm. Change the name to "updateFromCaps".
+         * VideoInfoDmaDrm. Change the name to "withCaps".
          */
         if (element instanceof Function f
                 && List.of("gst_video_info_from_caps",
                            "gst_video_info_dma_drm_from_caps")
                        .contains(f.callableAttrs().cIdentifier()))
-            return f.withAttribute("name", "update_from_caps");
+            return f.withAttribute("name", "with_caps");
 
         return element;
     }
