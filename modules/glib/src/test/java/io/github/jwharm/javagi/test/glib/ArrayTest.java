@@ -19,10 +19,10 @@ public class ArrayTest {
         try (var arena = Arena.ofConfined()) {
             HashTable table = HashTable.new_(GLib::strHash, GLib::strEqual);
             for (int i = 0; i < 3; i++)
-                HashTable.insert(table,
+                table.insert(
                         Interop.allocateNativeString("key" + i, arena),
                         Interop.allocateNativeString("val" + i, arena));
-            var values = HashTable.getValuesAsPtrArray(table);
+            var values = table.getValuesAsPtrArray();
             assertNotNull(values);
             assertEquals(3, values.length);
             for (int i = 0; i < 3; i++) {
