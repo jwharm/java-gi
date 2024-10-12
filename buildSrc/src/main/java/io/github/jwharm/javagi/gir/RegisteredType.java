@@ -81,6 +81,11 @@ public sealed interface RegisteredType
         return cType() != null && List.of("GList", "GSList").contains(cType());
     }
 
+    /** Return true if this is GHashTable */
+    default boolean checkIsGHashTable() {
+        return cType() != null && "GHashTable".equals(cType());
+    }
+
     default boolean isFloating() {
         // GObject has a ref_sink function, but we don't want to treat all
         // GObjects as floating references.

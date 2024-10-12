@@ -315,25 +315,14 @@ class TypedValueGenerator {
                     "$" + targetTypeTag + ":T.of(" + identifier + ")",
                     targetTypeTag, target.typeName());
 
-        if (type.checkIsGList() && target != null) {
+        // Generate constructor call for GList/GSList with generic element types
+        if (target != null && type.checkIsGList()) {
             if (type.anyTypes() == null || type.anyTypes().size() > 1)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
-            PartialStatement elementConstructor = switch (type.anyTypes().getFirst()) {
-                case Type t when t.isString()        -> PartialStatement.of("(_p -> $interop:T.getStringFrom(_p))", "interop", ClassNames.INTEROP);
-                case Type t when t.isMemorySegment() -> PartialStatement.of("(_p -> _p)");
-                case Array _                         -> PartialStatement.of("(_p -> _p)");
-                case Type t when t.get() != null     -> t.get().constructorName();
-                default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
-            };
-
-            PartialStatement elementDestructor = switch (type.anyTypes().getFirst()) {
-                case Array _                         -> PartialStatement.of("(_ -> {}) /* unsupported */");
-                case Type t when t.isString()        -> null;
-                case Type t when t.isMemorySegment() -> PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
-                case Type t when t.get() != null     -> t.get().destructorName();
-                default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
-            };
+            // Generate lambdas or method references to create and destruct elements
+            PartialStatement elementConstructor = getElementConstructor(type, 0);
+            PartialStatement elementDestructor = getElementDestructor(type, 0);
 
             // Get parent node (parameter, return value, ...)
             Node parent = type.parent();
@@ -358,6 +347,20 @@ class TypedValueGenerator {
             stmt.add(", " + (transferOwnership == FULL))
                 .add(")");
             return stmt;
+        }
+
+        // Generate constructor call for HashTable with generic types for keys and values
+        if (target != null && type.checkIsGHashTable()) {
+            if (type.anyTypes() == null || type.anyTypes().size() != 2)
+                throw new UnsupportedOperationException("Unsupported element type: " + type);
+
+            PartialStatement keyConstructor = getElementConstructor(type, 0);
+            PartialStatement valueConstructor = getElementConstructor(type, 1);
+
+            return PartialStatement.of("new $" + targetTypeTag + ":T(" + identifier + ", ",
+                            targetTypeTag, type.typeName())
+                    .add(keyConstructor).add(", ").add(valueConstructor).add(")");
+
         }
 
         if ((target instanceof Record && (!isTypeClass))
@@ -408,6 +411,26 @@ class TypedValueGenerator {
             return PartialStatement.of(identifier + " != 0");
 
         return PartialStatement.of(identifier);
+    }
+
+    private static PartialStatement getElementConstructor(Type type, int child) {
+        return switch (type.anyTypes().get(child)) {
+            case Type t when t.isString()        -> PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+            case Type t when t.isMemorySegment() -> PartialStatement.of("(_p -> _p)");
+            case Array _                         -> PartialStatement.of("(_p -> _p)");
+            case Type t when t.get() != null     -> t.get().constructorName();
+            default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+        };
+    }
+
+    private static PartialStatement getElementDestructor(Type type, int child) {
+        return switch (type.anyTypes().get(child)) {
+            case Array _                         -> PartialStatement.of("(_ -> {}) /* unsupported */");
+            case Type t when t.isString()        -> null;
+            case Type t when t.isMemorySegment() -> PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
+            case Type t when t.get() != null     -> t.get().destructorName();
+            default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+        };
     }
 
     private PartialStatement marshalNativeToJavaArray(Type type,

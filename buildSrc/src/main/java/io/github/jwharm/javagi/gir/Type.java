@@ -62,8 +62,8 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName typeName() {
-        if (checkIsGList())
-            return glistTypeName();
+        if (checkIsGList() || checkIsGHashTable())
+            return genericTypeName();
 
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
@@ -76,16 +76,21 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         };
     }
 
-    private TypeName glistTypeName() {
+    private TypeName genericTypeName() {
         var target = get();
         var rawType = toJavaQualifiedType(target.name(), target.namespace());
-        if (anyTypes().getFirst() instanceof Type t) {
-            return ParameterizedTypeName.get(rawType, t.typeName());
-        } else {
-            // Fallback to pointer for a list of arrays
-            TypeName pointer = TypeName.get(MemorySegment.class);
-            return ParameterizedTypeName.get(rawType, pointer);
+        var elements = new TypeName[anyTypes().size()];
+        int i = 0;
+        for (var anyType : anyTypes()) {
+            if (anyType instanceof Type t)
+                elements[i++] = t.typeName();
+            else {
+                // Fallback to pointer for a list of arrays
+                TypeName pointer = TypeName.get(MemorySegment.class);
+                return ParameterizedTypeName.get(rawType, pointer);
+            }
         }
+        return ParameterizedTypeName.get(rawType, elements);
     }
 
     public boolean isPrimitive() {
@@ -143,6 +148,11 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     public boolean checkIsGList() {
         RegisteredType target = get();
         return target != null && target.checkIsGList();
+    }
+
+    public boolean checkIsGHashTable() {
+        RegisteredType target = get();
+        return target != null && target.checkIsGHashTable();
     }
 
     public boolean isActuallyAnArray() {
