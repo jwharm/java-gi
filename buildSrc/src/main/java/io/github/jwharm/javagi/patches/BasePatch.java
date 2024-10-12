@@ -7,6 +7,8 @@ import io.github.jwharm.javagi.util.Patch;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.jwharm.javagi.gir.Direction.INOUT;
+import static io.github.jwharm.javagi.gir.Direction.OUT;
 import static io.github.jwharm.javagi.util.CollectionUtils.listOfNonNull;
 
 /**
@@ -32,12 +34,12 @@ public class BasePatch implements Patch {
          * parameter.
          */
         if (element instanceof RegisteredType e
-                && (! (e instanceof Namespace))
-                && e.children().stream().anyMatch(child -> child instanceof Function func
-                        && func.parameters() != null
-                        && func.parameters().parameters().getFirst().anyType() instanceof Type t
-                        && (e.name().equals(t.name()) || (namespace + "." + e.name()).equals(t.name()))
-                )) {
+            && (! (e instanceof Namespace))
+            && e.children().stream().anyMatch(
+                child -> child instanceof Function func
+                    && func.parameters() != null
+                    && isInstanceParameter(func.parameters().parameters().getFirst(),
+                                           e, namespace))) {
 
             // Create a new list of nodes for the type,
             // replacing functions by methods when possible.
@@ -45,8 +47,8 @@ public class BasePatch implements Patch {
             for (Node child : e.children()) {
                 if (child instanceof Function func
                         && func.parameters() != null
-                        && func.parameters().parameters().getFirst().anyType() instanceof Type t
-                        && (e.name().equals(t.name()) || (namespace + "." + e.name()).equals(t.name()))) {
+                        && isInstanceParameter(func.parameters().parameters().getFirst(),
+                                               e, namespace)) {
 
                     // Create new <parameters> element for method
                     var pList = func.parameters().parameters();
@@ -109,5 +111,14 @@ public class BasePatch implements Patch {
         }
 
         return element;
+    }
+
+    private boolean isInstanceParameter(Parameter param,
+                                        RegisteredType rt,
+                                        String namespace) {
+        return (param.direction() != OUT && param.direction() != INOUT)
+                && param.anyType() instanceof Type t
+                && (rt.name().equals(t.name())
+                    || (namespace + "." + rt.name()).equals(t.name()));
     }
 }
