@@ -212,6 +212,12 @@ public class BuilderGenerator {
         if (signal.infoElements().doc() != null)
             builder.addJavadoc(
                     new DocGenerator(signal.infoElements().doc()).generate());
+        builder.addJavadoc("""
+                
+                @param  handler the signal handler
+                @return the {@code Builder} instance is returned, to allow method chaining
+                @see    $LCallback#run
+                """, toCamelCase(signal.name(), true));
 
         // Deprecated annotation
         if (signal.infoAttrs().deprecated())
