@@ -19,9 +19,10 @@
 
 package io.github.jwharm.javagi.test.gio;
 
+import io.github.jwharm.javagi.gobject.SignalConnection;
 import org.gnome.gio.Application;
 import org.gnome.gio.ApplicationFlags;
-import org.gnome.gobject.GObjects;
+import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,8 +38,8 @@ public class SignalTest {
     public void connectSignal() {
         var success = new AtomicBoolean(false);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        int handlerId = app.onNotify("application-id", _ -> success.set(true));
-        assertTrue(GObjects.signalHandlerIsConnected(app, handlerId));
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", _ -> success.set(true));
+        assertTrue(signal.isConnected());
         app.setApplicationId("test.id2");
         assertTrue(success.get());
     }
@@ -47,9 +48,9 @@ public class SignalTest {
     public void disconnectSignal() {
         var success = new AtomicBoolean(true);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        int handlerId = app.onNotify("application-id", _ -> success.set(false));
-        GObjects.signalHandlerDisconnect(app, handlerId);
-        assertFalse(GObjects.signalHandlerIsConnected(app, handlerId));
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", _ -> success.set(false));
+        signal.disconnect();
+        assertFalse(signal.isConnected());
         app.setApplicationId("test.id2");
         assertTrue(success.get());
     }
@@ -58,11 +59,11 @@ public class SignalTest {
     public void blockUnblockSignal() {
         var success = new AtomicBoolean(true);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
-        int handlerId = app.onNotify("application-id", _ -> success.set(false));
-        GObjects.signalHandlerBlock(app, handlerId);
+        SignalConnection<GObject.NotifyCallback> signal = app.onNotify("application-id", _ -> success.set(false));
+        signal.block();
         app.setApplicationId("test.id2");
         assertTrue(success.get());
-        GObjects.signalHandlerUnblock(app, handlerId);
+        signal.unblock();
         app.setApplicationId("test.id3");
         assertFalse(success.get());
     }

@@ -339,12 +339,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     
                     @param  detailedSignal a string of the form "signal-name::detail"
                     @param  callback       the callback to connect
-                    @return a signal handler id to track, block and disconnect the
+                    @return a SignalConnection object to track, block and disconnect the
                             signal connection
                     """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
-                .returns(int.class)
+                .returns(ClassNames.SIGNAL_CONNECTION)
                 .addParameter(String.class, "detailedSignal")
                 .addParameter(TypeVariableName.get("T"), "callback")
                 .addStatement("return connect(detailedSignal, callback, false)")
@@ -360,19 +360,21 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @param callback       the callback to connect
                     @param after          whether the handler should be called before or
                                           after the default handler of the signal
-                    @return a signal handler id to track, block and disconnect the
+                    @return a SignalConnection object to track, block and disconnect the
                             signal connection
                     """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(TypeVariableName.get("T"))
-                .returns(int.class)
+                .returns(ClassNames.SIGNAL_CONNECTION)
                 .addParameter(String.class, "detailedSignal")
                 .addParameter(TypeVariableName.get("T"), "callback")
                 .addParameter(boolean.class, "after")
                 .addStatement("$1T closure = new $1T(callback)",
                         ClassNames.JAVA_CLOSURE)
-                .addStatement("return $T.signalConnectClosure(this, detailedSignal, closure, after)",
+                .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
                         ClassNames.GOBJECTS)
+                .addStatement("return new $T(handle(), handlerId, closure)",
+                        ClassNames.SIGNAL_CONNECTION)
                 .build();
     }
 

@@ -55,7 +55,8 @@ public class SignalGenerator {
     public MethodSpec generateConnectMethod() {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(connectMethod)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(int.class);
+                .returns(ParameterizedTypeName.get(
+                        ClassNames.SIGNAL_CONNECTION, signal.typeName()));
 
         if (signal.parent() instanceof Interface)
             builder.addModifiers(Modifier.DEFAULT);
@@ -93,7 +94,7 @@ public class SignalGenerator {
 
         return builder.addStatement("var _callbackArena = $T.ofShared()",
                         Arena.class)
-                .addStatement("return (int) (long) $1T.g_signal_connect_data.invokeExact("
+                .addStatement("var _result = (int) (long) $1T.g_signal_connect_data.invokeExact("
                                 + "$Zhandle(),"
                                 + "$W_name,$Whandler.toCallback(_callbackArena),"
                                 + "$W$2T.cacheArena(_callbackArena),"
@@ -101,6 +102,7 @@ public class SignalGenerator {
                                 + "$W0)",
                         ClassNames.SIGNALS,
                         ClassNames.ARENAS)
+                .addStatement("return new SignalConnection<>(handle(), _result)")
                 .nextControlFlow("catch (Throwable _err)")
                 .addStatement("throw new AssertionError(_err)")
                 .endControlFlow()
