@@ -61,6 +61,7 @@ public class Javadoc {
               "(?<emptyp><p>\\s*(?<tag><(pre|ul)>))"
             + "|(?m)(?<blockquote>(^&gt;\\s+.*\\n?)+)"
             + "|(?<code>`[^`]+?`)"
+            + "|(?<kbd>&lt;kbd&gt;(?<kbdcontent>.+?)&lt;/kbd&gt;)"
     ;
 
     /*
@@ -74,7 +75,7 @@ public class Javadoc {
             "container", "bulletpoint", "strong", "em", "entity", "p");
     
     private static final List<String> NAMED_GROUPS_PASS_2 = List.of(
-            "emptyp", "blockquote", "code");
+            "emptyp", "blockquote", "code", "kbd");
 
     // The compiled regex patterns
     private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
@@ -184,11 +185,12 @@ public class Javadoc {
                                             m.group("emcontent"));
             case "entity"      -> convertEntity(m.group());
             case "p"           -> convertP(m.group());
-            
+
             // Pass 2 group names
             case "emptyp"      -> convertEmptyP(m.group(),
                                                 m.group("tag"));
             case "blockquote"  -> convertBlockquote(m.group());
+            case "kbd"         -> convertKbd(m.group(), m.group("kbdcontent"));
 
             // Ignored
             default            -> m.group();
@@ -419,7 +421,12 @@ public class Javadoc {
             return "\n<p>\n";
         }
     }
-    
+
+    // Replace <kbd>...</kbd> with {@code ...}
+    private String convertKbd(String kbd, String kbdContent) {
+        return "{@code " + kbdContent + "}";
+    }
+
     /*
      * Replace <p><pre> or <p><ul> (and any whitespace in between) with just the
      * second tag
