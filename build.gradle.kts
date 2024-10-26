@@ -4,10 +4,15 @@ plugins {
 
 tasks.named("build") {
     dependsOn(gradle.includedBuild("generator").task(":build"))
+    dependsOn(gradle.includedBuild("generator").task(":assembleDist"))
 }
 
 tasks.named("clean") {
     dependsOn(gradle.includedBuild("generator").task(":clean"))
+}
+
+tasks.register("assembleDist") {
+    dependsOn(gradle.includedBuild("generator").task(":assembleDist"))
 }
 
 // Disable jar for top-level project
