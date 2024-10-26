@@ -12,13 +12,13 @@ dependencies {
 
     implementation(libs.javapoet)
     implementation(libs.annotations)
-    implementation("io.github.jwharm.javagi:generator:0.11.0-SNAPSHOT")
+    implementation(libs.javagi.generator)
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(22)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get())
 }
 
 kotlin {
-    jvmToolchain(22)
+    jvmToolchain(libs.versions.jdk.get().toInt())
 }

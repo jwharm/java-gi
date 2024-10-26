@@ -35,10 +35,10 @@ dependencies {
 }
 
 group = "io.github.jwharm.javagi"
-version = "0.11.0-SNAPSHOT"
+version = libs.versions.javagi.get()
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(22)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get())
     withJavadocJar()
     withSourcesJar()
 }

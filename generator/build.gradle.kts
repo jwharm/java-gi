@@ -1,10 +1,11 @@
 plugins {
     id("application")
     id("java-library")
+    alias(libs.plugins.jlink)
 }
 
 group = "io.github.jwharm.javagi"
-version = "0.11.0-SNAPSHOT"
+version = libs.versions.javagi.get()
 
 repositories {
     mavenCentral()
@@ -16,9 +17,20 @@ dependencies {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(22)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get())
 }
 
 application {
     mainClass = "io.github.jwharm.javagi.JavaGI"
+}
+
+jlink {
+    options = listOf(
+        "--strip-debug",
+        "--no-header-files",
+        "--no-man-pages",
+    )
+    launcher {
+        name = "Java-GI"
+    }
 }

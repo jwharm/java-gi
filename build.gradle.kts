@@ -16,7 +16,7 @@ tasks.withType<Jar>().configureEach {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(22)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get())
 }
 
 // Generate javadoc for all modules
