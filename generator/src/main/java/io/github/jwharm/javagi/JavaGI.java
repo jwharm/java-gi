@@ -29,6 +29,7 @@ import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Platform;
 import org.jetbrains.annotations.NotNull;
+import picocli.CommandLine;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -37,21 +38,43 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.*;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
-public class JavaGI {
+@CommandLine.Command(
+        name = "java-gi",
+        mixinStandardHelpOptions = true,
+        version = "java-gi 0.11.0",
+        description = "Generates Java language bindings from GObject-Introspection data")
+public class JavaGI implements Callable<Integer> {
 
-    public static void main(String[] args)
-            throws XMLStreamException, IOException {
-        File girDirectory = new File("../ext/gir-files");
-        File outputDirectory = new File("build/generated/sources/java-gi");
+    @CommandLine.Parameters(index = "0", description = "GIR file")
+    private File girFile;
+
+    @CommandLine.Parameters(index = "1", description = "Package name")
+    private String packageName;
+
+    @CommandLine.Option(names = {"--gir-files"}, description = "GIR files directory")
+    private File girDirectory;
+
+    @CommandLine.Option(names = {"--output"}, description = "Output directory")
+    private File outputDirectory;
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new JavaGI()).execute(args);
+        System.exit(exitCode);
+    }
+
+    @Override
+    public Integer call() throws Exception {
         String namespace = "Gtk";
         System.out.printf("Parse gir files from %s\n", girDirectory.getAbsolutePath());
         var library = parseGirFiles(girDirectory);
         System.out.printf("Generate %s to %s\n", namespace, outputDirectory.getAbsolutePath());
         generate(namespace, library, outputDirectory);
+        return 0;
     }
 
     public static Library parseGirFiles(@NotNull File girDirectory)

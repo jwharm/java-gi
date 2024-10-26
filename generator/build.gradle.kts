@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.picocli)
     implementation(libs.annotations)
     implementation(libs.javapoet)
 }
@@ -21,6 +22,7 @@ java {
 }
 
 application {
+    mainModule = "io.github.jwharm.javagi.generator"
     mainClass = "io.github.jwharm.javagi.JavaGI"
 }
 
@@ -31,6 +33,6 @@ jlink {
         "--no-man-pages",
     )
     launcher {
-        name = "Java-GI"
+        name = "java-gi"
     }
 }
