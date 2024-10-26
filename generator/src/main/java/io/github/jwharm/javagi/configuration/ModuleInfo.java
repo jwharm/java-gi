@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 import static java.util.Map.entry;
 
 /**
- * The PackageNames class defines the mapping between GIR namespaces and Java
+ * The ModuleInfo class defines the mapping between GIR namespaces and Java
  * package names, the base URL for image links, and a short description of the
  * package.
  */
