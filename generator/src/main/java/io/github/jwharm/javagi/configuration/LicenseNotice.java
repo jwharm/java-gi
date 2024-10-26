@@ -39,8 +39,8 @@ public final class LicenseNotice {
             are responsible for complying with any licenses or terms required by the
             original authors.
             
-            THIS FILE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-            INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-            PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+            THIS FILE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
             """;
 }
