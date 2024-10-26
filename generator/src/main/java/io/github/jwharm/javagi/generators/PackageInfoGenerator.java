@@ -27,6 +27,8 @@ import io.github.jwharm.javagi.util.Platform;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static io.github.jwharm.javagi.util.Conversions.capitalize;
+
 public class PackageInfoGenerator {
 
     private final Namespace ns;
@@ -39,8 +41,12 @@ public class PackageInfoGenerator {
 
     public String generate() {
         String desc = ModuleInfo.description(ns.name());
+        String moduleName = ModuleInfo.moduleName(ns.name());
+        if (moduleName.isBlank())
+            moduleName = capitalize(ns.name());
         if (desc.isBlank())
-            desc = "Java bindings for " + ModuleInfo.moduleName(ns.name()) + ".";
+            desc = "Java bindings for " + moduleName + ".";
+
         builder.append("""
                 /**
                  * %s
@@ -63,7 +69,7 @@ public class PackageInfoGenerator {
                 builder.append(" {@code ").append(fileName).append("}");
             }
             builder.append("""
-                     
+                    
                      * <p>
                     """);
         }

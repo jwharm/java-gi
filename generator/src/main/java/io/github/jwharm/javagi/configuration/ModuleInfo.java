@@ -19,10 +19,12 @@
 
 package io.github.jwharm.javagi.configuration;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static java.util.Map.entry;
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * The ModuleInfo class defines the mapping between GIR namespaces and Java
@@ -33,7 +35,7 @@ public final class ModuleInfo {
 
     private record Module(String moduleName, String packageName, String docUrlPrefix, String description) {}
 
-    private static final Map<String, Module> MODULES = Map.ofEntries(
+    private static final Map<String, Module> INCLUDED_MODULES = Map.ofEntries(
             entry("glib",                      new Module("GLib", "org.gnome.glib", "https://docs.gtk.org/glib/", "A general-purpose, portable utility library, which provides many useful data types, macros, type conversions, string utilities, file utilities, a mainloop abstraction, and so on")),
             entry("gobject",                   new Module("GObject", "org.gnome.gobject", "https://docs.gtk.org/glib/" ,"The base type system and object class")),
             entry("gmodule",                   new Module("GModule", "org.gnome.gmodule", "https://docs.gtk.org/glib/", "A portable API for dynamically loading modules")),
@@ -65,25 +67,62 @@ public final class ModuleInfo {
             entry("xlib",                      new Module("XLib", "org.freedesktop.xorg.xlib", "", ""))
     );
 
+    private static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
+
+    /**
+     * Add information about a module.
+     *
+     * @param namespace    name of the GIR namespace
+     * @param moduleName   official name of the module
+     * @param packageName  name of the generated Java package
+     * @param docUrlPrefix URL to be prefixed to hyperlinks in generated Javadoc
+     * @param description  description of the generated Java package
+     */
+    public static void add(String namespace,
+                            String moduleName,
+                            String packageName,
+                            String docUrlPrefix,
+                            String description) {
+        ALL_MODULES.put(namespace.toLowerCase(), new Module(
+                requireNonNullElse(moduleName, ""),
+                requireNonNullElse(packageName, ""),
+                requireNonNullElse(docUrlPrefix, ""),
+                requireNonNullElse(description, "")
+        ));
+    }
+
     private static Module get(String namespace) {
-        Module info = MODULES.get(namespace.toLowerCase());
+        Module info = ALL_MODULES.get(namespace.toLowerCase());
         if (info == null)
             throw new NoSuchElementException(namespace);
         return info;
     }
 
+    /**
+     * Get the official name for the specified GIR namespace
+     */
     public static String moduleName(String namespace) {
         return get(namespace).moduleName();
     }
 
+    /**
+     * Get the generated Java package name for the specified GIR namespace
+     */
     public static String packageName(String namespace) {
         return get(namespace).packageName();
     }
 
+    /**
+     * Get the URL prefix for hyperlinks in Javadoc generated for the specified
+     * GIR namespace
+     */
     public static String docUrlPrefix(String namespace) {
         return get(namespace).docUrlPrefix();
     }
 
+    /**
+     * Get the Java package description for the specified GIR namespace
+     */
     public static String description(String namespace) {
         return get(namespace).description();
     }
