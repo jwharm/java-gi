@@ -17,17 +17,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeSpec;
-import io.github.jwharm.javagi.configuration.LicenseNotice;
-import io.github.jwharm.javagi.configuration.ModuleInfo;
-import io.github.jwharm.javagi.generators.*;
-import io.github.jwharm.javagi.gir.*;
-import io.github.jwharm.javagi.gir.Class;
-import io.github.jwharm.javagi.gir.Library;
-import io.github.jwharm.javagi.gir.Record;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
@@ -38,7 +28,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-import static java.nio.file.StandardOpenOption.*;
+import static io.github.jwharm.javagi.JavaGI.generate;
 
 /**
  * GenerateSources is a Gradle task that will generate Java source files for
@@ -59,91 +49,15 @@ public abstract class GenerateSources extends DefaultTask {
     @TaskAction
     void execute() {
         try {
-            GirParserService buildService = getGirParserService().get();
-            String namespace = getNamespace().get();
-            Library library = buildService.getLibrary(namespace);
-            generate(namespace, library, getOutputDirectory().get());
+            var buildService = getGirParserService().get();
+            var namespace = getNamespace().get();
+            var library = buildService.getLibrary(namespace);
+            var packages = getPackages();
+            var outputDirectory = getOutputDirectory().get().getAsFile();
+            generate(namespace, library, packages, outputDirectory);
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
-    }
-
-    // Generate Java source files for a GIR repository
-    private void generate(String namespace,
-                          Library library,
-                          Directory outputDirectory) throws IOException {
-
-        Namespace ns = library.lookupNamespace(namespace);
-        String packageName = ModuleInfo.packageName(namespace);
-
-        // Generate class with namespace-global constants and functions
-        var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
-        writeJavaFile(typeSpec, packageName, outputDirectory);
-
-        // Generate package-info.java
-        Path path = outputDirectory
-                .dir(packageName.replace('.', File.separatorChar))
-                .getAsFile()
-                .toPath()
-                .resolve("package-info.java");
-        String packageInfo = new PackageInfoGenerator(ns).generate();
-        Files.writeString(path, packageInfo,
-                CREATE, WRITE, TRUNCATE_EXISTING);
-
-        // Generate module-info.java
-        path = outputDirectory
-                .getAsFile()
-                .toPath()
-                .resolve("module-info.java");
-        String moduleInfo = new ModuleInfoGenerator(ns, getPackages()).generate();
-        Files.writeString(path, moduleInfo,
-                CREATE, WRITE, TRUNCATE_EXISTING);
-
-        // Generate classes for all registered types in this namespace
-        for (var rt : ns.registeredTypes().values()) {
-
-            // Do not generate record types named "...Private" (except for
-            // GPrivate)
-            if (rt.skipJava())
-                continue;
-
-            typeSpec = switch(rt) {
-                case Alias a -> new AliasGenerator(a).generate();
-                case Boxed b -> new BoxedGenerator(b).generate();
-                case Callback c -> new CallbackGenerator(c).generate();
-                case Class c -> new ClassGenerator(c).generate();
-                case FlaggedType f -> new FlaggedTypeGenerator(f).generate();
-                case Interface i -> new InterfaceGenerator(i).generate();
-                case Record r when r.isGTypeStructFor() == null ->
-                        new RecordGenerator(r).generate();
-                case Union u -> new UnionGenerator(u).generate();
-                default -> null;
-            };
-            writeJavaFile(typeSpec, packageName, outputDirectory);
-
-            // Write package-private helper classes for interfaces, containing
-            // static downcall handles
-            if (rt instanceof Interface i) {
-                var generator = new InterfaceGenerator(i);
-                if (generator.hasDowncallHandles())
-                    writeJavaFile(generator.downcallHandlesClass(),
-                                  packageName,
-                                  outputDirectory);
-            }
-        }
-    }
-
-    // Write a generated class into a Java file
-    private void writeJavaFile(TypeSpec typeSpec,
-                               String packageName,
-                               Directory outputDirectory) throws IOException {
-        if (typeSpec == null) return;
-
-        JavaFile.builder(packageName, typeSpec)
-                .addFileComment(LicenseNotice.NOTICE)
-                .indent("    ")
-                .build()
-                .writeTo(outputDirectory.getAsFile());
     }
 
     /*
@@ -152,33 +66,32 @@ public abstract class GenerateSources extends DefaultTask {
      * exported in the module-info.java file.
      */
     private Set<String> getPackages() throws IOException {
-        Set<String> packages = new HashSet<>();
-
-        var srcDir = getProject().getProjectDir().toPath()
-                .resolve(Path.of("src", "main", "java"));
+        var packages = new HashSet<String>();
+        var rootDir = getProject().getProjectDir().toPath();
+        var srcDir = rootDir.resolve(Path.of("src", "main", "java"));
         var separator = srcDir.getFileSystem().getSeparator();
 
         if (! Files.exists(srcDir))
             return packages;
 
         Files.walkFileTree(
-                srcDir,
-                EnumSet.noneOf(FileVisitOption.class),
-                Integer.MAX_VALUE,
-                new SimpleFileVisitor<>() {
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (file.toString().endsWith(".java")) {
-                    String pkg = srcDir
-                            .relativize(file.getParent())
-                            .toString()
-                            .replace(separator, ".");
-                    packages.add(pkg);
+            srcDir,
+            EnumSet.noneOf(FileVisitOption.class),
+            Integer.MAX_VALUE,
+            new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file,
+                                                 BasicFileAttributes attrs) {
+                    if (file.toString().endsWith(".java")) {
+                        String pkg = srcDir
+                                .relativize(file.getParent())
+                                .toString()
+                                .replace(separator, ".");
+                        packages.add(pkg);
+                    }
+                    return FileVisitResult.CONTINUE;
                 }
-                return FileVisitResult.CONTINUE;
-            }
-        });
+            });
         return packages;
     }
 }

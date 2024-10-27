@@ -46,7 +46,11 @@ public final class Repository extends GirElement {
 
     @Override
     public Namespace namespace() {
-        return null;
+        var namespaces = namespaces();
+        if (namespaces.size() == 1)
+            return namespaces.getFirst();
+        else
+            throw new IllegalStateException("Gir file does not contain exactly one namespace");
     }
 
     public Node lookupCIdentifier(String cIdentifier) {
