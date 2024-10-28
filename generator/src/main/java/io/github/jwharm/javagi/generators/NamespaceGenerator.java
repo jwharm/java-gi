@@ -80,7 +80,12 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                         ClassNames.PLATFORM);
 
         // Add case for each platform
-        for (Integer platform : Platform.toList(ns.platforms())) {
+        for (Integer platform : Platform.toList(Platform.ALL)) {
+            // Add placeholder comment when this platform is not supported
+            if ((platform & ns.platforms()) == 0) {
+                block.add("// add $L library here\n", Platform.toString(platform));
+                continue;
+            }
 
             // Remove path from library name
             String lib = ns.sharedLibrary(platform);

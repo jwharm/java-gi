@@ -28,10 +28,24 @@ import java.util.StringJoiner;
  */
 public class Platform {
 
+    public static boolean GENERATE_PLATFORM_CHECKS = true;
+
     public final static int LINUX = 1;
     public final static int WINDOWS = 1 << 1;
     public final static int MACOS = 1 << 2;
     public final static int ALL = LINUX | WINDOWS | MACOS;
+
+    /**
+     * Determine the runtime platform
+     *
+     * @return the runtime platform
+     */
+    public static int getRuntimePlatform() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("windows"))    return WINDOWS;
+        else if (osName.contains("linux")) return LINUX;
+        else                               return MACOS;
+    }
 
     /**
      * Generate a String representation of the specified (combination of)

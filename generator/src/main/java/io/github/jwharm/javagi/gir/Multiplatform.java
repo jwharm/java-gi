@@ -48,6 +48,9 @@ public abstract sealed class Multiplatform
     }
 
     public boolean doPlatformCheck() {
+        if (! Platform.GENERATE_PLATFORM_CHECKS)
+            return false;
+
         if (platforms() == Platform.ALL)
             return false;
 

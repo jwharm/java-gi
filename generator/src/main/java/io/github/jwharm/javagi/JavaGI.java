@@ -112,18 +112,25 @@ public class JavaGI implements Callable<Integer> {
             if (! outputDirectory.mkdirs())
                 throw new IllegalArgumentException("Cannot create output directory");
 
+        // Do not generate runtime platform checks
+        Platform.GENERATE_PLATFORM_CHECKS = false;
+
+        // Parse gir files
         var library = parseGirDirectory(girDirectory);
 
         // Ensure that at least GLib gir file is present
         library.lookupNamespace("GLib");
 
-        // Parse the gir file
+        // Parse the gir file for which bindings will be generated
         var parser = GirParser.getInstance();
-        var repository = parser.parse(girFile, Platform.LINUX, null);
+        var platform = Platform.getRuntimePlatform();
+        var repository = parser.parse(girFile, platform, null);
 
+        // Check if the gir file contains a namespace
         if (repository == null || repository.namespace() == null)
             throw new IllegalArgumentException("Invalid gir file");
 
+        // Prepare contents of package-info.java and module-info.java
         var namespace = repository.namespace().name();
         if (moduleName == null) moduleName = namespace.toLowerCase();
         if (packageName == null) packageName = namespace.toLowerCase();
@@ -133,6 +140,7 @@ public class JavaGI implements Callable<Integer> {
         // No custom packages to export in module-info.java
         var packages = new HashSet<String>();
 
+        // Generate the language bindings
         generate(namespace, library, packages, outputDirectory);
 
         return 0;
@@ -157,14 +165,15 @@ public class JavaGI implements Callable<Integer> {
         // Load gir files from the directory itself
         for (File girFile : listGirFiles(girDirectory)) {
             var name = girFile.getName();
-            var repo = parser.parse(girFile, Platform.LINUX, library.get(name));
+            var platform = Platform.getRuntimePlatform();
+            var repo = parser.parse(girFile, platform, library.get(name));
             library.put(name, repo);
         }
 
         return library;
     }
 
-    // Generate Java source files for a GIR repository
+    // Generate Java language bindings for a GIR repository
     public static void generate(String namespace,
                                 Library library,
                                 Set<String> packages,
@@ -182,16 +191,12 @@ public class JavaGI implements Callable<Integer> {
                 .resolve(packageName.replace('.', File.separatorChar))
                 .resolve("package-info.java");
         String packageInfo = new PackageInfoGenerator(ns).generate();
-        Files.writeString(path, packageInfo,
-                CREATE, WRITE, TRUNCATE_EXISTING);
+        Files.writeString(path, packageInfo, CREATE, WRITE, TRUNCATE_EXISTING);
 
         // Generate module-info.java
-        path = outputDirectory
-                .toPath()
-                .resolve("module-info.java");
+        path = outputDirectory.toPath().resolve("module-info.java");
         String moduleInfo = new ModuleInfoGenerator(ns, packages).generate();
-        Files.writeString(path, moduleInfo,
-                CREATE, WRITE, TRUNCATE_EXISTING);
+        Files.writeString(path, moduleInfo, CREATE, WRITE, TRUNCATE_EXISTING);
 
         // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
@@ -221,8 +226,8 @@ public class JavaGI implements Callable<Integer> {
                 var generator = new InterfaceGenerator(i);
                 if (generator.hasDowncallHandles())
                     writeJavaFile(generator.downcallHandlesClass(),
-                            packageName,
-                            outputDirectory);
+                                  packageName,
+                                  outputDirectory);
             }
         }
     }
