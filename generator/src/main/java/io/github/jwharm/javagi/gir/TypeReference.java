@@ -63,6 +63,13 @@ public interface TypeReference {
                 return outer.typeName().nestedClass(
                         toJavaSimpleType(type.name(), type.namespace()));
         }
+
+        // Target not found: fallback to MemorySegment
+        if (type == null) {
+            System.err.println("Cannot resolve type " + name());
+            return TypeName.get(MemorySegment.class);
+        }
+
         return toJavaQualifiedType(type.name(), type.namespace());
     }
 
