@@ -7,12 +7,10 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
 === "Java"
 
     ```java
-    import io.github.jwharm.javagi.gtk.types.Types;
-    
     @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
     public class HelloWindow extends ApplicationWindow {
 
-        private static final Type gtype = Types.register(HelloWindow.class);
+        private static final Type gtype = TemplateTypes.register(HelloWindow.class);
 
         @GtkChild
         public HeaderBar header_bar;
@@ -31,12 +29,10 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
 === "Kotlin"
 
     ```kotlin
-    import io.github.jwharm.javagi.gtk.types.Types
-    
     @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
     class HelloWindow : ApplicationWindow {
         companion object {
-            val gtype: Type = Types.register<HelloWindow, Widget>(HelloWindow::class.java)
+            val gtype: Type = TemplateTypes.register<HelloWindow, Widget>(HelloWindow::class.java)
         }
 
         @GtkChild
@@ -52,7 +48,6 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
         
         ...
     ```
-
 
 In the above class, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file. During class initialization, the fields are set to the associated widget.
 

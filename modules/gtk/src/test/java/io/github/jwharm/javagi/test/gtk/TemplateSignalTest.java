@@ -22,7 +22,7 @@ package io.github.jwharm.javagi.test.gtk;
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
-import io.github.jwharm.javagi.gtk.types.Types;
+import io.github.jwharm.javagi.gtk.types.TemplateTypes;
 import org.gnome.gio.ApplicationFlags;
 import org.gnome.gio.Resource;
 import org.gnome.glib.Type;
@@ -71,7 +71,7 @@ public class TemplateSignalTest {
 
     @GtkTemplate(name="SignalTestWindow", ui="/io/github/jwharm/javagi/gtk/TemplateSignalTest.ui")
     public static class TestWindow extends ApplicationWindow {
-        public static Type gtype = Types.register(TestWindow.class);
+        public static Type gtype = TemplateTypes.register(TestWindow.class);
         public TestWindow(MemorySegment address ){
             super(address);
         }
