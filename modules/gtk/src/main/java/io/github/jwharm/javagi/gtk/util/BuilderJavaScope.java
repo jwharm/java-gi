@@ -22,12 +22,12 @@ package io.github.jwharm.javagi.gtk.util;
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkCallback;
 import io.github.jwharm.javagi.gobject.JavaClosure;
+import io.github.jwharm.javagi.gtk.types.TemplateTypes;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 import org.gnome.gtk.*;
-import io.github.jwharm.javagi.gtk.types.Types;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
@@ -50,7 +50,7 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 public final class BuilderJavaScope extends BuilderCScope
         implements BuilderScope {
 
-    private static final Type gtype = Types.register(BuilderJavaScope.class);
+    private static final Type gtype = TemplateTypes.register(BuilderJavaScope.class);
 
     static {
         Gtk.javagi$ensureInitialized();
