@@ -33,9 +33,9 @@ import static java.util.Objects.requireNonNullElse;
  */
 public final class ModuleInfo {
 
-    private record Module(String moduleName, String packageName, String docUrlPrefix, String description) {}
+    public record Module(String moduleName, String packageName, String docUrlPrefix, String description) {}
 
-    private static final Map<String, Module> INCLUDED_MODULES = Map.ofEntries(
+    public static final Map<String, Module> INCLUDED_MODULES = Map.ofEntries(
             entry("glib",                      new Module("GLib", "org.gnome.glib", "https://docs.gtk.org/glib/", "A general-purpose, portable utility library, which provides many useful data types, macros, type conversions, string utilities, file utilities, a mainloop abstraction, and so on")),
             entry("gobject",                   new Module("GObject", "org.gnome.gobject", "https://docs.gtk.org/glib/" ,"The base type system and object class")),
             entry("gmodule",                   new Module("GModule", "org.gnome.gmodule", "https://docs.gtk.org/glib/", "A portable API for dynamically loading modules")),
@@ -67,7 +67,7 @@ public final class ModuleInfo {
             entry("xlib",                      new Module("XLib", "org.freedesktop.xorg.xlib", "", ""))
     );
 
-    private static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
+    public static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
 
     /**
      * Add information about a module.

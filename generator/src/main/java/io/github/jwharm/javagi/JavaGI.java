@@ -28,7 +28,6 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Platform;
-import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import javax.xml.stream.XMLStreamException;
@@ -37,19 +36,40 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.*;
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.Collectors.joining;
 
+/**
+ * Main class for the {@code java-gi} command-line utility.
+ * <p>
+ * The command-line arguments are processed with Picocli. The tool loads the gir
+ * files collection into a {@link Library}, and then generates Java bindings for
+ * one or more gir files. With an optional argument, a complete Gradle project
+ * structure is generated.
+ * <p>
+ * The {@link #generate} method is used by the Gradle build scripts as well (see
+ * the {@code GenerateSources} class in the {@code buildSrc} folder).
+ */
 @CommandLine.Command(
         name = "java-gi",
         mixinStandardHelpOptions = true,
-        version = "java-gi 0.11.0-SNAPSHOT",
-        description = "Generate Java language bindings from a GObject-Introspection repository (gir) file.")
+        version = "java-gi 0.11.0",
+        description = "Generate Java bindings from GObject-Introspection repository (gir) files.")
 public class JavaGI implements Callable<Integer> {
+
+    @CommandLine.Option(
+            names = {"-d", "--domain"},
+            paramLabel = "domain",
+            description = "reverse domain name prefixed to the Java package " +
+                    "and module name, for example \"org.gnome\"")
+    private String domain;
 
     @CommandLine.Option(
             names = {"-g", "--gir-files"},
@@ -66,51 +86,67 @@ public class JavaGI implements Callable<Integer> {
     private File outputDirectory;
 
     @CommandLine.Option(
-            names = {"-m", "--target-module"},
-            paramLabel = "module",
-            description = "name of the generated java module, default: gir namespace name")
-    private String moduleName;
+            names = {"-p", "--project"},
+            description = "generate Gradle project structure and build scripts"
+    )
+    private boolean generateProject;
 
     @CommandLine.Option(
-            names = {"-p", "--target-package"},
-            paramLabel = "package",
-            description = "name of the generated java package, default: gir namespace name")
-    private String packageName;
+            names = {"-s", "--summary"},
+            paramLabel = "text",
+            description = "short summary of the library to include in the " +
+                    "javadoc of the generated Java package")
+    private String summary;
 
     @CommandLine.Option(
-            names = {"-d", "--description"},
-            paramLabel = "description",
-            description = "short description of the library to include in the javadoc of the generated Java package")
-    private String description;
-
-    @CommandLine.Option(
-            names = {"-u", "--doc-url-prefix"},
+            names = {"-u", "--doc-url"},
             paramLabel = "url",
             defaultValue = "",
-            description = "url of the online API documentation to prefix before hyperlinks in the generated javadoc")
-    private String docUrlPrefix;
+            description = "url of the online API documentation to prefix before " +
+                    "hyperlinks in the generated javadoc")
+    private String docUrl;
 
     @CommandLine.Parameters(
-            index = "0",
-            description = "gir file to process")
-    private File girFile;
+            arity = "1..*",
+            description = "one or more gir files to process")
+    private File[] girFiles;
 
+    // List of generated subprojects (one for each gir file)
+    private final List<String> subprojects = new ArrayList<>();
+
+    // The gir parser
+    private final GirParser parser = GirParser.getInstance();
+
+    // The runtime platform is assumed to be the target platform
+    private final int platform = Platform.getRuntimePlatform();
+
+    /**
+     * Redirects to {@link #call}
+     *
+     * @param args processed by picocli
+     */
     public static void main(String[] args) {
         int exitCode = new CommandLine(new JavaGI()).execute(args);
         System.exit(exitCode);
     }
 
+    /**
+     * Runs the bindings generator from the command-line arguments.
+     *
+     * @return status code (0 = success)
+     * @throws Exception all exceptions are handled (reported) by picocli
+     */
     @Override
     public Integer call() throws Exception {
-        if (girDirectory == null || (! girDirectory.isDirectory()))
+        // Check that the gir directory exists
+        if (! girDirectory.isDirectory())
             throw new IllegalArgumentException("gir files directory not found");
 
-        if (girFile == null || (! girFile.exists()))
-            throw new IllegalArgumentException("gir file not found");
-
-        if (! outputDirectory.exists())
-            if (! outputDirectory.mkdirs())
-                throw new IllegalArgumentException("Cannot create output directory");
+        // Check that all gir files exist
+        for (var girFile : girFiles)
+            if (! girFile.exists())
+                throw new IllegalArgumentException("gir file %s not found"
+                        .formatted(girFile.getName()));
 
         // Do not generate runtime platform checks
         Platform.GENERATE_PLATFORM_CHECKS = false;
@@ -119,34 +155,54 @@ public class JavaGI implements Callable<Integer> {
         var library = parseGirDirectory(girDirectory);
 
         // Ensure that at least GLib gir file is present
-        library.lookupNamespace("GLib");
+        library.lookupNamespace("GLib"); // throws exception when not found
 
-        // Parse the gir file for which bindings will be generated
-        var parser = GirParser.getInstance();
-        var platform = Platform.getRuntimePlatform();
-        var repository = parser.parse(girFile, platform, null);
+        // Parse the gir files for which bindings will be generated
+        for (var girFile : girFiles) {
+            var repository = parser.parse(girFile, platform, null);
 
-        // Check if the gir file contains a namespace
-        if (repository == null || repository.namespace() == null)
-            throw new IllegalArgumentException("Invalid gir file");
+            // Check if parsing succeeded (the gir file contains a namespace)
+            if (repository == null || repository.namespace() == null)
+                throw new IllegalArgumentException("gir file %s is invalid"
+                        .formatted(girFile.getName()));
 
-        // Prepare contents of package-info.java and module-info.java
-        var namespace = repository.namespace().name();
-        if (moduleName == null) moduleName = namespace.toLowerCase();
-        if (packageName == null) packageName = namespace.toLowerCase();
-        ModuleInfo.add(namespace, moduleName, packageName, docUrlPrefix, description);
-        library.put(girFile.getName(), repository);
+            // Prepare module and package information
+            var namespace = repository.namespace().name();
+            var packageName = generatePackageName(namespace);
+            ModuleInfo.add(namespace, packageName, packageName, docUrl, summary);
+            library.put(girFile.getName(), repository);
 
-        // No custom packages to export in module-info.java
-        var packages = new HashSet<String>();
+            // Create a directory for each module
+            var libDirectory = new File(outputDirectory, namespace.toLowerCase());
+            libDirectory.mkdirs();
 
-        // Generate the language bindings
-        generate(namespace, library, packages, outputDirectory);
+            // No custom packages to export in module-info.java
+            var packages = new HashSet<String>();
+
+            // Create standard source directories for maven/gradle projects
+            var srcDirectory = generateProject
+                    ? new File(libDirectory, "src/main/java")
+                    : libDirectory;
+
+            // Generate the language bindings
+            generate(namespace, library, packages, srcDirectory);
+
+            if (generateProject) {
+                // Generate build.gradle script
+                writeBuildScript(libDirectory.toPath(), repository);
+                subprojects.add(namespace.toLowerCase());
+            }
+        }
+
+        if (generateProject) {
+            // Generate settings.gradle script
+            writeSettingsScript(subprojects);
+        }
 
         return 0;
     }
 
-    public static Library parseGirDirectory(@NotNull File girDirectory)
+    private Library parseGirDirectory(File girDirectory)
             throws XMLStreamException, FileNotFoundException {
         var library = new Library();
         var parser = GirParser.getInstance();
@@ -171,6 +227,13 @@ public class JavaGI implements Callable<Integer> {
         }
 
         return library;
+    }
+
+    private String generatePackageName(String namespace) {
+        var name = requireNonNullElse(domain, "");
+        if (! name.endsWith("."))
+            name += ".";
+        return name + namespace.toLowerCase();
     }
 
     // Generate Java language bindings for a GIR repository
@@ -233,9 +296,9 @@ public class JavaGI implements Callable<Integer> {
     }
 
     // Write a generated class into a Java file
-    public static void writeJavaFile(TypeSpec typeSpec,
-                                     String packageName,
-                                     File outputDirectory) throws IOException {
+    private static void writeJavaFile(TypeSpec typeSpec,
+                                      String packageName,
+                                      File outputDirectory) throws IOException {
         if (typeSpec == null) return;
 
         JavaFile.builder(packageName, typeSpec)
@@ -245,11 +308,57 @@ public class JavaGI implements Callable<Integer> {
                 .writeTo(outputDirectory);
     }
 
+    private void writeBuildScript(Path basePath,
+                                  Repository repository) throws IOException {
+        // List the project dependencies
+        var dependencies = new HashSet<String>();
+        for (var incl : repository.includes()) {
+            var name = incl.name().toLowerCase();
+            String dep = "    api(project(\":" + name + "\"))";
+            if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
+                dep = "    api(\"io.github.jwharm.javagi:" + name + ":0.11.0\")";
+            }
+            dependencies.add(dep);
+        }
+
+        // Generate the build script
+        String script = """
+                plugins {
+                    id("java-library")
+                }
+                
+                repositories {
+                    mavenCentral()
+                }
+                
+                java {
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(22)
+                    }
+                }
+                
+                dependencies {
+                    compileOnly("org.jetbrains:annotations:26.0.1")
+                %s
+                }
+                """.formatted(String.join("\n", dependencies));
+        Path file = basePath.resolve("build.gradle");
+        Files.writeString(file, script, CREATE, WRITE, TRUNCATE_EXISTING);
+    }
+
+    private void writeSettingsScript(List<String> subprojects) throws IOException {
+        String script = subprojects.stream()
+                .map(s -> "include(\"" + s + "\")")
+                .collect(joining("\n", "", "\n"));
+        Path file = outputDirectory.toPath().resolve("settings.gradle");
+        Files.writeString(file, script, CREATE, WRITE, TRUNCATE_EXISTING);
+    }
+
     /*
      * Return an array of all *.gir files in this directory. If the directory
      * does not exist or contains no gir files, an empty array is returned.
      */
-    private static File[] listGirFiles(@NotNull File directory) {
+    private File[] listGirFiles(File directory) {
         File[] empty = new File[] {};
         if (! directory.exists())
             return empty;
