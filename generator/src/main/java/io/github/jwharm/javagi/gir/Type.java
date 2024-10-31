@@ -83,7 +83,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         int i = 0;
         for (var anyType : anyTypes()) {
             if (anyType instanceof Type t)
-                elements[i++] = t.typeName();
+                elements[i++] = t.typeName().box();
             else {
                 // Fallback to pointer for a list of arrays
                 TypeName pointer = TypeName.get(MemorySegment.class);
