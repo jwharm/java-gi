@@ -174,7 +174,6 @@ public class JavaGI implements Callable<Integer> {
 
             // Create a directory for each module
             var libDirectory = new File(outputDirectory, namespace.toLowerCase());
-            libDirectory.mkdirs();
 
             // No custom packages to export in module-info.java
             var packages = new HashSet<String>();
@@ -183,6 +182,7 @@ public class JavaGI implements Callable<Integer> {
             var srcDirectory = generateProject
                     ? new File(libDirectory, "src/main/java")
                     : libDirectory;
+            srcDirectory.mkdirs();
 
             // Generate the language bindings
             generate(namespace, library, packages, srcDirectory);
@@ -230,10 +230,13 @@ public class JavaGI implements Callable<Integer> {
     }
 
     private String generatePackageName(String namespace) {
-        var name = requireNonNullElse(domain, "");
-        if (! name.endsWith("."))
-            name += ".";
-        return name + namespace.toLowerCase();
+        var ns = namespace.toLowerCase();
+        if (domain == null || domain.isBlank())
+            return ns;
+        if (domain.endsWith("."))
+            return domain + ns;
+        else
+            return domain + "." + ns;
     }
 
     // Generate Java language bindings for a GIR repository
