@@ -94,7 +94,7 @@ public final class ModuleInfo {
     private static Module get(String namespace) {
         Module info = ALL_MODULES.get(namespace.toLowerCase());
         if (info == null)
-            throw new NoSuchElementException(namespace);
+            throw new NoSuchElementException("GIR namespace " + namespace + " not found");
         return info;
     }
 

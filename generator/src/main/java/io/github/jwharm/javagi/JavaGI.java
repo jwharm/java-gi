@@ -318,7 +318,10 @@ public class JavaGI implements Callable<Integer> {
         for (var incl : repository.includes()) {
             var name = incl.name().toLowerCase();
             String dep = "    api(project(\":" + name + "\"))";
-            if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
+            if (name.equals("cairo")) {
+                dep = "    api(\"io.github.jwharm.cairobindings:cairo:1.18.4.1\")";
+            }
+            else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
                 dep = "    api(\"io.github.jwharm.javagi:" + name + ":0.11.0\")";
             }
             dependencies.add(dep);
