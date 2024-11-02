@@ -34,6 +34,8 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static io.github.jwharm.javagi.interop.Interop.getAddress;
+
 /**
  * Java wrapper for <a href="https://docs.gtk.org/glib/struct.SList.html">GLib.SList</a>
  * that implements {@link java.util.List}.
@@ -42,7 +44,8 @@ import java.util.function.Function;
  * backwards will throw an {@code UnsupportedOperationException}.
  *
  * @param <E> The element type must be a {@link MemorySegment}, a
- *            {@link String}, or implement the {@link Proxy} interface.
+ *            {@link String}, a primitive value, or implement the {@link Proxy}
+ *            interface.
  */
 public class SList<E> extends AbstractSequentialList<E> implements Proxy {
 
@@ -235,16 +238,16 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                         free.accept(make.apply(data));
                 }
 
-                last.writeData(getAddress(e));
+                last.writeData(getAddress(e, arena));
             }
 
             @Override
             public void add(E e) {
                 var next = peek();
                 if (index <= 0)
-                    head = SListNode.insertBefore(head, next, getAddress(e));
+                    head = SListNode.insertBefore(head, next, getAddress(e, arena));
                 else {
-                    prev = SListNode.insertBefore(last, next, getAddress(e));
+                    prev = SListNode.insertBefore(last, next, getAddress(e, arena));
                     if (prev == null)
                         throw new IllegalStateException();
                     last = prev.readNext();
@@ -274,15 +277,6 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     @Override
     public boolean isEmpty() {
         return head == null;
-    }
-
-    private MemorySegment getAddress(Object o) {
-        return switch (o) {
-            case MemorySegment m -> m;
-            case String s        -> arena.allocateFrom(s);
-            case Proxy p         -> p.handle();
-            default              -> throw new IllegalArgumentException("Not a MemorySegment, String or Proxy");
-        };
     }
 
     /**

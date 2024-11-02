@@ -416,6 +416,7 @@ class TypedValueGenerator {
     private static PartialStatement getElementConstructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
             case Type t when t.isString()        -> PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+            case Type t when t.isPrimitive()     -> PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From", "interop", ClassNames.INTEROP);
             case Type t when t.isMemorySegment() -> PartialStatement.of("(_p -> _p)");
             case Array _                         -> PartialStatement.of("(_p -> _p)");
             case Type t when t.get() != null     -> t.get().constructorName();
@@ -427,6 +428,7 @@ class TypedValueGenerator {
         return switch (type.anyTypes().get(child)) {
             case Array _                         -> PartialStatement.of("(_ -> {}) /* unsupported */");
             case Type t when t.isString()        -> null;
+            case Type t when t.isPrimitive()     -> null;
             case Type t when t.isMemorySegment() -> PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
             case Type t when t.get() != null     -> t.get().destructorName();
             default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);

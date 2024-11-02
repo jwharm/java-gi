@@ -39,13 +39,14 @@ import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static io.github.jwharm.javagi.interop.Interop.getAddress;
 import static java.lang.foreign.MemorySegment.NULL;
 
 /**
  * The {@code GHashTable} struct is an opaque data structure to represent a
  * hash table. The keys and values of the Java class can be pointers
- * ({@link MemorySegment} objects), strings or native objects (implementing the
- * {@link Proxy} interface).
+ * ({@link MemorySegment} objects), strings, primitive values or native objects
+ * (implementing the {@link Proxy} interface).
  * <p>
  * This class is intended to help Java developers deal with native functions
  * that require or return a GHashTable. It is not meant to be used as a
@@ -164,15 +165,6 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         return Interop.getType("g_hash_table_get_type");
     }
 
-    private MemorySegment getAddress(Object o) {
-        return switch (o) {
-            case MemorySegment m -> m;
-            case String s        -> arena.allocateFrom(s);
-            case Proxy p         -> p.handle();
-            default              -> throw new IllegalArgumentException("Not a MemorySegment, String or Proxy");
-        };
-    }
-
     /**
      * Creates a new {@code GHashTable} with a reference count of 1.
      * <p>
@@ -236,7 +228,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_add.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -253,7 +245,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_contains.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -546,8 +538,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_insert.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)),
-                    (MemorySegment) (value == null ? NULL : getAddress(value)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)),
+                    (MemorySegment) (value == null ? NULL : getAddress(value, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -567,7 +559,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_lookup.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -598,7 +590,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             int _result;
             try {
                 _result = (int) MethodHandles.g_hash_table_lookup_extended.invokeExact(handle(),
-                        (MemorySegment) (lookupKey == null ? NULL : getAddress(lookupKey)),
+                        (MemorySegment) (lookupKey == null ? NULL : getAddress(lookupKey, arena)),
                         (MemorySegment) (origKey == null ? NULL : _origKeyPointer),
                         (MemorySegment) (value == null ? NULL : _valuePointer));
             } catch (Throwable _err) {
@@ -678,7 +670,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_remove.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -725,8 +717,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_replace.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)),
-                    (MemorySegment) (value == null ? NULL : getAddress(value)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)),
+                    (MemorySegment) (value == null ? NULL : getAddress(value, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -759,7 +751,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_steal.invokeExact(handle(),
-                    (MemorySegment) (key == null ? NULL : getAddress(key)));
+                    (MemorySegment) (key == null ? NULL : getAddress(key, arena)));
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -852,7 +844,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             int _result;
             try {
                 _result = (int) MethodHandles.g_hash_table_steal_extended.invokeExact(handle(),
-                        (MemorySegment) (lookupKey == null ? NULL : getAddress(lookupKey)),
+                        (MemorySegment) (lookupKey == null ? NULL : getAddress(lookupKey, arena)),
                         (MemorySegment) (stolenKey == null ? NULL : _stolenKeyPointer),
                         (MemorySegment) (stolenValue == null ? NULL : _stolenValuePointer));
             } catch (Throwable _err) {
