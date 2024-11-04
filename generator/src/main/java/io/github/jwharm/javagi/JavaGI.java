@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -126,8 +125,25 @@ public class JavaGI implements Callable<Integer> {
      * @param args processed by picocli
      */
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new JavaGI()).execute(args);
+        int exitCode = new CommandLine(new JavaGI())
+                .setExecutionExceptionHandler(JavaGI::handleException)
+                .execute(args);
         System.exit(exitCode);
+    }
+
+    /**
+     * Prints exception messages on the command line, but does not print the
+     * stack trace.
+     */
+    private static int handleException(Exception ex,
+                                       CommandLine cmd,
+                                       CommandLine.ParseResult parseResult) {
+        // bold red error message
+        cmd.getErr().println(cmd.getColorScheme().errorText(ex.getMessage()));
+
+        return cmd.getExitCodeExceptionMapper() != null
+                ? cmd.getExitCodeExceptionMapper().getExitCode(ex)
+                : cmd.getCommandSpec().exitCodeOnExecutionException();
     }
 
     /**
@@ -182,7 +198,7 @@ public class JavaGI implements Callable<Integer> {
             var srcDirectory = generateProject
                     ? new File(libDirectory, "src/main/java")
                     : libDirectory;
-            srcDirectory.mkdirs();
+            var ignored = srcDirectory.mkdirs();
 
             // Generate the language bindings
             generate(namespace, library, packages, srcDirectory);
