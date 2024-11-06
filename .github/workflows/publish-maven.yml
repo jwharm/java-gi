@@ -28,12 +28,6 @@ jobs:
           java-version: 22
           distribution: 'temurin'
 
-      - name: Checkout gir-files repository
-        uses: actions/checkout@v4
-        with:
-          repository: 'gircore/gir-files'
-          path: 'gir-files'
-
       - name: Checkout java-gi repository
         uses: actions/checkout@v4
         with:
