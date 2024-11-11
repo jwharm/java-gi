@@ -193,15 +193,21 @@ public abstract class GirElement implements Serializable, Node {
     }
 
     /**
-     * Replace the child elements of the element with a new list
+     * Replace the child elements of the element with a new list. Any
+     * {@code null} elements are removed from the list.
      *
-     * @param  newChildren the new list of child elements
+     * @param  children the new list of child elements
      * @param  <T> the element must be a GirElement
      * @return a new instance of the same type as {@code elem}, with the new
      *         child elements
      */
     @SuppressWarnings("unchecked")
-    public <T extends Node> T withChildren(List<Node> newChildren) {
+    public <T extends Node> T withChildren(List<Node> children) {
+        var newChildren = children;
+        // Filter null values from the list
+        if (children.contains(null))
+            newChildren = children.stream().filter(Objects::nonNull).toList();
+
         return (T) switch(this) {
             case Alias a             -> new Alias(a.attributes(), newChildren, a.platforms());
             case Array a             -> new Array(a.attributes(), newChildren);

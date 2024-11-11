@@ -28,6 +28,8 @@ import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
 
+import static io.github.jwharm.javagi.util.CollectionUtils.listOfNonNull;
+
 public class GstBasePatch implements Patch {
 
     @Override
@@ -48,7 +50,7 @@ public class GstBasePatch implements Patch {
                                          .type().name()))
             return new VirtualMethod(
                     vm.attributes(),
-                    List.of(
+                    listOfNonNull(
                             vm.infoElements().doc(),
                             vm.infoElements().sourcePosition(),
                             vm.returnValue(),
