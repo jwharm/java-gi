@@ -1,13 +1,17 @@
 [versions]
-v_cairo = "1.18.4.1"
-v_javapoet = "1.13.0"
-v_annotations = "26.0.1"
-v_junit = "5.11.3"
+javagi = "0.11.0"
+jdk = "22"
+cairo = "1.18.4.1"
+picocli = "4.7.6"
+javapoet = "1.13.0"
+annotations = "26.0.1"
+junit = "5.11.3"
 
 [libraries]
-cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "v_cairo" }
-javapoet = { module = "com.squareup:javapoet", version.ref = "v_javapoet" }
-annotations = { module = "org.jetbrains:annotations", version.ref = "v_annotations" }
-junit-jupiter = {module = "org.junit.jupiter:junit-jupiter", version.ref = "v_junit" }
+javagi-generator = { module = "io.github.jwharm.javagi:generator", version.ref = "javagi" }
+cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "cairo" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
+annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-

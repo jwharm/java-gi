@@ -34,12 +34,15 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static io.github.jwharm.javagi.interop.Interop.getAddress;
+
 /**
  * Java wrapper for <a href="https://docs.gtk.org/glib/struct.List.html">GLib.List</a>
  * that implements {@link java.util.List}.
  *
  * @param <E> The element type must be a {@link MemorySegment}, a
- *            {@link String}, or implement the {@link Proxy} interface.
+ *            {@link String}, a primitive value, or implement the {@link Proxy}
+ *            interface.
  */
 public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
@@ -223,17 +226,17 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                         free.accept(make.apply(data));
                 }
 
-                last.writeData(getAddress(e));
+                last.writeData(getAddress(e, arena));
             }
 
             @Override
             public void add(E e) {
                 if (direction == Direction.BACKWARD) {
-                    head = ListNode.insertBefore(head, last, getAddress(e));
+                    head = ListNode.insertBefore(head, last, getAddress(e, arena));
                     last = last.readPrev();
                 } else {
                     ListNode next = last == null ? head : last.readNext();
-                    head = ListNode.insertBefore(head, next, getAddress(e));
+                    head = ListNode.insertBefore(head, next, getAddress(e, arena));
                     next();
                 }
             }
@@ -262,15 +265,6 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         return head == null;
     }
     
-    private MemorySegment getAddress(Object o) {
-        return switch (o) {
-            case MemorySegment m -> m;
-            case String s        -> arena.allocateFrom(s);
-            case Proxy p         -> p.handle();
-            default              -> throw new IllegalArgumentException("Not a MemorySegment, String or Proxy");
-        };
-    }
-
     /**
      * Returns the memory address of the head of the list. This address can
      * change if the list is modified.

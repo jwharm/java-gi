@@ -255,7 +255,7 @@ public class Interop {
 
     /**
      * Copy a Java string from native memory using
-     * {@code MemorySegment.getUtf8String()}. If an error occurs or when the
+     * {@code MemorySegment.getString()}. If an error occurs or when the
      * native address is NULL, null is returned.
      * <p>
      * The native memory is not freed.
@@ -270,7 +270,7 @@ public class Interop {
 
     /**
      * Copy a Java string from native memory using
-     * {@code MemorySegment.getUtf8String()}. If an error occurs or when the
+     * {@code MemorySegment.getString()}. If an error occurs or when the
      * native address is NULL, null is returned.
      *
      * @param  address the memory address of the native String
@@ -279,7 +279,6 @@ public class Interop {
      * @return a String or null
      */
     public static String getStringFrom(MemorySegment address, boolean free) {
-
         if (NULL.equals(address))
             return null;
 
@@ -289,6 +288,284 @@ public class Interop {
             if (free)
                 GLib.free(address);
         }
+    }
+
+    /**
+     * Copy a boolean value from native memory. If the native address is NULL or
+     * contains the value 0, false is returned; else, true is returned.
+     *
+     * @param  address the memory address of the native boolean (0 is false, any
+     *                 other value is true)
+     * @return the resulting boolean
+     */
+    public static boolean getBooleanFrom(MemorySegment address) {
+        return getBooleanFrom(address, false);
+    }
+
+    /**
+     * Copy a boolean value from native memory. If the native address is NULL or
+     * contains the value 0, false is returned; else, true is returned.
+     *
+     * @param  address the memory address of the native boolean (0 is false, any
+     *                 other value is true)
+     * @param  free    if the address must be freed
+     * @return the resulting boolean
+     */
+    public static boolean getBooleanFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return false;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_INT, 0) != 0;
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a byte value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native byte
+     * @return the resulting byte
+     */
+    public static byte getByteFrom(MemorySegment address) {
+        return getByteFrom(address, false);
+    }
+
+    /**
+     * Copy a byte value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native byte
+     * @param  free    if the address must be freed
+     * @return the resulting byte
+     */
+    public static byte getByteFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_BYTE, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a char value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native char
+     * @return the resulting char
+     */
+    public static char getCharacterFrom(MemorySegment address) {
+        return getCharacterFrom(address, false);
+    }
+
+    /**
+     * Copy a char value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native char
+     * @param  free    if the address must be freed
+     * @return the resulting char
+     */
+    public static char getCharacterFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_CHAR, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a double value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native double
+     * @return the resulting double
+     */
+    public static double getDoubleFrom(MemorySegment address) {
+        return getDoubleFrom(address, false);
+    }
+
+    /**
+     * Copy a double value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native double
+     * @param  free    if the address must be freed
+     * @return the resulting double
+     */
+    public static double getDoubleFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_DOUBLE, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a float value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native float
+     * @return the resulting float
+     */
+    public static float getFloatFrom(MemorySegment address) {
+        return getFloatFrom(address, false);
+    }
+
+    /**
+     * Copy a float value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native float
+     * @param  free    if the address must be freed
+     * @return the resulting float
+     */
+    public static float getFloatFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_FLOAT, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy an integer value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native integer
+     * @return the resulting integer
+     */
+    public static int getIntegerFrom(MemorySegment address) {
+        return getIntegerFrom(address, false);
+    }
+
+    /**
+     * Copy an integer value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native integer
+     * @param  free    if the address must be freed
+     * @return the resulting integer
+     */
+    public static int getIntegerFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                          .get(ValueLayout.JAVA_INT, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a long value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native long
+     * @return the resulting long
+     */
+    public static long getLongFrom(MemorySegment address) {
+        return getLongFrom(address, false);
+    }
+
+    /**
+     * Copy a long value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native long
+     * @param  free    if the address must be freed
+     * @return the resulting long
+     */
+    public static long getLongFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                          .get(ValueLayout.JAVA_LONG, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    /**
+     * Copy a short value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native short
+     * @return the resulting short
+     */
+    public static short getShortFrom(MemorySegment address) {
+        return getShortFrom(address, false);
+    }
+
+    /**
+     * Copy a short value from native memory. If the native address is NULL,
+     * 0 is returned.
+     *
+     * @param  address the memory address of the native short
+     * @param  free    if the address must be freed
+     * @return the resulting short
+     */
+    public static short getShortFrom(MemorySegment address, boolean free) {
+        if (NULL.equals(address))
+            return 0;
+
+        try {
+            return address.reinterpret(LONG_UNBOUNDED)
+                    .get(ValueLayout.JAVA_SHORT, 0);
+        } finally {
+            if (free)
+                GLib.free(address);
+        }
+    }
+
+    public static MemorySegment getAddress(Object o, Arena arena) {
+        return switch (o) {
+            case MemorySegment m -> m;
+            case String s    -> arena.allocateFrom(s);
+            case Boolean b   -> arena.allocateFrom(ValueLayout.JAVA_INT, b ? 1 : 0);
+            case Byte b      -> arena.allocateFrom(ValueLayout.JAVA_BYTE, b);
+            case Character c -> arena.allocateFrom(ValueLayout.JAVA_CHAR, c);
+            case Double d    -> arena.allocateFrom(ValueLayout.JAVA_DOUBLE, d);
+            case Float f     -> arena.allocateFrom(ValueLayout.JAVA_FLOAT, f);
+            case Integer i   -> arena.allocateFrom(ValueLayout.JAVA_INT, i);
+            case Long l      -> longAsInt()
+                                    ? arena.allocateFrom(ValueLayout.JAVA_INT, l.intValue())
+                                    : arena.allocateFrom(ValueLayout.JAVA_LONG, l);
+            case Short s     -> arena.allocateFrom(ValueLayout.JAVA_SHORT, s);
+            case Proxy p     -> p.handle();
+            default          -> throw new IllegalArgumentException(
+                    "Not a MemorySegment, String, primitive or Proxy");
+        };
     }
 
     /**
