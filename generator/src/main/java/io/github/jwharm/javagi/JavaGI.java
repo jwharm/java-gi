@@ -62,7 +62,7 @@ import static java.util.stream.Collectors.joining;
 @CommandLine.Command(
         name = "java-gi",
         mixinStandardHelpOptions = true,
-        version = "java-gi 0.11.0",
+        version = "${app.version}",
         description = "Generate Java bindings from GObject-Introspection repository (gir) files.")
 public class JavaGI implements Callable<Integer> {
 
@@ -318,13 +318,7 @@ public class JavaGI implements Callable<Integer> {
         var dependencies = new HashSet<String>();
         for (var incl : repository.includes()) {
             var name = incl.name().toLowerCase();
-            String dep = "    api(project(\":" + name + "\"))";
-            if (name.equals("cairo")) {
-                dep = "    api(\"io.github.jwharm.cairobindings:cairo:1.18.4.1\")";
-            }
-            else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
-                dep = "    api(\"io.github.jwharm.javagi:" + name + ":0.11.0\")";
-            }
+            String dep = generateDependencyLine(name);
             dependencies.add(dep);
         }
 
@@ -351,6 +345,18 @@ public class JavaGI implements Callable<Integer> {
                 """.formatted(String.join("\n", dependencies));
         Path file = basePath.resolve("build.gradle");
         Files.writeString(file, script, CREATE, WRITE, TRUNCATE_EXISTING);
+    }
+
+    private String generateDependencyLine(String name) {
+        if (name.equals("cairo")) {
+            return "    api(\"io.github.jwharm.cairobindings:cairo:1.18.4.1\")";
+        }
+        else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
+            String version = System.getProperty("app.version");
+            return "    api(\"io.github.jwharm.javagi:" + name + ":" + version + "\")";
+        } else {
+            return "    api(project(\":" + name + "\"))";
+        }
     }
 
     private void writeSettingsScript(List<String> subprojects) throws IOException {

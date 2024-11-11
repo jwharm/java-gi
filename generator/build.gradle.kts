@@ -26,6 +26,7 @@ application {
     applicationName = "java-gi"
     mainModule = "io.github.jwharm.javagi.generator"
     mainClass = "io.github.jwharm.javagi.JavaGI"
+    applicationDefaultJvmArgs = listOf("-Dapp.version=$version")
 }
 
 // Include the gir-files repository as a zip file with the java-gi command-line
