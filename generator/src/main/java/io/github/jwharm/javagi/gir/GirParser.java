@@ -30,6 +30,7 @@ import javax.xml.stream.events.XMLEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 
 import static io.github.jwharm.javagi.configuration.Patches.PATCHES;
@@ -93,8 +94,23 @@ public final class GirParser {
         if (!file.exists())
             return repository;
 
-        XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(
-                new FileInputStream(file));
+        return parse(new FileInputStream(file), platform, repository);
+    }
+
+    /**
+     * Parse GIR XML and build the GIR model.
+     *
+     * @param  inputStream Input stream for a GIR file
+     * @param  platform   the platform of the GIR XML file
+     * @param  repository an existing GIR model to merge with the new repository
+     * @return the GIR model
+     * @throws XMLStreamException    if the XML cannot be parsed
+     */
+    public Repository parse(InputStream inputStream,
+                            int platform,
+                            Repository repository) throws XMLStreamException {
+        XMLEventReader eventReader =
+                XML_INPUT_FACTORY.createXMLEventReader(inputStream);
 
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
