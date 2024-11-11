@@ -15,9 +15,9 @@ import org.apache.tools.ant.taskdefs.condition.Os
  */
 
 plugins {
-    `java-library`
-    `maven-publish`
-    signing
+    id("java-library")
+    id("maven-publish")
+    id("signing")
 }
 
 repositories {

@@ -41,17 +41,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import static io.github.jwharm.javagi.util.Platform.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.stream.Collectors.joining;
 
 /**
  * Main class for the {@code java-gi} command-line utility.
  * <p>
- * The command-line arguments are processed with Picocli. The tool loads the gir
- * files collection into a {@link Library}, and then generates Java bindings for
- * one or more gir files. With an optional argument, a complete Gradle project
- * structure is generated.
+ * The command-line arguments are processed with Picocli. The tool loads the
+ * included gir files into a {@link Library}, and then generates Java bindings
+ * for one or more gir files. With an optional argument, a complete Gradle
+ * project structure is generated.
  * <p>
  * The {@link #generate} method is used by the Gradle build scripts as well (see
  * the {@code GenerateSources} class in the {@code buildSrc} folder).
@@ -69,13 +72,6 @@ public class JavaGI implements Callable<Integer> {
             description = "reverse domain name prefixed to the Java package " +
                     "and module name, for example \"org.gnome\"")
     private String domain;
-
-    @CommandLine.Option(
-            names = {"-g", "--gir-files"},
-            paramLabel = "dir",
-            defaultValue = "/usr/share/gir-1.0",
-            description = "gir files directory, default: /usr/share/gir-1.0")
-    private File girDirectory;
 
     @CommandLine.Option(
             names = {"-o", "--output"},
@@ -120,7 +116,7 @@ public class JavaGI implements Callable<Integer> {
     private final int platform = Platform.getRuntimePlatform();
 
     /**
-     * Redirects to {@link #call}
+     * Overrides error output and redirects to {@link #call}
      *
      * @param args processed by picocli
      */
@@ -154,21 +150,11 @@ public class JavaGI implements Callable<Integer> {
      */
     @Override
     public Integer call() throws Exception {
-        // Check that the gir directory exists
-        if (! girDirectory.isDirectory())
-            throw new IllegalArgumentException("gir files directory not found");
-
-        // Check that all gir files exist
-        for (var girFile : girFiles)
-            if (! girFile.exists())
-                throw new IllegalArgumentException("gir file %s not found"
-                        .formatted(girFile.getName()));
-
         // Do not generate runtime platform checks
         Platform.GENERATE_PLATFORM_CHECKS = false;
 
-        // Parse gir files
-        var library = parseGirDirectory(girDirectory);
+        // Load included gir files
+        var library = loadIncludedGirFiles();
 
         // Ensure that at least GLib gir file is present
         library.lookupNamespace("GLib"); // throws exception when not found
@@ -218,28 +204,27 @@ public class JavaGI implements Callable<Integer> {
         return 0;
     }
 
-    private Library parseGirDirectory(File girDirectory)
-            throws XMLStreamException, FileNotFoundException {
+    private Library loadIncludedGirFiles()
+            throws XMLStreamException, IOException {
         var library = new Library();
-        var parser = GirParser.getInstance();
+        ZipEntry entry;
 
-        // Load gir files from platform-specific subdirectories
-        for (var platform : Platform.toList(Platform.ALL)) {
-            String platformName = Platform.toString(platform);
-            File platformDirectory = new File(girDirectory, platformName);
-            for (File girFile : listGirFiles(platformDirectory)) {
-                var name = girFile.getName();
-                var repo = parser.parse(girFile, platform, library.get(name));
-                library.put(name, repo);
+        try (var resource = getClass().getResourceAsStream("/gir-files.zip")) {
+            if (resource == null)
+                throw new FileNotFoundException("gir-files.zip resource not found");
+
+            var zipIn = new ZipInputStream(resource);
+            while ((entry = zipIn.getNextEntry()) != null) {
+                var name = entry.getName();
+                if (!entry.isDirectory() && name.endsWith(".gir")) {
+                    var platform = name.startsWith("windows/") ? WINDOWS
+                            : name.startsWith("macos/") ? MACOS
+                            : LINUX;
+                    var file = name.substring(name.lastIndexOf("/") + 1);
+                    var repo = parser.parse(zipIn, platform, library.get(file));
+                    library.put(file, repo);
+                }
             }
-        }
-
-        // Load gir files from the directory itself
-        for (File girFile : listGirFiles(girDirectory)) {
-            var name = girFile.getName();
-            var platform = Platform.getRuntimePlatform();
-            var repo = parser.parse(girFile, platform, library.get(name));
-            library.put(name, repo);
         }
 
         return library;
@@ -374,17 +359,5 @@ public class JavaGI implements Callable<Integer> {
                 .collect(joining("\n", "", "\n"));
         Path file = outputDirectory.toPath().resolve("settings.gradle");
         Files.writeString(file, script, CREATE, WRITE, TRUNCATE_EXISTING);
-    }
-
-    /*
-     * Return an array of all *.gir files in this directory. If the directory
-     * does not exist or contains no gir files, an empty array is returned.
-     */
-    private File[] listGirFiles(File directory) {
-        File[] empty = new File[] {};
-        if (! directory.exists())
-            return empty;
-        File[] files = directory.listFiles((_, name) -> name.endsWith(".gir"));
-        return files == null ? empty : files;
     }
 }

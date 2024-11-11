@@ -6,7 +6,6 @@ picocli = "4.7.6"
 javapoet = "1.13.0"
 annotations = "26.0.1"
 junit = "5.11.3"
-jlink = "3.0.1"
 
 [libraries]
 javagi-generator = { module = "io.github.jwharm.javagi:generator", version.ref = "javagi" }
@@ -16,6 +15,3 @@ javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-
-[plugins]
-jlink = { id = "org.beryx.jlink", version.ref = "jlink" }

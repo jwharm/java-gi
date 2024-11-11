@@ -1,18 +1,18 @@
 plugins {
-    `java-library`
+    id("java-library")
 }
 
 tasks.named("build") {
     dependsOn(gradle.includedBuild("generator").task(":build"))
-    dependsOn(gradle.includedBuild("generator").task(":jlink"))
+    dependsOn(gradle.includedBuild("generator").task(":assembleDist"))
 }
 
 tasks.named("clean") {
     dependsOn(gradle.includedBuild("generator").task(":clean"))
 }
 
-tasks.register("jlink") {
-    dependsOn(gradle.includedBuild("generator").task(":jlink"))
+tasks.register("assembleDist") {
+    dependsOn(gradle.includedBuild("generator").task(":assembleDist"))
 }
 
 // Disable jar for top-level project
@@ -39,11 +39,9 @@ tasks.withType<Javadoc>().configureEach {
     // Exclude external dependencies from the classpath
     classpath = files(subprojects.flatMap { subproject ->
         subproject.sourceSets["main"].compileClasspath.filter { file ->
-            val path = file.absolutePath
+            val path = file.absolutePath.replace("\\", "/")
             path.contains("/org.jetbrains/annotations/")
                 || path.contains("/io.github.jwharm.cairobindings/cairo/")
-                || path.contains("\\org.jetbrains\\annotations\\")
-                || path.contains("\\io.github.jwharm.cairobindings\\cairo\\")
         }
     })
 
