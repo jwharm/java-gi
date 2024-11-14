@@ -19,10 +19,27 @@
 
 package io.github.jwharm.javagi.gir;
 
-public sealed interface Documentation
-        extends Node
-        permits Doc, DocDeprecated, DocVersion, DocStability {
+public final class DocStability extends GirElement implements Documentation {
 
-    String text();
-    Namespace namespace();
+    private final String text;
+
+    public DocStability(String text) {
+        this.text = text;
+    }
+
+    public String text() {
+        return text;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        return obj != null && obj.getClass() == this.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+        return 1;
+    }
 }
