@@ -234,6 +234,7 @@ public final class GirParser {
             case "doc"                -> new Doc(attributes, contents.toString().trim());
             case "docsection"         -> new Docsection(attributes, children);
             case "doc-deprecated"     -> new DocDeprecated(contents.toString().trim());
+            case "doc-stability"      -> new DocStability(contents.toString().trim());
             case "doc-version"        -> new DocVersion(contents.toString().trim());
             case "enumeration"        -> new Enumeration(attributes, children, platform);
             case "field"              -> new Field(attributes, children);

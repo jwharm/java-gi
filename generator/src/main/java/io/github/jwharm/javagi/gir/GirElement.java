@@ -97,8 +97,8 @@ public abstract class GirElement implements Serializable, Node {
 
     public InfoElements infoElements() {
         return new InfoElements(
-                attr("doc-version"),
-                attr("doc-stability"),
+                findAny(children, DocVersion.class),
+                findAny(children, DocStability.class),
                 findAny(children, Doc.class),
                 findAny(children, DocDeprecated.class),
                 findAny(children, SourcePosition.class),

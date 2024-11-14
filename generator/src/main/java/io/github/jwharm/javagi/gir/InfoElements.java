@@ -23,8 +23,8 @@ import java.io.Serializable;
 import java.util.List;
 
 public record InfoElements(
-        String docVersion,
-        String docStability,
+        DocVersion docVersion,
+        DocStability docStability,
         Doc doc,
         DocDeprecated docDeprecated,
         SourcePosition sourcePosition,
