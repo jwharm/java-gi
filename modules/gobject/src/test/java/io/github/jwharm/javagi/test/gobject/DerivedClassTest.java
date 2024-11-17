@@ -46,7 +46,7 @@ public class DerivedClassTest {
      */
     @Test
     public void gtypeNameIsCorrect() {
-        assertEquals(GObjects.typeName(TestObject.gtype), "JavaGiTestObject");
+        assertEquals("JavaGiTestObject", GObjects.typeName(TestObject.gtype));
     }
 
     private static boolean classInitHasRun = false;

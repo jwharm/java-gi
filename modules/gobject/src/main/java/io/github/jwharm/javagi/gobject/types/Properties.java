@@ -50,13 +50,13 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 public class Properties {
 
     /**
-     * Read the GType of the GParamSpec of a GObject property.
+     * Read the value type from the GParamSpec of a GObject property.
      *
      * @param  objectClass  the GObject typeclass that has a property installed
      *                      with the provided name
      * @param  propertyName the name of the property
-     * @return the GType of the GParamSpec of the GObject property, or null if
-     *         not found
+     * @return the value type of the GParamSpec of the GObject property, or null
+     *         if not found
      */
     public static Type readPropertyValueType(GObject.ObjectClass objectClass,
                                              String propertyName) {

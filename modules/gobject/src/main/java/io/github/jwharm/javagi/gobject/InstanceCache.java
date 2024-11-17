@@ -130,7 +130,7 @@ public class InstanceCache {
      * @param  address get the Proxy object for this address from the cache
      * @return the instance (if found), or null (if not found)
      */
-    private static Proxy get(MemorySegment address) {
+    private static Proxy lookup(MemorySegment address) {
         
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL))
@@ -158,11 +158,11 @@ public class InstanceCache {
                                    boolean cache) {
         
         // Get instance from the cache
-        Proxy instance = get(address);
+        Proxy instance = lookup(address);
         if (instance != null)
             return instance;
 
-        // Get constructor from the type registry
+        // Read gclass->gtype and get constructor from the type registry
         Function<MemorySegment, ? extends Proxy> ctor =
                 TypeCache.getConstructor(address, fallback);
         if (ctor == null)
@@ -219,8 +219,7 @@ public class InstanceCache {
             return fallback.apply(address);
 
         // Get the Java proxy TypeClass definition
-        TypeInstance typeInstance = (TypeInstance) newInstance;
-        Class<? extends TypeInstance> instanceClass = typeInstance.getClass();
+        Class<? extends Proxy> instanceClass = newInstance.getClass();
         Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
         if (typeClass == null)
             return fallback.apply(address);
@@ -254,7 +253,7 @@ public class InstanceCache {
                             boolean cache) {
 
         // Get instance from the cache
-        Proxy instance = get(address);
+        Proxy instance = lookup(address);
         if (instance != null)
             return instance;
 

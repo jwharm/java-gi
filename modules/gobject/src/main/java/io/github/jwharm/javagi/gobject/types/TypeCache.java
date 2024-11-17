@@ -56,8 +56,9 @@ public class TypeCache {
      * @return         the constructor, or {@code null} if address is
      *                 {@code null} or a null-pointer
      */
-    public static Function<MemorySegment, ? extends Proxy> getConstructor(MemorySegment address,
-                                                                          Function<MemorySegment, ? extends Proxy> fallback) {
+    public static Function<MemorySegment, ? extends Proxy>
+    getConstructor(MemorySegment address,
+                   Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL)) return null;
 

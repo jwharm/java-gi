@@ -28,4 +28,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface RegisteredType {
     String name() default "";
+    Class<?>[] prerequisites() default {};
 }
