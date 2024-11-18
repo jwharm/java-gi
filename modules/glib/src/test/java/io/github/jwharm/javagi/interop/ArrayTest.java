@@ -16,7 +16,7 @@ public class ArrayTest {
     @Test
     void testArray() {
         try (var arena = Arena.ofConfined()) {
-            HashTable table = HashTable.new_(GLib::strHash, GLib::strEqual);
+            var table = HashTable.new_(GLib::strHash, GLib::strEqual);
             for (int i = 0; i < 3; i++)
                 table.insert(
                         Interop.allocateNativeString("key" + i, arena),
