@@ -1,7 +1,6 @@
-package io.github.jwharm.javagi.test.glib;
+package io.github.jwharm.javagi.interop;
 
 import io.github.jwharm.javagi.base.Proxy;
-import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GString;
 import org.gnome.glib.OptionFlags;
 import org.gnome.glib.Variant;

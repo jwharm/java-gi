@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.test.glib;
+package io.github.jwharm.javagi.interop;
 
 import org.gnome.glib.GLib;
 import org.junit.jupiter.api.Test;
