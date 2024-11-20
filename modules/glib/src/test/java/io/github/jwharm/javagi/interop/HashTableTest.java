@@ -1,4 +1,4 @@
-package io.github.jwharm.javagi.test.glib;
+package io.github.jwharm.javagi.interop;
 
 import io.github.jwharm.javagi.base.GErrorException;
 import org.gnome.glib.HashTable;

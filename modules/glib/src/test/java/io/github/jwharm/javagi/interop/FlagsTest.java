@@ -1,6 +1,5 @@
-package io.github.jwharm.javagi.test.glib;
+package io.github.jwharm.javagi.interop;
 
-import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.AsciiType;
 import org.junit.jupiter.api.Test;
 

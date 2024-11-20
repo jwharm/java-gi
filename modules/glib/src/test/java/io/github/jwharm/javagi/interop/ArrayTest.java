@@ -1,6 +1,5 @@
-package io.github.jwharm.javagi.test.glib;
+package io.github.jwharm.javagi.interop;
 
-import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.HashTable;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,7 @@ public class ArrayTest {
     @Test
     void testArray() {
         try (var arena = Arena.ofConfined()) {
-            HashTable table = HashTable.new_(GLib::strHash, GLib::strEqual);
+            var table = HashTable.new_(GLib::strHash, GLib::strEqual);
             for (int i = 0; i < 3; i++)
                 table.insert(
                         Interop.allocateNativeString("key" + i, arena),

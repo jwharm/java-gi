@@ -39,15 +39,13 @@ import static java.util.Objects.requireNonNull;
  * was created (except for GObject instances; those are handled in the
  * InstanceCache).
  * <p>
- * When a new Proxy object is created, the reference count in the cache is
- * increased. When a Proxy object is garbage-collected, the reference count in
- * the cache is decreased. When the reference count is 0, the memory is
- * released using {@link GLib#free(MemorySegment)} or a specialized method.
+ * When a cached (and owned) Proxy object is garbage-collected, the native
+ * memory is released using {@code g_boxed_free}, a custom free-function, or
+ * (as a last resort), {@code g_free}.
  * <p>
- * When ownership of a memory address is passed to native code, the cleaner
- * will not free the memory. Ownership is enabled/disabled with
- * {@link #takeOwnership(Proxy)} and
- * {@link #yieldOwnership(Proxy)}.
+ * When ownership of a memory address transfers to native code, the cleaner
+ * will not free the memory. Take and yield ownership with
+ * {@link #takeOwnership} and {@link #yieldOwnership}.
  */
 public class MemoryCleaner {
 
@@ -68,15 +66,7 @@ public class MemoryCleaner {
                 // Put the address in the cache
                 var finalizer = new StructFinalizer(address);
                 var cleanable = CLEANER.register(proxy, finalizer);
-                cached = new Cached(false, 1, null, null, cleanable);
-                cache.put(address, cached);
-            } else {
-                // Already in the cache: increase the refcount
-                cached = new Cached(false,
-                        cached.references + 1,
-                        cached.freeFunc,
-                        cached.boxedType,
-                        cached.cleanable);
+                cached = new Cached(false, null, null, cleanable);
                 cache.put(address, cached);
             }
             return cached;
@@ -97,10 +87,9 @@ public class MemoryCleaner {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(cached.owned,
-                                               cached.references,
-                                               freeFunc,
-                                               cached.boxedType,
-                                               cached.cleanable));
+                                                 freeFunc,
+                                                 cached.boxedType,
+                                                 cached.cleanable));
         }
     }
 
@@ -118,15 +107,14 @@ public class MemoryCleaner {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(cached.owned,
-                                                cached.references,
-                                                cached.freeFunc,
-                                                boxedType,
-                                                cached.cleanable));
+                                                 cached.freeFunc,
+                                                 boxedType,
+                                                 cached.cleanable));
         }
     }
 
     /**
-     * Take ownership of this memory address: when all proxy objects are
+     * Take ownership of this memory address: when the proxy object is
      * garbage-collected, the memory will automatically be released.
      *
      * @param proxy  the proxy instance
@@ -136,15 +124,14 @@ public class MemoryCleaner {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(true,
-                                               cached.references,
-                                               cached.freeFunc,
-                                               cached.boxedType,
-                                               cached.cleanable));
+                                                 cached.freeFunc,
+                                                 cached.boxedType,
+                                                 cached.cleanable));
         }
     }
 
     /**
-     * Yield ownership of this memory address: when all proxy objects are
+     * Yield ownership of this memory address: when the proxy object is
      * garbage-collected, the memory will not be released.
      *
      * @param proxy  the proxy instance
@@ -154,16 +141,18 @@ public class MemoryCleaner {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(false,
-                                               cached.references,
-                                               cached.freeFunc,
-                                               cached.boxedType,
-                                               cached.cleanable));
+                                                 cached.freeFunc,
+                                                 cached.boxedType,
+                                                 cached.cleanable));
         }
     }
 
     /**
      * Run the {@link StructFinalizer} associated with this memory address, by
      * invoking {@link Cleaner.Cleanable#clean()}.
+     * <p>
+     * The cleaner action will only ever run once, so any further attempts to
+     * free this instance (including by the GC) will be a no-op.
      *
      * @param address the memory address to free
      */
@@ -178,22 +167,22 @@ public class MemoryCleaner {
     /**
      * This record type is cached for each memory address.
      *
-     * @param owned      whether this address is owned (should be cleaned)
-     * @param references the number of references (active Proxy objects) for
-     *                   this address
-     * @param freeFunc   an (optional) specialized function that will release
-     *                   the native memory
+     * @param owned     whether this address is owned (should be cleaned)
+     * @param freeFunc  an (optional) specialized function that will release
+     *                  the native memory
+     * @param boxedType an (optional) GType of a boxed type to release with
+     *                  {@code g_boxed_free}
+     * @param cleanable a cleaning action that will be run by the GC
      */
     private record Cached(boolean owned,
-                          int references,
                           String freeFunc,
                           Type boxedType,
                           Cleaner.Cleanable cleanable) {
     }
 
     /**
-     * This callback is run by the {@link Cleaner} when a struct or union
-     * instance has become unreachable, to free the native memory.
+     * This callback is run by the {@link Cleaner} when a Java Proxy object for
+     * a native struct/union has become unreachable, to free the native memory.
      */
     private record StructFinalizer(MemorySegment address) implements Runnable {
 
@@ -211,46 +200,32 @@ public class MemoryCleaner {
         public void run() {
             Cached cached;
             synchronized (cache) {
+                // Retrieve and remove the address from the cache
                 cached = cache.get(address);
-
-                // When other references exist, decrease the refcount
-                if (cached.references > 1) {
-                    cache.put(address, new Cached(cached.owned,
-                                                       cached.references - 1,
-                                                       cached.freeFunc,
-                                                       cached.boxedType,
-                                                       cached.cleanable));
-                    return;
-                }
-
-                // When no other references exist, remove the address from the
-                // cache and free the memory
                 cache.remove(address);
             }
 
-            // if we don't have ownership, we must not run free()
+            // if we don't have ownership, we must not run the free-function
             if (!cached.owned) {
                 return;
             }
 
-            // run g_free
-            if (cached.freeFunc == null) {
-                GLib.free(address);
-                return;
-            }
-
+            // run the free-function
             try {
                 if (cached.boxedType != null) {
                     // free boxed type
                     long gtype = cached.boxedType.getValue();
                     g_boxed_free.invokeExact(gtype, address);
-                } else {
-                    // Run specialized free function
+                } else if (cached.freeFunc != null) {
+                    // Run specialized free-function
                     Interop.downcallHandle(
                             cached.freeFunc,
                             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
                             false
                     ).invokeExact(address);
+                } else {
+                    // Fallback to g_free()
+                    GLib.free(address);
                 }
             } catch (Throwable err) {
                 throw new AssertionError(err);
