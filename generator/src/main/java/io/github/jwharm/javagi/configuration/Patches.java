@@ -38,6 +38,7 @@ public class Patches {
             new GstAudioPatch(),
             new GstVideoPatch(),
             new GstBasePatch(),
+            new GdkPatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),
             new PangoPatch(),

@@ -27,10 +27,12 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import io.github.jwharm.javagi.Constants;
 import io.github.jwharm.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
+import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 
 import static java.lang.Long.max;
@@ -1347,7 +1349,9 @@ public class Interop {
     }
 
     /**
-     * Create an EnumSet of class `cls` from the provided bitfield
+     * Create an EnumSet of class `cls` from the provided bitfield.
+     * Undefined flags are logged (with level
+     * {@link LogLevelFlags#LEVEL_WARNING}) and ignored.
      *
      * @param  <T>      an enum implementing the Java-GI Enumeration interface
      * @param  cls      the class of the enum
@@ -1363,8 +1367,19 @@ public class Interop {
         EnumSet<T> enumSet = EnumSet.noneOf(cls);
         int position = 0;
         while (n != 0) {
-            if ((n & 1) == 1)
-                enumSet.add(make.apply(1 << position));
+            if ((n & 1) == 1) {
+                // Gracefully handle undefined flags
+                try {
+                    T flag = make.apply(1 << position);
+                    enumSet.add(flag);
+                } catch (IllegalStateException e) {
+                    GLib.log(Constants.LOG_DOMAIN,
+                             LogLevelFlags.LEVEL_WARNING,
+                             "Unexpected flag %d in enum %s\n",
+                             n,
+                             cls == null ? "NULL" : cls.getName());
+                }
+            }
             position++;
             n >>= 1;
         }
