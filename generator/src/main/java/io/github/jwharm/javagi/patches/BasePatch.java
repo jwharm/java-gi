@@ -25,7 +25,7 @@ public class BasePatch implements Patch {
         if (element instanceof Record rec
                 && (! "GPrivate".equals(rec.cType()))
                 && rec.name() != null
-                && rec.name().endsWith("Private"))
+                && (rec.name().endsWith("Private") || rec.name().startsWith("_")))
             return element.withAttribute("java-gi-skip", "1");
 
         /*
