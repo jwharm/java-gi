@@ -353,7 +353,7 @@ public class JavaGI implements Callable<Integer> {
         }
         else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
             String version = System.getProperty("app.version");
-            return "    api(\"io.github.jwharm.javagi:" + name + ":" + version + "\")";
+            return "    api(\"io.github.jwharm.javagi:" + name + ":0.11.0\")";
         } else {
             return "    api(project(\":" + name + "\"))";
         }
