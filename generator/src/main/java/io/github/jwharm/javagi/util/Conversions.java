@@ -25,6 +25,7 @@ import io.github.jwharm.javagi.configuration.ModuleInfo;
 import io.github.jwharm.javagi.gir.*;
 
 import java.lang.foreign.MemorySegment;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -162,12 +163,19 @@ public class Conversions {
 
     /**
      * Overriding java.lang.Object methods is not allowed in default methods
-     * (in interfaces), so we append an underscore to those method names.
+     * (in interfaces), and overriding its final methods is not allowed in any
+     * case, so we append an underscore to those method names.
+     *
+     * @param  name the name of the method to check
+     * @param  all  whether to check against all Object methods (instead of
+     *              only the final methods).
+     * @return the method name, possibly renamed
      */
-    public static String replaceJavaObjectMethodNames(String name) {
+    public static String replaceJavaObjectMethodNames(String name, boolean all) {
         for (java.lang.reflect.Method m : Object.class.getMethods())
             if (m.getName().equals(name))
-                return name + "_";
+                if (all || Modifier.isFinal(m.getModifiers()))
+                    return name + "_";
 
         return name;
     }
