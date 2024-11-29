@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.patches;
 
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Patch;
+import io.github.jwharm.javagi.util.Platform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,7 @@ public class GdkPatch implements Patch {
          * adding placeholder "INTERNAL_n" flags for the missing ones.
          */
         if (element instanceof Bitfield bf
+                && bf.platforms() == Platform.ALL
                 && "ModifierType".equals(bf.name())) {
             var children = new ArrayList<>(bf.children());
             Doc doc = new Doc(emptyMap(),
