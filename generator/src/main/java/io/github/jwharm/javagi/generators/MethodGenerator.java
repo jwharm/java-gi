@@ -240,7 +240,7 @@ public class MethodGenerator {
     private void generateOwnershipTransfer() {
         // Prepare a statement that marshals the return value to Java
         RegisteredType target = returnValue.anyType() instanceof Type type
-                ? type.get() : null;
+                ? type.lookup() : null;
         var generator = new TypedValueGenerator(returnValue);
         PartialStatement stmt = PartialStatement.of("");
         if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))

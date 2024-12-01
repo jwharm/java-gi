@@ -43,7 +43,7 @@ public final class Field extends GirElement implements TypedValue {
         return TypedValue.super.allocatesMemory()
                 || (callback() != null)
                 || (anyType() instanceof Type type
-                        && type.get() instanceof Callback);
+                        && type.lookup() instanceof Callback);
     }
 
     /**
@@ -69,8 +69,11 @@ public final class Field extends GirElement implements TypedValue {
     }
 
     private int getSize(Type type, boolean longAsInt) {
-        if (type.get() instanceof Alias alias)
-            return getSize(alias.type(), longAsInt);
+        if (type.lookup() instanceof Alias alias)
+            return switch (alias.anyType()) {
+                case Array a -> getSize(a, longAsInt);
+                case Type t -> getSize(t, longAsInt);
+            };
 
         var typeName = type.typeName();
         if (List.of(BYTE, CHAR).contains(typeName))
@@ -79,7 +82,7 @@ public final class Field extends GirElement implements TypedValue {
             return 2;
         if (List.of(BOOLEAN, INT, FLOAT).contains(typeName))
             return 4;
-        if (type.get() instanceof FlaggedType)
+        if (type.lookup() instanceof FlaggedType)
             return 4;
         if (type.isLong() && longAsInt)
             return 4;
@@ -93,7 +96,7 @@ public final class Field extends GirElement implements TypedValue {
     public boolean isDisguised() {
         // No getter/setter for a "disguised" record or private data
         if (anyType() instanceof Type type
-                && type.get() instanceof Record r
+                && type.lookup() instanceof Record r
                 && (r.disguised() || r.skipJava()))
             return true;
 

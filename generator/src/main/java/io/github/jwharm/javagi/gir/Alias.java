@@ -19,11 +19,12 @@
 
 package io.github.jwharm.javagi.gir;
 
-import io.github.jwharm.javagi.configuration.ClassNames;
+import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,20 +44,38 @@ public final class Alias extends Multiplatform implements RegisteredType {
 
     @Override
     public String getTypeFunc() {
-        if (type().isPrimitive())
+        RegisteredType target = lookup();
+        return target == null ? null : target.getTypeFunc();
+    }
+
+    public boolean isValueWrapper() {
+        return !isProxy();
+    }
+
+    public boolean isProxy() {
+        return switch (anyType()) {
+            case Array _ -> false;
+            case Type t when t.isProxy() -> true;
+            case Type _ -> false;
+        };
+    }
+
+    public RegisteredType lookup() {
+        if (anyType() instanceof Type t)
+            return t.lookup();
+        else
             return null;
-        return type().get().getTypeFunc();
     }
 
     @Override
     public PartialStatement constructorName() {
-        RegisteredType target = type().get();
+        RegisteredType target = lookup();
         return target == null ? null : target.constructorName();
     }
 
     @Override
     public PartialStatement destructorName() {
-        RegisteredType target = type().get();
+        RegisteredType target = lookup();
         return target == null ? null : target.destructorName();
     }
 
@@ -70,8 +89,8 @@ public final class Alias extends Multiplatform implements RegisteredType {
         return this;
     }
 
-    public Type type() {
-        return findAny(children(), Type.class);
+    public AnyType anyType() {
+        return findAny(children(), AnyType.class);
     }
 
     @Override

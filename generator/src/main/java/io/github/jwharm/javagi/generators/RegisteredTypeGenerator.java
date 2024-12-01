@@ -33,7 +33,6 @@ import java.lang.foreign.MemorySegment;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
 public class RegisteredTypeGenerator {
@@ -132,9 +131,8 @@ public class RegisteredTypeGenerator {
                     """, name())
                 .addParameter(MemorySegment.class, "address");
 
-        if (rt instanceof Record rec && rec.isOpaque()
-                || rt instanceof Boxed
-                || rt instanceof Union union && union.isOpaque())
+        if (rt instanceof FieldContainer fc
+                && (fc.opaque() || fc.hasOpaqueStructFields()))
             builder.addStatement("super(address)");
         else
             builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",

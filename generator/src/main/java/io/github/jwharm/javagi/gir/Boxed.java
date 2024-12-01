@@ -23,13 +23,14 @@ import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
+import static java.util.Collections.emptyList;
 
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Boxed extends Multiplatform implements StandardLayoutType {
+public final class Boxed extends Multiplatform implements StandardLayoutType, FieldContainer {
 
     public Boxed(Map<String, String> attributes,
                  List<Node> children,
@@ -64,6 +65,16 @@ public final class Boxed extends Multiplatform implements StandardLayoutType {
                 tag, typeName(),
                 "gobjects", ClassNames.GOBJECTS,
                 "memorySegment", MemorySegment.class);
+    }
+
+    @Override
+    public List<Field> fields() {
+        return emptyList();
+    }
+
+    @Override
+    public boolean opaque() {
+        return true;
     }
 
     @Override

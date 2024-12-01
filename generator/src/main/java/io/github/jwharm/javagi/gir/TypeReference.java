@@ -27,25 +27,28 @@ import static io.github.jwharm.javagi.util.Conversions.*;
 
 /**
  * This interface is implemented by GIR elements whose name refers to a
- * RegisteredType. The {@link #get()} method will retrieve the type from the
+ * RegisteredType. The {@link #lookup()} method will retrieve the type from the
  * GIR model.
  */
 public interface TypeReference {
     Namespace namespace();
     String name();
 
-    default RegisteredType get() {
-        String name = name();
-        if (name == null)
+    static RegisteredType lookup(Namespace namespace, String name) {
+        if (name == null || namespace == null)
             return null;
 
         int dot = name.indexOf('.');
         if (dot == -1)
-            return namespace().registeredTypes().get(name);
+            return namespace.registeredTypes().get(name);
 
-        return namespace().parent()
+        return namespace.parent()
                 .lookupNamespace(name.substring(0, dot))
                 .registeredTypes().get(name.substring(dot + 1));
+    }
+
+    default RegisteredType lookup() {
+        return lookup(namespace(), name());
     }
 
     default TypeName typeName() {
@@ -54,7 +57,7 @@ public interface TypeReference {
             return TypeName.get(MemorySegment.class);
 
         // Get the target type
-        var type = get();
+        var type = lookup();
 
         // A TypeClass or TypeInterface is an inner class
         if (type instanceof Record rec) {
@@ -75,15 +78,5 @@ public interface TypeReference {
 
     default String javaType() {
         return typeName().toString();
-    }
-
-    static RegisteredType get(Namespace namespace, String name) {
-        if (namespace == null || name == null)
-            return null;
-
-        return new TypeReference() {
-            public Namespace namespace() { return namespace; }
-            public String    name()      { return name;      }
-        }.get();
     }
 }
