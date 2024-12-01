@@ -135,7 +135,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             spec.addCode(register(i.constructorName(), i.typeName()));
 
         for (Alias a : ns.aliases()) {
-            RegisteredType target = a.type().get();
+            RegisteredType target = a.lookup();
             if (target instanceof Class c)
                 spec.addCode(register(c.constructorName(), a.typeName()));
             if (target instanceof Interface i)

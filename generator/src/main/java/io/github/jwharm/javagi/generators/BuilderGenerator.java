@@ -83,7 +83,7 @@ public class BuilderGenerator {
                 .addTypeVariable(BUILDER_B)
                 .superclass(ParameterizedTypeName.get(parentTypeName, B))
                 .addSuperinterfaces(cls.implements_().stream()
-                        .map(TypeReference::get)
+                        .map(TypeReference::lookup)
                         .map(Interface.class::cast)
                         .filter(Interface::hasProperties)
                         .map(inf -> inf.typeName().nestedClass("Builder"))

@@ -150,7 +150,7 @@ public class CallableGenerator {
         // Marshal instance parameter
         InstanceParameter iParam = parameters.instanceParameter();
         if (iParam != null) {
-            if (iParam.type().get() instanceof FlaggedType)
+            if (iParam.type().lookup() instanceof FlaggedType)
                 stmt.add("getValue()"); // method in Enumeration class
             else
                 stmt.add("handle()");   // method in regular TypeInstance class
@@ -204,8 +204,8 @@ public class CallableGenerator {
             // Preprocessing statement
             else if (p.isOutParameter()
                     || (p.anyType() instanceof Type type
-                        && type.get() instanceof Alias a
-                        && a.type().isPrimitive()
+                        && type.lookup() instanceof Alias a
+                        && a.isValueWrapper()
                         && type.isPointer())) {
                 stmt.add("_" + name + "Pointer");
             }

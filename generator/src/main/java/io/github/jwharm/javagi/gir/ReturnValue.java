@@ -42,7 +42,7 @@ public final class ReturnValue extends GirElement implements TypedValue {
         return switch(anyType()) {
             case Array _ -> true;
             case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope())
-                    && type.get() instanceof Callback;
+                    && type.lookup() instanceof Callback;
         };
     }
 

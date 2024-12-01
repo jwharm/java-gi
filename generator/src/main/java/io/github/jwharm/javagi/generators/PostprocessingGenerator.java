@@ -48,14 +48,14 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 || (type != null
                     && type.isPointer()
                     && target instanceof Alias a
-                    && a.type().isPrimitive())) {
+                    && a.isValueWrapper())) {
 
             // Pointer to single value
             if (array == null) {
                 var stmt = PartialStatement.of(null, "valueLayout", ValueLayout.class);
 
                 stmt.add(getName())
-                        .add((target instanceof Alias a && a.type().isPrimitive())
+                        .add((target instanceof Alias a && a.isValueWrapper())
                                 ? ".setValue("
                                 : ".set(");
 
@@ -63,7 +63,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 String identifier = "_%sPointer.get(%s, 0)"
                         .formatted(getName(), layout.format());
 
-                if ((target instanceof Alias a && a.type().isPrimitive())
+                if ((target instanceof Alias a && a.isValueWrapper())
                         || (type.isPrimitive() && type.isPointer())) {
                     stmt.add(identifier);
                     if (type.isBoolean())
@@ -80,60 +80,56 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                             .endControlFlow();
                 else
                     builder.addNamedCode(stmt.format(), stmt.arguments());
+
+                return;
             }
 
             // Pointer to array
-            else {
-                String len = array.sizeExpression(false);
-                PartialStatement payload;
-                Type arrayType = (Type) array.anyType();
+            String len = array.sizeExpression(false);
+            PartialStatement payload;
 
-                if (p.isOutParameter() && len != null && p.callerAllocates()) {
-                    // Out-parameter array with known length
-                    payload = arrayType.isPrimitive()
-                            ? PartialStatement.of("_$name:LPointer.toArray(",
-                                            "name", getName())
-                                    .add(generateValueLayoutPlain(arrayType))
-                                    .add(")")
-                            : marshalNativeToJava("_%sPointer"
-                                    .formatted(getName()), false);
-                } else if (len != null
-                            && arrayType.isPrimitive()
-                            && !arrayType.isBoolean()) {
-                    // Arrays with primitive values and known length
-                    payload = PartialStatement.of("_$name:LPointer$Z.get($valueLayout:T.ADDRESS, 0)$Z.reinterpret(" + len + " * ",
-                                    "name", getName(),
-                                    "valueLayout", ValueLayout.class)
-                            .add(generateValueLayoutPlain(arrayType))
-                            .add(".byteSize(), _arena, null)$Z.toArray(")
-                            .add(generateValueLayoutPlain(arrayType))
-                            .add(")");
-                } else {
-                    // Other arrays
-                    payload = marshalNativeToJava("_" + getName() + "Pointer", false);
-                }
+            // Out-parameter array with known length
+            if (p.isOutParameter() && len != null && p.callerAllocates())
+                payload = array.anyType() instanceof Type t && t.isPrimitive()
+                        ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
+                                .add(generateValueLayoutPlain(t))
+                                .add(")")
+                        : marshalNativeToJava("_%sPointer".formatted(getName()), false);
 
-                var stmt = PartialStatement.of(getName())
-                        .add(".set(")
-                        .add(payload)
-                        .add(");\n");
+            // Arrays with primitive values and known length
+            else if (len != null
+                        && array.anyType() instanceof Type t
+                        && t.isPrimitive()
+                        && !t.isBoolean())
+                payload = PartialStatement.of("_$name:LPointer$Z.get($valueLayout:T.ADDRESS, 0)$Z.reinterpret(" + len + " * ",
+                                "name", getName(),
+                                "valueLayout", ValueLayout.class)
+                        .add(generateValueLayoutPlain(t))
+                        .add(".byteSize(), _arena, null)$Z.toArray(")
+                        .add(generateValueLayoutPlain(t))
+                        .add(")");
 
-                // Null-check
-                builder.beginControlFlow("if ($1L != null)", getName())
-                        .addNamedCode(stmt.format(), stmt.arguments())
-                        .endControlFlow();
-            }
+            // Other arrays
+            else
+                payload = marshalNativeToJava("_" + getName() + "Pointer", false);
+
+            var stmt = PartialStatement.of(getName())
+                    .add(".set(")
+                    .add(payload)
+                    .add(");\n");
+
+            // Null-check
+            builder.beginControlFlow("if ($1L != null)", getName())
+                    .addNamedCode(stmt.format(), stmt.arguments())
+                    .endControlFlow();
         }
     }
 
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
-        if (target instanceof Alias a
-                && a.type().isPrimitive()
-                && type.isPointer()) {
+        if (target instanceof Alias a && a.isValueWrapper() && type.isPointer()) {
             var stmt = PartialStatement.of("$name:LParam.set(")
                     .add(generateValueLayoutPlain(type))
-                    .add(", 0, _$name:LAlias.getValue());\n",
-                            "name", getName());
+                    .add(", 0, _$name:LAlias.getValue());\n", "name", getName());
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
@@ -144,20 +140,17 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         if (type != null) {
             PartialStatement payload;
-            if (type.isPrimitive()
-                    || (target instanceof Alias a && a.type().isPrimitive())) {
+            if (type.isPrimitive() || (target instanceof Alias a && a.isValueWrapper())) {
                 payload = PartialStatement.of("_" + getName() + "Out.get()");
                 if (type.isBoolean())
                     payload.add(" ? 1 : 0");
             }
             else if (target instanceof FlaggedType)
-                payload = PartialStatement.of("_$name:LOut.get().getValue()",
-                        "name", getName());
+                payload = PartialStatement.of("_$name:LOut.get().getValue()", "name", getName());
             else
                 payload = marshalJavaToNative("_" + getName() + "Out.get()");
 
-            var stmt = PartialStatement.of("$name:LParam.set(",
-                            "name", getName())
+            var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
                     .add(generateValueLayoutPlain(type))
                     .add(", 0, ")
                     .add(payload)

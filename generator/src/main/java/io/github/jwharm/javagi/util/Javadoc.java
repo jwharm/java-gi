@@ -328,7 +328,7 @@ public class Javadoc {
     // Replace #text with {@link text}
     private String convertTyperef(String ref) {
         String type = ref.substring(1);
-        RegisteredType rt = TypeReference.get(doc.namespace(), type);
+        RegisteredType rt = TypeReference.lookup(doc.namespace(), type);
         if (rt == null) {
             return "{@code " + ref.substring(1) + "}";
         } else {
@@ -539,7 +539,7 @@ public class Javadoc {
      * "{@link" tag, otherwise, generate a "{@code" tag.
      */
     private String checkLink(String ns, String type, String identifier) {
-        RegisteredType rt = TypeReference.get(getNamespace(ns), type);
+        RegisteredType rt = TypeReference.lookup(getNamespace(ns), type);
 
         if (rt == null)
             return "{@code ";

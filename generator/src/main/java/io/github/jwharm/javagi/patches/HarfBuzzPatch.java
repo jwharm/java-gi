@@ -73,7 +73,15 @@ public class HarfBuzzPatch implements Patch {
             /*
              * This constant has type "language_t" which cannot be instantiated.
              */
-            return remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
+            ns = remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
+
+            /*
+             * This function returns an array of "ot_name_entry_t" entries. The
+             * size of "ot_name_entry_t" is unknown because one of its fields
+             * has a disguised type ("language_t"), therefore the array contents
+             * cannot be read. Remove the function.
+             */
+            return remove(ns, Function.class, "name", "ot_name_list_names");
         }
 
         /*

@@ -23,9 +23,13 @@ import java.util.List;
 
 public sealed interface FieldContainer
         extends RegisteredType
-        permits Class, Interface, Record, Union {
+        permits Class, Interface, Boxed, Record, Union {
 
     List<Field> fields();
+
+    default boolean opaque() {
+        return false;
+    }
 
     default Field getAtIndex(int index) {
         return index == -1 ? null : fields().get(index);
@@ -42,8 +46,8 @@ public sealed interface FieldContainer
         for (Field field : fields())
             if (field.anyType() instanceof Type type
                     && !type.isPointer()
-                    && type.get() instanceof Class cls
-                    && (cls.isOpaque() || cls.hasOpaqueStructFields()))
+                    && type.lookup() instanceof FieldContainer fc
+                    && (fc.opaque() || fc.hasOpaqueStructFields()))
                 return true;
         return false;
     }

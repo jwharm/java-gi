@@ -274,8 +274,8 @@ public class ClosureGenerator {
 
             if (p.anyType() instanceof Type t
                     && t.isPointer()
-                    && t.get() instanceof Alias a
-                    && a.type().isPrimitive()) {
+                    && t.lookup() instanceof Alias a
+                    && a.isValueWrapper()) {
                 stmt.add("_" + toJavaIdentifier(p.name()) + "Alias");
                 continue;
             }
@@ -302,10 +302,10 @@ public class ClosureGenerator {
 
     private void returnNull(MethodSpec.Builder upcall) {
         if (returnValue.anyType() instanceof Type type) {
-            var target = type.get();
+            var target = type.lookup();
             if ((type.isPrimitive()
                         || target instanceof FlaggedType
-                        || (target instanceof Alias a && a.type().isPrimitive()))
+                        || (target instanceof Alias a && a.isValueWrapper()))
                     && (!type.isPointer())) {
                 upcall.addStatement("return 0");
                 return;

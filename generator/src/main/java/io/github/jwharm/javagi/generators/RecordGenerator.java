@@ -80,7 +80,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                  * disguised.
                  */
                 Type type = (Type) rec.fields().getFirst().anyType();
-                Record parentRec = (Record) type.get();
+                Record parentRec = (Record) type.lookup();
                 RegisteredType parentClass = parentRec.isGTypeStructFor();
                 if (parentClass != null) {
                     String nestedClassName = toJavaSimpleType(parentRec.name(), parentRec.namespace());
@@ -154,7 +154,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (cb == null) {
             if (f.anyType() instanceof Type t
                     && (!t.isPointer())
-                    && t.get() instanceof Record)
+                    && t.lookup() instanceof Record)
                 // Copy contents from nested struct
                 builder.addMethod(generator.generateReadCopyMethod());
             else
@@ -191,7 +191,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         if (f.anyType() instanceof Type t
                 && (!t.isPointer())
-                && t.get() instanceof Record)
+                && t.lookup() instanceof Record)
             // Generate write-method to copy contents to nested struct
             builder.addMethod(generator.generateWriteCopyMethod());
         else if (cb == null || outerClass == null)

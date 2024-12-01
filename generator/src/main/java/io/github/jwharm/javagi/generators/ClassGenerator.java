@@ -66,7 +66,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         // Add "implements" clause for all implemented interfaces.
         // For generic interfaces, add "<GObject>" generic type.
         for (var impl : cls.implements_())
-            if (impl.get() instanceof Interface iface)
+            if (impl.lookup() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
                         ? ParameterizedTypeName.get(iface.typeName(),
                                                     ClassNames.GENERIC_T)

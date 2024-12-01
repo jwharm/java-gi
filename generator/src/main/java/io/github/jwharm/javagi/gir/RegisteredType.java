@@ -69,7 +69,7 @@ public sealed interface RegisteredType
             case Class c -> c.isInstanceOf("GObject", "Object");
             case Interface _ -> true; // Requires a runtime instanceof check
             case Alias a -> {
-                var target = a.type().get();
+                var target = a.lookup();
                 yield target != null && target.checkIsGObject();
             }
             default -> false;

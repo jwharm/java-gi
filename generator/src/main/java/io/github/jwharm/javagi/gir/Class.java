@@ -78,7 +78,7 @@ public final class Class extends Multiplatform
             return true;
 
         for (var impl : implements_())
-            if (impl.get().generic())
+            if (impl.lookup().generic())
                 return true;
 
         return false;
@@ -88,12 +88,8 @@ public final class Class extends Multiplatform
         return attrBool("java-gi-auto-closeable", false);
     }
 
-    public boolean isOpaque() {
-        return fields().isEmpty() && unions().isEmpty();
-    }
-
     public Class parentClass() {
-        return (Class) TypeReference.get(namespace(), attr("parent"));
+        return (Class) TypeReference.lookup(namespace(), attr("parent"));
     }
 
     public boolean isInstanceOf(String ns, String name) {
@@ -107,7 +103,11 @@ public final class Class extends Multiplatform
 
     public Record typeStruct() {
         String typeStruct = attr("glib:type-struct");
-        return (Record) TypeReference.get(namespace(), typeStruct);
+        return (Record) TypeReference.lookup(namespace(), typeStruct);
+    }
+
+    public boolean opaque() {
+        return fields().isEmpty() && records().isEmpty() && unions().isEmpty();
     }
 
     public Method refFunc() {
