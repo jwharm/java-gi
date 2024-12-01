@@ -426,7 +426,7 @@ class TypedValueGenerator {
             case Type t when t.isPrimitive() ->
                     null;
             case Type t when t.isMemorySegment() ->
-                    PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
+                    PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
             case Type t when t.lookup() != null ->
                     t.lookup().destructorName();
             default ->
@@ -592,7 +592,7 @@ class TypedValueGenerator {
         if (type.isMemorySegment())
             return PartialStatement.of("$types:T.POINTER", "types", ClassNames.TYPES);
 
-        if (type.typeName().equals(ClassNames.GOBJECT))
+        if (type.typeName().equals(ClassNames.G_OBJECT))
             return PartialStatement.of("$types:T.OBJECT", "types", ClassNames.TYPES);
 
         RegisteredType rt = target instanceof Alias a ? a.lookup() : target;
@@ -610,9 +610,9 @@ class TypedValueGenerator {
             }
         }
 
-        if (type.typeName().equals(ClassNames.GTYPE))
+        if (type.typeName().equals(ClassNames.G_TYPE))
             return PartialStatement.of("$gobjects:T.gtypeGetType()",
-                    "gobjects", ClassNames.GOBJECTS);
+                    "gobjects", ClassNames.G_OBJECTS);
 
         return PartialStatement.of("$types:T.POINTER", "types", ClassNames.TYPES);
     }
@@ -676,7 +676,7 @@ class TypedValueGenerator {
                         .add(")");
             case "setObject" ->
                     PartialStatement.of("_value" + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
-                            "gobject", ClassNames.GOBJECT);
+                            "gobject", ClassNames.G_OBJECT);
             default ->
                     PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ")");
         };

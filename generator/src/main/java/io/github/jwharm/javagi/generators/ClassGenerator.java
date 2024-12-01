@@ -61,7 +61,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                                                     ClassNames.GENERIC_T)
                     : parentClass.typeName());
         else
-            builder.superclass(ClassNames.TYPE_INSTANCE);
+            builder.superclass(ClassNames.G_TYPE_INSTANCE);
 
         // Add "implements" clause for all implemented interfaces.
         // For generic interfaces, add "<GObject>" generic type.
@@ -194,7 +194,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @return always {@link $T#PARAM}
                     """, cls.cType(), ClassNames.TYPES)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.GTYPE)
+                .returns(ClassNames.G_TYPE)
                 .addStatement("return $T.PARAM", ClassNames.TYPES)
                 .build();
     }
@@ -208,12 +208,12 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @return the newly created GObject instance
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(TypeVariableName.get("T", ClassNames.GOBJECT))
+                .addTypeVariable(TypeVariableName.get("T", ClassNames.G_OBJECT))
                 .returns(TypeVariableName.get("T"))
-                .addParameter(ClassNames.GTYPE, "objectType")
+                .addParameter(ClassNames.G_TYPE, "objectType")
                 .addStatement("var _result = constructNew(objectType, null)")
                 .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)",
-                        ClassNames.INSTANCE_CACHE, ClassNames.GOBJECT)
+                        ClassNames.INSTANCE_CACHE, ClassNames.G_OBJECT)
                 .addStatement("return _object")
                 .build();
     }
@@ -231,9 +231,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @throws IllegalArgumentException invalid property name
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(TypeVariableName.get("T", ClassNames.GOBJECT))
+                .addTypeVariable(TypeVariableName.get("T", ClassNames.G_OBJECT))
                 .returns(TypeVariableName.get("T"))
-                .addParameter(ClassNames.GTYPE, "objectType")
+                .addParameter(ClassNames.G_TYPE, "objectType")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
                 .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)",
@@ -323,7 +323,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addTypeVariable(T)
                 .returns(ParameterizedTypeName.get(ClassNames.BINDING_BUILDER, S, T))
                 .addParameter(String.class, "sourceProperty")
-                .addParameter(ClassNames.GOBJECT, "target")
+                .addParameter(ClassNames.G_OBJECT, "target")
                 .addParameter(String.class, "targetProperty")
                 .addStatement("return new $T<S, T>(this, sourceProperty, target, targetProperty)",
                         ClassNames.BINDING_BUILDER)
@@ -371,7 +371,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addStatement("$1T closure = new $1T(callback)",
                         ClassNames.JAVA_CLOSURE)
                 .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
-                        ClassNames.GOBJECTS)
+                        ClassNames.G_OBJECTS)
                 .addStatement("return new $T(handle(), handlerId, closure)",
                         ClassNames.SIGNAL_CONNECTION)
                 .build();

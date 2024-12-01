@@ -65,7 +65,7 @@ public class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.GTYPE)
+                .returns(ClassNames.G_TYPE)
                 .addStatement("return $T.getType($S)",
                         ClassNames.INTEROP,
                         rt.getTypeFunc())
@@ -146,7 +146,7 @@ public class RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
         TypeName base = rt.generic()
-                ? ParameterizedTypeName.get(rt.typeName(), ClassNames.GOBJECT)
+                ? ParameterizedTypeName.get(rt.typeName(), ClassNames.G_OBJECT)
                 : rt.typeName();
 
         if (rt instanceof Interface i) {
@@ -180,7 +180,7 @@ public class RegisteredTypeGenerator {
     private TypeName getInterfaceSuperclass(Interface i) {
         Class c = i.prerequisiteBaseClass();
         return c.generic()
-                ? ParameterizedTypeName.get(c.typeName(), ClassNames.GOBJECT)
+                ? ParameterizedTypeName.get(c.typeName(), ClassNames.G_OBJECT)
                 : c.typeName();
     }
 

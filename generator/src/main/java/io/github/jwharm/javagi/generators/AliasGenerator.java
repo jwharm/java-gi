@@ -182,7 +182,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     layout);
 
         return spec.endControlFlow()
-                .addStatement("if (free) $T.free(address)", ClassNames.GLIB)
+                .addStatement("if (free) $T.free(address)", ClassNames.G_LIB)
                 .addStatement("return array")
                 .build();
     }

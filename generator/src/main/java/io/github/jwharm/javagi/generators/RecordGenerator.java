@@ -73,7 +73,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.addModifiers(Modifier.STATIC);
             if (rec.fields().isEmpty()) {
                 builder.superclass(outerClass instanceof Interface
-                        ? ClassNames.TYPE_INTERFACE : ClassNames.TYPE_CLASS);
+                        ? ClassNames.G_TYPE_INTERFACE : ClassNames.G_TYPE_CLASS);
             } else {
                 /*
                  * parent_class is always the first field, unless the struct is
@@ -306,9 +306,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     @return the GType
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.GTYPE)
+                .returns(ClassNames.G_TYPE)
                 // Types.VARIANT is declared in GObject. Hard-coded value as workaround
-                .addStatement("return new $T(21L << 2)", ClassNames.GTYPE)
+                .addStatement("return new $T(21L << 2)", ClassNames.G_TYPE)
                 .build();
     }
 
@@ -356,12 +356,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         described may change between different GLib versions.
                         
                         @return the newly allocated String.
-                        """, ClassNames.GOBJECTS, ClassNames.GVALUE)
+                        """, ClassNames.G_OBJECTS, ClassNames.G_VALUE)
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(String.class)
                 .addStatement("return $T.strdupValueContents(this)",
-                        ClassNames.GOBJECTS)
+                        ClassNames.G_OBJECTS)
                 .build();
     }
 }
