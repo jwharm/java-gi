@@ -559,6 +559,9 @@ class TypedValueGenerator {
                 return PartialStatement.of("$types:T.STRV",
                         "types", ClassNames.TYPES);
 
+            if ("GLib.ByteArray".equals(array.name()))
+                return PartialStatement.of("$byteArray:T.getType()", "byteArray", ClassNames.G_BYTE_ARRAY);
+
             // Other array types are not supported yet, but could be added here
             return PartialStatement.of("$types:T.POINTER /* unsupported */",
                     "types", ClassNames.TYPES);
@@ -618,7 +621,23 @@ class TypedValueGenerator {
     }
 
     PartialStatement getValueSetter(PartialStatement gTypeDeclaration, String payloadIdentifier) {
-        // First, check for fundamental classes with their own GValue setters
+        if (array != null) {
+            String allocation;
+
+            // GStrv is just an alias for an array of strings, but GByteArray
+            // needs to be allocated
+            if ("GLib.ByteArray".equals(array.name()))
+                allocation = "$byteArray:T.takeUnowned(" + payloadIdentifier + ").handle()";
+            else
+                allocation = "$interop:T.allocateNativeArray(" + payloadIdentifier + ", true, _arena)";
+
+            return PartialStatement.of(
+                    "_value.setBoxed(" + allocation + ")",
+                    "byteArray", ClassNames.G_BYTE_ARRAY,
+                    "interop", ClassNames.INTEROP);
+        }
+
+        // Check for fundamental classes with their own GValue setters
         if (type != null) {
             RegisteredType rt = target instanceof Alias a ? a.lookup() : target;
 
