@@ -58,7 +58,7 @@ public final class Record extends Multiplatform
         if ("g_boxed_free".equals(freeFunc.callableAttrs().cIdentifier()))
             return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
                     tag, typeName(),
-                    "gobjects", ClassNames.GOBJECTS,
+                    "gobjects", ClassNames.G_OBJECTS,
                     "memorySegment", MemorySegment.class);
 
         return PartialStatement.of("$" + tag + ":T::$freeFunc:L",

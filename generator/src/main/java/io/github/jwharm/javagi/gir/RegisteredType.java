@@ -60,7 +60,7 @@ public sealed interface RegisteredType
     }
 
     default PartialStatement destructorName() {
-        return PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
+        return PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
     }
 
     /** Return true if this class is GObject or is derived from GObject */

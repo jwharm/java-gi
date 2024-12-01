@@ -63,7 +63,7 @@ public final class Boxed extends Multiplatform implements StandardLayoutType, Fi
         var tag = typeTag();
         return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
                 tag, typeName(),
-                "gobjects", ClassNames.GOBJECTS,
+                "gobjects", ClassNames.G_OBJECTS,
                 "memorySegment", MemorySegment.class);
     }
 

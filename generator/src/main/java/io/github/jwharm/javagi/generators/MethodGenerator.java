@@ -134,7 +134,7 @@ public class MethodGenerator {
             builder.addModifiers(Modifier.DEFAULT);
 
         // Return type
-        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
         else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
@@ -186,7 +186,7 @@ public class MethodGenerator {
         if (vm != null && vm != func) {
             if (func.parent() instanceof Interface)
                 builder.beginControlFlow("if ((($T) this).callParent())",
-                        ClassNames.TYPE_INSTANCE);
+                        ClassNames.G_TYPE_INSTANCE);
             else
                 builder.beginControlFlow("if (callParent())");
             functionPointerInvocation();
@@ -243,7 +243,7 @@ public class MethodGenerator {
                 ? type.lookup() : null;
         var generator = new TypedValueGenerator(returnValue);
         PartialStatement stmt = PartialStatement.of("");
-        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             stmt.add("($generic:T) ", "generic", ClassNames.GENERIC_T);
         stmt.add(generator.marshalNativeToJava("_result", false));
 
@@ -256,7 +256,7 @@ public class MethodGenerator {
             builder.addNamedCode(PartialStatement.of("var _object = ")
                     .add(stmt).format() + ";\n", stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
-                            ClassNames.GOBJECT)
+                            ClassNames.G_OBJECT)
                     .addStatement("$T.debug($S, _gobject.handle().address())",
                             ClassNames.GLIB_LOGGER,
                             "Ref " + generator.getType() + " %ld")
@@ -333,7 +333,7 @@ public class MethodGenerator {
                 else if (hasMemoryLayout && copyFunc == null) {
                     builder.addStatement("$T _copy = $T.malloc($T.getMemoryLayout().byteSize())",
                             MemorySegment.class,
-                            ClassNames.GLIB,
+                            ClassNames.G_LIB,
                             returnValue.anyType().typeName());
                     stmt = PartialStatement.of("var _instance = ")
                             .add(generator.marshalNativeToJava("_copy", false))

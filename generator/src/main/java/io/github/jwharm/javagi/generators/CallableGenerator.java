@@ -124,7 +124,7 @@ public class CallableGenerator {
                     builder.varargs(true);
                 }
 
-                if (generic && type.equals(ClassNames.GOBJECT))
+                if (generic && type.equals(ClassNames.G_OBJECT))
                     type = ClassNames.GENERIC_T;
 
                 var spec = ParameterSpec.builder(type, generator.getName());
@@ -273,7 +273,7 @@ public class CallableGenerator {
 
         // Return type
         var returnValue = callable.returnValue();
-        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
         else if ((!ctor) || namedCtor)
             builder.returns(new TypedValueGenerator(returnValue).getType());

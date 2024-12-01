@@ -175,7 +175,7 @@ public class ConstructorGenerator {
                                     .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_object instanceof $T _gobject)",
-                            ClassNames.GOBJECT)
+                            ClassNames.G_OBJECT)
                     .addStatement("$T.debug($S, _gobject.handle().address())",
                             ClassNames.GLIB_LOGGER,
                             "Ref " + returnType + " %ld")
