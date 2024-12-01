@@ -132,13 +132,13 @@ public class GLibPatch implements Patch {
         }
 
         /*
-         * GLib.HashTable, GLib.List and GLib.SList are not generated from the
-         * gir data. Java-GI provides custom HashTable, List and SList classes
-         * that implement java.util.Map or java.util.List, to make them easier
-         * to use from Java.
+         * GLib.ByteArray, GLib.HashTable, GLib.List and GLib.SList are not
+         * generated from the gir data. Java-GI provides custom ByteArray,
+         * HashTable, List and SList classes.
          */
         if (element instanceof Record r
-                && List.of("HashTable", "List", "SList").contains(r.name()))
+                && List.of("ByteArray", "HashTable", "List", "SList")
+                        .contains(r.name()))
             return r.withAttribute("java-gi-skip", "1");
 
         return element;
