@@ -47,8 +47,8 @@ public final class Parameter extends GirElement implements TypedValue {
                             || (type.cType()) != null
                                 && type.cType().endsWith("gsize")))
                         && (!type.isProxy())
-                        && (!(type.get() instanceof Alias a
-                                && a.type().isPrimitive())));
+                        && (!(type.lookup() instanceof Alias a
+                                && a.isValueWrapper())));
     }
 
     public boolean isUserDataParameter() {
@@ -62,7 +62,7 @@ public final class Parameter extends GirElement implements TypedValue {
                 && List.of("gpointer", "gconstpointer").contains(t.cType())) {
             return parent().parameters().stream().anyMatch(p ->
                     p.anyType() instanceof Type type
-                            && type.get() instanceof Callback
+                            && type.lookup() instanceof Callback
                             && p.closure() == this);
         }
         return false;
@@ -71,7 +71,7 @@ public final class Parameter extends GirElement implements TypedValue {
     public boolean isUserDataParameterForDestroyNotify() {
         return parent().parameters().stream().anyMatch(p ->
                 p.anyType() instanceof Type type
-                        && type.get() instanceof Callback
+                        && type.lookup() instanceof Callback
                         && p.scope() == Scope.NOTIFIED
                         && p.closure() == this
                         && p.destroy() != null);
@@ -111,13 +111,13 @@ public final class Parameter extends GirElement implements TypedValue {
             return true;
 
         Type type = (Type) anyType();
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
 
         if (target instanceof Callback)
             return true;
 
         return type.isPointer()
-                && target instanceof Alias a && a.type().isPrimitive();
+                && target instanceof Alias a && a.isValueWrapper();
     }
 
     public boolean isLastParameter() {

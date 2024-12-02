@@ -77,7 +77,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     private TypeName genericTypeName() {
-        var target = get();
+        var target = lookup();
         var rawType = toJavaQualifiedType(target.name(), target.namespace());
         var elements = new TypeName[anyTypes().size()];
         int i = 0;
@@ -133,25 +133,25 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         if (cType() != null && cType().endsWith("**"))
             return false;
 
-        return switch(get()) {
-            case Alias a -> a.type().isProxy();
+        return switch(lookup()) {
+            case Alias a -> a.isProxy();
             case Class _, Interface _, Record _, Union _ -> true;
             case null, default -> false;
         };
     }
 
     public boolean checkIsGObject() {
-        RegisteredType target = get();
+        RegisteredType target = lookup();
         return target != null && target.checkIsGObject();
     }
 
     public boolean checkIsGList() {
-        RegisteredType target = get();
+        RegisteredType target = lookup();
         return target != null && target.checkIsGList();
     }
 
     public boolean checkIsGHashTable() {
-        RegisteredType target = get();
+        RegisteredType target = lookup();
         return target != null && target.checkIsGHashTable();
     }
 
@@ -183,7 +183,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         if ("String".equals(javaBaseType))
             return "string";
 
-        RegisteredType target = get();
+        RegisteredType target = lookup();
         return target == null ? null : target.typeTag();
     }
 

@@ -33,7 +33,6 @@ import java.lang.foreign.MemorySegment;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
-import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
 
 public class RegisteredTypeGenerator {
@@ -66,7 +65,7 @@ public class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.GTYPE)
+                .returns(ClassNames.G_TYPE)
                 .addStatement("return $T.getType($S)",
                         ClassNames.INTEROP,
                         rt.getTypeFunc())
@@ -132,9 +131,8 @@ public class RegisteredTypeGenerator {
                     """, name())
                 .addParameter(MemorySegment.class, "address");
 
-        if (rt instanceof Record rec && rec.isOpaque()
-                || rt instanceof Boxed
-                || rt instanceof Union union && union.isOpaque())
+        if (rt instanceof FieldContainer fc
+                && (fc.opaque() || fc.hasOpaqueStructFields()))
             builder.addStatement("super(address)");
         else
             builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
@@ -148,7 +146,7 @@ public class RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
         TypeName base = rt.generic()
-                ? ParameterizedTypeName.get(rt.typeName(), ClassNames.GOBJECT)
+                ? ParameterizedTypeName.get(rt.typeName(), ClassNames.G_OBJECT)
                 : rt.typeName();
 
         if (rt instanceof Interface i) {
@@ -182,7 +180,7 @@ public class RegisteredTypeGenerator {
     private TypeName getInterfaceSuperclass(Interface i) {
         Class c = i.prerequisiteBaseClass();
         return c.generic()
-                ? ParameterizedTypeName.get(c.typeName(), ClassNames.GOBJECT)
+                ? ParameterizedTypeName.get(c.typeName(), ClassNames.G_OBJECT)
                 : c.typeName();
     }
 

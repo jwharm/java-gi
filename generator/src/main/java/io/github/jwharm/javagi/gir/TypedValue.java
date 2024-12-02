@@ -49,9 +49,9 @@ public sealed interface TypedValue
 
     default boolean isBitfield() {
         if (anyType() instanceof Type type && (!type.isPrimitive())) {
-            RegisteredType target = type.get();
+            RegisteredType target = type.lookup();
             if (target instanceof Alias alias)
-                target = alias.type().get();
+                target = alias.lookup();
             return target instanceof Bitfield;
         }
         return false;

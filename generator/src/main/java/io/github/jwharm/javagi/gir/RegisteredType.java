@@ -60,7 +60,7 @@ public sealed interface RegisteredType
     }
 
     default PartialStatement destructorName() {
-        return PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
+        return PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
     }
 
     /** Return true if this class is GObject or is derived from GObject */
@@ -69,7 +69,7 @@ public sealed interface RegisteredType
             case Class c -> c.isInstanceOf("GObject", "Object");
             case Interface _ -> true; // Requires a runtime instanceof check
             case Alias a -> {
-                var target = a.type().get();
+                var target = a.lookup();
                 yield target != null && target.checkIsGObject();
             }
             default -> false;

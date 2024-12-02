@@ -83,7 +83,7 @@ public final class Array extends GirElement implements AnyType {
             if (lp.anyType() instanceof Type type) {
                 if (type.isPointer() || lp.isOutParameter())
                     return name + ".get().intValue()";
-                if (type.get() instanceof Alias a && a.type().isPrimitive())
+                if (type.lookup() instanceof Alias a && a.isValueWrapper())
                     return name + ".getValue()";
             }
             return name;

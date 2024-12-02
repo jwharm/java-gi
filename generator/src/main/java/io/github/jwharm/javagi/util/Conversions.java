@@ -47,7 +47,7 @@ public class Conversions {
     public static ClassName toJavaQualifiedType(String typeName, Namespace ns) {
         if (typeName == null) return null;
         if (typeName.contains(".")) {
-            var rt = TypeReference.get(ns, typeName);
+            var rt = TypeReference.lookup(ns, typeName);
             return toJavaQualifiedType(rt.name(), rt.namespace());
         }
         return ClassName.get(
@@ -60,7 +60,7 @@ public class Conversions {
      */
     public static String toJavaSimpleType(String typeName, Namespace ns) {
         if (typeName.contains(".")) {
-            var rt = TypeReference.get(ns, typeName);
+            var rt = TypeReference.lookup(ns, typeName);
             return toJavaSimpleType(rt.name(), rt.namespace());
         }
         return prefixDigits(replaceKnownType(
@@ -258,13 +258,13 @@ public class Conversions {
         if (type.isPrimitive() || "none".equals(t.cType()))
             return type.typeName();
 
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
 
         if (target instanceof FlaggedType)
             return TypeName.INT;
 
-        if (target instanceof Alias a && a.type().isPrimitive())
-            return a.type().typeName();
+        if (target instanceof Alias a && a.isValueWrapper())
+            return a.anyType().typeName();
 
         return TypeName.get(MemorySegment.class);
     }
@@ -287,13 +287,13 @@ public class Conversions {
         if (type.isPrimitive() || "none".equals(t.cType()))
             return toJavaBaseType(type.name());
 
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
 
         if (target instanceof FlaggedType)
             return "int";
 
-        if (target instanceof Alias a && a.type().isPrimitive())
-            return getCarrierTypeTag(a.type());
+        if (target instanceof Alias a && a.isValueWrapper())
+            return getCarrierTypeTag(a.anyType());
 
         return "memorySegment";
     }
@@ -319,7 +319,7 @@ public class Conversions {
         if (t == null) {
             return "ADDRESS";
         }
-        RegisteredType target = t.get();
+        RegisteredType target = t.lookup();
         if (target instanceof FlaggedType || t.isBoolean()) {
             return "JAVA_INT";
         }
@@ -329,8 +329,9 @@ public class Conversions {
         if (t.isPrimitive()) {
             return "JAVA_" + t.javaType().toUpperCase();
         }
-        if (target instanceof Alias a && a.type().isPrimitive()) {
-            return getValueLayoutPlain(a.type(), longAsInt);
+        if (target instanceof Alias a && a.isValueWrapper()
+                && a.anyType() instanceof Type type) {
+            return getValueLayoutPlain(type, longAsInt);
         }
         return "ADDRESS";
     }

@@ -196,7 +196,7 @@ public class ClosureGenerator {
         if (returnValue.anyType() instanceof Type t && t.checkIsGObject()
                 && returnValue.transferOwnership() != TransferOwnership.NONE)
             upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
-                    ClassNames.GOBJECT);
+                    ClassNames.G_OBJECT);
 
         // Marshal return value
         if (!returnsVoid) {
@@ -218,7 +218,7 @@ public class ClosureGenerator {
                         ClassNames.GERROR_EXCEPTION);
             }
             upcall.addStatement("$1T _gerror = new $1T(_ge.getDomain(), _ge.getCode(), _ge.getMessage())",
-                    ClassNames.GERROR);
+                    ClassNames.G_ERROR);
             upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())",
                     ValueLayout.class);
             if (!returnsVoid)
@@ -236,9 +236,9 @@ public class ClosureGenerator {
             upcall.nextControlFlow("catch ($T ite)",
                     InvocationTargetException.class);
             upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, ite.getCause().toString() + $S + $L)",
-                    ClassNames.GLIB,
+                    ClassNames.G_LIB,
                     ClassNames.CONSTANTS,
-                    ClassNames.LOG_LEVEL_FLAGS,
+                    ClassNames.G_LOG_LEVEL_FLAGS,
                     " in ",
                     methodName);
             if (!returnsVoid)
@@ -274,8 +274,8 @@ public class ClosureGenerator {
 
             if (p.anyType() instanceof Type t
                     && t.isPointer()
-                    && t.get() instanceof Alias a
-                    && a.type().isPrimitive()) {
+                    && t.lookup() instanceof Alias a
+                    && a.isValueWrapper()) {
                 stmt.add("_" + toJavaIdentifier(p.name()) + "Alias");
                 continue;
             }
@@ -302,10 +302,10 @@ public class ClosureGenerator {
 
     private void returnNull(MethodSpec.Builder upcall) {
         if (returnValue.anyType() instanceof Type type) {
-            var target = type.get();
+            var target = type.lookup();
             if ((type.isPrimitive()
                         || target instanceof FlaggedType
-                        || (target instanceof Alias a && a.type().isPrimitive()))
+                        || (target instanceof Alias a && a.isValueWrapper()))
                     && (!type.isPointer())) {
                 upcall.addStatement("return 0");
                 return;

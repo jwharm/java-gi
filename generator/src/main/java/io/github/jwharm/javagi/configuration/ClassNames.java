@@ -68,18 +68,19 @@ public final class ClassNames {
     public static final ClassName TYPES = get(PKG_GOBJECT_TYPES, "Types");
 
     // Some frequently used class names
-    public final static ClassName GERROR = get("org.gnome.glib", "GError");
-    public final static ClassName GLIB = get("org.gnome.glib", "GLib");
-    public final static ClassName GTYPE = get("org.gnome.glib", "Type");
-    public final static ClassName LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
+    public final static ClassName G_BYTE_ARRAY = get("org.gnome.glib", "ByteArray");
+    public final static ClassName G_ERROR = get("org.gnome.glib", "GError");
+    public final static ClassName G_LIB = get("org.gnome.glib", "GLib");
+    public final static ClassName G_LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
+    public final static ClassName G_TYPE = get("org.gnome.glib", "Type");
 
-    public final static ClassName GOBJECT = get("org.gnome.gobject", "GObject");
-    public final static ClassName GOBJECTS = get("org.gnome.gobject", "GObjects");
-    public final static ClassName GVALUE = get("org.gnome.gobject", "Value");
-    public final static ClassName TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
-    public final static ClassName TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
-    public final static ClassName TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");
+    public final static ClassName G_OBJECT = get("org.gnome.gobject", "GObject");
+    public final static ClassName G_OBJECTS = get("org.gnome.gobject", "GObjects");
+    public final static ClassName G_VALUE = get("org.gnome.gobject", "Value");
+    public final static ClassName G_TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
+    public final static ClassName G_TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
+    public final static ClassName G_TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");
 
     // The type variable used for <T extends GObject>
-    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", GOBJECT);
+    public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", G_OBJECT);
 }

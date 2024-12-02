@@ -50,7 +50,7 @@ public final class Union
         return this;
     }
 
-    public boolean isOpaque() {
+    public boolean opaque() {
         return fields().isEmpty() && records().isEmpty();
     }
 

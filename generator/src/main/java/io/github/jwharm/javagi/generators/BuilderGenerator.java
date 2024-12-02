@@ -83,7 +83,7 @@ public class BuilderGenerator {
                 .addTypeVariable(BUILDER_B)
                 .superclass(ParameterizedTypeName.get(parentTypeName, B))
                 .addSuperinterfaces(cls.implements_().stream()
-                        .map(TypeReference::get)
+                        .map(TypeReference::lookup)
                         .map(Interface.class::cast)
                         .filter(Interface::hasProperties)
                         .map(inf -> inf.typeName().nestedClass("Builder"))
@@ -155,7 +155,7 @@ public class BuilderGenerator {
         PartialStatement valueSetter = generator.getValueSetter(gtype, generator.getName())
                 .add(";\n");
         return builder.addStatement("$T _arena = getArena()", Arena.class)
-                .addStatement("$1T _value = new $1T(_arena)", ClassNames.GVALUE)
+                .addStatement("$1T _value = new $1T(_arena)", ClassNames.G_VALUE)
                 .addNamedCode("_value.init(" + gtype.format() + ");\n", gtype.arguments())
                 .addNamedCode(valueSetter.format(), valueSetter.arguments())
                 .addStatement("addBuilderProperty($S, _value)", prp.name())
@@ -257,7 +257,7 @@ public class BuilderGenerator {
                         
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
-                        """, rt.typeName().simpleName(), ClassNames.GOBJECT);
+                        """, rt.typeName().simpleName(), ClassNames.G_OBJECT);
         if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
             builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
                     .addJavadoc("@throws $T when run on an unsupported platform",
@@ -272,12 +272,12 @@ public class BuilderGenerator {
 
         return builder.addStatement("var _instance = ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
                         rt.typeName(),
-                        ClassNames.GOBJECT)
+                        ClassNames.G_OBJECT)
                 .addStatement("connectSignals(_instance.handle())")
                 .addStatement("return _instance")
                 .nextControlFlow("finally")
                 .addStatement("for ($T _value : getValues()) _value.unset()",
-                        ClassNames.GVALUE)
+                        ClassNames.G_VALUE)
                 .addStatement("getArena().close()")
                 .endControlFlow()
                 .build();

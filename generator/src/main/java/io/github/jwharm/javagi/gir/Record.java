@@ -58,7 +58,7 @@ public final class Record extends Multiplatform
         if ("g_boxed_free".equals(freeFunc.callableAttrs().cIdentifier()))
             return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
                     tag, typeName(),
-                    "gobjects", ClassNames.GOBJECTS,
+                    "gobjects", ClassNames.G_OBJECTS,
                     "memorySegment", MemorySegment.class);
 
         return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
@@ -105,16 +105,15 @@ public final class Record extends Multiplatform
         return attrBool("java-gi-generic", false);
     }
 
-    public boolean isOpaque() {
-        return fields().isEmpty() && unions().isEmpty();
-    }
-
     public boolean disguised() {
         return attrBool("disguised", false);
     }
 
     public boolean opaque() {
-        return attrBool("opaque", false);
+        if (attributes().containsKey("opaque"))
+            return attrBool("opaque", false);
+        else
+            return fields().isEmpty() && unions().isEmpty();
     }
 
     public boolean pointer() {
@@ -126,8 +125,7 @@ public final class Record extends Multiplatform
     }
 
     public RegisteredType isGTypeStructFor() {
-        Namespace ns = namespace();
-        return TypeReference.get(ns, attr("glib:is-gtype-struct-for"));
+        return TypeReference.lookup(namespace(), attr("glib:is-gtype-struct-for"));
     }
 
     @Override

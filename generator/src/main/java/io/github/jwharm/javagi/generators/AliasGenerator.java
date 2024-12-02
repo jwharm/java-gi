@@ -30,7 +30,6 @@ import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.getValueLayoutPlain;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
@@ -43,7 +42,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
     public AliasGenerator(Alias alias) {
         super(alias);
         this.alias = alias;
-        this.target = alias.type().get();
+        this.target = alias.lookup();
     }
 
     public TypeSpec generate() {
@@ -51,10 +50,10 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         // Alias for an alias for a primitive type
-        if (target instanceof Alias other && other.type().isPrimitive())
+        if (target instanceof Alias other && other.isValueWrapper())
             builder.superclass(other.typeName())
-                    .addMethod(valueConstructor(other.type().typeName()))
-                    .addMethod(arrayConstructor(other.type()));
+                    .addMethod(valueConstructor(other.anyType().typeName()))
+                    .addMethod(arrayConstructor(other.anyType()));
 
         // Alias for an alias
         else if (target instanceof Alias other)
@@ -70,13 +69,11 @@ public class AliasGenerator extends RegisteredTypeGenerator {
             builder = TypeSpec.interfaceBuilder(alias.typeName())
                     .addSuperinterface(target.typeName());
 
-        else if (alias.type().isPrimitive()
-                || List.of("java.lang.String", "java.lang.foreign.MemorySegment")
-                            .contains(alias.type().javaType()))
+        else if (alias.isValueWrapper())
             builder.superclass(ParameterizedTypeName.get(
-                            ClassNames.ALIAS, alias.type().typeName().box()))
-                    .addMethod(valueConstructor(alias.type().typeName()))
-                    .addMethod(arrayConstructor(alias.type()));
+                            ClassNames.ALIAS, alias.anyType().typeName().box()))
+                    .addMethod(valueConstructor(alias.anyType().typeName()))
+                    .addMethod(arrayConstructor(alias.anyType()));
 
         if (target instanceof Class || target instanceof Interface
                 || target instanceof Record || target instanceof Boxed
@@ -133,8 +130,11 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .build();
     }
 
-    private MethodSpec arrayConstructor(Type primitiveType) {
-        String layout = getValueLayoutPlain(primitiveType, false);
+    private MethodSpec arrayConstructor(AnyType anyType) {
+        String layout = switch (anyType) {
+            case Array _ -> "ADDRESS";
+            case Type type -> getValueLayoutPlain(type, false);
+        };
 
         var spec = MethodSpec.methodBuilder("fromNativeArray")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -145,7 +145,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .addStatement("$T array = new $T[(int) length]",
                         ArrayTypeName.of(alias.typeName()), alias.typeName());
 
-        if (primitiveType.isLong()) {
+        if (anyType instanceof Type t && t.isLong()) {
             spec.addStatement("long byteSize = $1T.longAsInt() ? $2T.JAVA_INT.byteSize() : $2T.JAVA_LONG.byteSize()",
                     ClassNames.INTEROP, ValueLayout.class);
         } else {
@@ -157,15 +157,32 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                         MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 
-        if ("java.lang.String".equals(primitiveType.javaType()))
+        // String[]
+        if (anyType instanceof Array a
+                && a.anyType() instanceof Type t
+                && t.typeName().equals(TypeName.get(String.class)))
+            spec.addStatement("array[i] = new $T($T.getStringArrayFrom(segment.get($T.$L, i * byteSize), free))",
+                    alias.typeName(),
+                    ClassNames.INTEROP,
+                    ValueLayout.class,
+                    layout);
+        // String
+        else if (anyType instanceof Type t
+                && t.typeName().equals(TypeName.get(String.class)))
             spec.addStatement("array[i] = new $T($T.getStringFrom(segment.get($T.$L, i * byteSize), free))",
-                    alias.typeName(), ClassNames.INTEROP, ValueLayout.class, layout);
+                    alias.typeName(),
+                    ClassNames.INTEROP,
+                    ValueLayout.class,
+                    layout);
+        // Primitive value
         else
             spec.addStatement("array[i] = new $T(segment.get($T.$L, i * byteSize))",
-                    alias.typeName(), ValueLayout.class, layout);
+                    alias.typeName(),
+                    ValueLayout.class,
+                    layout);
 
         return spec.endControlFlow()
-                .addStatement("if (free) $T.free(address)", ClassNames.GLIB)
+                .addStatement("if (free) $T.free(address)", ClassNames.G_LIB)
                 .addStatement("return array")
                 .build();
     }

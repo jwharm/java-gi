@@ -54,7 +54,7 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         // Add "extends" clause for all prerequisite interfaces.
         // For generic interfaces, add "<GObject>" generic type.
         for (var prereq : inf.prerequisites())
-            if (prereq.get() instanceof Interface iface)
+            if (prereq.lookup() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
                         ? ParameterizedTypeName.get(iface.typeName(),
                                                 ClassNames.GENERIC_T)

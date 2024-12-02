@@ -19,9 +19,6 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import com.squareup.javapoet.ClassName;
@@ -82,7 +79,7 @@ public final class Interface extends Multiplatform
             return true;
 
         for (var prereq : prerequisites())
-            if (prereq.get() instanceof Interface i && i.generic())
+            if (prereq.lookup() instanceof Interface i && i.generic())
                 return true;
 
         return false;
@@ -100,14 +97,14 @@ public final class Interface extends Multiplatform
      */
     public Class prerequisiteBaseClass() {
         for (var prerequisite : prerequisites())
-            if (prerequisite.get() instanceof Class c)
+            if (prerequisite.lookup() instanceof Class c)
                 return c;
-        return (Class) TypeReference.get(namespace(), "GObject.Object");
+        return (Class) TypeReference.lookup(namespace(), "GObject.Object");
     }
 
     public Record typeStruct() {
         String typeStruct = attr("glib:type-struct");
-        return (Record) TypeReference.get(namespace(), typeStruct);
+        return (Record) TypeReference.lookup(namespace(), typeStruct);
     }
 
     public boolean hasProperties() {

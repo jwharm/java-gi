@@ -124,7 +124,7 @@ public class CallableGenerator {
                     builder.varargs(true);
                 }
 
-                if (generic && type.equals(ClassNames.GOBJECT))
+                if (generic && type.equals(ClassNames.G_OBJECT))
                     type = ClassNames.GENERIC_T;
 
                 var spec = ParameterSpec.builder(type, generator.getName());
@@ -150,7 +150,7 @@ public class CallableGenerator {
         // Marshal instance parameter
         InstanceParameter iParam = parameters.instanceParameter();
         if (iParam != null) {
-            if (iParam.type().get() instanceof FlaggedType)
+            if (iParam.type().lookup() instanceof FlaggedType)
                 stmt.add("getValue()"); // method in Enumeration class
             else
                 stmt.add("handle()");   // method in regular TypeInstance class
@@ -204,8 +204,8 @@ public class CallableGenerator {
             // Preprocessing statement
             else if (p.isOutParameter()
                     || (p.anyType() instanceof Type type
-                        && type.get() instanceof Alias a
-                        && a.type().isPrimitive()
+                        && type.lookup() instanceof Alias a
+                        && a.isValueWrapper()
                         && type.isPointer())) {
                 stmt.add("_" + name + "Pointer");
             }
@@ -273,7 +273,7 @@ public class CallableGenerator {
 
         // Return type
         var returnValue = callable.returnValue();
-        if (generic && returnValue.anyType().typeName().equals(ClassNames.GOBJECT))
+        if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
         else if ((!ctor) || namedCtor)
             builder.returns(new TypedValueGenerator(returnValue).getType());

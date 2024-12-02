@@ -1108,6 +1108,36 @@ public class Interop {
     }
 
     /**
+     * Allocate and initialize an (optionally {@code NULL}-terminated) array of
+     * arrays of strings (a Strv-array).
+     *
+     * @param  strvs          the array of String arrays
+     * @param  zeroTerminated whether to add a {@code NULL} to the array. The
+     *                        embedded arrays are always
+     *                        {@code NULL}-terminated.
+     * @param  arena          the segment allocator for memory allocation
+     * @return the memory segment of the native array
+     */
+    public static MemorySegment allocateNativeArray(String[][] strvs,
+                                                    boolean zeroTerminated,
+                                                    Arena arena) {
+
+        int length = zeroTerminated ? strvs.length + 1 : strvs.length;
+        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
+
+        for (int i = 0; i < strvs.length; i++) {
+            var s = strvs[i] == null ? NULL
+                    : allocateNativeArray(strvs[i], true, arena);
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
+        }
+
+        if (zeroTerminated)
+            memorySegment.setAtIndex(ValueLayout.ADDRESS, strvs.length, NULL);
+
+        return memorySegment;
+    }
+
+    /**
      * Convert a boolean[] array into an int[] array, and calls
      * {@link #allocateNativeArray(int[], boolean, Arena)}.
      * Each boolean value "true" is converted 1, boolean value "false" to 0.

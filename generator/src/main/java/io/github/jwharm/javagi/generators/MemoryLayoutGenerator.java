@@ -39,9 +39,9 @@ public class MemoryLayoutGenerator {
     // Opaque structs have unknown memory layout.
     public boolean canGenerate(FieldContainer rt) {
         boolean isOpaque = switch (rt) {
-            case Class c -> c.hasOpaqueStructFields() || c.isOpaque();
-            case Record r -> r.hasOpaqueStructFields() || r.isOpaque();
-            case Union u -> u.hasOpaqueStructFields() || u.isOpaque();
+            case Class c -> c.hasOpaqueStructFields() || c.opaque();
+            case Record r -> r.hasOpaqueStructFields() || r.opaque();
+            case Union u -> u.hasOpaqueStructFields() || u.opaque();
             default -> false;
         };
         return !isOpaque;
@@ -184,11 +184,11 @@ public class MemoryLayoutGenerator {
     }
 
     private PartialStatement layoutForType(Type type, boolean longAsInt) {
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
 
         // Recursive lookup for aliases
-        if (target instanceof Alias alias)
-            return layoutForType(alias.type(), longAsInt);
+        if (target instanceof Alias alias && alias.anyType() instanceof Type t)
+            return layoutForType(t, longAsInt);
 
         // Proxy objects with a known memory layout
         if (!type.isPointer()

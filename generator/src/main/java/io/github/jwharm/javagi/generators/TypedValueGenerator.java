@@ -49,7 +49,7 @@ class TypedValueGenerator {
         this.v = v;
         this.array = v.anyType() instanceof Array a ? a : null;
         this.type = v.anyType() instanceof Type t ? t : null;
-        this.target = type != null ? type.get() : null;
+        this.target = type != null ? type.lookup() : null;
     }
 
     /**
@@ -57,7 +57,8 @@ class TypedValueGenerator {
      * @return true if this parameter is not a primitive value
      */
     boolean checkNull() {
-        if (v instanceof InstanceParameter) return false;
+        if (v instanceof InstanceParameter)
+            return false;
 
         if (v instanceof Parameter p &&
                 (p.notNull()
@@ -71,7 +72,9 @@ class TypedValueGenerator {
         return ! (type != null
                     && !type.isPointer()
                     && (type.isPrimitive()
-                        || (target instanceof Alias a && a.type().isPrimitive())
+                        || (target instanceof Alias a
+                                && a.anyType() instanceof Type t
+                                && t.isPrimitive())
                         || target instanceof FlaggedType));
     }
 
@@ -121,9 +124,7 @@ class TypedValueGenerator {
     }
 
     String getName() {
-        return "...".equals(v.name())
-                ? "varargs"
-                : toJavaIdentifier(v.name());
+        return "...".equals(v.name()) ? "varargs" : toJavaIdentifier(v.name());
     }
 
     PartialStatement marshalJavaToNative(String identifier) {
@@ -164,8 +165,7 @@ class TypedValueGenerator {
         if (type.isMemorySegment())
             return PartialStatement.of(identifier);
 
-        if (type.isPointer()
-                && (type.isPrimitive() || target instanceof FlaggedType))
+        if (type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
             return PartialStatement.of(identifier);
 
         if (type.isBoolean())
@@ -174,18 +174,21 @@ class TypedValueGenerator {
         return marshalJavaToNative(target, identifier);
     }
 
-    private PartialStatement marshalJavaToNative(RegisteredType target,
-                                                 String identifier) {
+    private PartialStatement marshalJavaToNative(RegisteredType target, String identifier) {
         return switch (target) {
             case null -> PartialStatement.of(identifier);
-            case Alias alias -> {
-                RegisteredType typedef = alias.type().get();
+            case Alias alias when alias.anyType() instanceof Array ->
+                    PartialStatement.of(
+                            "$interop.allocateNativeArray(" + identifier + ", true, _arena)",
+                            "interop", ClassNames.INTEROP);
+            case Alias alias when alias.anyType() instanceof Type t -> {
+                RegisteredType typedef = t.lookup();
                 if (typedef != null)
                     yield marshalJavaToNative(typedef, identifier);
-                String stmt = switch(toJavaBaseType(alias.type().name())) {
+                String stmt = switch(toJavaBaseType(t.name())) {
                     case null -> null;
                     case "String", "MemorySegment" -> identifier + ".getValue()";
-                    default -> identifier + ".getValue()." + alias.type().typeName() + "Value()";
+                    default -> identifier + ".getValue()." + t.typeName() + "Value()";
                 };
                 yield PartialStatement.of(stmt);
             }
@@ -210,30 +213,28 @@ class TypedValueGenerator {
         };
     }
 
-    private PartialStatement marshalJavaArrayToNative(Array array,
-                                                      String identifier) {
-
+    private PartialStatement marshalJavaArrayToNative(Array array, String identifier) {
         // When ownership is transferred, we must not free the allocated
         // memory -> use global scope
         String allocator = (v instanceof Parameter p && p.transferOwnership() != NONE)
                 ? "$arena:T.global()" : "_arena";
 
         Type type = (Type) array.anyType();
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
 
         boolean isFlaggedType = target instanceof FlaggedType;
-        boolean isPrimitiveAlias = target instanceof Alias a
-                                            && a.type().isPrimitive();
+        boolean isPrimitiveAlias = target instanceof Alias a && a.isValueWrapper();
 
         String targetTypeTag = isFlaggedType ? "flaggedType" : type.toTypeTag();
 
         String primitiveClassName = isPrimitiveAlias
-                ? primitiveClassName(((Alias) target).type().javaType())
+                ? primitiveClassName(((Alias) target).anyType().typeName().toString())
                 : "";
 
         if (isFlaggedType || isPrimitiveAlias) {
             return PartialStatement.of(
-                    "$interop:T.allocateNativeArray($" + targetTypeTag + ":T.get" + primitiveClassName + "Values(" + identifier + "), "
+                    "$interop:T.allocateNativeArray($" + targetTypeTag + ":T.get"
+                            + primitiveClassName + "Values(" + identifier + "), "
                             + array.zeroTerminated() + ", " + allocator + ")",
                     "arena", Arena.class,
                     "interop", ClassNames.INTEROP,
@@ -242,58 +243,52 @@ class TypedValueGenerator {
 
         if (target instanceof Record && (!type.isPointer()))
             return PartialStatement.of(
-                    "$interop:T.allocateNativeArray(" + identifier + ", $" + targetTypeTag + ":T.getMemoryLayout(), "
+                    "$interop:T.allocateNativeArray(" + identifier
+                            + ", $" + targetTypeTag + ":T.getMemoryLayout(), "
                             + array.zeroTerminated() + ", " + allocator + ")",
                     "arena", Arena.class,
                     targetTypeTag, target.typeName(),
                     "interop", ClassNames.INTEROP);
 
         return PartialStatement.of(
-                "$interop:T.allocateNativeArray(" + identifier + ", " + array.zeroTerminated() + ", " + allocator + ")",
+                "$interop:T.allocateNativeArray(" + identifier
+                        + ", " + array.zeroTerminated() + ", " + allocator + ")",
                 "arena", Arena.class,
                 "interop", ClassNames.INTEROP);
     }
 
     PartialStatement marshalNativeToJava(String identifier, boolean upcall) {
-        if (type != null
-                && type.cType() != null
-                && type.cType().equals("gfloat**"))
-            return PartialStatement.of("null /* unsupported */");
-
         if (type != null) {
+            if ("gfloat**".equals(type.cType()))
+                return PartialStatement.of("null /* unsupported */");
+
             if (type.isActuallyAnArray())
                 return marshalNativeToJavaArray(type, null, identifier);
 
-            if (type.isPointer()
-                    && (type.isPrimitive() || target instanceof FlaggedType))
+            if (type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
                 return PartialStatement.of(identifier);
 
             return marshalNativeToJava(type, identifier, upcall);
         }
 
+        // String[][]
         if (array != null && array.anyType() instanceof Array inner
-                && inner.anyType() instanceof Type t
-                && t.isString())
+                && inner.anyType() instanceof Type t && t.isString())
             return PartialStatement.of(
                     "$interop:T.getStrvArrayFrom(" + identifier + ", " + doFree() + ")",
                     "interop", ClassNames.INTEROP);
 
-        if (array != null && array.anyType() instanceof Type arrayType)
-            return marshalNativeToJavaArray(
-                    arrayType,
-                    array.sizeExpression(upcall),
-                    identifier
-            );
+        // Array
+        if (array != null && array.anyType() instanceof Type t)
+             return marshalNativeToJavaArray(t, array.sizeExpression(upcall), identifier);
 
+        // Nested array
         return PartialStatement.of("null /* unsupported */");
     }
 
-    PartialStatement marshalNativeToJava(Type type,
-                                         String identifier,
-                                         boolean upcall) {
+    PartialStatement marshalNativeToJava(Type type, String identifier, boolean upcall) {
         String free = doFree();
         String targetTypeTag = target == null ? null : type.toTypeTag();
-
         boolean isTypeClass = target instanceof Record
                                     && "TypeClass".equals(target.name());
 
@@ -331,11 +326,11 @@ class TypedValueGenerator {
 
             // Find out how ownership is transferred
             var transferOwnership = switch(parent) {
-                case Parameter p -> p.transferOwnership();
-                case InstanceParameter ip -> ip.transferOwnership();
-                case ReturnValue rv -> rv.transferOwnership();
-                case Property p -> p.transferOwnership();
-                default -> throw new IllegalStateException();
+                case Parameter p         -> p.transferOwnership();
+                case InstanceParameter i -> i.transferOwnership();
+                case ReturnValue r       -> r.transferOwnership();
+                case Property p          -> p.transferOwnership();
+                default                  -> throw new IllegalStateException();
             };
 
             var stmt = PartialStatement.of("new $" + targetTypeTag + ":T(" + identifier + ", ",
@@ -344,9 +339,8 @@ class TypedValueGenerator {
 
             if (elementDestructor != null)
                 stmt.add(", ").add(elementDestructor);
-            stmt.add(", " + (transferOwnership == FULL))
-                .add(")");
-            return stmt;
+
+            return stmt.add(", " + (transferOwnership == FULL)).add(")");
         }
 
         // Generate constructor call for HashTable with generic types for keys and values
@@ -363,20 +357,17 @@ class TypedValueGenerator {
 
         }
 
-        if ((target instanceof Record && (!isTypeClass))
+        if ((target instanceof Record && !isTypeClass)
                 || target instanceof Union
                 || target instanceof Boxed
-                || (target instanceof Alias a
-                        && a.type().get() instanceof Record))
+                || (target instanceof Alias a && a.lookup() instanceof Record))
             return PartialStatement.of(
-                    "$memorySegment:T.NULL.equals(" + identifier + ") ? null : new $" + targetTypeTag + ":T(" + identifier + ")",
+                    "$memorySegment:T.NULL.equals(" + identifier
+                            + ") ? null : new $" + targetTypeTag + ":T(" + identifier + ")",
                     "memorySegment", MemorySegment.class,
                     targetTypeTag, target.typeName());
 
-        if (target instanceof Alias a &&
-                (a.type().isPrimitive()
-                    || a.type().isString()
-                    || a.type().isMemorySegment()))
+        if (target instanceof Alias a && a.isValueWrapper())
             return PartialStatement.of(
                     "new $" + targetTypeTag + ":T(" + identifier + ")",
                     targetTypeTag, target.typeName());
@@ -387,25 +378,21 @@ class TypedValueGenerator {
         boolean hasGType = target instanceof Class
                 || target instanceof Interface
                 || (target instanceof Alias a
-                    && (a.type().get() instanceof Class ||
-                        a.type().get() instanceof Interface));
+                    && (a.lookup() instanceof Class || a.lookup() instanceof Interface));
 
-        String cacheFunction =
-                hasGType ? "getForType" :
-                isTypeClass ? "getForTypeClass" :
-                "get";
-
+        String cacheFunction = hasGType ? "getForType" : isTypeClass ? "getForTypeClass" : "get";
         String cache = upcall ? "false" : "true";
 
         if (target instanceof Class
                 || target instanceof Interface
-                || target instanceof Alias a && a.type().isProxy()
+                || (target instanceof Alias a && a.isProxy())
                 || isTypeClass)
-            return PartialStatement.of("($" + targetTypeTag + ":T) $instanceCache:T." + cacheFunction + "(" + identifier + ", ")
-                            .add(target.constructorName())
-                            .add(", " + cache + ")",
-                                    targetTypeTag, target.typeName(),
-                                    "instanceCache", ClassNames.INSTANCE_CACHE);
+            return PartialStatement.of(
+                        "($" + targetTypeTag + ":T) $instanceCache:T." + cacheFunction + "(" + identifier + ", ")
+                    .add(target.constructorName())
+                    .add(", " + cache + ")",
+                            targetTypeTag, target.typeName(),
+                            "instanceCache", ClassNames.INSTANCE_CACHE);
 
         if (type.isBoolean())
             return PartialStatement.of(identifier + " != 0");
@@ -415,43 +402,47 @@ class TypedValueGenerator {
 
     private static PartialStatement getElementConstructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
-            case Type t when t.isString()        -> PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
-            case Type t when t.isPrimitive()     -> PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From", "interop", ClassNames.INTEROP);
-            case Type t when t.isMemorySegment() -> PartialStatement.of("(_p -> _p)");
-            case Array _                         -> PartialStatement.of("(_p -> _p)");
-            case Type t when t.get() != null     -> t.get().constructorName();
-            default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+            case Type t when t.isString() ->
+                    PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+            case Type t when t.isPrimitive() ->
+                    PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From", "interop", ClassNames.INTEROP);
+            case Type t when t.isMemorySegment() ->
+                    PartialStatement.of("(_p -> _p)");
+            case Array _ ->
+                    PartialStatement.of("(_p -> _p)");
+            case Type t when t.lookup() != null ->
+                    t.lookup().constructorName();
+            default ->
+                    throw new UnsupportedOperationException("Unsupported element type: " + type);
         };
     }
 
     private static PartialStatement getElementDestructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
-            case Array _                         -> PartialStatement.of("(_ -> {}) /* unsupported */");
-            case Type t when t.isString()        -> null;
-            case Type t when t.isPrimitive()     -> null;
-            case Type t when t.isMemorySegment() -> PartialStatement.of("$glib:T::free", "glib", ClassNames.GLIB);
-            case Type t when t.get() != null     -> t.get().destructorName();
-            default                              -> throw new UnsupportedOperationException("Unsupported element type: " + type);
+            case Array _ ->
+                    PartialStatement.of("(_ -> {}) /* unsupported */");
+            case Type t when t.isString() ->
+                    null;
+            case Type t when t.isPrimitive() ->
+                    null;
+            case Type t when t.isMemorySegment() ->
+                    PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
+            case Type t when t.lookup() != null ->
+                    t.lookup().destructorName();
+            default ->
+                    throw new UnsupportedOperationException("Unsupported element type: " + type);
         };
     }
 
-    private PartialStatement marshalNativeToJavaArray(Type type,
-                                                      String size,
-                                                      String identifier) {
+    private PartialStatement marshalNativeToJavaArray(Type type, String size, String identifier) {
         String free = doFree();
-        RegisteredType target = type.get();
+        RegisteredType target = type.lookup();
         String targetTypeTag = target != null ? type.toTypeTag() : null;
-
-        String primitive = type.isPrimitive()
-                ? primitiveClassName(type.javaType())
-                : null;
+        String primitive = type.isPrimitive() ? primitiveClassName(type.javaType()) : null;
 
         // GArray stores the length in the len field
-        if (size == null
-                && array != null
-                && array.name() != null
-                && List.of("GLib.Array", "GLib.PtrArray", "GLib.ByteArray")
-                       .contains(array.name())) {
+        if (size == null && array != null && array.name() != null
+                && List.of("GLib.Array", "GLib.PtrArray", "GLib.ByteArray").contains(array.name())) {
             size = "new $arrayType:T(" + identifier + ").readLen()";
             identifier = "$interop:T.dereference(" + identifier + ")";
         }
@@ -470,11 +461,12 @@ class TypedValueGenerator {
 
             if (target instanceof FlaggedType)
                 return PartialStatement.of(
-                        "$interop:T.getArrayFromIntPointer(" + identifier + ", (int) $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
+                        "$interop:T.getArrayFromIntPointer(" + identifier
+                                + ", (int) $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
                         "interop", ClassNames.INTEROP,
                         targetTypeTag, target.typeName());
 
-            if (target instanceof Alias a && a.type().isPrimitive())
+            if (target instanceof Alias a && a.isValueWrapper())
                 return PartialStatement.of(
                         "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", " + free + ")",
                         targetTypeTag, target.typeName());
@@ -487,17 +479,21 @@ class TypedValueGenerator {
             if (target instanceof Record && (! type.isPointer()) &&
                     (! (array != null && "GLib.PtrArray".equals(array.name()))))
                 return PartialStatement.of(
-                        "$interop:T.getStructArrayFrom(" + identifier + ", $" + targetTypeTag + ":T.class, ").add(target.constructorName()).add(", $" + targetTypeTag + ":T.getMemoryLayout())",
-                        "interop", ClassNames.INTEROP,
-                        targetTypeTag, target.typeName());
+                                "$interop:T.getStructArrayFrom(" + identifier + ", $" + targetTypeTag + ":T.class, ")
+                        .add(target.constructorName())
+                        .add(", $" + targetTypeTag + ":T.getMemoryLayout())",
+                                "interop", ClassNames.INTEROP,
+                                targetTypeTag, target.typeName());
 
             if (target == null)
                 throw new IllegalStateException("Target is null for type " + type);
 
             return PartialStatement.of(
-                    "$interop:T.getProxyArrayFrom(" + identifier + ", $" + targetTypeTag + ":T.class, ").add(target.constructorName()).add(")",
-                    "interop", ClassNames.INTEROP,
-                    targetTypeTag, target.typeName());
+                            "$interop:T.getProxyArrayFrom(" + identifier + ", $" + targetTypeTag + ":T.class, ")
+                    .add(target.constructorName())
+                    .add(")",
+                            "interop", ClassNames.INTEROP,
+                            targetTypeTag, target.typeName());
         }
 
         // Array with known size
@@ -515,12 +511,13 @@ class TypedValueGenerator {
 
         if (target instanceof FlaggedType)
             return PartialStatement.of(
-                    "$interop:T.getArrayFromIntPointer(" + identifier + ", (int) " + size + ", $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
+                    "$interop:T.getArrayFromIntPointer(" + identifier
+                            + ", (int) " + size + ", $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
                     "interop", ClassNames.INTEROP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()),
                     targetTypeTag, target.typeName());
 
-        if (target instanceof Alias a && a.type().isPrimitive())
+        if (target instanceof Alias a && a.isValueWrapper())
             return PartialStatement.of(
                     "$targetType:T.fromNativeArray(" + identifier + ", " + size + ", " + free + ")",
                     "interop", ClassNames.INTEROP,
@@ -536,34 +533,44 @@ class TypedValueGenerator {
         if (target instanceof Record && (! type.isPointer()) &&
                 (! (array != null && "GLib.PtrArray".equals(array.name()))))
             return PartialStatement.of(
-                    "$interop:T.getStructArrayFrom(" + identifier + ", (int) " + size + ", $" + targetTypeTag + ":T.class, ").add(target.constructorName()).add(", $" + targetTypeTag + ":T.getMemoryLayout())",
-                    "interop", ClassNames.INTEROP,
-                    "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()),
-                    targetTypeTag, target.typeName());
+                            "$interop:T.getStructArrayFrom(" + identifier + ", (int) " + size + ", $" + targetTypeTag + ":T.class, ")
+                    .add(target.constructorName())
+                    .add(", $" + targetTypeTag + ":T.getMemoryLayout())",
+                            "interop", ClassNames.INTEROP,
+                            "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()),
+                            targetTypeTag, target.typeName());
 
         if (target == null)
             throw new IllegalStateException("Target is null for type " + type);
 
         return PartialStatement.of(
-                "$interop:T.getProxyArrayFrom(" + identifier + ", (int) " + size + ", $" + targetTypeTag + ":T.class, ").add(target.constructorName()).add(")",
-                "interop", ClassNames.INTEROP,
-                "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()),
-                targetTypeTag, target.typeName());
+                        "$interop:T.getProxyArrayFrom(" + identifier + ", (int) " + size + ", $" + targetTypeTag + ":T.class, ")
+                .add(target.constructorName())
+                .add(")",
+                        "interop", ClassNames.INTEROP,
+                        "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()),
+                        targetTypeTag, target.typeName());
     }
 
     PartialStatement getGTypeDeclaration() {
         if (array != null) {
             if (array.anyType() instanceof Type arrayType
                     && "utf8".equals(arrayType.name()))
-                return PartialStatement.of("$types:T.STRV", "types", ClassNames.TYPES);
+                return PartialStatement.of("$types:T.STRV",
+                        "types", ClassNames.TYPES);
+
+            if ("GLib.ByteArray".equals(array.name()))
+                return PartialStatement.of("$byteArray:T.getType()", "byteArray", ClassNames.G_BYTE_ARRAY);
 
             // Other array types are not supported yet, but could be added here
-            return PartialStatement.of("$types:T.BOXED", "types", ClassNames.TYPES);
+            return PartialStatement.of("$types:T.POINTER /* unsupported */",
+                    "types", ClassNames.TYPES);
         }
-        if (type == null)
-            return PartialStatement.of("$types:T.BOXED", "types", ClassNames.TYPES);
 
-        if (type.isPrimitive()) {
+        if (type == null)
+            throw new IllegalStateException("Expected type or array");
+
+        if (type.isPrimitive())
             return PartialStatement.of("$types:T." + switch(type.cType()) {
                 case "gboolean" -> "BOOLEAN";
                 case "gchar", "gint8" -> "CHAR";
@@ -574,27 +581,24 @@ class TypedValueGenerator {
                 case "gulong" -> "ULONG";
                 case "gint64" -> "INT64";
                 case "guint64" -> "UINT64";
-                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset",
-                     "gintptr", "guintptr" -> "POINTER";
+                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "POINTER";
                 case "gdouble" -> "DOUBLE";
                 case "gfloat" -> "FLOAT";
                 case "none" -> "NONE";
                 case "utf8", "filename" -> "STRING";
                 default -> throw new IllegalStateException("Unexpected type: " + type.cType());
             }, "types", ClassNames.TYPES);
-        }
+
         if (type.isString())
             return PartialStatement.of("$types:T.STRING", "types", ClassNames.TYPES);
 
         if (type.isMemorySegment())
             return PartialStatement.of("$types:T.POINTER", "types", ClassNames.TYPES);
 
-        if (type.typeName().equals(ClassNames.GOBJECT))
+        if (type.typeName().equals(ClassNames.G_OBJECT))
             return PartialStatement.of("$types:T.OBJECT", "types", ClassNames.TYPES);
 
-        RegisteredType rt = (target instanceof Alias a && (!a.type().isPrimitive()))
-                ? a.type().get()
-                : target;
+        RegisteredType rt = target instanceof Alias a ? a.lookup() : target;
 
         if (rt != null) {
             if (rt instanceof Class cls && cls.isInstanceOf("GObject", "ParamSpec"))
@@ -609,20 +613,33 @@ class TypedValueGenerator {
             }
         }
 
-        if (type.typeName().equals(ClassNames.GTYPE))
+        if (type.typeName().equals(ClassNames.G_TYPE))
             return PartialStatement.of("$gobjects:T.gtypeGetType()",
-                    "gobjects", ClassNames.GOBJECTS);
+                    "gobjects", ClassNames.G_OBJECTS);
 
         return PartialStatement.of("$types:T.POINTER", "types", ClassNames.TYPES);
     }
 
-    PartialStatement getValueSetter(PartialStatement gTypeDeclaration,
-                                    String payloadIdentifier) {
-        // First, check for fundamental classes with their own GValue setters
+    PartialStatement getValueSetter(PartialStatement gTypeDeclaration, String payloadIdentifier) {
+        if (array != null) {
+            String allocation;
+
+            // GStrv is just an alias for an array of strings, but GByteArray
+            // needs to be allocated
+            if ("GLib.ByteArray".equals(array.name()))
+                allocation = "$byteArray:T.takeUnowned(" + payloadIdentifier + ").handle()";
+            else
+                allocation = "$interop:T.allocateNativeArray(" + payloadIdentifier + ", true, _arena)";
+
+            return PartialStatement.of(
+                    "_value.setBoxed(" + allocation + ")",
+                    "byteArray", ClassNames.G_BYTE_ARRAY,
+                    "interop", ClassNames.INTEROP);
+        }
+
+        // Check for fundamental classes with their own GValue setters
         if (type != null) {
-            RegisteredType rt = target instanceof Alias a
-                    ? a.type().get()
-                    : target;
+            RegisteredType rt = target instanceof Alias a ? a.lookup() : target;
 
             if (rt instanceof Class cls && cls.setValueFunc() != null) {
                 var setter = cls.namespace().functions().stream()
@@ -633,7 +650,8 @@ class TypedValueGenerator {
                     Function function = setter.get();
                     String setValueFunc = toJavaIdentifier(function.name());
                     String globalClassTag = uncapitalize(rt.namespace().globalClassName());
-                    return PartialStatement.of("$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
+                    return PartialStatement.of(
+                            "$" + globalClassTag + ":T." + setValueFunc + "(_value, " + payloadIdentifier + ")",
                             globalClassTag,
                             toJavaQualifiedType(rt.namespace().globalClassName(), rt.namespace()));
                 }
@@ -677,7 +695,7 @@ class TypedValueGenerator {
                         .add(")");
             case "setObject" ->
                     PartialStatement.of("_value" + "." + setValue + "(($gobject:T) " + payloadIdentifier + ")",
-                            "gobject", ClassNames.GOBJECT);
+                            "gobject", ClassNames.G_OBJECT);
             default ->
                     PartialStatement.of("_value" + "." + setValue + "(" + payloadIdentifier + ")");
         };
@@ -686,35 +704,25 @@ class TypedValueGenerator {
     FieldSpec generateConstantDeclaration() {
         final String value = ((Constant) v).value();
         try {
-            var builder = FieldSpec.builder(
-                    getType(true),
-                    toJavaConstant(v.name()),
-                    Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
-            );
+            var builder = FieldSpec.builder(getType(true), toJavaConstant(v.name()),
+                    Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
             if (v.infoElements().doc() != null)
-                builder.addJavadoc(
-                        new DocGenerator(v.infoElements().doc()).generate());
+                builder.addJavadoc(new DocGenerator(v.infoElements().doc()).generate());
 
-            if (target instanceof Alias a && a.type().isPrimitive())
-                builder.initializer("new $T($L)",
-                        a.typeName(),
-                        literal(a.type().typeName(), value));
+            if (target instanceof Alias a && a.isValueWrapper())
+                builder.initializer("new $T($L)", a.typeName(), literal(a.anyType().typeName(), value));
             else if (target instanceof FlaggedType)
-                builder.initializer(
-                        marshalNativeToJava(literal(TypeName.INT, value), false)
-                                .toCodeBlock());
+                builder.initializer(marshalNativeToJava(literal(TypeName.INT, value), false).toCodeBlock());
             else
-                builder.initializer(
-                        literal(type.typeName(), value).replace("$", "$$"));
+                builder.initializer(literal(type.typeName(), value).replace("$", "$$"));
 
             return builder.build();
 
         } catch (NumberFormatException nfe) {
             // Do not write anything
             System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: Value not allowed%n",
-                    v.name(),
-                    value);
+                    v.name(), value);
             return null;
         }
     }

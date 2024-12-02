@@ -24,9 +24,10 @@ import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 import io.github.jwharm.javagi.util.Platform;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.emptyList;
 
 public class GLibPatch implements Patch {
 
@@ -43,9 +44,8 @@ public class GLibPatch implements Patch {
              */
             var gtype = new Alias(
                     Map.of("name", "Type", "c:type", "GType"),
-                    List.of(new Type(Map.of("name", "gsize",
-                                            "c:type", "gsize"),
-                            Collections.emptyList())),
+                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
+                                     emptyList())),
                     ns.platforms());
             ns = add(ns, gtype);
 
@@ -108,7 +108,7 @@ public class GLibPatch implements Patch {
             Parameter replacement = current.withChildren(
                     current.infoElements().doc(),
                     new Type(Map.of("name", "gpointer", "c:type", "gpointer"),
-                            Collections.emptyList()));
+                             emptyList()));
             return f.withChildren(
                     f.infoElements().doc(),
                     f.infoElements().sourcePosition(),
@@ -117,13 +117,28 @@ public class GLibPatch implements Patch {
         }
 
         /*
-         * GLib.HashTable, GLib.List and GLib.SList are not generated from the
-         * gir data. Java-GI provides custom HashTable, List and SList classes
-         * that implement java.util.Map or java.util.List, to make them easier
-         * to use from Java.
+         * GLib.Strv is an alias for a String[], but it is defined as a type
+         * with name="utf8" (though the c-type is "gchar**"). We change it to an
+         * array.
+         */
+        if (element instanceof Alias a && "Strv".equals(a.name())) {
+            return new Alias(a.attributes(),
+                    List.of(a.infoElements().doc(),
+                            a.infoElements().sourcePosition(),
+                            new Array(Map.of("zero-terminated", "1"),
+                                        List.of(new Type(Map.of("name", "utf8"),
+                                                         emptyList())))),
+                    a.platforms());
+        }
+
+        /*
+         * GLib.ByteArray, GLib.HashTable, GLib.List and GLib.SList are not
+         * generated from the gir data. Java-GI provides custom ByteArray,
+         * HashTable, List and SList classes.
          */
         if (element instanceof Record r
-                && List.of("HashTable", "List", "SList").contains(r.name()))
+                && List.of("ByteArray", "HashTable", "List", "SList")
+                        .contains(r.name()))
             return r.withAttribute("java-gi-skip", "1");
 
         return element;
