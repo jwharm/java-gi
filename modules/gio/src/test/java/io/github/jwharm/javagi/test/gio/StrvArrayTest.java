@@ -18,16 +18,19 @@ public class StrvArrayTest {
         // DesktopAppInfo is only available on Linux
         assumeTrue("linux".equals(Platform.getRuntimePlatform()));
 
-        String[][] array = DesktopAppInfo.search("gnome");
+        // Unless there are absolutely no applications installed, searching
+        // for "e" should return a few usable results
+        String[][] array = DesktopAppInfo.search("e");
         assertNotNull(array);
-        String result = "";
         for (String[] inner : array) {
             assertNotNull(inner);
             for (String str : inner) {
-                if (str.contains("org.gnome"))
-                    result = str;
+                // Check for NULL
+                assertNotNull(str);
+
+                // Check for valid strings
+                assertTrue(str.endsWith(".desktop"));
             }
         }
-        assertNotEquals("", result);
     }
 }
