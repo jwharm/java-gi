@@ -70,9 +70,10 @@ public final class Array extends GirElement implements AnyType {
     }
 
     public boolean unknownSize() {
-        return fixedSize() <= 0 && !zeroTerminated() && length() == null;
+        return !"1".equals(attr("fixed-size"))
+                && !"1".equals(attr("zero-terminated"))
+                && attr("length") == null;
     }
-
     public String sizeExpression(boolean upcall) {
         if (attr("fixed-size") != null) return attr("fixed-size");
         TypedValue length = length();
