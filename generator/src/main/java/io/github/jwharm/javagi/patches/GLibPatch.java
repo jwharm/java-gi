@@ -27,6 +27,7 @@ import io.github.jwharm.javagi.util.Platform;
 import java.util.List;
 import java.util.Map;
 
+import static io.github.jwharm.javagi.util.CollectionUtils.listOfNonNull;
 import static java.util.Collections.emptyList;
 
 public class GLibPatch implements Patch {
@@ -123,7 +124,7 @@ public class GLibPatch implements Patch {
          */
         if (element instanceof Alias a && "Strv".equals(a.name())) {
             return new Alias(a.attributes(),
-                    List.of(a.infoElements().doc(),
+                    listOfNonNull(a.infoElements().doc(),
                             a.infoElements().sourcePosition(),
                             new Array(Map.of("zero-terminated", "1"),
                                         List.of(new Type(Map.of("name", "utf8"),
