@@ -36,10 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -134,8 +131,12 @@ public class JavaGI implements Callable<Integer> {
     private static int handleException(Exception ex,
                                        CommandLine cmd,
                                        CommandLine.ParseResult parseResult) {
+        String message = Objects.requireNonNullElse(
+                ex.getMessage(),
+                ex.getClass().getSimpleName());
+
         // bold red error message
-        cmd.getErr().println(cmd.getColorScheme().errorText(ex.getMessage()));
+        cmd.getErr().println(cmd.getColorScheme().errorText(message));
 
         return cmd.getExitCodeExceptionMapper() != null
                 ? cmd.getExitCodeExceptionMapper().getExitCode(ex)
