@@ -195,7 +195,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         }
 
         // Same, but for structs/unions: Disable the cleaner
-        else if ((target instanceof StandardLayoutType)
+        else if (target != null
+                && (! (target instanceof Alias a && a.isValueWrapper()))
                 && p.transferOwnership() != TransferOwnership.NONE
                 && !p.isOutParameter()
                 && (type.cType() == null || !type.cType().endsWith("**"))) {
@@ -204,6 +205,33 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                 : "$2T.yieldOwnership($1L)",
                     getName(),
                     ClassNames.MEMORY_CLEANER);
+        }
+
+        // Same, but for arrays
+        else if (array != null
+                && array.anyType() instanceof Type elemType
+                && p.transferOwnership() != TransferOwnership.NONE
+                && !p.isOutParameter()
+                && elemType.lookup() != null) {
+            var elemTarget = elemType.lookup();
+            if (checkNull())
+                builder.beginControlFlow("if ($L != null)", getName());
+            builder.beginControlFlow("for (var _element : $L)", getName());
+            if (elemTarget.checkIsGObject()) {
+                builder.beginControlFlow("if (_element instanceof $T _gobject)",
+                                ClassNames.G_OBJECT)
+                        .addStatement("$T.debug($S, _gobject.handle().address())",
+                                ClassNames.GLIB_LOGGER,
+                                "Ref " + elemType.typeName() + " %ld")
+                        .addStatement("_gobject.ref()")
+                        .endControlFlow();
+            } else if (! (target instanceof Alias a && a.isValueWrapper())) {
+                builder.addStatement("if (_element != null) $T.yieldOwnership(_element)",
+                                ClassNames.MEMORY_CLEANER);
+            }
+            builder.endControlFlow();
+            if (checkNull())
+                builder.endControlFlow();
         }
     }
 
