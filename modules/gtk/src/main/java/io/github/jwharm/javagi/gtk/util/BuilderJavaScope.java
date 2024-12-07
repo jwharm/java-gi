@@ -32,7 +32,6 @@ import org.gnome.gtk.*;
 import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 
@@ -115,36 +114,7 @@ public final class BuilderJavaScope extends BuilderCScope
             // Find method with the right name
             Class<? extends GObject> cls = currentObject.getClass();
             Method method = getMethodForName(cls, function);
-
-            // Signal that returns boolean
-            if (method.getReturnType().equals(Boolean.TYPE)) {
-                return new JavaClosure((BooleanSupplier) () -> {
-                    try {
-                        return (boolean) method.invoke(currentObject);
-                    } catch (Exception e) {
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Cannot invoke method %s in class %s: %s\n",
-                                function,
-                                currentObject.getClass().getName(),
-                                e.getMessage());
-                        return false;
-                    }
-                });
-
-            // Signal that returns void
-            } else {
-                return new JavaClosure((Runnable) () -> {
-                    try {
-                        method.invoke(currentObject);
-                    } catch (Exception e) {
-                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                "Cannot invoke method %s in class %s: %s\n",
-                                function,
-                                currentObject.getClass().getName(),
-                                e.getMessage());
-                    }
-                });
-            }
+            return new JavaClosure(currentObject, method);
         } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find method %s in class %s\n",
