@@ -1,6 +1,6 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the new [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to directly access native resources from inside the JVM, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.11 generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 47:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to access native resources from Java, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.11.* generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 47:
 
 | Library       | Java-GI 0.11.x | Java-GI 0.10.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.7.x |
 |---------------|----------------|----------------|-------------------------|---------------|
@@ -12,7 +12,7 @@
 | GtkSourceview | 5.14           | 5.12           | 5.10                    | 5.9           |
 | WebkitGtk     | 2.46           | 2.44           | 2.42                    | 2.41          |
 
-Please note that Java-GI is still under active development. The bindings should not be used in a production environment yet, and the API is subject to unannounced changes. However, feel free to try out the latest release; feedback is welcome.
+Please note that Java-GI is still under active development, and the API is subject to unannounced changes. Feedback is welcome!
 
 [For more information, visit the Java-GI website.](https://jwharm.github.io/java-gi/)
 
@@ -67,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.11.0'
+    implementation 'io.github.jwharm.javagi:gtk:0.11.1'
 }
 ```
 
@@ -275,15 +275,15 @@ try {
 
 ### Portability
 
-The Java-GI bindings are cross-platform: You can use the same jar on all supported operating systems (Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
+The published bindings are cross-platform: You can use the same jar on all supported operating systems (64-bit Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
 
-## Building and Contributing
+## Generate bindings
 
-To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/).
+Java-GI offers a command-line utility to generate bindings for any library that supports GObject-Introspection. It is documented [here](https://jwharm.github.io/java-gi/generate/).
 
 ## Known issues
 
-The bindings are still under active development and have not been thoroughly tested yet. The most notable issues and missing features are currently:
+Java-GI is still under active development. The most notable issues and missing features are currently:
 
 - Java does not distinguish between signed and unsigned data types. Be extra careful when native code returns, for example, a `guint`.
 - Java-GI makes heavy use of [Cleaners](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ref/Cleaner.html) to free memory or decrease an object's refcount. Cleaners are triggered during garbage collection of a Java instance. However, Java doesn't guarantee when, and if, the GC will run, and what it will clean, leading to memory leaks.
