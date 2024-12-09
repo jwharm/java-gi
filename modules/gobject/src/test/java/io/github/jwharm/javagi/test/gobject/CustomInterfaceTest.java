@@ -110,15 +110,19 @@ public class CustomInterfaceTest {
 
         private int number = 0;
 
-        @Override
+        @Override @Property
         public int getNumber() {
             return number;
         }
 
-        @Override
+        @Override @Property
         public void setNumber(int number) {
             this.number = number;
             emit("number-changed", number);
+        }
+
+        public static Type getType() {
+            return gtype;
         }
     }
 }
