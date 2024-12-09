@@ -1158,6 +1158,29 @@ public class Types {
     }
 
     /**
+     * Check if this class (or in case of an interface, any class that
+     * implements it) is a GObject.
+     *
+     * @param  cls the class or interface to check
+     * @return whether this is a class that extends GObject or an interface
+     *         that has GObject as a prerequisite
+     */
+    private static boolean isGObjectBased(Class<?> cls) {
+        // Class that extends GObject
+        if (GObject.class.isAssignableFrom(cls))
+            return true;
+
+        // Interface with GObject as prerequisite
+        if (cls.isInterface() && cls.isAnnotationPresent(RegisteredType.class)) {
+            var annotation = cls.getAnnotation(RegisteredType.class);
+            for (var prerequisite : annotation.prerequisites())
+                if (GObject.class.isAssignableFrom(prerequisite))
+                    return true;
+        }
+        return false;
+    }
+
+    /**
      * Register a new GType for a Java class. The GType will inherit from the
      * GType of the Java superclass (using {@link Class#getSuperclass()},
      * reading a {@link GType} annotated field and executing
@@ -1215,14 +1238,18 @@ public class Types {
 
             // GObject class initializers for properties and signals
             Consumer<GObject.ObjectClass> propertiesInit;
-            Consumer<GObject.ObjectClass> signalsInit;
+            Consumer<TypeClass> signalsInit;
+            if (isGObjectBased(cls)) {
+                signalsInit = Signals.installSignals(cls);
+            } else {
+                signalsInit = null;
+            }
+
             if (GObject.class.isAssignableFrom(cls)) {
                 @SuppressWarnings("unchecked") // checked by isAssignableFrom()
                 var gobject = (Class<GObject>) cls;
                 propertiesInit = Properties.installProperties(gobject);
-                signalsInit = Signals.installSignals(gobject);
             } else {
-                signalsInit = null;
                 propertiesInit = null;
             }
 
@@ -1264,8 +1291,8 @@ public class Types {
                 applyIfNotNull(overridesInit, typeClass);
                 if (typeClass instanceof GObject.ObjectClass oc) {
                     applyIfNotNull(propertiesInit, oc);
-                    applyIfNotNull(signalsInit, oc);
                 }
+                applyIfNotNull(signalsInit, typeClass);
                 applyIfNotNull(customClassInit, typeClass);
             };
 
@@ -1278,47 +1305,47 @@ public class Types {
                 type = register(parentType, typeName, memoryLayout, classInit,
                         instanceLayout, instanceInit, constructor, flags);
 
-                Class<TypeInstance> typeInstanceClass;
                 try {
-                    typeInstanceClass = (Class<TypeInstance>) cls;
+                    @SuppressWarnings("unchecked") // ClassCastException handled below
+                    Class<TypeInstance> typeInstanceClass = (Class<TypeInstance>) cls;
+
+                    // Add interfaces
+                    try (var arena = Arena.ofConfined()) {
+                        for (Class<?> iface : cls.getInterfaces()) {
+                            if (Proxy.class.isAssignableFrom(iface)) {
+                                Type ifaceType = getGType(iface);
+                                if (ifaceType == null) {
+                                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                            "Cannot implement interface %s on class %s: No GType\n",
+                                            iface.getName(), cls.getName());
+                                    continue;
+                                }
+
+                                InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
+                                Consumer<TypeInterface> ifaceOverridesInit =
+                                        Overrides.overrideInterfaceMethods(typeInstanceClass, iface);
+                                Consumer<TypeInterface> customIfaceInit =
+                                        getInterfaceInit(typeInstanceClass, iface);
+
+                                // Override virtual methods before running a user-defined
+                                // interface init
+                                Consumer<TypeInterface> ifaceInit = typeIface -> {
+                                    applyIfNotNull(ifaceOverridesInit, typeIface);
+                                    applyIfNotNull(customIfaceInit, typeIface);
+                                };
+
+                                interfaceInfo.writeInterfaceInit((ti, data) ->
+                                        ifaceInit.accept(ti), Arena.global());
+                                GObjects.typeAddInterfaceStatic(
+                                        type, ifaceType, interfaceInfo);
+                            }
+                        }
+                    }
                 } catch (ClassCastException cce) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Class %s does not derive from TypeInstance\n",
                             cls.getName());
                     return null;
-                }
-
-                // Add interfaces
-                try (var arena = Arena.ofConfined()) {
-                    for (Class<?> iface : cls.getInterfaces()) {
-                        if (Proxy.class.isAssignableFrom(iface)) {
-                            Type ifaceType = getGType(iface);
-                            if (ifaceType == null) {
-                                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                        "Cannot implement interface %s on class %s: No GType\n",
-                                        iface.getName(), cls.getName());
-                                continue;
-                            }
-
-                            InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
-                            Consumer<TypeInterface> ifaceOverridesInit =
-                                    Overrides.overrideInterfaceMethods(typeInstanceClass, iface);
-                            Consumer<TypeInterface> customIfaceInit =
-                                    getInterfaceInit(typeInstanceClass, iface);
-
-                            // Override virtual methods before running a user-defined
-                            // interface init
-                            Consumer<TypeInterface> ifaceInit = typeIface -> {
-                                applyIfNotNull(ifaceOverridesInit, typeIface);
-                                applyIfNotNull(customIfaceInit, typeIface);
-                            };
-
-                            interfaceInfo.writeInterfaceInit((ti, data) ->
-                                    ifaceInit.accept(ti), Arena.global());
-                            GObjects.typeAddInterfaceStatic(
-                                    type, ifaceType, interfaceInfo);
-                        }
-                    }
                 }
             }
             return type;
@@ -1348,33 +1375,31 @@ public class Types {
                                           Consumer<TypeClass> classInit,
                                           Function<MemorySegment, ? extends Proxy> ctor,
                                           Set<TypeFlags> flags) {
-        try (var arena = Arena.ofConfined()) {
-            TypeInfo typeInfo = new TypeInfo(
-                    (short) interfaceLayout.byteSize(),
-                    null,       // base_init
-                    null,       // base_finalize
-                    (typeClass, data) -> classInit.accept(typeClass),
-                    null,       // class_finalize
-                    null,       // class_data
-                    (short) 0,  // instance_size
-                    (short) 0,  // n_preallocs
-                    null,       // instance_init
-                    null,       // value_table
-                    arena);
-            Type type = GObjects.typeRegisterStatic(
-                    INTERFACE, typeName, typeInfo, flags);
+        TypeInfo typeInfo = new TypeInfo(
+                (short) interfaceLayout.byteSize(),
+                null,       // base_init
+                null,       // base_finalize
+                (typeClass, data) -> classInit.accept(typeClass),
+                null,       // class_finalize
+                null,       // class_data
+                (short) 0,  // instance_size
+                (short) 0,  // n_preallocs
+                null,       // instance_init
+                null,       // value_table
+                Arena.global());
+        Type type = GObjects.typeRegisterStatic(
+                INTERFACE, typeName, typeInfo, flags);
 
-            // Add prerequisites
-            for (var prerequisite : getPrerequisites(cls)) {
-                var ptype = getGType(prerequisite);
-                if (ptype != null)
-                    TypeInterface.addPrerequisite(type, ptype);
-            }
-
-            // Register the type and constructor in the cache
-            TypeCache.register(type, ctor);
-            return type;
+        // Add prerequisites
+        for (var prerequisite : getPrerequisites(cls)) {
+            var ptype = getGType(prerequisite);
+            if (ptype != null)
+                TypeInterface.addPrerequisite(type, ptype);
         }
+
+        // Register the type and constructor in the cache
+        TypeCache.register(type, ctor);
+        return type;
     }
 
     /**

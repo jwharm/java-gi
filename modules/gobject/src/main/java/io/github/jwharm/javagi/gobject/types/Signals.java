@@ -166,13 +166,9 @@ public class Signals {
      * {@code g_signal_newv}) in the class initializer.
      *
      * @param cls  the class that possibly contains @Signal annotations
-     * @param <T>  the class must extend {@link org.gnome.gobject.GObject}
-     * @param <TC> the returned lambda expects a {@link GObject.ObjectClass}
-     *             parameter
      * @return a class initializer that registers the signals
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Consumer<TC> installSignals(Class<T> cls) {
+    public static Consumer<TypeClass> installSignals(Class<?> cls) {
 
         List<SignalDeclaration> signalDeclarations = new ArrayList<>();
         
