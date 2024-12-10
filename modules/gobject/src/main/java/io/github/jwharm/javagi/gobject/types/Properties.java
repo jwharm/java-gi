@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -275,6 +275,76 @@ public class Properties {
     }
 
     /*
+     * Create a ParamSpec of the requested class.
+     */
+    private static ParamSpec createParamSpec(Class<? extends ParamSpec> pClass,
+                                             String name,
+                                             Set<ParamFlags> flags) {
+        if (pClass.equals(ParamSpecBoolean.class))
+            return GObjects.paramSpecBoolean(name, name, name,
+                    false, flags);
+
+        else if (pClass.equals(ParamSpecChar.class))
+            return GObjects.paramSpecChar(name, name, name,
+                    Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, flags);
+
+        else if (pClass.equals(ParamSpecDouble.class))
+            return GObjects.paramSpecDouble(name, name, name,
+                    -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, flags);
+
+        else if (pClass.equals(ParamSpecFloat.class))
+            return GObjects.paramSpecFloat(name, name, name,
+                    -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, flags);
+
+        else if (pClass.equals(ParamSpecGType.class))
+            return GObjects.paramSpecGtype(name, name, name,
+                    Types.NONE, flags);
+
+        else if (pClass.equals(ParamSpecInt.class))
+            return GObjects.paramSpecInt(name, name, name,
+                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecInt64.class))
+            return GObjects.paramSpecInt64(name, name, name,
+                    Long.MIN_VALUE, Long.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecLong.class))
+            return GObjects.paramSpecLong(name, name, name,
+                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecPointer.class))
+            return GObjects.paramSpecPointer(name, name, name,
+                    flags);
+
+        else if (pClass.equals(ParamSpecString.class))
+            return GObjects.paramSpecString(name, name, name,
+                    null, flags);
+
+        else if (pClass.equals(ParamSpecUChar.class))
+            return GObjects.paramSpecUchar(name, name, name,
+                    (byte) 0, Byte.MAX_VALUE, (byte) 0, flags);
+
+        else if (pClass.equals(ParamSpecUInt.class))
+            return GObjects.paramSpecUint(name, name, name,
+                    0, Integer.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecUInt64.class))
+            return GObjects.paramSpecUint64(name, name, name,
+                    0, Long.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecULong.class))
+            return GObjects.paramSpecUlong(name, name, name,
+                    0, Integer.MAX_VALUE, 0, flags);
+
+        else if (pClass.equals(ParamSpecUnichar.class))
+            return GObjects.paramSpecUnichar(name, name, name,
+                    0, flags);
+
+        else
+            return null;
+    }
+
+    /*
      * Create a GParamFlags based on {@code @Property} annotation parameters.
      */
     private static Set<ParamFlags> getFlags(Property property) {
@@ -296,13 +366,9 @@ public class Properties {
      * annotated getters and setters.
      *
      * @param  cls  the class that possibly contains @Property annotations
-     * @param  <T>  the class must extend {@link org.gnome.gobject.GObject}
-     * @param  <TC> the returned lambda expects a {@link GObject.ObjectClass}
-     *              parameter
      * @return a class initializer that registers the properties
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Consumer<TC> installProperties(Class<T> cls) {
+    public static Consumer<TypeClass> installProperties(Class<?> cls) {
 
         List<ParamSpec> propertySpecs = new ArrayList<>();
         propertySpecs.add(null); // Index 0 is reserved
@@ -331,86 +397,29 @@ public class Properties {
             if (propertyNames.contains(name))
                 continue;
 
-            Class<? extends ParamSpec> paramspec = p.type();
+            Class<? extends ParamSpec> paramSpecClass = p.type();
+            Set<ParamFlags> flags = getFlags(p);
 
             /*
              * Check if the type is set on this method. It can be set on either
              * the getter or setter. If the type is not set, it defaults to
              * ParamSpec.class
              */
-            if (paramspec.equals(ParamSpec.class))
-                paramspec = inferType(method);
+            if (paramSpecClass.equals(ParamSpec.class))
+                paramSpecClass = inferType(method);
 
-            if (paramspec == null)
+            if (paramSpecClass == null)
                 continue;
 
-            ParamSpec ps;
-            if (paramspec.equals(ParamSpecBoolean.class))
-                ps = GObjects.paramSpecBoolean(name, name, name,
-                        false, getFlags(p));
+            ParamSpec ps = createParamSpec(paramSpecClass, name, flags);
 
-            else if (paramspec.equals(ParamSpecChar.class))
-                ps = GObjects.paramSpecChar(name, name, name,
-                        Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecDouble.class))
-                ps = GObjects.paramSpecDouble(name, name, name,
-                        -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecFloat.class))
-                ps = GObjects.paramSpecFloat(name, name, name,
-                        -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecGType.class))
-                ps = GObjects.paramSpecGtype(name, name, name,
-                        Types.NONE, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecInt.class))
-                ps = GObjects.paramSpecInt(name, name, name,
-                        Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecInt64.class))
-                ps = GObjects.paramSpecInt64(name, name, name,
-                        Long.MIN_VALUE, Long.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecLong.class))
-                ps = GObjects.paramSpecLong(name, name, name,
-                        Integer.MIN_VALUE, Integer.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecPointer.class))
-                ps = GObjects.paramSpecPointer(name, name, name,
-                        getFlags(p));
-
-            else if (paramspec.equals(ParamSpecString.class))
-                ps = GObjects.paramSpecString(name, name, name,
-                        null, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecUChar.class))
-                ps = GObjects.paramSpecUchar(name, name, name,
-                        (byte) 0, Byte.MAX_VALUE, (byte) 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecUInt.class))
-                ps = GObjects.paramSpecUint(name, name, name,
-                        0, Integer.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecUInt64.class))
-                ps = GObjects.paramSpecUint64(name, name, name,
-                        0, Long.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecULong.class))
-                ps = GObjects.paramSpecUlong(name, name, name,
-                        0, Integer.MAX_VALUE, 0, getFlags(p));
-
-            else if (paramspec.equals(ParamSpecUnichar.class))
-                ps = GObjects.paramSpecUnichar(name, name, name,
-                        0, getFlags(p));
-
-            else {
+            if (ps == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Unsupported ParamSpec %s in class %s:\n",
-                        paramspec.getName(), cls.getName());
+                        paramSpecClass.getName(), cls.getName());
                 return null;
             }
+
             propertySpecs.add(ps);
             propertyNames.add(name);
         }
@@ -540,8 +549,18 @@ public class Properties {
                 }
             }, Arena.global());
 
-            // Call g_class_install_properties with the generated ParamSpecs
-            gclass.installProperties(pspecs);
+            // Register properties for the generated ParamSpecs
+            if (gclass instanceof GObject.ObjectClass oclass) {
+                oclass.installProperties(pspecs);
+            } else if (cls.isInterface() && Types.isGObjectBased(cls)) {
+                var giface = new TypeInterface(gclass.handle());
+                for (var pspec : pspecs)
+                    GObject.interfaceInstallProperty(giface, pspec);
+            } else {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                        "Class or interface %s is not based on GObject\n",
+                        cls.getName());
+            }
         };
     }
 

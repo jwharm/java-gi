@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -1165,7 +1165,7 @@ public class Types {
      * @return whether this is a class that extends GObject or an interface
      *         that has GObject as a prerequisite
      */
-    private static boolean isGObjectBased(Class<?> cls) {
+    public static boolean isGObjectBased(Class<?> cls) {
         // Class that extends GObject
         if (GObject.class.isAssignableFrom(cls))
             return true;
@@ -1237,19 +1237,13 @@ public class Types {
             var overridesInit = Overrides.overrideClassMethods(cls);
 
             // GObject class initializers for properties and signals
-            Consumer<GObject.ObjectClass> propertiesInit;
+            Consumer<TypeClass> propertiesInit;
             Consumer<TypeClass> signalsInit;
             if (isGObjectBased(cls)) {
                 signalsInit = Signals.installSignals(cls);
+                propertiesInit = Properties.installProperties(cls);
             } else {
                 signalsInit = null;
-            }
-
-            if (GObject.class.isAssignableFrom(cls)) {
-                @SuppressWarnings("unchecked") // checked by isAssignableFrom()
-                var gobject = (Class<GObject>) cls;
-                propertiesInit = Properties.installProperties(gobject);
-            } else {
                 propertiesInit = null;
             }
 
