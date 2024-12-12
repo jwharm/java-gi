@@ -51,6 +51,7 @@ gradle.sharedServices.registerIfAbsent("gir", GirParserService::class) {
 
 // Register the task that will generate Java sources from GIR files
 val generateSources by tasks.registering(GenerateSources::class) {
+    mainJavaSourcesDirectory = layout.projectDirectory.dir("src/main/java")
     outputDirectory = layout.buildDirectory.dir("generated/sources/java-gi")
 }
 
