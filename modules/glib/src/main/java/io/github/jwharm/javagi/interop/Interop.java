@@ -1346,7 +1346,7 @@ public class Interop {
 
         if (zeroTerminated)
             // The array is zero-terminated by a struct with all members being 0
-            segment.asSlice(length * size, size).fill((byte) 0);
+            segment.asSlice(array.length * size, size).fill((byte) 0);
 
         return segment;
     }
