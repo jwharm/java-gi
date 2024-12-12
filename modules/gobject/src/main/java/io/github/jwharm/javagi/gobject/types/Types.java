@@ -30,9 +30,8 @@ import org.gnome.gobject.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -48,6 +47,10 @@ import static org.gnome.gobject.GObjects.typeTestFlags;
  */
 @SuppressWarnings("unused")
 public class Types {
+
+    static {
+        GObjects.javagi$ensureInitialized();
+    }
 
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
@@ -1180,12 +1183,36 @@ public class Types {
         return false;
     }
 
+    /*
+     * Perform sanity checks on the class that will be registered
+     */
+    private static void checkClassDefinition(Class<?> cls) {
+        if (cls == null)
+            throw new IllegalArgumentException("Class is null");
+
+        if (cls.isAnnotationPresent(RegisteredType.class)) {
+            var annotation = cls.getAnnotation(RegisteredType.class);
+            if (annotation.prerequisites().length > 0 && !cls.isInterface())
+                throw new IllegalArgumentException("Prerequisites can only be applied on interfaces");
+        }
+
+        if (cls.isAnnotationPresent(Flags.class) && !cls.isEnum())
+            throw new IllegalArgumentException("Only enums can be a flags type");
+    }
+
     /**
-     * Register a new GType for a Java class. The GType will inherit from the
-     * GType of the Java superclass (using {@link Class#getSuperclass()},
-     * reading a {@link GType} annotated field and executing
-     * {@code getMemoryLayout()} using reflection).
-     * <p>
+     * Register a new GType for a Java class, interface or enum.
+     * <ul>
+     *     <li>For classes, the GType will inherit from the GType of the Java
+     *     superclass, and will implement all interfaces that are implemented
+     *     by the Java class.
+     *     <li>Interfaces will be registered as a GType that inherits from
+     *     {@link TypeInterface}. It is possible to specify prerequisite types
+     *     using the {@link RegisteredType} annotation. When no prerequisites
+     *     are set, GObject is by default set as a prerequisite.
+     *     <li>Enums will be registered as a GObject enum type. When a flags
+     *     type is preferred, add the {@link Flags} annotation on the enum.
+     * </ul>
      * The name of the new GType will be the simple name of the Java class, but
      * can also be specified with the {@link RegisteredType} annotation. (All
      * invalid characters, including '.', are replaced with underscores.)
@@ -1201,17 +1228,15 @@ public class Types {
      * @return the GType of the registered Java type
      */
     public static Type register(Class<?> cls) {
-
-        if (cls == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Class is null\n");
-            return null;
-        }
+        checkClassDefinition(cls);
 
         if (Enum.class.isAssignableFrom(cls)) {
             @SuppressWarnings("unchecked") // checked by isAssignableFrom()
             var enumClass = (Class<? extends Enum<?>>) cls;
-            return registerEnum(enumClass);
+            if (enumClass.isAnnotationPresent(Flags.class))
+                return registerFlags(enumClass);
+            else
+                return registerEnum(enumClass);
         }
 
         // Assert that `cls` is a Proxy class
@@ -1404,18 +1429,92 @@ public class Types {
      */
     private static Type registerEnum(Class<? extends Enum<?>> cls) {
         var name = getName(cls);
-        var constants = (Enum<?>[]) cls.getDeclaringClass().getEnumConstants();
-        var arena = Arena.global();
+        var constants = (Enum<?>[]) cls.getEnumConstants();
         var enumValues = new EnumValue[constants.length];
         int i = 0;
         for (var constant : constants) {
-            enumValues[i++] = new EnumValue(arena);
-            enumValues[i].writeValueName(constant.name(), arena);
-            enumValues[i].writeValueNick(constant.name(), arena);
-            enumValues[i].writeValue(constant.ordinal());
+            enumValues[i++] = new EnumValue(
+                    constant.ordinal(), constant.name(), constant.name(), Arena.global());
+            System.out.println("Enum value: " + enumValues[i-1]);
         }
-        return GObjects.enumRegisterStatic(name, enumValues);
+        return enumRegisterStatic(name, enumValues);
     }
+
+    /**
+     * Register a new flags type.
+     *
+     * @param  cls the class (must extend java.lang.Enum)
+     * @return the GType of the registered enumeration
+     */
+    private static Type registerFlags(Class<? extends Enum<?>> cls) {
+        var name = getName(cls);
+        var constants = (Enum<?>[]) cls.getEnumConstants();
+        var flagsValues = new FlagsValue[constants.length];
+        int i = 0;
+        for (var constant : constants) {
+            flagsValues[i++] = new FlagsValue(
+                    1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
+        }
+        return flagsRegisterStatic(name, flagsValues);
+    }
+
+    /**
+     * Based on {@link GObjects#enumRegisterStatic}, but will allocate memory
+     * in the global arena.
+     *
+     * @param name              the name of the new type
+     * @param constStaticValues An array of {@code GEnumValue} structs for the
+     *                          possible enumeration values. The array is
+     *                          terminated by a struct with all members being 0.
+     *                          GObject keeps a reference to the data, so it
+     *                          must be allocated in the global arena.
+     * @return The new type identifier
+     */
+    private static Type enumRegisterStatic(String name, EnumValue[] constStaticValues) {
+        long _result;
+        try {
+            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
+            MemorySegment pValues = Interop.allocateNativeArray(
+                    constStaticValues, EnumValue.getMemoryLayout(), true, Arena.global());
+            _result = (long) g_enum_register_static.invokeExact(pName, pValues);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+        return new Type(_result);
+    }
+
+    private static final MethodHandle g_enum_register_static = Interop.downcallHandle(
+            "g_enum_register_static", FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
+
+    /**
+     * Based on {@link GObjects#flagsRegisterStatic}, but will allocate memory
+     * in the global arena.
+     *
+     * @param name              the name of the new type
+     * @param constStaticValues An array of {@code GFlagsValue} structs for the
+     *                          possible flags values. The array is terminated
+     *                          by a struct with all members being 0.
+     *                          GObject keeps a reference to the data, so it
+     *                          must be allocated in the global arena.
+     * @return The new type identifier
+     */
+    private static Type flagsRegisterStatic(String name, FlagsValue[] constStaticValues) {
+        long _result;
+        try {
+            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
+            MemorySegment pValues = Interop.allocateNativeArray(
+                    constStaticValues, FlagsValue.getMemoryLayout(), true, Arena.global());
+            _result = (long) g_flags_register_static.invokeExact(pName, pValues);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+        return new Type(_result);
+    }
+
+    private static final MethodHandle g_flags_register_static = Interop.downcallHandle(
+            "g_flags_register_static", FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
 
     /**
      * Register a new GType.
