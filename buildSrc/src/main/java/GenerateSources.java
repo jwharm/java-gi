@@ -43,6 +43,9 @@ public abstract class GenerateSources extends DefaultTask {
     @Input
     public abstract Property<String> getNamespace();
 
+    @InputFiles
+    public abstract DirectoryProperty getMainJavaSourcesDirectory();
+
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
@@ -67,8 +70,7 @@ public abstract class GenerateSources extends DefaultTask {
      */
     private Set<String> getPackages() throws IOException {
         var packages = new HashSet<String>();
-        var rootDir = getProject().getProjectDir().toPath();
-        var srcDir = rootDir.resolve(Path.of("src", "main", "java"));
+        var srcDir = getMainJavaSourcesDirectory().getAsFile().get().toPath();
         var separator = srcDir.getFileSystem().getSeparator();
 
         if (! Files.exists(srcDir))
