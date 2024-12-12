@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -27,13 +27,13 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -47,6 +47,10 @@ import static org.gnome.gobject.GObjects.typeTestFlags;
  */
 @SuppressWarnings("unused")
 public class Types {
+
+    static {
+        GObjects.javagi$ensureInitialized();
+    }
 
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
@@ -633,7 +637,7 @@ public class Types {
      * @param  cls the class for which a GType name is returned
      * @return the GType name
      */
-    public static String getName(Class<?> cls) {
+    private static String getName(Class<?> cls) {
         // Default type name: fully qualified Java class name
         String typeNameInput = cls.getName();
         String namespace = "";
@@ -664,12 +668,12 @@ public class Types {
      *
      * @param  cls      the class to provide a memory layout for
      * @param  typeName the name given tot the generated memory layout
-     * @param  <T>      the class must extend {@link GObject}
+     * @param  <T>      the class must extend {@link TypeInstance}
      * @return the declared memory layout, or if not found, a generated memory
      *         layout that copies the memory layout declared in the direct
      *         superclass.
      */
-    public static <T extends GObject>
+    public static <T extends TypeInstance>
     MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
 
             // Get instance-memorylayout of this class
@@ -699,24 +703,23 @@ public class Types {
      *
      * @param  cls  the class that contains (or whose superclass contains) an
      *              inner TypeClass class
-     * @param  <T>  the parameter must extend {@link TypeInstance}
-     * @param  <TC> the returned class extends {@link TypeClass}
      * @return the TypeClass class, or null if not found
      */
     @SuppressWarnings("unchecked")
-    public static <T extends TypeInstance, TC extends TypeClass>
-    Class<TC> getTypeClass(Class<T> cls) {
+    public static Class<? extends TypeClass> getTypeClass(Class<?> cls) {
 
         // Get the type-struct. This is an inner class that extends ObjectClass.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
-                return (Class<TC>) gclass;
+                return (Class<? extends TypeClass>) gclass;
             }
         }
         // If the type-struct is unavailable, get it from the parent class.
-        for (Class<?> gclass : cls.getSuperclass().getDeclaredClasses()) {
-            if (TypeClass.class.isAssignableFrom(gclass)) {
-                return (Class<TC>) gclass;
+        if (cls.getSuperclass() != null) {
+            for (Class<?> gclass : cls.getSuperclass().getDeclaredClasses()) {
+                if (TypeClass.class.isAssignableFrom(gclass)) {
+                    return (Class<? extends TypeClass>) gclass;
+                }
             }
         }
         return null;
@@ -727,7 +730,7 @@ public class Types {
      *
      * @param  iface the interface that contains an inner TypeInterface class
      * @param  <TI>  the returned class extends {@link TypeInterface}
-     * @return the TypeInterface class, or null if not found
+     * @return the TypeInterface class, or TypeInterface.class if not found
      */
     @SuppressWarnings("unchecked")
     public static <TI extends TypeInterface> Class<TI> getTypeInterface(Class<?> iface) {
@@ -737,20 +740,19 @@ public class Types {
                 return (Class<TI>) giface;
             }
         }
-        return null;
+        return (Class<TI>) TypeInterface.class;
     }
 
     /**
-     * Generate a MemoryLayout struct with one member: the memorylayout of the
+     * Generate a MemoryLayout struct with one member: the memory layout of the
      * parent TypeClass
      *
-     * @param  cls      the class to get a memory layout for
+     * @param  cls      the class to generate a memory layout for
      * @param  typeName the name of the new memory layout
-     * @param  <T>      the class must extend {@link org.gnome.gobject.GObject}
      * @return the requested memory layout
      */
-    public static <T extends GObject> MemoryLayout getClassLayout(Class<T> cls, String typeName) {
-        // Get the type-struct. This is an inner class that extends GObject.ObjectClass.
+    public static MemoryLayout generateClassLayout(Class<?> cls, String typeName) {
+        // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
         if (typeClass == null) {
@@ -759,7 +761,7 @@ public class Types {
             return null;
         }
 
-        // Get class-memorylayout
+        // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeClass);
 
         if (parentLayout == null) {
@@ -771,6 +773,38 @@ public class Types {
         return MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
         ).withName(typeName + "Class");
+    }
+
+    /**
+     * Generate a MemoryLayout struct with one member: the memory layout of
+     * GTypeInterface
+     *
+     * @param  cls      the interface to generate a memory layout for
+     * @param  typeName the name of the new memory layout
+     * @return the requested memory layout
+     */
+    public static MemoryLayout generateIfaceLayout(Class<?> cls, String typeName) {
+        // Get the type-struct. This is an inner class that extends TypeInterface.
+        // If the type-struct is unavailable, get it from the parent class.
+        Class<? extends TypeInterface> typeIface = getTypeInterface(cls);
+        if (typeIface == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find TypeInterface for class %s\n", cls.getName());
+            return null;
+        }
+
+        // Get memory layout of the type-struct
+        MemoryLayout parentLayout = getLayout(typeIface);
+
+        if (parentLayout == null) {
+            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                    "Cannot find class memory layout definition for interface %s\n", cls.getName());
+            return null;
+        }
+
+        return MemoryLayout.structLayout(
+                parentLayout.withName("g_iface")
+        ).withName(typeName + "Interface");
     }
 
     /**
@@ -897,9 +931,6 @@ public class Types {
             // Get memory address constructor
             ctor = cls.getConstructor(MemorySegment.class);
         } catch (NoSuchMethodException e) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find memory-address constructor definition for class %s: %s\n",
-                    cls.getName(), e.toString());
             return null;
         }
 
@@ -925,13 +956,14 @@ public class Types {
     /**
      * Return a lambda that invokes the instance initializer, with is a method
      * that is annotated with {@link InstanceInit} and takes a single parameter
-     * of type {@link GObject}.
+     * of type {@link TypeInstance}.
      *
      * @param  cls the class that declares the instance init method
-     * @param  <T> the class must extend {@link GObject}
-     * @return the instance initializer, or null if not found
+     * @param  <T> the class must extend {@link TypeInstance}
+     * @return the instance initializer, or a no-op ({@code $ -> {}}) if not
+     *         found
      */
-    public static <T extends GObject>
+    public static <T extends TypeInstance>
     Consumer<T> getInstanceInit(Class<T> cls) {
 
         // Find instance initializer function
@@ -964,21 +996,21 @@ public class Types {
                 };
             }
         }
-        return null;
+        return $ -> {};
     }
 
     /**
      * Return a lambda that invokes the class initializer, with is a method
      * that is annotated with {@link ClassInit} and takes a single parameter
-     * of type {@link GObject.ObjectClass}.
+     * of type {@link TypeClass}.
      *
      * @param  cls  the class that declares the class init method
-     * @param  <T>  the class must extend {@link GObject}
-     * @param  <TC> the class initializer must accept a
-     *              {@link GObject.ObjectClass} parameter
+     * @param  <T>  the class must extend {@link TypeInstance}
+     * @param  <TC> the class initializer must accept a {@link TypeClass}
+     *              parameter
      * @return the class initializer, or null if not found
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
+    public static <T extends TypeInstance, TC extends TypeClass>
     Consumer<TC> getClassInit(Class<T> cls) {
         // Find class initializer function
         for (Method method : cls.getDeclaredMethods()) {
@@ -1011,11 +1043,11 @@ public class Types {
      * parameter of the type that is specified with {@code iface}.
      *
      * @param cls  the class that declares the interface init method
-     * @param <T>  the class must extend {@link GObject}
+     * @param <T>  the class must extend {@link TypeInstance}
      * @param <TI> the iface parameter must extend {@link TypeInterface}
      * @return the interface initializer, or null if not found
      */
-    public static <T extends GObject, TI extends TypeInterface>
+    public static <T extends TypeInstance, TI extends TypeInterface>
     Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
         // Find all overridden methods
         Class<TI> typeStruct = getTypeInterface(iface);
@@ -1078,11 +1110,109 @@ public class Types {
     }
 
     /**
-     * Register a new GType for a Java class. The GType will inherit from the
-     * GType of the Java superclass (using {@link Class#getSuperclass()},
-     * reading a {@link GType} annotated field and executing
-     * {@code getMemoryLayout()} using reflection).
+     * Get a list of interface prerequisites. These are all interfaces directly
+     * extended by this interface, and all classes listed in the prerequisites
+     * argument of the RegisteredType annotation.
      * <p>
+     * When the interface declares properties and/or signals, and GObject or a
+     * GObject-derived class is not a prerequisite, it is added automatically.
+     *
+     * @param  iface the interface for which to list the prerequisites
+     * @return the list of prerequisites
+     */
+    private static List<Class<?>> getPrerequisites(Class<?> iface) {
+        var list = new ArrayList<Class<?>>();
+        for (var prerequisite : iface.getInterfaces()) {
+            if (! prerequisite.equals(Proxy.class)) // Skip Proxy interface
+                list.add(prerequisite);
+        }
+        var gobjectBased = false;
+
+        if (iface.isAnnotationPresent(RegisteredType.class)) {
+            var registeredType = iface.getAnnotation(RegisteredType.class);
+            for (var prereq : registeredType.prerequisites()) {
+                if (GObject.class.isAssignableFrom(prereq))
+                    gobjectBased = true;
+                list.add(prereq);
+            }
+        }
+
+        // If the interface declares properties or signals, automatically add
+        // GObject as a prerequisite.
+        if (!gobjectBased) {
+            // Find property declarations
+            for (var method : iface.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(Property.class)) {
+                    list.add(GObject.class);
+                    return list;
+                }
+            }
+
+            // Find signal declarations
+            for (var cls : iface.getDeclaredClasses()) {
+                if (cls.isInterface() && cls.isAnnotationPresent(Signal.class)) {
+                    list.add(GObject.class);
+                    return list;
+                }
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * Check if this class (or in case of an interface, any class that
+     * implements it) is a GObject.
+     *
+     * @param  cls the class or interface to check
+     * @return whether this is a class that extends GObject or an interface
+     *         that has GObject as a prerequisite
+     */
+    public static boolean isGObjectBased(Class<?> cls) {
+        // Class that extends GObject
+        if (GObject.class.isAssignableFrom(cls))
+            return true;
+
+        // Interface with GObject as prerequisite
+        if (cls.isInterface() && cls.isAnnotationPresent(RegisteredType.class)) {
+            var annotation = cls.getAnnotation(RegisteredType.class);
+            for (var prerequisite : annotation.prerequisites())
+                if (GObject.class.isAssignableFrom(prerequisite))
+                    return true;
+        }
+        return false;
+    }
+
+    /*
+     * Perform sanity checks on the class that will be registered
+     */
+    private static void checkClassDefinition(Class<?> cls) {
+        if (cls == null)
+            throw new IllegalArgumentException("Class is null");
+
+        if (cls.isAnnotationPresent(RegisteredType.class)) {
+            var annotation = cls.getAnnotation(RegisteredType.class);
+            if (annotation.prerequisites().length > 0 && !cls.isInterface())
+                throw new IllegalArgumentException("Prerequisites can only be applied on interfaces");
+        }
+
+        if (cls.isAnnotationPresent(Flags.class) && !cls.isEnum())
+            throw new IllegalArgumentException("Only enums can be a flags type");
+    }
+
+    /**
+     * Register a new GType for a Java class, interface or enum.
+     * <ul>
+     *     <li>For classes, the GType will inherit from the GType of the Java
+     *     superclass, and will implement all interfaces that are implemented
+     *     by the Java class.
+     *     <li>Interfaces will be registered as a GType that inherits from
+     *     {@link TypeInterface}. It is possible to specify prerequisite types
+     *     using the {@link RegisteredType} annotation. When no prerequisites
+     *     are set, GObject is by default set as a prerequisite.
+     *     <li>Enums will be registered as a GObject enum type. When a flags
+     *     type is preferred, add the {@link Flags} annotation on the enum.
+     * </ul>
      * The name of the new GType will be the simple name of the Java class, but
      * can also be specified with the {@link RegisteredType} annotation. (All
      * invalid characters, including '.', are replaced with underscores.)
@@ -1094,98 +1224,147 @@ public class Types {
      * The {@link TypeFlags#ABSTRACT} and {@link TypeFlags#FINAL} flags are set
      * for abstract and final Java classes.
      *
-     * @param  <T> The class must be derived from GObject
-     * @return the new registered GType
+     * @param  cls the class, interface or enumeration to register
+     * @return the GType of the registered Java type
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Type register(Class<T> cls) {
+    public static Type register(Class<?> cls) {
+        checkClassDefinition(cls);
 
-        if (cls == null) {
+        if (Enum.class.isAssignableFrom(cls)) {
+            @SuppressWarnings("unchecked") // checked by isAssignableFrom()
+            var enumClass = (Class<? extends Enum<?>>) cls;
+            if (enumClass.isAnnotationPresent(Flags.class))
+                return registerFlags(enumClass);
+            else
+                return registerEnum(enumClass);
+        }
+
+        // Assert that `cls` is a Proxy class
+        if (! Proxy.class.isAssignableFrom(cls)) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Class is null\n");
+                    "Class does not implement Proxy interface\n");
             return null;
         }
+        @SuppressWarnings("unchecked") // checked by isAssignableFrom()
+        var proxy = (Class<? extends Proxy>) cls;
 
         try {
             Class<?> parentClass = cls.getSuperclass();
-            Type parentType = getGType(parentClass);
+            Type parentType = cls.isInterface() ? INTERFACE : getGType(parentClass);
             String typeName = getName(cls);
-            MemoryLayout classLayout = getClassLayout(cls, typeName);
-            Consumer<TC> overridesInit = Overrides.overrideClassMethods(cls);
-            Consumer<TC> propertiesInit = Properties.installProperties(cls);
-            Consumer<TC> signalsInit = Signals.installSignals(cls);
-            Consumer<TC> classInit = getClassInit(cls);
-            MemoryLayout instanceLayout = getInstanceLayout(cls, typeName);
-            Consumer<T> instanceInit = getInstanceInit(cls);
-            Function<MemorySegment, T> constructor = getAddressConstructor(cls);
+
+            // Generate memory layout
+            MemoryLayout memoryLayout = cls.isInterface()
+                    ? generateIfaceLayout(cls, typeName)
+                    : generateClassLayout(cls, typeName);
+
+            // Create initialization function that registers method overrides
+            var overridesInit = Overrides.overrideClassMethods(cls);
+
+            // GObject class initializers for properties and signals
+            Consumer<TypeClass> propertiesInit;
+            Consumer<TypeClass> signalsInit;
+            if (isGObjectBased(cls)) {
+                signalsInit = Signals.installSignals(cls);
+                propertiesInit = Properties.installProperties(cls);
+            } else {
+                signalsInit = null;
+                propertiesInit = null;
+            }
+
+            // Initialization methods that are only applicable to classes,
+            // and `null` for interfaces
+            Consumer<TypeClass> customClassInit;
+            MemoryLayout instanceLayout;
+            Consumer<TypeInstance> instanceInit;
+            if (TypeInstance.class.isAssignableFrom(cls)) {
+                @SuppressWarnings("unchecked") // checked by isAssignableFrom()
+                var typeInstance = (Class<TypeInstance>) cls;
+                customClassInit = getClassInit(typeInstance);
+                instanceLayout = getInstanceLayout(typeInstance, typeName);
+                instanceInit = getInstanceInit(typeInstance);
+            } else {
+                customClassInit = null;
+                instanceLayout = null;
+                instanceInit = $ -> {};
+            }
+
+            var constructor = getAddressConstructor(proxy);
+            if (constructor == null && cls.isInterface())
+                constructor = getAddressConstructor(TypeInterface.class);
+
             Set<TypeFlags> flags = getTypeFlags(cls);
 
             if (parentType == null
-                    || classLayout == null
-                    || instanceLayout == null
+                    || memoryLayout == null
+                    || ((!cls.isInterface()) && instanceLayout == null)
                     || constructor == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Cannot register type %s\n", cls.getName());
                 return null;
             }
 
-            // Generate default init function
-            if (instanceInit == null)
-                instanceInit = $ -> {};
-
-            /*
-             * Override virtual methods and install properties and signals
-             * before running a user-defined class init. We chain the generated
-             * initializers (if not null) and default to an empty method _ -> {}
-             */
-            Consumer<TC> init = chain(overridesInit, propertiesInit);
-            init = chain(init, signalsInit);
-            init = chain(init, classInit);
-            classInit = init != null ? init : $ -> {};
+            // Override virtual methods and install properties and signals
+            // before running a user-defined class init.
+            Consumer<TypeClass> classInit = typeClass -> {
+                applyIfNotNull(overridesInit, typeClass);
+                if (typeClass instanceof GObject.ObjectClass oc) {
+                    applyIfNotNull(propertiesInit, oc);
+                }
+                applyIfNotNull(signalsInit, typeClass);
+                applyIfNotNull(customClassInit, typeClass);
+            };
 
             // Register the GType
-            Type type = register(
-                    parentType,
-                    typeName,
-                    classLayout,
-                    classInit,
-                    instanceLayout,
-                    instanceInit,
-                    constructor,
-                    flags
-            );
+            Type type;
+            if (cls.isInterface()) {
+                type = registerInterface(cls, typeName, memoryLayout, classInit,
+                        constructor, flags);
+            } else {
+                type = register(parentType, typeName, memoryLayout, classInit,
+                        instanceLayout, instanceInit, constructor, flags);
 
-            // Add interfaces
-            try (var arena = Arena.ofConfined()) {
-                for (Class<?> iface : cls.getInterfaces()) {
-                    if (Proxy.class.isAssignableFrom(iface)) {
-                        Type ifaceType = getGType(iface);
-                        if (ifaceType == null) {
-                            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                    "Cannot implement interface %s on class %s: No GType\n",
-                                    iface.getName(), cls.getName());
-                            continue;
+                try {
+                    @SuppressWarnings("unchecked") // ClassCastException handled below
+                    Class<TypeInstance> typeInstanceClass = (Class<TypeInstance>) cls;
+
+                    // Add interfaces
+                    try (var arena = Arena.ofConfined()) {
+                        for (Class<?> iface : cls.getInterfaces()) {
+                            if (Proxy.class.isAssignableFrom(iface)) {
+                                Type ifaceType = getGType(iface);
+                                if (ifaceType == null) {
+                                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                            "Cannot implement interface %s on class %s: No GType\n",
+                                            iface.getName(), cls.getName());
+                                    continue;
+                                }
+
+                                InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
+                                Consumer<TypeInterface> ifaceOverridesInit =
+                                        Overrides.overrideInterfaceMethods(typeInstanceClass, iface);
+                                Consumer<TypeInterface> customIfaceInit =
+                                        getInterfaceInit(typeInstanceClass, iface);
+
+                                // Override virtual methods before running a user-defined
+                                // interface init
+                                Consumer<TypeInterface> ifaceInit = typeIface -> {
+                                    applyIfNotNull(ifaceOverridesInit, typeIface);
+                                    applyIfNotNull(customIfaceInit, typeIface);
+                                };
+
+                                interfaceInfo.writeInterfaceInit((ti, data) ->
+                                        ifaceInit.accept(ti), Arena.global());
+                                GObjects.typeAddInterfaceStatic(
+                                        type, ifaceType, interfaceInfo);
+                            }
                         }
-
-                        InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
-                        Consumer<TypeInterface> ifaceOverridesInit =
-                                Overrides.overrideInterfaceMethods(cls, iface);
-                        Consumer<TypeInterface> ifaceInit =
-                                getInterfaceInit(cls, iface);
-
-                        // Override virtual methods before running a user-defined
-                        // interface init
-                        ifaceInit = chain(ifaceOverridesInit, ifaceInit);
-                        if (ifaceInit == null) {
-                            ifaceInit = $ -> {};
-                        }
-
-                        Consumer<TypeInterface> finalIfaceInit = ifaceInit;
-                        interfaceInfo.writeInterfaceInit((ti, data) ->
-                                finalIfaceInit.accept(ti), Arena.global());
-                        GObjects.typeAddInterfaceStatic(
-                                type, ifaceType, interfaceInfo);
                     }
+                } catch (ClassCastException cce) {
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                            "Class %s does not derive from TypeInstance\n",
+                            cls.getName());
+                    return null;
                 }
             }
             return type;
@@ -1199,6 +1378,145 @@ public class Types {
     }
 
     /**
+     * Register a new interface type.
+     *
+     * @param  cls             the interface to register
+     * @param  typeName        name of the GType
+     * @param  interfaceLayout memory layout of the interface
+     * @param  classInit       static class initializer function
+     * @param  ctor            memory-address constructor
+     * @param  flags           type flags
+     * @return the GType of the registered interface
+     */
+    private static Type registerInterface(Class<?> cls,
+                                          String typeName,
+                                          MemoryLayout interfaceLayout,
+                                          Consumer<TypeClass> classInit,
+                                          Function<MemorySegment, ? extends Proxy> ctor,
+                                          Set<TypeFlags> flags) {
+        TypeInfo typeInfo = new TypeInfo(
+                (short) interfaceLayout.byteSize(),
+                null,       // base_init
+                null,       // base_finalize
+                (typeClass, data) -> classInit.accept(typeClass),
+                null,       // class_finalize
+                null,       // class_data
+                (short) 0,  // instance_size
+                (short) 0,  // n_preallocs
+                null,       // instance_init
+                null,       // value_table
+                Arena.global());
+        Type type = GObjects.typeRegisterStatic(
+                INTERFACE, typeName, typeInfo, flags);
+
+        // Add prerequisites
+        for (var prerequisite : getPrerequisites(cls)) {
+            var ptype = getGType(prerequisite);
+            if (ptype != null)
+                TypeInterface.addPrerequisite(type, ptype);
+        }
+
+        // Register the type and constructor in the cache
+        TypeCache.register(type, ctor);
+        return type;
+    }
+
+    /**
+     * Register a new enumeration type.
+     *
+     * @param  cls the class (must extend java.lang.Enum)
+     * @return the GType of the registered enumeration
+     */
+    private static Type registerEnum(Class<? extends Enum<?>> cls) {
+        var name = getName(cls);
+        var constants = (Enum<?>[]) cls.getEnumConstants();
+        var enumValues = new EnumValue[constants.length];
+        int i = 0;
+        for (var constant : constants) {
+            enumValues[i++] = new EnumValue(
+                    constant.ordinal(), constant.name(), constant.name(), Arena.global());
+            System.out.println("Enum value: " + enumValues[i-1]);
+        }
+        return enumRegisterStatic(name, enumValues);
+    }
+
+    /**
+     * Register a new flags type.
+     *
+     * @param  cls the class (must extend java.lang.Enum)
+     * @return the GType of the registered enumeration
+     */
+    private static Type registerFlags(Class<? extends Enum<?>> cls) {
+        var name = getName(cls);
+        var constants = (Enum<?>[]) cls.getEnumConstants();
+        var flagsValues = new FlagsValue[constants.length];
+        int i = 0;
+        for (var constant : constants) {
+            flagsValues[i++] = new FlagsValue(
+                    1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
+        }
+        return flagsRegisterStatic(name, flagsValues);
+    }
+
+    /**
+     * Based on {@link GObjects#enumRegisterStatic}, but will allocate memory
+     * in the global arena.
+     *
+     * @param name              the name of the new type
+     * @param constStaticValues An array of {@code GEnumValue} structs for the
+     *                          possible enumeration values. The array is
+     *                          terminated by a struct with all members being 0.
+     *                          GObject keeps a reference to the data, so it
+     *                          must be allocated in the global arena.
+     * @return The new type identifier
+     */
+    private static Type enumRegisterStatic(String name, EnumValue[] constStaticValues) {
+        long _result;
+        try {
+            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
+            MemorySegment pValues = Interop.allocateNativeArray(
+                    constStaticValues, EnumValue.getMemoryLayout(), true, Arena.global());
+            _result = (long) g_enum_register_static.invokeExact(pName, pValues);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+        return new Type(_result);
+    }
+
+    private static final MethodHandle g_enum_register_static = Interop.downcallHandle(
+            "g_enum_register_static", FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
+
+    /**
+     * Based on {@link GObjects#flagsRegisterStatic}, but will allocate memory
+     * in the global arena.
+     *
+     * @param name              the name of the new type
+     * @param constStaticValues An array of {@code GFlagsValue} structs for the
+     *                          possible flags values. The array is terminated
+     *                          by a struct with all members being 0.
+     *                          GObject keeps a reference to the data, so it
+     *                          must be allocated in the global arena.
+     * @return The new type identifier
+     */
+    private static Type flagsRegisterStatic(String name, FlagsValue[] constStaticValues) {
+        long _result;
+        try {
+            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
+            MemorySegment pValues = Interop.allocateNativeArray(
+                    constStaticValues, FlagsValue.getMemoryLayout(), true, Arena.global());
+            _result = (long) g_flags_register_static.invokeExact(pName, pValues);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+        return new Type(_result);
+    }
+
+    private static final MethodHandle g_flags_register_static = Interop.downcallHandle(
+            "g_flags_register_static", FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
+
+    /**
      * Register a new GType.
      *
      * @param  parentType     parent GType
@@ -1209,38 +1527,31 @@ public class Types {
      * @param  instanceInit   static instance initializer function
      * @param  constructor    memory-address constructor
      * @param  flags          type flags
-     * @param  <T>            the instance initializer function must accept the
-     *                        result of the memory address constructor
-     * @param  <TC>           the class initializer function must accept a
-     *                        parameter that is a subclass of TypeClass
-     * @return the new GType
+     * @return the GType of the registered Java type
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Type register(Type parentType,
+    public static Type register(Type parentType,
                   String typeName,
                   MemoryLayout classLayout,
-                  Consumer<TC> classInit,
+                  Consumer<TypeClass> classInit,
                   MemoryLayout instanceLayout,
-                  Consumer<T> instanceInit,
-                  Function<MemorySegment, T> constructor,
+                  Consumer<TypeInstance> instanceInit,
+                  Function<MemorySegment, ? extends Proxy> constructor,
                   Set<TypeFlags> flags) {
 
-        @SuppressWarnings("unchecked")
         Type type = GObjects.typeRegisterStaticSimple(
                 parentType,
                 typeName,
                 (short) classLayout.byteSize(),
-                // The data parameter is not used.
-                (typeClass, data) -> classInit.accept((TC) typeClass),
+                (typeClass, data) -> classInit.accept(typeClass),
                 (short) instanceLayout.byteSize(),
-                // The instance parameter is a type-instance of T, so construct
-                // a T proxy instance. The typeClass parameter is not used.
                 (instance, typeClass) -> {
-                    // The instance is initially cached as TypeInstance.
-                    // Overwrite it with a new T instance, and run init().
-                    T newInstance = constructor.apply(instance.handle());
+                    // The instance is initially created and cached as a
+                    // TypeInstance. We replace it with a new instance from the
+                    // memory-address constructor of the Java class, and run its
+                    // instance-initializer method.
+                    var newInstance = constructor.apply(instance.handle());
                     InstanceCache.put(newInstance.handle(), newInstance);
-                    instanceInit.accept(newInstance);
+                    instanceInit.accept((TypeInstance) newInstance);
                 },
                 flags
         );
@@ -1250,24 +1561,16 @@ public class Types {
     }
 
     /**
-     * Null-safe run {@code first.andThen(second)}.
-     * <ul>
-     *   <li>When both lambdas are not null: return first.andThen(second)
-     *   <li>When only first is not null:    return first
-     *   <li>When only second is not null:   return second
-     *   <li>When both lambdas are null:     return null
-     * </ul>
+     * Apply {@code func} to {@code cls} if {@code func} is not {@code null}.
      *
-     * @param  first  the first Consumer to run
-     * @param  second the Consumer to run after the first
-     * @param  <Z>    both Consumers must have the same type signature
-     * @return a Consumer that runs the first and second lambdas, or
-     *         {@code null} if both arguments are {@code null}
+     * @param func a nullable Consumer operation that will be applied to
+     *             {@code cls}
+     * @param cls  the Class that will be passed to {@code func}
+     * @param <Z>  {@code func} must accept the type of {@code cls} as its
+     *             parameter
      */
-    public static <Z> Consumer<Z> chain(Consumer<Z> first, Consumer<Z> second) {
-        if (first != null && second != null) {
-            return first.andThen(second);
-        }
-        return first != null ? first : second;
+    public static <Z> void applyIfNotNull(@Nullable Consumer<? super Z> func, @NotNull Z cls) {
+        if (func != null)
+            func.accept(cls);
     }
 }

@@ -22,6 +22,8 @@ package io.github.jwharm.javagi.gtk.types;
 import io.github.jwharm.javagi.base.FunctionPointer;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gobject.InstanceCache;
+import io.github.jwharm.javagi.gobject.annotations.Namespace;
+import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.types.Overrides;
 import io.github.jwharm.javagi.gobject.types.Properties;
 import io.github.jwharm.javagi.gobject.types.Signals;
@@ -33,7 +35,9 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
+import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
+import org.gnome.gobject.TypeInstance;
 import org.gnome.gtk.Widget;
 
 import java.lang.foreign.*;
@@ -59,18 +63,42 @@ public class TemplateTypes {
 
     /**
      * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or
-     * if it is not defined, fallback to
-     * {@link io.github.jwharm.javagi.gobject.types.Types#getName(Class)}.
+     * if it is not defined, fallback to the {@code name} parameter of the
+     * {@code RegisteredType} annotation, or if that is also not defined, the
+     * package and class name will be used as the new GType name (with all
+     * characters except a-z and A-Z converted to underscores).
      *
      * @param  cls the class that is registered as a new GType
      * @return the name
      */
-    public static String getTemplateName(Class<?> cls) {
-        var annotation = cls.getAnnotation(GtkTemplate.class);
-        String name = annotation.name();
-        if (! "".equals(name))
-            return name;
-        return getName(cls);
+    private static String getName(Class<?> cls) {
+        // Default type name: fully qualified Java class name
+        String typeNameInput = cls.getName();
+        String namespace = "";
+
+        // Check for a Namespace annotation on the package
+        if (cls.getPackage().isAnnotationPresent(Namespace.class)) {
+            var annotation = cls.getPackage().getAnnotation(Namespace.class);
+            namespace = annotation.name();
+            typeNameInput = namespace + cls.getSimpleName();
+        }
+
+        // Check if the GtkTemplate annotation overrides the type name
+        var gtkTemplate = cls.getAnnotation(GtkTemplate.class);
+        if (! "".equals(gtkTemplate.name())) {
+            typeNameInput = namespace + gtkTemplate.name();
+        }
+
+        // Check for a RegisteredType annotation that overrides the name
+        else if (cls.isAnnotationPresent(RegisteredType.class)) {
+            var registeredType = cls.getAnnotation(RegisteredType.class);
+            if (! "".equals(registeredType.name())) {
+                typeNameInput = namespace + registeredType.name();
+            }
+        }
+
+        // Replace all characters except a-z or A-Z with underscores
+        return typeNameInput.replaceAll("[^a-zA-Z]", "_");
     }
 
     /**
@@ -115,37 +143,13 @@ public class TemplateTypes {
                 String fieldName = getChildName(field);
 
                 // Add the memory layout of the field to the struct.
-                if (field.getType().equals(boolean.class))
-                    size = add(ValueLayout.JAVA_BOOLEAN.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(byte.class))
-                    size = add(ValueLayout.JAVA_BYTE.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(char.class))
-                    size = add(ValueLayout.JAVA_CHAR.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(double.class))
-                    size = add(ValueLayout.JAVA_DOUBLE.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(float.class))
-                    size = add(ValueLayout.JAVA_FLOAT.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(int.class))
-                    size = add(ValueLayout.JAVA_INT.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(long.class))
-                    size = add(ValueLayout.JAVA_LONG.withName(fieldName),
-                               elements, size);
-                else if (field.getType().equals(short.class))
-                    size = add(ValueLayout.JAVA_SHORT.withName(fieldName),
-                               elements, size);
-                else if (Proxy.class.isAssignableFrom(field.getType()))
+                if (GObject.class.isAssignableFrom(field.getType()))
                     size = add(ValueLayout.ADDRESS.withName(fieldName),
                                elements, size);
                 else
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Unsupported type '%s' of field %s\n",
-                            field.getType().getSimpleName(), fieldName);
+                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_ERROR,
+                            "GtkChild field %s of type '%s' is not derived from GObject\n",
+                            fieldName, field.getType().getSimpleName());
             }
         }
 
@@ -176,7 +180,7 @@ public class TemplateTypes {
         return size + s;
     }
 
-    /*
+    /**
      * Return a lambda that will:
      * <ul>
      *   <li>load the ui file, and set it as template,
@@ -234,7 +238,7 @@ public class TemplateTypes {
         };
     }
 
-    /*
+    /**
      * Return a lambda that will:
      * <ul>
      *   <li>call gtk_widget_init_template
@@ -262,7 +266,7 @@ public class TemplateTypes {
         };
     }
 
-    /*
+    /**
      * Assign the widget from the template to the field
      */
     private static void setField(Field field, Widget widget) throws Exception {
@@ -283,11 +287,11 @@ public class TemplateTypes {
      */
     private static <W extends Widget> Type registerTemplate(Class<W> cls) {
         try {
-            String name = getTemplateName(cls);
+            String name = getName(cls);
             MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, name);
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = getGType(parentClass);
-            MemoryLayout classLayout = getClassLayout(cls, name);
+            MemoryLayout classLayout = generateClassLayout(cls, name);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
             Set<TypeFlags> flags = getTypeFlags(cls);
 
@@ -301,16 +305,24 @@ public class TemplateTypes {
             // Override virtual methods, install properties and signals, and
             // then install the template before running a user-defined class
             // init.
-            var classInit = chain(overridesInit, propertiesInit);
-            classInit = chain(classInit, signalsInit);
-            classInit = chain(classInit, templateClassInit);
-            classInit = chain(classInit, userDefinedClassInit);
+            Consumer<TypeClass> classInit = typeClass -> {
+                var widgetClass = (Widget.WidgetClass) typeClass;
+                applyIfNotNull(overridesInit, widgetClass);
+                applyIfNotNull(propertiesInit, widgetClass);
+                applyIfNotNull(signalsInit, widgetClass);
+                templateClassInit.accept(widgetClass);
+                applyIfNotNull(userDefinedClassInit, widgetClass);
+            };
 
             // Chain template instance init with user-defined init function
-            Consumer<W> instanceInit = getTemplateInstanceInit(cls);
+            Consumer<W> templateInit = getTemplateInstanceInit(cls);
             Consumer<W> userDefinedInit = getInstanceInit(cls);
-            if (userDefinedInit != null)
-                instanceInit = instanceInit.andThen(userDefinedInit);
+            Consumer<TypeInstance> instanceInit = typeInstance -> {
+                @SuppressWarnings("unchecked") // Class will always be a Widget
+                var widget = (W) typeInstance;
+                templateInit.accept(widget);
+                applyIfNotNull(userDefinedInit, widget);
+            };
 
             // Register and return the GType
             return register(
@@ -365,20 +377,15 @@ public class TemplateTypes {
      * @param instanceInit   static instance initializer function
      * @param constructor    memory-address constructor
      * @param flags          type flags
-     * @param <T>            the instance initializer function must accept the
-     *                       result of the memory address constructor
-     * @param <TC>           the class initializer function must accept a
-     *                       parameter that is a subclass of TypeClass
      * @return the new GType
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Type register(Type parentType,
+    public static Type register(Type parentType,
                   String typeName,
                   MemoryLayout classLayout,
-                  Consumer<TC> classInit,
+                  Consumer<TypeClass> classInit,
                   MemoryLayout instanceLayout,
-                  Consumer<T> instanceInit,
-                  Function<MemorySegment, T> constructor,
+                  Consumer<TypeInstance> instanceInit,
+                  Function<MemorySegment, ? extends Proxy> constructor,
                   Set<TypeFlags> flags) {
         return io.github.jwharm.javagi.gobject.types.Types.register(
                 parentType, typeName, classLayout, classInit, instanceLayout,
@@ -391,9 +398,10 @@ public class TemplateTypes {
     }
 
     @FunctionalInterface
-    public interface DisposeCallback extends FunctionPointer {
+    private interface DisposeCallback extends FunctionPointer {
         void run(GObject object);
 
+        @SuppressWarnings("unused") // called from foreign function
         default void upcall(MemorySegment object) {
             run((GObject) InstanceCache.getForType(object, GObject::new, false));
         }

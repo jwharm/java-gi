@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -24,9 +24,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.github.jwharm.javagi.gobject.types.Types;
+
+/**
+ * The {@code @Flags} annotation is used by {@link Types#register} to register
+ * a Java enum as a GObject Flags type. Flags types are like enumerations, but
+ * allow bitwise comparison of their values.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface RegisteredType {
-    String name() default "";
-    Class<?>[] prerequisites() default {};
+public @interface Flags {
 }

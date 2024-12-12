@@ -25,9 +25,7 @@ import io.github.jwharm.javagi.interop.InteropException;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
-import org.gnome.gobject.GObjects;
-import org.gnome.gobject.TypeInterface;
+import org.gnome.gobject.*;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -92,14 +90,10 @@ public class Overrides {
      * method overrides in the class virtual function table.
      *
      * @param  cls  the class that possibly declares method overrides
-     * @param  <T>  the class must extend {@link GObject}
-     * @param  <TC> the returned lambda expects a {@link GObject.ObjectClass}
-     *              parameter
      * @return a lambda to run during class initialization that will register
      *         the virtual functions
      */
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Consumer<TC> overrideClassMethods(Class<T> cls) {
+    public static Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
 
         Class<?> typeStruct = Types.getTypeClass(cls);
         if (typeStruct == null)
@@ -192,13 +186,13 @@ public class Overrides {
      *
      * @param  cls   the class that possibly declares method overrides
      * @param  iface the interface from which methods are implemented
-     * @param  <T>   the class must extend {@link GObject}
+     * @param  <T>   the class must extend {@link TypeInstance}
      * @param  <TI>  the returned lambda expects a {@link TypeInterface}
      *               parameter
      * @return a lambda to run during interface initialization that will
      *         register the virtual functions
      */
-    static <T extends GObject, TI extends TypeInterface>
+    static <T extends TypeInstance, TI extends TypeInterface>
     Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
 
         // Lookup the memory address constructor for the TypeInterface

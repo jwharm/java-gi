@@ -295,7 +295,7 @@ public class MethodGenerator {
             // No ownership transfer: Copy/ref the struct
             else {
                 // First check for NULL
-                if (returnValue.nullable()) {
+                if (generator.checkNull()) {
                     builder.beginControlFlow("if (_result == null || _result.equals($T.NULL))",
                                     MemorySegment.class)
                             .addStatement("return null")

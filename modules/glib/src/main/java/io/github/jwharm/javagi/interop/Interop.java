@@ -1313,12 +1313,13 @@ public class Interop {
 
     /**
      * Allocate and initialize an (optionally {@code NULL}-terminated) array of
-     * structs (from Proxy instances). The actual memory segments (not the
+     * structs (from Proxy instances). The actual struct contents (not the
      * pointers) are copied into the array.
      *
      * @param  array          array of Proxy instances
-     * @param  layout         the memory layout of the object type
-     * @param  zeroTerminated whether to add a {@code NULL} to the array
+     * @param  layout         the memory layout of the struct
+     * @param  zeroTerminated whether to terminate the array by a struct with
+     *                        all members being {@code NULL}
      * @param  arena          the allocator for memory allocation
      * @return the memory segment of the native array
      */
@@ -1344,7 +1345,8 @@ public class Interop {
         }
 
         if (zeroTerminated)
-            segment.set(ValueLayout.ADDRESS, length * size, NULL);
+            // The array is zero-terminated by a struct with all members being 0
+            segment.asSlice(array.length * size, size).fill((byte) 0);
 
         return segment;
     }

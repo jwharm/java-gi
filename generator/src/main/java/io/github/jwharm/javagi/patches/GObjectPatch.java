@@ -23,9 +23,11 @@ import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.Patch;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 public class GObjectPatch implements Patch {
 
@@ -55,7 +57,7 @@ public class GObjectPatch implements Patch {
                 && "TYPE_FLAG_RESERVED_ID_BIT".equals(c.name())) {
             Type type = new Type(
                     Map.of("name", "gsize", "c:type", "gsize"),
-                    Collections.emptyList()
+                    emptyList()
             );
             return c.withChildren(
                     c.infoElements().doc(),
@@ -72,7 +74,7 @@ public class GObjectPatch implements Patch {
         if (element instanceof Alias a && "Type".equals(a.name())) {
             Type type = new Type(
                     Map.of("name", "GLib.Type", "c:type", "gtype"),
-                    Collections.emptyList()
+                    emptyList()
             );
             return a.withChildren(a.infoElements().doc(), type);
         }
@@ -105,7 +107,7 @@ public class GObjectPatch implements Patch {
             Type type = new Type(
                     Map.of("name", "GObject.ObjectClass",
                            "c:type", "GObjectClass"),
-                    Collections.emptyList()
+                    emptyList()
             );
             Field field = new Field(
                     Map.of("name", "parent_class"),
@@ -143,6 +145,20 @@ public class GObjectPatch implements Patch {
                     vm.children(),
                     vm.platforms()
             );
+
+        /*
+         * Workaround for https://gitlab.gnome.org/GNOME/glib/-/issues/3524
+         */
+        if (element instanceof Type t
+                && (("EnumValue".equals(t.name())
+                        && "const GEnumValue*".equals(t.cType()))
+                    || ("FlagsValue".equals(t.name())
+                        && "const GFlagsValue*".equals(t.cType())))) {
+            var name = t.name();
+            var cType = "const G" + name;
+            return new Array(emptyMap(), List.of(
+                new Type(Map.of("name", name, "c:type", cType), emptyList())));
+        }
 
         return element;
     }

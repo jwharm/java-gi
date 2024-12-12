@@ -21,9 +21,12 @@ package io.github.jwharm.javagi.gtk.types;
 
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 
+import org.gnome.gio.Proxy;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
+import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
+import org.gnome.gobject.TypeInstance;
 import org.gnome.gtk.Widget;
 
 import java.lang.foreign.*;
@@ -42,20 +45,6 @@ import java.util.function.Function;
  */
 @Deprecated
 public class Types {
-
-    /**
-     * Get the {@code name} parameter of the {@code GtkTemplate} annotation, or
-     * if it is not defined, fallback to
-     * {@link io.github.jwharm.javagi.gobject.types.Types#getName(Class)}.
-     *
-     * @param  cls the class that is registered as a new GType
-     * @return the name
-     * @deprecated see {@link TemplateTypes#getTemplateName}
-     */
-    @Deprecated
-    public static String getTemplateName(Class<?> cls) {
-        return TemplateTypes.getTemplateName(cls);
-    }
 
     /**
      * This will call {@code TemplateTypes#registerTemplate(Class)} when
@@ -87,22 +76,17 @@ public class Types {
      * @param instanceInit   static instance initializer function
      * @param constructor    memory-address constructor
      * @param flags          type flags
-     * @param <T>            the instance initializer function must accept the
-     *                       result of the memory address constructor
-     * @param <TC>           the class initializer function must accept a
-     *                       parameter that is a subclass of TypeClass
      * @return the new GType
      * @deprecated see {@link TemplateTypes#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, Set)}
      */
     @Deprecated
-    public static <T extends GObject, TC extends GObject.ObjectClass>
-    Type register(Type parentType,
+    public static Type register(Type parentType,
                   String typeName,
                   MemoryLayout classLayout,
-                  Consumer<TC> classInit,
+                  Consumer<TypeClass> classInit,
                   MemoryLayout instanceLayout,
-                  Consumer<T> instanceInit,
-                  Function<MemorySegment, T> constructor,
+                  Consumer<TypeInstance> instanceInit,
+                  Function<MemorySegment, ? extends Proxy> constructor,
                   Set<TypeFlags> flags) {
         return TemplateTypes.register(
                 parentType, typeName, classLayout, classInit, instanceLayout,
