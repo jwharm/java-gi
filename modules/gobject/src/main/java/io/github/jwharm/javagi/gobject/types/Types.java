@@ -689,7 +689,7 @@ public class Types {
             if (parentLayout == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Cannot find memory layout definition for class %s\n",
-                        cls.getName());
+                        cls.getSimpleName());
                 return null;
             }
 
@@ -834,7 +834,7 @@ public class Types {
                         || (! m.getReturnType().equals(MemoryLayout.class))) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Method %s.%s does not have expected signature () -> MemoryLayout\n",
-                            cls.getName(), m.getName());
+                            cls.getSimpleName(), m.getName());
                     return null;
                 }
                 // Invoke the @MemoryLayout-annotated method and return the
@@ -844,12 +844,12 @@ public class Types {
                 } catch (IllegalAccessException e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "IllegalAccessException when calling %s.%s\n",
-                            cls.getName(), m.getName());
+                            cls.getSimpleName(), m.getName());
                     return null;
                 } catch (InvocationTargetException e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception when calling %s.%s: %s\n",
-                            cls.getName(),
+                            cls.getSimpleName(),
                             m.getName(),
                             e.getTargetException().toString());
                     return null;
@@ -898,12 +898,12 @@ public class Types {
             } catch (InvocationTargetException ite) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Exception in constructor for class %s: %s\n",
-                        cls.getName(), ite.getTargetException().toString());
+                        cls.getSimpleName(), ite.getTargetException().toString());
                 return null;
             } catch (Exception e) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Exception in constructor for class %s: %s\n",
-                        cls.getName(), e.toString());
+                        cls.getSimpleName(), e.toString());
                 return null;
             }
         };
@@ -935,18 +935,18 @@ public class Types {
                         if (t instanceof ExceptionInInitializerError eiie) {
                             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                     "ExceptionInInitializerError in %s instance init: %s\n",
-                                    cls.getName(),
+                                    cls.getSimpleName(),
                                     eiie.getCause().toString());
                         } else {
                             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                     "InvocationTargetException in %s instance init: %s\n",
-                                    cls.getName(),
+                                    cls.getSimpleName(),
                                     ite.getTargetException().toString());
                         }
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s instance init: %s\n",
-                                cls.getName(),
+                                cls.getSimpleName(),
                                 e.toString());
                     }
                 };
@@ -979,12 +979,12 @@ public class Types {
                     } catch (InvocationTargetException ite) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s class init: %s\n",
-                                cls.getName(),
+                                cls.getSimpleName(),
                                 ite.getTargetException().toString());
                     } catch (Exception e) {
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "Exception in %s class init: %s\n",
-                                cls.getName(),
+                                cls.getSimpleName(),
                                 e.toString());
                     }
                 };
@@ -1041,7 +1041,7 @@ public class Types {
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception in %s interface init: %s\n",
-                            cls.getName(), e.toString());
+                            cls.getSimpleName(), e.toString());
                 }
             };
         }
@@ -1256,7 +1256,7 @@ public class Types {
                     || ((!cls.isInterface()) && instanceLayout == null)
                     || constructor == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Cannot register type %s\n", cls.getName());
+                        "Cannot register type %s\n", cls.getSimpleName());
                 return null;
             }
 
@@ -1294,7 +1294,7 @@ public class Types {
                                 } catch (IllegalArgumentException iae) {
                                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                             "Cannot implement interface %s on class %s: No GType\n",
-                                            iface.getName(), cls.getName());
+                                            iface.getSimpleName(), cls.getSimpleName());
                                     continue;
                                 }
 
@@ -1321,7 +1321,7 @@ public class Types {
                 } catch (ClassCastException cce) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Class %s does not derive from TypeInstance\n",
-                            cls.getName());
+                            cls.getSimpleName());
                     return null;
                 }
             }
@@ -1330,7 +1330,7 @@ public class Types {
         } catch (Exception e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot register type %s: %s\n",
-                    cls.getName(), e.toString());
+                    cls.getSimpleName(), e.toString());
             return null;
         }
     }
@@ -1392,7 +1392,6 @@ public class Types {
         for (var constant : constants) {
             enumValues[i++] = new EnumValue(
                     constant.ordinal(), constant.name(), constant.name(), Arena.global());
-            System.out.println("Enum value: " + enumValues[i-1]);
         }
         var type = enumRegisterStatic(name, enumValues);
         TypeCache.register(cls, type, null);
