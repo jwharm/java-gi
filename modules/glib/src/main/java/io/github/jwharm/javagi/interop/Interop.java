@@ -42,6 +42,7 @@ import static java.lang.foreign.MemorySegment.NULL;
  * The Interop class contains functionality for interoperability with native
  * code.
  */
+@SuppressWarnings("unused") // Not all marshaling methods are used currently.
 public class Interop {
 
     private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
@@ -935,6 +936,28 @@ public class Interop {
     }
 
     /**
+     * Read a {@code NULL}-terminated array of longs from native memory.
+     *
+     * @param  address address of the memory segment
+     * @param  arena   the memory scope
+     * @param  free    if the array must be freed
+     * @return array of longs
+     */
+    public static long[] getLongArrayFrom(MemorySegment address,
+                                          Arena arena,
+                                          boolean free) {
+
+        // Find the null byte
+        MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
+        long idx = 0;
+        while (array.getAtIndex(ValueLayout.JAVA_LONG, idx) != 0) {
+            idx++;
+        }
+
+        return getLongArrayFrom(address, idx, arena, free);
+    }
+
+    /**
      * Read an array of shorts with the requested length from native memory.
      *
      * @param  address address of the memory segment
@@ -956,6 +979,28 @@ public class Interop {
             GLib.free(address);
 
         return array;
+    }
+
+    /**
+     * Read a {@code NULL}-terminated array of shorts from native memory.
+     *
+     * @param  address address of the memory segment
+     * @param  arena   the memory scope
+     * @param  free    if the array must be freed
+     * @return array of shorts
+     */
+    public static short[] getShortArrayFrom(MemorySegment address,
+                                            Arena arena,
+                                            boolean free) {
+
+        // Find the null byte
+        MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
+        long idx = 0;
+        while (array.getAtIndex(ValueLayout.JAVA_SHORT, idx) != 0) {
+            idx++;
+        }
+
+        return getShortArrayFrom(address, idx, arena, free);
     }
 
     /**
