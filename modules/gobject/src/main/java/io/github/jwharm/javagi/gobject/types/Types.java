@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static java.util.Objects.requireNonNull;
 import static org.gnome.gobject.GObjects.typeTestFlags;
 
 /**
@@ -755,20 +756,13 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
-        if (typeClass == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeClass for class %s\n", cls.getName());
-            return null;
-        }
+        requireNonNull(typeClass,
+                "No TypeClass for class " + cls.getSimpleName());
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeClass);
-
-        if (parentLayout == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find class memory layout definition for class %s\n", cls.getName());
-            return null;
-        }
+        requireNonNull(parentLayout,
+                "No memory layout for class " + typeClass.getSimpleName());
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
@@ -787,55 +781,17 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeInterface.
         // If the type-struct is unavailable, get it from the parent class.
         Class<? extends TypeInterface> typeIface = getTypeInterface(cls);
-        if (typeIface == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeInterface for class %s\n", cls.getName());
-            return null;
-        }
+        requireNonNull(typeIface,
+                "No TypeInterface for interface " + cls.getSimpleName());
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeIface);
-
-        if (parentLayout == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find class memory layout definition for interface %s\n", cls.getName());
-            return null;
-        }
+        requireNonNull(parentLayout,
+                "No memory layout for interface " + typeIface.getSimpleName());
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("g_iface")
         ).withName(typeName + "Interface");
-    }
-
-    /**
-     * Return the {@link Type} that is returned by a static method with
-     * {@code @GType} annotation, or if that annotation is not found, by
-     * searching for a method with return type {@code Type}, or else, return
-     * null.
-     *
-     * @param  cls the class for which to return the declared GType
-     * @return the declared GType
-     */
-    public static Type getGType(Class<?> cls) {
-        Method gtypeMethod = getGTypeMethod(cls);
-
-        if (gtypeMethod == null) {
-            // No gtype method found
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find static method that returns org.gnome.glib.Type in class %s\n",
-                    cls.getName());
-            return null;
-        }
-
-        try {
-            return (Type) gtypeMethod.invoke(null);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            // Method is not public, or throws an exception
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Exception while trying to read %s.%s\n",
-                    cls.getName(), gtypeMethod.getName());
-            return null;
-        }
     }
 
     // Find a static method that returns the GType of this class
@@ -1250,7 +1206,8 @@ public class Types {
 
         try {
             Class<?> parentClass = cls.getSuperclass();
-            Type parentType = cls.isInterface() ? INTERFACE : getGType(parentClass);
+            Type parentType = cls.isInterface() ? INTERFACE
+                    : TypeCache.getType(parentClass);
             String typeName = getName(cls);
 
             // Generate memory layout
@@ -1295,8 +1252,7 @@ public class Types {
 
             Set<TypeFlags> flags = getTypeFlags(cls);
 
-            if (parentType == null
-                    || memoryLayout == null
+            if (memoryLayout == null
                     || ((!cls.isInterface()) && instanceLayout == null)
                     || constructor == null) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -1321,7 +1277,7 @@ public class Types {
                 type = registerInterface(cls, typeName, memoryLayout, classInit,
                         constructor, flags);
             } else {
-                type = register(parentType, typeName, memoryLayout, classInit,
+                type = register(parentType, cls, typeName, memoryLayout, classInit,
                         instanceLayout, instanceInit, constructor, flags);
 
                 try {
@@ -1332,8 +1288,10 @@ public class Types {
                     try (var arena = Arena.ofConfined()) {
                         for (Class<?> iface : cls.getInterfaces()) {
                             if (Proxy.class.isAssignableFrom(iface)) {
-                                Type ifaceType = getGType(iface);
-                                if (ifaceType == null) {
+                                Type ifaceType;
+                                try {
+                                    ifaceType = TypeCache.getType(iface);
+                                } catch (IllegalArgumentException iae) {
                                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                             "Cannot implement interface %s on class %s: No GType\n",
                                             iface.getName(), cls.getName());
@@ -1411,13 +1369,12 @@ public class Types {
 
         // Add prerequisites
         for (var prerequisite : getPrerequisites(cls)) {
-            var ptype = getGType(prerequisite);
-            if (ptype != null)
-                TypeInterface.addPrerequisite(type, ptype);
+            var ptype = TypeCache.getType(prerequisite);
+            TypeInterface.addPrerequisite(type, ptype);
         }
 
         // Register the type and constructor in the cache
-        TypeCache.register(type, ctor);
+        TypeCache.register(cls, type, ctor);
         return type;
     }
 
@@ -1437,7 +1394,9 @@ public class Types {
                     constant.ordinal(), constant.name(), constant.name(), Arena.global());
             System.out.println("Enum value: " + enumValues[i-1]);
         }
-        return enumRegisterStatic(name, enumValues);
+        var type = enumRegisterStatic(name, enumValues);
+        TypeCache.register(cls, type, null);
+        return type;
     }
 
     /**
@@ -1455,7 +1414,9 @@ public class Types {
             flagsValues[i++] = new FlagsValue(
                     1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
-        return flagsRegisterStatic(name, flagsValues);
+        var type = flagsRegisterStatic(name, flagsValues);
+        TypeCache.register(cls, type, null);
+        return type;
     }
 
     /**
@@ -1530,6 +1491,7 @@ public class Types {
      * @return the GType of the registered Java type
      */
     public static Type register(Type parentType,
+                  Class<?> javaClass,
                   String typeName,
                   MemoryLayout classLayout,
                   Consumer<TypeClass> classInit,
@@ -1556,7 +1518,7 @@ public class Types {
                 flags
         );
         // Register the type and constructor in the cache
-        TypeCache.register(type, constructor);
+        TypeCache.register(javaClass, type, constructor);
         return type;
     }
 
