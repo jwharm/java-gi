@@ -49,17 +49,17 @@ public class CustomInterfaceTest {
         assertTrue(Types.IS_INTERFACE(TestInterface.gtype));
         assertTrue(GObjects.typeIsA(TestObject.gtype, TestInterface.gtype));
 
-        var instance = GObject.newInstance(TestObject.gtype);
+        var instance = GObject.newInstance(TestObject.class);
         assertTrue(GObjects.typeCheckInstanceIsA(instance, TestInterface.gtype));
     }
 
     @Test
     public void testComplexInterface() {
-        var instance = GObject.newInstance(TestObjectWithComplexInterface.gtype);
-        assertTrue(GObjects.typeCheckInstanceIsA(instance, TestInterfaceWithPropertiesAndSignals.gtype));
+        var instance = GObject.newInstance(BarClass.class);
+        assertTrue(GObjects.typeCheckInstanceIsA(instance, FooInterface.gtype));
 
         var result = new AtomicInteger(0);
-        instance.connect("number-changed", (TestInterfaceWithPropertiesAndSignals.NumberChanged) result::set);
+        instance.connect("number-changed", (FooInterface.NumberChanged) result::set);
         instance.setProperty("number", 2);
         assertEquals(2, result.get());
     }
@@ -67,10 +67,6 @@ public class CustomInterfaceTest {
     @RegisteredType(name="JavaGiTestInterface")
     public interface TestInterface extends Proxy {
         Type gtype = Types.register(TestInterface.class);
-
-        static Type getType() {
-            return gtype;
-        }
     }
 
     @RegisteredType(name="JavaGiTestObjectWithInterface")
@@ -81,10 +77,10 @@ public class CustomInterfaceTest {
         }
     }
 
-    @RegisteredType(name="JavaGiTestInterfaceWithPropertiesAndSignals",
+    @RegisteredType(name="JavaGiFooInterface",
                     prerequisites = {GObject.class})
-    public interface TestInterfaceWithPropertiesAndSignals extends Proxy {
-        Type gtype = Types.register(TestInterfaceWithPropertiesAndSignals.class);
+    public interface FooInterface extends Proxy {
+        Type gtype = Types.register(FooInterface.class);
 
         @Property
         int getNumber();
@@ -94,17 +90,13 @@ public class CustomInterfaceTest {
 
         @Signal
         interface NumberChanged extends IntConsumer {}
-
-        static Type getType() {
-            return gtype;
-        }
     }
 
-    @RegisteredType(name="JavaGiTestObjectWithComplexInterface")
-    public static class TestObjectWithComplexInterface extends GObject
-            implements TestInterfaceWithPropertiesAndSignals {
-        public static Type gtype = Types.register(TestObjectWithComplexInterface.class);
-        public TestObjectWithComplexInterface(MemorySegment address) {
+    @RegisteredType(name="JavaGiBarClass")
+    public static class BarClass extends GObject
+            implements FooInterface {
+        public static Type gtype = Types.register(BarClass.class);
+        public BarClass(MemorySegment address) {
             super(address);
         }
 
@@ -119,10 +111,6 @@ public class CustomInterfaceTest {
         public void setNumber(int number) {
             this.number = number;
             emit("number-changed", number);
-        }
-
-        public static Type getType() {
-            return gtype;
         }
     }
 }

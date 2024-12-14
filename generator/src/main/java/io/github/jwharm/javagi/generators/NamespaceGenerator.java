@@ -149,7 +149,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
     }
 
     private CodeBlock register(PartialStatement constructor, ClassName typeName) {
-        var stmt = PartialStatement.of("$typeCache:T.register($typeName:T.getType(), ",
+        var stmt = PartialStatement.of(
+                    "$typeCache:T.register($typeName:T.class, $typeName:T.getType(), ",
                         "typeCache", ClassNames.TYPE_CACHE,
                         "typeName", typeName)
                 .add(constructor)

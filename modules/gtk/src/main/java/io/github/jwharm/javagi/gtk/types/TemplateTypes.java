@@ -24,9 +24,7 @@ import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gobject.InstanceCache;
 import io.github.jwharm.javagi.gobject.annotations.Namespace;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
-import io.github.jwharm.javagi.gobject.types.Overrides;
-import io.github.jwharm.javagi.gobject.types.Properties;
-import io.github.jwharm.javagi.gobject.types.Signals;
+import io.github.jwharm.javagi.gobject.types.*;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.gtk.util.BuilderJavaScope;
@@ -51,6 +49,7 @@ import java.util.function.Function;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 import static io.github.jwharm.javagi.gobject.types.Types.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class contains functionality to register a Java class as a Gtk
@@ -126,12 +125,8 @@ public class TemplateTypes {
                                                           String typeName) {
 
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
-        if (parentLayout == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find memory layout of class %s\n",
-                    cls.getSimpleName());
-            return null;
-        }
+        requireNonNull(parentLayout,
+                "No memory layout for class " + cls.getSimpleName());
 
         ArrayList<MemoryLayout> elements = new ArrayList<>();
         long size = add(parentLayout.withName("parent_instance"), elements, 0);
@@ -290,7 +285,7 @@ public class TemplateTypes {
             String name = getName(cls);
             MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, name);
             Class<?> parentClass = cls.getSuperclass();
-            Type parentType = getGType(parentClass);
+            Type parentType = TypeCache.getType(parentClass);
             MemoryLayout classLayout = generateClassLayout(cls, name);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
             Set<TypeFlags> flags = getTypeFlags(cls);
@@ -325,8 +320,9 @@ public class TemplateTypes {
             };
 
             // Register and return the GType
-            return register(
+            return Types.register(
                     parentType,
+                    cls,
                     name,
                     classLayout,
                     classInit,
@@ -345,10 +341,10 @@ public class TemplateTypes {
     }
 
     /**
-     * This will call {@link TemplateTypes#registerTemplate(Class)} when {@code cls} is
-     * a {@code Widget.class} with {@link GtkTemplate} annotation, and
-     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Class)} for
-     * all other (GObject-derived) classes.
+     * This will call {@link TemplateTypes#registerTemplate(Class)} when
+     * {@code cls} is a {@code Widget.class} with {@link GtkTemplate}
+     * annotation, and {@link Types#register(Class)} for all other
+     * (GObject-derived) classes.
      *
      * @param  cls the class to register as a new GType
      * @param  <T> the class must extend {@link GObject}
@@ -363,33 +359,6 @@ public class TemplateTypes {
         } else {
             return io.github.jwharm.javagi.gobject.types.Types.register(cls);
         }
-    }
-
-    /**
-     * Convenience function that redirects to
-     * {@link io.github.jwharm.javagi.gobject.types.Types#register(Type, String, MemoryLayout, Consumer, MemoryLayout, Consumer, Function, Set)}
-     *
-     * @param parentType     parent GType
-     * @param typeName       name of the GType
-     * @param classLayout    memory layout of the typeclass
-     * @param classInit      static class initializer function
-     * @param instanceLayout memory layout of the typeinstance
-     * @param instanceInit   static instance initializer function
-     * @param constructor    memory-address constructor
-     * @param flags          type flags
-     * @return the new GType
-     */
-    public static Type register(Type parentType,
-                  String typeName,
-                  MemoryLayout classLayout,
-                  Consumer<TypeClass> classInit,
-                  MemoryLayout instanceLayout,
-                  Consumer<TypeInstance> instanceInit,
-                  Function<MemorySegment, ? extends Proxy> constructor,
-                  Set<TypeFlags> flags) {
-        return io.github.jwharm.javagi.gobject.types.Types.register(
-                parentType, typeName, classLayout, classInit, instanceLayout,
-                instanceInit, constructor, flags);
     }
 
     private static void overrideDispose(Proxy instance, DisposeCallback dispose, Arena _arena) {

@@ -144,7 +144,7 @@ public class Signals {
 
         else if (GObject.class.isAssignableFrom(cls))
             // GObject class
-            return Types.getGType(cls);
+            return TypeCache.getType(cls);
 
         else if (ProxyInstance.class.isAssignableFrom(cls))
             // Struct
@@ -152,7 +152,7 @@ public class Signals {
 
         else if (Proxy.class.isAssignableFrom(cls))
             // GObject interface
-            return Types.getGType(cls);
+            return TypeCache.getType(cls);
 
         throw new IllegalArgumentException("Cannot infer gtype for class "
                 + cls.getName()
@@ -247,7 +247,7 @@ public class Signals {
     public static Object emit(GObject gobject,
                               String detailedSignal,
                               Object... params) {
-        Type gtype = Types.getGType(gobject.getClass());
+        Type gtype = TypeCache.getType(gobject.getClass());
 
         // Parse the detailed signal name into a signal id and detail quark
         Out<Integer> signalId = new Out<>();

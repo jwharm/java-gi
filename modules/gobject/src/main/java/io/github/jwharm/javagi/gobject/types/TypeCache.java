@@ -33,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.github.jwharm.javagi.gobject.types.Types.IS_FUNDAMENTAL;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A register of GTypes with a Java constructor for each GType.
@@ -44,11 +45,14 @@ public class TypeCache {
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
             = new ConcurrentHashMap<>();
 
+    private final static Map<Class<?>, Type> classToTypeMap
+            = new ConcurrentHashMap<>();
+
     /**
      * Get the constructor from the type registry for the native object
      * instance at the given memory address. The applicable constructor is
      * determined based on the GType of the native object (as it was registered
-     * using {@link #register(Type, Function)}).
+     * using {@link #register(Class, Type, Function)}).
      *
      * @param address  address of TypeInstance object to obtain the type from
      * @param fallback if none was found, this constructor will be registered
@@ -139,15 +143,51 @@ public class TypeCache {
     }
 
     /**
-     * Register the provided constructor function for the provided type
+     * Return the GType that was registered for this class.
      *
-     * @param type Type to use as key in the type register
+     * @param  cls a Java class
+     * @return the cached GType
+     */
+    public static Type getType(Class<?> cls) {
+        requireNonNull(cls);
+        forceInit(cls);
+        var type = classToTypeMap.get(cls);
+        if (type == null)
+            throw new IllegalArgumentException(
+                    "Class " + cls.getSimpleName() + " is not a registered GType");
+        return type;
+    }
+
+    /**
+     * Register the type and constructor function for the provided class
+     *
+     * @param cls  Class in Java
+     * @param type The registered GType
      * @param ctor Constructor function for this type
      */
-    public static void register(Type type,
+    public static void register(Class<?> cls,
+                                Type type,
                                 Function<MemorySegment, ? extends Proxy> ctor) {
+        requireNonNull(cls);
         if (type != null) {
-            typeRegister.put(type, ctor);
+            if (ctor != null)
+                typeRegister.put(type, ctor);
+            classToTypeMap.put(cls, type);
+        }
+    }
+
+    /**
+     * Forces the initialization of the class pertaining to the specified
+     * {@code Class} object. This method does nothing if the class is already
+     * initialized prior to invocation.
+     *
+     * @param cls the class for which to force initialization
+     */
+    private static void forceInit(Class<?> cls) {
+        try {
+            Class.forName(cls.getName(), true, cls.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new AssertionError(e);
         }
     }
 }

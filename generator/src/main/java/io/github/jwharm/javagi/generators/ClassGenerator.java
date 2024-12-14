@@ -121,6 +121,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if ("GObject".equals(cls.cType()))
             builder.addMethod(gobjectConstructor())
                     .addMethod(gobjectConstructorVarargs())
+                    .addMethod(gobjectClassConstructor())
+                    .addMethod(gobjectClassConstructorVarargs())
                     .addMethod(gobjectGetProperty())
                     .addMethod(gobjectSetProperty())
                     .addMethod(gobjectBindProperty())
@@ -208,7 +210,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @return the newly created GObject instance
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(TypeVariableName.get("T", ClassNames.G_OBJECT))
+                .addTypeVariable(ClassNames.GENERIC_T)
                 .returns(TypeVariableName.get("T"))
                 .addParameter(ClassNames.G_TYPE, "objectType")
                 .addStatement("var _result = constructNew(objectType, null)")
@@ -231,12 +233,68 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @throws IllegalArgumentException invalid property name
                     """)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(TypeVariableName.get("T", ClassNames.G_OBJECT))
+                .addTypeVariable(ClassNames.GENERIC_T)
                 .returns(TypeVariableName.get("T"))
                 .addParameter(ClassNames.G_TYPE, "objectType")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
                 .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)",
+                        ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectClassConstructor() {
+        var paramType = ParameterizedTypeName.get(
+                ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
+
+        return MethodSpec.methodBuilder("newInstance")
+                .addJavadoc("""
+                    Creates a new instance of a GObject-derived class. For your own
+                    GObject-derived Java classes, a GType must have been registered using
+                    {@link io.github.jwharm.javagi.gobject.types.Types#register(Class<?>)}
+                    
+                    @param  objectClass the Java class of the new GObject
+                    @return the newly created GObject instance
+                    """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addTypeVariable(ClassNames.GENERIC_T)
+                .returns(TypeVariableName.get("T"))
+                .addParameter(paramType, "objectClass")
+                .addStatement("var _type = $T.getType(objectClass)",
+                        ClassNames.TYPE_CACHE)
+                .addStatement("var _result = constructNew(_type, null)")
+                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)",
+                        ClassNames.INSTANCE_CACHE, ClassNames.G_OBJECT)
+                .addStatement("return _object")
+                .build();
+    }
+
+    private MethodSpec gobjectClassConstructorVarargs() {
+        var paramType = ParameterizedTypeName.get(
+                ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
+
+        return MethodSpec.methodBuilder("newInstance")
+                .addJavadoc("""
+                    Creates a new instance of a GObject-derived class with the provided
+                    property values. For your own GObject-derived Java classes, a GType
+                    must have been registered using
+                    {@link io.github.jwharm.javagi.gobject.types.Types#register(Class<?>)}
+                    
+                    @param  objectClass the Java class of the new GObject
+                    @param  propertyNamesAndValues pairs of property names and values
+                            (Strings and Objects)
+                    @return the newly created GObject instance
+                    @throws IllegalArgumentException invalid property name
+                    """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addTypeVariable(ClassNames.GENERIC_T)
+                .returns(TypeVariableName.get("T"))
+                .addParameter(paramType, "objectClass")
+                .addParameter(Object[].class, "propertyNamesAndValues")
+                .varargs(true)
+                .addStatement("var _type = $T.getType(objectClass)",
+                        ClassNames.TYPE_CACHE)
+                .addStatement("return $T.newGObjectWithProperties(_type, propertyNamesAndValues)",
                         ClassNames.PROPERTIES)
                 .build();
     }
