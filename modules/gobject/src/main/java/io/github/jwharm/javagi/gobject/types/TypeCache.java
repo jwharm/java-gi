@@ -150,6 +150,7 @@ public class TypeCache {
      */
     public static Type getType(Class<?> cls) {
         requireNonNull(cls);
+        forceInit(cls);
         var type = classToTypeMap.get(cls);
         if (type == null)
             throw new IllegalArgumentException(
@@ -172,6 +173,21 @@ public class TypeCache {
             if (ctor != null)
                 typeRegister.put(type, ctor);
             classToTypeMap.put(cls, type);
+        }
+    }
+
+    /**
+     * Forces the initialization of the class pertaining to the specified
+     * {@code Class} object. This method does nothing if the class is already
+     * initialized prior to invocation.
+     *
+     * @param cls the class for which to force initialization
+     */
+    private static void forceInit(Class<?> cls) {
+        try {
+            Class.forName(cls.getName(), true, cls.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new AssertionError(e);
         }
     }
 }
