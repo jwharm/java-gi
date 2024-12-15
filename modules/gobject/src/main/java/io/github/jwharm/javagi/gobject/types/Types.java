@@ -1223,7 +1223,7 @@ public class Types {
             Consumer<TypeClass> signalsInit;
             if (isGObjectBased(cls)) {
                 signalsInit = Signals.installSignals(cls);
-                propertiesInit = Properties.installProperties(cls);
+                propertiesInit = new Properties().installProperties(cls);
             } else {
                 signalsInit = null;
                 propertiesInit = null;

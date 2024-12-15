@@ -292,7 +292,7 @@ public class TemplateTypes {
 
             // Chain template class init with user-defined class init function
             var overridesInit = Overrides.overrideClassMethods(cls);
-            var propertiesInit = Properties.installProperties(cls);
+            var propertiesInit = new Properties().installProperties(cls);
             var signalsInit = Signals.installSignals(cls);
             var templateClassInit = getTemplateClassInit(cls, instanceLayout);
             var userDefinedClassInit = getClassInit(cls);

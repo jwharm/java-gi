@@ -87,7 +87,7 @@ public class ListIndexModel extends GObject
      *
      * @return always returns the value of {@link ListIndex#gtype}
      */
-    @Property(name="item-type", constructOnly = true)
+    @Property(constructOnly = true)
     @Override
     public Type getItemType() {
         return ListIndex.gtype;
@@ -98,7 +98,8 @@ public class ListIndexModel extends GObject
      *
      * @param itemType ignored
      */
-    @Property(name="item-type")
+    @SuppressWarnings("unused")
+    @Property(constructOnly = true)
     public void setItemType(Type itemType) {
     }
 
