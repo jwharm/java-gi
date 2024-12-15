@@ -36,13 +36,11 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static java.lang.Character.isUpperCase;
 
 /**
  * Helper class to register properties in a new GType.
@@ -195,83 +193,103 @@ public class Properties {
      * Convert "CamelCase" to "kebab-case"
      */
     private static String getPropertyName(String methodName) {
-        if (methodName.startsWith("get") || methodName.startsWith("set")) {
-            String value = methodName.substring(3);
-            return value.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
-                    .toLowerCase().replaceAll("\\.", "");
-        }
-        throw new IllegalArgumentException("Cannot infer property name from method named %s"
-                .formatted(methodName));
+        String value;
+        if (methodName.startsWith("is"))
+            value = methodName.substring(2);
+        else if (methodName.startsWith("get") || methodName.startsWith("set"))
+            value = methodName.substring(3);
+        else
+            throw new IllegalArgumentException(
+                    "Cannot infer property name from method named " + methodName);
+        return value.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
+                .toLowerCase().replaceAll("\\.", "");
+    }
+
+    private static boolean isGetter(Method method) {
+        if (skip(method))
+            return false;
+
+        if (method.getReturnType().equals(void.class)
+                || method.getParameterCount() != 0)
+            return false;
+
+        String name = method.getName();
+
+        if (name.startsWith("get")
+                && name.length() > 3
+                && isUpperCase(name.charAt(3)))
+            return true;
+
+        // Boolean getter can be either getFoo() or isFoo()
+        return method.getReturnType().equals(boolean.class)
+                && name.startsWith("is")
+                && name.length() > 2
+                && isUpperCase(name.charAt(2));
+    }
+
+    private static boolean isSetter(Method method) {
+        if (skip(method))
+            return false;
+
+        return method.getReturnType().equals(void.class)
+                && method.getParameterCount() == 1
+                && method.getName().startsWith("set")
+                && method.getName().length() > 3
+                && isUpperCase(method.getName().charAt(3));
+    }
+
+    private static Class<?> getJavaType(Method method) {
+        if (method.getReturnType().equals(void.class))
+            return method.getParameterTypes()[0];
+        else
+            return method.getReturnType();
     }
 
     /*
      * Infer the ParamSpec class from the Java class that is used in the
      * getter/setter method.
      */
-    private static Class<? extends ParamSpec> inferType(Method method) {
-        // Determine the Java class of the property
-        Class<?> cls;
-        if ((! method.getReturnType().equals(void.class))
-                && method.getParameterCount() == 0) {
-            // Getter
-            cls = method.getReturnType();
-        } else if (method.getReturnType().equals(void.class)
-                && method.getParameterCount() == 1) {
-            // Setter
-            cls = method.getParameterTypes()[0];
-        } else {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Invalid property getter/setter %s in class %s\n",
-                    method.getName(), method.getDeclaringClass().getName());
-            return null;
-        }
-
-        // Infer the ParamSpec from the Java class.
-        if (cls.equals(boolean.class) || cls.equals(Boolean.class))
+    private static Class<? extends ParamSpec> inferType(Class<?> type) {
+        if (type.equals(boolean.class) || type.equals(Boolean.class))
             return ParamSpecBoolean.class;
 
-        else if (cls.equals(byte.class) || cls.equals(Byte.class))
+        else if (type.equals(byte.class) || type.equals(Byte.class))
             return ParamSpecChar.class;
 
-        else if (cls.equals(char.class) || cls.equals(Character.class))
+        else if (type.equals(char.class) || type.equals(Character.class))
             return ParamSpecChar.class;
 
-        else if (cls.equals(double.class) || cls.equals(Double.class))
+        else if (type.equals(double.class) || type.equals(Double.class))
             return ParamSpecDouble.class;
 
-        else if (cls.equals(float.class) || cls.equals(Float.class))
+        else if (type.equals(float.class) || type.equals(Float.class))
             return ParamSpecFloat.class;
 
-        else if (cls.equals(int.class) || cls.equals(Integer.class))
+        else if (type.equals(int.class) || type.equals(Integer.class))
             return ParamSpecInt.class;
 
-        else if (cls.equals(long.class) || cls.equals(Long.class))
+        else if (type.equals(long.class) || type.equals(Long.class))
             return ParamSpecLong.class;
 
-        else if (cls.equals(String.class))
+        else if (type.equals(String.class))
             return ParamSpecString.class;
 
-        else if (Type.class.isAssignableFrom(cls))
+        else if (Type.class.isAssignableFrom(type))
             return ParamSpecGType.class;
 
         // GObject class
-        else if (GObject.class.isAssignableFrom(cls))
+        else if (GObject.class.isAssignableFrom(type))
             return ParamSpecObject.class;
 
         // Struct
-        else if (ProxyInstance.class.isAssignableFrom(cls))
+        else if (ProxyInstance.class.isAssignableFrom(type))
             return ParamSpecBoxed.class;
 
         // GObject interface
-        else if (Proxy.class.isAssignableFrom(cls))
+        else if (Proxy.class.isAssignableFrom(type))
             return ParamSpecObject.class;
 
-        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                "Invalid property type %s in method %s in class %s\n",
-                cls.getName(),
-                method.getName(),
-                method.getDeclaringClass().getName());
-        return null;
+        throw new IllegalArgumentException("Invalid property type " + type.getSimpleName());
     }
 
     /*
@@ -340,8 +358,8 @@ public class Properties {
             return GObjects.paramSpecUnichar(name, name, name,
                     0, flags);
 
-        else
-            return null;
+        throw new IllegalArgumentException(
+                "Unsupported property type: " + pClass.getSimpleName());
     }
 
     /*
@@ -358,6 +376,113 @@ public class Properties {
         return flags;
     }
 
+    /*
+     * Check if a `@Property` annotation with `skip=true`is set on this method
+     */
+    private static boolean skip(Method method) {
+        return method.isAnnotationPresent(Property.class)
+                && method.getAnnotation(Property.class).skip();
+    }
+
+    private final Map<Integer, String> names;
+    private final Map<Integer, Method> getters;
+    private final Map<Integer, Method> setters;
+    private final Map<Integer, ParamSpec> paramSpecs;
+    private int index = 0;
+
+    public Properties() {
+        names = new HashMap<>();
+        getters = new HashMap<>();
+        setters = new HashMap<>();
+        paramSpecs = new HashMap<>();
+    }
+
+    /*
+     * Find all property methods: `T getFooBar()`, `void setFooBar(T t)`, and
+     * methods annotated with `@Property`. The results are put in the hashmaps.
+     */
+    private void inferProperties(Class<?> cls) {
+        Map<String, Method> possibleGetters = new HashMap<>();
+
+        // Methods with annotation @Property
+        for (var method : cls.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Property.class)) {
+                Property p = method.getAnnotation(Property.class);
+                if (p.skip())
+                    continue;
+
+                String name = p.name();
+                if (name.isBlank()) name = getPropertyName(method.getName());
+
+                if (names.containsValue(name)) {
+                    for (var entry : names.entrySet()) {
+                        if (entry.getValue().equals(name)) {
+                            int id = entry.getKey();
+                            if (method.getReturnType().equals(void.class))
+                                setters.put(id, method);
+                            else
+                                getters.put(id, method);
+                            break;
+                        }
+                    }
+                } else {
+                    index++;
+                    var flags = getFlags(p);
+                    Class<?> javaType = getJavaType(method);
+                    var paramSpecClass = inferType(javaType);
+                    var paramSpec = createParamSpec(paramSpecClass, name, flags);
+                    paramSpecs.put(index, paramSpec);
+                    names.put(index, name);
+                    if (method.getReturnType().equals(void.class))
+                        setters.put(index, method);
+                    else
+                        getters.put(index, method);
+                }
+            }
+        }
+
+        // Getter methods (`T getFoo()` or `boolean isFoo()`)
+        for (var method : cls.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Property.class))
+                continue;
+
+            if (isGetter(method))
+                possibleGetters.put(getPropertyName(method.getName()), method);
+        }
+
+        // Setter methods (`void setFoo(T t)`) for which a corresponding
+        // getter method was found
+        for (var method : cls.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Property.class))
+                continue;
+
+            if (isSetter(method)) {
+                String name = getPropertyName(method.getName());
+                if (possibleGetters.containsKey(name)) {
+                    Method getter = possibleGetters.get(name);
+
+                    // Check that the getter and setter have the same type
+                    if (!getJavaType(getter).equals(getJavaType(method)))
+                        continue;
+
+                    // Prevent multiple properties with the same name
+                    if (names.containsValue(name))
+                        continue;
+
+                    index++;
+                    names.put(index, name);
+                    getters.put(index, getter);
+                    setters.put(index, method);
+                    Class<?> javaType = getJavaType(method);
+                    Class<? extends ParamSpec> paramSpecClass = inferType(javaType);
+                    Set<ParamFlags> flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
+                    ParamSpec paramSpec = createParamSpec(paramSpecClass, name, flags);
+                    paramSpecs.put(index, paramSpec);
+                }
+            }
+        }
+    }
+
     /**
      * If the provided class defines {@code @Property}-annotated getter and/or
      * setter methods, this function will return a class initializer that
@@ -368,96 +493,10 @@ public class Properties {
      * @param  cls  the class that possibly contains @Property annotations
      * @return a class initializer that registers the properties
      */
-    public static Consumer<TypeClass> installProperties(Class<?> cls) {
-
-        List<ParamSpec> propertySpecs = new ArrayList<>();
-        propertySpecs.add(null); // Index 0 is reserved
-
-        /*
-         * Create an index of property names. The list is used to obtain a
-         * property id using `list.indexOf(property.name())`
-         */
-        List<String> propertyNames = new ArrayList<>();
-        propertyNames.add(null); // index 0 is reserved
-
-        for (Method method : cls.getDeclaredMethods()) {
-
-            // Look for methods with annotation @Property
-            Property p = method.getAnnotation(Property.class);
-            if (p == null)
-                continue;
-
-            // Name is specified with the annotation, or infer it from the
-            // method name
-            String name = p.name().isEmpty()
-                    ? getPropertyName(method.getName())
-                    : p.name();
-
-            // Check if this property has already been added from another method
-            if (propertyNames.contains(name))
-                continue;
-
-            Class<? extends ParamSpec> paramSpecClass = p.type();
-            Set<ParamFlags> flags = getFlags(p);
-
-            /*
-             * Check if the type is set on this method. It can be set on either
-             * the getter or setter. If the type is not set, it defaults to
-             * ParamSpec.class
-             */
-            if (paramSpecClass.equals(ParamSpec.class))
-                paramSpecClass = inferType(method);
-
-            if (paramSpecClass == null)
-                continue;
-
-            ParamSpec ps = createParamSpec(paramSpecClass, name, flags);
-
-            if (ps == null) {
-                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Unsupported ParamSpec %s in class %s:\n",
-                        paramSpecClass.getName(), cls.getName());
-                return null;
-            }
-
-            propertySpecs.add(ps);
-            propertyNames.add(name);
-        }
-
-        // No properties found?
-        if (propertySpecs.size() == 1)
+    public Consumer<TypeClass> installProperties(Class<?> cls) {
+        inferProperties(cls);
+        if (index == 0)
             return null;
-
-        // Create arrays of getter and setter methods.
-        Method[] getters = new Method[propertySpecs.size()];
-        Method[] setters = new Method[propertySpecs.size()];
-
-        for (Method method : cls.getDeclaredMethods()) {
-            if (! method.isAnnotationPresent(Property.class)) {
-                continue;
-            }
-            Property property = method.getDeclaredAnnotation(Property.class);
-
-            // Name is specified with the annotation, or infer it form the
-            // method name
-            String name = property.name().isEmpty()
-                    ? getPropertyName(method.getName())
-                    : property.name();
-
-            int idx = propertyNames.indexOf(name);
-
-            // Returns void -> setter, else -> getter
-            if (method.getReturnType().equals(void.class))
-                setters[idx] = method;
-            else
-                getters[idx] = method;
-        }
-
-        // Create GParamSpec array. Index 0 is reserved.
-        final ParamSpec[] pspecs = new ParamSpec[propertySpecs.size()];
-        for (int i = 1; i < propertySpecs.size(); i++) {
-            pspecs[i] = propertySpecs.get(i);
-        }
 
         // Return class initializer method that installs the properties.
         return (gclass) -> {
@@ -465,39 +504,40 @@ public class Properties {
             overrideGetProperty(gclass, (object, propertyId, value, _) -> {
 
                 // Check for invalid property IDs
-                if (propertyId < 1 || propertyId >= getters.length) {
+                if (propertyId < 1 || propertyId > index) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.getProperty\n",
-                            propertyId, cls.getName());
+                            propertyId, cls.getSimpleName());
                     return;
                 }
 
-                // Check for non-existing getter method
-                if (getters[propertyId] == null) {
+                String name = names.get(propertyId);
+                if (name == null) name = "";
+                Method getter = getters.get(propertyId);
+
+                if (getter == null) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "No getter method defined for property \"%s\" in %s\n",
-                            propertyNames.get(propertyId), cls.getName());
+                            "No getter method defined for property with ID=%d and name='%s' in %s\n",
+                            propertyId, name, cls.getSimpleName());
                     return;
                 }
 
                 // Invoke the getter method
                 Object output;
                 try {
-                    output = getters[propertyId].invoke(object);
+                    output = getter.invoke(object);
                 } catch (InvocationTargetException e) {
                     // Log exceptions thrown by the getter method
                     Throwable t = e.getTargetException();
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "%s.getProperty('%s'): %s\n",
-                            cls.getName(),
-                            propertyNames.get(propertyId),
-                            t.toString());
+                            cls.getSimpleName(), name, t.toString());
                     return;
                 } catch (IllegalAccessException e) {
                     // Tried to call a private method
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "IllegalAccessException calling %s.getProperty('%s')\n",
-                            cls.getName(), propertyNames.get(propertyId));
+                            cls.getSimpleName(), name);
                     return;
                 }
 
@@ -510,18 +550,21 @@ public class Properties {
             overrideSetProperty(gclass, (object, propertyId, value, _) -> {
 
                 // Check for invalid property IDs
-                if (propertyId < 1 || propertyId >= setters.length) {
+                if (propertyId < 1 || propertyId > index) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Invalid property id %d in %s.setProperty\n",
-                            propertyId, cls.getName());
+                            propertyId, cls.getSimpleName());
                     return;
                 }
 
-                // Check for non-existing getter method
-                if (setters[propertyId] == null) {
+                String name = names.get(propertyId);
+                if (name == null) name = "";
+                Method setter = setters.get(propertyId);
+
+                if (setter == null) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "No setter method defined for property \"%s\" in %s\n",
-                            propertyNames.get(propertyId), cls.getName());
+                            "No getter method defined for property with ID=%d and name='%s' in %s\n",
+                            propertyId, name, cls.getSimpleName());
                     return;
                 }
 
@@ -531,35 +574,40 @@ public class Properties {
                 // Invoke the setter method
                 if (input != null) {
                     try {
-                        setters[propertyId].invoke(object, input);
+                        setter.invoke(object, input);
                     } catch (InvocationTargetException e) {
                         // Log exceptions thrown by the setter method
                         Throwable t = e.getTargetException();
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "%s.setProperty('%s'): %s\n",
-                                cls.getName(),
-                                propertyNames.get(propertyId),
-                                t.toString());
+                                cls.getSimpleName(), name, t.toString());
                     } catch (IllegalAccessException e) {
                         // Tried to call a private method
                         GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                                 "IllegalAccessException calling %s.setProperty('%s')\n",
-                                cls.getName(), propertyNames.get(propertyId));
+                                cls.getSimpleName(), name);
                     }
                 }
             }, Arena.global());
 
             // Register properties for the generated ParamSpecs
             if (gclass instanceof GObject.ObjectClass oclass) {
-                oclass.installProperties(pspecs);
-            } else if (cls.isInterface() && Types.isGObjectBased(cls)) {
+                for (int i = 1; i <= index; i++) {
+                    oclass.installProperty(i, paramSpecs.get(i));
+                }
+            }
+
+            else if (cls.isInterface() && Types.isGObjectBased(cls)) {
                 var giface = new TypeInterface(gclass.handle());
-                for (var pspec : pspecs)
-                    GObject.interfaceInstallProperty(giface, pspec);
-            } else {
+                for (int i = 1; i <= index; i++) {
+                    GObject.interfaceInstallProperty(giface, paramSpecs.get(i));
+                }
+            }
+
+            else {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Class or interface %s is not based on GObject\n",
-                        cls.getName());
+                        cls.getSimpleName());
             }
         };
     }

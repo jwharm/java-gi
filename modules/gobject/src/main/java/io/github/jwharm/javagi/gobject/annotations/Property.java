@@ -31,10 +31,13 @@ import java.lang.annotation.Target;
 public @interface Property {
     String name() default "";
     Class<? extends ParamSpec> type() default ParamSpec.class;
+    boolean skip() default false;
     boolean readable() default true;
     boolean writable() default true;
     boolean construct() default false;
     boolean constructOnly() default false;
     boolean explicitNotify() default false;
     boolean deprecated() default false;
+
+
 }

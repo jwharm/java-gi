@@ -19,7 +19,7 @@
 
 package io.github.jwharm.javagi.test.gobject;
 
-import io.github.jwharm.javagi.gobject.annotations.Property;
+import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
@@ -83,6 +83,7 @@ public class PropertyBindingTest {
         assertTrue((boolean) mph.getProperty("too-fast"));
     }
 
+    @RegisteredType(name="Speed")
     public static class Speed extends GObject {
         private static final Type type = Types.register(Speed.class);
         private double currentSpeed = 0.0;
@@ -102,22 +103,18 @@ public class PropertyBindingTest {
                     null);
         }
 
-        @Property
         public double getCurrentSpeed() {
             return currentSpeed;
         }
 
-        @Property
         public void setCurrentSpeed(double currentSpeed) {
             this.currentSpeed = currentSpeed;
         }
 
-        @Property
         public boolean getTooFast() {
             return currentSpeed > limit;
         }
 
-        @Property
         public void setTooFast(boolean tooFast) {
             if (tooFast)
                 setProperty("current-speed", limit + 10.0);
