@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -26,6 +26,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * The {@code @Property} annotation is used to indicate that a method (or pair
+ * of methods) is a property, to set a property name and flags, or to specify
+ * that a pair of get- and set-methods are not properties (using
+ * {@code skip=false}).
+ * <p>
+ * Always set the {@code @Property} annotation with the same parameters on both
+ * the get- and set-method.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Property {
@@ -38,6 +47,4 @@ public @interface Property {
     boolean constructOnly() default false;
     boolean explicitNotify() default false;
     boolean deprecated() default false;
-
-
 }
