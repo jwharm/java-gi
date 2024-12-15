@@ -27,7 +27,7 @@ public class ListModelTest {
         assertEquals(listIndexModel.getItemType(), ListIndexModel.ListIndex.getType());
         assertEquals(1000, listIndexModel.getNItems());
 
-        var item500 = (ListIndexModel.ListIndex) listIndexModel.getItem(500);
+        var item500 = listIndexModel.getItem(500);
         assertNotNull(item500);
         assertEquals(500, item500.getIndex());
 
