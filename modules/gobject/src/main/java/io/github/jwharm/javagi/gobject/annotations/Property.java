@@ -38,6 +38,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Property {
+    String NOT_SET = "JAVA-GI-DEFAULT-PLACEHOLDER-VALUE";
+
     String name() default "";
     Class<? extends ParamSpec> type() default ParamSpec.class;
     boolean skip() default false;
@@ -47,4 +49,7 @@ public @interface Property {
     boolean constructOnly() default false;
     boolean explicitNotify() default false;
     boolean deprecated() default false;
+    String minimumValue() default NOT_SET;
+    String maximumValue() default NOT_SET;
+    String defaultValue() default NOT_SET;
 }

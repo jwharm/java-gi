@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static io.github.jwharm.javagi.gobject.annotations.Property.NOT_SET;
 import static java.lang.Character.isUpperCase;
 
 /**
@@ -292,71 +293,139 @@ public class Properties {
         throw new IllegalArgumentException("Invalid property type " + type.getSimpleName());
     }
 
+    static void checkParameters(String property, String minimumValue,
+                                String maximumValue, String defaultValue,
+                                boolean defAllowed) {
+        if (!NOT_SET.equals(minimumValue))
+            throw new IllegalArgumentException(
+                    "No minimum value allowed on property " + property);
+        if (!NOT_SET.equals(maximumValue))
+            throw new IllegalArgumentException(
+                    "No maximum value allowed on property " + property);
+        if (!defAllowed && !NOT_SET.equals(defaultValue))
+            throw new IllegalArgumentException(
+                    "No default value allowed on property " + property);
+    }
+
+    static boolean notSet(String s) {
+        return NOT_SET.equals(s);
+    }
+
     /*
      * Create a ParamSpec of the requested class.
      */
     private static ParamSpec createParamSpec(Class<? extends ParamSpec> pClass,
                                              String name,
-                                             Set<ParamFlags> flags) {
-        if (pClass.equals(ParamSpecBoolean.class))
-            return GObjects.paramSpecBoolean(name, name, name,
-                    false, flags);
+                                             Set<ParamFlags> flags,
+                                             String min, String max, String def) {
+        if (pClass.equals(ParamSpecBoolean.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = !notSet(def) && Boolean.parseBoolean(def);
+            return GObjects.paramSpecBoolean(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecChar.class))
+        else if (pClass.equals(ParamSpecChar.class)) {
+            var minVal = notSet(min) ? Byte.MIN_VALUE : Byte.parseByte(min);
+            var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
+            var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
             return GObjects.paramSpecChar(name, name, name,
-                    Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecDouble.class))
+        else if (pClass.equals(ParamSpecDouble.class)) {
+            var minVal = notSet(min) ? -Double.MIN_VALUE : Double.parseDouble(min);
+            var maxVal = notSet(max) ? Double.MAX_VALUE : Double.parseDouble(max);
+            var defVal = notSet(def) ? 0.0d : Double.parseDouble(def);
             return GObjects.paramSpecDouble(name, name, name,
-                    -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecFloat.class))
+        else if (pClass.equals(ParamSpecFloat.class)) {
+            var minVal = notSet(min) ? -Float.MIN_VALUE : Float.parseFloat(min);
+            var maxVal = notSet(max) ? Float.MAX_VALUE : Float.parseFloat(max);
+            var defVal = notSet(def) ? 0.0f : Float.parseFloat(def);
             return GObjects.paramSpecFloat(name, name, name,
-                    -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecGType.class))
-            return GObjects.paramSpecGtype(name, name, name,
-                    Types.NONE, flags);
+        else if (pClass.equals(ParamSpecGType.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? Types.NONE : GObjects.typeFromName(def);
+            return GObjects.paramSpecGtype(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecInt.class))
+        else if (pClass.equals(ParamSpecInt.class)) {
+            var minVal = notSet(min) ? Integer.MIN_VALUE : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             return GObjects.paramSpecInt(name, name, name,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecInt64.class))
+        else if (pClass.equals(ParamSpecInt64.class)) {
+            var minVal = notSet(min) ? Long.MIN_VALUE : Long.parseLong(min);
+            var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
+            var defVal = notSet(def) ? 0L : Long.parseLong(def);
             return GObjects.paramSpecInt64(name, name, name,
-                    Long.MIN_VALUE, Long.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecLong.class))
+        else if (pClass.equals(ParamSpecLong.class)) {
+            var minVal = notSet(min) ? Integer.MIN_VALUE : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             return GObjects.paramSpecLong(name, name, name,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+            }
 
-        else if (pClass.equals(ParamSpecPointer.class))
-            return GObjects.paramSpecPointer(name, name, name,
-                    flags);
+        else if (pClass.equals(ParamSpecPointer.class)) {
+            checkParameters(name, min, max, def, false);
+            return GObjects.paramSpecPointer(name, name, name, flags);
+        }
 
-        else if (pClass.equals(ParamSpecString.class))
-            return GObjects.paramSpecString(name, name, name,
-                    null, flags);
+        else if (pClass.equals(ParamSpecString.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? null : def;
+            return GObjects.paramSpecString(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUChar.class))
+        else if (pClass.equals(ParamSpecUChar.class)) {
+            var minVal = notSet(min) ? (byte) 0 : Byte.parseByte(min);
+            var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
+            var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
             return GObjects.paramSpecUchar(name, name, name,
-                    (byte) 0, Byte.MAX_VALUE, (byte) 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUInt.class))
+        else if (pClass.equals(ParamSpecUInt.class)) {
+            var minVal = notSet(min) ? 0 : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             return GObjects.paramSpecUint(name, name, name,
-                    0, Integer.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUInt64.class))
+        else if (pClass.equals(ParamSpecUInt64.class)) {
+            var minVal = notSet(min) ? 0L : Long.parseLong(min);
+            var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
+            var defVal = notSet(def) ? 0L : Long.parseLong(def);
             return GObjects.paramSpecUint64(name, name, name,
-                    0, Long.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecULong.class))
+        else if (pClass.equals(ParamSpecULong.class)) {
+            var minVal = notSet(min) ? 0 : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             return GObjects.paramSpecUlong(name, name, name,
-                    0, Integer.MAX_VALUE, 0, flags);
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUnichar.class))
-            return GObjects.paramSpecUnichar(name, name, name,
-                    0, flags);
+        else if (pClass.equals(ParamSpecUnichar.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            return GObjects.paramSpecUnichar(name, name, name, defVal, flags);
+        }
 
         throw new IllegalArgumentException(
                 "Unsupported property type: " + pClass.getSimpleName());
@@ -430,7 +499,9 @@ public class Properties {
                     var flags = getFlags(p);
                     Class<?> javaType = getJavaType(method);
                     var paramSpecClass = inferType(javaType);
-                    var paramSpec = createParamSpec(paramSpecClass, name, flags);
+                    var paramSpec = createParamSpec(
+                            paramSpecClass, name, flags,
+                            p.maximumValue(), p.maximumValue(), p.defaultValue());
                     paramSpecs.put(index, paramSpec);
                     names.put(index, name);
                     if (method.getReturnType().equals(void.class))
@@ -476,7 +547,8 @@ public class Properties {
                     Class<?> javaType = getJavaType(method);
                     Class<? extends ParamSpec> paramSpecClass = inferType(javaType);
                     Set<ParamFlags> flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
-                    ParamSpec paramSpec = createParamSpec(paramSpecClass, name, flags);
+                    ParamSpec paramSpec = createParamSpec(
+                            paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
                     paramSpecs.put(index, paramSpec);
                 }
             }
