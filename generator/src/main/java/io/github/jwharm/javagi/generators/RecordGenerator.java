@@ -93,9 +93,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.superclass(ClassNames.PROXY_INSTANCE);
         }
 
-        if (rec.isFloating())
-            builder.addSuperinterface(ClassNames.FLOATING);
-
         if (outerClass == null)
             builder.addStaticBlock(staticBlock());
 

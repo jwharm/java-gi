@@ -86,31 +86,6 @@ public sealed interface RegisteredType
         return cType() != null && "GHashTable".equals(cType());
     }
 
-    default boolean isFloating() {
-        // GObject has a ref_sink function, but we don't want to treat all
-        // GObjects as floating references.
-        if ("GObject".equals(cType()))
-            return false;
-
-        // GInitiallyUnowned is always a floating reference, and doesn't
-        // explicitly need to be marked as such.
-        if ("GInitiallyUnowned".equals(cType()))
-            return false;
-
-        // Subclasses of GInitiallyUnowned don't need to implement the
-        // `Floating` interface, because GInitiallyUnowned already does.
-        if (this instanceof Class cls
-                && cls.isInstanceOf("GObject", "InitiallyUnowned"))
-            return false;
-
-        // Any other classes that have a ref_sink method, will be treated as
-        // floating references.
-        return parent().children().stream()
-                .filter(Method.class::isInstance)
-                .map(Method.class::cast)
-                .anyMatch(m -> "ref_sink".equals(m.name()));
-    }
-
     default ClassName helperClass() {
         return typeName().nestedClass("MethodHandles");
     }
