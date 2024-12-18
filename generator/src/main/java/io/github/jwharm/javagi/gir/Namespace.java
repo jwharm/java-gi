@@ -59,18 +59,7 @@ public final class Namespace extends Multiplatform implements RegisteredType {
      */
     public Map<String, RegisteredType> registeredTypes() {
         return filter(children(), RegisteredType.class).stream().collect(
-                Collectors.toMap(
-                        RegisteredType::name,
-                        java.util.function.Function.identity()));
-    }
-
-    public Namespace mergeWith(Namespace other) {
-        return new Namespace(
-                attributes(),
-                union(children(), other.children()),
-                platforms() | other.platforms(),
-                union(sharedLibraries, other.sharedLibraries)
-        );
+                Collectors.toMap(RegisteredType::name, a -> a));
     }
 
     public ClassName typeName() {
@@ -172,11 +161,6 @@ public final class Namespace extends Multiplatform implements RegisteredType {
 
     public String globalClassName() {
         return name().equals("GObject") ? "GObjects" : name();
-    }
-
-    @Override
-    public RegisteredType mergeWith(RegisteredType rt) {
-        throw new IllegalArgumentException("Cannot merge Namespace with RegisteredType");
     }
 
     @Override

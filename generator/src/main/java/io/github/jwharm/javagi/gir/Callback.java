@@ -49,12 +49,6 @@ public final class Callback extends Multiplatform
     }
 
     @Override
-    public Callback mergeWith(RegisteredType rt) {
-        // No need to merge
-        return this;
-    }
-
-    @Override
     public boolean throws_() {
         return attrBool("throws", false);
     }

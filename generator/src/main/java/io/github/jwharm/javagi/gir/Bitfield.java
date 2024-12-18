@@ -19,8 +19,6 @@
 
 package io.github.jwharm.javagi.gir;
 
-import static io.github.jwharm.javagi.util.CollectionUtils.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,16 +34,6 @@ public final class Bitfield extends Multiplatform implements FlaggedType {
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
-    }
-
-    @Override
-    public RegisteredType mergeWith(RegisteredType rt) {
-        if (rt instanceof Bitfield other)
-            return new Bitfield(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
     }
 
     @Override

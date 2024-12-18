@@ -63,16 +63,6 @@ public final class Class extends Multiplatform
                 "unrefFunc", toJavaIdentifier(unrefFunc.name()));
     }
 
-    @Override
-    public RegisteredType mergeWith(RegisteredType rt) {
-        if (rt instanceof Class other)
-            return new Class(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
-    }
-
     public boolean generic() {
         if (attrBool("java-gi-generic", false))
             return true;

@@ -31,24 +31,6 @@ import java.util.stream.Stream;
 public class CollectionUtils {
 
     /**
-     * Return the union of two lists. Updates the {@code platforms} property of
-     * {@link Multiplatform} instances. The ordering is retained.
-     */
-    public static <T> List<T> union(List<T> list1, List<T> list2) {
-        List<T> result = new ArrayList<>(list1);
-        for (T element : list2) {
-            int idx = result.indexOf(element);
-            if (idx == -1)
-                result.add(element);
-            else if (element instanceof Multiplatform mp) {
-                var existing = (Multiplatform) result.get(idx);
-                existing.setPlatforms(existing.platforms() | mp.platforms());
-            }
-        }
-        return result;
-    }
-
-    /**
      * Filter the list for members of the requested type. Returns an
      * unmodifiable list.
      */

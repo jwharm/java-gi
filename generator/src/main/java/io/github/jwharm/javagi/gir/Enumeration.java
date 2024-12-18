@@ -19,8 +19,6 @@
 
 package io.github.jwharm.javagi.gir;
 
-import static io.github.jwharm.javagi.util.CollectionUtils.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,15 +34,6 @@ public final class Enumeration extends Multiplatform implements FlaggedType {
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
-    }
-
-    public Enumeration mergeWith(RegisteredType rt) {
-        if (rt instanceof Enumeration other)
-            return new Enumeration(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
     }
 
     public String errorDomain() {

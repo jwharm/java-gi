@@ -40,16 +40,6 @@ public final class Union
         super(attributes, children, platforms);
     }
 
-    @Override
-    public Union mergeWith(RegisteredType rt) {
-        if (rt instanceof Union other)
-            return new Union(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
-    }
-
     public boolean opaque() {
         return fields().isEmpty() && records().isEmpty();
     }

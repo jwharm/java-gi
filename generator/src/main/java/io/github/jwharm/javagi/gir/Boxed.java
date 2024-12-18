@@ -49,16 +49,6 @@ public final class Boxed extends Multiplatform implements StandardLayoutType, Fi
     }
 
     @Override
-    public Boxed mergeWith(RegisteredType rt) {
-        if (rt instanceof Boxed other)
-            return new Boxed(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
-    }
-
-    @Override
     public PartialStatement destructorName() {
         var tag = typeTag();
         return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",

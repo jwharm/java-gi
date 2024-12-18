@@ -19,12 +19,10 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
-import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,16 +75,6 @@ public final class Alias extends Multiplatform implements RegisteredType {
     public PartialStatement destructorName() {
         RegisteredType target = lookup();
         return target == null ? null : target.destructorName();
-    }
-
-    @Override
-    public Alias mergeWith(RegisteredType rt) {
-        if (rt instanceof Alias other)
-            return new Alias(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
-        return this;
     }
 
     public AnyType anyType() {

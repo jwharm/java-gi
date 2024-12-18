@@ -33,10 +33,30 @@ public sealed interface RegisteredType
         permits Alias, Callback, Class, FlaggedType,
                 Interface, Namespace, StandardLayoutType, FieldContainer {
 
-    RegisteredType mergeWith(RegisteredType rt);
     int platforms();
+    void setPlatforms(int platforms);
     InfoAttrs infoAttrs();
     InfoElements infoElements();
+
+    /**
+     * Merges two nodes and their immediate children. Updates the
+     * {@code platforms} field of {@link Multiplatform} child instances.
+     */
+    default RegisteredType mergeWith(RegisteredType other) {
+        if (this.getClass() == other.getClass()) {
+            setPlatforms(platforms() | other.platforms());
+            for (Node element : other.children()) {
+                int idx = children().indexOf(element);
+                if (idx == -1)
+                    children().add(element);
+                else if (element instanceof Multiplatform mp) {
+                    var existing = (Multiplatform) children().get(idx);
+                    existing.setPlatforms(existing.platforms() | mp.platforms());
+                }
+            }
+        }
+        return this;
+    }
 
     default boolean generic() {
         return false;
