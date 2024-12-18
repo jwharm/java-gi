@@ -35,7 +35,7 @@ public interface Node {
     int attrInt(String key);
     boolean attrBool(String key, boolean defaultValue);
 
-    <T extends Node> T withAttribute(String attrName, String newValue);
+    <T extends Node> T withAttribute(String name, String value);
     <T extends Node> T withChildren(GirElement... newChildren);
     <T extends Node> T withChildren(List<Node> newChildren);
 
