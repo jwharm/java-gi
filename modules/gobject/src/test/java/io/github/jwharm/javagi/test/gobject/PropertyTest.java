@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.MemorySegment;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertyTest {
 
@@ -25,6 +24,28 @@ public class PropertyTest {
 
         assertNull(gclass.findProperty("baz"));
         assertNull(gclass.findProperty("qux"));
+
+        // Valid value
+        dino.setProperty("abc", 6);
+        assertEquals(6, dino.getProperty("abc"));
+
+        // Too low value
+        dino.setProperty("abc", 3);
+        assertEquals(6, dino.getProperty("abc"));
+
+        // Too high value
+        dino.setProperty("abc", 32);
+        assertEquals(6, dino.getProperty("abc"));
+
+        // Update to another valid value
+        dino.setProperty("abc", 15);
+        assertEquals(15, dino.getProperty("abc"));
+
+        // Check default value
+        var spec = gclass.findProperty("abc");
+        assertNotNull(spec);
+        var defaultValue = spec.getDefaultValue().getInt();
+        assertEquals(10, defaultValue);
     }
 
     @SuppressWarnings("unused")
@@ -34,6 +55,7 @@ public class PropertyTest {
         private boolean bar;
         private String baz;
         private float qux;
+        private int abc;
 
         public Dino(MemorySegment address) {
             super(address);
@@ -73,6 +95,16 @@ public class PropertyTest {
         @Property(skip=true)
         public void setQux(float qux) {
             this.qux = qux;
+        }
+
+        @Property(minimumValue = "5", defaultValue = "10", maximumValue = "20")
+        public int getAbc() {
+            return abc;
+        }
+
+        @Property(minimumValue = "5", defaultValue = "10", maximumValue = "20")
+        public void setAbc(int abc) {
+            this.abc = abc;
         }
     }
 }

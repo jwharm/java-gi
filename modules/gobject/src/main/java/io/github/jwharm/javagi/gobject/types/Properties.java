@@ -501,7 +501,7 @@ public class Properties {
                     var paramSpecClass = inferType(javaType);
                     var paramSpec = createParamSpec(
                             paramSpecClass, name, flags,
-                            p.maximumValue(), p.maximumValue(), p.defaultValue());
+                            p.minimumValue(), p.maximumValue(), p.defaultValue());
                     paramSpecs.put(index, paramSpec);
                     names.put(index, name);
                     if (method.getReturnType().equals(void.class))
