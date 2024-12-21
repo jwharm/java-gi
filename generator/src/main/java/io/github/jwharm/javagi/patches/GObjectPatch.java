@@ -66,10 +66,9 @@ public class GObjectPatch implements Patch {
         }
 
         /*
-         * GLib and GObject both define gtype as an alias to gsize. We replace
-         * the gtype declaration in GObject with an alias for the GLib gtype,
-         * so it will inherit in Java and the instances of both classes can be
-         * used interchangeably in many cases.
+         * Replace the gtype declaration in GObject with an alias for the GLib
+         * gtype that was added there, so it will inherit in Java and the
+         * instances of both classes can be used interchangeably in many cases.
          */
         if (element instanceof Alias a && "Type".equals(a.name())) {
             Type type = new Type(

@@ -86,6 +86,10 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         if (alias.infoAttrs().deprecated())
             builder.addAnnotation(Deprecated.class);
 
+        if ("GType".equals(alias.cType())
+                && "GObject".equals(alias.parent().name()))
+            builder.addMethod(gtypeToString());
+
         return builder.addModifiers(Modifier.PUBLIC).build();
     }
 
@@ -184,6 +188,21 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         return spec.endControlFlow()
                 .addStatement("if (free) $T.free(address)", ClassNames.G_LIB)
                 .addStatement("return array")
+                .build();
+    }
+
+    private MethodSpec gtypeToString() {
+        return MethodSpec.methodBuilder("toString")
+                .addJavadoc("""
+                        Return the name of a Type using {@link $1T#typeName($2T)}.
+                        
+                        @return the name of the Type
+                        """, ClassNames.G_OBJECTS, ClassNames.G_TYPE)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(String.class)
+                .addStatement("return $T.typeName(this)",
+                        ClassNames.G_OBJECTS)
                 .build();
     }
 }
