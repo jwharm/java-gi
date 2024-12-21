@@ -2,6 +2,7 @@ package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.Variant;
+import org.gnome.gobject.GObject;
 import org.gnome.gobject.Value;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,7 @@ public class ToStringTest {
 
     @Test
     public void testTypeToString() {
-        // todo
+        assertEquals("GThread", Types.THREAD.toString());
+        assertEquals("GObject", GObject.getType().toString());
     }
 }
