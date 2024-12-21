@@ -2,7 +2,7 @@ package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.gobject.annotations.Flags;
 import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObjects;
 import org.junit.jupiter.api.Test;
 

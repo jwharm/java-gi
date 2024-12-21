@@ -2,7 +2,7 @@ package io.github.jwharm.javagi.test.gtk;
 
 import io.github.jwharm.javagi.gobject.JavaClosure;
 import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.Closure;
 import org.gnome.gobject.Value;
 import org.gnome.gtk.ClosureExpression;

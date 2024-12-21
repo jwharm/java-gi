@@ -31,7 +31,7 @@ import io.github.jwharm.javagi.gtk.util.BuilderJavaScope;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;

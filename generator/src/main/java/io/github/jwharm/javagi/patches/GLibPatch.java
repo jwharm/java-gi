@@ -40,15 +40,11 @@ public class GLibPatch implements Patch {
 
         if (element instanceof Namespace ns) {
             /*
-             * GType was removed from GLib, but is still used
-             * by `g_strv_get_type`
+             * g_strv_get_type and g_variant_get_gtype return a "gtype", which
+             * doesn't exist in GLib.
              */
-            var gtype = new Alias(
-                    Map.of("name", "Type", "c:type", "GType"),
-                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
-                                     emptyList())),
-                    ns.platforms());
-            ns = add(ns, gtype);
+            ns = remove(ns, Function.class, "name", "strv_get_type");
+            ns = remove(ns, Function.class, "name", "variant_get_gtype");
 
             /*
              * g_clear_error has attribute throws="1" but no gerror** parameter

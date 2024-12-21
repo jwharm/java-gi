@@ -50,15 +50,6 @@ public class ByteArray extends ProxyInstance {
     }
 
     /**
-     * Get the GType of the ByteArray class
-     *
-     * @return the GType
-     */
-    public static Type getType() {
-        return Interop.getType("g_byte_array_get_type");
-    }
-
-    /**
      * The memory layout of the native struct.
      * @return the memory layout
      */

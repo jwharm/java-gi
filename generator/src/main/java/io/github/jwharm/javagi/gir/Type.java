@@ -41,7 +41,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         String name = attr("name");
         return switch(name) {
             case null -> null;
-            case "GType" -> "GLib.Type";
+            case "GType" -> "GObject.Type";
             case "gulong" -> overrideLongValue() ? "guint" : "gulong";
             case "glong" -> overrideLongValue() ? "gint" : "glong";
             default -> name;

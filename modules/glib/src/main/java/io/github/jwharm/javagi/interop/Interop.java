@@ -33,7 +33,6 @@ import org.gnome.glib.GLib;
 
 import io.github.jwharm.javagi.base.*;
 import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
 
 import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
@@ -216,28 +215,6 @@ public class Interop {
         src.reinterpret(size);
         dst.reinterpret(size);
         dst.copyFrom(src);
-    }
-
-    /**
-     * Get a GType by executing the provided get-type function.
-     *
-     * @return the gtype from the provided get-type function
-     */
-    public static Type getType(String getTypeFunction) {
-
-        if (getTypeFunction == null)
-            return null;
-
-        FunctionDescriptor fdesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
-
-        try {
-            MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
-            if (handle == null)
-                return null;
-            return new Type((long) handle.invokeExact());
-        } catch (Throwable err) {
-            throw new AssertionError("Unexpected exception occurred: ", err);
-        }
     }
 
     /**

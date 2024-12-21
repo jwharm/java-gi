@@ -21,7 +21,6 @@ package io.github.jwharm.javagi.interop;
 
 import io.github.jwharm.javagi.base.Proxy;
 import org.gnome.glib.GLib;
-import org.gnome.glib.Type;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.foreign.FunctionDescriptor;
@@ -66,7 +65,7 @@ public class MemoryCleaner {
                 // Put the address in the cache
                 var finalizer = new StructFinalizer(address);
                 var cleanable = CLEANER.register(proxy, finalizer);
-                cached = new Cached(false, null, null, cleanable);
+                cached = new Cached(false, null, 0, cleanable);
                 cache.put(address, cached);
             }
             return cached;
@@ -101,9 +100,8 @@ public class MemoryCleaner {
      * @param boxedType the boxed type
      */
     public static void setBoxedType(@NotNull Proxy proxy,
-                                    @NotNull Type boxedType) {
+                                    long boxedType) {
         requireNonNull(proxy);
-        requireNonNull(boxedType);
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(cached.owned,
@@ -176,7 +174,7 @@ public class MemoryCleaner {
      */
     private record Cached(boolean owned,
                           String freeFunc,
-                          Type boxedType,
+                          long boxedType,
                           Cleaner.Cleanable cleanable) {
     }
 
@@ -212,9 +210,9 @@ public class MemoryCleaner {
 
             // run the free-function
             try {
-                if (cached.boxedType != null) {
+                if (cached.boxedType != 0) {
                     // free boxed type
-                    long gtype = cached.boxedType.getValue();
+                    long gtype = cached.boxedType;
                     g_boxed_free.invokeExact(gtype, address);
                 } else if (cached.freeFunc != null) {
                     // Run specialized free-function

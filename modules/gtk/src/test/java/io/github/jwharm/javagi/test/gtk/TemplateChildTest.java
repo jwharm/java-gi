@@ -25,7 +25,7 @@ import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import io.github.jwharm.javagi.gtk.types.TemplateTypes;
 import org.gnome.gio.ApplicationFlags;
 import org.gnome.gio.Resource;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gtk.Application;
 import org.gnome.gtk.Label;

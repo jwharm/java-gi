@@ -102,9 +102,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
 
-        if (rec.cType().equals("GVariant"))
-            builder.addMethod(gvariantGetType());
-
         builder.addMethod(memoryAddressConstructor());
 
         MethodSpec memoryLayout = new MemoryLayoutGenerator()
@@ -299,20 +296,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     private boolean hasFieldSetters() {
         return streamAccessibleFields().anyMatch(f -> f.callback() == null);
-    }
-
-    private MethodSpec gvariantGetType() {
-        return MethodSpec.methodBuilder("getType")
-                .addJavadoc("""
-                    Get the GType of the GVariant class
-                    
-                    @return the GType
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_TYPE)
-                // Types.VARIANT is declared in GObject. Hard-coded value as workaround
-                .addStatement("return new $T(21L << 2)", ClassNames.G_TYPE)
-                .build();
     }
 
     private void addCallParentMethods() {

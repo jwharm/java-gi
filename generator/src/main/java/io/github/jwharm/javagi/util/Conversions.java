@@ -201,7 +201,7 @@ public class Conversions {
             case "none" -> "void";
             case "utf8", "filename" -> "String";
             case "gpointer", "gconstpointer" -> "MemorySegment";
-            case "gtype" -> "org.gnome.glib.GType";
+            case "gtype" -> "org.gnome.gobject.GType";
             case "valist", "va_list" -> "VaList";
             default -> null;
         };

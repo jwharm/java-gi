@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeInstance;
 

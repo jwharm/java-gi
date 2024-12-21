@@ -24,7 +24,7 @@ import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.annotations.Signal;
 import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +52,7 @@ public class NewSignalTest {
         AtomicBoolean success = new AtomicBoolean(false);
 
         // Connect to the "limit-reached" signal
-        counter.connect("limit-reached", (Counter.LimitReached) (max) -> success.set(true));
+        counter.connect("limit-reached", (Counter.LimitReached) _ -> success.set(true));
 
         // First count to 9, this should not run the callback.
         for (int a = 0; a < 9; a++)
@@ -69,6 +69,7 @@ public class NewSignalTest {
      * When the maximum number is reached, the "limit-reached" signal is emitted.
      * The class exposes two properties: the current count ("count") and the limit ("limit").
      */
+    @SuppressWarnings("unused")
     @RegisteredType(name="TestCounter")
     public static class Counter extends GObject {
         private static final Type gtype = Types.register(Counter.class);

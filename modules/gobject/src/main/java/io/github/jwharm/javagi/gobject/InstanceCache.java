@@ -34,7 +34,6 @@ import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.MainContext;
-import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Proxy;

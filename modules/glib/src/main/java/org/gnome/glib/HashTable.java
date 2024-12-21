@@ -157,15 +157,6 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
     }
 
     /**
-     * Get the GType of the HashTable class
-     *
-     * @return the GType
-     */
-    public static Type getType() {
-        return Interop.getType("g_hash_table_get_type");
-    }
-
-    /**
      * Creates a new {@code GHashTable} with a reference count of 1.
      * <p>
      * Hash values returned by {@code hashFunc} are used to determine where keys
@@ -199,7 +190,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         var _instance = NULL.equals(_result) ? null : new HashTable<MemorySegment, MemorySegment>(_result);
         if (_instance != null) {
             MemoryCleaner.takeOwnership(_instance);
-            MemoryCleaner.setBoxedType(_instance, HashTable.getType());
+            MemoryCleaner.setFreeFunc(_instance, "g_hash_table_unref");
         }
         return _instance;
     }
@@ -629,7 +620,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
                 : new HashTable<>(_result, makeKey, makeValue);
         if (_instance != null) {
             MemoryCleaner.takeOwnership(_instance);
-            MemoryCleaner.setBoxedType(_instance, HashTable.getType());
+            MemoryCleaner.setFreeFunc(_instance, "g_hash_table_unref");
         }
         return _instance;
     }
@@ -648,7 +639,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             throw new AssertionError(_err);
         }
         MemoryCleaner.takeOwnership(this);
-        MemoryCleaner.setBoxedType(this, HashTable.getType());
+        MemoryCleaner.setFreeFunc(this, "g_hash_table_unref");
         return this;
     }
 

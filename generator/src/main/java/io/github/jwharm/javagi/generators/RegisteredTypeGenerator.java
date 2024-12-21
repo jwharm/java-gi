@@ -53,6 +53,8 @@ public class RegisteredTypeGenerator {
     }
 
     protected boolean hasTypeMethod() {
+        if (rt.namespace().name().equals("GLib"))
+            return false;
         String typeFunc = rt.getTypeFunc();
         return typeFunc != null && !"intern".equals(typeFunc);
     }
@@ -67,7 +69,7 @@ public class RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ClassNames.G_TYPE)
                 .addStatement("return $T.getType($S)",
-                        ClassNames.INTEROP,
+                        ClassNames.TYPES,
                         rt.getTypeFunc())
                 .build();
     }
@@ -244,13 +246,14 @@ public class RegisteredTypeGenerator {
 
         // Boxed types
         if ((rt instanceof Record || rt instanceof Boxed || rt instanceof Union)
-                && rt.getTypeFunc() != null) {
+                && hasTypeMethod()) {
+
             if (className == null)
-                builder.addStatement("$T.setBoxedType($L, getType())",
+                builder.addStatement("$T.setBoxedType($L, getType().getValue())",
                         ClassNames.MEMORY_CLEANER,
                         identifier);
             else
-                builder.addStatement("$T.setBoxedType($L, $T.getType())",
+                builder.addStatement("$T.setBoxedType($L, $T.getType().getValue())",
                         ClassNames.MEMORY_CLEANER,
                         identifier,
                         className);

@@ -28,7 +28,6 @@ import io.github.jwharm.javagi.gobject.ValueUtil;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import java.lang.foreign.*;

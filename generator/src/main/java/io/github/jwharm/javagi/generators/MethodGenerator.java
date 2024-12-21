@@ -305,8 +305,8 @@ public class MethodGenerator {
                 // Lookup the copy/ref function and the memory layout
                 var slt = (StandardLayoutType) target;
                 var copyFunc = slt.copyFunction();
-                var hasMemoryLayout = slt instanceof FieldContainer fc
-                        && new MemoryLayoutGenerator().canGenerate(fc);
+                var fc = (FieldContainer) slt;
+                var hasMemoryLayout = new MemoryLayoutGenerator().canGenerate(fc);
 
                 // Don't automatically copy the return values of GLib functions
                 var skipNamespace = List.of("GLib", "GModule")

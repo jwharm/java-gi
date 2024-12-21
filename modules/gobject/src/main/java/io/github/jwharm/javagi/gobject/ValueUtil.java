@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.gobject;
 
 import java.lang.foreign.MemorySegment;
-import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Enumeration;

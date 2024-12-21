@@ -24,7 +24,6 @@ import io.github.jwharm.javagi.interop.Interop;
 import io.github.jwharm.javagi.interop.InteropException;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import java.lang.foreign.*;

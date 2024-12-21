@@ -24,7 +24,7 @@ import io.github.jwharm.javagi.gobject.annotations.InstanceInit;
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.Value;

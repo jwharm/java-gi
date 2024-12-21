@@ -560,7 +560,8 @@ class TypedValueGenerator {
                         "types", ClassNames.TYPES);
 
             if ("GLib.ByteArray".equals(array.name()))
-                return PartialStatement.of("$byteArray:T.getType()", "byteArray", ClassNames.G_BYTE_ARRAY);
+                return PartialStatement.of("$byteArray:T.getType()",
+                        "byteArray", ClassName.get("org.gnome.gobject", "ByteArray"));
 
             // Other array types are not supported yet, but could be added here
             return PartialStatement.of("$types:T.POINTER /* unsupported */",
@@ -608,6 +609,12 @@ class TypedValueGenerator {
                 return PartialStatement.of("$types:T.VARIANT", "types", ClassNames.TYPES);
 
             if (rt.getTypeFunc() != null) {
+                // GLib get-type functions can be found in the GObject namespace
+                if (rt.namespace().name().equals("GLib")) {
+                    String typeTag = type.toTypeTag();
+                    return PartialStatement.of("$" + typeTag + ":T.getType()",
+                            typeTag, ClassName.get("org.gnome.gobject", rt.name()));
+                }
                 String typeTag = type.toTypeTag();
                 return PartialStatement.of("$" + typeTag + ":T.getType()", typeTag, type.typeName());
             }

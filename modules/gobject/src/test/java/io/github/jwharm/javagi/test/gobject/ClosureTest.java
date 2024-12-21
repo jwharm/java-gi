@@ -22,7 +22,7 @@ package io.github.jwharm.javagi.test.gobject;
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.gobject.JavaClosure;
-import org.gnome.glib.Type;
+import org.gnome.gobject.Type;
 import org.gnome.gobject.Binding;
 import org.gnome.gobject.BindingFlags;
 import org.gnome.gobject.GObject;

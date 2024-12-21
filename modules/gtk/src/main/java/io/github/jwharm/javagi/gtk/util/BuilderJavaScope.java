@@ -25,7 +25,6 @@ import io.github.jwharm.javagi.gobject.JavaClosure;
 import io.github.jwharm.javagi.gtk.types.TemplateTypes;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 import org.gnome.gtk.*;
 
