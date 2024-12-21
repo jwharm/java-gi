@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
+import static io.github.jwharm.javagi.gobject.annotations.Property.NOT_SET;
 import static java.lang.Character.isUpperCase;
 
 /**
@@ -249,7 +250,7 @@ public class Properties {
      * Infer the ParamSpec class from the Java class that is used in the
      * getter/setter method.
      */
-    private static Class<? extends ParamSpec> inferType(Class<?> type) {
+    private static Class<? extends ParamSpec> getParamSpecClass(Class<?> type) {
         if (type.equals(boolean.class) || type.equals(Boolean.class))
             return ParamSpecBoolean.class;
 
@@ -292,74 +293,161 @@ public class Properties {
         throw new IllegalArgumentException("Invalid property type " + type.getSimpleName());
     }
 
+    static void checkParameters(String property, String minimumValue,
+                                String maximumValue, String defaultValue,
+                                boolean defAllowed) {
+        if (!NOT_SET.equals(minimumValue))
+            throw new IllegalArgumentException(
+                    "No minimum value allowed on property " + property);
+        if (!NOT_SET.equals(maximumValue))
+            throw new IllegalArgumentException(
+                    "No maximum value allowed on property " + property);
+        if (!defAllowed && !NOT_SET.equals(defaultValue))
+            throw new IllegalArgumentException(
+                    "No default value allowed on property " + property);
+    }
+
+    static boolean notSet(String s) {
+        return NOT_SET.equals(s);
+    }
+
     /*
      * Create a ParamSpec of the requested class.
      */
-    private static ParamSpec createParamSpec(Class<? extends ParamSpec> pClass,
-                                             String name,
-                                             Set<ParamFlags> flags) {
-        if (pClass.equals(ParamSpecBoolean.class))
-            return GObjects.paramSpecBoolean(name, name, name,
-                    false, flags);
+    private void createParamSpec(Class<? extends ParamSpec> pClass,
+                                 String name,
+                                 Set<ParamFlags> flags,
+                                 String min, String max, String def) {
+        ParamSpec paramSpec;
+        if (pClass.equals(ParamSpecBoolean.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = !notSet(def) && Boolean.parseBoolean(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecBoolean(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecChar.class))
-            return GObjects.paramSpecChar(name, name, name,
-                    Byte.MIN_VALUE, Byte.MAX_VALUE, (byte) 0, flags);
+        else if (pClass.equals(ParamSpecChar.class)) {
+            var minVal = notSet(min) ? Byte.MIN_VALUE : Byte.parseByte(min);
+            var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
+            var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecChar(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecDouble.class))
-            return GObjects.paramSpecDouble(name, name, name,
-                    -Double.MAX_VALUE, Double.MAX_VALUE, 0.0d, flags);
+        else if (pClass.equals(ParamSpecDouble.class)) {
+            var minVal = notSet(min) ? -Double.MIN_VALUE : Double.parseDouble(min);
+            var maxVal = notSet(max) ? Double.MAX_VALUE : Double.parseDouble(max);
+            var defVal = notSet(def) ? 0.0d : Double.parseDouble(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecDouble(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecFloat.class))
-            return GObjects.paramSpecFloat(name, name, name,
-                    -Float.MAX_VALUE, Float.MAX_VALUE, 0.0f, flags);
+        else if (pClass.equals(ParamSpecFloat.class)) {
+            var minVal = notSet(min) ? -Float.MIN_VALUE : Float.parseFloat(min);
+            var maxVal = notSet(max) ? Float.MAX_VALUE : Float.parseFloat(max);
+            var defVal = notSet(def) ? 0.0f : Float.parseFloat(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecFloat(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecGType.class))
-            return GObjects.paramSpecGtype(name, name, name,
-                    Types.NONE, flags);
+        else if (pClass.equals(ParamSpecGType.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? Types.NONE : GObjects.typeFromName(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecGtype(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecInt.class))
-            return GObjects.paramSpecInt(name, name, name,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecInt.class)) {
+            var minVal = notSet(min) ? Integer.MIN_VALUE : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecInt(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecInt64.class))
-            return GObjects.paramSpecInt64(name, name, name,
-                    Long.MIN_VALUE, Long.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecInt64.class)) {
+            var minVal = notSet(min) ? Long.MIN_VALUE : Long.parseLong(min);
+            var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
+            var defVal = notSet(def) ? 0L : Long.parseLong(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecInt64(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecLong.class))
-            return GObjects.paramSpecLong(name, name, name,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecLong.class)) {
+            var minVal = notSet(min) ? Integer.MIN_VALUE : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecLong(name, name, name,
+                    minVal, maxVal, defVal, flags);
+            }
 
-        else if (pClass.equals(ParamSpecPointer.class))
-            return GObjects.paramSpecPointer(name, name, name,
-                    flags);
+        else if (pClass.equals(ParamSpecPointer.class)) {
+            checkParameters(name, min, max, def, false);
+            paramSpec = GObjects.paramSpecPointer(name, name, name, flags);
+        }
 
-        else if (pClass.equals(ParamSpecString.class))
-            return GObjects.paramSpecString(name, name, name,
-                    null, flags);
+        else if (pClass.equals(ParamSpecString.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? null : def;
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecString(name, name, name, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUChar.class))
-            return GObjects.paramSpecUchar(name, name, name,
-                    (byte) 0, Byte.MAX_VALUE, (byte) 0, flags);
+        else if (pClass.equals(ParamSpecUChar.class)) {
+            var minVal = notSet(min) ? (byte) 0 : Byte.parseByte(min);
+            var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
+            var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecUchar(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUInt.class))
-            return GObjects.paramSpecUint(name, name, name,
-                    0, Integer.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecUInt.class)) {
+            var minVal = notSet(min) ? 0 : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecUint(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUInt64.class))
-            return GObjects.paramSpecUint64(name, name, name,
-                    0, Long.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecUInt64.class)) {
+            var minVal = notSet(min) ? 0L : Long.parseLong(min);
+            var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
+            var defVal = notSet(def) ? 0L : Long.parseLong(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecUint64(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecULong.class))
-            return GObjects.paramSpecUlong(name, name, name,
-                    0, Integer.MAX_VALUE, 0, flags);
+        else if (pClass.equals(ParamSpecULong.class)) {
+            var minVal = notSet(min) ? 0 : Integer.parseInt(min);
+            var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecUlong(name, name, name,
+                    minVal, maxVal, defVal, flags);
+        }
 
-        else if (pClass.equals(ParamSpecUnichar.class))
-            return GObjects.paramSpecUnichar(name, name, name,
-                    0, flags);
+        else if (pClass.equals(ParamSpecUnichar.class)) {
+            checkParameters(name, min, max, def, true);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            defaultValues.put(index, defVal);
+            paramSpec = GObjects.paramSpecUnichar(name, name, name, defVal, flags);
+        }
 
-        throw new IllegalArgumentException(
-                "Unsupported property type: " + pClass.getSimpleName());
+        else {
+            throw new IllegalArgumentException(
+                    "Unsupported property type: " + pClass.getSimpleName());
+        }
+
+        paramSpecs.put(index, paramSpec);
     }
 
     /*
@@ -388,6 +476,7 @@ public class Properties {
     private final Map<Integer, Method> getters;
     private final Map<Integer, Method> setters;
     private final Map<Integer, ParamSpec> paramSpecs;
+    private final Map<Integer, Object> defaultValues;
     private int index = 0;
 
     public Properties() {
@@ -395,6 +484,7 @@ public class Properties {
         getters = new HashMap<>();
         setters = new HashMap<>();
         paramSpecs = new HashMap<>();
+        defaultValues = new HashMap<>();
     }
 
     /*
@@ -404,8 +494,12 @@ public class Properties {
     private void inferProperties(Class<?> cls) {
         Map<String, Method> possibleGetters = new HashMap<>();
 
+        // Create a sorted list of Methods so the getters are processed first
+        var methods = cls.getDeclaredMethods();
+        Arrays.sort(methods, Comparator.comparing(Method::getName));
+
         // Methods with annotation @Property
-        for (var method : cls.getDeclaredMethods()) {
+        for (var method : methods) {
             if (method.isAnnotationPresent(Property.class)) {
                 Property p = method.getAnnotation(Property.class);
                 if (p.skip())
@@ -427,16 +521,17 @@ public class Properties {
                     }
                 } else {
                     index++;
-                    var flags = getFlags(p);
-                    Class<?> javaType = getJavaType(method);
-                    var paramSpecClass = inferType(javaType);
-                    var paramSpec = createParamSpec(paramSpecClass, name, flags);
-                    paramSpecs.put(index, paramSpec);
                     names.put(index, name);
                     if (method.getReturnType().equals(void.class))
                         setters.put(index, method);
                     else
                         getters.put(index, method);
+
+                    var flags = getFlags(p);
+                    var javaType = getJavaType(method);
+                    var paramSpecClass = getParamSpecClass(javaType);
+                    createParamSpec(paramSpecClass, name, flags,
+                            p.minimumValue(), p.maximumValue(), p.defaultValue());
                 }
             }
         }
@@ -473,11 +568,11 @@ public class Properties {
                     names.put(index, name);
                     getters.put(index, getter);
                     setters.put(index, method);
-                    Class<?> javaType = getJavaType(method);
-                    Class<? extends ParamSpec> paramSpecClass = inferType(javaType);
-                    Set<ParamFlags> flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
-                    ParamSpec paramSpec = createParamSpec(paramSpecClass, name, flags);
-                    paramSpecs.put(index, paramSpec);
+
+                    var javaType = getJavaType(method);
+                    var paramSpecClass = getParamSpecClass(javaType);
+                    var flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
+                    createParamSpec(paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
                 }
             }
         }
@@ -515,7 +610,11 @@ public class Properties {
                 if (name == null) name = "";
                 Method getter = getters.get(propertyId);
 
-                if (getter == null) {
+                Object output = null;
+
+                if (getter == null && defaultValues.containsKey(propertyId)) {
+                    output = defaultValues.get(propertyId);
+                } else if (getter == null) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "No getter method defined for property with ID=%d and name='%s' in %s\n",
                             propertyId, name, cls.getSimpleName());
@@ -523,27 +622,36 @@ public class Properties {
                 }
 
                 // Invoke the getter method
-                Object output;
-                try {
-                    output = getter.invoke(object);
-                } catch (InvocationTargetException e) {
-                    // Log exceptions thrown by the getter method
-                    Throwable t = e.getTargetException();
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "%s.getProperty('%s'): %s\n",
-                            cls.getSimpleName(), name, t.toString());
-                    return;
-                } catch (IllegalAccessException e) {
-                    // Tried to call a private method
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "IllegalAccessException calling %s.getProperty('%s')\n",
-                            cls.getSimpleName(), name);
-                    return;
+                if (output == null && getter != null) {
+                    try {
+                        output = getter.invoke(object);
+                    } catch (InvocationTargetException e) {
+                        // Log exceptions thrown by the getter method
+                        Throwable t = e.getTargetException();
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "%s.getProperty('%s'): %s\n",
+                                cls.getSimpleName(), name, t.toString());
+                        return;
+                    } catch (IllegalAccessException e) {
+                        // Tried to call a private method
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "IllegalAccessException calling %s.getProperty('%s')\n",
+                                cls.getSimpleName(), name);
+                        return;
+                    }
                 }
 
                 // Convert return value to GValue
-                if (output != null)
-                    ValueUtil.objectToValue(output, value);
+                if (output != null) {
+                    var success = ValueUtil.objectToValue(output, value);
+                    if (!success) {
+                        GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
+                                "Error in %s.getProperty('%s'): Cannot write return-value " +
+                                        "with Java type %s into GValue with GType %s\n",
+                                cls.getSimpleName(), name, output.getClass().getSimpleName(),
+                                value == null ? "null" : GObjects.typeName(value.readGType()));
+                    }
+                }
             }, Arena.global());
 
             // Override the set_property virtual method

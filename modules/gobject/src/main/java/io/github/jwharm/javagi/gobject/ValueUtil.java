@@ -20,16 +20,11 @@
 package io.github.jwharm.javagi.gobject;
 
 import java.lang.foreign.MemorySegment;
-import java.lang.reflect.Method;
-
-import org.gnome.glib.GLib;
-import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import io.github.jwharm.javagi.base.Enumeration;
 
-import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 import static io.github.jwharm.javagi.gobject.types.Types.*;
 import static org.gnome.gobject.GObjects.gtypeGetType;
 import static org.gnome.gobject.GObjects.typeIsA;
@@ -49,15 +44,12 @@ public class ValueUtil {
      *             null.
      */
     public static Object valueToObject(Value src) {
-        if (src == null) {
+        if (src == null)
             return null;
-        }
-        
+
         Type type = src.readGType();
-        
-        if (type == null || type.equals(NONE)) {
+        if (type == null || type.equals(NONE))
             return null;
-        }
 
         // Fundamental types
         if (type.equals(BOOLEAN))        return src.getBoolean();
@@ -103,56 +95,30 @@ public class ValueUtil {
         if (type == null)
             return false;
 
-        try {
-            if (type.equals(BOOLEAN)) {
-                dest.setBoolean((Boolean) src);
-            } else if (type.equals(CHAR)) {
-                dest.setSchar((Byte) src);
-            } else if (type.equals(DOUBLE)) {
-                dest.setDouble((Double) src);
-            } else if (type.equals(FLOAT)) {
-                dest.setFloat((Float) src);
-            } else if (type.equals(INT)) {
-                dest.setInt((Integer) src);
-            } else if (type.equals(LONG)) {
-                // On Linux: Value.setLong(long), on Windows: Value.setLong(int)
-                // Use reflection to bypass the type checker
-                for (Method m : Value.class.getDeclaredMethods()) {
-                    if ("setLong".equals(m.getName())) {
-                        m.invoke(dest, src);
-                        break;
-                    }
-                }
-            } else if (type.equals(STRING)) {
-                dest.setString((String) src);
-            } else if (type.equals(ENUM)) {
-                dest.setEnum(((Enumeration) src).getValue());
-            } else if (type.equals(FLAGS)) {
-                dest.setFlags(((Enumeration) src).getValue());
-            } else if (type.equals(OBJECT)) {
-                dest.setObject((GObject) src);
-            } else if (type.equals(gtypeGetType())) {
-                dest.setGtype((Type) src);
-            } else if (type.equals(POINTER)) {
-                dest.setPointer((MemorySegment) src);
-            } else if (type.equals(PARAM)) {
-                dest.setParam((ParamSpec) src);
-            } else {
-                // Boxed value
-                dest.setBoxed((MemorySegment) src);
-            }
-        } catch (Exception e) {
-            GLib.log(
-                    LOG_DOMAIN,
-                    LogLevelFlags.LEVEL_CRITICAL,
-                    "ValueUtil: Cannot set Object with Class %s to GValue with GType %s: %s\n",
-                    src.getClass().getSimpleName(),
-                    GObjects.typeName(type),
-                    e.toString()
-            );
-            return false;
-        }
+        if      (type.equals(BOOLEAN))        dest.setBoolean((Boolean) src);
+        else if (type.equals(CHAR))           dest.setSchar((Byte) src);
+        else if (type.equals(DOUBLE))         dest.setDouble((Double) src);
+        else if (type.equals(FLOAT))          dest.setFloat((Float) src);
+        else if (type.equals(INT))            dest.setInt((Integer) src);
+        else if (type.equals(LONG))           dest.setLong(toInt(src));
+        else if (type.equals(STRING))         dest.setString((String) src);
+        else if (type.equals(ENUM))           dest.setEnum(((Enumeration) src).getValue());
+        else if (type.equals(FLAGS))          dest.setFlags(((Enumeration) src).getValue());
+        else if (type.equals(OBJECT))         dest.setObject((GObject) src);
+        else if (type.equals(gtypeGetType())) dest.setGtype((Type) src);
+        else if (type.equals(POINTER))        dest.setPointer((MemorySegment) src);
+        else if (type.equals(PARAM))          dest.setParam((ParamSpec) src);
+        else                                  dest.setBoxed((MemorySegment) src);
 
         return true;
+    }
+
+    /*
+     * On Linux and macOS, Long values are 64 bit in native code. On Windows,
+     * Long values are 32 bit. To preserve cross-platform compatibility, Java-GI
+     * converts all Java Long values to Integers.
+     */
+    private static int toInt(Object src) {
+        return src instanceof Long l ? l.intValue() : (Integer) src;
     }
 }
