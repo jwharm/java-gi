@@ -44,13 +44,20 @@ public class PropertyTest {
         dino.setProperty("abc", 6);
         assertEquals(6, dino.getProperty("abc"));
 
-        // Too low value
-        dino.setProperty("abc", 3);
-        assertEquals(6, dino.getProperty("abc"));
-
-        // Too high value
-        dino.setProperty("abc", 32);
-        assertEquals(6, dino.getProperty("abc"));
+        /*
+         * Tests for invalid values (too low or too high) are disabled here,
+         * to prevent CRITICAL GObject errors on the command-line output when
+         * executing testcases.
+         * Uncomment the following lines to run these tests.
+         *
+         * // Too low value
+         * dino.setProperty("abc", 3);
+         * assertEquals(6, dino.getProperty("abc"));
+         *
+         * // Too high value
+         * dino.setProperty("abc", 32);
+         * assertEquals(6, dino.getProperty("abc"));
+         */
 
         // Check default value from `@Property` annotation
         assertEquals(30, dino.getProperty("fgh")); // default
