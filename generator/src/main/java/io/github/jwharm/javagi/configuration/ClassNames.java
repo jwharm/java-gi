@@ -73,6 +73,7 @@ public final class ClassNames {
     public final static ClassName G_LIB = get("org.gnome.glib", "GLib");
     public final static ClassName G_LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
     public final static ClassName G_TYPE = get("org.gnome.glib", "Type");
+    public final static ClassName G_VARIANT = get("org.gnome.glib", "Variant");
 
     public final static ClassName G_OBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName G_OBJECTS = get("org.gnome.gobject", "GObjects");

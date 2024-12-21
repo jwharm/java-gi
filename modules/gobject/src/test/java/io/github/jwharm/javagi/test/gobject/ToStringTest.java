@@ -1,6 +1,7 @@
 package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.gobject.types.Types;
+import org.gnome.glib.Variant;
 import org.gnome.gobject.Value;
 import org.junit.jupiter.api.Test;
 
@@ -9,14 +10,10 @@ import java.lang.foreign.Arena;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * {@code org.gnome.Value.toString()} is injected with a patch.
- * Test if it works.
- * <p>
- * If this test fails because the actual value is something like
- * {@code org.gnome.gobject.Value@31e4bb20}, it means the
- * {@code toString()} method doesn't exist (the patch was not applied).
+ * GValue, GType and GVariant have an extra {@code toString()} method.
+ * Test if these methods work as expected.
  */
-public class ValueToStringTest {
+public class ToStringTest {
 
     @Test
     public void testValueToString() {
@@ -34,5 +31,16 @@ public class ValueToStringTest {
         vStr.setString("abc");
         assertEquals("\"abc\"", vStr.toString());
         vStr.unset();
+    }
+
+    @Test
+    public void testVariantToString() {
+        var vInt = new Variant("u", 40);
+        assertEquals("uint32 40", vInt.toString());
+    }
+
+    @Test
+    public void testTypeToString() {
+        // todo
     }
 }
