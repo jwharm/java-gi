@@ -124,7 +124,7 @@ public class PropertyTest {
             return abc;
         }
 
-        @Property(minimumValue = "5", defaultValue = "10", maximumValue = "20")
+        @Property
         public void setAbc(int abc) {
             this.abc = abc;
         }

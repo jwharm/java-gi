@@ -494,8 +494,12 @@ public class Properties {
     private void inferProperties(Class<?> cls) {
         Map<String, Method> possibleGetters = new HashMap<>();
 
+        // Create a sorted list of Methods so the getters are processed first
+        var methods = cls.getDeclaredMethods();
+        Arrays.sort(methods, Comparator.comparing(Method::getName));
+
         // Methods with annotation @Property
-        for (var method : cls.getDeclaredMethods()) {
+        for (var method : methods) {
             if (method.isAnnotationPresent(Property.class)) {
                 Property p = method.getAnnotation(Property.class);
                 if (p.skip())
