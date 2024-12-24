@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2024 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -24,16 +24,25 @@ import org.gnome.gio.ListModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 /**
  * This interface is implemented by {@link ListModel}, so it can be used like a
- * regular Java {@link List}. The list is immutable, so all mutations such as
- * {@link #add}, {@link #set} and {@link #remove} throw
- * {@link UnsupportedOperationException}.
+ * regular Java {@link List}.
+ * <p>
+ * Because {@code ListModel} only defines operations to retrieve items and
+ * size, the default implementations of the {@code List} mutator methods
+ * throw {@code UnsupportedOperationException}. ListModel implementations that
+ * support mutation must override the following methods:
+ * <ul>
+ *     <li>{@link #set(int, E)}
+ *     <li>{@link #add(E)}
+ *     <li>{@link #add(int, E)}
+ *     <li>{@link #remove(int)}
+ *     <li>{@link #remove(Object)}
+ * </ul>
+ * It is recommended to also override other operations such as {@link #clear()}
+ * with a more efficient implementation.
  *
  * @param <E> The item type must be a GObject.
  */
@@ -45,7 +54,8 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     /**
      * {@inheritDoc}
      *
-     * @apiNote This operation is implemented with {@link ListModel#getNItems()}
+     * @apiNote This operation is implemented with
+     *          {@link ListModel#getNItems()}.
      */
     @Override
     default int size() {
@@ -54,6 +64,9 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
     /**
      * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by checking if {@link #size}
+     *          returns 0.
      */
     @Override
     default boolean isEmpty() {
@@ -79,16 +92,14 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
-    default Iterator<E> iterator() {
+    default @NotNull Iterator<E> iterator() {
         return listIterator();
     }
 
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
     default Object @NotNull [] toArray() {
         return toArray(new Object[0]);
@@ -97,10 +108,9 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
     @SuppressWarnings("unchecked") // Unchecked casts are unavoidable here
-    default <T> T @NotNull [] toArray(@NotNull T @NotNull [] a) {
+    default <T> T @NotNull [] toArray(T @NotNull [] a) {
         int size = size();
         T[] data = a.length >= size ? a :
                 (T[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -132,6 +142,10 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
     /**
      * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by calling
+     *          {@link #contains(Object)} for all elements in the specified
+     *          collection.
      */
     @Override
     default boolean containsAll(@NotNull Collection<?> c) {
@@ -142,43 +156,80 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by calling {@link #add(E)}
+     *          for all elements in the specified collection.
      */
     @Override
     default boolean addAll(@NotNull Collection<? extends E> c) {
-        throw new UnsupportedOperationException();
+        boolean changed = false;
+        for (E item : c) {
+            add(item);
+            changed = true;
+        }
+        return changed;
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by calling {@link #add(int, E)}
+     *          for all elements in the specified collection.
      */
     @Override
     default boolean addAll(int index, @NotNull Collection<? extends E> c) {
-        throw new UnsupportedOperationException();
+        boolean changed = false;
+        for (E item : c) {
+            add(index++, item);
+            changed = true;
+        }
+        return changed;
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented with {@link #remove(Object)} for
+     *          all elements that are in the specified collection.
      */
     @Override
     default boolean removeAll(@NotNull Collection<?> c) {
-        throw new UnsupportedOperationException();
+        boolean changed = false;
+        for (Object item : c) {
+            if (remove(item))
+                changed = true;
+        }
+        return changed;
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented with {@link #remove(Object)} for
+     *          all elements that are not in the specified collection.
      */
     @Override
     default boolean retainAll(@NotNull Collection<?> c) {
-        throw new UnsupportedOperationException();
+        boolean changed = false;
+        for (E item : this) {
+            if (!c.contains(item))
+                changed = remove(item);
+        }
+        return changed;
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by repeatedly calling
+     *          {@link #remove(int)} until the list is empty.
      */
     @Override
     default void clear() {
-        throw new UnsupportedOperationException();
+        int size = size();
+        for (int i = 0; i < size; i++)
+            remove(0);
     }
 
     /**
@@ -248,20 +299,19 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
-    default ListIterator<E> listIterator() {
+    default @NotNull ListIterator<E> listIterator() {
         return listIterator(0);
     }
 
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
-    default ListIterator<E> listIterator(int index) {
+    default @NotNull ListIterator<E> listIterator(int index) {
         return new ListIterator<>() {
-            int next = index;
+            int next = index; // Index of the next element to be returned
+            int last = -1;    // Index of the last returned element
 
             @Override
             public boolean hasNext() {
@@ -270,6 +320,9 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
             @Override
             public E next() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
+                last = next;
                 return get(next++);
             }
 
@@ -280,7 +333,10 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
             @Override
             public E previous() {
-                return get(--next);
+                if (!hasPrevious())
+                    throw new NoSuchElementException();
+                last = --next;
+                return get(last);
             }
 
             @Override
@@ -295,17 +351,26 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
             @Override
             public void remove() {
-                throw new UnsupportedOperationException();
+                if (last < 0)
+                    throw new IllegalStateException();
+                ListModelJavaList.this.remove(last);
+                if (last < next) // Adjust 'next' if remove was before it
+                    next--;
+                last = -1;       // Reset 'last'
             }
 
             @Override
             public void set(E e) {
-                throw new UnsupportedOperationException();
+                if (last < 0)
+                    throw new IllegalStateException();
+                ListModelJavaList.this.set(last, e);
             }
 
             @Override
             public void add(E e) {
-                throw new UnsupportedOperationException();
+                ListModelJavaList.this.add(next, e);
+                next++;    // Adjust 'next' to reflect the added element
+                last = -1; // Reset 'last'
             }
         };
     }
@@ -313,10 +378,9 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     /**
      * {@inheritDoc}
      */
-    @NotNull
     @Override
-    default List<E> subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size() || fromIndex > toIndex)
+    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || fromIndex > toIndex || toIndex > size())
             throw new IndexOutOfBoundsException();
 
         return new ListModelJavaList<>() {
