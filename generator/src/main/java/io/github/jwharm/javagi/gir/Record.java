@@ -54,10 +54,14 @@ public final class Record extends Multiplatform
             return PartialStatement.of("(_ -> {})");
 
         String tag = ((RegisteredType) freeFunc.parent()).typeTag();
+        // For GLib types, the getType() method is in the GObject namespace
+        var boxedClass = typeName();
+        if (namespace().name().equals("GLib"))
+            boxedClass = ClassName.get("org.gnome.gobject", name());
 
         if ("g_boxed_free".equals(freeFunc.callableAttrs().cIdentifier()))
             return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
-                    tag, typeName(),
+                    tag, boxedClass,
                     "gobjects", ClassNames.G_OBJECTS,
                     "memorySegment", MemorySegment.class);
 
