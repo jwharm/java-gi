@@ -96,6 +96,8 @@ public interface ListModelJavaListMutable<E extends GObject> extends ListModelJa
 
         @Override
         public void removeAt(int index) {
+            if (index < 0 || index >= size())
+                throw new IndexOutOfBoundsException();
             list.removeAt(index + fromIndex);
         }
 

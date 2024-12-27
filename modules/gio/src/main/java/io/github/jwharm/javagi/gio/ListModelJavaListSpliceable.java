@@ -82,11 +82,15 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
 
         @Override
         public void splice(int position, int nRemovals, @Nullable E[] additions) {
+            if (position < 0 || nRemovals < 0 || position + nRemovals > size())
+                throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);
         }
 
         @Override
         public void splice(int position, int nRemovals, @NotNull Collection<? extends E> additions) {
+            if (position < 0 || nRemovals < 0 || position + nRemovals > size())
+                throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);
         }
     }
