@@ -221,17 +221,31 @@ public class GtkPatch implements Patch {
         /*
          * Because these classes implement GListModel, which is patched to
          * implement java.util.List, their `void remove(int)` method conflicts
-         * with List's `boolean remove(int)`. Rename to `removeItem()`.
+         * with List's `boolean remove(int)`. Rename to `removeAt()`.
          */
         if (element instanceof Method m
                 && "gtk_multi_filter_remove".equals(m.callableAttrs().cIdentifier()))
-            return element.withAttribute("name", "remove_filter");
+            return element.withAttribute("name", "remove_at");
         else if (element instanceof Method m
                 && "gtk_string_list_remove".equals(m.callableAttrs().cIdentifier()))
-            return element.withAttribute("name", "remove_string");
+            return element.withAttribute("name", "remove_at");
         else if (element instanceof Method m
                 && "gtk_multi_sorter_remove".equals(m.callableAttrs().cIdentifier()))
-            return element.withAttribute("name", "remove_sorter");
+            return element.withAttribute("name", "remove_at");
+
+        if (element instanceof Class c && "MultiFilter".equals(c.name()))
+            return c.withAttribute("java-gi-generic-actual", "Gtk.Filter")
+                    .withAttribute("java-gi-list-mutable", "1");
+        if (element instanceof Class c && "AnyFilter".equals(c.name()))
+            return c.withAttribute("java-gi-generic-actual", "Gtk.Filter");
+        if (element instanceof Class c && "EveryFilter".equals(c.name()))
+            return c.withAttribute("java-gi-generic-actual", "Gtk.Filter");
+        if (element instanceof Class c && "MultiSorter".equals(c.name()))
+            return c.withAttribute("java-gi-generic-actual", "Gtk.Sorter")
+                    .withAttribute("java-gi-list-mutable", "1");
+        if (element instanceof Class c && "StringList".equals(c.name()))
+            return c.withAttribute("java-gi-generic-actual", "Gtk.StringObject")
+                    .withAttribute("java-gi-list-spliceable", "1");
 
         return element;
     }

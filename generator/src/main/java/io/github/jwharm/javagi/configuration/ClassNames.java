@@ -53,6 +53,9 @@ public final class ClassNames {
 
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");
     public static final ClassName LIST_MODEL_JAVA_LIST = get(PKG_GIO, "ListModelJavaList");
+    public static final ClassName LIST_MODEL_JAVA_LIST_MUTABLE = get(PKG_GIO, "ListModelJavaListMutable");
+    public static final ClassName LIST_MODEL_JAVA_LIST_SPLICEABLE = get(PKG_GIO, "ListModelJavaListSpliceable");
+    public static final ClassName STRING_OBJECT = get("org.gnome.gtk", "StringObject");
 
     public static final ClassName BINDING_BUILDER = get(PKG_GOBJECT, "BindingBuilder");
     public static final ClassName BUILDER = get(PKG_GOBJECT, "Builder");

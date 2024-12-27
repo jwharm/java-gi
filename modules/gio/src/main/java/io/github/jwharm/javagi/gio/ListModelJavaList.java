@@ -21,6 +21,7 @@ package io.github.jwharm.javagi.gio;
 
 import org.gnome.gobject.GObject;
 import org.gnome.gio.ListModel;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -39,7 +40,6 @@ import java.util.*;
  *     <li>{@link #add(E)}
  *     <li>{@link #add(int, E)}
  *     <li>{@link #remove(int)}
- *     <li>{@link #remove(Object)}
  * </ul>
  * It is recommended to also override other operations such as {@link #clear()}
  * with a more efficient implementation.
@@ -133,11 +133,17 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     }
 
     /**
-     * Always throws {@link UnsupportedOperationException}.
+     * {@inheritDoc}
+     *
+     * @apiNote This operation is implemented by calling {@link #remove(int)} on the result of {@link #indexOf(Object)}.
      */
     @Override
     default boolean remove(Object o) {
-        throw new UnsupportedOperationException();
+        int index = indexOf(o);
+        if (index < 0)
+            return false;
+        remove(index);
+        return true;
     }
 
     /**
@@ -380,19 +386,31 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      */
     @Override
     default @NotNull List<E> subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || fromIndex > toIndex || toIndex > size())
-            throw new IndexOutOfBoundsException();
+        return new SubList<>(this, fromIndex, toIndex);
+    }
 
-        return new ListModelJavaList<>() {
-            @Override
-            public int getNItems() {
-                return toIndex - fromIndex;
-            }
+    @ApiStatus.Internal
+    class SubList<E extends GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
+        protected final List list;
+        protected final int fromIndex;
+        protected final int toIndex;
 
-            @Override
-            public E getItem(int position) {
-                return ListModelJavaList.this.getItem(position + fromIndex);
-            }
-        };
+        public SubList(List list, int fromIndex, int toIndex) {
+            if (fromIndex < 0 || fromIndex > toIndex || toIndex > size())
+                throw new IndexOutOfBoundsException();
+            this.list = Objects.requireNonNull(list);
+            this.fromIndex = fromIndex;
+            this.toIndex = toIndex;
+        }
+
+        @Override
+        public int getNItems() {
+            return toIndex - fromIndex;
+        }
+
+        @Override
+        public E getItem(int position) {
+            return list.getItem(position + fromIndex);
+        }
     }
 }
