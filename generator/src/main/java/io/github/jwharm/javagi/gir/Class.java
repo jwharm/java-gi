@@ -19,10 +19,13 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.TypeName;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
+import static io.github.jwharm.javagi.util.Conversions.toJavaQualifiedType;
 
 import java.util.List;
 import java.util.Map;
@@ -74,6 +77,8 @@ public final class Class extends Multiplatform
     }
 
     public boolean generic() {
+        if (!ClassNames.GENERIC_T.equals(actualGeneric())) return false;
+
         if (attrBool("java-gi-generic", false))
             return true;
 
@@ -82,6 +87,21 @@ public final class Class extends Multiplatform
                 return true;
 
         return false;
+    }
+
+    public TypeName actualGeneric() {
+        String actualGenericName = attr("java-gi-generic-actual");
+        if (actualGenericName == null)
+            return ClassNames.GENERIC_T;
+        return toJavaQualifiedType(actualGenericName, namespace());
+    }
+
+    public boolean mutableList() {
+        return attrBool("java-gi-list-mutable", false);
+    }
+
+    public boolean spliceableList() {
+        return attrBool("java-gi-list-spliceable", false);
     }
 
     public boolean autoCloseable() {
