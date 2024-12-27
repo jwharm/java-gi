@@ -410,6 +410,8 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
 
         @Override
         public E getItem(int position) {
+            if (position < 0 || position >= size())
+                throw new IndexOutOfBoundsException();
             return list.getItem(position + fromIndex);
         }
     }
