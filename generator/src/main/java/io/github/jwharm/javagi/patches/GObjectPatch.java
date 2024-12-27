@@ -159,6 +159,9 @@ public class GObjectPatch implements Patch {
                 new Type(Map.of("name", name, "c:type", cType), emptyList())));
         }
 
+        if (element instanceof Record r && "Value".equals(r.name()))
+            return r.withAttribute("java-gi-to-string", "org.gnome.gobject.GObjects.strdupValueContents(this)");
+
         return element;
     }
 }

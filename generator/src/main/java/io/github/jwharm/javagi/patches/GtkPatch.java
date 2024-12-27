@@ -248,9 +248,9 @@ public class GtkPatch implements Patch {
                     .withAttribute("java-gi-list-spliceable", "1");
 
         if (element instanceof Class i && "StringObject".equals(i.name()))
-            return i.withAttribute("java-gi-to-string", "getString");
+            return i.withAttribute("java-gi-to-string", "getString()");
         if (element instanceof Class i && "StringFilter".equals(i.name()))
-            return i.withAttribute("java-gi-to-string", "getSearch");
+            return i.withAttribute("java-gi-to-string", "getSearch()");
 
         return element;
     }

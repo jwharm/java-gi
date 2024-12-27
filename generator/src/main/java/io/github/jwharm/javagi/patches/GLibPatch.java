@@ -142,6 +142,9 @@ public class GLibPatch implements Patch {
                         .contains(r.name()))
             return r.withAttribute("java-gi-skip", "1");
 
+        if (element instanceof Record r && "Variant".equals(r.name()))
+            return r.withAttribute("java-gi-to-string", "print(true)");
+
         return element;
     }
 }
