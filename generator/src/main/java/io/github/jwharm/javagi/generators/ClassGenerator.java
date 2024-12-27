@@ -32,6 +32,7 @@ import javax.lang.model.element.Modifier;
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
 public class ClassGenerator extends RegisteredTypeGenerator {
 
@@ -118,6 +119,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(parentAccessor());
         builder.addMethod(memoryAddressConstructor());
+
+        if (cls.toStringTarget() != null)
+            builder.addMethod(toStringRedirect(cls.toStringTarget()));
 
         addConstructors(builder);
         addFunctions(builder);
@@ -531,6 +535,20 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ClassNames.STRING_OBJECT, "e")
                 .addStatement("append(e.getString())")
+                .build();
+    }
+
+    private MethodSpec toStringRedirect(String target) {
+        return MethodSpec.methodBuilder("toString")
+                .addJavadoc("""
+                        Returns a string representation of the object.
+                        
+                        @return a string representation of the object
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .addStatement("return $T.toString($L())", Objects.class, target)
                 .build();
     }
 }
