@@ -120,14 +120,14 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         builder.addMethod(parentAccessor());
         builder.addMethod(memoryAddressConstructor());
 
-        if (cls.toStringTarget() != null)
-            builder.addMethod(toStringRedirect(cls.toStringTarget()));
-
         addConstructors(builder);
         addFunctions(builder);
         addMethods(builder);
         addVirtualMethods(builder);
         addSignals(builder);
+
+        if (cls.toStringTarget() != null)
+            builder.addMethod(toStringRedirect(cls.toStringTarget()));
 
         Record typeStruct = cls.typeStruct();
         if (typeStruct != null)
@@ -548,7 +548,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(String.class)
-                .addStatement("return $T.toString($L())", Objects.class, target)
+                .addStatement("return $T.toString($L)", Objects.class, target)
                 .build();
     }
 }

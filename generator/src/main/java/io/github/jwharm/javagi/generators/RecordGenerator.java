@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.squareup.javapoet.*;
@@ -132,14 +133,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (hasDowncallHandles())
             builder.addType(downcallHandlesClass());
 
+        if (rec.toStringTarget() != null)
+            builder.addMethod(toStringRedirect(rec.toStringTarget()));
+
         if ("GTypeInstance".equals(rec.cType()))
             addCallParentMethods();
-
-        if ("GValue".equals(rec.cType()))
-            builder.addMethod(gvalueToString());
-
-        if ("GVariant".equals(rec.cType()))
-            builder.addMethod(gvariantToString());
 
         return builder.build();
     }
@@ -332,37 +330,17 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .build());
     }
 
-    private MethodSpec gvalueToString() {
+    private MethodSpec toStringRedirect(String target) {
         return MethodSpec.methodBuilder("toString")
                 .addJavadoc("""
-                        Return a newly allocated String using {@link $1T#strdupValueContents($2T)},
-                        which describes the contents of a {@link $2T}.
-                        The main purpose of this function is to describe {@link $2T}
-                        contents for debugging output, the way in which the contents are
-                        described may change between different GLib versions.
+                        Returns a string representation of the object.
                         
-                        @return the newly allocated String.
-                        """, ClassNames.G_OBJECTS, ClassNames.G_VALUE)
-                .addModifiers(Modifier.PUBLIC)
+                        @return a string representation of the object
+                        """)
                 .addAnnotation(Override.class)
-                .returns(String.class)
-                .addStatement("return $T.strdupValueContents(this)",
-                        ClassNames.G_OBJECTS)
-                .build();
-    }
-
-    private MethodSpec gvariantToString() {
-        return MethodSpec.methodBuilder("toString")
-                .addJavadoc("""
-                        Return a newly allocated String using {@link #print},
-                        which pretty-prints the value and type information of a {@link $T}.
-                        
-                        @return the newly allocated String.
-                        """, ClassNames.G_VARIANT)
                 .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
                 .returns(String.class)
-                .addStatement("return print(true)")
+                .addStatement("return $T.toString($L)", Objects.class, target)
                 .build();
     }
 }
