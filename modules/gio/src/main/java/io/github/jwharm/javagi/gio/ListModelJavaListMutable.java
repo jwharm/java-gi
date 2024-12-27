@@ -99,11 +99,13 @@ public interface ListModelJavaListMutable<E extends GObject> extends ListModelJa
             if (index < 0 || index >= size())
                 throw new IndexOutOfBoundsException();
             list.removeAt(index + fromIndex);
+            toIndex--;
         }
 
         @Override
         public void append(E e) {
             list.add(toIndex, e);
+            toIndex++;
         }
     }
 }
