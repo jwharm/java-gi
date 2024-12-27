@@ -393,7 +393,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
     class SubList<E extends GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
         protected final List list;
         protected final int fromIndex;
-        protected final int toIndex;
+        protected int toIndex;
 
         public SubList(List list, int fromIndex, int toIndex) {
             if (fromIndex < 0 || fromIndex > toIndex || toIndex > list.size())

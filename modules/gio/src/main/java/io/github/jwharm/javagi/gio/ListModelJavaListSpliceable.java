@@ -85,6 +85,8 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
             if (position < 0 || nRemovals < 0 || position + nRemovals > size())
                 throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);
+            toIndex -= nRemovals;
+            toIndex += additions == null ? 0 : additions.length;
         }
 
         @Override
@@ -92,6 +94,8 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
             if (position < 0 || nRemovals < 0 || position + nRemovals > size())
                 throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);
+            toIndex -= nRemovals;
+            toIndex += additions.size();
         }
     }
 }
