@@ -104,6 +104,10 @@ public final class Class extends Multiplatform
         return attrBool("java-gi-list-spliceable", false);
     }
 
+    public String toStringTarget() {
+        return attr("java-gi-to-string");
+    }
+
     public boolean autoCloseable() {
         return attrBool("java-gi-auto-closeable", false);
     }

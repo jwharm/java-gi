@@ -396,7 +396,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
         protected final int toIndex;
 
         public SubList(List list, int fromIndex, int toIndex) {
-            if (fromIndex < 0 || fromIndex > toIndex || toIndex > size())
+            if (fromIndex < 0 || fromIndex > toIndex || toIndex > list.size())
                 throw new IndexOutOfBoundsException();
             this.list = Objects.requireNonNull(list);
             this.fromIndex = fromIndex;
