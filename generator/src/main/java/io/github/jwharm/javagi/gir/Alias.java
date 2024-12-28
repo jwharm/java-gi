@@ -19,12 +19,10 @@
 
 package io.github.jwharm.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
-import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,12 +65,11 @@ public final class Alias extends Multiplatform implements RegisteredType {
             return null;
     }
 
-    @Override
-    public PartialStatement constructorName() {
-        RegisteredType target = lookup();
-        return target == null ? null : target.constructorName();
-    }
-
+    /**
+     * An Alias must be destroyed with the appropriate free-func from the
+     * target type. So {@link RegisteredType#destructorName} is overridden
+     * to refer to the target type.
+     */
     @Override
     public PartialStatement destructorName() {
         RegisteredType target = lookup();
