@@ -136,7 +136,7 @@ public class GLibPatch implements Patch {
         if (element instanceof Record r
                 && List.of("ByteArray", "HashTable", "List", "SList")
                         .contains(r.name()))
-            return r.withAttribute("java-gi-skip", "1");
+            return r.withAttribute("java-gi-custom", "1");
 
         return element;
     }
