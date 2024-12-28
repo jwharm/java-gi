@@ -319,13 +319,6 @@ class TypedValueGenerator {
             PartialStatement elementConstructor = getElementConstructor(type, 0);
             PartialStatement elementDestructor = getElementDestructor(type, 0);
 
-            if ("runs".equals(v.attr("name"))) {
-                System.out.println("runs:");
-                System.out.println(type.toString());
-                System.out.println(((Type) type.anyTypes().getFirst()).lookup());
-                System.out.println(elementConstructor.format());
-            }
-
             // Get parent node (parameter, return value, ...)
             Node parent = type.parent();
             while (parent instanceof AnyType)
