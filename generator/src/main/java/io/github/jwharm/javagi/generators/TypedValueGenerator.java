@@ -330,6 +330,7 @@ class TypedValueGenerator {
                 case InstanceParameter i -> i.transferOwnership();
                 case ReturnValue r       -> r.transferOwnership();
                 case Property p          -> p.transferOwnership();
+                case Field _             -> NONE;
                 default                  -> throw new IllegalStateException();
             };
 

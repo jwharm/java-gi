@@ -270,8 +270,8 @@ public class JavaGI implements Callable<Integer> {
         for (var rt : ns.registeredTypes().values()) {
 
             // Do not generate record types named "...Private" (except for
-            // GPrivate)
-            if (rt.skipJava())
+            // GPrivate) or types that are custom implemented in java-gi
+            if (rt.skipJava() || rt.customJava())
                 continue;
 
             typeSpec = switch(rt) {

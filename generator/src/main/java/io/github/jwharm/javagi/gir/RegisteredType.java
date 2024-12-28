@@ -134,4 +134,8 @@ public sealed interface RegisteredType
     default boolean skipJava() {
         return attrBool("java-gi-skip", false);
     }
+
+    default boolean customJava() {
+        return attrBool("java-gi-custom", false);
+    }
 }
