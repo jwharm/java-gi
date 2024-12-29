@@ -25,10 +25,14 @@ import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.Interface;
 import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
+import org.jetbrains.annotations.NotNull;
 
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
 
 public class ClassGenerator extends RegisteredTypeGenerator {
 
@@ -53,12 +57,13 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if (cls.abstract_()) builder.addModifiers(Modifier.ABSTRACT);
         if (cls.final_()) builder.addModifiers(Modifier.FINAL);
         if (cls.generic()) builder.addTypeVariable(ClassNames.GENERIC_T);
+        TypeName actualGeneric = cls.actualGeneric();
 
         Class parentClass = cls.parentClass();
         if (parentClass != null)
             builder.superclass(parentClass.generic()
                     ? ParameterizedTypeName.get(parentClass.typeName(),
-                                                    ClassNames.GENERIC_T)
+                    actualGeneric)
                     : parentClass.typeName());
         else
             builder.superclass(ClassNames.G_TYPE_INSTANCE);
@@ -69,11 +74,27 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             if (impl.lookup() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
                         ? ParameterizedTypeName.get(iface.typeName(),
-                                                    ClassNames.GENERIC_T)
+                        actualGeneric)
                         : iface.typeName());
 
         if (cls.autoCloseable())
             builder.addSuperinterface(ClassNames.AUTO_CLOSEABLE);
+
+        if (cls.mutableList()) {
+            builder.addSuperinterface(ParameterizedTypeName.get(ClassNames.LIST_MODEL_JAVA_LIST_MUTABLE, actualGeneric));
+            if (actualGeneric.equals(ClassNames.STRING_OBJECT))
+                builder.addMethod(appendStringObjectUnwrapper());
+        }
+
+        if (cls.spliceableList()) {
+            if (actualGeneric instanceof TypeVariableName) throw new IllegalArgumentException("actualGeneric is a TypeVariableName");
+            builder.addSuperinterface(ParameterizedTypeName.get(ClassNames.LIST_MODEL_JAVA_LIST_SPLICEABLE, actualGeneric));
+            builder.addMethod(spliceCollectionWrapper(actualGeneric));
+            if (actualGeneric.equals(ClassNames.STRING_OBJECT)) {
+                builder.addMethod(spliceStringObjectUnwrapper());
+                builder.addMethod(appendStringObjectUnwrapper());
+            }
+        }
 
         if (cls.isFloating())
             builder.addSuperinterface(ClassNames.FLOATING);
@@ -98,6 +119,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(parentAccessor());
         builder.addMethod(memoryAddressConstructor());
+
+        if (cls.toStringTarget() != null)
+            builder.addMethod(toStringRedirect(cls.toStringTarget()));
 
         addConstructors(builder);
         addFunctions(builder);
@@ -454,6 +478,77 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .varargs(true)
                 .addStatement("return $T.emit(this, detailedSignal, params)",
                         ClassNames.SIGNALS)
+                .build();
+    }
+
+    private MethodSpec spliceCollectionWrapper(TypeName actualGeneric) {
+        return MethodSpec.methodBuilder("splice")
+                .addJavadoc("""
+                        Modifies this list by removing {@code nRemovals} elements starting at
+                        {@code index} and replacing them with the elements in {@code additions}.
+                        
+                        @param index the index at which to splice the list
+                        @param nRemovals the number of elements to remove
+                        @param elements the elements to insert at the index
+                        @throws IndexOutOfBoundsException if the index is out of range
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(int.class, "index")
+                .addParameter(int.class, "nRemovals")
+                .addParameter(ParameterizedTypeName.get(
+                        ClassName.get(Collection.class),
+                        WildcardTypeName.subtypeOf(actualGeneric)
+                ).annotated(AnnotationSpec.builder(NotNull.class).build()), "additions")
+                .addStatement("splice(index, nRemovals, additions.toArray($T[]::new))", actualGeneric)
+                .build();
+    }
+
+    private MethodSpec spliceStringObjectUnwrapper() {
+        return MethodSpec.methodBuilder("splice")
+                .addJavadoc("""
+                        Modifies this list by removing {@code nRemovals} elements starting at
+                        {@code index} and replacing them with the elements in {@code additions}.
+                        
+                        @param index the index at which to splice the list
+                        @param nRemovals the number of elements to remove
+                        @param additions the elements to insert at the index
+                        @throws IndexOutOfBoundsException if the index is out of range
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(int.class, "index")
+                .addParameter(int.class, "nRemovals")
+                .addParameter(ArrayTypeName.of(ClassNames.STRING_OBJECT), "additions")
+                .addStatement("splice(index, nRemovals, additions == null ? null : $T.stream(additions).map($T::getString).toArray(String[]::new))", Arrays.class, ClassNames.STRING_OBJECT)
+                .build();
+    }
+
+    private MethodSpec appendStringObjectUnwrapper() {
+            return MethodSpec.methodBuilder("append")
+                .addJavadoc("""
+                        Adds the specified element to the end of this list.
+                        
+                        @param e element to be appended to this list
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(ClassNames.STRING_OBJECT, "e")
+                .addStatement("append(e.getString())")
+                .build();
+    }
+
+    private MethodSpec toStringRedirect(String target) {
+        return MethodSpec.methodBuilder("toString")
+                .addJavadoc("""
+                        Returns a string representation of the object.
+                        
+                        @return a string representation of the object
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .addStatement("return $T.toString($L())", Objects.class, target)
                 .build();
     }
 }
