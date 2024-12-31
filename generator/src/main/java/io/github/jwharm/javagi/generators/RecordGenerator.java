@@ -20,7 +20,6 @@
 package io.github.jwharm.javagi.generators;
 
 import java.lang.foreign.Arena;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.squareup.javapoet.*;
@@ -134,7 +133,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.addType(downcallHandlesClass());
 
         if (rec.toStringTarget() != null)
-            builder.addMethod(toStringRedirect(rec.toStringTarget()));
+            builder.addMethod(toStringRedirect());
 
         if ("GTypeInstance".equals(rec.cType()))
             addCallParentMethods();
@@ -328,19 +327,5 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .returns(boolean.class)
                 .addStatement("return this.callParent")
                 .build());
-    }
-
-    private MethodSpec toStringRedirect(String target) {
-        return MethodSpec.methodBuilder("toString")
-                .addJavadoc("""
-                        Returns a string representation of the object.
-                        
-                        @return a string representation of the object
-                        """)
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(String.class)
-                .addStatement("return $T.toString($L)", Objects.class, target)
-                .build();
     }
 }

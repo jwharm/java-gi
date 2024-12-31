@@ -77,6 +77,9 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         addVirtualMethods(builder);
         addSignals(builder);
 
+        if (inf.toStringTarget() != null)
+            builder.addMethod(toStringRedirect());
+
         Record typeStruct = inf.typeStruct();
         if (typeStruct != null)
             builder.addType(new RecordGenerator(typeStruct).generate());

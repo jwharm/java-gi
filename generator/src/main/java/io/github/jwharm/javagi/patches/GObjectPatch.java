@@ -66,6 +66,21 @@ public class GObjectPatch implements Patch {
         }
 
         /*
+         * Replace the gtype declaration in GObject with an alias for the GLib
+         * gtype that was added there, so it will inherit in Java and the
+         * instances of both classes can be used interchangeably in many cases.
+         */
+        if (element instanceof Alias a && "Type".equals(a.name())) {
+            Type type = new Type(
+                    Map.of("name", "GLib.Type", "c:type", "gtype"),
+                    emptyList()
+            );
+            return a.withChildren(a.infoElements().doc(), type)
+                    .withAttribute("java-gi-to-string",
+                                   "org.gnome.gobject.GObjects.typeName(this)");
+        }
+
+        /*
          * The method "g_type_module_use" overrides "g_type_plugin_use", but
          * with a different return type. This is not allowed in Java.
          * Therefore, it is renamed from "use" to "use_type_module".
@@ -147,7 +162,8 @@ public class GObjectPatch implements Patch {
         }
 
         if (element instanceof Record r && "Value".equals(r.name()))
-            return r.withAttribute("java-gi-to-string", "org.gnome.gobject.GObjects.strdupValueContents(this)");
+            return r.withAttribute("java-gi-to-string",
+                    "org.gnome.gobject.GObjects.strdupValueContents(this)");
 
         return element;
     }
