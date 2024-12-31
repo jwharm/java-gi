@@ -73,6 +73,9 @@ public class FlaggedTypeGenerator extends RegisteredTypeGenerator {
         addFunctions(builder);
         addMethods(builder);
 
+        if (en.toStringTarget() != null)
+            builder.addMethod(toStringRedirect());
+
         List<Member> uniques = filterDuplicateValues(en.members());
         for (Member m : uniques) {
             try {

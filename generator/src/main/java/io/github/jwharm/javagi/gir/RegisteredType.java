@@ -131,6 +131,10 @@ public sealed interface RegisteredType
         return attr("glib:get-type");
     }
 
+    default String toStringTarget() {
+        return attr("java-gi-to-string");
+    }
+
     default boolean skipJava() {
         return attrBool("java-gi-skip", false);
     }
