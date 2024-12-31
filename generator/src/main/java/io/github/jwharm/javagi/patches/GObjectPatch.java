@@ -75,7 +75,9 @@ public class GObjectPatch implements Patch {
                     Map.of("name", "GLib.Type", "c:type", "gtype"),
                     emptyList()
             );
-            return a.withChildren(a.infoElements().doc(), type);
+            return a.withChildren(a.infoElements().doc(), type)
+                    .withAttribute("java-gi-to-string",
+                                   "org.gnome.gobject.GObjects.typeName(this)");
         }
 
         /*
@@ -160,7 +162,8 @@ public class GObjectPatch implements Patch {
         }
 
         if (element instanceof Record r && "Value".equals(r.name()))
-            return r.withAttribute("java-gi-to-string", "org.gnome.gobject.GObjects.strdupValueContents(this)");
+            return r.withAttribute("java-gi-to-string",
+                    "org.gnome.gobject.GObjects.strdupValueContents(this)");
 
         return element;
     }

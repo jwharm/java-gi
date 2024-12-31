@@ -56,6 +56,9 @@ public class BoxedGenerator extends RegisteredTypeGenerator {
 
         addFunctions(builder);
 
+        if (boxed.toStringTarget() != null)
+            builder.addMethod(toStringRedirect());
+
         if (hasDowncallHandles())
             builder.addType(downcallHandlesClass());
 

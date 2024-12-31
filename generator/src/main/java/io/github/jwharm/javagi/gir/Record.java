@@ -204,10 +204,6 @@ public final class Record extends Multiplatform
         return filter(children(), Union.class);
     }
 
-    public String toStringTarget() {
-        return attr("java-gi-to-string");
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this)

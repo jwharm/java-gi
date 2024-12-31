@@ -31,6 +31,7 @@ import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
 import java.util.List;
+import java.util.Objects;
 
 import static io.github.jwharm.javagi.util.CollectionUtils.filter;
 import static java.util.function.Predicate.not;
@@ -138,6 +139,21 @@ public class RegisteredTypeGenerator {
             builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
                     ClassNames.INTEROP);
         return builder.build();
+    }
+
+    protected MethodSpec toStringRedirect() {
+        String target = rt.toStringTarget();
+        return MethodSpec.methodBuilder("toString")
+                .addJavadoc("""
+                        Returns a string representation of the object.
+                        
+                        @return a string representation of the object
+                        """)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .addStatement("return $T.toString($L)", Objects.class, target)
+                .build();
     }
 
     protected TypeSpec implClass() {
