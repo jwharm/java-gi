@@ -3,10 +3,12 @@ plugins {
 }
 
 dependencies {
-    api(project(":gsk"))
-    api(project(":gdk"))
+    api(project(":gst"))
+    api(project(":gstaudio"))
+    api(project(":gstbase"))
+    api(project(":gstvideo"))
 }
 
 tasks.withType<GenerateSources> {
-    namespace = "Gtk"
+    namespace = "GstPbutils"
 }
