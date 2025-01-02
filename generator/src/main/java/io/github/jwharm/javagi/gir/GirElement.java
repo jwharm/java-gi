@@ -54,6 +54,10 @@ public abstract class GirElement implements Serializable, Node {
         this.parent = parent;
     }
 
+    public void setAttr(String key, String newValue) {
+        attributes.put(key, newValue);
+    }
+
     public String attr(String key) {
         return attributes.get(key);
     }
