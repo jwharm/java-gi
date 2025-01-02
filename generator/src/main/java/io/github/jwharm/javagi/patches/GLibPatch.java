@@ -40,6 +40,16 @@ public class GLibPatch implements Patch {
 
         if (element instanceof Namespace ns) {
             /*
+             * GType was removed from GLib. Keep a deprecated class for now.
+             */
+            var gtype = new Alias(
+                    Map.of("name", "Type", "c:type", "GType", "deprecated", "1"),
+                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
+                            emptyList())),
+                    ns.platforms());
+            ns = add(ns, gtype);
+
+            /*
              * g_strv_get_type and g_variant_get_gtype return a "gtype", which
              * doesn't exist in GLib.
              */
