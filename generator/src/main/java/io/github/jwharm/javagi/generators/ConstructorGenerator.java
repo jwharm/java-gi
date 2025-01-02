@@ -129,8 +129,7 @@ public class ConstructorGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
 
-        // Override the specified return type
-        TypeName returnType = parent.typeName();
+        TypeName returnType = ctor.returnValue().anyType().typeName();
         builder.returns(returnType);
 
         // Javadoc

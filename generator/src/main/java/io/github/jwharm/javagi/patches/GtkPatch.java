@@ -26,10 +26,31 @@ import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
 
+import static java.util.function.Predicate.not;
+
 public class GtkPatch implements Patch {
 
     @Override
     public GirElement patch(GirElement element, String namespace) {
+
+        /*
+         * Named constructors of Gtk Widgets often specify return type "Widget".
+         * To prevent redundant casts, we override them with the actual type.
+         */
+        if (element instanceof Class cls) {
+            for (Constructor ctor : cls.constructors().stream()
+                    .filter(not(f -> f.name().equals("new")))
+                    .toList()) {
+                var type = (Type) ctor.returnValue().anyType();
+                if ("GtkWidget*".equals(type.cType())) {
+                    if ("Gtk.Widget".equals(type.name())
+                            || ("Gtk".equals(namespace) && "Widget".equals(type.name()))) {
+                        type.setAttr("name", cls.name());
+                        type.setAttr("c:type", "Gtk" + cls.name() + "*");
+                    }
+                }
+            }
+        }
 
         if (!"Gtk".equals(namespace))
             return element;
@@ -38,12 +59,12 @@ public class GtkPatch implements Patch {
 
             /*
              * Gtk.CustomLayout is a convenience class for C code that wants to
-             * avoid subclassing Gtk.LayoutManager. It is not supposed to be used
-             * by language bindings, and will never work correctly, as it doesn't
-             * have the necessary parameters and annotations to manage the lifetime
-             * of the callback functions.
-             * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially the
-             * first comment.
+             * avoid subclassing Gtk.LayoutManager. It is not supposed to be
+             * used by language bindings, and will never work correctly, as it
+             * doesn't have the necessary parameters and annotations to manage
+             * the lifetime of the callback functions.
+             * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially
+             * the first comment.
              */
             ns = remove(ns, Callback.class, "name", "CustomRequestModeFunc");
             ns = remove(ns, Callback.class, "name", "CustomMeasureFunc");
@@ -72,8 +93,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getWindowId()
          */
         if (element instanceof Method m
-                && "gtk_application_window_get_id"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_application_window_get_id".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_window_id");
 
         /*
@@ -81,8 +101,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getArrowDirection()
          */
         if (element instanceof Method m
-                && "gtk_menu_button_get_direction"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_menu_button_get_direction".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_arrow_direction");
 
         /*
@@ -90,8 +109,7 @@ public class GtkPatch implements Patch {
          * type. Rename to getString()
          */
         if (element instanceof Method m
-                && "gtk_print_settings_get"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_print_settings_get".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_string");
 
         /*
@@ -99,8 +117,7 @@ public class GtkPatch implements Patch {
          * different return type. Rename to getPrintSettings()
          */
         if (element instanceof Method m
-                && "gtk_print_unix_dialog_get_settings"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_print_unix_dialog_get_settings".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "get_print_settings");
 
         /*
@@ -110,8 +127,7 @@ public class GtkPatch implements Patch {
          * Widget.activate() to activateWidget()
          */
         if (element instanceof Method m
-                && "gtk_widget_activate"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_widget_activate".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "activate_widget");
 
         /*
@@ -120,19 +136,18 @@ public class GtkPatch implements Patch {
          * Class ApplicationWindow extends Widget and implements ActionGroup.
          * This doesn't compile in Java. We rename Widget.activateAction()
          * to activateActionIfExists() to resolve this.
-         *
+         */
+        if (element instanceof Method m
+                && "gtk_widget_activate_action".equals(m.callableAttrs().cIdentifier()))
+            return m.withAttribute("name", "activate_action_if_exists");
+
+        /*
          * Furthermore, Widget.activateAction() is shadowed by
          * Widget.activateActionVariant() so we have to rename the "shadows"
          * attribute too.
          */
         if (element instanceof Method m
-                && "gtk_widget_activate_action"
-                            .equals(m.callableAttrs().cIdentifier()))
-            return m.withAttribute("name", "activate_action_if_exists");
-
-        if (element instanceof Method m
-                && "gtk_widget_activate_action_variant"
-                            .equals(m.callableAttrs().cIdentifier()))
+                && "gtk_widget_activate_action_variant".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("shadows", "activate_action_if_exists");
 
         /*
@@ -142,9 +157,7 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "play".equals(vm.name())
-                && "MediaStream".equals(vm.parameters()
-                                          .instanceParameter()
-                                          .type().name()))
+                && "MediaStream".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("invoker", "play");
 
         /*
@@ -153,10 +166,10 @@ public class GtkPatch implements Patch {
          * override a public method with the same name in Widget. Therefore,
          * they must also be public.
          */
+        var classes = List.of("Window", "Popover");
         if (element instanceof VirtualMethod vm
                 && "activate_default".equals(vm.name())
-                && List.of("Window", "Popover").contains(
-                        vm.parameters().instanceParameter().type().name()))
+                && classes.contains(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*
@@ -164,9 +177,7 @@ public class GtkPatch implements Patch {
          */
         if (element instanceof VirtualMethod vm
                 && "close".equals(vm.name())
-                && "Dialog".equals(vm.parameters()
-                                     .instanceParameter()
-                                     .type().name()))
+                && "Dialog".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-override-visibility", "PUBLIC");
 
         /*
@@ -180,9 +191,7 @@ public class GtkPatch implements Patch {
         );
         if (element instanceof VirtualMethod vm
                 && methods.contains(vm.name())
-                && "BuilderScope".equals(vm.parameters()
-                                           .instanceParameter()
-                                           .type().name()))
+                && "BuilderScope".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("java-gi-dont-skip", "1");
 
         /*
@@ -191,8 +200,7 @@ public class GtkPatch implements Patch {
          * Make sure that it is the same on every platform.
          */
         if (element instanceof Function f
-                && "gtk_ordering_from_cmpfunc"
-                            .equals(f.callableAttrs().cIdentifier()))
+                && "gtk_ordering_from_cmpfunc".equals(f.callableAttrs().cIdentifier()))
             return f.withAttribute("introspectable", "0");
 
         /*
@@ -233,22 +241,34 @@ public class GtkPatch implements Patch {
                 && "gtk_multi_sorter_remove".equals(m.callableAttrs().cIdentifier()))
             return element.withAttribute("name", "remove_at");
 
+        // MultiFilter implements ListModel<Filter> and supports mutation
         if (element instanceof Class c && "MultiFilter".equals(c.name()))
             return c.withAttribute("java-gi-generic-actual", "Gtk.Filter")
                     .withAttribute("java-gi-list-mutable", "1");
+
+        // AnyFilter implements ListModel<Filter>
         if (element instanceof Class c && "AnyFilter".equals(c.name()))
             return c.withAttribute("java-gi-generic-actual", "Gtk.Filter");
+
+        // EveryFilter implements ListModel<Filter>
         if (element instanceof Class c && "EveryFilter".equals(c.name()))
             return c.withAttribute("java-gi-generic-actual", "Gtk.Filter");
+
+        // MultiSorter implements ListModel<Sorter> and supports mutation
         if (element instanceof Class c && "MultiSorter".equals(c.name()))
             return c.withAttribute("java-gi-generic-actual", "Gtk.Sorter")
                     .withAttribute("java-gi-list-mutable", "1");
+
+        // StringList implements ListModel<StringObject> and supports splice
         if (element instanceof Class c && "StringList".equals(c.name()))
             return c.withAttribute("java-gi-generic-actual", "Gtk.StringObject")
                     .withAttribute("java-gi-list-spliceable", "1");
 
+        // Use StringObject.getString() for toString()
         if (element instanceof Class i && "StringObject".equals(i.name()))
             return i.withAttribute("java-gi-to-string", "getString()");
+
+        // Use StringFilter.getSearch() for toString()
         if (element instanceof Class i && "StringFilter".equals(i.name()))
             return i.withAttribute("java-gi-to-string", "getSearch()");
 
