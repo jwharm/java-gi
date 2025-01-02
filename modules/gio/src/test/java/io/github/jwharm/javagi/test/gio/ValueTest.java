@@ -39,7 +39,7 @@ public class ValueTest {
         boolean b = true;
         Value boolValue = new Value().init(Types.BOOLEAN);
         boolValue.setBoolean(b);
-        assertEquals(boolValue.getBoolean(), b);
+        assertEquals(b, boolValue.getBoolean());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class ValueTest {
         double d = 12345.6789;
         Value doubleValue = new Value().init(Types.DOUBLE);
         doubleValue.setDouble(d);
-        assertEquals(doubleValue.getDouble(), d);
+        assertEquals(d, doubleValue.getDouble());
     }
 
     @Test
@@ -55,7 +55,7 @@ public class ValueTest {
         float f = 12.345f;
         Value floatValue = new Value().init(Types.FLOAT);
         floatValue.setFloat(f);
-        assertEquals(floatValue.getFloat(), f);
+        assertEquals(f, floatValue.getFloat());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class ValueTest {
         int i = 15;
         Value intValue = new Value().init(Types.INT);
         intValue.setInt(i);
-        assertEquals(intValue.getInt(), i);
+        assertEquals(i, intValue.getInt());
     }
 
     @Test
@@ -72,7 +72,7 @@ public class ValueTest {
         int i = 15;
         Value longValue = new Value().init(Types.LONG);
         longValue.setLong(i);
-        assertEquals(longValue.getLong(), i);
+        assertEquals(i, longValue.getLong());
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ValueTest {
         String s = "Test";
         Value strValue = new Value().init(Types.STRING);
         strValue.setString(s);
-        assertEquals(strValue.getString(), s);
+        assertEquals(s, strValue.getString());
     }
 
     @Test
@@ -96,11 +96,11 @@ public class ValueTest {
     public void boxedValue() {
         // compare a boxed value with its duplicate
         Date date = Date.dmy(new DateDay((byte) 3), DateMonth.JUNE, new DateYear((short) 2023));
-        Value boxedValue = new Value().init(Date.getType());
+        Value boxedValue = new Value().init(Types.DATE);
         boxedValue.setBoxed(date.handle());
         var copy = boxedValue.dupBoxed();
         assertNotNull(copy);
         Date dup = new Date(copy);
-        assertEquals(date.compare(dup), 0);
+        assertEquals(0, date.compare(dup));
     }
 }
