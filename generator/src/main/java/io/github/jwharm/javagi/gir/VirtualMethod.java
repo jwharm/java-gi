@@ -39,11 +39,50 @@ public final class VirtualMethod extends Multiplatform implements Callable {
                 .filter(Method.class::isInstance)
                 .map(Method.class::cast)
                 .filter(m -> invoker.equals(m.name()))
+                .filter(this::equalTypeSignature)
                 .findAny()
                 .orElse(null);
     }
 
     public String overrideVisibility() {
         return attr("java-gi-override-visibility");
+    }
+
+    /*
+     * Check if the invoker method has the same type signature as this virtual
+     * method.
+     *
+     * We deliberately don't compare the return types, because two Java methods
+     * with the same name and parameter types but different return types will
+     * not compile.
+     */
+    boolean equalTypeSignature(Method m) {
+        // Compare instance parameter type
+        if (different(parameters().instanceParameter(),
+                      m.parameters().instanceParameter()))
+            return false;
+
+        // Compare exceptions
+        if (throws_() != m.throws_())
+            return false;
+
+        List<Parameter> params1 = parameters().parameters();
+        List<Parameter> params2 = m.parameters().parameters();
+
+        // Compare number of parameters
+        if (params1.size() != params2.size())
+            return false;
+
+        // Compare parameter types
+        for (int i = 0; i < params1.size(); i++)
+            if (different(params1.get(i), params2.get(i)))
+                return false;
+
+        return true;
+    }
+
+    // Return true when these types would be different in Java
+    private boolean different(TypedValue a, TypedValue b) {
+        return !a.anyType().typeName().equals(b.anyType().typeName());
     }
 }
