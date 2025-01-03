@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,7 +20,11 @@
 package io.github.jwharm.javagi.gio;
 
 import io.github.jwharm.javagi.base.GErrorException;
+import org.gnome.glib.GError;
 import org.gnome.gio.Cancellable;
+import org.gnome.gio.IOStream;
+import org.gnome.gio.InputStream;
+import org.gnome.gio.OutputStream;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -28,12 +32,11 @@ import java.io.IOException;
 /**
  * An {@link java.lang.AutoCloseable} interface for GIO streams.
  * <p>
- * This interface extends {@link java.lang.AutoCloseable} and implements the
- * {@link #close()} with a {@code default} version that calls the
- * {@link #close(Cancellable)} method. This method is implemented by GIO
- * streams ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream}
- * and {@link org.gnome.gio.OutputStream}) so they become
- * {@code AutoCloseable} and can be used in a try-with-resources block.
+ * This interface extends {@link java.lang.AutoCloseable} and implements
+ * {@link #close()} with a {@code default} method that calls
+ * {@link #close(Cancellable)}. This interface is implemented by GIO streams
+ * ({@link IOStream}, {@link InputStream} and {@link OutputStream}) so they
+ * become {@code AutoCloseable} and can be used in a try-with-resources block.
  */
 public interface AutoCloseable extends java.lang.AutoCloseable {
 
@@ -46,7 +49,7 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
      *                             around the {@link GErrorException} that is
      *                             thrown by {@link #close(Cancellable)}.
      */
-    default void close() throws java.io.IOException {
+    default void close() throws IOException {
         try {
             close(null);
         } catch (GErrorException gerror) {
@@ -55,14 +58,13 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
     }
 
     /**
-     * The {@code close} method that is implemented by GLib streams
-     * ({@link org.gnome.gio.IOStream}, {@link org.gnome.gio.InputStream} and
-     * {@link org.gnome.gio.OutputStream}).
+     * The {@code close} method that is implemented by GIO streams
+     * ({@link IOStream}, {@link InputStream} and {@link OutputStream}).
      *
      * @param  cancellable optional {@link Cancellable} object, {@code null} to
      *                     ignore
      * @return {@code true} on success, {@code false} on failure
-     * @throws GErrorException See {@link org.gnome.glib.GError}
+     * @throws GErrorException See {@link GError}
      */
     boolean close(@Nullable org.gnome.gio.Cancellable cancellable)
             throws GErrorException;
