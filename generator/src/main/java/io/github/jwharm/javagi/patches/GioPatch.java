@@ -155,7 +155,7 @@ public class GioPatch implements Patch {
 
         /*
          * File.prefixMatches() is defined as a virtual method with invoker
-         * method hasPrefix(), but the parameters are different. Remove the
+         * method hasPrefix(), but the parameters are swapped. Remove the
          * invoker attribute, so they will be treated as separate methods.
          */
         if (element instanceof VirtualMethod vm

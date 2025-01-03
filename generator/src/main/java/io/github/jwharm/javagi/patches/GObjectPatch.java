@@ -132,22 +132,6 @@ public class GObjectPatch implements Patch {
         }
 
         /*
-         * GObject.notify() is defined as a virtual method with an invoker
-         * method, but the parameters are different. Remove the invoker
-         * attribute, so they will be treated as separate methods.
-         */
-        if (element instanceof VirtualMethod vm
-                && "notify".equals(vm.name())
-                && "Object".equals(vm.parameters()
-                                     .instanceParameter()
-                                     .type().name()))
-            return new VirtualMethod(
-                    Map.of("name", "notify"),
-                    vm.children(),
-                    vm.platforms()
-            );
-
-        /*
          * Workaround for https://gitlab.gnome.org/GNOME/glib/-/issues/3524
          */
         if (element instanceof Type t

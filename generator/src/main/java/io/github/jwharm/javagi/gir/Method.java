@@ -49,6 +49,7 @@ public final class Method extends Multiplatform implements Callable {
                 .filter(VirtualMethod.class::isInstance)
                 .map(VirtualMethod.class::cast)
                 .filter(vm -> name().equals(vm.attr("invoker")))
+                .filter(vm -> vm.equalTypeSignature(this))
                 .findAny()
                 .orElse(null);
     }
