@@ -20,7 +20,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     <dependency>
       <groupId>io.github.jwharm.javagi</groupId>
       <artifactId>gtk</artifactId>
-      <version>0.11.1</version>
+      <version>0.11.2</version>
     </dependency>
     ```
 
@@ -32,7 +32,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation 'io.github.jwharm.javagi:gtk:0.11.1'
+        implementation 'io.github.jwharm.javagi:gtk:0.11.2'
     }
     ```
 
@@ -44,20 +44,20 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("io.github.jwharm.javagi:gtk:0.11.1")
+        implementation("io.github.jwharm.javagi:gtk:0.11.2")
     }
     ```
 
 === "Scala SBT"
 
     ```scala
-    libraryDependencies += "io.github.jwharm.javagi" % "gtk" % "0.11.1"
+    libraryDependencies += "io.github.jwharm.javagi" % "gtk" % "0.11.2"
     ```
 
 === "Leiningen"
 
     ```clojure
-    [io.github.jwharm.javagi/gtk "0.11.1"]
+    [io.github.jwharm.javagi/gtk "0.11.2"]
     ```
 
 === "bld"
@@ -67,7 +67,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     scope(main)
         .include(dependency("io.github.jwharm.javagi",
                             "gtk",
-                            version(0,11,1)));
+                            version(0,11,2)));
     ```
 
 This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gst`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=io.github.jwharm.javagi).
