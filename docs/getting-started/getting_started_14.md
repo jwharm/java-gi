@@ -12,13 +12,13 @@ To install it, run :
 === "Ubuntu/Debian"
 
     ```bash
-    apt-get install gtk-3-examples
+    apt-get install gtk-4-examples
     ```
 
 === "Fedora/RHEL"
 
     ```bash
-    dnf install gtk3-devel
+    dnf install gtk4-devel-tools
     ```
 
 
@@ -51,12 +51,12 @@ First, we install the software to compile GTK application resources :
 === "Fedora/RHEL"
 
     ```bash
-    dnf install glib2-devel-2.82.2-1.fc41.x86_64
+    dnf install glib2-devel
     ```
 
 #### GTK resources file
 
-Then, we create the GTK XML resource file in our Java resources folder (i.e `src/main/resources`) ; let's call it `ouapp.gresource.xml` :
+Then, we create the GTK XML resource file in our Java resources folder (i.e `src/main/resources`) ; let's call it `ourapp.gresource.xml` :
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
