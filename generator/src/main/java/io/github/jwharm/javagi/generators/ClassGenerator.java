@@ -142,10 +142,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         }
 
         if ("GObject".equals(cls.cType()))
-            builder.addMethod(gobjectConstructor())
-                    .addMethod(gobjectConstructorVarargs())
-                    .addMethod(gobjectClassConstructor())
-                    .addMethod(gobjectClassConstructorVarargs())
+            builder.addMethod(gobjectClassConstructor())
+                    .addMethod(gobjectFactory())
+                    .addMethod(gobjectFactoryVarargs())
+                    .addMethod(gobjectClassFactory())
+                    .addMethod(gobjectClassFactoryVarargs())
                     .addMethod(gobjectGetProperty())
                     .addMethod(gobjectSetProperty())
                     .addMethod(gobjectBindProperty())
@@ -224,7 +225,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .build();
     }
 
-    private MethodSpec gobjectConstructor() {
+    private MethodSpec gobjectFactory() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
                     Creates a new GObject instance of the provided GType.
@@ -243,7 +244,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .build();
     }
 
-    private MethodSpec gobjectConstructorVarargs() {
+    private MethodSpec gobjectFactoryVarargs() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
                     Creates a new GObject instance of the provided GType and with the
@@ -266,7 +267,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .build();
     }
 
-    private MethodSpec gobjectClassConstructor() {
+    private MethodSpec gobjectClassFactory() {
         var paramType = ParameterizedTypeName.get(
                 ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
 
@@ -292,7 +293,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .build();
     }
 
-    private MethodSpec gobjectClassConstructorVarargs() {
+    private MethodSpec gobjectClassFactoryVarargs() {
         var paramType = ParameterizedTypeName.get(
                 ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
 
@@ -319,6 +320,35 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                         ClassNames.TYPE_CACHE)
                 .addStatement("return $T.newGObjectWithProperties(_type, propertyNamesAndValues)",
                         ClassNames.PROPERTIES)
+                .build();
+    }
+
+    private MethodSpec gobjectClassConstructor() {
+        var paramType = ParameterizedTypeName.get(
+                ClassName.get(java.lang.Class.class), TypeVariableName.get("?"));
+
+        return MethodSpec.constructorBuilder()
+                .addJavadoc("""
+                    Creates a new instance of a GObject-derived class with the provided
+                    property values. For your own GObject-derived Java classes, a GType
+                    must have been registered using {@code Types.register(Class<?>)}
+                    
+                    @param  objectClass the Java class of the new GObject
+                    @param  propertyNamesAndValues pairs of property names and values
+                            (Strings and Objects). Does not need to be null-terminated.
+                    @return the newly created GObject instance
+                    @throws ClassCastException invalid property name
+                    """)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(paramType, "objectClass")
+                .addParameter(Object[].class, "propertyNamesAndValues")
+                .varargs(true)
+                .addStatement("this(constructNew($1T.getType(objectClass),$W" +
+                                "(String) $2T.first(propertyNamesAndValues),$W" +
+                                "$2T.rest(propertyNamesAndValues)))",
+                        ClassNames.TYPE_CACHE, ClassNames.VARARGS_UTIL)
+                .addStatement("$T.put(handle(), this)",
+                        ClassNames.INSTANCE_CACHE)
                 .build();
     }
 
