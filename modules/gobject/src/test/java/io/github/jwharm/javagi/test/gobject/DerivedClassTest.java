@@ -112,6 +112,18 @@ public class DerivedClassTest {
         assertEquals(input2, object.getProperty("bool-property"));
     }
 
+    @Test
+    public void constructWithClassParameter() {
+        TestObject object = new TestObject();
+        assertEquals(object.readGClass().readGType(), TestObject.gtype);
+
+        String input1 = "abc";
+        boolean input2 = true;
+        TestObject object2 = new TestObject(input1, input2);
+        assertEquals(input1, object2.getProperty("string-property"));
+        assertEquals(input2, object2.getProperty("bool-property"));
+    }
+
     /**
      * Simple GObject-derived class used in the above tests
      */
@@ -120,6 +132,16 @@ public class DerivedClassTest {
         public static Type gtype = Types.register(TestObject.class);
         public TestObject(MemorySegment address) {
             super(address);
+        }
+
+        public TestObject() {
+            super(TestObject.class);
+        }
+
+        public TestObject(String stringValue, boolean booleanValue) {
+            super(TestObject.class,
+                    "string-property", stringValue,
+                    "bool-property", booleanValue);
         }
 
         @ClassInit
