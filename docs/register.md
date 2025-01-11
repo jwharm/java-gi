@@ -22,7 +22,7 @@ It is recommended to register the new gtype in a static block like this:
 === "Java"
 
     ```java
-        {
+        static {
             Types.register(MyObject.class);
         }
     ```
