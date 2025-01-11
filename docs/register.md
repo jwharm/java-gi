@@ -15,17 +15,15 @@ When you extend a Java class from an existing GObject-derived class, Java will t
     ```
 
 
-However, the GObject type system itself will not recognize it as its own class. Therefore, you need to register your class as a new GType. To do this, Java-GI offers an easy-to-use wrapper function: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
+However, the GObject type system itself will not recognize it as its own class. To do that, you need to register your class as a new GType. Java-GI offers an easy-to-use function to achieve this: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
 
-It is recommended to register the new gtype in a static field `gtype` like this:
+It is recommended to register the new gtype in a static block like this:
 
 === "Java"
 
     ```java
-        private static final Type gtype = Types.register(MyObject.class);
-        
-        public static Type getType() {
-            return gtype;
+        {
+            Types.register(MyObject.class);
         }
     ```
 
@@ -33,27 +31,28 @@ It is recommended to register the new gtype in a static field `gtype` like this:
 
     ```kotlin
         companion object {
-            val gtype: Type = Types.register<MyObject, ObjectClass>(MyObject::class.java)
+            init {
+                Types.register<MyObject, ObjectClass>(MyObject::class.java)
+            }
         }
     ```
 
+By using a static initializer, the GObject type will be registered immediately when the JVM classloader initializes the Java class. Similarly, you can register all your classes in your `main()` method.
 
-By declaring the `gtype` as a static field in this way, it will be registered immediately when the JVM classloader initializes the Java class.
-
-When instantiating a new instance of the object, pass the `gtype` to `GObject::new()`:
+When instantiating a new instance of the object, pass the class to `GObject::new()`:
 
 === "Java"
 
     ```java
         public MyObject() {
-            super(gtype, null);
+            super(MyObject.class);
         }
     ```
 
 === "Kotlin"
 
     ```kotlin
-        constructor() : super(gtype, null)
+        constructor() : super(MyObject::class.java)
     ```
 
 Alternatively, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
@@ -62,7 +61,7 @@ Alternatively, create a static factory method with a descriptive name like `crea
 
     ```java
         public static MyObject create() {
-            return GObject.newInstance(gtype);
+            return GObject.newInstance(MyObject.class);
         }
     ```
 
@@ -73,14 +72,14 @@ Alternatively, create a static factory method with a descriptive name like `crea
             val gtype: Type = ...
             
             fun create(): MyObject {
-                return newInstance(gtype)
+                return newInstance(MyObject::class.java)
             }
         }
     ```
 
 Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
 
-If your class contains GObject class or instance initializer method (see below), the constructor **must** be a static factory method; a regular constructor that calls `super(gtype, null)` **will not work** correctly with GObject initializers.
+If your class contains GObject class or instance initializer method (see below), the constructor **must** be a static factory method; a regular constructor that calls `super(MyObject.class)` **will not work** correctly with GObject initializers.
 
 Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
@@ -100,7 +99,7 @@ Finally, add the default memory-address-constructor for Java-GI Proxy objects:
     }
     ```
 
-Ignore warnings that the constructor appears unused: This constructor should exist in all Java-GI proxy classes. It enables a Java class to be instantiated automatically for new instances returned from native function calls.
+Ignore warnings that the constructor appears unused: This constructor should exist in all Java-GI proxy classes. It enables a Java object to be instantiated automatically for GObject instances returned from native function calls.
 
 If your Java application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -130,7 +129,9 @@ A GType has a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You ca
         ...
     ```
 
-If you don't intend to override the name of the GType, you can safely omit the `@RegisteredType` annotation.
+To prefix all type names in a package with a shared namespace identifier, use the `@Namespace(name="...")` annotation in your `package-info.java` file.
+
+If you don't intend to override the name of the GType, you can safely omit the `@RegisteredType` and `@Namespace` annotations.
 
 ## Method overrides
 
@@ -144,7 +145,9 @@ When a virtual method is not available as a regular instance method, you can saf
 
 ## Properties
 
-You can define GObject properties with the `@Property` annotation on the getter and setter methods. You must annotate both the getter and setter methods (if applicable). All `@Property` annotation parameters are optional.
+When your class contains getter and setter method pairs, Java-GI will register them as GObject properties. For boolean properties, you can also use `isFoo()`/`setFoo()` pairs. Kotlin creates get- and set-methods for Kotlin properties automatically, so in practice a Kotlin property will be registered as a GObject property.
+
+You can define GObject properties with the `@Property` annotation on other methods besides getter/setter pairs, or when you want to change the property name or change other parameters. When you use `@Property`, you must annotate both the getter and setter methods (if applicable).
 
 Example definition of an `int` property with name `n-items`:
 
@@ -153,12 +156,10 @@ Example definition of an `int` property with name `n-items`:
     ```java
     private int size = 0;
 
-    @Property
     public int getNItems() {
         return size;
     }
 
-    @Property
     public void setNItems(int nItems) {
         size = nItems;
     }
@@ -167,27 +168,44 @@ Example definition of an `int` property with name `n-items`:
 === "Kotlin"
 
     ```kotlin
-    var size: Int = 0
-        @Property get
-        @Property set
+    var nItems: Int = 0
     ```
+
+### Property annotation parameters
+
+The `@Property` annotation can be used to set a property name and other attributes. It can also be used to mark methods as properties that don't conform to the getter/setter convention. Finally, a `@Property(skip=true)` annotation can be used to prevent getter/setter methods getting registered as a GObject property.
+
+For properties with a getter and setter method, either both or neither methods must be annotated with `@Property` (or else they will not be recognized by Java-GI as a pair). The annotation parameters must be specified on the getter. They can be specified on the setter too, but only the parameters on the getter are actually used.
 
 The `@Property` annotation accepts the following parameters:
 
-| Parameter      | Type      | Default value |
-|----------------|-----------|---------------|
-| name           | String    | inferred      |
-| type           | ParamSpec | inferred      |
-| readable       | Boolean   | true          |
-| writable       | Boolean   | true          |
-| construct      | Boolean   | false         |
-| constructOnly  | Boolean   | false         |
-| explicitNotify | Boolean   | false         |
-| deprecated     | Boolean   | false         |
+| Parameter      | Type      | Default value   |
+|----------------|-----------|-----------------|
+| name           | String    | inferred        |
+| type           | ParamSpec | inferred        |
+| readable       | Boolean   | true            |
+| writable       | Boolean   | true            |
+| construct      | Boolean   | false           |
+| constructOnly  | Boolean   | false           |
+| explicitNotify | Boolean   | false           |
+| deprecated     | Boolean   | false           |
+| minimumValue   | String    | type-dependent  |
+| maximumValue   | String    | type-dependent  |
+| defaultValue   | String    | type-dependent  |
+| skip           | Boolean   | false           |
+
+All `@Property` annotation parameters are optional.
 
 When the name is not specified, it will be inferred from the name of the method (provided that the method names follow the `getX()`/`setX(...)` pattern), stripping the "get" or "set" prefix and converting CamelCase to kebab-case. If you do specify a name, it must be present on **both** the getter and setter methods (otherwise Java-GI will create two properties, with different names).
 
 When the type is not specified, it will be inferred from the parameter or return-type of the method. When the type is specified, it must be one of the subclasses of `GParamSpec`. The boolean parameters are `GParamFlags` arguments, and are documented [here](https://docs.gtk.org/gobject/flags.ParamFlags.html).
+
+The `@Property` parameters `minimumValue`, `maximumValue` and `defaultValue` expect String values. They are transformed by Java-GI to the proper type using `Boolean.parseBoolean()`, `Integer.parseInt()` etcetera.  Using these three parameters, you can set the minimum, maximum and default values on the `GParamSpec` of a property that was defined in Java.
+
+* The minimum and maximum values are not enforced by Java-GI, so on the Java side the benefits are negligible. In most cases it is advisable to implement minimum and maximum property values in Java itself.
+* The default value is returned by Java-GI for properties that have only a setter method in Java.
+
+When the `skip` parameter is set, the method will *not* be registered as a GObject property.
 
 ## Class and instance init functions
 
@@ -228,6 +246,8 @@ To implement a custom class initializer or instance initializer function, use th
         ...
     }
     ```
+
+Be aware that the instance initializer will only run for objects constructed with a static factory method. A regular constructor that calls `super(MyObject.class)` will not work.
 
 ## Signals
 

@@ -91,7 +91,7 @@ An example Gtk application with a "Hello world" button can be created as follows
         }
         
         public HelloWorld(String[] args) {
-            var app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
+            var app = new Application("my.example.HelloApp");
             app.onActivate(() -> activate(app));
             app.run(args);
         }
@@ -126,7 +126,7 @@ An example Gtk application with a "Hello world" button can be created as follows
     import org.gnome.gtk.*
 
     fun main(args: Array<String>) {
-        val app = Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS)
+        val app = Application("my.example.HelloApp")
         app.onActivate { activate(app) }
         app.run(args)
     }
@@ -180,7 +180,7 @@ An example Gtk application with a "Hello world" button can be created as follows
 
     object HelloWorld {
         def main(args: Array[String]) = {
-            val app = Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS)
+            val app = Application("my.example.HelloApp")
             app.onActivate(() => HelloWorld().activate(app))
             app.run(args);
             ()
