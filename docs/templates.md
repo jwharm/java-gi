@@ -1,6 +1,6 @@
 # Gtk Composite template classes
 
-A class with a `@GtkTemplate` annotation will be registered as a Gtk composite template class. You need to specify the UI file and the name that your class is referred to from the UI file. The path to the UI file is a GResource path.
+A class with a `@GtkTemplate` annotation will be registered as a Gtk composite template class when you register it with `TemplateTypes.register(classname)`. Use the `@GtkTemplate` annotation to specify the UI file and the name that your class is referred to from the UI file. The path to the UI file is a GResource path.
 
 ## Example
 
@@ -9,8 +9,9 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
     ```java
     @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
     public class HelloWindow extends ApplicationWindow {
-
-        private static final Type gtype = TemplateTypes.register(HelloWindow.class);
+        static {
+            TemplateTypes.register(HelloWindow.class);
+        }
 
         @GtkChild
         public HeaderBar header_bar;
@@ -32,7 +33,9 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
     @GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
     class HelloWindow : ApplicationWindow {
         companion object {
-            val gtype: Type = TemplateTypes.register<HelloWindow, Widget>(HelloWindow::class.java)
+            init {
+                TemplateTypes.register(HelloWindow::class.java)
+            }
         }
 
         @GtkChild

@@ -1,5 +1,7 @@
 # Registering new types
 
+## Registration
+
 When you extend a Java class from an existing GObject-derived class, Java will treat it as a subclass of GObject:
 
 === "Java"
@@ -13,7 +15,6 @@ When you extend a Java class from an existing GObject-derived class, Java will t
     ```kotlin
     class MyObject : GObject {
     ```
-
 
 However, the GObject type system itself will not recognize it as its own class. To do that, you need to register your class as a new GType. Java-GI offers an easy-to-use function to achieve this: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
 
@@ -32,12 +33,23 @@ It is recommended to register the new gtype in a static block like this:
     ```kotlin
         companion object {
             init {
-                Types.register<MyObject, ObjectClass>(MyObject::class.java)
+                Types.register(MyObject::class.java)
             }
         }
     ```
 
 By using a static initializer, the GObject type will be registered immediately when the JVM classloader initializes the Java class. Similarly, you can register all your classes in your `main()` method.
+
+With `Types.register()`, a Java class, interface or enum can be registered as a GType:
+
+* Classes must extend {{ javadoc('GObject.TypeInstance') }} or a descendant class, usually `GObject`.
+* Interfaces must extend the Java-GI {{ javadoc('Proxy') }} interface.
+* Enums are just enums. To register a flags (bitfield) type, add the `@Flags` annotation.
+
+!!! info
+    With a flags type, the values will represent individual bits in a bitfield, that are powers of two (1, 2, 4, 8, etc.), so they can be combined using bitwise operations to represent multiple flags simultaneously. Without the `@Flags` annotation, the values will have the ordinal enum values, and cannot be bitwise combined.
+
+## Construction
 
 When instantiating a new instance of the object, pass the class to `GObject::new()`:
 
@@ -209,7 +221,7 @@ When the `skip` parameter is set, the method will *not* be registered as a GObje
 
 ## Class and instance init functions
 
-To implement a custom class initializer or instance initializer function, use the `@ClassInit` and `@InstanceInit` attributes:
+To implement a custom class initializer or instance initializer function, use the `@ClassInit` and `@InstanceInit` annotations:
 
 === "Java"
 
@@ -259,7 +271,9 @@ You can define custom signals in Java classes that extend GObject. For example:
     public class Counter extends GObject {
 
         // register the type
-        private static final Type gtype = Types.register(Counter.class);
+        static {
+            Types.register(Counter.class);
+        }
         
         // declare the signal
         @Signal
@@ -286,7 +300,9 @@ You can define custom signals in Java classes that extend GObject. For example:
 
         // register the type
         companion object {
-            val gtype: Type = Types.register<Counter, ObjectClass>(Counter::class.java)
+            init {
+                Types.register(Counter::class.java)
+            }
         }
         
         // declare the signal
