@@ -23,6 +23,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
@@ -62,6 +63,7 @@ public class ConstructorGenerator {
 
     public Iterable<MethodSpec> generate() {
         MethodSpec constructor = ctor.name().equals("new")
+                    && (! (parent instanceof Class c && c.abstract_()))
                 ? constructor()
                 : namedConstructor();
 
