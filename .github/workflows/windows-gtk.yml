@@ -7,8 +7,11 @@ on:
         description: 'Upload artifacts as release'
         required: true
         type: boolean
-      tag:
-        description: 'The tag to clone'
+      gtktag:
+        description: 'The GTK tag to clone'
+        required: true
+      libadwaitatag:
+        description: 'The libadwaita tag to clone'
         required: true
 
 jobs:
@@ -16,25 +19,88 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: scripts
+          sparse-checkout: |
+            .github
       - name: Install Dependencies
         run: |
           choco uninstall -y mingw strawberryperl cmake.install llvm
           pip install meson ninja
+      - name: Clone pkgconf
+        uses: actions/checkout@v4
+        with:
+          repository: 'pkgconf/pkgconf'
+          submodules: recursive
+          path: pkgconf
+      - name: Build pkgconf
+        run: |
+          meson setup pkgconf\build pkgconf --prefix ${{ github.workspace }}\pkgdist -Dtests=disabled --vsenv
+          meson compile -C pkgconf\build
+          meson install -C pkgconf\build
+          cp pkgdist\bin\pkgconf.exe pkgdist\bin\pkg-config.exe
+          echo "${{ github.workspace }}\pkgdist\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Download winflexbison and gettext
+        run: |
+          curl -L https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip -o win_flex_bison.zip
+          7z x win_flex_bison.zip -owin_flex_bison
+          echo "${{ github.workspace }}\win_flex_bison"  | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          curl -L https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.23-v1.17/gettext0.23-iconv1.17-static-64.zip -o gettext.zip
+          7z x gettext.zip -ogettext
+          echo "${{ github.workspace }}\gettext\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Clone GTK tree
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.gtktag }}
           repository: 'GNOME/gtk'
           submodules: recursive
-      - name: Perform Build
+          path: gtk
+      - name: Build GTK
         run: |
-          meson setup build --prefix ${{ github.workspace }}\dist --buildtype release -Db_pie=true -Dbuild-tests=false -Dmedia-gstreamer=disabled -Dvulkan=disabled --vsenv
-          meson compile -C build
-          meson install -C build
+          meson setup gtk\build gtk --pkg-config-path ${{ github.workspace }}\dist\lib\pkgconfig --build.pkg-config-path ${{ github.workspace }}\dist\lib\pkgconfig --prefix ${{ github.workspace }}\dist --buildtype release --vsenv -Db_pie=true -Dbuild-tests=false -Dmedia-gstreamer=disabled -Dvulkan=disabled
+          meson compile -C gtk\build
+          meson install -C gtk\build
           cd dist\bin
           7z a ..\..\natives.zip *.dll
           7z a ..\..\executable.zip *.exe
           cd ..\..
+          cp natives.zip natives-gtk.zip
+          cp executable.zip executable-gtk.zip
+          echo "${{ github.workspace }}\dist\bin"  | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Clone gobject-introspection
+        uses: actions/checkout@v4
+        with:
+          repository: 'GNOME/gobject-introspection'
+          submodules: recursive
+          path: gobject-introspection
+      - name: Build gobject-introspection
+        run: |
+          meson setup gobject-introspection\build gobject-introspection --prefix ${{ github.workspace }}\dist --buildtype release --vsenv -Db_pie=true -Dglib2:introspection=enabled
+          meson compile -C gobject-introspection\build
+          meson install -C gobject-introspection\build
+      - name: Clone libadwaita tree
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.libadwaitatag }}
+          repository: 'GNOME/libadwaita'
+          submodules: recursive
+          path: libadwaita
+      - name: Build libadwaita
+        run: |
+          git -C libadwaita apply ${{ github.workspace }}/scripts/.github/libadwaita-appstream.diff
+          meson setup libadwaita\build libadwaita --pkg-config-path ${{ github.workspace }}\dist\lib\pkgconfig --build.pkg-config-path ${{ github.workspace }}\dist\lib\pkgconfig --prefix ${{ github.workspace }}\dist --buildtype release --vsenv -Db_pie=true -Dvapi=false -Dexamples=false -Dtests=false -Dintrospection=disabled
+          meson compile -C libadwaita\build
+          meson install -C libadwaita\build
+          cd dist\bin
+          7z a ..\..\natives-adw.zip *.dll
+          7z a ..\..\executable-adw.zip *.exe
+          cd ..\..
+      - name: Finish up
+        run: |
+          cp pkgdist\bin\pkg-config.exe pkg-config.exe
       - name: Library artifact
         uses: actions/upload-artifact@v4
         with:
@@ -47,14 +113,19 @@ jobs:
           name: applications
           path: |
             dist\bin\*.exe
+            pkg-config.exe
       - name: Generate Release
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: softprops/action-gh-release@v2
         if: ${{ inputs.release }}
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "libraries"
-          prerelease: false
-          title: "GTK Natives for ${{ inputs.tag }}"
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          tag_name: "libraries"
+          name: "Natives for GTK ${{ inputs.gtktag }} and libadwaita ${{ inputs.libadwaitatag }}"
           files: |
             natives.zip
             executable.zip
+            natives-gtk.zip
+            executable-gtk.zip
+            natives-adw.zip
+            executable-adw.zip
+            pkg-config.exe
