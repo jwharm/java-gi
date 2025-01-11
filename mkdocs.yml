@@ -22,6 +22,7 @@ nav:
         - Adding a search bar: getting-started/getting_started_11.md
         - Adding a side bar: getting-started/getting_started_12.md
         - Properties: getting-started/getting_started_13.md
+        - Using icons: getting-started/getting_started_14.md
     - Generating bindings: generate.md
 
 theme:
