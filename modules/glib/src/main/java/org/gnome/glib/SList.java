@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package org.gnome.glib;
 
+import io.github.jwharm.javagi.base.TransferOwnership;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.base.ProxyInstance;
 import io.github.jwharm.javagi.interop.Interop;
@@ -69,60 +70,62 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     // operations on an SList can change/remove the head
     private SListNode head;
 
-    // Ownership is "container" (memory of item is not managed) or "full"
-    private final boolean fullOwnership;
+    // Install a cleaner when ownership is "container" (memory of item is not
+    // managed) or "full"
+    private final TransferOwnership ownership;
 
     /**
      * Create a new {@code GLib.SList} wrapper.
      *
-     * @param address       the memory address of the head element of the SList
-     * @param make          a function to construct element instances
-     * @param free          a function to free element instances. If
-     *                      {@code fullOwnership} is {@code false}, this can
-     *                      safely be set to {@code null}.
-     * @param fullOwnership whether to free element instances automatically
+     * @param address   the memory address of the head element of the SList
+     * @param make      a function to construct element instances
+     * @param free      a function to free element instances. If
+     *                  {@code ownership} is "none" or "container", this can
+     *                  safely be set to {@code null}.
+     * @param ownership whether to free memory automatically
      */
     public SList(MemorySegment address,
                  Function<MemorySegment, E> make,
                  Consumer<E> free,
-                 boolean fullOwnership) {
+                 TransferOwnership ownership) {
         this.head = MemorySegment.NULL.equals(address) ? null
                 : new SListNode(address);
         this.make = make;
         this.free = free;
-        this.fullOwnership = fullOwnership;
+        this.ownership = ownership;
 
-        var finalizer = new Finalizer<>(address, make, free, fullOwnership);
-        CLEANER.register(this, finalizer);
+        if (ownership != TransferOwnership.NONE) {
+            var finalizer = new Finalizer<>(address, make, free, ownership);
+            CLEANER.register(this, finalizer);
+        }
     }
 
     /**
      * Create a wrapper for a new, empty {@code GLib.SList}.
      *
-     * @param make          a function to construct element instances
-     * @param free          a function to free element instances. If
-     *                      {@code fullOwnership} is {@code false}, this can
-     *                      safely be set to {@code null}.
-     * @param fullOwnership whether to free element instances automatically
+     * @param make      a function to construct element instances
+     * @param free      a function to free element instances. If
+     *                  {@code ownership} is "none" or "container", this can
+     *                  safely be set to {@code null}.
+     * @param ownership whether to free memory automatically
      */
     public SList(Function<MemorySegment, E> make,
                  Consumer<E> free,
-                 boolean fullOwnership) {
-        this(null, make, free, fullOwnership);
+                 TransferOwnership ownership) {
+        this(null, make, free, ownership);
     }
 
     /**
      * Create a new {@code GLib.SList} wrapper.
      *
-     * @param address       the memory address of the head element of the SList
-     * @param make          a function to construct element instances
-     * @param fullOwnership whether to free element instances automatically
-     *                      with {@link GLib#free}
+     * @param address   the memory address of the head element of the SList
+     * @param make      a function to construct element instances
+     * @param ownership whether to free memory automatically
      */
     public SList(MemorySegment address,
                  Function<MemorySegment, E> make,
-                 boolean fullOwnership) {
-        this(address, make, null, fullOwnership);
+                 TransferOwnership ownership) {
+        this(address, make, null, ownership);
     }
 
     /**
@@ -217,7 +220,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 }
                 index--;
 
-                if (fullOwnership && data != null) {
+                if (ownership == TransferOwnership.FULL && data != null) {
                     if (free == null)
                         GLib.free(data);
                     else
@@ -231,7 +234,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                     throw new IllegalStateException();
 
                 var data = last.readData();
-                if (fullOwnership && data != null) {
+                if (ownership == TransferOwnership.FULL && data != null) {
                     if (free == null)
                         GLib.free(data);
                     else
@@ -459,7 +462,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     private record Finalizer<E>(MemorySegment address,
                                 Function<MemorySegment, E> make,
                                 Consumer<E> free,
-                                boolean fullOwnership) implements Runnable {
+                                TransferOwnership ownership) implements Runnable {
         public void run() {
             if (address == null || MemorySegment.NULL.equals(address))
                 return;
@@ -467,7 +470,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
             // The calls to GLib.free() and SListNode.free() must run on the
             // main thread, not in the Cleaner thread.
             SourceFunc action = () -> {
-                if (fullOwnership) {
+                if (ownership == TransferOwnership.FULL) {
                     var node = new SListNode(address);
                     do {
                         if (free == null)

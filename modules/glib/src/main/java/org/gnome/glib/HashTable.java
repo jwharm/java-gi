@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,6 +20,7 @@
 package org.gnome.glib;
 
 import io.github.jwharm.javagi.base.Out;
+import io.github.jwharm.javagi.base.TransferOwnership;
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.interop.Interop;
 import io.github.jwharm.javagi.interop.MemoryCleaner;
@@ -403,7 +404,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeKey, null, false);
+        return new List<>(_result, makeKey, null, TransferOwnership.CONTAINER);
     }
 
     /**
@@ -441,7 +442,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
                 throw new AssertionError(_err);
             }
             length.set(_lengthPointer.get(ValueLayout.JAVA_INT, 0));
-            return Interop.getAddressArrayFrom(_result, length.get().intValue(), true);
+            return Interop.getAddressArrayFrom(_result, length.get(), true);
         }
     }
 
@@ -489,7 +490,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeValue, null, false);
+        return new List<>(_result, makeValue, null, TransferOwnership.CONTAINER);
     }
 
     /**
