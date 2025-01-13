@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -341,7 +341,9 @@ class TypedValueGenerator {
             if (elementDestructor != null)
                 stmt.add(", ").add(elementDestructor);
 
-            return stmt.add(", " + (transferOwnership == FULL)).add(")");
+            return stmt.add(", $transferOwnership:T." + transferOwnership.toString(),
+                            "transferOwnership", ClassNames.TRANSFER_OWNERSHIP)
+                    .add(")");
         }
 
         // Generate constructor call for HashTable with generic types for keys and values

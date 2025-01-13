@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -43,6 +43,7 @@ public final class ClassNames {
     public static final ClassName OUT = get(PKG_BASE, "Out");
     public static final ClassName PROXY = get(PKG_BASE, "Proxy");
     public static final ClassName PROXY_INSTANCE = get(PKG_BASE, "ProxyInstance");
+    public static final ClassName TRANSFER_OWNERSHIP = get(PKG_BASE, "TransferOwnership");
     public static final ClassName UNSUPPORTED_PLATFORM_EXCEPTION = get(PKG_BASE, "UnsupportedPlatformException");
 
     public static final ClassName ARENAS = get(PKG_INTEROP, "Arenas");
