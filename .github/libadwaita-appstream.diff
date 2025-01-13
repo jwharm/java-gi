@@ -3,17 +3,17 @@ index 235f77f4..d7471036 100644
 --- a/src/adw-about-dialog.c
 +++ b/src/adw-about-dialog.c
 @@ -7,7 +7,6 @@
-
+ 
  #include "config.h"
  #include <glib/gi18n-lib.h>
 -#include <appstream.h>
-
+ 
  #include "adw-about-dialog.h"
-
+ 
 @@ -429,12 +428,12 @@ legal_showing_cb (AdwAboutDialog *self)
    self->legal_showing_idle_id = 0;
  }
-
+ 
 -static gboolean
 +/*static gboolean
  get_release_for_version (AsRelease  *rel,
@@ -22,7 +22,7 @@ index 235f77f4..d7471036 100644
    return !g_strcmp0 (as_release_get_version (rel), version);
 -}
 +}*/
-
+ 
  static void
  update_credits_legal_group (AdwAboutDialog *self)
 @@ -2008,7 +2007,8 @@ AdwDialog *
@@ -38,7 +38,7 @@ index 235f77f4..d7471036 100644
 @@ -2126,7 +2126,7 @@ adw_about_dialog_new_from_appdata (const char *resource_path,
        }
      }
-
+ 
 -    /* Handle deprecated SPDX IDs */
 +    /* Handle deprecated SPDX IDs *//*
      for (i = 0; i < G_N_ELEMENTS (license_aliases); i++) {
@@ -47,28 +47,28 @@ index 235f77f4..d7471036 100644
 @@ -2152,7 +2152,7 @@ adw_about_dialog_new_from_appdata (const char *resource_path,
    g_free (application_id);
    g_free (appdata_uri);
-
+ 
 -  return ADW_DIALOG (self);
 +  return ADW_DIALOG (self);*/
  }
-
+ 
  /**
 diff --git a/src/adw-about-window.c b/src/adw-about-window.c
 index 2c17e129..c741283e 100644
 --- a/src/adw-about-window.c
 +++ b/src/adw-about-window.c
 @@ -6,7 +6,6 @@
-
+ 
  #include "config.h"
  #include <glib/gi18n-lib.h>
 -#include <appstream.h>
-
+ 
  #include "adw-about-window.h"
-
+ 
 @@ -421,12 +420,12 @@ legal_showing_cb (AdwAboutWindow *self)
      g_idle_add_once ((GSourceOnceFunc) legal_showing_idle_cb, self);
  }
-
+ 
 -static gboolean
 +/*static gboolean
  get_release_for_version (AsRelease  *rel,
@@ -77,7 +77,7 @@ index 2c17e129..c741283e 100644
    return !g_strcmp0 (as_release_get_version (rel), version);
 -}
 +}*/
-
+ 
  static void
  update_credits_legal_group (AdwAboutWindow *self)
 @@ -2022,7 +2021,8 @@ GtkWidget *
@@ -93,7 +93,7 @@ index 2c17e129..c741283e 100644
 @@ -2140,7 +2140,7 @@ adw_about_window_new_from_appdata (const char *resource_path,
        }
      }
-
+ 
 -    /* Handle deprecated SPDX IDs */
 +    /* Handle deprecated SPDX IDs *//*
      for (i = 0; i < G_N_ELEMENTS (license_aliases); i++) {
@@ -102,18 +102,18 @@ index 2c17e129..c741283e 100644
 @@ -2166,7 +2166,7 @@ adw_about_window_new_from_appdata (const char *resource_path,
    g_free (application_id);
    g_free (appdata_uri);
-
+ 
 -  return GTK_WIDGET (self);
 +  return GTK_WIDGET (self);*/
  }
-
+ 
  /**
 diff --git a/src/meson.build b/src/meson.build
 index 03b6c248..b8ceeec2 100644
 --- a/src/meson.build
 +++ b/src/meson.build
 @@ -313,20 +313,12 @@ gtk_min_version = '>= 4.15.2'
-
+ 
  gio_dep = dependency('gio-2.0', version: glib_min_version)
  gtk_dep = dependency('gtk4', version: gtk_min_version)
 -appstream_dep = dependency('appstream',
@@ -123,7 +123,7 @@ index 03b6c248..b8ceeec2 100644
 -    'stemming=false', 'svg-support=false', 'gir=false',
 -  ],
 -)
-
+ 
  libadwaita_deps = [
    dependency('glib-2.0', version: glib_min_version),
    dependency('fribidi'),
@@ -132,7 +132,7 @@ index 03b6c248..b8ceeec2 100644
 -  appstream_dep,
    cc.find_library('m', required: false),
  ]
-
+ 
 diff --git a/subprojects/appstream.wrap b/subprojects/appstream.wrap
 deleted file mode 100644
 index 4262a04b..00000000
