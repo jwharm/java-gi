@@ -239,41 +239,6 @@ public class InstanceCache {
     }
 
     /**
-     * Get a {@link Proxy} object for the provided native memory address. If a
-     * Proxy object does not yet exist for this address, a new Proxy object is
-     * instantiated and added to the cache. Invalid references are removed from
-     * the cache using a GObject toggle reference.
-     *
-     * @param  address  memory address of the native object
-     * @param  fallback constructor for the Java proxy object
-     * @return a Proxy instance for the provided memory address
-     */
-    public static Proxy get(MemorySegment address,
-                            Function<MemorySegment, ? extends Proxy> fallback,
-                            boolean cache) {
-
-        // Get instance from the cache
-        Proxy instance = lookup(address);
-        if (instance != null)
-            return instance;
-
-        // No instance in cache: Create a new instance
-        Proxy newInstance = fallback.apply(address);
-
-        // Null check on the new instance
-        if (newInstance == null)
-            return null;
-
-        // Cache GObjects
-        if (cache
-                && newInstance instanceof TypeInstance ti
-                && GObjects.typeCheckInstanceIsFundamentallyA(ti, GOBJECT))
-            return put(address, newInstance);
-
-        return newInstance;
-    }
-    
-    /**
      * Add the new GObject instance to the cache. Floating references are
      * sunk, and a toggle reference is installed.
      *
