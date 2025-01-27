@@ -4,7 +4,7 @@ jdk = "22"
 cairo = "1.18.4.1"
 picocli = "4.7.6"
 javapoet = "1.13.0"
-annotations = "26.0.1"
+annotations = "26.0.2"
 junit = "5.11.4"
 
 [libraries]
