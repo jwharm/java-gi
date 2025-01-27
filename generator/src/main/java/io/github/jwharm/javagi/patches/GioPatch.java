@@ -141,17 +141,19 @@ public class GioPatch implements Patch {
             return element.withAttribute("java-gi-generic", "1")
                           .withAttribute("java-gi-list-interface", "1");
 
+        // ListStore implements ListModel<T> and supports splice
         if (element instanceof Class c && "ListStore".equals(c.name()))
-            return element.withAttribute("java-gi-generic", "1");
+            return element.withAttribute("java-gi-generic", "1")
+                    .withAttribute("java-gi-list-mutable", "1");
 
         /*
          * Because GListStore implements GListModel, which is patched to
          * implement java.util.List, its `void remove(int)` method conflicts
-         * with List's `boolean remove(int)`. Rename to `removeItem()`.
+         * with List's `boolean remove(int)`. Rename to `removeAt()`.
          */
         if (element instanceof Method m
                 && "g_list_store_remove".equals(m.callableAttrs().cIdentifier()))
-            return element.withAttribute("name", "remove_item");
+            return element.withAttribute("name", "remove_at");
 
         /*
          * File.prefixMatches() is defined as a virtual method with invoker
