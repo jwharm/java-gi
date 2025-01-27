@@ -154,6 +154,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
 
+        if ("GListStore".equals(cls.cType()))
+            builder.addMethod(gListStoreRemoveItem());
+
         if (hasDowncallHandles())
             builder.addType(downcallHandlesClass());
 
@@ -507,6 +510,25 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .varargs(true)
                 .addStatement("return $T.emit(this, detailedSignal, params)",
                         ClassNames.SIGNALS)
+                .build();
+    }
+
+    private MethodSpec gListStoreRemoveItem() {
+        return MethodSpec.methodBuilder("removeItem")
+                .addJavadoc("""
+                    Removes the item from this ListStore that is at {@code position}.
+                    {@code position} must be smaller than the current length of the list.
+                    <p>
+                    Use g_list_store_splice() to remove multiple items at the same time
+                    efficiently.
+                    
+                    @param position the position of the item that is to be removed
+                    @deprecated renamed to {@link #removeAt(int)}
+                    """)
+                .addAnnotation(Deprecated.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(int.class, "position")
+                .addStatement("removeAt(position)")
                 .build();
     }
 
