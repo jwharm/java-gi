@@ -42,7 +42,7 @@ By using a static initializer, the GObject type will be registered immediately w
 
 With `Types.register()`, a Java class, interface or enum can be registered as a GType:
 
-* Classes must extend {{ javadoc('GObject.TypeInstance') }} or a descendant class, usually `GObject`.
+* Classes must extend {{ javadoc('GObject') }} or a descendant class.
 * Interfaces must extend the Java-GI {{ javadoc('Proxy') }} interface.
 * Enums are just enums. To register a flags (bitfield) type, add the `@Flags` annotation.
 
@@ -51,23 +51,7 @@ With `Types.register()`, a Java class, interface or enum can be registered as a 
 
 ## Construction
 
-When instantiating a new instance of the object, pass the class to `GObject::new()`:
-
-=== "Java"
-
-    ```java
-        public MyObject() {
-            super(MyObject.class);
-        }
-    ```
-
-=== "Kotlin"
-
-    ```kotlin
-        constructor() : super(MyObject::class.java)
-    ```
-
-Alternatively, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
+When instantiating a new instance of the object, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
 
 === "Java"
 
@@ -81,7 +65,9 @@ Alternatively, create a static factory method with a descriptive name like `crea
 
     ```kotlin
         companion object {
-            val gtype: Type = ...
+            init {
+                Types.register(MyObject::class.java)
+            }
             
             fun create(): MyObject {
                 return newInstance(MyObject::class.java)
@@ -91,7 +77,8 @@ Alternatively, create a static factory method with a descriptive name like `crea
 
 Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
 
-If your class contains GObject class or instance initializer method (see below), the constructor **must** be a static factory method; a regular constructor that calls `super(MyObject.class)` **will not work** correctly with GObject initializers.
+!!! warning
+    The constructor **must** be a static factory method. In a class that directly extends GObject, it's tempting to create a regular constructor that calls `super(gtype, ...)`, but that **will not work** correctly with GObject class or instance initializer methods (see below).
 
 Finally, add the default memory-address-constructor for Java-GI Proxy objects:
 
@@ -111,7 +98,7 @@ Finally, add the default memory-address-constructor for Java-GI Proxy objects:
     }
     ```
 
-Ignore warnings that the constructor appears unused: This constructor should exist in all Java-GI proxy classes. It enables a Java object to be instantiated automatically for GObject instances returned from native function calls.
+Ignore warnings that the constructor appears unused: This constructor **must** exist in all Java-GI proxy classes. It enables a Java object to be instantiated automatically for GObject instances returned from native function calls.
 
 If your Java application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -259,7 +246,7 @@ To implement a custom class initializer or instance initializer function, use th
     }
     ```
 
-Be aware that the instance initializer will only run for objects constructed with a static factory method. A regular constructor that calls `super(MyObject.class)` will not work.
+Be aware that the instance initializer will only run for objects constructed with a static factory method. A regular constructor that calls `super(gtype, ...)` will not work.
 
 ## Signals
 
