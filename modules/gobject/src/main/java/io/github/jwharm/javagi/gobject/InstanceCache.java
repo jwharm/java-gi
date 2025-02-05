@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -341,6 +341,18 @@ public class InstanceCache {
         return object;
     }
 
+    /**
+     * Construct a new GObject instance and set the provided Java proxy to
+     * its address.
+     *
+     * @param proxy      the Java Proxy for the newly constructed GObject
+     *                   instance
+     * @param objectType the GType, if {@code null} it will be queried from
+     *                   the TypeCache
+     * @param size       the size of the native instance
+     * @param properties pairs of property names and values (optional).
+     *                   A trailing {@code null} will be added automatically.
+     */
     public static void newGObject(GObject proxy,
                                   Type objectType,
                                   long size,

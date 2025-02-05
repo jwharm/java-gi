@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -48,7 +48,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         builder.addJavadoc("Constants and functions that are declared in the global $L namespace.",
                         ns.name())
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addStaticBlock(loadLibraries())
+                .addStaticBlock(staticInitializer())
                 .addMethod(ensureInitialized())
                 .addMethod(registerTypes());
 
@@ -74,7 +74,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         return builder.build();
     }
 
-    private CodeBlock loadLibraries() {
+    private CodeBlock staticInitializer() {
+        // Load libraries
         CodeBlock.Builder block = CodeBlock.builder()
                 .beginControlFlow("switch ($T.getRuntimePlatform())",
                         ClassNames.PLATFORM);
@@ -113,8 +114,19 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             }
         }
 
-        return block.endControlFlow()
-                .addStatement("registerTypes()")
+        block.endControlFlow();
+
+        // Type registration functions for GObject and Gtk
+        if ("GObject".equals(ns.name()))
+            block.addStatement("$1T.setTypeRegisterFunction($2T.class, $3T::register)",
+                    ClassNames.TYPE_CACHE, ClassNames.G_OBJECT, ClassNames.TYPES);
+
+        if ("Gtk".equals(ns.name()))
+            block.addStatement("$1T.setTypeRegisterFunction($2T.class, $3T::register)",
+                    ClassNames.TYPE_CACHE, ClassNames.GTK_WIDGET, ClassNames.TEMPLATE_TYPES);
+
+        // Cache all generated types
+        return block.addStatement("registerTypes()")
                 .build();
     }
 

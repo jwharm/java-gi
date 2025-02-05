@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.gnome.glib.Type;
+import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeInstance;
 
@@ -47,6 +48,14 @@ public class TypeCache {
 
     private final static Map<Class<?>, Type> classToTypeMap
             = new ConcurrentHashMap<>();
+
+    private static final Map<Class<? extends GObject>, Function<Class<? extends GObject>, Type>> typeRegisterFunctions
+            = new ConcurrentHashMap<>();
+
+    public static void setTypeRegisterFunction(Class<? extends GObject> cls,
+                                               Function<Class<? extends GObject>, Type> function) {
+        typeRegisterFunctions.put(cls, function);
+    }
 
     /**
      * Get the constructor from the type registry for the native object
@@ -143,18 +152,45 @@ public class TypeCache {
     }
 
     /**
-     * Return the GType that was registered for this class.
+     * Return the GType that was registered for this class. If no type was
+     * registered yet, this method will try to register it, and then return
+     * the GType.
      *
      * @param  cls a Java class
      * @return the cached GType
      */
     public static Type getType(Class<?> cls) {
         requireNonNull(cls);
+
+        // Class must be a GObject derived class
+        @SuppressWarnings("unchecked")
+        var gobjectClass = (Class<? extends GObject>) cls;
+
+        // Ensure the class is loaded and initialized. This is useful in case
+        // there's static initialization code that needs to be run.
         forceInit(cls);
+
+        // Is the class cached?
         var type = classToTypeMap.get(cls);
-        if (type == null)
+        if (type != null)
+            return type;
+
+        // Register the type: Determine which function to use
+        var classes = typeRegisterFunctions.keySet();
+        var mostSpecific = classes.stream()
+                .filter(c -> c.isAssignableFrom(cls))
+                .max((c0, c1) -> c0.isAssignableFrom(c1) ? -1 : c1.isAssignableFrom(c0) ? 1 : 0);
+
+        // No function found to register this class
+        if (mostSpecific.isEmpty())
             throw new IllegalArgumentException(
-                    "Class " + cls.getSimpleName() + " is not a registered GType");
+                    "Class " + cls.getSimpleName() + " cannot be registered");
+
+        // Run the type registration function
+        var function = typeRegisterFunctions.get(mostSpecific.get());
+
+        function.apply(gobjectClass);
+        type = classToTypeMap.get(cls);
         return type;
     }
 

@@ -31,6 +31,7 @@ public final class ClassNames {
     private static final String PKG_GIO             = "io.github.jwharm.javagi.gio";
     private static final String PKG_GOBJECT         = "io.github.jwharm.javagi.gobject";
     private static final String PKG_GOBJECT_TYPES   = "io.github.jwharm.javagi.gobject.types";
+    private static final String PKG_GTK_TYPES       = "io.github.jwharm.javagi.gtk.types";
 
     public static final ClassName CONSTANTS = get(PKG_TOPLEVEL, "Constants");
 
@@ -72,6 +73,8 @@ public final class ClassNames {
     public static final ClassName TYPE_CACHE = get(PKG_GOBJECT_TYPES, "TypeCache");
     public static final ClassName TYPES = get(PKG_GOBJECT_TYPES, "Types");
 
+    public static final ClassName TEMPLATE_TYPES = get(PKG_GTK_TYPES, "TemplateTypes");
+
     // Some frequently used class names
     public final static ClassName G_BYTE_ARRAY = get("org.gnome.glib", "ByteArray");
     public final static ClassName G_ERROR = get("org.gnome.glib", "GError");
@@ -86,6 +89,8 @@ public final class ClassNames {
     public final static ClassName G_TYPE_CLASS = get("org.gnome.gobject", "TypeClass");
     public final static ClassName G_TYPE_INTERFACE = get("org.gnome.gobject", "TypeInterface");
     public final static ClassName G_TYPE_INSTANCE = get("org.gnome.gobject", "TypeInstance");
+
+    public final static ClassName GTK_WIDGET = get("org.gnome.gtk", "Widget");
 
     // The type variable used for <T extends GObject>
     public final static TypeVariableName GENERIC_T = TypeVariableName.get("T", G_OBJECT);

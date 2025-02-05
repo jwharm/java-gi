@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,6 +23,7 @@ import io.github.jwharm.javagi.gobject.annotations.ClassInit;
 import io.github.jwharm.javagi.gobject.annotations.InstanceInit;
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
+import io.github.jwharm.javagi.gobject.types.TypeCache;
 import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
@@ -124,6 +125,12 @@ public class DerivedClassTest {
         assertEquals(input2, object2.getProperty("bool-property"));
     }
 
+    @Test
+    public void autoRegisterType() {
+        new AutoRegistered();
+        assertTrue(TypeCache.contains(AutoRegistered.class));
+    }
+
     /**
      * Simple GObject-derived class used in the above tests
      */
@@ -175,6 +182,12 @@ public class DerivedClassTest {
         @Property
         public void setBoolProperty(boolean boolProperty) {
             this.boolProperty = boolProperty;
+        }
+    }
+
+    public static class AutoRegistered extends GObject {
+        public AutoRegistered() {
+            super();
         }
     }
 }
