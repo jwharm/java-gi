@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  * the GType of the native object instance.
  */
 public class TypeCache {
-    
+
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
             = new ConcurrentHashMap<>();
 
@@ -174,6 +174,16 @@ public class TypeCache {
                 typeRegister.put(type, ctor);
             classToTypeMap.put(cls, type);
         }
+    }
+
+    /**
+     * Check if this class is already cached.
+     *
+     * @param  cls the class to check
+     * @return true when the class is cached in the TypeCache
+     */
+    public static boolean contains(Class<?> cls) {
+        return classToTypeMap.containsKey(cls);
     }
 
     /**

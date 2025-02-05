@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import static io.github.jwharm.javagi.gir.TransferOwnership.FULL;
 import static io.github.jwharm.javagi.gir.TransferOwnership.NONE;
 import static io.github.jwharm.javagi.util.Conversions.*;
 
@@ -289,6 +288,8 @@ class TypedValueGenerator {
     PartialStatement marshalNativeToJava(Type type, String identifier, boolean upcall) {
         String free = doFree();
         String targetTypeTag = target == null ? null : type.toTypeTag();
+        boolean isTypeInstance = target instanceof Record
+                && "TypeInstance".equals(target.name());
         boolean isTypeClass = target instanceof Record
                                     && "TypeClass".equals(target.name());
 
@@ -360,7 +361,7 @@ class TypedValueGenerator {
 
         }
 
-        if ((target instanceof Record && !isTypeClass)
+        if ((target instanceof Record && !isTypeInstance && !isTypeClass)
                 || target instanceof Union
                 || target instanceof Boxed
                 || (target instanceof Alias a && a.lookup() instanceof Record))
@@ -378,7 +379,8 @@ class TypedValueGenerator {
         if (target instanceof Callback)
             return PartialStatement.of("null /* Unsupported parameter type */");
 
-        boolean hasGType = target instanceof Class
+        boolean hasGType = isTypeInstance
+                || target instanceof Class
                 || target instanceof Interface
                 || (target instanceof Alias a
                     && (a.lookup() instanceof Class || a.lookup() instanceof Interface));
@@ -389,6 +391,7 @@ class TypedValueGenerator {
         if (target instanceof Class
                 || target instanceof Interface
                 || (target instanceof Alias a && a.isProxy())
+                || isTypeInstance
                 || isTypeClass)
             return PartialStatement.of(
                         "($" + targetTypeTag + ":T) $instanceCache:T." + cacheFunction + "(" + identifier + ", ")

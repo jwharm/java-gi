@@ -135,13 +135,12 @@ public class DerivedClassTest {
         }
 
         public TestObject() {
-            super(TestObject.class);
+            super();
         }
 
         public TestObject(String stringValue, boolean booleanValue) {
-            super(TestObject.class,
-                    "string-property", stringValue,
-                    "bool-property", booleanValue);
+            super("string-property", stringValue,
+                  "bool-property", booleanValue);
         }
 
         @ClassInit
@@ -154,7 +153,7 @@ public class DerivedClassTest {
             instanceInitHasRun = true;
         }
 
-        private String stringProperty = null;
+        private String stringProperty;
 
         @Property(name="string-property")
         public String getStringProperty() {
@@ -166,7 +165,7 @@ public class DerivedClassTest {
             this.stringProperty = value;
         }
 
-        private boolean boolProperty = false;
+        private boolean boolProperty;
 
         @Property // name will be inferred: "bool-property"
         public boolean getBoolProperty() {

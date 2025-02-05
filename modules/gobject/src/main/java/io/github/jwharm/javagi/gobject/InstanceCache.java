@@ -24,6 +24,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -45,38 +47,90 @@ import io.github.jwharm.javagi.base.Proxy;
  */
 public class InstanceCache {
 
-    private sealed interface Ref permits Ref.Strong, Ref.Weak {
-
-        record Strong(Proxy proxy) implements Ref {
-            public Proxy get() {
+    /*
+     * The Ref type represents either a strong or weak reference to a Java
+     * proxy for a GObject. When a toggle-notify event is received, the cached
+     * Ref is toggled between strong and weak.
+     */
+    private sealed interface Ref<T> permits Ref.Strong, Ref.Weak {
+        record Strong<T>(T proxy) implements Ref<T> {
+            public T get() {
                 return proxy;
             }
         }
 
-        record Weak(WeakReference<Proxy> proxy) implements Ref {
-            Weak(Proxy proxy) {
+        record Weak<T>(WeakReference<T> proxy) implements Ref<T> {
+            Weak(T proxy) {
                 this(new WeakReference<>(proxy));
             }
-            public Proxy get() {
+            public T get() {
                 return proxy == null ? null : proxy.get();
             }
         }
 
-        Proxy get();
+        T get();
 
-        default Ref asWeak() {
-            return this instanceof Weak ? this : new Weak(get());
+        default Ref<T> asWeak() {
+            return this instanceof Weak ? this : new Weak<>(get());
         }
 
-        default Ref asStrong() {
-            return this instanceof Strong ? this : new Strong(get());
+        default Ref<T> asStrong() {
+            return this instanceof Strong ? this : new Strong<>(get());
         }
     }
 
-    private static final ConcurrentHashMap<MemorySegment, Ref> references
+    /*
+     * Stack of GObjects currently under construction. For these objects a
+     * Java proxy was created, but `g_object_new` has not yet completed so
+     * they don't have a memory address yet.
+     *
+     * This is a stack, not a plain reference, because one object can trigger
+     * the creation of another object during initialization.
+     *
+     * The stack uses a ThreadLocal variable, so concurrently created objects
+     * will not interfere with each other.
+     */
+    private static final class ConstructStack<T> {
+        private final ThreadLocal<ArrayList<T>> CONSTRUCT_STACK;
+
+        ConstructStack() {
+            CONSTRUCT_STACK = new ThreadLocal<>();
+            CONSTRUCT_STACK.set(new ArrayList<>());
+        }
+
+        boolean isEmpty() {
+            return CONSTRUCT_STACK.get().isEmpty();
+        }
+
+        void push(T object) {
+            CONSTRUCT_STACK.get().add(object);
+        }
+
+        T peek() {
+            return CONSTRUCT_STACK.get().getLast();
+        }
+
+        T pop() {
+            T object = peek();
+            CONSTRUCT_STACK.get().removeLast();
+            return object;
+        }
+    }
+
+    private static final ConstructStack<GObject> constructStack
+            = new ConstructStack<>();
+
+    private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references
             = new ConcurrentHashMap<>();
 
     private static final Cleaner CLEANER = Cleaner.create();
+
+    private static final MethodHandle g_object_new =
+            Interop.downcallHandle(
+                    "g_object_new",
+                    FunctionDescriptor.of(ValueLayout.ADDRESS,
+                            ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+                    true);
 
     private static final MethodHandle g_object_add_toggle_ref =
             Interop.downcallHandle(
@@ -137,7 +191,7 @@ public class InstanceCache {
             return null;
 
         // Get instance from cache
-        Ref ref = references.get(address);
+        var ref = references.get(address);
         return ref == null ? null : ref.get();
     }
 
@@ -174,6 +228,20 @@ public class InstanceCache {
         // Null check on the new instance
         if (newInstance == null)
             return null;
+
+        // If this instance is newly constructed
+        if (!constructStack.isEmpty()
+                && newInstance instanceof TypeInstance ti) {
+            var proxy = constructStack.peek();
+            var actualType = ti.readGClass().readGType();
+            var creatingType = TypeCache.getType(proxy.getClass());
+            if (actualType.equals(creatingType)) {
+                proxy.address = newInstance.handle();
+                put(address, proxy);
+                constructStack.pop();
+                return proxy;
+            }
+        }
 
         // Cache GObjects
         if (cache
@@ -248,7 +316,7 @@ public class InstanceCache {
      */
     public static Proxy put(MemorySegment address, Proxy object) {
         // If it was already cached, putIfAbsent() will return the existing one
-        Ref existing = references.putIfAbsent(address, new Ref.Strong(object));
+        var existing = references.putIfAbsent(address, new Ref.Strong<>(object));
         if (existing != null)
             return existing.get();
 
@@ -271,6 +339,46 @@ public class InstanceCache {
 
         // Return the new instance.
         return object;
+    }
+
+    public static void newGObject(GObject proxy,
+                                  Type objectType,
+                                  long size,
+                                  Object... properties) {
+        // Split varargs into first property name and the rest
+        String first;
+        Object[] rest;
+        if (properties == null || properties.length == 0) {
+            first = null;
+            rest = new Object[] {};
+        } else {
+            if (properties.length == 1)
+                throw new IllegalArgumentException("Invalid number of arguments");
+            if (properties[0] instanceof String string) {
+                first = string;
+                rest = Arrays.copyOfRange(properties, 1, properties.length + 1);
+            } else {
+                throw new IllegalArgumentException("First argument is not a String");
+            }
+        }
+
+        // Invoke g_object_new() and let the proxy point to its address
+        try (var _arena = Arena.ofConfined()) {
+            constructStack.push(proxy);
+            if (objectType == null)
+                objectType = TypeCache.getType(proxy.getClass());
+            try {
+                var address = (MemorySegment) g_object_new.invokeExact(
+                        objectType.getValue().longValue(),
+                        (MemorySegment) (first == null ? MemorySegment.NULL
+                                : Interop.allocateNativeString(first, _arena)),
+                        rest);
+                if (proxy.address == null)
+                    proxy.address = address.reinterpret(size);
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+        }
     }
 
     // Calls g_object_add_toggle_ref

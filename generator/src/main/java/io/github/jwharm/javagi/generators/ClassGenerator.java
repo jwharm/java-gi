@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -142,17 +142,17 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         }
 
         if ("GObject".equals(cls.cType()))
-            builder.addMethod(gobjectClassConstructor())
-                    .addMethod(gobjectFactory())
-                    .addMethod(gobjectFactoryVarargs())
+            builder.addMethod(gobjectFactory())
                     .addMethod(gobjectClassFactory())
-                    .addMethod(gobjectClassFactoryVarargs())
                     .addMethod(gobjectGetProperty())
                     .addMethod(gobjectSetProperty())
                     .addMethod(gobjectBindProperty())
                     .addMethod(gobjectConnect())
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
+
+        if (cls.checkIsGObject())
+            builder.addMethod(gobjectConstructor());
 
         if ("GListStore".equals(cls.cType()))
             builder.addMethod(gListStoreRemoveItem());
@@ -231,25 +231,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectFactory() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                    Creates a new GObject instance of the provided GType.
-                    
-                    @param objectType the GType of the new GObject
-                    @return the newly created GObject instance
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(ClassNames.GENERIC_T)
-                .returns(TypeVariableName.get("T"))
-                .addParameter(ClassNames.G_TYPE, "objectType")
-                .addStatement("var _result = constructNew(objectType, null)")
-                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)",
-                        ClassNames.INSTANCE_CACHE, ClassNames.G_OBJECT)
-                .addStatement("return _object")
-                .build();
-    }
-
-    private MethodSpec gobjectFactoryVarargs() {
-        return MethodSpec.methodBuilder("newInstance")
-                .addJavadoc("""
                     Creates a new GObject instance of the provided GType and with the
                     provided property values.
                     
@@ -265,38 +246,16 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(ClassNames.G_TYPE, "objectType")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
-                .addStatement("return $T.newGObjectWithProperties(objectType, propertyNamesAndValues)",
-                        ClassNames.PROPERTIES)
+                .addStatement("var constructor = $T.getConstructor(objectType, null)",
+                        ClassNames.TYPE_CACHE)
+                .addStatement("var proxy = (T) constructor.apply(null)")
+                .addStatement("$T.newGObject(proxy, objectType, getMemoryLayout().byteSize(), propertyNamesAndValues)",
+                        ClassNames.INSTANCE_CACHE)
+                .addStatement("return proxy")
                 .build();
     }
 
     private MethodSpec gobjectClassFactory() {
-        var paramType = ParameterizedTypeName.get(
-                ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
-
-        return MethodSpec.methodBuilder("newInstance")
-                .addJavadoc("""
-                    Creates a new instance of a GObject-derived class. For your own
-                    GObject-derived Java classes, a GType must have been registered using
-                    {@link io.github.jwharm.javagi.gobject.types.Types#register(Class<?>)}
-                    
-                    @param  objectClass the Java class of the new GObject
-                    @return the newly created GObject instance
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(ClassNames.GENERIC_T)
-                .returns(TypeVariableName.get("T"))
-                .addParameter(paramType, "objectClass")
-                .addStatement("var _type = $T.getType(objectClass)",
-                        ClassNames.TYPE_CACHE)
-                .addStatement("var _result = constructNew(_type, null)")
-                .addStatement("T _object = (T) $T.getForType(_result, $T::new, true)",
-                        ClassNames.INSTANCE_CACHE, ClassNames.G_OBJECT)
-                .addStatement("return _object")
-                .build();
-    }
-
-    private MethodSpec gobjectClassFactoryVarargs() {
         var paramType = ParameterizedTypeName.get(
                 ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
 
@@ -319,39 +278,29 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(paramType, "objectClass")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
-                .addStatement("var _type = $T.getType(objectClass)",
+                .addStatement("return newInstance($T.getType(objectClass), propertyNamesAndValues)",
                         ClassNames.TYPE_CACHE)
-                .addStatement("return $T.newGObjectWithProperties(_type, propertyNamesAndValues)",
-                        ClassNames.PROPERTIES)
                 .build();
     }
 
-    private MethodSpec gobjectClassConstructor() {
-        var paramType = ParameterizedTypeName.get(
-                ClassName.get(java.lang.Class.class), TypeVariableName.get("?"));
-
+    private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("""
                     Creates a new instance of a GObject-derived class with the provided
-                    property values. For your own GObject-derived Java classes, a GType
-                    must have been registered using {@code Types.register(Class<?>)}
+                    property names and values. For your own GObject-derived Java classes,
+                    a GType must have been registered using {@code Types.register(Class<?>)}
                     
-                    @param  objectClass the Java class of the new GObject
                     @param  propertyNamesAndValues pairs of property names and values
                             (Strings and Objects). Does not need to be null-terminated.
                     @return the newly created GObject instance
-                    @throws ClassCastException invalid property name
+                    @throws IllegalArgumentException invalid property names or values
                     """)
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(paramType, "objectClass")
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
-                .addStatement("this(constructNew($1T.getType(objectClass),$W" +
-                                "(String) $2T.first(propertyNamesAndValues),$W" +
-                                "$2T.rest(propertyNamesAndValues)))",
-                        ClassNames.TYPE_CACHE, ClassNames.VARARGS_UTIL)
-                .addStatement("$T.put(handle(), this)",
-                        ClassNames.INSTANCE_CACHE)
+                .addStatement("super(($T) null)", MemorySegment.class)
+                .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), propertyNamesAndValues)",
+                        ClassNames.INSTANCE_CACHE, ClassNames.TYPE_CACHE)
                 .build();
     }
 
