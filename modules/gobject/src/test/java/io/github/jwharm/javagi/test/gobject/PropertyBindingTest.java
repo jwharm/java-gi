@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,12 +20,8 @@
 package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
-import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
-
-import java.lang.foreign.MemorySegment;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,8 +32,8 @@ public class PropertyBindingTest {
 
     @Test
     void testPropertyBinding() {
-        Speed kmh = Speed.create(0.0);
-        Speed mph = Speed.create(0.0);
+        Speed kmh = new Speed(0.0);
+        Speed mph = new Speed(0.0);
 
         kmh.<Double, Double>bindProperty("current-speed", mph, "current-speed")
                 .bidirectional()
@@ -53,8 +49,8 @@ public class PropertyBindingTest {
 
     @Test
     void testArgumentValidation() {
-        Speed kmh = Speed.create(0.0);
-        Speed mph = Speed.create(0.0);
+        Speed kmh = new Speed(0.0);
+        Speed mph = new Speed(0.0);
 
         try {
             kmh.<Double, Double>bindProperty("too-fast", mph, "too-fast")
@@ -85,22 +81,11 @@ public class PropertyBindingTest {
 
     @RegisteredType(name="Speed")
     public static class Speed extends GObject {
-        private static final Type type = Types.register(Speed.class);
-        private double currentSpeed = 0.0;
+        private double currentSpeed;
         private final double limit = 70.0;
 
-        public static Type getType() {
-            return type;
-        }
-
-        public Speed(MemorySegment address) {
-            super(address);
-        }
-
-        public static Speed create(double currentSpeed) {
-            return GObject.newInstance(getType(),
-                    "current-speed", currentSpeed,
-                    null);
+        public Speed(double currentSpeed) {
+            super("current-speed", currentSpeed);
         }
 
         public double getCurrentSpeed() {

@@ -97,15 +97,11 @@ public class ClosureTest {
 
     // A simple GObject-derived class with a "num" property
     public static class NumObject extends GObject {
-//        public NumObject(MemorySegment address) {
-//            super(address);
-//        }
+        private int num;
 
         public NumObject() {
             super();
         }
-
-        private int num;
 
         @SuppressWarnings("unused")
         public void setNum(int num) {

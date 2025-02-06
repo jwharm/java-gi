@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,16 +20,14 @@
 package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.base.Proxy;
-import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.annotations.Signal;
+import io.github.jwharm.javagi.gobject.types.TypeCache;
 import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.MemorySegment;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
 
@@ -46,17 +44,29 @@ public class CustomInterfaceTest {
      */
     @Test
     public void testCustomInterface() {
-        assertTrue(Types.IS_INTERFACE(TestInterface.gtype));
-        assertTrue(GObjects.typeIsA(TestObject.gtype, TestInterface.gtype));
+        var instance = new TestObject();
 
-        var instance = GObject.newInstance(TestObject.class);
-        assertTrue(GObjects.typeCheckInstanceIsA(instance, TestInterface.gtype));
+        assertTrue(TypeCache.contains(TestObject.class));
+        assertTrue(TypeCache.contains(TestInterface.class));
+
+        var objectType = TypeCache.getType(TestObject.class);
+        var interfaceType = TypeCache.getType(TestInterface.class);
+
+        assertTrue(Types.IS_INTERFACE(interfaceType));
+        assertTrue(GObjects.typeIsA(objectType, interfaceType));
+        assertTrue(GObjects.typeCheckInstanceIsA(instance, interfaceType));
     }
 
     @Test
     public void testComplexInterface() {
-        var instance = GObject.newInstance(BarClass.class);
-        assertTrue(GObjects.typeCheckInstanceIsA(instance, FooInterface.gtype));
+        var instance = new BarClass();
+
+        assertTrue(TypeCache.contains(FooInterface.class));
+        assertTrue(TypeCache.contains(BarClass.class));
+        var fooType = TypeCache.getType(FooInterface.class);
+        var barType = TypeCache.getType(BarClass.class);
+
+        assertTrue(GObjects.typeCheckInstanceIsA(instance, fooType));
 
         var result = new AtomicInteger(0);
         instance.connect("number-changed", (FooInterface.NumberChanged) result::set);
@@ -66,26 +76,18 @@ public class CustomInterfaceTest {
 
     @RegisteredType(name="JavaGiTestInterface")
     public interface TestInterface extends Proxy {
-        Type gtype = Types.register(TestInterface.class);
     }
 
     @RegisteredType(name="JavaGiTestObjectWithInterface")
     public static class TestObject extends GObject implements TestInterface {
-        public static Type gtype = Types.register(TestObject.class);
-        public TestObject(MemorySegment address) {
-            super(address);
+        public TestObject() {
+            super();
         }
     }
 
-    @RegisteredType(name="JavaGiFooInterface",
-                    prerequisites = {GObject.class})
+    @RegisteredType(name="JavaGiFooInterface", prerequisites = {GObject.class})
     public interface FooInterface extends Proxy {
-        Type gtype = Types.register(FooInterface.class);
-
-        @Property
         int getNumber();
-
-        @Property
         void setNumber(int number);
 
         @Signal
@@ -93,21 +95,19 @@ public class CustomInterfaceTest {
     }
 
     @RegisteredType(name="JavaGiBarClass")
-    public static class BarClass extends GObject
-            implements FooInterface {
-        public static Type gtype = Types.register(BarClass.class);
-        public BarClass(MemorySegment address) {
-            super(address);
+    public static class BarClass extends GObject implements FooInterface {
+        public BarClass() {
+            super();
         }
 
         private int number = 0;
 
-        @Override @Property
+        @Override
         public int getNumber() {
             return number;
         }
 
-        @Override @Property
+        @Override
         public void setNumber(int number) {
             this.number = number;
             emit("number-changed", number);

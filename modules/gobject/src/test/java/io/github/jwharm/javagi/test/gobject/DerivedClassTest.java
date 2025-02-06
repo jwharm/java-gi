@@ -58,7 +58,7 @@ public class DerivedClassTest {
      */
     @Test
     public void initializersHaveRun() {
-        TestObject object = GObject.newInstance(TestObject.gtype);
+        TestObject ignored = GObject.newInstance(TestObject.gtype);
         assertTrue(classInitHasRun);
         assertTrue(instanceInitHasRun);
     }

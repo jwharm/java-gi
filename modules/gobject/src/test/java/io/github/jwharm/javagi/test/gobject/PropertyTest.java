@@ -1,12 +1,28 @@
+/* Java-GI - Java language bindings for GObject-Introspection-based libraries
+ * Copyright (C) 2025 Jan-Willem Harmannij
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.github.jwharm.javagi.test.gobject;
 
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
-import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
-
-import java.lang.foreign.MemorySegment;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,8 +33,7 @@ public class PropertyTest {
 
     @Test
     void testCustomProperties() {
-        Types.register(Dino.class);
-        var dino = GObject.newInstance(Dino.class);
+        var dino = new Dino();
         var gclass = (GObject.ObjectClass) dino.readGClass();
 
         // Check that the properties exist
@@ -79,8 +94,8 @@ public class PropertyTest {
         private int fgh;
         private long xyz;
 
-        public Dino(MemorySegment address) {
-            super(address);
+        public Dino() {
+            super();
         }
 
         // Int property with getter and setter
