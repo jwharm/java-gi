@@ -1264,14 +1264,18 @@ public class Types {
                 applyIfNotNull(customClassInit, typeClass);
             };
 
+            // Get parent TypeClass constructor
+            var typeClassConstructor = TypeCache.getTypeClassConstructor(parentType);
+
             // Register the GType
             Type type;
             if (cls.isInterface()) {
                 type = registerInterface(cls, typeName, memoryLayout, classInit,
-                        constructor, flags);
+                        constructor, typeClassConstructor, flags);
             } else {
                 type = register(parentType, cls, typeName, memoryLayout, classInit,
-                        instanceLayout, instanceInit, constructor, flags);
+                        instanceLayout, instanceInit, constructor,
+                        typeClassConstructor, flags);
 
                 try {
                     @SuppressWarnings("unchecked") // ClassCastException handled below
@@ -1344,6 +1348,7 @@ public class Types {
                                           MemoryLayout interfaceLayout,
                                           Consumer<TypeClass> classInit,
                                           Function<MemorySegment, ? extends Proxy> ctor,
+                                          Function<MemorySegment, ? extends Proxy> typeClassCtor,
                                           Set<TypeFlags> flags) {
         TypeInfo typeInfo = new TypeInfo(
                 (short) interfaceLayout.byteSize(),
@@ -1367,7 +1372,7 @@ public class Types {
         }
 
         // Register the type and constructor in the cache
-        TypeCache.register(cls, type, ctor);
+        TypeCache.register(cls, type, ctor, typeClassCtor);
         return type;
     }
 
@@ -1387,7 +1392,7 @@ public class Types {
                     constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = enumRegisterStatic(name, enumValues);
-        TypeCache.register(cls, type, null);
+        TypeCache.register(cls, type, null, TypeInterface::new);
         return type;
     }
 
@@ -1407,7 +1412,7 @@ public class Types {
                     1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = flagsRegisterStatic(name, flagsValues);
-        TypeCache.register(cls, type, null);
+        TypeCache.register(cls, type, null, null);
         return type;
     }
 
@@ -1489,6 +1494,7 @@ public class Types {
                   MemoryLayout instanceLayout,
                   Consumer<TypeInstance> instanceInit,
                   Function<MemorySegment, ? extends Proxy> constructor,
+                  Function<MemorySegment, ? extends Proxy> typeClassConstructor,
                   Set<TypeFlags> flags) {
 
         Type type = GObjects.typeRegisterStaticSimple(
@@ -1501,7 +1507,7 @@ public class Types {
                 flags
         );
         // Register the type and constructor in the cache
-        TypeCache.register(javaClass, type, constructor);
+        TypeCache.register(javaClass, type, constructor, typeClassConstructor);
         return type;
     }
 

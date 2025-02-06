@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -220,7 +220,7 @@ public class TemplateTypes {
             }, Arena.global());
 
             // Install BuilderJavaScope to call Java signal handler methods
-            widgetClass.setTemplateScope(BuilderJavaScope.newInstance());
+            widgetClass.setTemplateScope(new BuilderJavaScope());
 
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
@@ -288,6 +288,8 @@ public class TemplateTypes {
             Type parentType = TypeCache.getType(parentClass);
             MemoryLayout classLayout = generateClassLayout(cls, name);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
+            Function<MemorySegment, ? extends Proxy> typeClassCtor =
+                    TypeCache.getTypeClassConstructor(parentType);
             Set<TypeFlags> flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
@@ -329,6 +331,7 @@ public class TemplateTypes {
                     instanceLayout,
                     instanceInit,
                     constructor,
+                    typeClassCtor,
                     flags
             );
 

@@ -32,7 +32,6 @@ import java.util.function.Function;
 import io.github.jwharm.javagi.base.Floating;
 import io.github.jwharm.javagi.base.GLibLogger;
 import io.github.jwharm.javagi.gobject.types.TypeCache;
-import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.MainContext;
@@ -254,9 +253,8 @@ public class InstanceCache {
 
     /**
      * Get a {@link Proxy} object for the provided native memory address of a
-     * TypeClass. If a Proxy object does not yet exist for this address, a new
-     * Proxy object is instantiated and added to the cache. The type of the
-     * Proxy object is read from the gtype field of the native TypeClass.
+     * TypeClass. The type of the Proxy object is read from the gtype field of
+     * the native TypeClass.
      *
      * @param  address  memory address of the native object
      * @param  fallback fallback constructor to use when the type is not found
@@ -273,37 +271,21 @@ public class InstanceCache {
             return null;
         }
 
-        // Get constructor from the type registry
+        // Get the GType of the GTypeClass
         Type type = new TypeClass(address).readGType();
-        Function<MemorySegment, ? extends Proxy> ctor =
-                TypeCache.getConstructor(type, null);
-        if (ctor == null)
-            return fallback.apply(address);
+        while (type.getValue() != 0) {
+            // Get the Java GTypeClass constructor for this type
+            Function<MemorySegment, ? extends Proxy> constructor =
+                    TypeCache.getTypeClassConstructor(type);
 
-        // Create a new throw-away instance (without a memory address) so we
-        // can get the Java Class definition.
-        Proxy newInstance = ctor.apply(null);
-        if (newInstance == null)
-            return fallback.apply(address);
+            if (constructor != null)
+                return constructor.apply(address);
 
-        // Get the Java proxy TypeClass definition
-        Class<? extends Proxy> instanceClass = newInstance.getClass();
-        Class<? extends TypeClass> typeClass = Types.getTypeClass(instanceClass);
-        if (typeClass == null)
-            return fallback.apply(address);
+            // Not found: Try the parent type
+            type = GObjects.typeParent(type);
+        }
 
-        // Use the memory address constructor to create a new instance of the
-        // TypeClass
-        ctor = Types.getAddressConstructor(typeClass);
-        if (ctor == null)
-            return fallback.apply(address);
-
-        // Create the instance
-        newInstance = ctor.apply(address);
-        if (newInstance == null)
-            return fallback.apply(address);
-
-        return newInstance;
+        return fallback.apply(address);
     }
 
     /**

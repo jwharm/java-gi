@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -44,6 +44,20 @@ public sealed interface RegisteredType
 
     default ClassName typeName() {
         return toJavaQualifiedType(name(), namespace());
+    }
+
+    default ClassName typeClassName() {
+        Record typeStruct = switch(this) {
+            case Class c -> c.typeStruct();
+            case Interface i -> i.typeStruct();
+            case Alias a -> switch(a.lookup()) {
+                case Class c -> c.typeStruct();
+                case Interface i -> i.typeStruct();
+                case null, default -> null;
+            };
+            default -> null;
+        };
+        return typeStruct == null ? null : typeStruct.typeName();
     }
 
     default String javaType() {

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,10 +19,7 @@
 
 package io.github.jwharm.javagi.test.gobject;
 
-import io.github.jwharm.javagi.gobject.annotations.Property;
-import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.gobject.JavaClosure;
-import org.gnome.glib.Type;
 import org.gnome.gobject.Binding;
 import org.gnome.gobject.BindingFlags;
 import org.gnome.gobject.GObject;
@@ -47,8 +44,8 @@ public class ClosureTest {
     @Test
     public void methodReference() {
         // Create 2 objects, both with a simple "num" property of type int
-        NumObject n1 = GObject.newInstance(NumObject.type);
-        NumObject n2 = GObject.newInstance(NumObject.type);
+        NumObject n1 = new NumObject();
+        NumObject n2 = new NumObject();
 
         // Create a JavaClosure for the "timesTwo" method
         Method timesTwo = null;
@@ -72,8 +69,8 @@ public class ClosureTest {
     @Test
     public void lambda() {
         // Create 2 objects, both with a simple "num" property of type int
-        NumObject n1 = GObject.newInstance(NumObject.type);
-        NumObject n2 = GObject.newInstance(NumObject.type);
+        NumObject n1 = new NumObject();
+        NumObject n2 = new NumObject();
         
         // Create a JavaClosure for the "timesTwo" method
         JavaClosure closure = new JavaClosure((MyInterface) this::timesTwo);
@@ -100,18 +97,22 @@ public class ClosureTest {
 
     // A simple GObject-derived class with a "num" property
     public static class NumObject extends GObject {
-        public static Type type = Types.register(NumObject.class);
-        public NumObject(MemorySegment address) {
-            super(address);
+//        public NumObject(MemorySegment address) {
+//            super(address);
+//        }
+
+        public NumObject() {
+            super();
         }
 
         private int num;
 
         @SuppressWarnings("unused")
-        @Property(name="num") public void setNum(int num) {
+        public void setNum(int num) {
             this.num = num;
         }
-        @Property(name="num") public int getNum() {
+
+        public int getNum() {
             return this.num;
         }
     }

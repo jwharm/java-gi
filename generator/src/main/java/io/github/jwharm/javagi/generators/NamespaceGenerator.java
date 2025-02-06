@@ -141,31 +141,35 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Class c : ns.classes())
-            spec.addCode(register(c.constructorName(), c.typeName()));
+            spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
 
         for (Interface i : ns.interfaces())
-            spec.addCode(register(i.constructorName(), i.typeName()));
+            spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
 
         for (Alias a : ns.aliases()) {
             RegisteredType target = a.lookup();
             if (target instanceof Class c)
-                spec.addCode(register(c.constructorName(), a.typeName()));
+                spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
             if (target instanceof Interface i)
-                spec.addCode(register(i.constructorName(), a.typeName()));
+                spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
         }
 
         for (Boxed b : ns.boxeds())
-            spec.addCode(register(b.constructorName(), b.typeName()));
+            spec.addCode(register(b.constructorName(), b.typeName(), null));
 
         return spec.build();
     }
 
-    private CodeBlock register(PartialStatement constructor, ClassName typeName) {
+    private CodeBlock register(PartialStatement constructor,
+                               ClassName typeName,
+                               ClassName typeClassName) {
         var stmt = PartialStatement.of(
                     "$typeCache:T.register($typeName:T.class, $typeName:T.getType(), ",
                         "typeCache", ClassNames.TYPE_CACHE,
                         "typeName", typeName)
                 .add(constructor)
+                .add(typeClassName == null ? ", null" : ", $typeClassName:T::new",
+                        "typeClassName", typeClassName)
                 .add(");\n");
         return CodeBlock.builder()
                 .addNamed(stmt.format(), stmt.arguments())

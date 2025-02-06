@@ -46,6 +46,9 @@ public class TypeCache {
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
             = new ConcurrentHashMap<>();
 
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
+            = new ConcurrentHashMap<>();
+
     private final static Map<Class<?>, Type> classToTypeMap
             = new ConcurrentHashMap<>();
 
@@ -61,7 +64,7 @@ public class TypeCache {
      * Get the constructor from the type registry for the native object
      * instance at the given memory address. The applicable constructor is
      * determined based on the GType of the native object (as it was registered
-     * using {@link #register(Class, Type, Function)}).
+     * using {@link #register(Class, Type, Function, Function)}).
      *
      * @param address  address of TypeInstance object to obtain the type from
      * @param fallback if none was found, this constructor will be registered
@@ -194,6 +197,11 @@ public class TypeCache {
         return type;
     }
 
+    public static Function<MemorySegment, ? extends Proxy>
+    getTypeClassConstructor(@NotNull Type type) {
+        return typeClassRegister.get(type);
+    }
+
     /**
      * Register the type and constructor function for the provided class
      *
@@ -203,11 +211,14 @@ public class TypeCache {
      */
     public static void register(Class<?> cls,
                                 Type type,
-                                Function<MemorySegment, ? extends Proxy> ctor) {
+                                Function<MemorySegment, ? extends Proxy> ctor,
+                                Function<MemorySegment, ? extends Proxy> typeClassCtor) {
         requireNonNull(cls);
         if (type != null) {
             if (ctor != null)
                 typeRegister.put(type, ctor);
+            if (typeClassCtor != null)
+                typeClassRegister.put(type, typeClassCtor);
             classToTypeMap.put(cls, type);
         }
     }
