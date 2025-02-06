@@ -23,7 +23,7 @@ public class ListModelTest {
     @Test
     public void createListModel() {
         // verify that ListIndexModel works as expected
-        var listIndexModel = ListIndexModel.newInstance(1000);
+        var listIndexModel = new ListIndexModel(1000);
         assertEquals(listIndexModel.getItemType(), ListIndexModel.ListIndex.getType());
         assertEquals(1000, listIndexModel.getNItems());
 

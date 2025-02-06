@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,11 +19,10 @@
 
 package io.github.jwharm.javagi.gio;
 
-import java.lang.foreign.*;
 import java.util.ArrayList;
 
 import io.github.jwharm.javagi.gobject.annotations.Property;
-import io.github.jwharm.javagi.gobject.types.Types;
+import io.github.jwharm.javagi.gobject.types.TypeCache;
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
@@ -36,7 +35,6 @@ import org.gnome.gobject.*;
 public class ListIndexModel extends GObject
         implements ListModel<ListIndexModel.ListIndex> {
 
-    private static final Type gtype = Types.register(ListIndexModel.class);
     private ArrayList<ListIndex> items = new ArrayList<>();
 
     /**
@@ -45,27 +43,28 @@ public class ListIndexModel extends GObject
      * @return the GType
      */
     public static Type getType() {
-        return gtype;
+        return TypeCache.getType(ListIndexModel.class);
     }
 
     /**
      * Construct a ListIndexModel for the provided memory address.
      *
-     * @param address the memory address of the instance in native memory
+     * @param size the initial list size
      */
-    public ListIndexModel(MemorySegment address) {
-        super(address);
+    public ListIndexModel(int size) {
+        super();
+        setSize(size);
     }
 
     /**
      * Construct a new ListIndexModel with the provided size.
      *
      * @param size the initial size of the list model
+     * @deprecated Replaced with {@link #ListIndexModel(int)}
      */
+    @Deprecated
     public static ListIndexModel newInstance(int size) {
-        ListIndexModel model = GObject.newInstance(gtype);
-        model.setSize(size);
-        return model;
+        return new ListIndexModel(size);
     }
 
     /**
@@ -78,23 +77,23 @@ public class ListIndexModel extends GObject
         int oldSize = items.size();
         items = new ArrayList<>(size);
         for (int i = 0; i < size; i++)
-            items.add(ListIndex.newInstance(i));
+            items.add(new ListIndex(i));
         itemsChanged(0, oldSize, size);
     }
 
     /**
      * Get the gtype of {@link ListIndex}.
      *
-     * @return always returns the value of {@link ListIndex#gtype}
+     * @return always returns the value of {@link ListIndex#getType}
      */
     @Property(constructOnly = true)
     @Override
     public Type getItemType() {
-        return ListIndex.gtype;
+        return ListIndex.getType();
     }
 
     /**
-     * No-op. The item type is always {@link ListIndex#gtype}.
+     * No-op. The item type is always {@link ListIndex#getType}.
      *
      * @param itemType ignored
      */
@@ -131,9 +130,7 @@ public class ListIndexModel extends GObject
      * Small GObject-derived class with a numeric "index" field.
      */
     public static class ListIndex extends GObject {
-
-        private static final Type gtype = Types.register(ListIndex.class);
-        private int index;
+        private final int index;
 
         /**
          * Return the GType for the ListIndex.
@@ -141,28 +138,17 @@ public class ListIndexModel extends GObject
          * @return the GType
          */
         public static Type getType() {
-            return gtype;
+            return TypeCache.getType(ListIndex.class);
         }
 
         /**
          * Construct a new ListIndex Proxy instance.
          *
-         * @param address the memory address of the native object instance
+         * @param value the index value
          */
-        public ListIndex(MemorySegment address) {
-            super(address);
-        }
-
-        /**
-         * Construct a new ListIndex with the provided value.
-         *
-         * @param  value the value of the ListIndex instance
-         * @return a new ListIndex instance
-         */
-        public static ListIndex newInstance(int value) {
-            ListIndex instance = GObject.newInstance(gtype);
-            instance.index = value;
-            return instance;
+        public ListIndex(int value) {
+            super();
+            this.index = value;
         }
 
         /**

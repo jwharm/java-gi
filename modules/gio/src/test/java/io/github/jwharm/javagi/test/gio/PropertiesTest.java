@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,7 +23,6 @@ import io.github.jwharm.javagi.gobject.types.Properties;
 
 import org.gnome.gio.Application;
 import org.gnome.gio.ApplicationFlags;
-import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -39,14 +38,14 @@ public class PropertiesTest {
 
     @Test
     public void getProperty() {
-        Application app = new Application("io.github.jwharm.javagi.test.Application", ApplicationFlags.DEFAULT_FLAGS);
+        Application app = new Application("io.github.jwharm.javagi.test.Application");
         String applicationId = (String) app.getProperty("application-id");
         assertEquals("io.github.jwharm.javagi.test.Application", applicationId);
     }
 
     @Test
     public void setProperty() {
-        Application app = new Application("io.github.jwharm.javagi.test.Application", ApplicationFlags.DEFAULT_FLAGS);
+        Application app = new Application("io.github.jwharm.javagi.test.Application");
         app.setProperty("application-id", "my.example.Application");
         String applicationId = (String) Properties.getProperty(app, "application-id");
         assertEquals("my.example.Application", applicationId);
@@ -54,8 +53,7 @@ public class PropertiesTest {
 
     @Test
     public void newGObjectWithProperties() {
-        Application app = GObject.newInstance(
-                Application.getType(),
+        Application app = new Application(
                 "application-id", "io.github.jwharm.javagi.test.Application",
                 "flags", ApplicationFlags.DEFAULT_FLAGS);
         String applicationId = (String) Properties.getProperty(app, "application-id");
@@ -68,9 +66,7 @@ public class PropertiesTest {
         Application app = Application.builder()
                 .setApplicationId("javagi.test.Application1")
                 .setFlags(Set.of(ApplicationFlags.IS_SERVICE))
-                .onNotify("application-id", _ -> {
-                    notified.set(true);
-                })
+                .onNotify("application-id", _ -> notified.set(true))
                 .build();
 
         // Assert that the properties are set

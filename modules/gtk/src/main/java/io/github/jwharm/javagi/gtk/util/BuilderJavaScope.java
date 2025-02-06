@@ -22,14 +22,12 @@ package io.github.jwharm.javagi.gtk.util;
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkCallback;
 import io.github.jwharm.javagi.gobject.JavaClosure;
-import io.github.jwharm.javagi.gtk.types.TemplateTypes;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 import org.gnome.gtk.*;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -49,33 +47,15 @@ import static io.github.jwharm.javagi.Constants.LOG_DOMAIN;
 public final class BuilderJavaScope extends BuilderCScope
         implements BuilderScope {
 
-    private static final Type gtype = TemplateTypes.register(BuilderJavaScope.class);
-
     static {
         Gtk.javagi$ensureInitialized();
     }
 
     /**
-     * Memory address constructor for instantiating a Java proxy object
-     * @param address the memory address of the native object
+     * Default constructor
      */
-    public BuilderJavaScope(MemorySegment address) {
-        super(address);
-    }
-
-    /**
-     * Return the GType of {@link BuilderJavaScope}
-     * @return the GType
-     */
-    public static Type getType() {
-        return gtype;
-    }
-
-    /**
-     * Instantiates a new {@link BuilderScope}
-     */
-    public static BuilderJavaScope newInstance() {
-        return GObject.newInstance(gtype);
+    public BuilderJavaScope() {
+        super();
     }
 
     /**
