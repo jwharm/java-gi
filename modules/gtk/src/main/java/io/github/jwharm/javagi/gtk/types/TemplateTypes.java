@@ -350,15 +350,13 @@ public class TemplateTypes {
      * (GObject-derived) classes.
      *
      * @param  cls the class to register as a new GType
-     * @param  <T> the class must extend {@link GObject}
      * @return the new GType
      */
     @SuppressWarnings("unchecked")
-    public static <T extends GObject, W extends Widget>
-    Type register(Class<T> cls) {
+    public static Type register(Class<?> cls) {
         if (Widget.class.isAssignableFrom(cls)
                 && cls.isAnnotationPresent(GtkTemplate.class)) {
-            return registerTemplate((Class<W>) cls);
+            return registerTemplate((Class<? extends Widget>) cls);
         } else {
             return io.github.jwharm.javagi.gobject.types.Types.register(cls);
         }
