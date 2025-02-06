@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.function.BooleanSupplier;
 
-import io.github.jwharm.javagi.interop.MemoryCleaner;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.gobject.Closure;

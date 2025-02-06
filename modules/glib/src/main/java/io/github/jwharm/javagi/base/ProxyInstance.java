@@ -27,7 +27,7 @@ import java.util.Objects;
  */
 public class ProxyInstance implements Proxy {
 
-    private final MemorySegment address;
+    public MemorySegment address;
 
     /**
      * Create a new {@code ProxyInstance} object for an instance in native

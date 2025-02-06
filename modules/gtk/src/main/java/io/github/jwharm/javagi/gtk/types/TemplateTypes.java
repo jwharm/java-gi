@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -220,7 +220,7 @@ public class TemplateTypes {
             }, Arena.global());
 
             // Install BuilderJavaScope to call Java signal handler methods
-            widgetClass.setTemplateScope(BuilderJavaScope.newInstance());
+            widgetClass.setTemplateScope(new BuilderJavaScope());
 
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
@@ -288,6 +288,8 @@ public class TemplateTypes {
             Type parentType = TypeCache.getType(parentClass);
             MemoryLayout classLayout = generateClassLayout(cls, name);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
+            Function<MemorySegment, ? extends Proxy> typeClassCtor =
+                    TypeCache.getTypeClassConstructor(parentType);
             Set<TypeFlags> flags = getTypeFlags(cls);
 
             // Chain template class init with user-defined class init function
@@ -329,6 +331,7 @@ public class TemplateTypes {
                     instanceLayout,
                     instanceInit,
                     constructor,
+                    typeClassCtor,
                     flags
             );
 
@@ -347,15 +350,13 @@ public class TemplateTypes {
      * (GObject-derived) classes.
      *
      * @param  cls the class to register as a new GType
-     * @param  <T> the class must extend {@link GObject}
      * @return the new GType
      */
     @SuppressWarnings("unchecked")
-    public static <T extends GObject, W extends Widget>
-    Type register(Class<T> cls) {
+    public static Type register(Class<?> cls) {
         if (Widget.class.isAssignableFrom(cls)
                 && cls.isAnnotationPresent(GtkTemplate.class)) {
-            return registerTemplate((Class<W>) cls);
+            return registerTemplate((Class<? extends Widget>) cls);
         } else {
             return io.github.jwharm.javagi.gobject.types.Types.register(cls);
         }

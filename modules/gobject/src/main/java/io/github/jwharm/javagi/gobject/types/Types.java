@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,7 +21,6 @@ package io.github.jwharm.javagi.gobject.types;
 
 import io.github.jwharm.javagi.base.Proxy;
 import io.github.jwharm.javagi.gobject.annotations.*;
-import io.github.jwharm.javagi.gobject.InstanceCache;
 import io.github.jwharm.javagi.interop.Interop;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
@@ -707,19 +706,19 @@ public class Types {
      * @return the TypeClass class, or null if not found
      */
     @SuppressWarnings("unchecked")
-    public static Class<? extends TypeClass> getTypeClass(Class<?> cls) {
+    public static <TC extends TypeClass> Class<TC> getTypeClass(Class<?> cls) {
 
         // Get the type-struct. This is an inner class that extends ObjectClass.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
             if (TypeClass.class.isAssignableFrom(gclass)) {
-                return (Class<? extends TypeClass>) gclass;
+                return (Class<TC>) gclass;
             }
         }
         // If the type-struct is unavailable, get it from the parent class.
         if (cls.getSuperclass() != null) {
             for (Class<?> gclass : cls.getSuperclass().getDeclaredClasses()) {
                 if (TypeClass.class.isAssignableFrom(gclass)) {
-                    return (Class<? extends TypeClass>) gclass;
+                    return (Class<TC>) gclass;
                 }
             }
         }
@@ -1013,13 +1012,6 @@ public class Types {
                     iface);
             return null;
         }
-        var constructor = getAddressConstructor(typeStruct);
-        if (constructor == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find constructor in TypeInterface %s\n",
-                    typeStruct);
-            return null;
-        }
 
         // Find interface initializer function
         for (Method method : cls.getDeclaredMethods()) {
@@ -1036,8 +1028,7 @@ public class Types {
             // and logs exceptions
             return (giface) -> {
                 try {
-                    TI ifaceInstance = constructor.apply(giface.handle());
-                    method.invoke(null, ifaceInstance);
+                    method.invoke(null, giface);
                 } catch (Exception e) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                             "Exception in %s interface init: %s\n",
@@ -1184,6 +1175,9 @@ public class Types {
      * @return the GType of the registered Java type
      */
     public static Type register(Class<?> cls) {
+        if (TypeCache.contains(cls))
+            return TypeCache.getType(cls);
+
         checkClassDefinition(cls);
 
         if (Enum.class.isAssignableFrom(cls)) {
@@ -1253,8 +1247,7 @@ public class Types {
             Set<TypeFlags> flags = getTypeFlags(cls);
 
             if (memoryLayout == null
-                    || ((!cls.isInterface()) && instanceLayout == null)
-                    || constructor == null) {
+                    || ((!cls.isInterface()) && instanceLayout == null)) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                         "Cannot register type %s\n", cls.getSimpleName());
                 return null;
@@ -1271,14 +1264,18 @@ public class Types {
                 applyIfNotNull(customClassInit, typeClass);
             };
 
+            // Get parent TypeClass constructor
+            var typeClassConstructor = TypeCache.getTypeClassConstructor(parentType);
+
             // Register the GType
             Type type;
             if (cls.isInterface()) {
                 type = registerInterface(cls, typeName, memoryLayout, classInit,
-                        constructor, flags);
+                        constructor, typeClassConstructor, flags);
             } else {
                 type = register(parentType, cls, typeName, memoryLayout, classInit,
-                        instanceLayout, instanceInit, constructor, flags);
+                        instanceLayout, instanceInit, constructor,
+                        typeClassConstructor, flags);
 
                 try {
                     @SuppressWarnings("unchecked") // ClassCastException handled below
@@ -1351,6 +1348,7 @@ public class Types {
                                           MemoryLayout interfaceLayout,
                                           Consumer<TypeClass> classInit,
                                           Function<MemorySegment, ? extends Proxy> ctor,
+                                          Function<MemorySegment, ? extends Proxy> typeClassCtor,
                                           Set<TypeFlags> flags) {
         TypeInfo typeInfo = new TypeInfo(
                 (short) interfaceLayout.byteSize(),
@@ -1374,7 +1372,7 @@ public class Types {
         }
 
         // Register the type and constructor in the cache
-        TypeCache.register(cls, type, ctor);
+        TypeCache.register(cls, type, ctor, typeClassCtor);
         return type;
     }
 
@@ -1394,7 +1392,7 @@ public class Types {
                     constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = enumRegisterStatic(name, enumValues);
-        TypeCache.register(cls, type, null);
+        TypeCache.register(cls, type, null, TypeInterface::new);
         return type;
     }
 
@@ -1414,7 +1412,7 @@ public class Types {
                     1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = flagsRegisterStatic(name, flagsValues);
-        TypeCache.register(cls, type, null);
+        TypeCache.register(cls, type, null, null);
         return type;
     }
 
@@ -1485,7 +1483,6 @@ public class Types {
      * @param  classInit      static class initializer function
      * @param  instanceLayout memory layout of the typeinstance
      * @param  instanceInit   static instance initializer function
-     * @param  constructor    memory-address constructor
      * @param  flags          type flags
      * @return the GType of the registered Java type
      */
@@ -1497,6 +1494,7 @@ public class Types {
                   MemoryLayout instanceLayout,
                   Consumer<TypeInstance> instanceInit,
                   Function<MemorySegment, ? extends Proxy> constructor,
+                  Function<MemorySegment, ? extends Proxy> typeClassConstructor,
                   Set<TypeFlags> flags) {
 
         Type type = GObjects.typeRegisterStaticSimple(
@@ -1505,19 +1503,11 @@ public class Types {
                 (short) classLayout.byteSize(),
                 (typeClass, data) -> classInit.accept(typeClass),
                 (short) instanceLayout.byteSize(),
-                (instance, typeClass) -> {
-                    // The instance is initially created and cached as a
-                    // TypeInstance. We replace it with a new instance from the
-                    // memory-address constructor of the Java class, and run its
-                    // instance-initializer method.
-                    var newInstance = constructor.apply(instance.handle());
-                    InstanceCache.put(newInstance.handle(), newInstance);
-                    instanceInit.accept((TypeInstance) newInstance);
-                },
+                (instance, typeClass) -> instanceInit.accept(instance),
                 flags
         );
         // Register the type and constructor in the cache
-        TypeCache.register(javaClass, type, constructor);
+        TypeCache.register(javaClass, type, constructor, typeClassConstructor);
         return type;
     }
 

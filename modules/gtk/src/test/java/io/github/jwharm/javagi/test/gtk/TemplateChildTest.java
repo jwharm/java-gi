@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -22,11 +22,7 @@ package io.github.jwharm.javagi.test.gtk;
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
-import io.github.jwharm.javagi.gtk.types.TemplateTypes;
-import org.gnome.gio.ApplicationFlags;
 import org.gnome.gio.Resource;
-import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
 import org.gnome.gtk.Application;
 import org.gnome.gtk.Label;
 import org.gnome.gtk.ApplicationWindow;
@@ -55,10 +51,10 @@ public class TemplateChildTest {
         resource.resourcesRegister();
 
         // New Gtk application
-        Application app = new Application(TemplateChildTest.class.getName(), ApplicationFlags.DEFAULT_FLAGS);
+        Application app = new Application(TemplateChildTest.class.getName());
         app.onActivate(() -> {
             // New TestWindow (defined below)
-            TestWindow tw = GObject.newInstance(TestWindow.gtype);
+            TestWindow tw = new TestWindow();
 
             // Check that the label field is set to the value from the ui file
             assertEquals(tw.label.getLabel(), "Test Label");
@@ -66,7 +62,7 @@ public class TemplateChildTest {
             // Check that the "namedLabel" field (referring to the "label"
             // element in the XML using the annotation parameter "name", is set
             // to the expected value
-            TestWindow tw2 = GObject.newInstance(TestWindow.gtype);
+            TestWindow tw2 = new TestWindow();
             assertEquals(tw2.namedLabel.getLabel(), "Second Label");
 
             app.quit();
@@ -76,9 +72,8 @@ public class TemplateChildTest {
 
     @GtkTemplate(name="ChildTestWindow", ui="/io/github/jwharm/javagi/gtk/TemplateChildTest.ui")
     public static class TestWindow extends ApplicationWindow {
-        public static Type gtype = TemplateTypes.register(TestWindow.class);
-        public TestWindow(MemorySegment address ){
-            super(address);
+        public TestWindow( ){
+            super();
         }
 
         @GtkChild

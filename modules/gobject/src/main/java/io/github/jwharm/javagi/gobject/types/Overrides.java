@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -93,9 +93,10 @@ public class Overrides {
      * @return a lambda to run during class initialization that will register
      *         the virtual functions
      */
-    public static Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
+    public static <T extends TypeInstance, TC extends TypeClass>
+    Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
 
-        Class<?> typeStruct = Types.getTypeClass(cls);
+        Class<TC> typeStruct = Types.getTypeClass(cls);
         if (typeStruct == null)
             return null;
         Class<?> parentClass = cls.getSuperclass();

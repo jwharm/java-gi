@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -50,6 +50,12 @@ public sealed interface Callable
         // Explicit override: do not skip
         if (attrBool("java-gi-dont-skip", false))
             return false;
+
+        // Do not generate unnamed, parameter-less constructors
+        if (this instanceof Constructor ctr
+                && "new".equals(ctr.name())
+                && (ctr.parameters() == null || ctr.parameters().parameters().isEmpty()))
+            return true;
 
         // Do not generate virtual methods in interfaces
         if (this instanceof VirtualMethod vm

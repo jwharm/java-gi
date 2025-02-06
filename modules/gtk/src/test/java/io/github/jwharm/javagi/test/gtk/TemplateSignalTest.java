@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -22,18 +22,12 @@ package io.github.jwharm.javagi.test.gtk;
 import io.github.jwharm.javagi.base.GErrorException;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
-import io.github.jwharm.javagi.gtk.types.TemplateTypes;
-import org.gnome.gio.ApplicationFlags;
 import org.gnome.gio.Resource;
-import org.gnome.glib.Type;
-import org.gnome.gobject.GObject;
 import org.gnome.gtk.Application;
 import org.gnome.gtk.ApplicationWindow;
 import org.gnome.gtk.Button;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
-
-import java.lang.foreign.MemorySegment;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,10 +49,10 @@ public class TemplateSignalTest {
         resource.resourcesRegister();
 
         // New Gtk application
-        Application app = new Application(TemplateSignalTest.class.getName(), ApplicationFlags.DEFAULT_FLAGS);
+        Application app = new Application(TemplateSignalTest.class.getName());
         app.onActivate(() -> {
             // New TestWindow (defined below)
-            TestWindow tw = GObject.newInstance(TestWindow.gtype);
+            TestWindow tw = new TestWindow();
 
             // Emit the "clicked" signal that should be connected to the `buttonClicked()` java method
             tw.button.emitClicked();
@@ -71,9 +65,8 @@ public class TemplateSignalTest {
 
     @GtkTemplate(name="SignalTestWindow", ui="/io/github/jwharm/javagi/gtk/TemplateSignalTest.ui")
     public static class TestWindow extends ApplicationWindow {
-        public static Type gtype = TemplateTypes.register(TestWindow.class);
-        public TestWindow(MemorySegment address ){
-            super(address);
+        public TestWindow(){
+            super();
         }
 
         @GtkChild

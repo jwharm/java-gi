@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -41,18 +41,29 @@ import static java.util.Objects.requireNonNull;
  * the GType of the native object instance.
  */
 public class TypeCache {
-    
+
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
+            = new ConcurrentHashMap<>();
+
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
             = new ConcurrentHashMap<>();
 
     private final static Map<Class<?>, Type> classToTypeMap
             = new ConcurrentHashMap<>();
 
+    private static final Map<Class<? extends Proxy>, Function<Class<? extends Proxy>, Type>> typeRegisterFunctions
+            = new ConcurrentHashMap<>();
+
+    public static void setTypeRegisterFunction(Class<? extends Proxy> cls,
+                                               Function<Class<? extends Proxy>, Type> function) {
+        typeRegisterFunctions.put(cls, function);
+    }
+
     /**
      * Get the constructor from the type registry for the native object
      * instance at the given memory address. The applicable constructor is
      * determined based on the GType of the native object (as it was registered
-     * using {@link #register(Class, Type, Function)}).
+     * using {@link #register(Class, Type, Function, Function)}).
      *
      * @param address  address of TypeInstance object to obtain the type from
      * @param fallback if none was found, this constructor will be registered
@@ -143,19 +154,51 @@ public class TypeCache {
     }
 
     /**
-     * Return the GType that was registered for this class.
+     * Return the GType that was registered for this class. If no type was
+     * registered yet, this method will try to register it, and then return
+     * the GType.
      *
      * @param  cls a Java class
      * @return the cached GType
      */
     public static Type getType(Class<?> cls) {
         requireNonNull(cls);
+
+        // Class must be a Proxy-derived class
+        @SuppressWarnings("unchecked")
+        var proxyClass = (Class<? extends Proxy>) cls;
+
+        // Ensure the class is loaded and initialized. This is useful in case
+        // there's static initialization code that needs to be run.
         forceInit(cls);
+
+        // Is the class cached?
         var type = classToTypeMap.get(cls);
-        if (type == null)
-            throw new IllegalArgumentException(
-                    "Class " + cls.getSimpleName() + " is not a registered GType");
-        return type;
+        if (type != null)
+            return type;
+
+        // Register the type: Determine which function to use
+        var classes = typeRegisterFunctions.keySet();
+        var mostSpecific = classes.stream()
+                .filter(c -> c.isAssignableFrom(cls))
+                .max((c0, c1) -> c0.isAssignableFrom(c1) ? -1 : c1.isAssignableFrom(c0) ? 1 : 0);
+
+        if (mostSpecific.isPresent()) {
+            // Run the type registration function
+            var function = typeRegisterFunctions.get(mostSpecific.get());
+
+            function.apply(proxyClass);
+            type = classToTypeMap.get(cls);
+            return type;
+        } else {
+            // No function found to register this class: Fallback to Types.register()
+            return Types.register(cls);
+        }
+    }
+
+    public static Function<MemorySegment, ? extends Proxy>
+    getTypeClassConstructor(@NotNull Type type) {
+        return typeClassRegister.get(type);
     }
 
     /**
@@ -167,13 +210,26 @@ public class TypeCache {
      */
     public static void register(Class<?> cls,
                                 Type type,
-                                Function<MemorySegment, ? extends Proxy> ctor) {
+                                Function<MemorySegment, ? extends Proxy> ctor,
+                                Function<MemorySegment, ? extends Proxy> typeClassCtor) {
         requireNonNull(cls);
         if (type != null) {
             if (ctor != null)
                 typeRegister.put(type, ctor);
+            if (typeClassCtor != null)
+                typeClassRegister.put(type, typeClassCtor);
             classToTypeMap.put(cls, type);
         }
+    }
+
+    /**
+     * Check if this class is already cached.
+     *
+     * @param  cls the class to check
+     * @return true when the class is cached in the TypeCache
+     */
+    public static boolean contains(Class<?> cls) {
+        return classToTypeMap.containsKey(cls);
     }
 
     /**

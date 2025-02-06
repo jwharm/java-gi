@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -48,7 +48,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         builder.addJavadoc("Constants and functions that are declared in the global $L namespace.",
                         ns.name())
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addStaticBlock(loadLibraries())
+                .addStaticBlock(staticInitializer())
                 .addMethod(ensureInitialized())
                 .addMethod(registerTypes());
 
@@ -74,7 +74,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         return builder.build();
     }
 
-    private CodeBlock loadLibraries() {
+    private CodeBlock staticInitializer() {
+        // Load libraries
         CodeBlock.Builder block = CodeBlock.builder()
                 .beginControlFlow("switch ($T.getRuntimePlatform())",
                         ClassNames.PLATFORM);
@@ -113,8 +114,19 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             }
         }
 
-        return block.endControlFlow()
-                .addStatement("registerTypes()")
+        block.endControlFlow();
+
+        // Type registration functions for GObject and Gtk
+        if ("GObject".equals(ns.name()))
+            block.addStatement("$1T.setTypeRegisterFunction($2T.class, $3T::register)",
+                    ClassNames.TYPE_CACHE, ClassNames.G_OBJECT, ClassNames.TYPES);
+
+        if ("Gtk".equals(ns.name()))
+            block.addStatement("$1T.setTypeRegisterFunction($2T.class, $3T::register)",
+                    ClassNames.TYPE_CACHE, ClassNames.GTK_WIDGET, ClassNames.TEMPLATE_TYPES);
+
+        // Cache all generated types
+        return block.addStatement("registerTypes()")
                 .build();
     }
 
@@ -129,31 +141,35 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Class c : ns.classes())
-            spec.addCode(register(c.constructorName(), c.typeName()));
+            spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
 
         for (Interface i : ns.interfaces())
-            spec.addCode(register(i.constructorName(), i.typeName()));
+            spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
 
         for (Alias a : ns.aliases()) {
             RegisteredType target = a.lookup();
             if (target instanceof Class c)
-                spec.addCode(register(c.constructorName(), a.typeName()));
+                spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
             if (target instanceof Interface i)
-                spec.addCode(register(i.constructorName(), a.typeName()));
+                spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
         }
 
         for (Boxed b : ns.boxeds())
-            spec.addCode(register(b.constructorName(), b.typeName()));
+            spec.addCode(register(b.constructorName(), b.typeName(), null));
 
         return spec.build();
     }
 
-    private CodeBlock register(PartialStatement constructor, ClassName typeName) {
+    private CodeBlock register(PartialStatement constructor,
+                               ClassName typeName,
+                               ClassName typeClassName) {
         var stmt = PartialStatement.of(
                     "$typeCache:T.register($typeName:T.class, $typeName:T.getType(), ",
                         "typeCache", ClassNames.TYPE_CACHE,
                         "typeName", typeName)
                 .add(constructor)
+                .add(typeClassName == null ? ", null" : ", $typeClassName:T::new",
+                        "typeClassName", typeClassName)
                 .add(");\n");
         return CodeBlock.builder()
                 .addNamed(stmt.format(), stmt.arguments())

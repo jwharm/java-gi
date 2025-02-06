@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2023 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,16 +19,12 @@
 
 package io.github.jwharm.javagi.test.gobject;
 
-import io.github.jwharm.javagi.gobject.annotations.GType;
 import io.github.jwharm.javagi.gobject.annotations.Property;
 import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
 import io.github.jwharm.javagi.gobject.annotations.Signal;
-import io.github.jwharm.javagi.gobject.types.Types;
-import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.MemorySegment;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
 
@@ -48,11 +44,11 @@ public class NewSignalTest {
     @Test
     void registerSignal() {
         // Create a Counter object (see below) with limit 10
-        Counter counter = GObject.newInstance(Counter.getType(), "limit", 10);
+        Counter counter = new Counter(10);
         AtomicBoolean success = new AtomicBoolean(false);
 
         // Connect to the "limit-reached" signal
-        counter.connect("limit-reached", (Counter.LimitReached) (max) -> success.set(true));
+        counter.connect("limit-reached", (Counter.LimitReached) _ -> success.set(true));
 
         // First count to 9, this should not run the callback.
         for (int a = 0; a < 9; a++)
@@ -71,15 +67,8 @@ public class NewSignalTest {
      */
     @RegisteredType(name="TestCounter")
     public static class Counter extends GObject {
-        private static final Type gtype = Types.register(Counter.class);
-
-        @GType
-        public static Type getType() {
-            return gtype;
-        }
-
-        public Counter(MemorySegment address) {
-            super(address);
+        public Counter(int limit) {
+            super("limit", 10);
         }
 
         @Signal
@@ -93,12 +82,10 @@ public class NewSignalTest {
             return num;
         }
 
-        @Property(name="limit")
         public void setLimit(int limit) {
             this.limit = limit;
         }
 
-        @Property(name="limit")
         public int getLimit() {
             return this.limit;
         }
