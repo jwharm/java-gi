@@ -170,19 +170,8 @@ public class ConstructorGenerator {
 
         // Ref GObject
         if (parent.checkIsGObject()) {
-            builder.addNamedCode(PartialStatement.of("var _object = ")
-                                    .add(stmt)
-                                    .add(";\n")
-                                    .format(),
-                            stmt.arguments())
-                    .beginControlFlow("if (_object instanceof $T _gobject)",
-                            ClassNames.G_OBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle().address())",
-                            ClassNames.GLIB_LOGGER,
-                            "Ref " + returnType + " %ld")
-                    .addStatement("_gobject.ref()")
-                    .endControlFlow()
-                    .addStatement("return ($T) _object", returnType);
+            builder.addNamedCode(PartialStatement.of("return ")
+                    .add(stmt).add(";\n").format(),stmt.arguments());
         }
 
         // GVariant constructors return floating references
