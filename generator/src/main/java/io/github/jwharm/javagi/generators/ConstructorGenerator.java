@@ -70,12 +70,7 @@ public class ConstructorGenerator {
         MethodSpec helperMethod = new MethodGenerator(ctor, privateMethodName)
                 .generate();
 
-        if (unnamedConstructorWithOneNullableArg()) {
-            MethodSpec overload = generateNoArgConstructor();
-            return List.of(constructor, overload, helperMethod);
-        } else {
-            return List.of(constructor, helperMethod);
-        }
+        return List.of(constructor, helperMethod);
     }
 
     private MethodSpec constructor() {
@@ -229,44 +224,5 @@ public class ConstructorGenerator {
                 .map(TypedValue::name)
                 .map(n -> "...".equals(n) ? "varargs" : toJavaIdentifier(n))
                 .collect(joining(", "));
-    }
-
-    private boolean unnamedConstructorWithOneNullableArg() {
-        if (! "new".equals(ctor.name()))
-            return false;
-
-        var params = javaParameters();
-        return params.size() == 1 && params.getFirst().nullable();
-    }
-
-    /*
-     * A class with a constructor with one nullable parameter, for example
-     * `org.gnome.gtk.Frame#Frame(@Nullable String label)` introduces ambiguity
-     * with the default MemorySegment constructor when passing a null argument.
-     * For these cases, we add a no-argument constructor.
-     */
-    private MethodSpec generateNoArgConstructor() {
-        MethodSpec.Builder builder = MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PUBLIC);
-
-        var generator = new TypedValueGenerator(javaParameters().getFirst());
-        String className = toJavaSimpleType(ctor.parent().name(), ctor.namespace());
-
-        // Javadoc
-        builder.addJavadoc("Calls {@link $1L#$1L($2L)} with $3L = {@code null}",
-                className, generator.getType(), generator.getName());
-
-        // Deprecated annotation
-        if (ctor.callableAttrs().deprecated())
-            builder.addAnnotation(Deprecated.class);
-
-        // Exception
-        if (ctor.callableAttrs().throws_())
-            builder.addException(ClassNames.GERROR_EXCEPTION);
-
-        // Call overloaded constructor
-        builder.addStatement("this(($T) null)", generator.getType());
-
-        return builder.build();
     }
 }
