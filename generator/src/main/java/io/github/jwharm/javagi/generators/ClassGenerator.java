@@ -135,12 +135,15 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if (cls.abstract_())
             builder.addType(implClass());
 
-        if (cls.isInstanceOf("GObject", "Object")) {
+        if (cls.checkIsGObject()) {
+            builder.addMethod(gobjectConstructor());
             BuilderGenerator generator = new BuilderGenerator(cls);
-            builder.addMethod(generator.generateBuilderMethod());
             builder.addType(generator.generateBuilderClass());
+            if (!cls.abstract_()) // no builder() for abstract classes
+                builder.addMethod(generator.generateBuilderMethod());
         }
 
+        // Extra methods in GObject class
         if ("GObject".equals(cls.cType()))
             builder.addMethod(gobjectFactory())
                     .addMethod(gobjectClassFactory())
@@ -151,9 +154,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     .addMethod(gobjectConnectAfter())
                     .addMethod(gobjectEmit());
 
-        if (cls.checkIsGObject())
-            builder.addMethod(gobjectConstructor());
-
+        // Extra method in GListStore class (deprecated, to be removed)
         if ("GListStore".equals(cls.cType()))
             builder.addMethod(gListStoreRemoveItem());
 
@@ -286,15 +287,13 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("""
-                    Creates a new instance of a GObject-derived class with the provided
-                    property names and values. For your own GObject-derived Java classes,
-                    a GType must have been registered using {@code Types.register(Class<?>)}
+                    Creates a new $L with the provided property names and values.
                     
                     @param  propertyNamesAndValues pairs of property names and values
                             (Strings and Objects). Does not need to be null-terminated.
                     @return the newly created GObject instance
                     @throws IllegalArgumentException invalid property names or values
-                    """)
+                    """, name())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Object[].class, "propertyNamesAndValues")
                 .varargs(true)
