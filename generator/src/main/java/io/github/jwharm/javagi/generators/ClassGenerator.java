@@ -287,11 +287,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("""
-                    Creates a new $L with the provided property names and values.
+                    Creates a new $1L with the provided property names and values.
                     
                     @param  propertyNamesAndValues pairs of property names and values
                             (Strings and Objects). Does not need to be null-terminated.
-                    @return the newly created GObject instance
+                    @return the newly created $1L instance
                     @throws IllegalArgumentException invalid property names or values
                     """, name())
                 .addModifiers(Modifier.PUBLIC)
