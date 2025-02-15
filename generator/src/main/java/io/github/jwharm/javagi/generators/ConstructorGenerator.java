@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -24,6 +24,7 @@ import com.squareup.javapoet.TypeName;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.gir.Class;
+import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.PartialStatement;
 import io.github.jwharm.javagi.util.Platform;
 
@@ -33,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.github.jwharm.javagi.util.Conversions.toJavaIdentifier;
-import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 
@@ -108,15 +108,24 @@ public class ConstructorGenerator {
             builder.addStatement("$T.put(handle(), this)",
                     ClassNames.INSTANCE_CACHE);
 
+        // These constructors return floating references
+        else if (parent instanceof Record rec
+                && List.of("GVariant", "GClosure").contains(rec.cType())) {
+            builder.addStatement(rec.cType().equals("GVariant")
+                            ? "refSink()" : "ref().sink()")
+                    .addStatement("$T.takeOwnership(this)",
+                            ClassNames.MEMORY_CLEANER)
+                    .addStatement("$T.setFreeFunc(this, $S)",
+                            ClassNames.MEMORY_CLEANER,
+                            rec.attr("free-function"));
+        }
+
         // Add cleaner to struct/union pointer
         else {
             builder.addStatement("$T.takeOwnership(this)",
                             ClassNames.MEMORY_CLEANER);
             new RegisteredTypeGenerator(parent).setFreeFunc(
-                    builder,
-                    "this",
-                    parent.typeName()
-            );
+                    builder, "this", parent.typeName());
         }
 
         return builder.build();
@@ -170,19 +179,21 @@ public class ConstructorGenerator {
         }
 
         // GVariant constructors return floating references
-        else if (ctor.callableAttrs().cIdentifier() != null
-                && ctor.callableAttrs().cIdentifier().startsWith("g_variant_new_")) {
+        else if (parent instanceof Record rec
+                && List.of("GVariant", "GClosure").contains(rec.cType())) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
                                     .add(stmt)
                                     .add(";\n")
                                     .format(),
                             stmt.arguments())
                     .beginControlFlow("if (_instance != null)")
-                    .addStatement("_instance.refSink()")
+                    .addStatement(rec.cType().equals("GVariant")
+                            ? "_instance.refSink()" : "_instance.ref().sink()")
                     .addStatement("$T.takeOwnership(_instance)",
                             ClassNames.MEMORY_CLEANER)
                     .addStatement("$T.setFreeFunc(_instance, $S)",
-                            ClassNames.MEMORY_CLEANER, "g_variant_unref")
+                            ClassNames.MEMORY_CLEANER,
+                            rec.attr("free-function"))
                     .endControlFlow()
                     .addStatement("return ($T) _instance", parent.typeName());
         }

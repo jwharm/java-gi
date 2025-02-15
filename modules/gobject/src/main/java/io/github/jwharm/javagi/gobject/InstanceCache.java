@@ -153,8 +153,6 @@ public class InstanceCache {
 
     private static final MemorySegment toggle_notify;
 
-    private static final Type GOBJECT = GObject.getType();
-
     static {
         GObjects.javagi$ensureInitialized();
 
@@ -242,11 +240,13 @@ public class InstanceCache {
             }
         }
 
-        // Cache GObjects
-        if (cache
-            && newInstance instanceof TypeInstance ti
-            && GObjects.typeCheckInstanceIsFundamentallyA(ti, GOBJECT))
-            return put(address, newInstance);
+        // Cache GObject
+        if (cache && newInstance instanceof GObject gobject)
+            return put(address, gobject);
+
+        // Sink initially floating ParamSpec
+        else if (newInstance instanceof ParamSpec paramSpec)
+            paramSpec.refSink();
 
         return newInstance;
     }
@@ -292,11 +292,11 @@ public class InstanceCache {
      * Add the new GObject instance to the cache. Floating references are
      * sunk, and a toggle reference is installed.
      *
-     * @param  address     the memory address of the native instance
-     * @param  object the GObject instance
+     * @param  address the memory address of the native instance
+     * @param  object  the GObject instance
      * @return the cached GObject instance
      */
-    public static Proxy put(MemorySegment address, Proxy object) {
+    public static Proxy put(MemorySegment address, GObject object) {
         // If it was already cached, putIfAbsent() will return the existing one
         var existing = references.putIfAbsent(address, new Ref.Strong<>(object));
         if (existing != null)

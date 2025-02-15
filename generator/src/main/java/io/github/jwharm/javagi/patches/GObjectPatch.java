@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 
 public class GObjectPatch implements Patch {
 
@@ -118,9 +119,14 @@ public class GObjectPatch implements Patch {
         }
 
         /*
-         * CClosure construction functions return floating references. There's
-         * specific code in java-gi to ref_sink GInitiallyUnowned and GVariant,
-         * but as CClosure shouldn't be used from Java anyway, we remove these
+         * Closure construction functions return floating references.
+         */
+        if (element instanceof Record r && "Closure".equals(r.name()))
+            return r.withAttribute("free-function", "g_closure_unref");
+
+        /*
+         * CClosure construction functions return floating references. As
+         * CClosure shouldn't be used from Java anyway, we remove these
          * functions.
          */
         if (element instanceof Record r
@@ -139,7 +145,7 @@ public class GObjectPatch implements Patch {
                         && "const GEnumValue*".equals(t.cType()))
                     || ("FlagsValue".equals(t.name())
                         && "const GFlagsValue*".equals(t.cType())))) {
-            var name = t.name();
+            var name = requireNonNull(t.name());
             var cType = "const G" + name;
             return new Array(emptyMap(), List.of(
                 new Type(Map.of("name", name, "c:type", cType), emptyList())));
