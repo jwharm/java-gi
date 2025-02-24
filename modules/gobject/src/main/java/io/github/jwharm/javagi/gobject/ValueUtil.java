@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,6 +20,8 @@
 package io.github.jwharm.javagi.gobject;
 
 import java.lang.foreign.MemorySegment;
+
+import io.github.jwharm.javagi.base.Proxy;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
@@ -108,7 +110,10 @@ public class ValueUtil {
         else if (type.equals(gtypeGetType())) dest.setGtype((Type) src);
         else if (type.equals(POINTER))        dest.setPointer((MemorySegment) src);
         else if (type.equals(PARAM))          dest.setParam((ParamSpec) src);
-        else                                  dest.setBoxed((MemorySegment) src);
+        else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
+        else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
+        else if (typeIsA(type, FLAGS))        dest.setEnum(((Enumeration) src).getValue());
+        else                                  dest.setBoxed(((Proxy) src).handle());
 
         return true;
     }
