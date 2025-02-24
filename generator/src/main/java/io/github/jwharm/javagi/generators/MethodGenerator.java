@@ -386,10 +386,34 @@ public class MethodGenerator {
         }
 
         // No ownership transfer, just marshal the return value
+
+        // If this is an instance method and returns an instance of the
+        // surrounding class, check if we can simply "return this".
+        else if (couldReturnThis()) {
+            builder.beginControlFlow("if (handle().equals(_result))")
+                    .addStatement("return this")
+                    .nextControlFlow("else")
+                    .addNamedCode(PartialStatement.of("return ")
+                            .add(stmt).format() + ";\n", stmt.arguments())
+                    .endControlFlow();
+        }
+
+        // Marshal the return value
         else {
             builder.addNamedCode(PartialStatement.of("return ")
                     .add(stmt).format() + ";\n", stmt.arguments());
         }
+    }
+
+    // Check if this is an instance method that returns an instance of the
+    // surrounding class
+    private boolean couldReturnThis() {
+        if (func instanceof Method || func instanceof VirtualMethod) {
+            var returnType = returnValue.anyType().typeName();
+            var thisType = ((RegisteredType) func.parent()).typeName();
+            return returnType.equals(thisType);
+        }
+        return false;
     }
 
     private void functionNameInvocation() {
