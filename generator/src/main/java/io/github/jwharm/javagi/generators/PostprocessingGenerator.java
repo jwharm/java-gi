@@ -69,7 +69,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     if (type.isBoolean())
                         stmt.add(" != 0");
                 } else {
-                    stmt.add(marshalNativeToJava(type, identifier, false));
+                    stmt.add(marshalNativeToJava(type, identifier));
                 }
                 stmt.add(");\n");
 

@@ -3,7 +3,7 @@
   <requires lib="gtk" version="4.0"/>
   <template class="ChildTestWindow" parent="GtkApplicationWindow">
     <child>
-      <object class="GtkLabel" id="label">
+      <object class="TestButton" id="button">
         <property name="label">Test Label</property>
       </object>
       <object class="GtkLabel" id="label2">

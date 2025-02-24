@@ -659,10 +659,10 @@ public class Properties {
         void run(GObject object, int propertyId, Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            run((GObject) InstanceCache.getForType(object, GObject::new, false),
+            run((GObject) InstanceCache.getForType(object, GObject::new),
                     propertyId,
                     MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new, false));
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new));
         }
 
         default MemorySegment toCallback(Arena arena) {
@@ -681,10 +681,10 @@ public class Properties {
         void run(GObject object, int propertyId, Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            run((GObject) InstanceCache.getForType(object, GObject::new, false),
+            run((GObject) InstanceCache.getForType(object, GObject::new),
                     propertyId,
                     MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new, false));
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new));
         }
 
         default MemorySegment toCallback(Arena arena) {

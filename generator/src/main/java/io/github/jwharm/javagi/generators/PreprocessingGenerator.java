@@ -306,7 +306,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "valueLayout", ValueLayout.class,
                             "outType", getType(),
                             "out", ClassNames.OUT)
-                    .add(marshalNativeToJava(type, identifier, true))
+                    .add(marshalNativeToJava(type, identifier))
                     .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
