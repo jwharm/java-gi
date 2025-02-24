@@ -112,7 +112,8 @@ public class Properties {
     }
 
     /*
-     * Convert "CamelCase" to "kebab-case"
+     * getMyProperty(), "isMyProperty()", "setMyProperty()" and "myProperty"
+     * are all converted to "my-property"
      */
     private static String getPropertyName(String methodName) {
         String value;
@@ -121,10 +122,10 @@ public class Properties {
         else if (methodName.startsWith("get") || methodName.startsWith("set"))
             value = methodName.substring(3);
         else
-            throw new IllegalArgumentException(
-                    "Cannot infer property name from method named " + methodName);
+            value = methodName;
         return value.replaceAll("([a-z0-9])([A-Z])", "$1-$2")
-                .toLowerCase().replaceAll("\\.", "");
+                    .toLowerCase()
+                    .replaceAll("\\.", "");
     }
 
     private static boolean isGetter(Method method) {
@@ -235,7 +236,8 @@ public class Properties {
     /*
      * Create a ParamSpec of the requested class.
      */
-    private void createParamSpec(Class<? extends ParamSpec> pClass,
+    private void createParamSpec(Class<?> javaType,
+                                 Class<? extends ParamSpec> pClass,
                                  String name,
                                  Set<ParamFlags> flags,
                                  String min, String max, String def) {
@@ -307,6 +309,12 @@ public class Properties {
             paramSpec = GObjects.paramSpecLong(name, name, name,
                     minVal, maxVal, defVal, flags);
             }
+
+        else if (pClass.equals(ParamSpecObject.class)) {
+            checkParameters(name, min, max, def, false);
+            var objectType = TypeCache.getType(javaType);
+            paramSpec = GObjects.paramSpecObject(name, name, name, objectType, flags);
+        }
 
         else if (pClass.equals(ParamSpecPointer.class)) {
             checkParameters(name, min, max, def, false);
@@ -451,7 +459,7 @@ public class Properties {
                     var flags = getFlags(p);
                     var javaType = getJavaType(method);
                     var paramSpecClass = getParamSpecClass(javaType);
-                    createParamSpec(paramSpecClass, name, flags,
+                    createParamSpec(javaType, paramSpecClass, name, flags,
                             p.minimumValue(), p.maximumValue(), p.defaultValue());
                 }
             }
@@ -493,7 +501,7 @@ public class Properties {
                     var javaType = getJavaType(method);
                     var paramSpecClass = getParamSpecClass(javaType);
                     var flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
-                    createParamSpec(paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
+                    createParamSpec(javaType, paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
                 }
             }
         }
