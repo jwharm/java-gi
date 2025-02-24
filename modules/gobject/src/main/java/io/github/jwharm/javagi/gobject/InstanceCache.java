@@ -41,7 +41,7 @@ import org.gnome.gobject.*;
 import io.github.jwharm.javagi.base.Proxy;
 
 /**
- * Caches Proxy instances so the same instance is used for the same memory
+ * Caches TypeInstances so the same instance is used for the same memory
  * address.
  */
 public class InstanceCache {
@@ -205,8 +205,7 @@ public class InstanceCache {
      * @return a Proxy instance for the provided memory address
      */
     public static Proxy getForType(MemorySegment address,
-                                   Function<MemorySegment, ? extends Proxy> fallback,
-                                   boolean cache) {
+                                   Function<MemorySegment, ? extends Proxy> fallback) {
         
         // Get instance from the cache
         Proxy instance = lookup(address);
@@ -241,7 +240,7 @@ public class InstanceCache {
         }
 
         // Cache GObject
-        if (cache && newInstance instanceof GObject gobject)
+        if (newInstance instanceof GObject gobject)
             return put(address, gobject);
 
         // Sink initially floating ParamSpec
@@ -259,12 +258,10 @@ public class InstanceCache {
      * @param  address  memory address of the native object
      * @param  fallback fallback constructor to use when the type is not found
      *                  in the TypeCache
-     * @param ignored   ignored
      * @return a Proxy instance for the provided memory address
      */
     public static Proxy getForTypeClass(MemorySegment address,
-                                        Function<MemorySegment, ? extends Proxy> fallback,
-                                        boolean ignored) {
+                                        Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check
         if (address == null || MemorySegment.NULL.equals(address)) {
             GLibLogger.debug("InstanceCache.getForTypeClass: address is NULL\n");

@@ -373,7 +373,7 @@ public class TemplateTypes {
 
         @SuppressWarnings("unused") // called from foreign function
         default void upcall(MemorySegment object) {
-            run((GObject) InstanceCache.getForType(object, GObject::new, false));
+            run((GObject) InstanceCache.getForType(object, GObject::new));
         }
 
         default MemorySegment toCallback(Arena arena) {

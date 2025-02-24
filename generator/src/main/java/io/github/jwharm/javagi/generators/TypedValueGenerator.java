@@ -267,7 +267,7 @@ class TypedValueGenerator {
             if (type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
                 return PartialStatement.of(identifier);
 
-            return marshalNativeToJava(type, identifier, upcall);
+            return marshalNativeToJava(type, identifier);
         }
 
         // String[][]
@@ -285,7 +285,7 @@ class TypedValueGenerator {
         return PartialStatement.of("null /* unsupported */");
     }
 
-    PartialStatement marshalNativeToJava(Type type, String identifier, boolean upcall) {
+    PartialStatement marshalNativeToJava(Type type, String identifier) {
         String free = doFree();
         String targetTypeTag = target == null ? null : type.toTypeTag();
         boolean isTypeInstance = target instanceof Record
@@ -386,7 +386,6 @@ class TypedValueGenerator {
                     && (a.lookup() instanceof Class || a.lookup() instanceof Interface));
 
         String cacheFunction = hasGType ? "getForType" : isTypeClass ? "getForTypeClass" : "get";
-        String cache = upcall ? "false" : "true";
 
         if (target instanceof Class
                 || target instanceof Interface
@@ -396,7 +395,7 @@ class TypedValueGenerator {
             return PartialStatement.of(
                         "($" + targetTypeTag + ":T) $instanceCache:T." + cacheFunction + "(" + identifier + ", ")
                     .add(target.constructorName())
-                    .add(", " + cache + ")",
+                    .add(")",
                             targetTypeTag, target.typeName(),
                             "instanceCache", ClassNames.INSTANCE_CACHE);
 

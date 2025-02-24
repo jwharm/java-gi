@@ -20,10 +20,14 @@
 package io.github.jwharm.javagi.test.gtk;
 
 import io.github.jwharm.javagi.base.GErrorException;
+import io.github.jwharm.javagi.gobject.annotations.InstanceInit;
+import io.github.jwharm.javagi.gobject.annotations.RegisteredType;
+import io.github.jwharm.javagi.gobject.types.Types;
 import io.github.jwharm.javagi.gtk.annotations.GtkChild;
 import io.github.jwharm.javagi.gtk.annotations.GtkTemplate;
 import org.gnome.gio.Resource;
 import org.gnome.gtk.Application;
+import org.gnome.gtk.Button;
 import org.gnome.gtk.Label;
 import org.gnome.gtk.ApplicationWindow;
 import org.junit.jupiter.api.Test;
@@ -34,7 +38,7 @@ import java.lang.foreign.MemorySegment;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test that a @GtkChild field in a Gtk template class is setup
+ * Test that a @GtkChild field in a Gtk template class is set up
  */
 @Isolated
 public class TemplateChildTest {
@@ -50,6 +54,10 @@ public class TemplateChildTest {
         }
         resource.resourcesRegister();
 
+        // Make sure that the TestButton class is registered as a GType.
+        // Otherwise, the "button" field can't be setup by GtkBuilder.
+        Types.register(TestButton.class);
+
         // New Gtk application
         Application app = new Application(TemplateChildTest.class.getName());
         app.onActivate(() -> {
@@ -57,13 +65,16 @@ public class TemplateChildTest {
             TestWindow tw = new TestWindow();
 
             // Check that the label field is set to the value from the ui file
-            assertEquals(tw.label.getLabel(), "Test Label");
+            assertEquals("Test Label", tw.button.getLabel());
+
+            // Check that Java instance state is preserved
+            assertTrue(tw.button.initialized);
 
             // Check that the "namedLabel" field (referring to the "label"
             // element in the XML using the annotation parameter "name", is set
             // to the expected value
             TestWindow tw2 = new TestWindow();
-            assertEquals(tw2.namedLabel.getLabel(), "Second Label");
+            assertEquals("Second Label", tw2.namedLabel.getLabel());
 
             app.quit();
         });
@@ -72,14 +83,28 @@ public class TemplateChildTest {
 
     @GtkTemplate(name="ChildTestWindow", ui="/io/github/jwharm/javagi/gtk/TemplateChildTest.ui")
     public static class TestWindow extends ApplicationWindow {
-        public TestWindow( ){
+        public TestWindow() {
             super();
         }
 
         @GtkChild
-        public Label label;
+        public TestButton button;
 
         @GtkChild(name="label2")
         public Label namedLabel;
+    }
+
+    @RegisteredType(name="TestButton")
+    public static class TestButton extends Button {
+        public TestButton(MemorySegment address) {
+            super(address);
+        }
+
+        public boolean initialized = false;
+
+        @InstanceInit
+        public void init() {
+            this.initialized = true;
+        }
     }
 }
