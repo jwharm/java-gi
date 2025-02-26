@@ -291,7 +291,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     
                     @param  propertyNamesAndValues pairs of property names and values
                             (Strings and Objects). Does not need to be null-terminated.
-                    @return the newly created $1L instance
                     @throws IllegalArgumentException invalid property names or values
                     """, name())
                 .addModifiers(Modifier.PUBLIC)
@@ -488,7 +487,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                         
                         @param index the index at which to splice the list
                         @param nRemovals the number of elements to remove
-                        @param elements the elements to insert at the index
+                        @param additions the elements to insert at the index
                         @throws IndexOutOfBoundsException if the index is out of range
                         """)
                 .addAnnotation(Override.class)
