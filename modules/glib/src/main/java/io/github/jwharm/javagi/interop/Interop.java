@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -1488,5 +1488,77 @@ public class Interop {
         for (int i = 0; i < array.length; i++)
             values[i] = array[i].getValue();
         return values;
+    }
+
+    /**
+     * Create a GBytes from a Java byte array
+     *
+     * @param  data the Java byte array
+     * @return the GBytes
+     */
+    public static MemorySegment toGBytes(byte[] data) {
+        try (var _arena = Arena.ofConfined()) {
+            long size = data == null ? 0L : data.length;
+            MemorySegment _result;
+            try {
+                _result = (MemorySegment) DowncallHandles.g_bytes_new.invokeExact(
+                        (MemorySegment) (data == null ? MemorySegment.NULL : allocateNativeArray(data, false, _arena)),
+                        size);
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+            return _result;
+        }
+    }
+
+    /**
+     * Create a Java byte array from a GBytes
+     *
+     * @param  address the memory address of the GBytes
+     * @return the Java byte array
+     */
+    public static byte[] fromGBytes(MemorySegment address) {
+        try (var _arena = Arena.ofConfined()) {
+            MemorySegment _sizePointer = _arena.allocate(ValueLayout.JAVA_LONG);
+            _sizePointer.set(ValueLayout.JAVA_LONG, 0L, 0L);
+            Out<Long> size = new Out<>();
+            MemorySegment _result;
+            try {
+                _result = (MemorySegment) DowncallHandles.g_bytes_get_data.invokeExact(address, _sizePointer);
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+            size.set(_sizePointer.get(ValueLayout.JAVA_LONG, 0));
+            return getByteArrayFrom(_result, size.get().intValue(), _arena, false);
+        }
+    }
+
+    public static void freeGBytes(MemorySegment address) {
+        try {
+            DowncallHandles.g_bytes_unref.invokeExact(address);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
+    private static class DowncallHandles {
+        static {
+            GLib.javagi$ensureInitialized();
+        }
+
+        private static final MethodHandle g_bytes_new = Interop.downcallHandle(
+                "g_bytes_new",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,ValueLayout.JAVA_LONG),
+                false);
+
+        private static final MethodHandle g_bytes_get_data = Interop.downcallHandle(
+                "g_bytes_get_data",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                false);
+
+        private static final MethodHandle g_bytes_unref = Interop.downcallHandle(
+                "g_bytes_unref",
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                false);
     }
 }

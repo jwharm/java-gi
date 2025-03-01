@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.generators;
 
 import com.squareup.javapoet.MethodSpec;
+import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.PartialStatement;
 
@@ -36,11 +37,13 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
     public void generate(MethodSpec.Builder builder) {
         readPointer(builder);
+        freeGBytes(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
         writePrimitiveAliasPointer(builder);
         writeOutParameter(builder);
+        freeGBytesUpcall(builder);
     }
 
     private void readPointer(MethodSpec.Builder builder) {
@@ -125,6 +128,19 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         }
     }
 
+    private void freeGBytes(MethodSpec.Builder builder) {
+        if (target != null && target.checkIsGBytes()) {
+            if (!p.isOutParameter() && p.transferOwnership() == TransferOwnership.NONE) {
+                builder.addStatement("$1T.freeGBytes(_$2LGBytes)",
+                        ClassNames.INTEROP, getName());
+            }
+            else if (p.isOutParameter() && p.transferOwnership() != TransferOwnership.NONE) {
+                builder.addStatement("$1T.freeGBytes(_$2LPointer.get(ValueLayout.ADDRESS, 0))",
+                        ClassNames.INTEROP, getName());
+            }
+        }
+    }
+
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
         if (target instanceof Alias a && a.isValueWrapper() && type.isPointer()) {
             var stmt = PartialStatement.of("$name:LParam.set(")
@@ -156,6 +172,13 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     .add(payload)
                     .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
+        }
+    }
+
+    private void freeGBytesUpcall(MethodSpec.Builder builder) {
+        if (target != null && target.checkIsGBytes()
+                && p.transferOwnership() != TransferOwnership.NONE) {
+            builder.addStatement("$1T.freeGBytes($2L)", ClassNames.INTEROP, getName());
         }
     }
 }

@@ -208,6 +208,14 @@ class TypedValueGenerator {
                         "interop", ClassNames.INTEROP);
             }
             case Enumeration _ -> PartialStatement.of(identifier + ".getValue()");
+            case Record rec when rec.checkIsGBytes() -> {
+                if (v instanceof ReturnValue) {
+                    yield PartialStatement.of("$interop:T.toGBytes(" + identifier + ")",
+                            "interop", ClassNames.INTEROP);
+                } else {
+                    yield PartialStatement.of("_" + getName() + "GBytes");
+                }
+            }
             default -> PartialStatement.of(identifier + ".handle()");
         };
     }
@@ -360,6 +368,10 @@ class TypedValueGenerator {
                     .add(keyConstructor).add(", ").add(valueConstructor).add(")");
 
         }
+
+        if (target != null && target.checkIsGBytes())
+            return PartialStatement.of("$interop:T.fromGBytes(" + identifier + ")",
+                    "interop", ClassNames.INTEROP);
 
         if ((target instanceof Record && !isTypeInstance && !isTypeClass)
                 || target instanceof Union
@@ -612,6 +624,9 @@ class TypedValueGenerator {
             if (rt.javaType().equals("org.gnome.glib.Variant"))
                 return PartialStatement.of("$types:T.VARIANT", "types", ClassNames.TYPES);
 
+            if (rt.checkIsGBytes())
+                return PartialStatement.of("$types:T.BYTES", "types", ClassNames.TYPES);
+
             if (rt.getTypeFunc() != null) {
                 String typeTag = type.toTypeTag();
                 return PartialStatement.of("$" + typeTag + ":T.getType()", typeTag, type.typeName());
@@ -641,6 +656,11 @@ class TypedValueGenerator {
                     "byteArray", ClassNames.G_BYTE_ARRAY,
                     "interop", ClassNames.INTEROP);
         }
+
+        // GBytes has its own marshalling function in the Interop class
+        if (target != null && target.checkIsGBytes())
+            return PartialStatement.of("_value.setBoxed($interop:T.toGBytes(" + payloadIdentifier + "))",
+                    "interop", ClassNames.INTEROP);
 
         // Check for fundamental classes with their own GValue setters
         if (type != null) {

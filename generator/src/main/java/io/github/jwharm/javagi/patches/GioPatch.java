@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 the Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -69,6 +69,16 @@ public class GioPatch implements Patch {
         if (element instanceof Method m
                 && "g_io_module_load".equals(m.callableAttrs().cIdentifier()))
             return m.withAttribute("name", "load_module");
+
+        /*
+         * The method "g_tls_certificate_get_dns_names" returns a GPtrArray of
+         * GBytes. Java-GI converts GPtrArray and GBytes into Java arrays, but
+         * doesn't support nesting them yet.
+         */
+        if (element instanceof Class c
+                && "TlsCertificate".equals(c.name())) {
+            return remove(c, Method.class, "name", "get_dns_names");
+        }
 
         /*
          * The method "g_data_input_stream_read_byte" overrides

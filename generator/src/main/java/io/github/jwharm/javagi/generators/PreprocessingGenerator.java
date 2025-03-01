@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -47,6 +47,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         arrayLength(builder);
         scope(builder);
         transferOwnership(builder);
+        createGBytes(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -196,7 +197,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
         // Same, but for structs/unions: Disable the cleaner
         else if (target != null
-                && (! (target instanceof Alias a && a.isValueWrapper()))
+                && !(target instanceof Alias a && a.isValueWrapper())
+                && !target.checkIsGBytes()
                 && p.transferOwnership() != TransferOwnership.NONE
                 && !p.isOutParameter()
                 && (type.cType() == null || !type.cType().endsWith("**"))) {
@@ -232,6 +234,18 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             builder.endControlFlow();
             if (checkNull())
                 builder.endControlFlow();
+        }
+    }
+
+    private void createGBytes(MethodSpec.Builder builder) {
+        if (target != null && target.checkIsGBytes()) {
+            if (p.isOutParameter()) {
+                builder.addStatement("_$1LPointer.set($2T.ADDRESS, 0L, $3T.toGBytes($1L == null ? null : $1L.get()))",
+                        getName(), ValueLayout.class, ClassNames.INTEROP);
+            } else {
+                builder.addStatement("$1T _$3LGBytes = $2T.toGBytes($3L)",
+                        MemorySegment.class, ClassNames.INTEROP, getName());
+            }
         }
     }
 

@@ -119,6 +119,13 @@ public class GObjectPatch implements Patch {
         }
 
         /*
+         * GBytes is available in Java as a plain byte array. There are
+         * functions in the Interop class to read, write and free GBytes.
+         */
+        if (element instanceof Record r && "Bytes".equals(r.name()))
+            return r.withAttribute("java-gi-skip", "1");
+
+        /*
          * Closure construction functions return floating references.
          */
         if (element instanceof Record r && "Closure".equals(r.name()))

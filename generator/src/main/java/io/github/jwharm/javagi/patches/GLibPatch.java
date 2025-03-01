@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -56,6 +56,13 @@ public class GLibPatch implements Patch {
              */
             return remove(ns, Function.class, "name", "clear_error");
         }
+
+        /*
+         * GBytes is available in Java as a plain byte array. There are
+         * functions in the Interop class to read, write and free GBytes.
+         */
+        if (element instanceof Record r && "Bytes".equals(r.name()))
+            return r.withAttribute("java-gi-skip", "1");
 
         /*
          * GPid is defined as gint on Unix vs gpointer on Windows. The generated
