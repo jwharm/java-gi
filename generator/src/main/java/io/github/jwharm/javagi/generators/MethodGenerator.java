@@ -265,6 +265,16 @@ public class MethodGenerator {
                     .addStatement("return _object");
         }
 
+        // Marshal a returned GBytes to a Java byte array and free the GBytes
+        // when ownership is transferred.
+        else if (target != null && target.checkIsGBytes()
+                && returnValue.transferOwnership() != TransferOwnership.NONE) {
+            builder.addNamedCode(PartialStatement.of("byte[] _bytes = ")
+                            .add(stmt).format() + ";\n", stmt.arguments())
+                    .addStatement("$1T.freeGBytes(_result)", ClassNames.INTEROP)
+                    .addStatement("return _bytes");
+        }
+
         // Add cleaner to struct/union pointer.
         // * Exclude foreign types
         // * GList/GSList have their own cleaner
@@ -305,8 +315,8 @@ public class MethodGenerator {
                 // Lookup the copy/ref function and the memory layout
                 var slt = (StandardLayoutType) target;
                 var copyFunc = slt.copyFunction();
-                var hasMemoryLayout = slt instanceof FieldContainer fc
-                        && new MemoryLayoutGenerator().canGenerate(fc);
+                FieldContainer fc = (FieldContainer) slt;
+                var hasMemoryLayout = new MemoryLayoutGenerator().canGenerate(fc);
 
                 // Don't automatically copy the return values of GLib functions
                 var skipNamespace = List.of("GLib", "GModule")

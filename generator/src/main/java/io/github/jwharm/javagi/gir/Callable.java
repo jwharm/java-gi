@@ -51,8 +51,9 @@ public sealed interface Callable
         if (attrBool("java-gi-dont-skip", false))
             return false;
 
-        // Do not generate unnamed, parameter-less constructors
+        // Do not generate unnamed, parameter-less class constructors
         if (this instanceof Constructor ctr
+                && ctr.parent() instanceof Class
                 && "new".equals(ctr.name())
                 && (ctr.parameters() == null || ctr.parameters().parameters().isEmpty()))
             return true;

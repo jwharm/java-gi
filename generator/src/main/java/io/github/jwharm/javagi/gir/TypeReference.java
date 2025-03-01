@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package io.github.jwharm.javagi.gir;
 
+import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.TypeName;
 
 import java.lang.foreign.MemorySegment;
@@ -59,8 +60,12 @@ public interface TypeReference {
         // Get the target type
         var type = lookup();
 
-        // A TypeClass or TypeInterface is an inner class
         if (type instanceof Record rec) {
+            // GBytes is treated as a byte[]
+            if (rec.checkIsGBytes())
+                return ArrayTypeName.of(byte.class);
+
+            // A TypeClass or TypeInterface is an inner class
             var outer = rec.isGTypeStructFor();
             if (outer != null)
                 return outer.typeName().nestedClass(
