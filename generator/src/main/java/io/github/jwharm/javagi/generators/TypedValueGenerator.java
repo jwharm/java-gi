@@ -631,6 +631,9 @@ class TypedValueGenerator {
             if (rt.checkIsGBytes())
                 return PartialStatement.of("$types:T.BYTES", "types", ClassNames.TYPES);
 
+            if (rt.checkIsGHashTable())
+                return PartialStatement.of("$types:T.HASH_TABLE", "types", ClassNames.TYPES);
+
             if (rt.getTypeFunc() != null) {
                 String typeTag = type.toTypeTag();
                 return PartialStatement.of("$" + typeTag + ":T.getType()", typeTag, type.typeName());
