@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.*;
+import io.github.jwharm.javagi.gir.Record;
 import io.github.jwharm.javagi.util.PartialStatement;
 
 import java.lang.foreign.Arena;
@@ -201,6 +202,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && !target.checkIsGBytes()
                 && p.transferOwnership() != TransferOwnership.NONE
                 && !p.isOutParameter()
+                && !(target instanceof Record r && r.foreign())
                 && (type.cType() == null || !type.cType().endsWith("**"))) {
             builder.addStatement(
                     checkNull() ? "if ($1L != null) $2T.yieldOwnership($1L)"
