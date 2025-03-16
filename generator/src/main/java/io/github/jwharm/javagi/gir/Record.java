@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -34,7 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public final class Record extends Multiplatform
-        implements StandardLayoutType, FieldContainer {
+        implements StandardLayoutType {
 
     public Record(Map<String, String> attributes,
                   List<Node> children,

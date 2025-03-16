@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,7 +23,7 @@ import java.util.List;
 
 public sealed interface FieldContainer
         extends RegisteredType
-        permits Class, Interface, Boxed, Record, Union {
+        permits StandardLayoutType, Class, Interface {
 
     List<Field> fields();
 

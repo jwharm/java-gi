@@ -181,7 +181,6 @@ public class Interop {
      */
     public static MemorySegment reinterpret(MemorySegment address,
                                             long newSize) {
-
         if (address == null || address.byteSize() >= newSize)
             return address;
 
@@ -224,7 +223,6 @@ public class Interop {
      * @return the gtype from the provided get-type function
      */
     public static Type getType(String getTypeFunction) {
-
         if (getTypeFunction == null)
             return null;
 
@@ -582,7 +580,6 @@ public class Interop {
     public static String[] getStringArrayFrom(MemorySegment address,
                                               int length,
                                               boolean free) {
-
         if (address == null || NULL.equals(address))
             return null;
 
@@ -702,7 +699,6 @@ public class Interop {
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
                                                       boolean free) {
-
         if (address == null || NULL.equals(address))
             return null;
 
@@ -739,8 +735,10 @@ public class Interop {
                                                 long length,
                                                 Arena arena,
                                                 boolean free) {
-
         int[] intArray = getIntegerArrayFrom(address, length, arena, free);
+        if (intArray == null)
+            return null;
+
         boolean[] array = new boolean[intArray.length];
 
         for (int c = 0; c < intArray.length; c++)
@@ -762,9 +760,11 @@ public class Interop {
                                           long length,
                                           Arena arena,
                                           boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         byte[] array = address.reinterpret(length, arena, null)
-                .toArray(ValueLayout.JAVA_BYTE);
+                              .toArray(ValueLayout.JAVA_BYTE);
 
         if (free)
             GLib.free(address);
@@ -783,6 +783,9 @@ public class Interop {
     public static byte[] getByteArrayFrom(MemorySegment address,
                                           Arena arena,
                                           boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
+
         // Find the null byte
         MemorySegment array = address.reinterpret(LONG_UNBOUNDED, arena, null);
         long idx = 0;
@@ -806,10 +809,12 @@ public class Interop {
                                                long length,
                                                Arena arena,
                                                boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_CHAR.byteSize();
         char[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_CHAR);
+                              .toArray(ValueLayout.JAVA_CHAR);
 
         if (free)
             GLib.free(address);
@@ -830,10 +835,12 @@ public class Interop {
                                               long length,
                                               Arena arena,
                                               boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_DOUBLE.byteSize();
         double[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_DOUBLE);
+                                .toArray(ValueLayout.JAVA_DOUBLE);
 
         if (free)
             GLib.free(address);
@@ -854,10 +861,12 @@ public class Interop {
                                             long length,
                                             Arena arena,
                                             boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_FLOAT.byteSize();
         float[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_FLOAT);
+                               .toArray(ValueLayout.JAVA_FLOAT);
 
         if (free)
             GLib.free(address);
@@ -878,10 +887,12 @@ public class Interop {
                                             long length,
                                             Arena arena,
                                             boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_INT.byteSize();
         int[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_INT);
+                             .toArray(ValueLayout.JAVA_INT);
 
         if (free)
             GLib.free(address);
@@ -900,6 +911,8 @@ public class Interop {
     public static int[] getIntegerArrayFrom(MemorySegment address,
                                             Arena arena,
                                             boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
@@ -924,10 +937,12 @@ public class Interop {
                                           long length,
                                           Arena arena,
                                           boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_LONG.byteSize();
         long[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_LONG);
+                              .toArray(ValueLayout.JAVA_LONG);
 
         if (free)
             GLib.free(address);
@@ -946,6 +961,8 @@ public class Interop {
     public static long[] getLongArrayFrom(MemorySegment address,
                                           Arena arena,
                                           boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
@@ -970,10 +987,12 @@ public class Interop {
                                             long length,
                                             Arena arena,
                                             boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         long size = ValueLayout.JAVA_SHORT.byteSize();
         short[] array = address.reinterpret(length * size, arena, null)
-                .toArray(ValueLayout.JAVA_SHORT);
+                               .toArray(ValueLayout.JAVA_SHORT);
 
         if (free)
             GLib.free(address);
@@ -992,6 +1011,8 @@ public class Interop {
     public static short[] getShortArrayFrom(MemorySegment address,
                                             Arena arena,
                                             boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
 
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
@@ -1018,15 +1039,12 @@ public class Interop {
     T[] getProxyArrayFrom(MemorySegment address,
                           Class<T> cls,
                           Function<MemorySegment, T> make) {
-
         if (address == null || NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
-
         long offset = 0;
-        while (!NULL.equals(
-                        array.get(ValueLayout.ADDRESS, offset))) {
+        while (!NULL.equals(array.get(ValueLayout.ADDRESS, offset))) {
             offset += ValueLayout.ADDRESS.byteSize();
         }
 
@@ -1049,7 +1067,6 @@ public class Interop {
                           int length,
                           Class<T> cls,
                           Function<MemorySegment, T> make) {
-
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1080,7 +1097,6 @@ public class Interop {
                            Class<T> cls,
                            Function<MemorySegment, T> make,
                            MemoryLayout layout) {
-
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1111,7 +1127,6 @@ public class Interop {
                                                  int length,
                                                  Class<T> cls,
                                                  Function<Integer, T> make) {
-
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1137,6 +1152,8 @@ public class Interop {
     public static MemorySegment allocateNativeArray(String[] strings,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (strings == null)
+            return NULL;
 
         int length = zeroTerminated ? strings.length + 1 : strings.length;
         var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
@@ -1166,6 +1183,8 @@ public class Interop {
     public static MemorySegment allocateNativeArray(String[][] strvs,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (strvs == null)
+            return NULL;
 
         int length = zeroTerminated ? strvs.length + 1 : strvs.length;
         var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
@@ -1195,6 +1214,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(boolean[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         int[] intArray = new int[array.length];
         for (int i = 0; i < array.length; i++) {
             intArray[i] = array[i] ? 1 : 0;
@@ -1215,6 +1237,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(byte[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         byte[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1234,6 +1259,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(char[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         char[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1253,6 +1281,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(double[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         double[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1272,6 +1303,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(float[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         float[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1291,6 +1325,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(int[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         int[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1309,6 +1346,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(long[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         long[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1328,6 +1368,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(short[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
+
         short[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
@@ -1347,6 +1390,8 @@ public class Interop {
     public static MemorySegment allocateNativeArray(Proxy[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
 
         MemorySegment[] addressArray = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -1372,6 +1417,8 @@ public class Interop {
                                                     MemoryLayout layout,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+        if (array == null)
+            return NULL;
 
         long size = layout.byteSize();
         int length = zeroTerminated ? array.length + 1 : array.length;
@@ -1408,6 +1455,9 @@ public class Interop {
     public static MemorySegment allocateNativeArray(MemorySegment[] array,
                                                     boolean zeroTerminated,
                                                     Arena arena) {
+
+        if (array == null)
+            return NULL;
 
         int length = zeroTerminated ? array.length + 1 : array.length;
         var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
@@ -1502,7 +1552,7 @@ public class Interop {
             MemorySegment _result;
             try {
                 _result = (MemorySegment) DowncallHandles.g_bytes_new.invokeExact(
-                        (MemorySegment) (data == null ? MemorySegment.NULL : allocateNativeArray(data, false, _arena)),
+                        (MemorySegment) (data == null ? NULL : allocateNativeArray(data, false, _arena)),
                         size);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);

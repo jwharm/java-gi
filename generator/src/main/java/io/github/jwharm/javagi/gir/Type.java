@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -174,17 +174,27 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             int end = cType.indexOf("*");
             if (start == -1) start = 0; else start++;
             if (end == -1) end = cType.length();
-            return uncapitalize(cType.substring(start, end));
+            String typeTag = cType.substring(start, end);
+            if (typeTag.startsWith("_"))
+                typeTag = typeTag.substring(1);
+            return uncapitalize(typeTag);
         }
 
         String javaBaseType = toJavaBaseType(name());
-        if ("MemorySegment".equals(javaBaseType))
-            return "memorySegment";
-        if ("String".equals(javaBaseType))
-            return "string";
+        String typeTag;
+        if ("MemorySegment".equals(javaBaseType)) {
+            typeTag = "memorySegment";
+        } if ("String".equals(javaBaseType)) {
+            typeTag = "string";
+        } else {
+            RegisteredType target = lookup();
+            typeTag = target == null ? null : target.typeTag();
+        }
 
-        RegisteredType target = lookup();
-        return target == null ? null : target.typeTag();
+        if (isActuallyAnArray())
+            typeTag += "Array";
+
+        return typeTag;
     }
 
     private boolean overrideLongValue() {
