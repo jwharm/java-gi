@@ -424,15 +424,25 @@ class TypedValueGenerator {
     private static PartialStatement getElementConstructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
             case Type t when t.isString() ->
-                    PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+                PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
             case Type t when t.isPrimitive() ->
-                    PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From", "interop", ClassNames.INTEROP);
+                PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From",
+                        "interop", ClassNames.INTEROP);
             case Type t when t.isMemorySegment() ->
-                    PartialStatement.of("(_p -> _p)");
+                PartialStatement.of("(_p -> _p)");
             case Array _ ->
-                    PartialStatement.of("(_p -> _p)");
-            case Type t when t.lookup() != null ->
-                    t.lookup().constructorName();
+                PartialStatement.of("(_p -> _p)");
+            case Type t when t.lookup() != null -> {
+                var elemTarget = t.lookup();
+                // For flagged types (bitfield/enum) read an integer and call <EnumType>.of()
+                if (elemTarget instanceof FlaggedType ft) {
+                    var elemTypeTag = elemTarget.typeTag();
+                    yield PartialStatement.of("(_ptr -> $" + elemTypeTag + ":T.of($interop:T.getIntegerFrom(_ptr)))",
+                            elemTypeTag, ft.typeName(), "interop", ClassNames.INTEROP);
+                } else {
+                    yield elemTarget.constructorName();
+                }
+            }
             default ->
                     throw new UnsupportedOperationException("Unsupported element type: " + type);
         };
@@ -441,17 +451,17 @@ class TypedValueGenerator {
     private static PartialStatement getElementDestructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
             case Array _ ->
-                    PartialStatement.of("(_ -> {}) /* unsupported */");
+                PartialStatement.of("(_ -> {}) /* unsupported */");
             case Type t when t.isString() ->
-                    null;
+                null;
             case Type t when t.isPrimitive() ->
-                    null;
+                null;
             case Type t when t.isMemorySegment() ->
-                    PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
+                PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
             case Type t when t.lookup() != null ->
-                    t.lookup().destructorName();
+                t.lookup().destructorName();
             default ->
-                    throw new UnsupportedOperationException("Unsupported element type: " + type);
+                throw new UnsupportedOperationException("Unsupported element type: " + type);
         };
     }
 
