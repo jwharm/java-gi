@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -35,20 +35,28 @@ public final class Parameter extends GirElement implements TypedValue {
         return (Parameters) super.parent();
     }
 
+    /*
+     * Check if the parameter has direction "out" or "inout", and also check:
+     * - It's not an array of unknown size
+     * - It's not a raw pointer
+     * - It's not a proxy type
+     * - It's not an alias wrapping a primitive value
+     * This is used for all parameters that will be wrapped in an Out<> class in Java.
+     */
     public boolean isOutParameter() {
         if (anyType() instanceof Array a && a.unknownSize())
             return false;
 
-        return (direction() == Direction.OUT
-                    || direction() == Direction.INOUT)
-                && (anyType() instanceof Array
-                    || (anyType() instanceof Type type
-                        && (type.isPointer()
-                            || (type.cType()) != null
-                                && type.cType().endsWith("gsize")))
-                        && (!type.isProxy())
-                        && (!(type.lookup() instanceof Alias a
-                                && a.isValueWrapper())));
+        if (direction() == null || direction() == Direction.IN)
+            return false;
+
+        if (anyType() instanceof Array)
+            return true;
+
+        return (anyType() instanceof Type type
+                && (type.isPointer() || (type.cType()) != null && type.cType().endsWith("gsize")))
+                && (!type.isProxy())
+                && (!(type.lookup() instanceof Alias a && a.isValueWrapper()));
     }
 
     public boolean isUserDataParameter() {
@@ -167,6 +175,7 @@ public final class Parameter extends GirElement implements TypedValue {
         return attrBool("skip", false);
     }
 
+    @Override
     public TransferOwnership transferOwnership() {
         return TransferOwnership.from(attr("transfer-ownership"));
     }

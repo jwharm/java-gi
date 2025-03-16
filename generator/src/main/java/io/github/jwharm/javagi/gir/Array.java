@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -39,6 +39,10 @@ public final class Array extends GirElement implements AnyType {
     @Override
     public TypeName typeName() {
         return ArrayTypeName.of(anyType().typeName());
+    }
+
+    public String toTypeTag() {
+        return anyType().toTypeTag() + "Array";
     }
 
     public boolean zeroTerminated() {

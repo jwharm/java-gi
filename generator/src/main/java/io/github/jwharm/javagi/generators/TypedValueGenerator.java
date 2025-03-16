@@ -68,6 +68,10 @@ class TypedValueGenerator {
                     || p.isArrayLengthParameter()))
             return false;
 
+        // A NULL GList is just empty
+        if (type != null && type.checkIsGList())
+            return false;
+
         return ! (type != null
                     && !type.isPointer()
                     && (type.isPrimitive()

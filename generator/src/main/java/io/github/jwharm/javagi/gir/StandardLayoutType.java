@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,7 +20,7 @@
 package io.github.jwharm.javagi.gir;
 
 public sealed interface StandardLayoutType
-        extends RegisteredType
+        extends FieldContainer
         permits Boxed, Record, Union {
 
     default String cSymbolPrefix() {
