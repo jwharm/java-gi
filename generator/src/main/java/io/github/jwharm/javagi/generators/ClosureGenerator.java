@@ -130,10 +130,13 @@ public class ClosureGenerator {
         }
 
         // Add parameters (native carrier types)
-        if (closure.parameters() != null)
-            for (Parameter p : closure.parameters().parameters())
+        if (closure.parameters() != null) {
+            for (Parameter p : closure.parameters().parameters()) {
+                var generator = new TypedValueGenerator(p);
                 upcall.addParameter(getCarrierTypeName(p.anyType(), false),
-                                    toJavaIdentifier(p.name()));
+                        generator.getName());
+            }
+        }
 
         // GError** parameter
         if (closure.throws_())
