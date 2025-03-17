@@ -59,4 +59,4 @@ This brings our example application to this appearance:
 
 ![Full application](img/getting-started-app9.png)
 
-[Previous](getting_started_12.md){ .md-button }
+[Previous](getting_started_12.md){ .md-button } [Next](getting_started_14.md){ .md-button }

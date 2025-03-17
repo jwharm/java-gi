@@ -108,3 +108,5 @@ We can now use the icon using `Image.fromResource` and the string name of the ic
 ```Java
 var image = Image.fromResource("/icons/key-symbolic");
 ```
+
+[Previous](getting_started_13.md){ .md-button }
