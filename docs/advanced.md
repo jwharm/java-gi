@@ -264,7 +264,7 @@ To learn about creating your own signals, read [Registering new types](register.
 
 ## Closures
 
-[Closures](https://docs.gtk.org/gobject/struct.Closure.html) can be marshaled to Java methods. Similar to the `CClosure` type in C code, Java-GI offers a [JavaClosure](https://jwharm.github.io/java-gi/javadoc/io/github/jwharm/javagi/gobject/JavaClosure.html). You can create a JavaClosure for a lambda fuction, functional interface or `java.lang.reflect.Method`, and then pass it to native code (for example, the last two parameters of [`GObject.bindPropertyFull()`](https://jwharm.github.io/java-gi/glib/org.gnome.glib/org/gnome/gobject/GObject.html#bindPropertyFull(java.lang.String,org.gnome.gobject.GObject,java.lang.String,org.gnome.gobject.BindingFlags,org.gnome.gobject.Closure,org.gnome.gobject.Closure))).
+[Closures](https://docs.gtk.org/gobject/struct.Closure.html) can be marshaled to Java methods. Similar to the `CClosure` type in C code, Java-GI offers a [JavaClosure](https://jwharm.github.io/java-gi/javadoc/io/github/jwharm/javagi/gobject/JavaClosure.html). You can create a JavaClosure for a lambda fuction, functional interface or `java.lang.reflect.Method`, and then pass it to native code (for example, the last two parameters of [`GObject.bindPropertyFull()`](https://jwharm.github.io/java-gi/javadoc/org/gnome/gobject/GObject.html#bindPropertyWithClosures(java.lang.String,org.gnome.gobject.GObject,java.lang.String,java.util.Set,org.gnome.gobject.Closure,org.gnome.gobject.Closure)).
 
 !!! warning
     Be aware that a Java lambda or method reference that is wrapped in a JavaClosure must have the correct type signature, or else the application will fail at runtime. Closures cannot be type-checked by the compiler!
