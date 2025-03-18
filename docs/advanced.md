@@ -105,6 +105,21 @@ Builders also offer `on...()` methods to connect signals:
 
 This can result in cleaner-looking code, but the signals cannot be managed and disconnected. To properly connect and disconnect signals, use the `SignalHandler` object that is returned by the `on...()` methods on the created instances. You should only connect signals from a builder when they don't need to be disconnected later.
 
+## Property bindings
+
+Use `GObject.bindProperty()` to create a property binding, so that when one property value is modified, the other one is updated too. It's also possible to apply transformations in both directions:
+
+```java
+button1.<Integer, Integer>bindProperty("number", button2, "number")
+       .transformTo(n -> n + 1)
+       .transformFrom(n -> n - 1)
+       .bidirectional()
+       .syncCreate()
+       .build();
+```
+
+This example binds the "number" property of `button1` to the "number" property of `button2`. The generic type declaration `<Integer, Integer>` contains the types of the properties.
+
 ## Exceptions
 
 `GError**` parameters are mapped to Java `GErrorException`s.
