@@ -234,7 +234,6 @@ public class InstanceCache {
             if (actualType.equals(creatingType)) {
                 proxy.address = newInstance.handle();
                 put(address, proxy);
-                constructStack.pop();
                 return proxy;
             }
         }
@@ -369,6 +368,8 @@ public class InstanceCache {
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
+        } finally {
+            constructStack.pop();
         }
     }
 
