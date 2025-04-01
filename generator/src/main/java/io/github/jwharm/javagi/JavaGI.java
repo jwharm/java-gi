@@ -84,6 +84,12 @@ public class JavaGI implements Callable<Integer> {
     private boolean generateProject;
 
     @CommandLine.Option(
+            names = {"-S", "--stacktrace"},
+            description = "write a stacktrace to stderr for all exceptions"
+    )
+    private boolean stacktrace;
+
+    @CommandLine.Option(
             names = {"-s", "--summary"},
             paramLabel = "text",
             description = "short summary of the library to include in the " +
@@ -118,19 +124,24 @@ public class JavaGI implements Callable<Integer> {
      * @param args processed by picocli
      */
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new JavaGI())
-                .setExecutionExceptionHandler(JavaGI::handleException)
+        var javaGi = new JavaGI();
+        int exitCode = new CommandLine(javaGi)
+                .setExecutionExceptionHandler(javaGi::writeErrorMessages)
                 .execute(args);
         System.exit(exitCode);
     }
 
     /**
-     * Prints exception messages on the command line, but does not print the
-     * stack trace.
+     * When "--stacktrace" is passed on the command line, the exception is
+     * rethrown. Otherwise, this will print the exception message on the
+     * command line, without the stack trace.
      */
-    private static int handleException(Exception ex,
-                                       CommandLine cmd,
-                                       CommandLine.ParseResult parseResult) {
+    private int writeErrorMessages(Exception ex,
+                                   CommandLine cmd,
+                                   CommandLine.ParseResult result) throws Exception {
+        if (stacktrace)
+            throw ex;
+
         String message = Objects.requireNonNullElse(
                 ex.getMessage(),
                 ex.getClass().getSimpleName());
