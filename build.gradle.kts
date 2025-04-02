@@ -15,6 +15,10 @@ tasks.register("assembleDist") {
     dependsOn(gradle.includedBuild("generator").task(":assembleDist"))
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}
+
 // Disable jar for top-level project
 tasks.withType<Jar>().configureEach {
     enabled = false

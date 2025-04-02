@@ -1,7 +1,5 @@
-dependencyResolutionManagement {
-    versionCatalogs {
-        create("libs") {
-            from(files("../gradle/libs.versions.toml"))
-        }
-    }
+rootProject.name = "buildSrc"
+
+plugins {
+    id("dev.panuszewski.typesafe-conventions") version "0.6.0-RC1"
 }

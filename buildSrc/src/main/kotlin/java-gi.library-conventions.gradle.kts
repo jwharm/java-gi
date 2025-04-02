@@ -1,4 +1,3 @@
-import org.gradle.accessors.dm.LibrariesForLibs
 import org.apache.tools.ant.taskdefs.condition.Os
 
 /*
@@ -23,10 +22,6 @@ plugins {
 repositories {
     mavenCentral()
 }
-
-// Workaround for https://github.com/gradle/gradle/issues/15383
-val libs: LibrariesForLibs
-    get() = the<LibrariesForLibs>()
 
 dependencies {
     compileOnly(libs.annotations)
