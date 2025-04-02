@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -29,6 +29,7 @@ import org.gradle.api.services.BuildServiceParameters;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 
 /**
  * A Gradle build service that provides Library objects containing a GIR
@@ -100,7 +101,7 @@ public abstract class GirParserService
             throws XMLStreamException, FileNotFoundException {
         Repository repository = null;
 
-        for (Integer platform : Platform.toList(Platform.ALL)) {
+        for (Integer platform : List.of(Platform.MACOS, Platform.WINDOWS, Platform.LINUX)) {
             try {
                 File girFile = findFile(
                         baseFolder.dir(Platform.toString(platform)).getAsFile(),
