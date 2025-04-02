@@ -139,7 +139,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         return new ListIterator<>() {
 
             // Register the direction of the last iterator step
-            private enum Direction {
+            enum Direction {
                 FORWARD,
                 BACKWARD
             }
