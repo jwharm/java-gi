@@ -167,11 +167,11 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // Arena for parameters with async or notified scope
     private void scope(MethodSpec.Builder builder) {
         if (p.scope() == Scope.NOTIFIED && p.destroy() != null)
-            builder.addStatement("final $1T _$2LScope = $1T.ofConfined()",
+            builder.addStatement("final $1T _$2LScope = $1T.ofShared()",
                             Arena.class, getName());
 
         if (p.scope() == Scope.ASYNC && !p.isDestroyNotifyParameter())
-            builder.addStatement("final $1T _$2LScope = $1T.ofConfined()",
+            builder.addStatement("final $1T _$2LScope = $1T.ofShared()",
                             Arena.class, getName())
                    .addStatement("if ($2L != null) $1T.CLEANER.register($2L, new $1T(_$2LScope))",
                             ClassNames.ARENA_CLOSE_ACTION, getName());
