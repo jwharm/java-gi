@@ -52,7 +52,6 @@ public final class ClassNames {
     public static final ClassName MEMORY_CLEANER = get(PKG_INTEROP, "MemoryCleaner");
     public static final ClassName INTEROP = get(PKG_INTEROP, "Interop");
     public static final ClassName PLATFORM = get(PKG_INTEROP, "Platform");
-    public static final ClassName VARARGS_UTIL = get(PKG_INTEROP, "VarargsUtil");
 
     public static final ClassName AUTO_CLOSEABLE = get(PKG_GIO, "AutoCloseable");
     public static final ClassName LIST_MODEL_JAVA_LIST = get(PKG_GIO, "ListModelJavaList");
@@ -80,8 +79,8 @@ public final class ClassNames {
     public final static ClassName G_ERROR = get("org.gnome.glib", "GError");
     public final static ClassName G_LIB = get("org.gnome.glib", "GLib");
     public final static ClassName G_LOG_LEVEL_FLAGS = get("org.gnome.glib", "LogLevelFlags");
+    public final static ClassName G_SOURCE_ONCE_FUNC = get("org.gnome.glib", "SourceOnceFunc");
     public final static ClassName G_TYPE = get("org.gnome.glib", "Type");
-    public final static ClassName G_VARIANT = get("org.gnome.glib", "Variant");
 
     public final static ClassName G_OBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName G_OBJECTS = get("org.gnome.gobject", "GObjects");
