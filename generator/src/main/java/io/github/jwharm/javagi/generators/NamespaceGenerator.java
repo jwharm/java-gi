@@ -68,6 +68,11 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             }
         }
 
+        if (ns.name().equals("GLib"))
+            builder.addMethod(glibIdleAddOnce())
+                   .addMethod(glibTimeoutAddOnce())
+                   .addMethod(glibTimeoutAddSecondsOnce());
+
         if (hasDowncallHandles())
             builder.addType(downcallHandlesClass());
 
@@ -173,6 +178,96 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .add(");\n");
         return CodeBlock.builder()
                 .addNamed(stmt.format(), stmt.arguments())
+                .build();
+    }
+
+    /*
+     * We replace g_idle_add_once, g_timeout_add_once and
+     * g_timeout_add_seconds_once with custom wrappers around g_idle_add_full
+     * g_timeout_add_full and g_timeout_add_seconds_full, because the "_once"
+     * functions leak memory (they don't notify when the callback is completed
+     * and the arena for the upcall stub can be closed).
+     */
+
+    private MethodSpec glibIdleAddOnce() {
+        return MethodSpec.methodBuilder("idleAddOnce")
+                .addJavadoc("""
+                     Adds a function to be called whenever there are no higher priority
+                     events pending to the default main loop. The function is given the
+                     default idle priority, {@code $1T.PRIORITY_DEFAULT_IDLE}.
+                     <p>
+                     The function will only be called once and then the source will be
+                     automatically removed from the main context.
+                     <p>
+                     This function otherwise behaves like {@link $1T#idleAdd}.
+                     
+                     @param function function to call
+                     @return the ID (greater than 0) of the event source""", ClassNames.G_LIB)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(int.class)
+                .addParameter(ClassNames.G_SOURCE_ONCE_FUNC, "function")
+                .addCode(CodeBlock.builder()
+                        .add("return idleAdd(PRIORITY_DEFAULT_IDLE, () -> {\n")
+                        .indent()
+                        .addStatement("function.run()")
+                        .addStatement("return SOURCE_REMOVE")
+                        .unindent()
+                        .addStatement("})")
+                        .build())
+                .build();
+    }
+
+    private MethodSpec glibTimeoutAddOnce() {
+        return MethodSpec.methodBuilder("timeoutAddOnce")
+                .addJavadoc("""
+                    Sets a function to be called after {@code interval} milliseconds have elapsed,
+                    with the default priority, {@code $1T.PRIORITY_DEFAULT}.
+                    <p>
+                    The given {@code function} is called once and then the source will be automatically
+                    removed from the main context.
+                    <p>
+                    This function otherwise behaves like {@link $1T#timeoutAdd}.
+                    
+                    @param interval the time after which the function will be called, in
+                      milliseconds (1/1000ths of a second)
+                    @param function function to call
+                    @return the ID (greater than 0) of the event source""", ClassNames.G_LIB)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(int.class)
+                .addParameter(int.class, "interval")
+                .addParameter(ClassNames.G_SOURCE_ONCE_FUNC, "function")
+                .addCode(CodeBlock.builder()
+                        .add("return timeoutAdd(PRIORITY_DEFAULT, interval, () -> {\n")
+                        .indent()
+                        .addStatement("function.run()")
+                        .addStatement("return SOURCE_REMOVE")
+                        .unindent()
+                        .addStatement("})")
+                        .build())
+                .build();
+    }
+
+    private MethodSpec glibTimeoutAddSecondsOnce() {
+        return MethodSpec.methodBuilder("timeoutAddSecondsOnce")
+                .addJavadoc("""
+                    This function behaves like {@link $1T#timeoutAddOnce} but with a range in
+                    seconds.
+                    
+                    @param interval the time after which the function will be called, in seconds
+                    @param function function to call
+                    @return the ID (greater than 0) of the event source""", ClassNames.G_LIB)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(int.class)
+                .addParameter(int.class, "interval")
+                .addParameter(ClassNames.G_SOURCE_ONCE_FUNC, "function")
+                .addCode(CodeBlock.builder()
+                        .add("return timeoutAddSeconds(PRIORITY_DEFAULT, interval, () -> {\n")
+                        .indent()
+                        .addStatement("function.run()")
+                        .addStatement("return SOURCE_REMOVE")
+                        .unindent()
+                        .addStatement("})")
+                        .build())
                 .build();
     }
 }

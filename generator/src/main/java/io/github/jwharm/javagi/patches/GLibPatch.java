@@ -51,6 +51,15 @@ public class GLibPatch implements Patch {
             ns = add(ns, gtype);
 
             /*
+             * These functions don't clean up the memory allocated for the
+             * callback function. It is replaced in Java-GI by wrappers
+             * around their respective "full" functions.
+             */
+            ns = remove(ns, Function.class, "name", "idle_add_once");
+            ns = remove(ns, Function.class, "name", "timeout_add_once");
+            ns = remove(ns, Function.class, "name", "timeout_add_seconds_once");
+
+            /*
              * g_clear_error has attribute throws="1" but no gerror** parameter
              * (or any other parameters) in the gir file.
              */
