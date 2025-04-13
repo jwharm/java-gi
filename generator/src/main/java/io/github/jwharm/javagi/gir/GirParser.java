@@ -232,6 +232,7 @@ public final class GirParser {
             case "constant"           -> new Constant(attributes, children, platform);
             case "constructor"        -> new Constructor(attributes, children, platform);
             case "doc"                -> new Doc(attributes, contents.toString().trim());
+            case "doc:format"         -> new DocFormat(attributes);
             case "docsection"         -> new Docsection(attributes, children);
             case "doc-deprecated"     -> new DocDeprecated(contents.toString().trim());
             case "doc-stability"      -> new DocStability(contents.toString().trim());
