@@ -110,13 +110,6 @@ public class BasePatch implements Patch {
             return m.withAttribute("shadows", null);
         }
 
-        /*
-         * Remove aliases for void. They are unusable for language bindings.
-         */
-        if (element instanceof Alias a
-                && a.anyType() instanceof Type t && t.isVoid())
-            return element.withAttribute("java-gi-skip", "1");
-
         return element;
     }
 

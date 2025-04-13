@@ -69,6 +69,12 @@ public class AliasGenerator extends RegisteredTypeGenerator {
             builder = TypeSpec.interfaceBuilder(alias.typeName())
                     .addSuperinterface(target.typeName());
 
+        else if (alias.anyType().isVoid()) {
+            builder.superclass(ParameterizedTypeName.get(
+                            ClassNames.ALIAS, TypeName.get(MemorySegment.class)))
+                    .addMethod(valueConstructor(TypeName.get(MemorySegment.class)));
+        }
+
         else if (alias.isValueWrapper())
             builder.superclass(ParameterizedTypeName.get(
                             ClassNames.ALIAS, alias.anyType().typeName().box()))
