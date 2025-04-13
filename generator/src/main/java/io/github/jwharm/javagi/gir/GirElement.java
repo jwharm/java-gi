@@ -150,6 +150,7 @@ public abstract class GirElement implements Serializable, Node {
             case Constant c          -> new Constant(newAttrs, c.children(), c.platforms());
             case Constructor c       -> new Constructor(newAttrs, c.children(), c.platforms());
             case Doc d               -> new Doc(newAttrs, d.text());
+            case DocFormat _         -> new DocFormat(newAttrs);
             case Docsection d        -> new Docsection(newAttrs, d.children());
             case DocDeprecated d     -> d;
             case DocVersion d        -> d;
@@ -224,6 +225,7 @@ public abstract class GirElement implements Serializable, Node {
             case Constant c          -> new Constant(c.attributes(), newChildren, c.platforms());
             case Constructor c       -> new Constructor(c.attributes(), newChildren, c.platforms());
             case Doc d               -> d;
+            case DocFormat d         -> d;
             case Docsection d        -> new Docsection(d.attributes(), newChildren);
             case DocDeprecated d     -> d;
             case DocVersion d        -> d;
