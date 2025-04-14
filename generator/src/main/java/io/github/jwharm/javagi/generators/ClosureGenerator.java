@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -307,7 +307,7 @@ public class ClosureGenerator {
         if (returnValue.anyType() instanceof Type type) {
             var target = type.lookup();
             if ((type.isPrimitive()
-                        || target instanceof FlaggedType
+                        || target instanceof EnumType
                         || (target instanceof Alias a && a.isValueWrapper()))
                     && (!type.isPointer())) {
                 upcall.addStatement("return 0");

@@ -314,7 +314,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 if (type.isBoolean())
                     payload.add(" ? 1 : 0");
             }
-            else if (target instanceof FlaggedType)
+            else if (target instanceof EnumType)
                 payload = PartialStatement.of("_$name:LOut.get().getValue()", "name", getName());
             else
                 payload = marshalJavaToNative("_" + getName() + "Out.get()");

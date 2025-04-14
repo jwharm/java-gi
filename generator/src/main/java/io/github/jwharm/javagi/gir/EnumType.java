@@ -25,7 +25,7 @@ import static io.github.jwharm.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 
-public sealed interface FlaggedType
+public sealed interface EnumType
         extends RegisteredType
         permits Bitfield, Enumeration {
 

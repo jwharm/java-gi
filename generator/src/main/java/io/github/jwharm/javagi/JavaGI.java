@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -290,7 +290,7 @@ public class JavaGI implements Callable<Integer> {
                 case Boxed b -> new BoxedGenerator(b).generate();
                 case Callback c -> new CallbackGenerator(c).generate();
                 case Class c -> new ClassGenerator(c).generate();
-                case FlaggedType f -> new FlaggedTypeGenerator(f).generate();
+                case EnumType e -> new EnumGenerator(e).generate();
                 case Interface i -> new InterfaceGenerator(i).generate();
                 case Record r when r.isGTypeStructFor() == null ->
                         new RecordGenerator(r).generate();
