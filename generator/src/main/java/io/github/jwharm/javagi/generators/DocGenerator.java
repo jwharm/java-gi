@@ -51,11 +51,6 @@ public class DocGenerator {
         // Write docstring
         writeDoc(builder, javadoc, null);
 
-        // Version
-        if (doc.parent() instanceof RegisteredType rt
-                && rt.infoAttrs().version() != null)
-            writeDoc(builder, rt.infoAttrs().version(), "@version");
-
         // Methods and functions
         if (doc.parent() instanceof Callable func
                 && (! (doc.parent() instanceof Callback
@@ -107,15 +102,6 @@ public class DocGenerator {
                     "@return");
         }
 
-        // Deprecated
-        if (doc.parent() instanceof Callable m
-                && m.callableAttrs().deprecated()
-                && m.infoElements().docDeprecated() != null) {
-            writeDoc(builder,
-                     new Javadoc().convert(m.infoElements().docDeprecated()),
-                    "@deprecated");
-        }
-
         // Property setters
         if (doc.parent() instanceof Property p) {
             String identifier = toJavaIdentifier(p.name());
@@ -130,6 +116,20 @@ public class DocGenerator {
             String identifier = toJavaIdentifier(f.name());
             writeDoc(builder, identifier + " the value for the {@code " + f.name() + "} field",
                     "@param");
+        }
+
+        // Version/Since
+        if (doc.parent() instanceof GirElement element
+                && element.infoAttrs().version() != null)
+            writeDoc(builder, element.infoAttrs().version(), "@since");
+
+        // Deprecated
+        if (doc.parent() instanceof Callable m
+                && m.callableAttrs().deprecated()
+                && m.infoElements().docDeprecated() != null) {
+            writeDoc(builder,
+                     new Javadoc().convert(m.infoElements().docDeprecated()),
+                    "@deprecated");
         }
 
         return builder.toString();
