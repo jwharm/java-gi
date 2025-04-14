@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -260,7 +260,7 @@ public class Conversions {
 
         RegisteredType target = type.lookup();
 
-        if (target instanceof FlaggedType)
+        if (target instanceof EnumType)
             return TypeName.INT;
 
         if (target instanceof Alias a && a.isValueWrapper())
@@ -289,7 +289,7 @@ public class Conversions {
 
         RegisteredType target = type.lookup();
 
-        if (target instanceof FlaggedType)
+        if (target instanceof EnumType)
             return "int";
 
         if (target instanceof Alias a && a.isValueWrapper())
@@ -320,7 +320,7 @@ public class Conversions {
             return "ADDRESS";
         }
         RegisteredType target = t.lookup();
-        if (target instanceof FlaggedType || t.isBoolean()) {
+        if (target instanceof EnumType || t.isBoolean()) {
             return "JAVA_INT";
         }
         if (t.isLong() && longAsInt) {

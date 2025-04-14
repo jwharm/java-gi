@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -25,7 +25,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.jwharm.javagi.configuration.ClassNames;
 import io.github.jwharm.javagi.gir.Bitfield;
-import io.github.jwharm.javagi.gir.FlaggedType;
+import io.github.jwharm.javagi.gir.EnumType;
 import io.github.jwharm.javagi.gir.Member;
 import io.github.jwharm.javagi.util.GeneratedAnnotationBuilder;
 import io.github.jwharm.javagi.util.Numbers;
@@ -40,12 +40,12 @@ import static io.github.jwharm.javagi.util.Conversions.toJavaConstantUpperCase;
 import static io.github.jwharm.javagi.util.Conversions.toJavaSimpleType;
 import static java.util.function.Predicate.not;
 
-public class FlaggedTypeGenerator extends RegisteredTypeGenerator {
+public class EnumGenerator extends RegisteredTypeGenerator {
 
-    private final FlaggedType en;
+    private final EnumType en;
     private final TypeSpec.Builder builder;
 
-    public FlaggedTypeGenerator(FlaggedType en) {
+    public EnumGenerator(EnumType en) {
         super(en);
         this.en = en;
         this.builder = TypeSpec.enumBuilder(en.typeName());

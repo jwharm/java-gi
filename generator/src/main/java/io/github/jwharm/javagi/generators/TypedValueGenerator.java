@@ -78,7 +78,7 @@ class TypedValueGenerator {
                         || (target instanceof Alias a
                                 && a.anyType() instanceof Type t
                                 && t.isPrimitive())
-                        || target instanceof FlaggedType));
+                        || target instanceof EnumType));
     }
 
     String doFree() {
@@ -120,7 +120,7 @@ class TypedValueGenerator {
 
         if (type != null
                 && type.isPointer()
-                && (type.isPrimitive() || target instanceof FlaggedType))
+                && (type.isPrimitive() || target instanceof EnumType))
             return TypeName.get(MemorySegment.class);
 
         return typeName;
@@ -168,7 +168,7 @@ class TypedValueGenerator {
         if (type.isMemorySegment())
             return PartialStatement.of(identifier);
 
-        if (type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
+        if (type.isPointer() && (type.isPrimitive() || target instanceof EnumType))
             return PartialStatement.of(identifier);
 
         if (type.isBoolean())
@@ -233,23 +233,23 @@ class TypedValueGenerator {
         Type type = (Type) array.anyType();
         RegisteredType target = type.lookup();
 
-        boolean isFlaggedType = target instanceof FlaggedType;
+        boolean isEnum = target instanceof EnumType;
         boolean isPrimitiveAlias = target instanceof Alias a && a.isValueWrapper();
 
-        String targetTypeTag = isFlaggedType ? "flaggedType" : type.toTypeTag();
+        String targetTypeTag = isEnum ? "enumType" : type.toTypeTag();
 
         String primitiveClassName = isPrimitiveAlias
                 ? primitiveClassName(((Alias) target).anyType().typeName().toString())
                 : "";
 
-        if (isFlaggedType || isPrimitiveAlias) {
+        if (isEnum || isPrimitiveAlias) {
             return PartialStatement.of(
                     "$interop:T.allocateNativeArray($" + targetTypeTag + ":T.get"
                             + primitiveClassName + "Values(" + identifier + "), "
                             + array.zeroTerminated() + ", " + allocator + ")",
                     "arena", Arena.class,
                     "interop", ClassNames.INTEROP,
-                    targetTypeTag, isFlaggedType ? ClassNames.INTEROP : type.typeName());
+                    targetTypeTag, isEnum ? ClassNames.INTEROP : type.typeName());
         }
 
         if (target instanceof Record && (!type.isPointer()))
@@ -276,7 +276,7 @@ class TypedValueGenerator {
             if (type.isActuallyAnArray())
                 return marshalNativeToJavaArray(type, null, identifier);
 
-            if (type.isPointer() && (type.isPrimitive() || target instanceof FlaggedType))
+            if (type.isPointer() && (type.isPrimitive() || target instanceof EnumType))
                 return PartialStatement.of(identifier);
 
             return marshalNativeToJava(type, identifier);
@@ -434,11 +434,11 @@ class TypedValueGenerator {
                 PartialStatement.of("(_p -> _p)");
             case Type t when t.lookup() != null -> {
                 var elemTarget = t.lookup();
-                // For flagged types (bitfield/enum) read an integer and call <EnumType>.of()
-                if (elemTarget instanceof FlaggedType ft) {
+                // For enum types (bitfield/enumeration) read an integer and call <EnumType>.of()
+                if (elemTarget instanceof EnumType enumType) {
                     var elemTypeTag = elemTarget.typeTag();
                     yield PartialStatement.of("(_ptr -> $" + elemTypeTag + ":T.of($interop:T.getIntegerFrom(_ptr)))",
-                            elemTypeTag, ft.typeName(), "interop", ClassNames.INTEROP);
+                            elemTypeTag, enumType.typeName(), "interop", ClassNames.INTEROP);
                 } else {
                     yield elemTarget.constructorName();
                 }
@@ -490,7 +490,7 @@ class TypedValueGenerator {
                         "$interop:T.getAddressArrayFrom(" + identifier + ", " + free + ")",
                         "interop", ClassNames.INTEROP);
 
-            if (target instanceof FlaggedType)
+            if (target instanceof EnumType)
                 return PartialStatement.of(
                         "$interop:T.getArrayFromIntPointer(" + identifier
                                 + ", (int) $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
@@ -540,7 +540,7 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
-        if (target instanceof FlaggedType)
+        if (target instanceof EnumType)
             return PartialStatement.of(
                     "$interop:T.getArrayFromIntPointer(" + identifier
                             + ", (int) " + size + ", $" + targetTypeTag + ":T.class, $" + targetTypeTag + ":T::of)",
@@ -754,7 +754,7 @@ class TypedValueGenerator {
 
             if (target instanceof Alias a && a.isValueWrapper())
                 builder.initializer("new $T($L)", a.typeName(), literal(a.anyType().typeName(), value));
-            else if (target instanceof FlaggedType)
+            else if (target instanceof EnumType)
                 builder.initializer(marshalNativeToJava(literal(TypeName.INT, value), false).toCodeBlock());
             else
                 builder.initializer(literal(type.typeName(), value).replace("$", "$$"));

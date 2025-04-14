@@ -315,7 +315,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             builder.addNamedCode(stmt.format(), stmt.arguments());
         } else {
             String identifier = getName() + "Param";
-            if (target instanceof FlaggedType)
+            if (target instanceof EnumType)
                 identifier += ".get($valueLayout:T.JAVA_INT, 0)";
 
             stmt = PartialStatement.of("$outType:T _" + getName() + "Out = new $out:T<>(",
