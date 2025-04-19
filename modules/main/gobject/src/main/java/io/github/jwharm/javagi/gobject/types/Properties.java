@@ -670,7 +670,7 @@ public class Properties {
             run((GObject) InstanceCache.getForType(object, GObject::new),
                     propertyId,
                     MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new));
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new));
         }
 
         default MemorySegment toCallback(Arena arena) {
@@ -692,7 +692,7 @@ public class Properties {
             run((GObject) InstanceCache.getForType(object, GObject::new),
                     propertyId,
                     MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpecImpl::new));
+                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new));
         }
 
         default MemorySegment toCallback(Arena arena) {
