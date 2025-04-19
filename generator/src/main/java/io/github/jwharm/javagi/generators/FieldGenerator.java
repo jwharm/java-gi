@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -129,11 +129,18 @@ public class FieldGenerator extends TypedValueGenerator {
             spec.addJavadoc("@param _arena to control the memory allocation scope\n")
                 .addParameter(Arena.class, "_arena");
 
-        PartialStatement stmt = marshalJavaToNative(getName())
-                .add(null,
+        var stmt = PartialStatement.of(null,
                         "memoryLayout", MemoryLayout.class,
                         "memorySegment", MemorySegment.class,
                         "fieldName", f.name());
+
+        if (type != null && type.isPointer()
+                && (type.isPrimitive() || (target instanceof EnumType))) {
+            // Pointer to a primitive value is an opaque MemorySegment
+            stmt.add(getName());
+        } else {
+            stmt.add(marshalJavaToNative(getName()));
+        }
 
         if (checkNull())
             spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
