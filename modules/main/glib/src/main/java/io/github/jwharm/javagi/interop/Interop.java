@@ -875,6 +875,30 @@ public class Interop {
     }
 
     /**
+     * Read a {@code NULL}-terminated array of float from native memory.
+     *
+     * @param  address address of the memory segment
+     * @param  arena   the memory scope
+     * @param  free    if the array must be freed
+     * @return array of floats
+     */
+    public static float[] getFloatArrayFrom(MemorySegment address,
+                                            Arena arena,
+                                            boolean free) {
+        if (address == null || NULL.equals(address))
+            return null;
+
+        // Find the null byte
+        MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
+        long idx = 0;
+        while (array.getAtIndex(ValueLayout.JAVA_FLOAT, idx) != 0) {
+            idx++;
+        }
+
+        return getFloatArrayFrom(address, idx, arena, free);
+    }
+
+    /**
      * Read an array of integers with the requested length from native memory.
      *
      * @param  address address of the memory segment
