@@ -90,7 +90,7 @@ public class Conversions {
         StringBuilder builder = new StringBuilder();
         boolean upper = startUpperCase;
         for (char c : typeName.toCharArray()) {
-            if (c == '_' || c == '-') {
+            if ((c == '_' || c == '-') && !builder.isEmpty()) {
                 upper = true;
             } else {
                 builder.append(upper ? Character.toUpperCase(c) : c);
