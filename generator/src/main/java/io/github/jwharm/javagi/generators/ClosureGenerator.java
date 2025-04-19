@@ -307,6 +307,11 @@ public class ClosureGenerator {
                         || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
                     stmt.add("($object:T) ", "object", Object.class);
 
+            // This is unsupported; it generates a "null". Suppress the warning
+            // when it's the trailing parameter.
+            if (i == last && p.varargs())
+                stmt.add("($object:T) ", "object", Object.class);
+
             stmt.add(new TypedValueGenerator(p)
                 .marshalNativeToJava(toJavaIdentifier(p.name()), true));
         }
