@@ -36,6 +36,7 @@ public final class ModuleInfo {
     public record Module(String moduleName, String packageName, String docUrlPrefix, String description) {}
 
     public static final Map<String, Module> INCLUDED_MODULES = Map.ofEntries(
+            // Main modules
             entry("glib",                      new Module("GLib", "org.gnome.glib", "https://docs.gtk.org/glib/", "A general-purpose, portable utility library, which provides many useful data types, macros, type conversions, string utilities, file utilities, a mainloop abstraction, and so on")),
             entry("gobject",                   new Module("GObject", "org.gnome.gobject", "https://docs.gtk.org/glib/" ,"The base type system and object class")),
             entry("gmodule",                   new Module("GModule", "org.gnome.gmodule", "https://docs.gtk.org/glib/", "A portable API for dynamically loading modules")),
@@ -64,7 +65,14 @@ public final class ModuleInfo {
             entry("gstaudio",                  new Module("GstAudio", "org.freedesktop.gstreamer.audio", "", "The GStreamer Audio Library")),
             entry("gstpbutils",                new Module("GstPbutils", "org.freedesktop.gstreamer.pbutils", "", "A general utility library for GStreamer plugins and applications")),
             entry("gstvideo",                  new Module("GstVideo", "org.freedesktop.gstreamer.video", "", "The GStreamer Video Library")),
-            entry("xlib",                      new Module("XLib", "org.freedesktop.xorg.xlib", "", ""))
+            entry("xlib",                      new Module("XLib", "org.freedesktop.xorg.xlib", "", "")),
+
+            // Regression test modules
+            entry("gimarshallingtests",        new Module("GIMarshallingTests", "org.gnome.gi.gimarshallingtests", "", "")),
+            entry("regress",                   new Module("Regress", "org.gnome.gi.regress", "", "")),
+            entry("regressunix",               new Module("XLib", "org.gnome.gi.regressunix", "", "")),
+            entry("utility",                   new Module("XLib", "org.gnome.gi.utility", "", "")),
+            entry("warnlib",                   new Module("XLib", "org.gnome.gi.warnlib", "", ""))
     );
 
     public static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);

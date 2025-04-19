@@ -96,54 +96,59 @@ tasks.withType<Test>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            pom {
-                name = "${groupId}:${artifactId}"
-                groupId = "io.github.jwharm.javagi"
-                val capitalizedId = artifactId.replaceFirstChar(Char::titlecase)
-                description = "Java language bindings for $capitalizedId, generated with Java-GI"
-                url = "https://jwharm.github.io/java-gi/"
-                licenses {
-                    license {
-                        name = "GNU Lesser General Public License, version 2.1"
-                        url = "https://www.gnu.org/licenses/lgpl-2.1.txt"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "jwharm"
-                        name = "Jan-Willem Harmannij"
-                        email = "jwharmannij@gmail.com"
-                        url = "https://github.com/jwharm"
-                    }
-                }
-                scm {
-                    connection = "scm:git:git://github.com/jwharm/java-gi.git"
-                    developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
-                    url = "http://github.com/jwharm/java-gi/tree/master"
-                }
-            }
-        }
-    }
+// Check if the module is located under "modules/test"
+val isTestModule = project.projectDir.toPath().startsWith(rootDir.toPath().resolve("modules/test"))
 
-    if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
-        repositories {
-            maven {
-                name = "OSSRH"
-                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-                url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-                credentials {
-                    username = project.findProperty("ossrhUsername").toString()
-                    password = project.findProperty("ossrhPassword").toString()
+if (!isTestModule) {
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+                pom {
+                    name = "${groupId}:${artifactId}"
+                    groupId = "io.github.jwharm.javagi"
+                    val capitalizedId = artifactId.replaceFirstChar(Char::titlecase)
+                    description = "Java language bindings for $capitalizedId, generated with Java-GI"
+                    url = "https://jwharm.github.io/java-gi/"
+                    licenses {
+                        license {
+                            name = "GNU Lesser General Public License, version 2.1"
+                            url = "https://www.gnu.org/licenses/lgpl-2.1.txt"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = "jwharm"
+                            name = "Jan-Willem Harmannij"
+                            email = "jwharmannij@gmail.com"
+                            url = "https://github.com/jwharm"
+                        }
+                    }
+                    scm {
+                        connection = "scm:git:git://github.com/jwharm/java-gi.git"
+                        developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
+                        url = "http://github.com/jwharm/java-gi/tree/master"
+                    }
                 }
             }
         }
-        signing {
-            sign(publishing.publications["mavenJava"])
+
+        if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+            repositories {
+                maven {
+                    name = "OSSRH"
+                    val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                    url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+                    credentials {
+                        username = project.findProperty("ossrhUsername").toString()
+                        password = project.findProperty("ossrhPassword").toString()
+                    }
+                }
+            }
+            signing {
+                sign(publishing.publications["mavenJava"])
+            }
         }
     }
 }
