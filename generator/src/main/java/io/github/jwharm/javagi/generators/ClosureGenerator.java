@@ -254,6 +254,12 @@ public class ClosureGenerator {
         return upcall.build();
     }
 
+    private boolean isHiddenParameter(Parameter p) {
+        return p.isUserDataParameter()
+                || p.isDestroyNotifyParameter()
+                || p.isArrayLengthParameter();
+    }
+
     private PartialStatement marshalParameters(String methodToInvoke) {
         PartialStatement stmt = new PartialStatement();
 
@@ -262,13 +268,17 @@ public class ClosureGenerator {
 
         List<Parameter> parameters = closure.parameters().parameters();
         boolean first = true;
-        for (int i = 0; i < parameters.size(); i++) {
-            Parameter p = parameters.get(i);
-            boolean last = i == parameters.size() - 1;
 
-            if (p.isUserDataParameter()
-                    || p.isDestroyNotifyParameter()
-                    || p.isArrayLengthParameter())
+        // Determine the index of the last (non-hidden) parameter
+        int last = parameters.size() - 1;
+        while (last > 0 && isHiddenParameter(parameters.get(last)))
+            last--;
+
+        // Generate the parameters
+        for (int i = 0; i <= last; i++) {
+            Parameter p = parameters.get(i);
+
+            if (isHiddenParameter(p))
                 continue;
 
             if (!first)
@@ -292,7 +302,7 @@ public class ClosureGenerator {
             // variadic. If the last parameter is an array, that will trigger a
             // compiler warning, because it is unsure if the array should be
             // treated as varargs or not.
-            if (last && methodToInvoke.endsWith("invoke"))
+            if (i == last && methodToInvoke.endsWith("invoke"))
                 if (p.anyType() instanceof Array
                         || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
                     stmt.add("($object:T) ", "object", Object.class);
