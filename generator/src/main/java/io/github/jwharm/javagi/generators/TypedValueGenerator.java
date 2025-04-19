@@ -701,6 +701,7 @@ class TypedValueGenerator {
         String setValue = switch (gTypeDeclaration.format()) {
             case "$types:T.BOOLEAN" -> "setBoolean";
             case "$types:T.CHAR" -> "setSchar";
+            case "$types:T.UCHAR" -> "setUchar";
             case "$types:T.DOUBLE" -> "setDouble";
             case "$types:T.FLOAT" -> "setFloat";
             case "$types:T.INT" -> "setInt";
