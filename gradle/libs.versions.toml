@@ -5,7 +5,7 @@ cairo = "1.18.4.1"
 picocli = "4.7.6"
 javapoet = "1.13.0"
 annotations = "26.0.2"
-junit = "5.12.1"
+junit = "5.12.2"
 
 [libraries]
 javagi-generator = { module = "io.github.jwharm.javagi:generator", version.ref = "javagi" }
