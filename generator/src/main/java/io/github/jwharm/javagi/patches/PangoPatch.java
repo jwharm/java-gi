@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 the Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,7 +21,9 @@ package io.github.jwharm.javagi.patches;
 
 import io.github.jwharm.javagi.gir.Class;
 import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.Function;
 import io.github.jwharm.javagi.gir.Method;
+import io.github.jwharm.javagi.gir.Namespace;
 import io.github.jwharm.javagi.gir.VirtualMethod;
 import io.github.jwharm.javagi.util.Patch;
 
@@ -34,6 +36,15 @@ public class PangoPatch implements Patch {
 
         if (!"Pango".equals(namespace))
             return element;
+
+        if (element instanceof Namespace ns) {
+
+            /*
+             * pango_log2vis_get_embedding_levels has missing annotations.
+             */
+            return remove(ns, Function.class,
+                    "c:identifier", "pango_log2vis_get_embedding_levels");
+        }
 
         /*
          * Unsure how to interpret this return type:

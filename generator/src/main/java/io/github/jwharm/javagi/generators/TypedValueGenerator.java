@@ -168,9 +168,6 @@ class TypedValueGenerator {
         if (type.isMemorySegment())
             return PartialStatement.of(identifier);
 
-        if (type.isPointer() && (type.isPrimitive() || target instanceof EnumType))
-            return PartialStatement.of(identifier);
-
         if (type.isBoolean())
             return PartialStatement.of(identifier + " ? 1 : 0");
 

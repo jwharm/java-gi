@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -159,6 +159,15 @@ public class GtkPatch implements Patch {
                 && "play".equals(vm.name())
                 && "MediaStream".equals(vm.parameters().instanceParameter().type().name()))
             return vm.withAttribute("invoker", "play");
+
+        /*
+         * Virtual method Widget.computeExpand(gboolean*, gboolean*) has two
+         * out-parameters, but they aren't annotated as such.
+         */
+        if (element instanceof Parameter p
+                && List.of("hexpand_p", "vexpand_p").contains(p.name())) {
+            return p.withAttribute("direction", "inout");
+        }
 
         /*
          * Virtual method Window.activateDefault() and

@@ -308,21 +308,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             return;
 
         if (type != null) {
-            PartialStatement payload;
-            if (type.isPrimitive() || (target instanceof Alias a && a.isValueWrapper())) {
-                payload = PartialStatement.of("_" + getName() + "Out.get()");
-                if (type.isBoolean())
-                    payload.add(" ? 1 : 0");
-            }
-            else if (target instanceof EnumType)
-                payload = PartialStatement.of("_$name:LOut.get().getValue()", "name", getName());
-            else
-                payload = marshalJavaToNative("_" + getName() + "Out.get()");
-
             var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
                     .add(generateValueLayoutPlain(type))
                     .add(", 0, ")
-                    .add(payload)
+                    .add(marshalJavaToNative("_" + getName() + "Out.get()"))
                     .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
