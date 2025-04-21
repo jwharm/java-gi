@@ -2,7 +2,7 @@
 javagi = "0.12.0"
 jdk = "22"
 cairo = "1.18.4.1"
-picocli = "4.7.6"
+picocli = "4.7.7"
 javapoet = "1.13.0"
 annotations = "26.0.2"
 junit = "5.12.2"
