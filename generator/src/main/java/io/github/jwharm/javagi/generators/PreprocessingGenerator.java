@@ -54,6 +54,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     public void generateUpcall(MethodSpec.Builder builder) {
         readPrimitiveAliasPointer(builder);
         readOutParameter(builder);
+        refGObject(builder);
     }
 
     /*
@@ -325,6 +326,20 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     .add(marshalNativeToJava(type, identifier))
                     .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
+        }
+    }
+
+    // Ref GObject when ownership is not transferred
+    private void refGObject(MethodSpec.Builder builder) {
+        if (p.transferOwnership() == TransferOwnership.NONE
+                && target != null && target.checkIsGObject()) {
+            var stmt = PartialStatement.of("var _" + getName() + "Cached = ")
+                    .add(marshalNativeToJava(type, getName()))
+                    .add(";\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments())
+                    .beginControlFlow("if (_" + getName() + "Cached instanceof $T _gobject)", ClassNames.G_OBJECT)
+                    .addStatement("_gobject.ref()")
+                    .endControlFlow();
         }
     }
 }
