@@ -18,18 +18,18 @@ Please note that Java-GI is still under active development. Feedback is welcome.
 
 ## Supported 
 
-Java-GI version 0.11 requires OpenJDK 22 or newer. Version 0.8.x and 0.9.x work with OpenJDK 21, and version 0.7.2 works with OpenJDK 20. They have been built with the following library versions:
+Java-GI version 0.12 requires OpenJDK 22 or newer. Version 0.8.x and 0.9.x work with OpenJDK 21, and version 0.7.2 works with OpenJDK 20. They have been built with the following library versions:
 
-| Library       | Java-GI 0.11.x | Java-GI 0.10.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.7.x |
-|---------------|---------------:|---------------:|------------------------:|--------------:|
-| GNOME         | 47             | 46             | 45                      | 44            |
-| GLib          | 2.82           | 2.80           | 2.78                    | 2.76          |
-| GTK           | 4.16           | 4.14           | 4.12                    | 4.10          |
-| LibAdwaita    | 1.6            | 1.5            | 1.4                     | 1.3           |
-| GStreamer     | 1.24           | 1.22           | 1.22                    | 1.20          |
-| GtkSourceview | 5.14           | 5.12           | 5.10                    | 5.9           |
-| WebkitGtk     | 2.46           | 2.44           | 2.42                    | 2.41          |
-| OpenJDK       | 22             | 22             | 21                      | 20            |
+| Library       | Java-GI 0.12.x | Java-GI 0.11.x | Java-GI 0.10.x | Java-GI 0.8.x and 0.9.x | Java-GI 0.7.x |
+|---------------|---------------:|---------------:|---------------:|------------------------:|--------------:|
+| GNOME         | 48             | 47             | 46             | 45                      | 44            |
+| GLib          | 2.84           | 2.82           | 2.80           | 2.78                    | 2.76          |
+| GTK           | 4.18           | 4.16           | 4.14           | 4.12                    | 4.10          |
+| LibAdwaita    | 1.7            | 1.6            | 1.5            | 1.4                     | 1.3           |
+| GStreamer     | 1.24           | 1.24           | 1.22           | 1.22                    | 1.20          |
+| GtkSourceview | 5.16           | 5.14           | 5.12           | 5.10                    | 5.9           |
+| WebkitGtk     | 2.48           | 2.46           | 2.44           | 2.42                    | 2.41          |
+| OpenJDK       | 22             | 22             | 22             | 21                      | 20            |
 
 The Java bindings for these libraries are available from [Maven Central](https://central.sonatype.com/search?namespace=io.github.jwharm.javagi).
 

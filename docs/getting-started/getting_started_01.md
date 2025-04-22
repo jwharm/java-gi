@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.11.2'
+    implementation 'io.github.jwharm.javagi:gtk:0.12.0'
 }
 
 java {
