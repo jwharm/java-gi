@@ -98,10 +98,13 @@ public class InstanceCache {
         }
 
         boolean isEmpty() {
-            return CONSTRUCT_STACK.get().isEmpty();
+            var stack = CONSTRUCT_STACK.get();
+            return stack == null || stack.isEmpty();
         }
 
         void push(T object) {
+            if (CONSTRUCT_STACK.get() == null)
+                CONSTRUCT_STACK.set(new ArrayList<>());
             CONSTRUCT_STACK.get().add(object);
         }
 
