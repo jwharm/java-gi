@@ -1,15 +1,15 @@
 # Java-GI
 
-**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to access native resources from Java, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.11.* generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 47:
+**Java-GI** is a tool for generating GObject-Introspection bindings for Java. The generated bindings use the [Foreign Function & Memory API](https://openjdk.org/projects/panama/) (JEP 454) to access native resources from Java, with wrapper classes based on GObject-Introspection to offer an elegant API. Java-GI version 0.12.* generates bindings to develop Java applications for libraries, based of the versions in GNOME Platform 48:
 
 | Library       | Version |
 |---------------|---------|
-| GLib          | 2.82    |
-| GTK           | 4.16    |
-| LibAdwaita    | 1.6     |
+| GLib          | 2.84    |
+| GTK           | 4.18    |
+| LibAdwaita    | 1.7     |
 | GStreamer     | 1.24    |
-| GtkSourceview | 5.14    |
-| WebkitGtk     | 2.46    |
+| GtkSourceview | 5.16    |
+| WebkitGtk     | 2.48    |
 
 You can generate Java bindings for other libraries with the `java-gi` [command-line tool](https://jwharm.github.io/java-gi/generate/) on the GIR (introspection data) file.
 
@@ -68,7 +68,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.jwharm.javagi:gtk:0.11.2'
+    implementation 'io.github.jwharm.javagi:gtk:0.12.0'
 }
 ```
 
