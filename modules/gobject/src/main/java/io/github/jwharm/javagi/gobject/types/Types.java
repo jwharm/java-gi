@@ -1149,7 +1149,7 @@ public class Types {
         if (cls.isInterface() && getTypeInterface(cls) == null)
             throw new TypeRegistrationException("Unknown TypeTypeInterface");
 
-        else if (!cls.isInterface() && getTypeClass(cls) == null)
+        else if (!cls.isInterface() && !cls.isEnum() && getTypeClass(cls) == null)
             throw new TypeRegistrationException("Unknown TypeClass");
     }
 
