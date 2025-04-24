@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.test.gtk;
 import io.github.jwharm.javagi.gobject.types.TypeCache;
 import org.gnome.gtk.FlowBox;
 import org.gnome.gtk.Gtk;
+import org.gnome.gtk.SignalListItemFactory;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,7 +38,8 @@ public class SubClassingTest {
     void testFinalSubclass() {
         Gtk.init();
 
-        // This should not throw an exception
+        // FlowBox has no TypeClass.
+        // Subclassing should not throw an exception.
         new FlowBoxExtended();
 
         // The new subclass should have the parent GType
@@ -45,10 +47,20 @@ public class SubClassingTest {
                 TypeCache.getType(FlowBox.class),
                 TypeCache.getType(FlowBoxExtended.class)
         );
+
+        // SignalListItemFactory has a TypeClass, but without a memory layout.
+        // Subclassing should not throw an exception.
+        new ItemFactoryExtended();
     }
 
     public static class FlowBoxExtended extends FlowBox {
         public FlowBoxExtended() {
+            super();
+        }
+    }
+
+    public static class ItemFactoryExtended extends SignalListItemFactory {
+        public ItemFactoryExtended() {
             super();
         }
     }

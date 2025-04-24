@@ -1146,11 +1146,23 @@ public class Types {
         if (cls.isAnnotationPresent(Flags.class) && !cls.isEnum())
             throw new TypeRegistrationException("Only enums can be a flags type");
 
-        if (cls.isInterface() && getTypeInterface(cls) == null)
-            throw new TypeRegistrationException("Unknown TypeTypeInterface");
+        if (cls.isInterface()) {
+            var typeInterface = getTypeInterface(cls);
+            if (typeInterface == null)
+                throw new TypeRegistrationException("Unknown TypeTypeInterface");
 
-        else if (!cls.isInterface() && !cls.isEnum() && getTypeClass(cls) == null)
-            throw new TypeRegistrationException("Unknown TypeClass");
+            if (getLayout(typeInterface) == null)
+                throw new TypeRegistrationException("Unknown memory layout");
+        }
+
+        else if (!cls.isEnum()) {
+            var typeClass = getTypeClass(cls);
+            if (typeClass == null)
+                throw new TypeRegistrationException("Unknown TypeClass");
+
+            if (getLayout(typeClass) == null)
+                throw new TypeRegistrationException("Unknown memory layout");
+        }
     }
 
     /**
