@@ -1135,16 +1135,22 @@ public class Types {
      */
     private static void checkClassDefinition(Class<?> cls) {
         if (cls == null)
-            throw new IllegalArgumentException("Class is null");
+            throw new TypeRegistrationException("Class is null");
 
         if (cls.isAnnotationPresent(RegisteredType.class)) {
             var annotation = cls.getAnnotation(RegisteredType.class);
             if (annotation.prerequisites().length > 0 && !cls.isInterface())
-                throw new IllegalArgumentException("Prerequisites can only be applied on interfaces");
+                throw new TypeRegistrationException("Prerequisites can only be applied on interfaces");
         }
 
         if (cls.isAnnotationPresent(Flags.class) && !cls.isEnum())
-            throw new IllegalArgumentException("Only enums can be a flags type");
+            throw new TypeRegistrationException("Only enums can be a flags type");
+
+        if (cls.isInterface() && getTypeInterface(cls) == null)
+            throw new TypeRegistrationException("Unknown TypeTypeInterface");
+
+        else if (!cls.isInterface() && getTypeClass(cls) == null)
+            throw new TypeRegistrationException("Unknown TypeClass");
     }
 
     /**

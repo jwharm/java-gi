@@ -178,21 +178,30 @@ public class TypeCache {
             return type;
 
         // Register the type: Determine which function to use
-        var classes = typeRegisterFunctions.keySet();
-        var mostSpecific = classes.stream()
-                .filter(c -> c.isAssignableFrom(cls))
-                .max((c0, c1) -> c0.isAssignableFrom(c1) ? -1 : c1.isAssignableFrom(c0) ? 1 : 0);
+        try {
+            var classes = typeRegisterFunctions.keySet();
+            var mostSpecific = classes.stream()
+                    .filter(c -> c.isAssignableFrom(cls))
+                    .max((c0, c1) -> c0.isAssignableFrom(c1) ? -1 : c1.isAssignableFrom(c0) ? 1 : 0);
 
-        if (mostSpecific.isPresent()) {
-            // Run the type registration function
-            var function = typeRegisterFunctions.get(mostSpecific.get());
+            if (mostSpecific.isPresent()) {
+                // Run the type registration function
+                var function = typeRegisterFunctions.get(mostSpecific.get());
 
-            function.apply(proxyClass);
-            type = classToTypeMap.get(cls);
-            return type;
-        } else {
-            // No function found to register this class: Fallback to Types.register()
-            return Types.register(cls);
+                function.apply(proxyClass);
+                type = classToTypeMap.get(cls);
+                return type;
+            } else {
+                // No function found to register this class: Fallback to Types.register()
+                return Types.register(cls);
+            }
+        } catch (TypeRegistrationException cre) {
+            // Type registration failed: Use the parent class GType for this
+            // class. The subclass will only exist in Java; native code will
+            // think it's the parent class.
+            var superType = getType(cls.getSuperclass());
+            register(cls, superType, null, null);
+            return superType;
         }
     }
 
