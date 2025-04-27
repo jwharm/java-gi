@@ -72,26 +72,29 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         for (var impl : cls.implements_())
             if (impl.lookup() instanceof Interface iface)
                 builder.addSuperinterface(iface.generic()
-                        ? ParameterizedTypeName.get(iface.typeName(),
-                        actualGeneric)
+                        ? ParameterizedTypeName.get(iface.typeName(), actualGeneric)
                         : iface.typeName());
 
         if (cls.autoCloseable())
             builder.addSuperinterface(ClassNames.AUTO_CLOSEABLE);
 
         if (cls.mutableList()) {
-            builder.addSuperinterface(ParameterizedTypeName.get(ClassNames.LIST_MODEL_JAVA_LIST_MUTABLE, actualGeneric));
+            builder.addSuperinterface(ParameterizedTypeName.get(
+                    ClassNames.LIST_MODEL_JAVA_LIST_MUTABLE, actualGeneric));
             if (actualGeneric.equals(ClassNames.STRING_OBJECT))
                 builder.addMethod(appendStringObjectUnwrapper());
         }
 
         if (cls.spliceableList()) {
-            if (actualGeneric instanceof TypeVariableName) throw new IllegalArgumentException("actualGeneric is a TypeVariableName");
-            builder.addSuperinterface(ParameterizedTypeName.get(ClassNames.LIST_MODEL_JAVA_LIST_SPLICEABLE, actualGeneric));
+            if (actualGeneric instanceof TypeVariableName)
+                throw new IllegalArgumentException("actualGeneric is a TypeVariableName");
+
+            builder.addSuperinterface(ParameterizedTypeName.get(
+                    ClassNames.LIST_MODEL_JAVA_LIST_SPLICEABLE, actualGeneric));
             builder.addMethod(spliceCollectionWrapper(actualGeneric));
             if (actualGeneric.equals(ClassNames.STRING_OBJECT)) {
-                builder.addMethod(spliceStringObjectUnwrapper());
-                builder.addMethod(appendStringObjectUnwrapper());
+                builder.addMethod(spliceStringObjectUnwrapper())
+                       .addMethod(appendStringObjectUnwrapper());
             }
         }
 
@@ -286,18 +289,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
     private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
-                .addJavadoc("""
-                    Creates a new $1L with the provided property names and values.
-                    
-                    @param  propertyNamesAndValues pairs of property names and values
-                            (Strings and Objects). Does not need to be null-terminated.
-                    @throws IllegalArgumentException invalid property names or values
-                    """, name())
+                .addJavadoc("Creates a new $1L.", name())
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(Object[].class, "propertyNamesAndValues")
-                .varargs(true)
                 .addStatement("super(($T) null)", MemorySegment.class)
-                .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), propertyNamesAndValues)",
+                .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), (Object[]) null)",
                         ClassNames.INSTANCE_CACHE, ClassNames.TYPE_CACHE)
                 .build();
     }
@@ -518,7 +513,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(int.class, "index")
                 .addParameter(int.class, "nRemovals")
                 .addParameter(ArrayTypeName.of(ClassNames.STRING_OBJECT), "additions")
-                .addStatement("splice(index, nRemovals, additions == null ? null : $T.stream(additions).map($T::getString).toArray(String[]::new))", Arrays.class, ClassNames.STRING_OBJECT)
+                .addStatement("splice(index, nRemovals, additions == null ? null : $T.stream(additions).map($T::getString).toArray(String[]::new))",
+                        Arrays.class, ClassNames.STRING_OBJECT)
                 .build();
     }
 

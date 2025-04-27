@@ -68,7 +68,8 @@ public class NewSignalTest {
     @RegisteredType(name="TestCounter")
     public static class Counter extends GObject {
         public Counter(int limit) {
-            super("limit", 10);
+            super();
+            setProperty("limit", limit);
         }
 
         @Signal
