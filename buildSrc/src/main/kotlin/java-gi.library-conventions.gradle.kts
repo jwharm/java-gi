@@ -1,4 +1,7 @@
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.kotlin.dsl.configure
+import org.jreleaser.gradle.plugin.JReleaserExtension
+import org.jreleaser.model.Active
 
 /*
  * Common build settings for Java-GI modules:
@@ -16,7 +19,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     id("java-library")
     id("maven-publish")
-    id("signing")
+    id("org.jreleaser")
 }
 
 repositories {
@@ -128,22 +131,34 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            url = uri(layout.buildDirectory.dir("staging-deploy"))
+        }
+    }
+}
 
-    if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
-        repositories {
-            maven {
-                name = "OSSRH"
-                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-                url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-                credentials {
-                    username = project.findProperty("ossrhUsername").toString()
-                    password = project.findProperty("ossrhPassword").toString()
+configure<JReleaserExtension> {
+    gitRootSearch = true
+    release {
+        github {
+            token = "unused"
+            skipRelease = true
+        }
+    }
+    signing {
+        active = Active.ALWAYS
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                register("sonatype") {
+                    active = Active.ALWAYS
+                    url = "https://central.sonatype.com/api/v1/publisher"
+                    stagingRepository(layout.buildDirectory.dir("staging-deploy").get().asFile.path)
                 }
             }
-        }
-        signing {
-            sign(publishing.publications["mavenJava"])
         }
     }
 }

@@ -4,12 +4,14 @@ plugins {
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
     implementation(libs.javapoet)
     implementation(libs.annotations)
     implementation(libs.javagi.generator)
+    implementation(libs.jreleaser)
 }
 
 tasks.withType<JavaCompile>().configureEach {
