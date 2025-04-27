@@ -23,6 +23,7 @@ import io.github.jwharm.javagi.gobject.types.Properties;
 
 import org.gnome.gio.Application;
 import org.gnome.gio.ApplicationFlags;
+import org.gnome.gobject.GObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -53,7 +54,7 @@ public class PropertiesTest {
 
     @Test
     public void newGObjectWithProperties() {
-        Application app = new Application(
+        Application app = GObject.newInstance(Application.class,
                 "application-id", "io.github.jwharm.javagi.test.Application",
                 "flags", ApplicationFlags.DEFAULT_FLAGS);
         String applicationId = (String) Properties.getProperty(app, "application-id");

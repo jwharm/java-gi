@@ -85,7 +85,8 @@ public class PropertyBindingTest {
         private final double limit = 70.0;
 
         public Speed(double currentSpeed) {
-            super("current-speed", currentSpeed);
+            super();
+            setProperty("current-speed", currentSpeed);
         }
 
         public double getCurrentSpeed() {

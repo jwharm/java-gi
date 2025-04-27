@@ -120,7 +120,9 @@ public class DerivedClassTest {
 
         String input1 = "abc";
         boolean input2 = true;
-        TestObject object2 = new TestObject(input1, input2);
+        TestObject object2 = GObject.newInstance(TestObject.class,
+                "string-property", input1,
+                "bool-property", input2);
         assertEquals(input1, object2.getProperty("string-property"));
         assertEquals(input2, object2.getProperty("bool-property"));
     }
@@ -143,11 +145,6 @@ public class DerivedClassTest {
 
         public TestObject() {
             super();
-        }
-
-        public TestObject(String stringValue, boolean booleanValue) {
-            super("string-property", stringValue,
-                  "bool-property", booleanValue);
         }
 
         @ClassInit
