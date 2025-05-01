@@ -65,7 +65,8 @@ jobs:
           meson compile -C gtk\build
           meson install -C gtk\build
           cd dist\bin
-          7z a ..\..\natives.zip *.dll
+          python ${{ github.workspace }}/scripts/.github/gendeps.py
+          7z a ..\..\natives.zip dll_dependencies.json *.dll
           7z a ..\..\executable.zip *.exe
           cd ..\..
           cp natives.zip natives-gtk.zip
@@ -96,7 +97,8 @@ jobs:
           meson compile -C libadwaita\build
           meson install -C libadwaita\build
           cd dist\bin
-          7z a ..\..\natives-adw.zip *.dll
+          python ${{ github.workspace }}/scripts/.github/gendeps.py
+          7z a ..\..\natives-adw.zip dll_dependencies.json *.dll
           7z a ..\..\executable-adw.zip *.exe
           cd ..\..
       - name: Finish up
