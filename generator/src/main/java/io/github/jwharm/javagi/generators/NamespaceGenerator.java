@@ -101,8 +101,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
 
             // Multiple library names (comma-separated)
             if (lib.contains(",")) {
-                block.beginControlFlow("case $S -> ",
-                        Platform.toString(platform));
+                block.beginControlFlow("case $L -> ",
+                        Platform.toString(platform).toUpperCase());
                 for (String libName : lib.split(","))
                     block.addStatement("$T.loadLibrary($S)",
                             ClassNames.INTEROP,
@@ -112,8 +112,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
 
             // Single library name
             else {
-                block.addStatement("case $S -> $T.loadLibrary($S)",
-                        Platform.toString(platform),
+                block.addStatement("case $L -> $T.loadLibrary($S)",
+                        Platform.toString(platform).toUpperCase(),
                         ClassNames.INTEROP,
                         lib);
             }

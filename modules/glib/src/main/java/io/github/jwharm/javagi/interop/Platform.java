@@ -27,23 +27,26 @@ import java.util.StringJoiner;
  * The Platform class provides utility functions to retrieve the runtime
  * platform and and check if a function is supported on the runtime platform.
  */
-public class Platform {
+public enum Platform {
+    WINDOWS,
+    LINUX,
+    MACOS;
 
-    private static String runtimePlatform = null;
+    private static Platform runtimePlatform = null;
 
     /**
      * Determine the runtime platform
      * @return the runtime platform: "windows", "linux" or "macos"
      */
-    public static String getRuntimePlatform() {
+    public static Platform getRuntimePlatform() {
         if (runtimePlatform == null) {
             String osName = System.getProperty("os.name").toLowerCase();
-            if (osName.contains("windows"))
-                runtimePlatform = "windows";
-            else if (osName.contains("linux"))
-                runtimePlatform = "linux";
-            else
-                runtimePlatform = "macos";
+            if (osName.contains("win"))
+                runtimePlatform = WINDOWS;
+            else if (osName.contains("nux"))
+                runtimePlatform = LINUX;
+            else if (osName.contains("mac") || osName.contains("darwin"))
+                runtimePlatform = MACOS;
         }
         return runtimePlatform;
     }
@@ -57,7 +60,7 @@ public class Platform {
      * @throws UnsupportedPlatformException when the runtime platform does not
      *                                      support this api call
      */
-    public static void checkSupportedPlatform(String... supportedPlatforms)
+    public static void checkSupportedPlatform(Platform... supportedPlatforms)
             throws UnsupportedPlatformException {
 
         /*
@@ -77,7 +80,7 @@ public class Platform {
                 "Unsupported API call (only available on ", ".");
 
         for (var platform : supportedPlatforms) {
-            joiner.add(platform);
+            joiner.add(platform.name().toLowerCase());
         }
 
         throw new UnsupportedPlatformException(joiner.toString());

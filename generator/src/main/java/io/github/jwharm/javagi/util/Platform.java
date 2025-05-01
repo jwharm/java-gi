@@ -19,6 +19,9 @@
 
 package io.github.jwharm.javagi.util;
 
+import com.squareup.javapoet.CodeBlock;
+import io.github.jwharm.javagi.configuration.ClassNames;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -64,12 +67,16 @@ public class Platform {
      * Generate a String representation of the specified (combination of)
      * platform(s)
      */
-    public static String toStringLiterals(int platform) {
+    public static CodeBlock generateSupportCheck(int platform) {
         var joiner = new StringJoiner(", ");
-        if ((platform & LINUX) > 0)   joiner.add("\"linux\"");
-        if ((platform & WINDOWS) > 0) joiner.add("\"windows\"");
-        if ((platform & MACOS) > 0)   joiner.add("\"macos\"");
-        return joiner.toString();
+        if ((platform & LINUX) > 0)   joiner.add("$1T.LINUX");
+        if ((platform & WINDOWS) > 0) joiner.add("$1T.WINDOWS");
+        if ((platform & MACOS) > 0)   joiner.add("$1T.MACOS");
+        var builder = CodeBlock.builder();
+        builder.add("$T.checkSupportedPlatform(", ClassNames.PLATFORM);
+        builder.add(joiner.toString(), ClassNames.PLATFORM);
+        builder.add(")");
+        return builder.build();
     }
 
     public static List<Integer> toList(int platform) {

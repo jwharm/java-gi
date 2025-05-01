@@ -266,9 +266,7 @@ public class BuilderGenerator {
         builder.beginControlFlow("try");
 
         if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM,
-                    Platform.toStringLiterals(rt.platforms()));
+            builder.addStatement(Platform.generateSupportCheck(rt.platforms()));
 
         return builder.addStatement("var _instance = ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
                         rt.typeName(),

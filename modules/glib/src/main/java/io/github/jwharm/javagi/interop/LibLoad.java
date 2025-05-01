@@ -81,7 +81,7 @@ public class LibLoad {
 
             Set<String> possibleNames = new HashSet<>();
             possibleNames.add(name);
-            if (Platform.getRuntimePlatform().equals("windows") && name.startsWith("lib")) {
+            if (Platform.getRuntimePlatform() == Platform.WINDOWS && name.startsWith("lib")) {
                 possibleNames.add(name.substring(3));
             }
             // Find the file with the requested library name

@@ -16,7 +16,7 @@ public class StrvArrayTest {
     @Test
     public void testStrvArrayToJava() {
         // DesktopAppInfo is only available on Linux
-        assumeTrue("linux".equals(Platform.getRuntimePlatform()));
+        assumeTrue(Platform.LINUX.equals(Platform.getRuntimePlatform()));
 
         // Unless there are absolutely no applications installed, searching
         // for "e" should return a few usable results
