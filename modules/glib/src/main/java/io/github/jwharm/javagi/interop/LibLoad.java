@@ -34,12 +34,10 @@ public class LibLoad {
     static {
         String javagiPath = System.getProperty("javagi.path");
         String javaPath = System.getProperty("java.library.path");
-        if (javagiPath != null) {
-            if (javaPath == null)
-                System.setProperty("java.library.path", javagiPath);
-            else
-                System.setProperty("java.library.path",
-                        javaPath + File.pathSeparator + javagiPath);
+        if (javaPath != null) {
+            if (javagiPath == null) javagiPath = javaPath;
+            else javagiPath = javagiPath + File.pathSeparator + javaPath;
+            System.setProperty("javagi.path", javagiPath);
         }
     }
 
@@ -59,8 +57,8 @@ public class LibLoad {
             fail.addSuppressed(t);
         }
 
-        // Loop through all paths defined in java.library.path
-        String[] libraryPaths = System.getProperty("java.library.path")
+        // Loop through all paths defined in javagi.path
+        String[] libraryPaths = System.getProperty("javagi.path")
                 .split(File.pathSeparator);
 
         for (String s : libraryPaths) {
