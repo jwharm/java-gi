@@ -20,16 +20,21 @@
 package io.github.jwharm.javagi.interop;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * The LibLoad class is used by Java-GI to load native libraries by name.
  */
 public class LibLoad {
+
+    private static final Pattern separator = Pattern.compile(Pattern.quote(File.pathSeparator));
+    private static final List<Path> sourceDirs;
+    private static final Map<String, Set<String>> additionalDependencies;
 
     static {
         String javagiPath = System.getProperty("javagi.path");
@@ -39,7 +44,47 @@ public class LibLoad {
             else javagiPath = javagiPath + File.pathSeparator + javaPath;
             System.setProperty("javagi.path", javagiPath);
         }
+
+        sourceDirs = separator.splitAsStream(javagiPath)
+                .filter(s -> !s.isBlank())
+                .map(s -> Path.of(s).toAbsolutePath().normalize())
+                .filter(Files::isDirectory)
+                .toList();
+
+        additionalDependencies = sourceDirs.stream().map(s -> s.resolve("java-gi-meta-v1.txt"))
+                .filter(Files::isRegularFile)
+                .findFirst()
+                .map(LibLoad::parseMetadata)
+                .orElseGet(Map::of);
     }
+
+    private static Map<String, Set<String>> parseMetadata(Path path) {
+        Map<String, Set<String>> dependencyMap = new HashMap<>();
+        try (var reader = Files.newBufferedReader(path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    String dllName = parts[0].trim();
+                    String[] dependencies = parts[1].split(",");
+                    Set<String> dependencySet = new HashSet<>();
+                    for (String dep : dependencies) {
+                        dependencySet.add(dep.trim());
+                    }
+                    dependencyMap.put(dllName, dependencySet);
+                    if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
+                        if (dllName.startsWith("lib")) dependencyMap.put(dllName.substring(3), dependencySet);
+                        else dependencyMap.put("lib" + dllName, dependencySet);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read metadata file: " + path, e);
+        }
+        return Map.copyOf(dependencyMap);
+    }
+
+    private static final Set<String> loadedLibraries = new HashSet<>();
 
     /**
      * Load the native library with the provided name.
@@ -47,29 +92,28 @@ public class LibLoad {
      * @param name the name of the library
      */
     public static void loadLibrary(String name) {
+        if (loadedLibraries.contains(name)) return;
+
+        Set<String> dependencies = additionalDependencies.get(name);
+        if (dependencies != null) {
+            for (String dependency : dependencies) {
+                loadLibrary(dependency);
+            }
+        }
+
         InteropException fail = new InteropException("Could not load library " + name);
 
         // Try System::loadLibrary first
         try {
             System.loadLibrary(name);
+            loadedLibraries.add(name);
             return;
         } catch (Throwable t) {
             fail.addSuppressed(t);
         }
 
         // Loop through all paths defined in javagi.path
-        String[] libraryPaths = System.getProperty("javagi.path")
-                .split(File.pathSeparator);
-
-        for (String s : libraryPaths) {
-            if (s.isBlank())
-                continue;
-
-            // Get a direct path to the directory
-            Path pk = Path.of(s).toAbsolutePath().normalize();
-            if (!Files.isDirectory(pk))
-                continue;
-
+        for (Path pk : sourceDirs) {
             // List the files in the directory
             Path[] files;
             try (Stream<Path> p = Files.list(pk)) {
@@ -81,8 +125,9 @@ public class LibLoad {
 
             Set<String> possibleNames = new HashSet<>();
             possibleNames.add(name);
-            if (Platform.getRuntimePlatform() == Platform.WINDOWS && name.startsWith("lib")) {
-                possibleNames.add(name.substring(3));
+            if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
+                if (name.startsWith("lib")) possibleNames.add(name.substring(3));
+                else possibleNames.add("lib" + name);
             }
             // Find the file with the requested library name
             for (Path path : files) {
@@ -91,6 +136,7 @@ public class LibLoad {
                     if (possibleNames.contains(fn)) {
                         // Load the library
                         System.load(path.toString());
+                        loadedLibraries.add(name);
                         return;
                     }
                 } catch (Throwable t) {

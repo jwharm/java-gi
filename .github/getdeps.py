@@ -1,4 +1,3 @@
-import json
 import subprocess
 from pathlib import Path
 
@@ -28,8 +27,9 @@ def scan_current_directory():
         if existing_deps:
             dependency_map[dll.name] = existing_deps
 
-    with open('dll_dependencies.json', 'w') as f:
-        json.dump(dependency_map, f, indent=2)
+    with open('java-gi-meta-v1.txt', 'w') as f:
+        for dll, deps in dependency_map.items():
+            f.write(f"{dll}: {', '.join(deps)}\n")
 
 
 if __name__ == '__main__':
