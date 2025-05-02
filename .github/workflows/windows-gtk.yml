@@ -30,7 +30,6 @@ jobs:
             .github
       - name: Install Dependencies
         run: |
-          ls scripts\.github
           choco uninstall -y mingw strawberryperl cmake.install llvm
           pip install meson ninja
       - name: Clone pkgconf
@@ -67,7 +66,7 @@ jobs:
           meson compile -C gtk\build
           meson install -C gtk\build
           cd dist\bin
-          python "${{ github.workspace }}\scripts\.github\gendeps.py"
+          python ${{ github.workspace }}\scripts\.github\getdeps.py
           7z a ..\..\natives.zip java-gi-meta-v1.txt *.dll
           7z a ..\..\executable.zip *.exe
           cd ..\..
@@ -99,7 +98,7 @@ jobs:
           meson compile -C libadwaita\build
           meson install -C libadwaita\build
           cd dist\bin
-          python "${{ github.workspace }}\scripts\.github\gendeps.py"
+          python ${{ github.workspace }}\scripts\.github\getdeps.py
           7z a ..\..\natives-adw.zip java-gi-meta-v1.txt *.dll
           7z a ..\..\executable-adw.zip *.exe
           cd ..\..
