@@ -1,7 +1,5 @@
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.kotlin.dsl.configure
-import org.jreleaser.gradle.plugin.JReleaserExtension
-import org.jreleaser.model.Active
+import com.vanniktech.maven.publish.SonatypeHost
 
 /*
  * Common build settings for Java-GI modules:
@@ -18,8 +16,7 @@ import org.jreleaser.model.Active
 
 plugins {
     id("java-library")
-    id("maven-publish")
-    id("org.jreleaser")
+    id("com.vanniktech.maven.publish")
 }
 
 repositories {
@@ -37,8 +34,6 @@ version = libs.versions.javagi.get()
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get())
-    withJavadocJar()
-    withSourcesJar()
 }
 
 // Register a build service that will parse and cache GIR files
@@ -99,66 +94,33 @@ tasks.withType<Test>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            pom {
-                name = "${groupId}:${artifactId}"
-                groupId = "io.github.jwharm.javagi"
-                val capitalizedId = artifactId.replaceFirstChar(Char::titlecase)
-                description = "Java language bindings for $capitalizedId, generated with Java-GI"
-                url = "https://jwharm.github.io/java-gi/"
-                licenses {
-                    license {
-                        name = "GNU Lesser General Public License, version 2.1"
-                        url = "https://www.gnu.org/licenses/lgpl-2.1.txt"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "jwharm"
-                        name = "Jan-Willem Harmannij"
-                        email = "jwharmannij@gmail.com"
-                        url = "https://github.com/jwharm"
-                    }
-                }
-                scm {
-                    connection = "scm:git:git://github.com/jwharm/java-gi.git"
-                    developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
-                    url = "http://github.com/jwharm/java-gi/tree/master"
-                }
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    coordinates("io.github.jwharm.javagi", project.name, project.version.toString())
+    pom {
+        val capitalizedId = project.name.replaceFirstChar(Char::titlecase)
+        name = capitalizedId
+        description = "Java language bindings for $capitalizedId, generated with Java-GI"
+        url = "https://jwharm.github.io/java-gi/"
+        licenses {
+            license {
+                name = "GNU Lesser General Public License, version 2.1"
+                url = "https://www.gnu.org/licenses/lgpl-2.1.txt"
             }
         }
-    }
-    repositories {
-        maven {
-            url = uri(layout.buildDirectory.dir("staging-deploy"))
-        }
-    }
-}
-
-configure<JReleaserExtension> {
-    gitRootSearch = true
-    release {
-        github {
-            token = "unused"
-            skipRelease = true
-        }
-    }
-    signing {
-        active = Active.ALWAYS
-        armored = true
-    }
-    deploy {
-        maven {
-            mavenCentral {
-                register("sonatype") {
-                    active = Active.ALWAYS
-                    url = "https://central.sonatype.com/api/v1/publisher"
-                    stagingRepository(layout.buildDirectory.dir("staging-deploy").get().asFile.path)
-                }
+        developers {
+            developer {
+                id = "jwharm"
+                name = "Jan-Willem Harmannij"
+                email = "jwharmannij@gmail.com"
+                url = "https://github.com/jwharm"
             }
+        }
+        scm {
+            connection = "scm:git:git://github.com/jwharm/java-gi.git"
+            developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
+            url = "http://github.com/jwharm/java-gi/tree/master"
         }
     }
 }
