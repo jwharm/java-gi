@@ -202,8 +202,9 @@ public class LibLoad {
             for (String n : possibleNames) {
                 try (InputStream in = m.getResourceAsStream("/io/github/jwharm/javagi/natives/" + n)) {
                     if (in != null) {
+                        Files.createDirectories(tmp);
                         Path tempFile = tmp.resolve(n);
-                        Files.copy(in, tempFile);
+                        if (!Files.exists(tempFile)) Files.copy(in, tempFile);
                         System.load(tempFile.toString());
                         loadedLibraries.add(name);
                         return;
@@ -233,14 +234,15 @@ public class LibLoad {
      * This is used to find native libraries that are bundled with the application.
      */
     private static Iterable<Module> modules() {
-        return Stream.iterate(
+        Stream<Module> modules = Stream.iterate(
                 List.of(ModuleLayer.boot()),
                 Predicate.not(List::isEmpty),
                 s -> s.stream().flatMap(x -> x.parents().stream()).toList()
         )
                 .flatMap(List::stream)
                 .distinct()
-                .flatMap(s -> s.modules().stream())
-                ::iterator;
+                .flatMap(s -> s.modules().stream());
+        modules = Stream.concat(Stream.of(LibLoad.class.getClassLoader().getUnnamedModule()), modules);
+        return modules::iterator;
     }
 }
