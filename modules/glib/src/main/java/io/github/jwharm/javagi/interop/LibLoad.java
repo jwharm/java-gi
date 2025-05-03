@@ -23,6 +23,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -55,11 +56,26 @@ public class LibLoad {
                 .filter(Files::isDirectory)
                 .toList();
 
-        additionalDependencies = sourceDirs.stream().map(s -> s.resolve("java-gi-meta-v1.txt"))
-                .filter(Files::isRegularFile)
-                .findFirst()
-                .map(LibLoad::parseMetadata)
-                .orElseGet(LibLoad::loadClasspathMetadata);
+        additionalDependencies = merge(
+                LibLoad.loadClasspathMetadata(),
+                sourceDirs.stream().map(s -> s.resolve("java-gi-meta-v1.txt"))
+                        .filter(Files::isRegularFile)
+                        .map(LibLoad::parseMetadata)
+                        .reduce(LibLoad::merge)
+                        .orElseGet(Map::of)
+        );
+    }
+
+    private static Map<String, Set<String>> merge(Map<String, Set<String>> a, Map<String, Set<String>> b) {
+        Map<String, Set<String>> merged = new HashMap<>(a);
+        for (var entry : b.entrySet()) {
+            merged.merge(entry.getKey(), entry.getValue(), (setA, setB) -> {
+                Set<String> mergedSet = new HashSet<>(setA);
+                mergedSet.addAll(setB);
+                return mergedSet;
+            });
+        }
+        return merged;
     }
 
     /**
@@ -219,10 +235,11 @@ public class LibLoad {
     private static Iterable<Module> modules() {
         return Stream.iterate(
                 List.of(ModuleLayer.boot()),
-                Objects::nonNull,
+                Predicate.not(List::isEmpty),
                 s -> s.stream().flatMap(x -> x.parents().stream()).toList()
         )
                 .flatMap(List::stream)
+                .distinct()
                 .flatMap(s -> s.modules().stream())
                 ::iterator;
     }
