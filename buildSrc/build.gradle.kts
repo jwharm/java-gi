@@ -11,7 +11,7 @@ dependencies {
     implementation(libs.javapoet)
     implementation(libs.annotations)
     implementation(libs.javagi.generator)
-    implementation(libs.jreleaser)
+    implementation(libs.mavenpublish)
 }
 
 tasks.withType<JavaCompile>().configureEach {

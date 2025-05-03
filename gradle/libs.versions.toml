@@ -1,12 +1,12 @@
 [versions]
-javagi = "0.12.1-RC1"
+javagi = "0.12.1"
 jdk = "22"
 cairo = "1.18.4.1"
 picocli = "4.7.7"
 javapoet = "1.13.0"
 annotations = "26.0.2"
 junit = "5.12.2"
-jreleaser = "1.17.0"
+mavenpublish = "0.31.0"
 
 [libraries]
 javagi-generator = { module = "io.github.jwharm.javagi:generator", version.ref = "javagi" }
@@ -16,4 +16,4 @@ javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-jreleaser = { module = "org.jreleaser:org.jreleaser.gradle.plugin", version.ref = "jreleaser" }
+mavenpublish = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "mavenpublish" }
