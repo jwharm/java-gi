@@ -35,10 +35,12 @@ public class LibLoad {
     private static final Pattern separator = Pattern.compile(Pattern.quote(File.pathSeparator));
     private static final List<Path> sourceDirs;
     private static final Map<String, Set<String>> additionalDependencies;
+    private static final boolean pathOverride;
 
     static {
         String javagiPath = System.getProperty("javagi.path");
         String javaPath = System.getProperty("java.library.path");
+        pathOverride = javagiPath != null;
         if (javaPath != null) {
             if (javagiPath == null) javagiPath = javaPath;
             else javagiPath = javagiPath + File.pathSeparator + javaPath;
@@ -103,13 +105,23 @@ public class LibLoad {
 
         InteropException fail = new InteropException("Could not load library " + name);
 
-        // Try System::loadLibrary first
-        try {
-            System.loadLibrary(name);
-            loadedLibraries.add(name);
-            return;
-        } catch (Throwable t) {
-            fail.addSuppressed(t);
+        // If javagi.path was not set, try System::loadLibrary first
+        if (!pathOverride) {
+            try {
+                System.loadLibrary(name);
+                loadedLibraries.add(name);
+                return;
+            } catch (Throwable t) {
+                fail.addSuppressed(t);
+            }
+        }
+
+        // Identify the possible names of the library
+        Set<String> possibleNames = new HashSet<>();
+        possibleNames.add(name);
+        if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
+            if (name.startsWith("lib")) possibleNames.add(name.substring(3));
+            else possibleNames.add("lib" + name);
         }
 
         // Loop through all paths defined in javagi.path
@@ -123,12 +135,6 @@ public class LibLoad {
                 continue;
             }
 
-            Set<String> possibleNames = new HashSet<>();
-            possibleNames.add(name);
-            if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
-                if (name.startsWith("lib")) possibleNames.add(name.substring(3));
-                else possibleNames.add("lib" + name);
-            }
             // Find the file with the requested library name
             for (Path path : files) {
                 try {
@@ -144,6 +150,18 @@ public class LibLoad {
                 }
             }
         }
+
+        // If javagi.path was set and the library was not found, also try System::loadLibrary
+        if (pathOverride) {
+            try {
+                System.loadLibrary(name);
+                loadedLibraries.add(name);
+                return;
+            } catch (Throwable t) {
+                fail.addSuppressed(t);
+            }
+        }
+
         throw fail;
     }
 }
