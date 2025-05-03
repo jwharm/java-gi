@@ -19,8 +19,7 @@
 
 package io.github.jwharm.javagi.interop;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -36,6 +35,9 @@ public class LibLoad {
     private static final List<Path> sourceDirs;
     private static final Map<String, Set<String>> additionalDependencies;
     private static final boolean pathOverride;
+    private static final Path tmp = Path.of(System.getProperty("java.io.tmpdir"))
+            .resolve("io.github.jwharm.javagi.natives")
+            .toAbsolutePath();
 
     static {
         String javagiPath = System.getProperty("javagi.path");
@@ -57,31 +59,59 @@ public class LibLoad {
                 .filter(Files::isRegularFile)
                 .findFirst()
                 .map(LibLoad::parseMetadata)
-                .orElseGet(Map::of);
+                .orElseGet(LibLoad::loadClasspathMetadata);
     }
 
+    /**
+     * Load the metadata file from the provided path.
+     */
     private static Map<String, Set<String>> parseMetadata(Path path) {
-        Map<String, Set<String>> dependencyMap = new HashMap<>();
         try (var reader = Files.newBufferedReader(path)) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String dllName = parts[0].trim();
-                    String[] dependencies = parts[1].split(",");
-                    Set<String> dependencySet = new HashSet<>();
-                    for (String dep : dependencies) {
-                        dependencySet.add(dep.trim());
-                    }
-                    dependencyMap.put(dllName, dependencySet);
-                    if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
-                        if (dllName.startsWith("lib")) dependencyMap.put(dllName.substring(3), dependencySet);
-                        else dependencyMap.put("lib" + dllName, dependencySet);
-                    }
-                }
-            }
+            return parseMetadata(reader);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read metadata file: " + path, e);
+        }
+    }
+
+    /**
+     * Load the metadata file from the classpath. Returns an empty map if it doesn't exist.
+     */
+    private static Map<String, Set<String>> loadClasspathMetadata() {
+        for (Module m : modules()) {
+            try (InputStream in = m.getResourceAsStream("/io/github/jwharm/javagi/natives/java-gi-meta-v1.txt")) {
+                if (in != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                        return parseMetadata(reader);
+                    }
+                }
+            } catch (IOException e) {
+                // This might be bad, but we can probably live with it
+            }
+        }
+        return Map.of();
+    }
+
+    /**
+     * Parse the metadata file and return a map of library names to their dependencies.
+     */
+    private static Map<String, Set<String>> parseMetadata(BufferedReader reader) throws IOException {
+        Map<String, Set<String>> dependencyMap = new HashMap<>();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split(":");
+            if (parts.length == 2) {
+                String dllName = parts[0].trim();
+                String[] dependencies = parts[1].split(",");
+                Set<String> dependencySet = new HashSet<>();
+                for (String dep : dependencies) {
+                    dependencySet.add(dep.trim());
+                }
+                dependencyMap.put(dllName, dependencySet);
+                if (Platform.getRuntimePlatform() == Platform.WINDOWS) {
+                    if (dllName.startsWith("lib")) dependencyMap.put(dllName.substring(3), dependencySet);
+                    else dependencyMap.put("lib" + dllName, dependencySet);
+                }
+            }
         }
         return Map.copyOf(dependencyMap);
     }
@@ -151,6 +181,23 @@ public class LibLoad {
             }
         }
 
+        // If the library was not found, try to load it from the classpath
+        for (Module m : modules()) {
+            for (String n : possibleNames) {
+                try (InputStream in = m.getResourceAsStream("/io/github/jwharm/javagi/natives/" + n)) {
+                    if (in != null) {
+                        Path tempFile = tmp.resolve(n);
+                        Files.copy(in, tempFile);
+                        System.load(tempFile.toString());
+                        loadedLibraries.add(name);
+                        return;
+                    }
+                } catch (IOException e) {
+                    fail.addSuppressed(e);
+                }
+            }
+        }
+
         // If javagi.path was set and the library was not found, also try System::loadLibrary
         if (pathOverride) {
             try {
@@ -163,5 +210,20 @@ public class LibLoad {
         }
 
         throw fail;
+    }
+
+    /**
+     * Enumerate all modules that are loaded.
+     * This is used to find native libraries that are bundled with the application.
+     */
+    private static Iterable<Module> modules() {
+        return Stream.iterate(
+                List.of(ModuleLayer.boot()),
+                Objects::nonNull,
+                s -> s.stream().flatMap(x -> x.parents().stream()).toList()
+        )
+                .flatMap(List::stream)
+                .flatMap(s -> s.modules().stream())
+                ::iterator;
     }
 }
