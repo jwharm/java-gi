@@ -54,8 +54,7 @@ public class Interop {
 
     private final static Linker LINKER = Linker.nativeLinker();
 
-    private static SymbolLookup symbolLookup = SymbolLookup.loaderLookup()
-            .or(Linker.nativeLinker().defaultLookup());
+    private static SymbolLookup symbolLookup = LINKER.defaultLookup();
 
     public static boolean longAsInt() {
         return LONG_AS_INT;
@@ -68,12 +67,8 @@ public class Interop {
      * @param name the name of the library
      */
     public static synchronized void loadLibrary(String name) {
-        try {
-            symbolLookup = SymbolLookup.libraryLookup(name, Arena.global())
-                                       .or(Interop.symbolLookup);
-        } catch (IllegalArgumentException iae) {
-            LibLoad.loadLibrary(name);
-        }
+        symbolLookup = LibLoad.loadLibrary(name, Arena.global())
+                .or(Interop.symbolLookup);
     }
 
     /**

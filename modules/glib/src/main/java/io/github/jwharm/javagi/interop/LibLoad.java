@@ -20,6 +20,8 @@
 package io.github.jwharm.javagi.interop;
 
 import java.io.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.SymbolLookup;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -132,20 +134,22 @@ public class LibLoad {
         return Map.copyOf(dependencyMap);
     }
 
-    private static final Set<String> loadedLibraries = new HashSet<>();
+    private static final Map<String, SymbolLookup> loadedLibraries = new HashMap<>();
 
     /**
      * Load the native library with the provided name.
      *
      * @param name the name of the library
      */
-    public static void loadLibrary(String name) {
-        if (loadedLibraries.contains(name)) return;
+    public static SymbolLookup loadLibrary(String name, Arena arena) {
+        SymbolLookup lookup = loadedLibraries.get(name);
+        if (lookup != null) return lookup;
 
         Set<String> dependencies = additionalDependencies.get(name);
+        Set<SymbolLookup> loadedDependencies = new HashSet<>();
         if (dependencies != null) {
             for (String dependency : dependencies) {
-                loadLibrary(dependency);
+                loadedDependencies.add(loadLibrary(dependency, arena));
             }
         }
 
@@ -154,9 +158,10 @@ public class LibLoad {
         // If javagi.path was not set, try System::loadLibrary first
         if (!pathOverride) {
             try {
-                System.loadLibrary(name);
-                loadedLibraries.add(name);
-                return;
+                lookup = SymbolLookup.libraryLookup(name, arena);
+                for (SymbolLookup dependency : loadedDependencies) lookup = lookup.or(dependency);
+                loadedLibraries.put(name, lookup);
+                return lookup;
             } catch (Throwable t) {
                 fail.addSuppressed(t);
             }
@@ -187,9 +192,10 @@ public class LibLoad {
                     String fn = path.getFileName().toString();
                     if (possibleNames.contains(fn)) {
                         // Load the library
-                        System.load(path.toString());
-                        loadedLibraries.add(name);
-                        return;
+                        lookup = SymbolLookup.libraryLookup(path, arena);
+                        for (SymbolLookup dependency : loadedDependencies) lookup = lookup.or(dependency);
+                        loadedLibraries.put(name, lookup);
+                        return lookup;
                     }
                 } catch (Throwable t) {
                     fail.addSuppressed(t);
@@ -205,9 +211,10 @@ public class LibLoad {
                         Files.createDirectories(tmp);
                         Path tempFile = tmp.resolve(n);
                         if (!Files.exists(tempFile)) Files.copy(in, tempFile);
-                        System.load(tempFile.toString());
-                        loadedLibraries.add(name);
-                        return;
+                        lookup = SymbolLookup.libraryLookup(tempFile, arena);
+                        for (SymbolLookup dependency : loadedDependencies) lookup = lookup.or(dependency);
+                        loadedLibraries.put(name, lookup);
+                        return lookup;
                     }
                 } catch (IOException e) {
                     fail.addSuppressed(e);
@@ -218,9 +225,10 @@ public class LibLoad {
         // If javagi.path was set and the library was not found, also try System::loadLibrary
         if (pathOverride) {
             try {
-                System.loadLibrary(name);
-                loadedLibraries.add(name);
-                return;
+                lookup = SymbolLookup.libraryLookup(name, arena);
+                for (SymbolLookup dependency : loadedDependencies) lookup = lookup.or(dependency);
+                loadedLibraries.put(name, lookup);
+                return lookup;
             } catch (Throwable t) {
                 fail.addSuppressed(t);
             }
