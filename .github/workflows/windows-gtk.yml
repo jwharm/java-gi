@@ -39,6 +39,7 @@ jobs:
       - name: Clone pkgconf
         uses: actions/checkout@v4
         with:
+          ref: 664b53d5c4920e66e4a57c7515ccfd1bd1477bac # Last commit before unistd.h dependency
           repository: 'pkgconf/pkgconf'
           submodules: recursive
           path: pkgconf
