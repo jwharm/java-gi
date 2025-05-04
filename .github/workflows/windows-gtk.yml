@@ -18,7 +18,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
+    permissions:
+      contents: write
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -31,6 +32,10 @@ jobs:
         run: |
           choco uninstall -y mingw strawberryperl cmake.install llvm
           pip install meson ninja
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
       - name: Clone pkgconf
         uses: actions/checkout@v4
         with:
@@ -65,7 +70,8 @@ jobs:
           meson compile -C gtk\build
           meson install -C gtk\build
           cd dist\bin
-          7z a ..\..\natives.zip *.dll
+          python ${{ github.workspace }}\scripts\.github\getdeps.py
+          7z a ..\..\natives.zip java-gi-meta-v1.txt *.dll
           7z a ..\..\executable.zip *.exe
           cd ..\..
           cp natives.zip natives-gtk.zip
@@ -96,7 +102,8 @@ jobs:
           meson compile -C libadwaita\build
           meson install -C libadwaita\build
           cd dist\bin
-          7z a ..\..\natives-adw.zip *.dll
+          python ${{ github.workspace }}\scripts\.github\getdeps.py
+          7z a ..\..\natives-adw.zip java-gi-meta-v1.txt *.dll
           7z a ..\..\executable-adw.zip *.exe
           cd ..\..
       - name: Finish up

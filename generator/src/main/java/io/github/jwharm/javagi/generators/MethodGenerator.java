@@ -148,9 +148,7 @@ public class MethodGenerator {
 
         // Platform check
         if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM,
-                    Platform.toStringLiterals(func.platforms()));
+            builder.addStatement(Platform.generateSupportCheck(func.platforms()));
 
         // try-block for arena
         if (func.allocatesMemory())

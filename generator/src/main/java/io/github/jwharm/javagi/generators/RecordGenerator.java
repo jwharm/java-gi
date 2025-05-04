@@ -216,8 +216,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         // Platform check
         if (rec.doPlatformCheck())
-            spec.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM, Platform.toStringLiterals(rec.platforms()));
+            spec.addStatement(Platform.generateSupportCheck(rec.platforms()));
 
         return spec.build();
     }
@@ -283,8 +282,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         // Platform check
         if (rec.doPlatformCheck())
-            spec.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM, Platform.toStringLiterals(rec.platforms()));
+            spec.addStatement(Platform.generateSupportCheck(rec.platforms()));
 
         return spec.build();
     }

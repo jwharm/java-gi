@@ -161,8 +161,7 @@ public class ConstructorGenerator {
 
         // Platform check
         if (ctor.doPlatformCheck())
-            builder.addStatement("$T.checkSupportedPlatform($L)",
-                    ClassNames.PLATFORM, Platform.toStringLiterals(ctor.platforms()));
+            builder.addStatement(Platform.generateSupportCheck(ctor.platforms()));
 
         builder.addStatement("var _result = $L($L)",
                 privateMethodName,
