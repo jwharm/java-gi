@@ -15,16 +15,13 @@ tasks.named('run') {
 !!! warning
     Following C conventions, Gtk expects the first argument to be the program name, but this is not the case in Java applications. To solve this, we add the program name "ExampleApp" back as the first argument, followed by the files to open (in this case, we simply open some of the source code files of our application).
 
-Next, we add a `stack` field to our application window subclass, with a `@GtkChild` annotation. The `Types.register()` method internally uses the {{ doc('func@Gtk.widget_class_bind_template_child') }} function to arrange things so that after instantiating the template, the `stack` field will point to the widget of the same name from the template.
+Next, we add a `stack` field to our application window subclass, with a `@GtkChild` annotation. Java-GI internally uses the {{ doc('func@Gtk.widget_class_bind_template_child') }} function to arrange things so that after instantiating the template, the `stack` field will point to the widget of the same name from the template.
 
 ```java
 ...
 
 @GtkTemplate(ui="/org/gtk/exampleapp/window.ui")
 public class ExampleAppWindow extends ApplicationWindow {
-
-  private static final Type gtype = Types.register(ExampleAppWindow.class);
-
   @GtkChild
   public Stack stack;
 

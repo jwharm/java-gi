@@ -21,7 +21,7 @@ Our simple ui file gives the window a title, and puts a `GtkStack` widget as the
 </interface>
 ```
 
-To make use of this file in our application, we revisit our `GtkApplicationWindow` subclass, and add a `GtkTemplate` annotation. The annotation is processed by the `TemplateTypes.register()` method. It will call {{ doc('method@Gtk.WidgetClass.set_template_from_resource') }} from the class init function to set the ui file as template for this class, and call {{ doc('method@Gtk.Widget.init_template') }} in the instance init function to instantiate the template for each instance of our class.
+To make use of this file in our application, we revisit our `GtkApplicationWindow` subclass, and add a `GtkTemplate` annotation. The annotation is processed by Java-GI, which will insert a call to {{ doc('method@Gtk.WidgetClass.set_template_from_resource') }} in the class init function, to set the ui file as template for this class, and a call {{ doc('method@Gtk.Widget.init_template') }} in the instance init function to instantiate the template for each instance of our class.
 
 ```java
  ...

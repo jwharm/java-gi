@@ -13,92 +13,27 @@ When you extend a Java class from an existing GObject-derived class, Java will t
 === "Kotlin"
 
     ```kotlin
-    class MyObject : GObject {
+    class MyObject : GObject() {
     ```
 
-However, the GObject type system itself will not recognize it as its own class. To do that, you need to register your class as a new GType. Java-GI offers an easy-to-use function to achieve this: `Types.register(classname)`. This will use reflection to determine the name, parent class, implemented interfaces and overridden methods, and will register it as a new GType.
+To make sure that the GObject type system will also recognize it as its own class, Java-GI registers your class as a new GType. It will use reflection to determine the name, parent class, implemented interfaces and overridden methods.
 
-It is recommended to register the new gtype in a static block like this:
-
-=== "Java"
-
-    ```java
-        static {
-            Types.register(MyObject.class);
-        }
-    ```
-
-=== "Kotlin"
-
-    ```kotlin
-        companion object {
-            init {
-                Types.register(MyObject::class.java)
-            }
-        }
-    ```
-
-By using a static initializer, the GObject type will be registered immediately when the JVM classloader initializes the Java class. Similarly, you can register all your classes in your `main()` method.
-
-With `Types.register()`, a Java class, interface or enum can be registered as a GType:
+GType registration is supported for classes, interfaces and enums, when the following conditions are met:
 
 * Classes must extend {{ javadoc('GObject') }} or a descendant class.
 * Interfaces must extend the Java-GI {{ javadoc('Proxy') }} interface.
 * Enums are just enums. To register a flags (bitfield) type, add the `@Flags` annotation.
 
 !!! info
+    GObject interfaces don't inherit from other interfaces, but they do allow instead to specify *prerequisite* interfaces and classes. When registering a GType for a Java interface, all GTypeInterfaces that the interface extends from are automatically registered as prerequisites. GObject is automatically added as a prerequisite class, unless you specify another class with the `@Prerequisite` annotation.
+
+!!! info
     With a flags type, the values will represent individual bits in a bitfield, that are powers of two (1, 2, 4, 8, etc.), so they can be combined using bitwise operations to represent multiple flags simultaneously. Without the `@Flags` annotation, the values will have the ordinal enum values, and cannot be bitwise combined.
 
-## Construction
+When instantiating a new Java instance of the class, the call to `super()` will create the native object instance first.
 
-When instantiating a new instance of the object, create a static factory method with a descriptive name like `create` or `newInstance` that calls `GObject::newInstance()`:
-
-=== "Java"
-
-    ```java
-        public static MyObject create() {
-            return GObject.newInstance(MyObject.class);
-        }
-    ```
-
-=== "Kotlin"
-
-    ```kotlin
-        companion object {
-            init {
-                Types.register(MyObject::class.java)
-            }
-            
-            fun create(): MyObject {
-                return newInstance(MyObject::class.java)
-            }
-        }
-    ```
-
-Now, when you call `MyObject.create()`, you will have a Java object that is also instantiated as a native GObject instance.
-
-!!! warning
-    The constructor **must** be a static factory method. In a class that directly extends GObject, it's tempting to create a regular constructor that calls `super(gtype, ...)`, but that **will not work** correctly with GObject class or instance initializer methods (see below).
-
-Finally, add the default memory-address-constructor for Java-GI Proxy objects:
-
-=== "Java"
-
-    ```java
-        public MyObject(MemorySegment address) {
-            super(address);
-        }
-    }
-    ```
-
-=== "Kotlin"
-
-    ```kotlin
-        constructor(address: MemorySegment?) : super(address)
-    }
-    ```
-
-Ignore warnings that the constructor appears unused: This constructor **must** exist in all Java-GI proxy classes. It enables a Java object to be instantiated automatically for GObject instances returned from native function calls.
+!!! info
+    In Java-GI version 0.11.* and below, the GType must be explicitly registered with a call to `Types.register(classname.class)`, and the constructor must be a static factory method. Since Java-GI 0.12.0, this is not necessary anymore.
 
 If your Java application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -107,6 +42,42 @@ module my.module.name {
     exports my.package.name to org.gnome.gobject;
 }
 ```
+
+### Classes constructed from native code
+
+When your class is constructed by native code (for example, when your Java class is used in a GtkBuilder UI file), you need to add a few more things.
+
+First, explicitly register your class, for example in the main method:
+
+=== "Java"
+
+    ```java
+    Types.register(MyObject.class);
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    Types.register(MyObject::class.java)
+    ```
+
+You also need to add a memory-address-constructor for Java-GI Proxy objects:
+
+=== "Java"
+
+    ```java
+    public MyObject(MemorySegment address) {
+        super(address);
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    constructor(address: MemorySegment?) : super(address)
+    ```
+
+Ignore warnings that the constructor appears unused: This constructor enables a Java object to be instantiated automatically for GObject instances returned from native function calls.
 
 ## Specifying the name of the GType
 
@@ -134,7 +105,7 @@ If you don't intend to override the name of the GType, you can safely omit the `
 
 ## Method overrides
 
-When you override virtual methods from parent GObject classes (or implemented interfaces), the override will automatically be registered by `Types.register(class)`. You don't need to do this manually.
+When you override virtual methods from parent GObject classes (or implemented interfaces), the override will automatically be registered by Java-GI. You don't need to do this manually.
 
 ### Chaining up
 
@@ -347,7 +318,3 @@ Because the signal declaration is an ordinary functional interface, it is equall
     ```
 
 It is also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
-
-## Examples
-
-In [this example application](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire), the inner class `SolitairePeg` is registered as a GObject subclass that implements the `Paintable` interface.

@@ -135,17 +135,6 @@ Next comes the dialog subclass. (Import statements have been omitted for brevity
 ```java
 @GtkTemplate(ui="/org/gtk/exampleapp/prefs.ui")
 public class ExampleAppPrefs extends Dialog {
-
-  private static final Type gtype = Types.register(ExampleAppPrefs.class);
-
-  public static Type getType() {
-    return gtype;
-  }
-
-  public ExampleAppPrefs(MemorySegment address) {
-    super(address);
-  }
-
   @GtkChild
   public FontButton font;
 
@@ -161,11 +150,9 @@ public class ExampleAppPrefs extends Dialog {
     settings.bind("transition", transition, "active-id", SettingsBindFlags.DEFAULT);
   }
 
-  public static ExampleAppPrefs create(ExampleAppWindow win) {
-    return GObject.newInstance(getType(),
-        "transient-for", win,
-        "use-header-bar", 1,
-        null);
+  public ExampleAppPrefs(ExampleAppWindow win) {
+    setTransientFor(win);
+    setUseHeaderBar(true);
   }
 }
 ```
@@ -178,7 +165,7 @@ class, and make it open a new preference dialog.
 
 public void preferencesActivated(Variant parameter) {
   ExampleAppWindow win = (ExampleAppWindow) getActiveWindow();
-  ExampleAppPrefs prefs = ExampleAppPrefs.create(win);
+  ExampleAppPrefs prefs = new ExampleAppPrefs(win);
   prefs.present();
 }
 

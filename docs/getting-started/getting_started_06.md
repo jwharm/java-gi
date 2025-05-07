@@ -27,7 +27,7 @@ When using `GtkApplication`, the `main()` method can be very simple. We just cal
 public class ExampleMainClass {
 
   public static void main(String[] args) {
-    ExampleApp.create().run(args);
+    new ExampleApp().run(args);
   }
 }
 ```
@@ -51,20 +51,9 @@ import java.lang.foreign.MemorySegment;
 
 public class ExampleApp extends Application {
 
-  // Register this Java class with the GObject type system
-  private static final Type gtype = Types.register(ExampleApp.class);
-
-  public static Type getType() {
-    return gtype;
-  }
-
-  public ExampleApp(MemorySegment address) {
-    super(address);
-  }
-
   @Override
   public void activate() {
-    ExampleAppWindow win = ExampleAppWindow.create(this);
+    ExampleAppWindow win = new ExampleAppWindow(this);
     win.present();
   }
 
@@ -83,11 +72,9 @@ public class ExampleApp extends Application {
     win.present();
   }
 
-  public static ExampleApp create() {
-    return GObject.newInstance(getType(),
-        "application-id", "org.gtk.exampleapp",
-        "flags", ApplicationFlags.HANDLES_OPEN,
-        null);
+  public ExampleApp() {
+    setApplicationId("org.gtk.exampleapp");
+    setFlags(ApplicationFlags.HANDLES_OPEN);
   }
 }
 ```
@@ -104,18 +91,8 @@ import java.lang.foreign.MemorySegment;
 
 public class ExampleAppWindow extends ApplicationWindow {
 
-  private static final Type gtype = Types.register(ExampleAppWindow.class);
-
-  public static Type getType() {
-    return gtype;
-  }
-
-  public ExampleAppWindow(MemorySegment address) {
-    super(address);
-  }
-
-  public static ExampleAppWindow create(ExampleApp app) {
-    return GObject.newInstance(getType(), "application", app, null);
+  public ExampleAppWindow(ExampleApp app) {
+    setApplication(app);
   }
 
   public void open(File file) {
