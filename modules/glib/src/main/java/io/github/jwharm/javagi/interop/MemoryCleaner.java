@@ -139,11 +139,14 @@ public class MemoryCleaner {
     public static void yieldOwnership(@NotNull Proxy proxy) {
         requireNonNull(proxy);
         synchronized (cache) {
-            Cached cached = getOrRegister(proxy);
-            cache.put(proxy.handle(), new Cached(false,
-                                                 cached.freeFunc,
-                                                 cached.boxedType,
-                                                 cached.cleanable));
+            Cached cached = cache.get(proxy.handle());
+            if (cached != null) {
+                cache.put(proxy.handle(), new Cached(false,
+                                                     cached.freeFunc,
+                                                     cached.boxedType,
+                                                     cached.cleanable));
+                cached.cleanable.clean();
+            }
         }
     }
 
