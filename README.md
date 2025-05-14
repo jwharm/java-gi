@@ -84,9 +84,13 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 | ---- | ---- | ---- | ---- |
 | [Web Browser](https://github.com/jwharm/java-gi-examples/tree/main/Browser)                     | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
 
+## Generate bindings for other libraries
+
+Java-GI offers a command-line utility to generate bindings for any library that supports GObject-Introspection. It is documented [here](https://jwharm.github.io/java-gi/generate/).
+
 ## Current features
 
-Nearly all types, functions and parameters defined in the GIR files are supported by Java-GI. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
+Nearly all types, functions and parameters defined in a GIR file are supported by Java-GI. Even complex function signatures with combinations of arrays, callbacks, out-parameters and varargs are available in Java.
 
 Some interesting features of the bindings that Java-GI generates:
 
@@ -146,57 +150,38 @@ Functions with callback parameters are supported too. The generated Java binding
 
 ### Registering new types
 
-You can easily register a Java class as a GType:
+Java-GI registers GObject-derived Java classes as a GType. When overriding virtual methods from a parent class (or implementing methods from an interface), Java-GI will register that in the GObject type system, so native code will call your Java method too. JavaBeans-style getter and setter method pairs are registered as GObject properties. You can also define your own custom signals, using the "@Signal" annotation. The following example defines an `int` property named `"lives"` and a `"game-over"` signal with a `String` parameter:
 
 ```java
-public class MyWidget extends Widget {
+public class Player extends GObject {
+    private String name;
 
-    public static Type gtype = Types.register(MyWidget.class);
-
-    // Construct new instance
-    public static MyWidget newInstance() {
-        return GObject.newInstance(gtype);
-    }
-
-    // Default constructor, used by Java-GI for marshaling
-    public MyWidget(MemorySegment address) {
-        super(address);
-    }
-}
-```
-
-You can define custom GObject properties and signals using annotations. The following example defines an `int` property named `"lives"` and a `"game-over"` signal with a `String` parameter:
-
-```java
-    @Property
     public int getLives() {
         return lives;
     }
     
-    @Property
     public void setLives(int value) {
         this.lives = value;
         if (value == 0)
-            emit("game-over", player.name());
+            emit("game-over", this.name);
     }
 
     @Signal
     public interface GameOver {
         void apply(String playerName);
     }
+}
 ```
 
-Java classes can implement interfaces and override methods without any additional effort. When implementing methods from an interface (or overriding virtual methods from a parent class), Java-GI will register it in the GObject type system, so native code will call your Java method too. See for example [this implementation](https://github.com/jwharm/java-gi/blob/main/modules/gio/src/main/java/io/github/jwharm/javagi/gio/ListIndexModel.java) of the `ListModel` interface, or read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
+Read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
 
 ### Composite template classes
 
 A class with a `@GtkTemplate` annotation will be registered as a Gtk composite template class:
 
 ```java
-@GtkTemplate(name="HelloWindow", ui="/my/example/hello-window.ui")
+@GtkTemplate(ui="/my/example/hello-window.ui")
 public class HelloWindow extends ApplicationWindow {
-
-    private static Type gtype = TemplateTypes.register(HelloWindow.class);
 
     @GtkChild(name="header_bar")
     public HeaderBar header;
@@ -208,11 +193,10 @@ public class HelloWindow extends ApplicationWindow {
     public void buttonClicked() {
         ...
     }
-
-    ...
+}
 ```
 
-In the above example, the `header` and `label` fields and the `buttonClicked` callback function are all declared the `hello-window.ui` file.
+In the above example, the `header_bar` and `label` elements and the `buttonClicked` callback function are all connected to the `hello-window.ui` file.
 
 You can read more about template classes in [the documentation](https://jwharm.github.io/java-gi/templates/).
 
@@ -277,10 +261,6 @@ try {
 ### Portability
 
 The published bindings are cross-platform: You can use the same jar on all supported operating systems (64-bit Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
-
-## Generate bindings
-
-Java-GI offers a command-line utility to generate bindings for any library that supports GObject-Introspection. It is documented [here](https://jwharm.github.io/java-gi/generate/).
 
 ## Known issues
 
