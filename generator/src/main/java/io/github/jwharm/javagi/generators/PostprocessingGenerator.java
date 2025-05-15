@@ -47,6 +47,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         refGObject(builder);
         freeGBytes(builder);
         takeOwnership(builder);
+        scope(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -290,6 +291,17 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     ClassNames.MEMORY_CLEANER, paramName);
             new RegisteredTypeGenerator(target)
                     .setFreeFunc(builder, paramName, target.typeName());
+        }
+    }
+
+    // Mark arena for parameters with async or notified scope, ready to close
+    private void scope(MethodSpec.Builder builder) {
+        if (v instanceof Parameter p) {
+            boolean notified = p.scope() == Scope.NOTIFIED && p.destroy() != null;
+            boolean async = p.scope() == Scope.ASYNC && !p.isDestroyNotifyParameter();
+            if (notified || async)
+                builder.addStatement("$1T.readyToClose(_$2LScope)",
+                        ClassNames.ARENAS, getName());
         }
     }
 

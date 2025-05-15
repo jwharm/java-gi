@@ -24,6 +24,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Keeps a list of open Arenas that will be closed in a DestroyNotify callback.
@@ -33,7 +34,7 @@ import java.util.Map;
 public class Arenas {
 
     // Contains all open callback arenas that are closed using DestroyNotify
-    private static final Map<Integer, Arena> ARENAS = new HashMap<>();
+    private static final Map<Integer, CompletableFuture<Arena>> ARENAS = new HashMap<>();
 
     /**
      * The upcall stub for the DestroyNotify callback method
@@ -61,9 +62,11 @@ public class Arenas {
     public static void close_cb(MemorySegment data) {
         int hashCode = data.reinterpret(ValueLayout.JAVA_INT.byteSize())
                            .get(ValueLayout.JAVA_INT, 0);
-        Arena arena = ARENAS.remove(hashCode);
-        if (arena != null)
-            arena.close();
+        ARENAS.get(hashCode).thenAccept(arena -> {
+            ARENAS.remove(hashCode);
+            if (arena != null)
+                arena.close();
+        });
     }
 
     /**
@@ -75,7 +78,17 @@ public class Arenas {
      */
     public static MemorySegment cacheArena(Arena arena) {
         int hashCode = arena.hashCode();
-        ARENAS.put(hashCode, arena);
+        var future = new CompletableFuture<Arena>();
+        ARENAS.put(hashCode, future);
         return arena.allocateFrom(ValueLayout.JAVA_INT, hashCode);
+    }
+
+    /**
+     * Allow the upcall stub allocation of the callback to be released.
+     *
+     * @param arena the cached Arena
+     */
+    public static void readyToClose(Arena arena) {
+        ARENAS.get(arena.hashCode()).complete(arena);
     }
 }
