@@ -407,6 +407,36 @@ public class InstanceCache {
             references.computeIfPresent(object, (_, v) -> v.asStrong());
     }
 
+    public static final MemorySegment REMOVE_TOGGLE_REF;
+
+    // Allocate the upcall stub for the removeToggleRef callback method
+    static {
+        try {
+            FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
+            MethodHandle _handle = MethodHandles.lookup().findStatic(
+                    InstanceCache.class, "removeToggleRef", _fdesc.toMethodType());
+            REMOVE_TOGGLE_REF = Linker.nativeLinker().upcallStub(_handle, _fdesc, Arena.global());
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static int removeToggleRef(MemorySegment address) {
+        GLibLogger.debug("Unref %ld", address.address());
+        try {
+            g_object_remove_toggle_ref.invokeExact(
+                    address, toggle_notify, MemorySegment.NULL);
+        } catch (Throwable _err) {
+            throw new AssertionError("Unexpected exception occurred: ", _err);
+        }
+        InstanceCache.references.remove(address);
+        return 0;
+    }
+
+    private static final MethodHandle g_main_context_invoke = Interop.downcallHandle(
+            "g_main_context_invoke", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
+            ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
+
     /**
      * This callback is run by the {@link Cleaner} when a {@link GObject}
      * instance has become unreachable, to remove the toggle reference. The
@@ -423,22 +453,16 @@ public class InstanceCache {
 
             // g_object_remove_toggle_ref must be called from the main context
             var defaultContext = MainContext.default_();
-            if (defaultContext != null)
-                defaultContext.invoke(this::removeToggleRef);
-            else
-                removeToggleRef();
-        }
-
-        private boolean removeToggleRef() {
-            GLibLogger.debug("Unref %ld", address.address());
-            try {
-                g_object_remove_toggle_ref.invokeExact(
-                        address, toggle_notify, MemorySegment.NULL);
-            } catch (Throwable _err) {
-                throw new AssertionError("Unexpected exception occurred: ", _err);
+            if (defaultContext != null) {
+                try {
+                    g_main_context_invoke.invokeExact(defaultContext.handle(),
+                            REMOVE_TOGGLE_REF, address);
+                } catch (Throwable _err) {
+                    throw new AssertionError(_err);
+                }
+            } else {
+                removeToggleRef(address);
             }
-            InstanceCache.references.remove(address);
-            return GLib.SOURCE_REMOVE;
         }
     }
 }
