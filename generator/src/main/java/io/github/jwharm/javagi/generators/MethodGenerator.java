@@ -346,8 +346,11 @@ public class MethodGenerator {
     }
 
     private void functionPointerInvocation(boolean longAsInt) {
-        // Function descriptor
-        var generator = new CallableGenerator(vm);
+        // Base the generator on func, not on vm, because sometimes the virtual
+        // method has different parameter names than the invoker method
+        var generator = new CallableGenerator(func);
+
+        // Generate function descriptor
         builder.addCode(generator.generateFunctionDescriptorDeclaration());
 
         // Function pointer lookup
