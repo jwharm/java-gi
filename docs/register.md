@@ -8,12 +8,14 @@ When you extend a Java class from an existing GObject-derived class, Java will t
 
     ```java
     public class MyObject extends GObject {
+    }
     ```
 
 === "Kotlin"
 
     ```kotlin
     class MyObject : GObject() {
+    }
     ```
 
 To make sure that the GObject type system will also recognize it as its own class, Java-GI registers your class as a new GType. It will use reflection to determine the name, parent class, implemented interfaces and overridden methods.
@@ -88,7 +90,7 @@ A GType has a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You ca
     ```java
     @RegisteredType(name="MyExampleObject")
     public class MyObject extends GObject {
-        ...
+    }
     ```
 
 === "Kotlin"
@@ -96,7 +98,7 @@ A GType has a unique name, like 'GtkLabel', 'GstObject' or 'GListModel'. (You ca
     ```kotlin
     @RegisteredType(name="MyExampleObject")
     class MyObject : GObject {
-        ...
+    }
     ```
 
 To prefix all type names in a package with a shared namespace identifier, use the `@Namespace(name="...")` annotation in your `package-info.java` file.
@@ -141,7 +143,7 @@ Example definition of an `int` property with name `n-items`:
     var nItems: Int = 0
     ```
 
-### Property annotation parameters
+### Property annotation
 
 The `@Property` annotation can be used to set a property name and other attributes. It can also be used to mark methods as properties that don't conform to the getter/setter convention. Finally, a `@Property(skip=true)` annotation can be used to prevent getter/setter methods getting registered as a GObject property.
 
@@ -184,16 +186,14 @@ To implement a custom class initializer or instance initializer function, use th
 === "Java"
 
     ```java
-    // (Optional) class initialization function    
     @ClassInit
     public static void classInit(GObject.ObjectClass typeClass) {
-        ...
+        // Class initialization logic
     }
 
-    // (Optional) instance initialization function    
     @InstanceInit
     public void init() {
-        ...
+        // Instance initialization logic
     }
     ```
 
@@ -201,23 +201,19 @@ To implement a custom class initializer or instance initializer function, use th
 
     ```kotlin
     companion object {
-        ...
-        
-        // (Optional) class initialization function    
         @ClassInit
         fun classInit(typeClass: ObjectClass) {
-            ...
+            // Class initialization logic
         }
     }
 
-    // (Optional) instance initialization function    
     @InstanceInit
     fun init() {
-        ...
+        // Instance initialization logic
     }
     ```
 
-Be aware that the instance initializer will only run for objects constructed with a static factory method. A regular constructor that calls `super(gtype, ...)` will not work.
+In a similar way, annotate a method with `@InterfaceInit` to register it as an interface initialization function. The method must be static and take the interface class (for example, `File.FileIface`) as a parameter.
 
 ## Signals
 
@@ -227,13 +223,7 @@ You can define custom signals in Java classes that extend GObject. For example:
 
     ```java
     public class Counter extends GObject {
-
-        // register the type
-        static {
-            Types.register(Counter.class);
-        }
-        
-        // declare the signal
+        // declare a signal
         @Signal
         public interface LimitReached {
             void run(int limit);
@@ -246,8 +236,6 @@ You can define custom signals in Java classes that extend GObject. For example:
                 emit("limit-reached", limit);
             }
         }
-        
-        ...
     }
     ```
 
@@ -255,15 +243,7 @@ You can define custom signals in Java classes that extend GObject. For example:
 
     ```kotlin
     class Counter : GObject {
-
-        // register the type
-        companion object {
-            init {
-                Types.register(Counter::class.java)
-            }
-        }
-        
-        // declare the signal
+        // declare a signal
         @Signal
         interface LimitReached {
             fun run(limit: Int)
@@ -276,12 +256,10 @@ You can define custom signals in Java classes that extend GObject. For example:
                 emit("limit-reached", limit)
             }
         }
-        
-        ...
     }
     ```
 
-The "limit-reached" signal in the example is declared with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface too (converting CamelCase to kebab-case) but can be overridden.
+The "limit-reached" signal in the example is declared with a functional interface annotated as `@Signal`. The method signature of the functional interface is used to define the signal parameters and return value. The signal name is inferred from the interface (converting CamelCase to kebab-case) but can be overridden.
 
 You can connect to the custom signal, like this:
 
@@ -306,15 +284,15 @@ Because the signal declaration is an ordinary functional interface, it is equall
 === "Java"
 
     ```java
-        @Signal
-        public interface LimitReached extends IntConsumer {}
+    @Signal
+    public interface LimitReached extends IntConsumer {}
     ```
 
 === "Kotlin"
 
     ```kotlin
-        @Signal
-        interface LimitReached : IntConsumer
+    @Signal
+    interface LimitReached : IntConsumer
     ```
 
 It is also possible to set a custom signal name and optional flags in the `@Signal` annotation, for example `@Signal(name="my-signal", detailed=true)` to define a detailed signal.
