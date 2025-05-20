@@ -92,7 +92,8 @@ public final class Parameter extends GirElement implements TypedValue {
 
     public boolean isDestroyNotifyParameter() {
         return (anyType() instanceof Type type)
-                && "GDestroyNotify".equals(type.cType());
+                && ("GDestroyNotify".equals(type.cType())
+                    || "GDestroyNotify*".equals(type.cType()));
     }
 
     public boolean isErrorParameter() {
