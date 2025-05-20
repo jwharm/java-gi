@@ -94,17 +94,44 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     .add(marshalJavaToNative(getName() + ".get()"))
                     .add(";\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
-        } else if (p.isOutParameter()
+        } else if ((p.isOutParameter() && !p.isDestroyNotifyParameter())
                 || (type != null
                     && type.isPointer()
                     && target instanceof Alias a
                     && a.isValueWrapper())) {
-            var stmt = PartialStatement.of(
-                            "$memorySegment:T _$name:LPointer = _arena.allocate(",
-                            "memorySegment", MemorySegment.class,
-                            "name", getName())
-                    .add(generateValueLayoutPlain(type))
-                    .add(");\n");
+            PartialStatement stmt;
+            if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
+                    || (target != null && target.checkIsGBytes())) {
+                /*
+                 * Allocate an empty memory segment with the correct layout
+                 */
+                stmt = PartialStatement.of(
+                                "$memorySegment:T _$name:LPointer = _arena.allocate(",
+                                "memorySegment", MemorySegment.class,
+                                "name", getName())
+                        .add(generateValueLayoutPlain(type))
+                        .add(");\n");
+            } else {
+                /*
+                 * Allocate a memory segment with the parameter's input value.
+                 * We do this for both "inout" and "out" parameters, even
+                 * though it should only be required for "inout".
+                 */
+                String identifier = getName();
+                if (! (target instanceof Alias a && a.isValueWrapper()))
+                    identifier = identifier + ".get()";
+                if (type != null && type.isBoolean())
+                    identifier = "Boolean.TRUE.equals(" + identifier + ")";
+
+                stmt = PartialStatement.of(
+                                "$memorySegment:T _$name:LPointer = _arena.allocateFrom(",
+                                "memorySegment", MemorySegment.class,
+                                "name", getName())
+                        .add(generateValueLayoutPlain(type))
+                        .add(", ")
+                        .add(marshalJavaToNative(identifier))
+                        .add(");\n");
+            }
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
