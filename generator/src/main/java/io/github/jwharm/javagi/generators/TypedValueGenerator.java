@@ -187,7 +187,7 @@ class TypedValueGenerator {
                     yield marshalJavaToNative(typedef, identifier);
                 String stmt = switch(toJavaBaseType(t.name())) {
                     case null -> null;
-                    case "String", "MemorySegment" -> identifier + ".getValue()";
+                    case "String", "MemorySegment", "void" -> identifier + ".getValue()";
                     default -> identifier + ".getValue()." + t.typeName() + "Value()";
                 };
                 yield PartialStatement.of(stmt);
