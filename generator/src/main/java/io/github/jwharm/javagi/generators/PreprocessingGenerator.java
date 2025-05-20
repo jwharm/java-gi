@@ -119,12 +119,16 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                  */
                 String identifier = getName();
                 if (! (target instanceof Alias a && a.isValueWrapper()))
-                    identifier = identifier + ".get()";
+                        identifier = identifier + ".get()";
+
+                identifier = "(" + getName() + " == null ? null : " + identifier + ")";
+
+                // Handle an Out<Boolean> where the value is null.
                 if (type != null && type.isBoolean())
-                    identifier = "Boolean.TRUE.equals(" + identifier + ")";
+                    identifier = "Boolean.TRUE.equals" + identifier;
 
                 stmt = PartialStatement.of(
-                                "$memorySegment:T _$name:LPointer = _arena.allocateFrom(",
+                                "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
                                 "memorySegment", MemorySegment.class,
                                 "name", getName())
                         .add(generateValueLayoutPlain(type))

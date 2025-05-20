@@ -44,9 +44,7 @@ public class TestGiMarshalling {
 
     @Test
     void testBooleanOutUninitialized() {
-        var v = new Out<Boolean>();
-        booleanOutUninitialized(v);
-        assertFalse(v.get());
+        assertFalse(booleanOutUninitialized(null));
     }
 
     @Test
