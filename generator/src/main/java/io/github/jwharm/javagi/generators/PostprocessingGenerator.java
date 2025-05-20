@@ -57,6 +57,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
     private void readPointer(MethodSpec.Builder builder) {
         if (v instanceof Parameter p
+                && !p.isDestroyNotifyParameter()
                 && (p.isOutParameter()
                     || (type != null
                         && type.isPointer()
