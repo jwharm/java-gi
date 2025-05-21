@@ -169,7 +169,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
     private MethodSpec parentAccessor() {
         ClassName className = cls.abstract_()
-                ? cls.typeName().nestedClass(cls.name() + "Impl")
+                ? cls.typeName().nestedClass(cls.name() + "$Impl")
                 : cls.typeName();
 
         return MethodSpec.methodBuilder("asParent")

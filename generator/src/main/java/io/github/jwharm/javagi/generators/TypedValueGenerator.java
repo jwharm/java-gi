@@ -168,9 +168,6 @@ class TypedValueGenerator {
         if (type.isMemorySegment())
             return PartialStatement.of(identifier);
 
-        if (type.isPointer() && (type.isPrimitive() || target instanceof EnumType))
-            return PartialStatement.of(identifier);
-
         if (type.isBoolean())
             return PartialStatement.of(identifier + " ? 1 : 0");
 
@@ -190,7 +187,7 @@ class TypedValueGenerator {
                     yield marshalJavaToNative(typedef, identifier);
                 String stmt = switch(toJavaBaseType(t.name())) {
                     case null -> null;
-                    case "String", "MemorySegment" -> identifier + ".getValue()";
+                    case "String", "MemorySegment", "void" -> identifier + ".getValue()";
                     default -> identifier + ".getValue()." + t.typeName() + "Value()";
                 };
                 yield PartialStatement.of(stmt);
@@ -704,6 +701,7 @@ class TypedValueGenerator {
         String setValue = switch (gTypeDeclaration.format()) {
             case "$types:T.BOOLEAN" -> "setBoolean";
             case "$types:T.CHAR" -> "setSchar";
+            case "$types:T.UCHAR" -> "setUchar";
             case "$types:T.DOUBLE" -> "setDouble";
             case "$types:T.FLOAT" -> "setFloat";
             case "$types:T.INT" -> "setInt";

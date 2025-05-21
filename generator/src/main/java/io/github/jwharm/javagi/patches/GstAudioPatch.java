@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -61,6 +61,15 @@ public class GstAudioPatch implements Patch {
                 && List.of("gst_audio_info_from_caps", "gst_dsd_info_from_caps")
                        .contains(f.callableAttrs().cIdentifier()))
             return f.withAttribute("name", "with_caps");
+
+        /*
+         * Constructor AudioChannelMixer.new has two out-parameters, but they
+         * aren't annotated as such.
+         */
+        if (element instanceof Parameter p
+                && List.of("in_position", "out_position").contains(p.name())) {
+            return p.withAttribute("direction", "inout");
+        }
 
         return element;
     }

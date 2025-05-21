@@ -90,7 +90,7 @@ public class Conversions {
         StringBuilder builder = new StringBuilder();
         boolean upper = startUpperCase;
         for (char c : typeName.toCharArray()) {
-            if (c == '_' || c == '-') {
+            if ((c == '_' || c == '-') && !builder.isEmpty()) {
                 upper = true;
             } else {
                 builder.append(upper ? Character.toUpperCase(c) : c);
@@ -200,9 +200,10 @@ public class Conversions {
             case "gfloat" -> "float";
             case "none" -> "void";
             case "utf8", "filename" -> "String";
-            case "gpointer", "gconstpointer" -> "MemorySegment";
+            case "gpointer", "gconstpointer",
+                 // treat va_list as an opaque pointer
+                 "valist", "va_list" -> "MemorySegment";
             case "gtype" -> "org.gnome.glib.GType";
-            case "valist", "va_list" -> "VaList";
             default -> null;
         };
     }

@@ -29,6 +29,7 @@ import java.util.List;
  */
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
+            // Main modules
             new AdwPatch(),
             new BasePatch(),
             new FreetypePatch(),
@@ -44,6 +45,9 @@ public class Patches {
             new HarfBuzzPatch(),
             new PangoPatch(),
             new SoupPatch(),
-            new WebKitPatch()
+            new WebKitPatch(),
+
+            // Test modules
+            new GIMarshallingTestsPatch()
     );
 }

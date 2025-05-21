@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2025 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -48,9 +48,9 @@ public final class Class extends Multiplatform
     @Override
     public PartialStatement constructorName() {
         return abstract_()
-                ? PartialStatement.of("$" + typeTag() + "Impl:T::new",
-                        typeTag() + "Impl",
-                        typeName().nestedClass(name() + "Impl"))
+                ? PartialStatement.of("$" + typeTag() + "_Impl:T::new",
+                        typeTag() + "_Impl",
+                        typeName().nestedClass(name() + "$Impl"))
                 : FieldContainer.super.constructorName();
     }
 

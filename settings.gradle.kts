@@ -29,9 +29,16 @@ include("soup")
 include("webkit")
 include("webkitwebprocessextension")
 
-// All child projects are located in the modules/ directory
+include("gimarshallingtests")
+include("regress")
+include("regressunix")
+include("utility")
+include("warnlib")
+
+// All child projects are located in modules/main or modules/test
 for (p in rootProject.children) {
-    val dir = File(settingsDir, "modules/${p.name}")
-    if (dir.exists())
-        p.projectDir = dir
+    p.projectDir = listOf(
+        File(settingsDir, "modules/main/${p.name}"),
+        File(settingsDir, "modules/test/${p.name}")
+    ).firstOrNull { it.exists() }!!
 }

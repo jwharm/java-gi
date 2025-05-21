@@ -19,9 +19,7 @@
 
 package io.github.jwharm.javagi.patches;
 
-import io.github.jwharm.javagi.gir.Callable;
-import io.github.jwharm.javagi.gir.Function;
-import io.github.jwharm.javagi.gir.GirElement;
+import io.github.jwharm.javagi.gir.*;
 import io.github.jwharm.javagi.util.Patch;
 
 import java.util.List;
@@ -44,6 +42,26 @@ public class GstVideoPatch implements Patch {
                            "gst_video_info_dma_drm_from_caps")
                        .contains(f.callableAttrs().cIdentifier()))
             return f.withAttribute("name", "with_caps");
+
+        /*
+         * Function GstVideo.bufferAddVideoGlTextureUploadMeta has an
+         * out-parameter "texture_type", but it isn't annotated as such.
+         */
+        if (element instanceof Parameter p
+                && "texture_type".equals(p.name())) {
+            return p.withAttribute("direction", "inout");
+        }
+
+        /*
+         * Function Navigation.eventParseModifierState has an out-parameter
+         * "state", but it isn't annotated as such.
+         */
+        if (element instanceof Parameter p
+                && "state".equals(p.name())
+                && p.anyType() instanceof Type t
+                && "GstNavigationModifierType*".equals(t.cType())) {
+            return p.withAttribute("direction", "inout");
+        }
 
         return element;
     }
