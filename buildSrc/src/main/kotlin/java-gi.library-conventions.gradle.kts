@@ -41,7 +41,18 @@ java {
 // Register a build service that will parse and cache GIR files
 gradle.sharedServices.registerIfAbsent("gir", GirParserService::class) {
     val girFilesLocation = rootDir.resolve(project.findProperty("girFilesLocation").toString())
-    parameters.inputDirectory.set(girFilesLocation)
+    parameters.inputDirectories.from(girFilesLocation)
+}
+
+// For each subproject: Get the build service
+@Suppress("UNCHECKED_CAST") // cast is safe, we know what type it is
+val girServiceRegistration = gradle.sharedServices.registrations.named("gir").get()
+        as BuildServiceRegistration<*, GirParserService.Params>
+
+// For each subproject: Add the '/gir' folder to the build service's inputDirectories
+val girDir = layout.projectDirectory.dir("gir")
+if (girDir.asFile.exists()) {
+    girServiceRegistration.parameters.inputDirectories.from(girDir)
 }
 
 // Register the task that will generate Java sources from GIR files

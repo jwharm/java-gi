@@ -21,8 +21,7 @@ import io.github.jwharm.javagi.gir.GirParser;
 import io.github.jwharm.javagi.gir.Library;
 import io.github.jwharm.javagi.gir.Repository;
 import io.github.jwharm.javagi.util.Platform;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
 
@@ -41,27 +40,10 @@ public abstract class GirParserService
         implements BuildService<GirParserService.Params> {
 
     public interface Params extends BuildServiceParameters {
-        DirectoryProperty getInputDirectory();
+        ConfigurableFileCollection getInputDirectories();
     }
 
     private final Library library = new Library();
-
-    /**
-     * Create a new GirParserService. This will only check if the input
-     * directory is specified and exists.
-     *
-     * @throws IllegalArgumentException the input directory is not specified
-     * @throws FileNotFoundException    the input directory does not exist
-     */
-    public GirParserService() throws FileNotFoundException {
-        var dir = getParameters().getInputDirectory();
-        if (!dir.isPresent())
-            throw new IllegalArgumentException("Input directory is not set");
-
-        if (!dir.get().getAsFile().exists())
-            throw new FileNotFoundException("Input directory does not exist: "
-                    + dir.get().getAsFile());
-    }
 
     /**
      * Create and return a Library that contains the requested Repository with
@@ -84,27 +66,31 @@ public abstract class GirParserService
     }
 
     /*
-     * Call parse(getInputDirectory(), moduleName) and wrap exceptions in
-     * runtime exceptions.
+     * Call parse(directory, moduleName) for all input directories, and
+     * wrap exceptions in runtime exceptions.
      */
     private Repository parse(String moduleName) {
-        try {
-            Directory basePath = getParameters().getInputDirectory().get();
-            return parse(basePath, moduleName);
-        } catch (XMLStreamException | FileNotFoundException e) {
-            throw new RuntimeException(e);
+        for (File basePath : getParameters().getInputDirectories()) {
+            try {
+                return parse(basePath, moduleName);
+            } catch (FileNotFoundException ignored) {
+            } catch (XMLStreamException x) {
+                throw new RuntimeException(x);
+            }
         }
+        throw new RuntimeException(new FileNotFoundException(
+                "No GIR files found for %s".formatted(moduleName)));
     }
 
     // Read the GIR files for all platforms and parse them into a Repository.
-    private Repository parse(Directory baseFolder, String moduleName)
+    private Repository parse(File baseFolder, String moduleName)
             throws XMLStreamException, FileNotFoundException {
         Repository repository = null;
 
         for (Integer platform : List.of(Platform.MACOS, Platform.WINDOWS, Platform.LINUX)) {
             try {
                 File girFile = findFile(
-                        baseFolder.dir(Platform.toString(platform)).getAsFile(),
+                        new File(baseFolder, Platform.toString(platform)),
                         moduleName + "-"
                 );
                 repository = GirParser.getInstance().parse(
@@ -117,8 +103,8 @@ public abstract class GirParserService
         }
 
         if (repository == null)
-            throw new FileNotFoundException("No GIR files found for %s"
-                    .formatted(moduleName));
+            throw new FileNotFoundException("No GIR files found for %s in %s"
+                    .formatted(moduleName, baseFolder.getName()));
 
         repository.setLibrary(library);
 
