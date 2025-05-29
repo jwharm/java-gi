@@ -9,6 +9,7 @@ tasks.named("build") {
 
 tasks.named("clean") {
     dependsOn(gradle.includedBuild("generator").task(":clean"))
+    delete(project.file("ext/gobject-introspection-tests/build"))
 }
 
 tasks.register("assembleDist") {
