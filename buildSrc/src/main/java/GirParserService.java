@@ -36,8 +36,7 @@ import java.util.List;
  * depends on. The build service caches all repositories so every GIR file is
  * only parsed once during a build.
  */
-public abstract class GirParserService
-        implements BuildService<GirParserService.Params> {
+public abstract class GirParserService implements BuildService<GirParserService.Params> {
 
     public interface Params extends BuildServiceParameters {
         ConfigurableFileCollection getInputDirectories();
@@ -87,41 +86,45 @@ public abstract class GirParserService
             throws XMLStreamException, FileNotFoundException {
         Repository repository = null;
 
+        // First try /macos, /windows and /linux subfolders.
         for (Integer platform : List.of(Platform.MACOS, Platform.WINDOWS, Platform.LINUX)) {
             try {
-                File girFile = findFile(
-                        new File(baseFolder, Platform.toString(platform)),
-                        moduleName + "-"
-                );
-                repository = GirParser.getInstance().parse(
-                        girFile,
-                        platform,
-                        repository
-                );
+                File subFolder = new File(baseFolder, Platform.toString(platform));
+                File girFile = findFile(subFolder, moduleName + "-");
+                repository = GirParser.getInstance().parse(girFile, platform, repository);
             } catch (FileNotFoundException ignored) {
             }
         }
 
-        if (repository == null)
-            throw new FileNotFoundException("No GIR files found for %s in %s"
-                    .formatted(moduleName, baseFolder.getName()));
+        // If the gir file was not found in a platform-specific subfolder, try
+        // the base folder.
+        if (repository == null) {
+            try {
+                int platform = Platform.getRuntimePlatform();
+                File girFile = findFile(baseFolder, moduleName + "-");
+                repository = GirParser.getInstance().parse(girFile, platform, repository);
+            } catch (FileNotFoundException ignored) {
+                throw new FileNotFoundException("No GIR files found for %s in %s"
+                        .formatted(moduleName, baseFolder.getName()));
+            }
+        }
 
         repository.setLibrary(library);
 
         return repository;
     }
 
-    // Find a file in the given folder with the given filename prefix.
-    private static File findFile(File folder, String fileNamePrefix)
-            throws FileNotFoundException {
+    // Find a Gir file in the given folder with the given filename prefix.
+    private static File findFile(File folder, String prefix) throws FileNotFoundException {
         File[] files = folder.listFiles();
 
         if (files != null)
             for (File file : files)
-                if (file.isFile() && file.getName().startsWith(fileNamePrefix))
+                if (file.isFile()
+                        && file.getName().startsWith(prefix)
+                        && file.getName().endsWith(".gir"))
                     return file;
 
-        throw new FileNotFoundException("%s not found in %s"
-                .formatted(fileNamePrefix, folder));
+        throw new FileNotFoundException("%s.gir not found in %s".formatted(prefix, folder));
     }
 }

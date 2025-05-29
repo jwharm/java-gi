@@ -38,19 +38,9 @@ java {
 
 // Register a build service that will parse and cache GIR files
 gradle.sharedServices.registerIfAbsent("gir", GirParserService::class) {
-    val girFilesLocation = rootDir.resolve(project.findProperty("girFilesLocation").toString())
-    parameters.inputDirectories.from(girFilesLocation)
-}
-
-// For each subproject: Get the build service
-@Suppress("UNCHECKED_CAST") // cast is safe, we know what type it is
-val girServiceRegistration = gradle.sharedServices.registrations.named("gir").get()
-        as BuildServiceRegistration<*, GirParserService.Params>
-
-// For each subproject: Add the '/gir' folder to the build service's inputDirectories
-val girDir = layout.projectDirectory.dir("gir")
-if (girDir.asFile.exists()) {
-    girServiceRegistration.parameters.inputDirectories.from(girDir)
+    val mainGirFilesLocation = rootDir.resolve("ext/gir-files")
+    val testGirFilesLocation = rootDir.resolve("ext/gobject-introspection-tests/build")
+    parameters.inputDirectories.from(mainGirFilesLocation, testGirFilesLocation)
 }
 
 // Register the task that will generate Java sources from GIR files
@@ -88,18 +78,21 @@ tasks.withType<Test>().configureEach {
 
     // Configure library path for macOS (Homebrew) and set MacOS-specific JVM parameter
     if (Os.isFamily(Os.FAMILY_MAC)) {
-        jvmArgs("-Djava.library.path=lib:/opt/homebrew/lib")
+        jvmArgs("-Djava.library.path=../../../ext/gobject-introspection-tests/build:"
+                + "/opt/homebrew/lib")
         jvmArgs("-XstartOnFirstThread")
     }
 
     // Configure library path for Arch, Fedora and Debian/Ubuntu
     else if (Os.isFamily(Os.FAMILY_UNIX)) {
-        jvmArgs("-Djava.library.path=lib:/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu")
+        jvmArgs("-Djava.library.path=../../../ext/gobject-introspection-tests/build:"
+                + "/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu")
     }
 
     // Configure library path for Windows (MSYS2)
     else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        jvmArgs("-Djava.library.path=lib;C:/msys64/mingw64/bin")
+        jvmArgs("-Djava.library.path=../../../ext/gobject-introspection-tests/build;"
+                + "C:/msys64/mingw64/bin")
     }
 
     jvmArgs("--enable-native-access=ALL-UNNAMED")
