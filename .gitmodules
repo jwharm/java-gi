@@ -1,3 +1,6 @@
 [submodule "ext/gir-files"]
 	path = ext/gir-files
 	url = https://github.com/gircore/gir-files
+[submodule "ext/gobject-introspection-tests"]
+	path = ext/gobject-introspection-tests
+	url = https://gitlab.gnome.org/gnome/gobject-introspection-tests
