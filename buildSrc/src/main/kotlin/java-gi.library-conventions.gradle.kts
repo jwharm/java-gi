@@ -57,9 +57,6 @@ sourceSets["main"].java.srcDir(generateSources)
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-
-    // Run the gobject-introspection-tests meson build
-    if (isTestModule) dependsOn(buildGObjectIntrospectionTests)
 }
 
 tasks.withType<Javadoc>().configureEach {
@@ -69,18 +66,6 @@ tasks.withType<Javadoc>().configureEach {
         addStringOption("Xdoclint:none", "-quiet")
         encoding = "UTF-8"
     }
-}
-
-// Define task to build the gobject-introspection-tests subproject with Meson
-var buildGObjectIntrospectionTests = tasks.register<Exec>("buildGObjectIntrospectionTests") {
-    onlyIf {
-        !rootDir.resolve("ext/gobject-introspection-tests/build").exists()
-    }
-
-    group = "verification"
-    description = "Run Meson build in ext/gobject-introspection-tests"
-    workingDir = rootDir.resolve("ext/gobject-introspection-tests")
-    commandLine("bash", "-c", "meson setup build && meson compile -C build")
 }
 
 tasks.withType<Test>().configureEach {
