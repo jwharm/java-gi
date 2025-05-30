@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
+      
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -34,6 +34,18 @@ jobs:
           repository: 'jwharm/java-gi'
           path: 'java-gi'
           submodules: 'true'
+
+      - name: Install dependencies to build gobject-introspection-test
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: meson pkg-config libglib2.0-dev libgirepository1.0-dev libcairo2-dev
+          version: 1.0
+
+      - name: Build gobject-introspection-tests
+        working-directory: java-gi/ext/gobject-introspection-tests
+        run: |
+          meson setup build
+          meson compile -C build
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
