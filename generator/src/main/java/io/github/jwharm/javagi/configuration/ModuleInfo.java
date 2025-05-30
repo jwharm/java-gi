@@ -70,9 +70,9 @@ public final class ModuleInfo {
             // Regression test modules
             entry("gimarshallingtests",        new Module("GIMarshallingTests", "org.gnome.gi.gimarshallingtests", "", "")),
             entry("regress",                   new Module("Regress", "org.gnome.gi.regress", "", "")),
-            entry("regressunix",               new Module("XLib", "org.gnome.gi.regressunix", "", "")),
-            entry("utility",                   new Module("XLib", "org.gnome.gi.utility", "", "")),
-            entry("warnlib",                   new Module("XLib", "org.gnome.gi.warnlib", "", ""))
+            entry("regressunix",               new Module("RegressUnix", "org.gnome.gi.regressunix", "", "")),
+            entry("utility",                   new Module("Utility", "org.gnome.gi.utility", "", "")),
+            entry("warnlib",                   new Module("WarnLib", "org.gnome.gi.warnlib", "", ""))
     );
 
     public static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
