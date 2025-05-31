@@ -29,6 +29,9 @@ application {
     applicationDefaultJvmArgs = listOf("-Dapp.version=$version")
 }
 
+// This task should really be in ext, but that would mean this module
+// would have to be `include`d, which would mean we couldn't use it in our build
+
 // Include the gir-files repository as a zip file with the java-gi command-line
 // utility. To decrease size, the documentation is excluded.
 tasks.register<Zip>("includeGirFiles") {
