@@ -75,15 +75,17 @@ public class GtkPatch implements Patch {
             /*
              * The functions StyleContext::addProviderForDisplay and
              * StyleContext::removeProviderForDisplay are moved to the Gtk
-             * global class. The originals are marked as deprecated (see below)
-             * because they are defined in the deprecated class "StyleContext".
+             * global class.
              */
             for (var cls : ns.classes().stream()
                     .filter(c -> "StyleContext".equals(c.name()))
-                    .toList())
+                    .toList()) {
                 for (var func : cls.functions())
                     ns = add(ns, func.withAttribute("deprecated", "0")
                             .withAttribute("name", "style_context_" + func.name()));
+                remove(cls, Function.class, "c:identifier", "gtk_style_context_add_provider_for_display");
+                remove(cls, Function.class, "c:identifier", "gtk_style_context_remove_provider_for_display");
+            }
 
             return ns;
         }
@@ -211,19 +213,6 @@ public class GtkPatch implements Patch {
         if (element instanceof Function f
                 && "gtk_ordering_from_cmpfunc".equals(f.callableAttrs().cIdentifier()))
             return f.withAttribute("introspectable", "0");
-
-        /*
-         * Mark StyleContext::addProviderForDisplay and
-         * StyleContext::removeProviderForDisplay as deprecated. They are moved
-         * to the Gtk global class.
-         */
-        var functions = List.of(
-                "gtk_style_context_add_provider_for_display",
-                "gtk_style_context_remove_provider_for_display"
-        );
-        if (element instanceof Function f
-                && functions.contains(f.callableAttrs().cIdentifier()))
-            return f.withAttribute("deprecated", "1");
 
         /*
          * FontDialog::chooseFontAndFeaturesFinish has different
