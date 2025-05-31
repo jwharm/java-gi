@@ -73,7 +73,7 @@ tasks.withType<Test>().configureEach {
     testLogging.showStandardStreams = true
 
     val ext = project(":ext")
-    val testGirPath = ext.layout.buildDirectory.dir("testgir").map { it.asFile.absolutePath }
+    val testGirPath = ext.layout.buildDirectory.dir("testgir").get().asFile.absolutePath
     dependsOn(ext.tasks.named("buildGir"))
 
     // Configure library path for macOS (Homebrew) and set MacOS-specific JVM parameter
