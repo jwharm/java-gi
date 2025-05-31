@@ -38,10 +38,18 @@ tasks.withType<Javadoc>().configureEach {
         encoding = "UTF-8"
     }
     exclude("**/module-info.java")
-    source(subprojects.flatMap { it.sourceSets["main"].allJava.srcDirs })
+
+    // Include only the main modules in the javadoc
+    val mainModules = subprojects.filter {
+        it.plugins.hasPlugin("java-gi.library-conventions")
+    }
+
+    source(mainModules.flatMap {
+        it.sourceSets["main"].allJava.srcDirs
+    })
 
     // Exclude external dependencies from the classpath
-    classpath = files(subprojects.flatMap { subproject ->
+    classpath = files(mainModules.flatMap { subproject ->
         subproject.sourceSets["main"].compileClasspath.filter { file ->
             val path = file.absolutePath.replace("\\", "/")
             path.contains("/org.jetbrains/annotations/")
@@ -50,7 +58,7 @@ tasks.withType<Javadoc>().configureEach {
     })
 
     // Ensure all source code is generated before the Javadoc task starts
-    subprojects.forEach {
+    mainModules.forEach {
         dependsOn(it.tasks.named("generateSources"))
     }
 }
