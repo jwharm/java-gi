@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
+import static io.github.jwharm.javagi.util.Conversions.toJavaBaseType;
 
 public class PreprocessingGenerator extends TypedValueGenerator {
 
@@ -100,44 +101,61 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     && type.isPointer()
                     && target instanceof Alias a
                     && a.isValueWrapper())) {
-            PartialStatement stmt;
             if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
                     || (target != null && target.checkIsGBytes())) {
                 /*
                  * Allocate an empty memory segment with the correct layout
                  */
-                stmt = PartialStatement.of(
+                var stmt = PartialStatement.of(
                                 "$memorySegment:T _$name:LPointer = _arena.allocate(",
                                 "memorySegment", MemorySegment.class,
                                 "name", getName())
                         .add(generateValueLayoutPlain(type))
                         .add(");\n");
+                builder.addNamedCode(stmt.format(), stmt.arguments());
             } else {
                 /*
                  * Allocate a memory segment with the parameter's input value.
                  * We do this for both "inout" and "out" parameters, even
                  * though it should only be required for "inout".
                  */
-                String identifier = getName();
-                if (! (target instanceof Alias a && a.isValueWrapper()))
+
+                // Handle an Out<> parameter with a primitive type
+                if (type != null && type.isPrimitive()) {
+                    var identifier = "$interop:T.to$boxed:L($name:L)";
+                    var stmt = PartialStatement.of(
+                                    "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
+                                    "memorySegment", MemorySegment.class,
+                                    "name", getName())
+                            .add(generateValueLayoutPlain(type))
+                            .add(", ")
+                            .add(marshalJavaToNative(identifier))
+                            .add(");\n",
+                                "interop", ClassNames.INTEROP,
+                                "boxed", primitiveClassName(toJavaBaseType(type.name())),
+                                "name", getName());
+                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                }
+
+                // Other Out<> parameters
+                else {
+                    String identifier = getName();
+                    if (! (target instanceof Alias a && a.isValueWrapper()))
                         identifier = identifier + ".get()";
 
-                identifier = "(" + getName() + " == null ? null : " + identifier + ")";
+                    identifier = "(" + getName() + " == null ? null : " + identifier + ")";
 
-                // Handle an Out<Boolean> where the value is null.
-                if (type != null && type.isBoolean())
-                    identifier = "Boolean.TRUE.equals" + identifier;
-
-                stmt = PartialStatement.of(
-                                "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
-                                "memorySegment", MemorySegment.class,
-                                "name", getName())
-                        .add(generateValueLayoutPlain(type))
-                        .add(", ")
-                        .add(marshalJavaToNative(identifier))
-                        .add(");\n");
+                    var stmt = PartialStatement.of(
+                                    "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
+                                    "memorySegment", MemorySegment.class,
+                                    "name", getName())
+                            .add(generateValueLayoutPlain(type))
+                            .add(", ")
+                            .add(marshalJavaToNative(identifier))
+                            .add(");\n");
+                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                }
             }
-            builder.addNamedCode(stmt.format(), stmt.arguments());
         }
     }
 

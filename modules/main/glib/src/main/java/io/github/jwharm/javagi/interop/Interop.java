@@ -34,6 +34,7 @@ import org.gnome.glib.GLib;
 import io.github.jwharm.javagi.base.*;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
+import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
@@ -1608,6 +1609,121 @@ public class Interop {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
+    }
+
+    /**
+     * Null-safe retrieve the value of a Boolean Out
+     *
+     * @param  val a possibly null {@code Out<Boolean>}
+     * @return the boolean value, or false when null
+     */
+    public static boolean toBoolean(@Nullable Out<@Nullable Boolean> val) {
+        return val != null && Boolean.TRUE.equals(val.get());
+    }
+
+    /**
+     * Null-safe retrieve the value of a Byte Out
+     *
+     * @param  val a possibly null {@code Out<Byte>}
+     * @return the byte value, or 0 when null
+     */
+    public static byte toByte(@Nullable Out<@Nullable Byte> val) {
+        if (val != null) {
+            Byte value = val.get();
+            if (value != null)
+                return value;
+        }
+        return (byte) 0;
+    }
+
+    /**
+     * Null-safe retrieve the value of a Character Out
+     *
+     * @param  val a possibly null {@code Out<Character>}
+     * @return the char value, or 0 when null
+     */
+    public static char toCharacter(@Nullable Out<@Nullable Character> val) {
+        if (val != null) {
+            Character value = val.get();
+            if (value != null)
+                return value;
+        }
+        return (char) 0;
+    }
+
+    /**
+     * Null-safe retrieve the value of a Double Out
+     *
+     * @param  val a possibly null {@code Out<Double>}
+     * @return the double value, or 0 when null
+     */
+    public static double toDouble(@Nullable Out<@Nullable Double> val) {
+        if (val != null) {
+            Double value = val.get();
+            if (value != null)
+                return value;
+        }
+        return 0.0d;
+    }
+
+    /**
+     * Null-safe retrieve the value of a Float Out
+     *
+     * @param  val a possibly null {@code Out<Float>}
+     * @return the float value, or 0 when null
+     */
+    public static float toFloat(@Nullable Out<@Nullable Float> val) {
+        if (val != null) {
+            Float value = val.get();
+            if (value != null)
+                return value;
+        }
+        return 0.0f;
+    }
+
+    /**
+     * Null-safe retrieve the value of an Integer Out
+     *
+     * @param  val a possibly null {@code Out<Integer>}
+     * @return the int value, or 0 when null
+     */
+    public static int toInteger(@Nullable Out<@Nullable Integer> val) {
+        if (val != null) {
+            Integer value = val.get();
+            if (value != null)
+                return value;
+        }
+        return 0;
+    }
+
+    /**
+     * Null-safe retrieve the value of a Long Out
+     *
+     * @param  val a possibly null {@code Out<Long>}
+     * @return the long value, or 0 when null
+     */
+    public static long toLong(@Nullable Out<@Nullable Long> val) {
+        if (val != null) {
+            Long value = val.get();
+            if (value != null)
+                return value;
+        }
+        return 0L;
+    }
+
+    /**
+     * Null-safe retrieve the value of a Short Out
+     *
+     * @param  val a possibly null {@code Out<Short>}
+     * @return the short value, or 0 when null
+     */
+    public static short toShort(@Nullable Out<@Nullable Short> val) {
+        if (val != null) {
+            Short value = val.get();
+            if (value != null)
+                return value;
+        }
+        return (short) 0;
     }
 
     private static class DowncallHandles {
