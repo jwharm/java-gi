@@ -42,3 +42,5 @@ for (p in rootProject.children) {
         File(settingsDir, "modules/test/${p.name}")
     ).firstOrNull { it.exists() }!!
 }
+
+include("ext")
