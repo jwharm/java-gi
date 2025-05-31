@@ -5,12 +5,12 @@ plugins {
 with(gradle.sharedServices.registrations["gir"].service.get() as GirParserService) {
     parameters.inputDirectories.from(project(":ext")
         .layout.buildDirectory
-        .dir("testgir")
+        .dir("meson")
     )
 }
 
 afterEvaluate {
     tasks.withType<GenerateSources>().configureEach {
-        dependsOn(project(":ext").tasks.named("buildGir"))
+        dependsOn(project(":ext").tasks.named("mesonBuild"))
     }
 }

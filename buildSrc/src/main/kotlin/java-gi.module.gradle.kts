@@ -73,23 +73,23 @@ tasks.withType<Test>().configureEach {
     testLogging.showStandardStreams = true
 
     val ext = project(":ext")
-    val testGirPath = ext.layout.buildDirectory.dir("testgir").get().asFile.absolutePath
-    dependsOn(ext.tasks.named("buildGir"))
+    val mesonBuildDir = ext.layout.buildDirectory.dir("meson").get().asFile.absolutePath
+    dependsOn(ext.tasks.named("mesonBuild"))
 
     // Configure library path for macOS (Homebrew) and set MacOS-specific JVM parameter
     if (Os.isFamily(Os.FAMILY_MAC)) {
-        jvmArgs("-Djava.library.path=$testGirPath:/opt/homebrew/lib")
+        jvmArgs("-Djava.library.path=$mesonBuildDir:/opt/homebrew/lib")
         jvmArgs("-XstartOnFirstThread")
     }
 
     // Configure library path for Arch, Fedora and Debian/Ubuntu
     else if (Os.isFamily(Os.FAMILY_UNIX)) {
-        jvmArgs("-Djava.library.path=$testGirPath:/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu")
+        jvmArgs("-Djava.library.path=$mesonBuildDir:/usr/lib64:/lib64:/lib:/usr/lib:/lib/x86_64-linux-gnu")
     }
 
     // Configure library path for Windows (MSYS2)
     else if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        jvmArgs("-Djava.library.path=$testGirPath;C:/msys64/mingw64/bin")
+        jvmArgs("-Djava.library.path=$mesonBuildDir;C:/msys64/mingw64/bin")
     }
 
     jvmArgs("--enable-native-access=ALL-UNNAMED")

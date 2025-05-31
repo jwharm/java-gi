@@ -1,10 +1,14 @@
+plugins {
+    id("base") // for the 'clean' task
+}
+
 tasks {
     val sourceDir = layout.projectDirectory.dir("gobject-introspection-tests")
-    val buildDir = layout.buildDirectory.dir("testgir")
+    val buildDir = layout.buildDirectory.dir("meson")
 
-    val buildGir by registering(Exec::class) {
+    register("mesonBuild", Exec::class) {
         group = "build"
-        description = "Runs the meson build for gir-files"
+        description = "Runs the meson build for gobject-introspection-tests"
 
         commandLine("sh", "-c", """
             meson setup "${buildDir.get().asFile.absolutePath}" "${sourceDir.asFile.absolutePath}" && \
