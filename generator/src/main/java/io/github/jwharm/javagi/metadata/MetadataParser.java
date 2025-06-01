@@ -154,8 +154,8 @@ public class MetadataParser {
                 if (token == null || "\n".equals(token))
                     return;
             } else {
-                // when no value is specified, default to "true"
-                setAttribute(nodes, key, "true");
+                // when no value is specified, default to "1" (true)
+                setAttribute(nodes, key, "1");
                 key = token;
                 if ("\n".equals(token))
                     return;
@@ -266,11 +266,16 @@ public class MetadataParser {
     }
 
     /**
-     * Set a gir attribute value in the provided gir nodes
+     * Set a gir attribute value in the provided gir nodes.
+     * Attribute value "()" means null, and the attribute is removed.
      */
     private void setAttribute(List<? extends Node> nodes, String key, String val) {
-        for (var node : nodes)
-            node.attributes().put(key, val);
+        for (var node : nodes) {
+            if ("()".equals(val))
+                node.attributes().remove(key);
+            else
+                node.attributes().put(key, val);
+        }
     }
 
     /**
