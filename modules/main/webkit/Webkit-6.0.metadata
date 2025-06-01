@@ -1,0 +1,5 @@
+/*
+ * WebView.getSettings() overrides Widget.getSettings() with a
+ * different return type. Rename to getWebViewSettings()
+ */
+WebView.get_settings name=get_web_view_settings

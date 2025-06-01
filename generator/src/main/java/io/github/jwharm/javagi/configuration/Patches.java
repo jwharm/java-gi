@@ -42,8 +42,6 @@ public class Patches {
             new GtkPatch(),
             new HarfBuzzPatch(),
             new PangoPatch(),
-            new SoupPatch(),
-            new WebKitPatch(),
 
             // Test modules
             new GIMarshallingTestsPatch()

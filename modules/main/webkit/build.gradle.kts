@@ -10,4 +10,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "WebKit"
+    metadata = file("Webkit-6.0.metadata")
 }
