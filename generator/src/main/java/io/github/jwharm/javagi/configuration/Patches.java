@@ -33,7 +33,6 @@ public class Patches {
             new BasePatch(),
             new FreetypePatch(),
             new GLibPatch(),
-            new GioPatch(),
             new GObjectPatch(),
             new GstPatch(),
             new GstAudioPatch(),

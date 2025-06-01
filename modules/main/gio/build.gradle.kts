@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Gio"
+    metadata = file("Gio-2.0.metadata")
 }
