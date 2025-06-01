@@ -27,9 +27,11 @@ import java.lang.Class;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Parse a metadata file and update the attributes on the matching nodes in a
@@ -116,11 +118,16 @@ public class MetadataParser {
             selector = next();
         }
 
-        var childNodes = matchIdentifier(nodes, identifier, selector);
+        List<Node> childNodes = Collections.emptyList();
+        try {
+            childNodes = matchIdentifier(nodes, identifier, selector);
 
-        // Log unused entries
-        if (childNodes.isEmpty())
-            warn(lastPos, "Rule '%s' does not match anything", identifier);
+            if (childNodes.isEmpty())
+                warn(lastPos, "Rule '%s' does not match anything", identifier);
+
+        } catch (PatternSyntaxException e) {
+            warn(lastPos, "Invalid rule '%s': %s", identifier, e.getMessage());
+        }
 
         while (!"\n".equals(token) || ".".equals(next())) {
             if (".".equals(token)) {
@@ -247,7 +254,10 @@ public class MetadataParser {
      * Match a metadata pattern against the child nodes of the provided nodes.
      */
     private List<Node> matchIdentifier(List<? extends Node> nodes, String pattern, String selector) {
-        var patternSpec = Pattern.compile(pattern);
+        // Metadata uses "*" as a wildcard. Change it to a regex ".*?".
+        String escapedPattern = pattern.replace("*", ".*?");
+
+        var patternSpec = Pattern.compile(escapedPattern);
         var result = new ArrayList<Node>();
         for (var node : nodes) {
             for (var child : node.children()) {
