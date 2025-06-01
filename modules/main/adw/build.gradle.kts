@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Adw"
+    metadata = file("Adw-1.metadata")
 }

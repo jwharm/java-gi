@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -30,7 +30,6 @@ import java.util.List;
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
             // Main modules
-            new AdwPatch(),
             new BasePatch(),
             new FreetypePatch(),
             new GLibPatch(),
