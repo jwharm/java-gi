@@ -1,0 +1,50 @@
+/*
+ * VaList parameters are excluded from the Java bindings.
+ * Therefore, the VaList marshaller classes and the
+ * "signal_set_va_marshaller" function are excluded too.
+ */
+VaClosureMarshal java-gi-skip
+SignalCVaMarshaller java-gi-skip
+signal_set_va_marshaller java-gi-skip
+
+/*
+ * `TYPE_FLAG_RESERVED_ID_BIT` is defined as GType but that doesn't
+ * make sense in the Java bindings. Change it to a numeric type.
+ */
+TYPE_FLAG_RESERVED_ID_BIT.*#type name=gsize c:type=gsize
+
+/*
+ * Replace the gtype declaration in GObject with an alias for the GLib
+ * gtype that was added there, so it will inherit in Java and the
+ * instances of both classes can be used interchangeably in many cases.
+ */
+Type.*#type name=GLib.Type c:type=gtype
+
+// Implement GType.toString() with g_type_name()
+Type java-gi-to-string="org.gnome.gobject.GObjects.typeName(this)"
+
+/*
+ * The method "g_type_module_use" overrides "g_type_plugin_use", but
+ * with a different return type. This is not allowed in Java.
+ * Therefore, it is renamed from "use" to "use_type_module".
+ */
+TypeModule.use name=use_type_module
+
+/*
+ * Make GWeakRef generic (replacing all GObject arguments with generic
+ * type {@code <T extends GObject>}).
+ */
+WeakRef java-gi-generic
+
+// Closure construction functions return floating references.
+Closure free-function=g_closure_unref
+
+/*
+ * CClosure construction functions return floating references. As
+ * CClosure shouldn't be used from Java anyway, we remove these
+ * functions.
+ */
+CClosure.new*#function java-gi-skip
+
+// Implement GValue.toString() with g_strdup_value_contents()
+Value java-gi-to-string="org.gnome.gobject.GObjects.strdupValueContents(this)"
