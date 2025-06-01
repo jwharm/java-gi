@@ -51,6 +51,10 @@ public sealed interface Callable
         if (attrBool("java-gi-dont-skip", false))
             return false;
 
+        // Explicit override: skip
+        if (attrBool("java-gi-skip", false))
+            return true;
+
         // Do not generate unnamed, parameter-less class constructors
         if (this instanceof Constructor ctr
                 && ctr.parent() instanceof Class
