@@ -56,11 +56,16 @@ public class MetadataParser {
      *
      * @param repository   the Gir repository to apply the metadata to
      * @param metadataFile the metadata file to parse
-     * @throws IOException when the metadata file cannot be read
      */
-    public void parse(Repository repository, Path metadataFile) throws IOException {
+    public void parse(Repository repository, Path metadataFile) {
         filename = metadataFile.getFileName().toString();
-        contents = Files.readString(metadataFile);
+
+        try {
+            contents = Files.readString(metadataFile);
+        } catch (IOException e) {
+            error(-1, e.getMessage());
+            return;
+        }
 
         contents = contents
                 .replace("\t", " ")
@@ -318,6 +323,9 @@ public class MetadataParser {
      * 16 of file "MyLib-2.0.metadata".
      */
     private String getSourcePosition(int pos) {
+        if (pos < 0)
+            return filename + ": ";
+
         int line = 1;
         for (int i = 0; i < pos; i++)
             if (contents.charAt(i) == '\n')

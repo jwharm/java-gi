@@ -20,6 +20,7 @@
 import io.github.jwharm.javagi.gir.GirParser;
 import io.github.jwharm.javagi.gir.Library;
 import io.github.jwharm.javagi.gir.Repository;
+import io.github.jwharm.javagi.metadata.MetadataParser;
 import io.github.jwharm.javagi.util.Platform;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
@@ -52,14 +53,20 @@ public abstract class GirParserService implements BuildService<GirParserService.
      * contain more Repositories than were requested.
      *
      * @param  name the name of the requested Repository
+     * @param  metadata a metadata file (optional)
      * @return a Library object with the Repository and its dependencies, and
      *         possibly other Repositories
      */
-    public Library getLibrary(String name) {
+    public Library getLibrary(String name, File metadata) {
         Repository repository = library.computeIfAbsent(name, this::parse);
 
+        if (metadata != null && metadata.exists()) {
+            var metadataParser = new MetadataParser();
+            metadataParser.parse(repository, metadata.toPath());
+        }
+
         for (var include : repository.includes())
-            getLibrary(include.name());
+            getLibrary(include.name(), null);
 
         return library;
     }
