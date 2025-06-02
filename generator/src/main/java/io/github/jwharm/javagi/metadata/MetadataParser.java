@@ -20,6 +20,7 @@
 package io.github.jwharm.javagi.metadata;
 
 import io.github.jwharm.javagi.gir.Node;
+import io.github.jwharm.javagi.gir.Parameters;
 import io.github.jwharm.javagi.gir.Repository;
 
 import java.io.IOException;
@@ -116,6 +117,7 @@ public class MetadataParser {
         String selector = null;
         if ("#".equals(next())) {
             selector = next();
+            next();
         }
 
         List<Node> childNodes = Collections.emptyList();
@@ -261,6 +263,10 @@ public class MetadataParser {
         var result = new ArrayList<Node>();
         for (var node : nodes) {
             for (var child : node.children()) {
+                // Recursively descent into the <parameters> node
+                if (child instanceof Parameters)
+                    result.addAll(matchIdentifier(List.of(child), pattern, selector));
+
                 var name = child.attr("name");
                 // name matches pattern?
                 if (name != null && patternSpec.matcher(name).matches()) {
