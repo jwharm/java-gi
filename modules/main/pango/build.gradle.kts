@@ -10,4 +10,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Pango"
+    metadata = file("Pango-1.0.metadata")
 }

@@ -36,12 +36,9 @@ public class Patches {
             new GObjectPatch(),
             new GstPatch(),
             new GstAudioPatch(),
-            new GstVideoPatch(),
-            new GstBasePatch(),
             new GdkPatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),
-            new PangoPatch(),
 
             // Test modules
             new GIMarshallingTestsPatch()

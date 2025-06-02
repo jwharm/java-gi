@@ -1,0 +1,34 @@
+// pango_log2vis_get_embedding_levels has missing annotations
+log2vis_get_embedding_levels java-gi-skip
+
+/*
+ * Unsure how to interpret this return type:
+ *   <array c:type="PangoLanguage**">
+ *     <type name="Language"/>
+ *   </array>
+ * Removing the method from the Java bindings for now.
+ */
+Font.get_languages java-gi-skip
+
+/*
+ * Font::getFeatures has different parameter attributes between
+ * platforms. Remove the Java binding for now.
+ */
+Font.get_features java-gi-skip
+
+/*
+ * Java-GI automatically calls ref() but this one is deprecated.
+ * We can safely remove it from the Java bindings.
+ */
+Coverage.ref java-gi-skip
+
+/*
+ * FontFamily::getName, isMonospace and isVariable have a
+ * "glib:get-property" attribute on Linux, but not on Windows and
+ * macOS. We set the same attribute on all, so they are correctly
+ * merged into one method in the Java bindings.
+ */
+FontFamily
+    .get_name glib:get-property=name
+    .is_monospace glib:get-property=name
+    .is_variable glib:get-property=name
