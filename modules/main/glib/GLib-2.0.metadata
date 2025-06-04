@@ -1,0 +1,49 @@
+/*
+ * These functions don't clean up the memory allocated for the
+ * callback function. It is replaced in Java-GI by wrappers
+ * around their respective "full" functions.
+ */
+idle_add_once            java-gi-skip
+timeout_add_once         java-gi-skip
+timeout_add_seconds_once java-gi-skip
+
+/*
+ * g_clear_error has attribute throws="1" but no gerror** parameter
+ * (or any other parameters) in the gir file.
+ */
+clear_error java-gi-skip
+
+/*
+ * GBytes is available in Java as a plain byte array. There are
+ * functions in the Interop class to read, write and free GBytes.
+ */
+Bytes java-gi-skip
+
+/*
+ * GVariant has a method "get_type" that clashes with the "getType()"
+ * method that is generated in Java. Therefore, it is renamed to
+ * "getVariantType()".
+ */
+Variant.get_type name=get_variant_type
+
+/*
+ * The functions "g_main_context_query" and "g_main_context_check" have
+ * GPollFD[] parameters. Because the size of GPollFD is unknown, it is
+ * not possible to allocate the array with the correct size. For this
+ * reason, both methods are excluded.
+ */
+MainContext
+    .query java-gi-skip
+    .check java-gi-skip
+
+/*
+ * GLib.ByteArray, GLib.HashTable, GLib.List and GLib.SList are not
+ * generated from the gir data. Java-GI provides custom ByteArray,
+ * HashTable, List and SList classes.
+ */
+ByteArray java-gi-custom
+HashTable java-gi-custom
+List      java-gi-custom
+SList     java-gi-custom
+
+Variant java-gi-to-string="print(true)"
