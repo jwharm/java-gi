@@ -146,21 +146,26 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Class c : ns.classes())
-            spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
+            if (!c.skipJava())
+                spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
 
         for (Interface i : ns.interfaces())
-            spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
+            if (!i.skipJava())
+                spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
 
         for (Alias a : ns.aliases()) {
-            RegisteredType target = a.lookup();
-            if (target instanceof Class c)
-                spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
-            if (target instanceof Interface i)
-                spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
+            if (!a.skipJava()) {
+                RegisteredType target = a.lookup();
+                if (target instanceof Class c)
+                    spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
+                if (target instanceof Interface i)
+                    spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
+            }
         }
 
         for (Boxed b : ns.boxeds())
-            spec.addCode(register(b.constructorName(), b.typeName(), null));
+            if (!b.skipJava())
+                spec.addCode(register(b.constructorName(), b.typeName(), null));
 
         return spec.build();
     }
