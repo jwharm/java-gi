@@ -29,7 +29,6 @@ import java.util.List;
  */
 public class Patches {
     public static final List<Patch> PATCHES = List.of(
-            // Main modules
             new BasePatch(),
             new FreetypePatch(),
             new GLibPatch(),
@@ -37,9 +36,6 @@ public class Patches {
             new GstPatch(),
             new GdkPatch(),
             new GtkPatch(),
-            new HarfBuzzPatch(),
-
-            // Test modules
-            new GIMarshallingTestsPatch()
+            new HarfBuzzPatch()
     );
 }
