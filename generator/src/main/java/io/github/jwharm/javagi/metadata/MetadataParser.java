@@ -267,9 +267,14 @@ public class MetadataParser {
                 if (child instanceof Parameters)
                     result.addAll(matchIdentifier(List.of(child), pattern, selector));
 
+                // match all nodes?
+                var matchesEverything = "*".equals(pattern);
+
+                // node name matches pattern?
                 var name = child.attr("name");
-                // name matches pattern?
-                if (name != null && patternSpec.matcher(name).matches()) {
+                var matchesPattern = name != null && patternSpec.matcher(name).matches();
+
+                if (matchesEverything || matchesPattern) {
                     // node type matches selector?
                     if (selector == null || selector.equals(getTagName(child.getClass()))) {
                         result.add(child);
