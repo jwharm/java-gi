@@ -1,0 +1,144 @@
+/*
+ * Gtk.CustomLayout is a convenience class for C code that wants to
+ * avoid subclassing Gtk.LayoutManager. It is not supposed to be
+ * used by language bindings, and will never work correctly, as it
+ * doesn't have the necessary parameters and annotations to manage
+ * the lifetime of the callback functions.
+ * See also https://github.com/gtk-rs/gtk4-rs/issues/23, especially
+ * the first comment.
+ */
+CustomRequestModeFunc java-gi-skip
+CustomMeasureFunc     java-gi-skip
+CustomAllocateFunc    java-gi-skip
+CustomLayoutClass     java-gi-skip
+CustomLayout          java-gi-skip
+
+/*
+ * ApplicationWindow.getId() overrides Buildable.getId() with a
+ * different return type. Rename to getWindowId()
+ */
+ApplicationWindow.get_id name=get_window_id
+
+/*
+ * MenuButton.getDirection() overrides Widget.getDirection() with a
+ * different return type. Rename to getArrowDirection()
+ */
+MenuButton.get_direction name=get_arrow_direction
+
+/*
+ * PrintSettings.get() overrides GObject.get() with a different return
+ * type. Rename to getString()
+ */
+PrintSettings.get name=get_string
+
+/*
+ * PrintUnixDialog.getSettings() overrides Widget.getSettings() with a
+ * different return type. Rename to getPrintSettings()
+ */
+PrintUnixDialog.get_settings name=get_print_settings
+
+/*
+ * Widget.activate() is problematic for several subclasses that have
+ * their own "activate" virtual method: in Java, a child class cannot
+ * override a public method with a protected method. Rename
+ * Widget.activate() to activateWidget()
+ */
+Widget.activate name=activate_widget
+
+/*
+ * Widget.activateAction() returns boolean.
+ * ActionGroup.activateAction() returns void.
+ * Class ApplicationWindow extends Widget and implements ActionGroup.
+ * This doesn't compile in Java. We rename Widget.activateAction()
+ * to activateActionIfExists() to resolve this.
+ */
+Widget.activate_action name=activate_action_if_exists
+
+/*
+ * Furthermore, Widget.activateAction() is shadowed by
+ * Widget.activateActionVariant() so we have to rename the "shadows"
+ * attribute too.
+ */
+Widget.activate_action_variant shadows=activate_action_if_exists
+
+/*
+ * Virtual method Widget.computeExpand(gboolean*, gboolean*) has two
+ * out-parameters, but they aren't annotated as such.
+ */
+Widget.compute_expand#virtual-method.(h|v)expand_p direction=inout
+
+WidgetClass.compute_expand.compute_expand.(h|v)expand_p direction=inout
+
+/*
+ * The invoker attribute isn't set automatically in the gir file,
+ * because the return values are not the same. Set the attribute
+ * anyway.
+ */
+MediaStream.play#virtual-method invoker=play
+
+/*
+ * Virtual method Window.activateDefault() and
+ * Popover.activateDefault() would be protected in Java, but they
+ * override a public method with the same name in Widget. Therefore,
+ * they must also be public.
+ */
+(Window|Popover).activate_default java-gi-override-visibility=PUBLIC
+
+/*
+ * Same for Dialog.close() overriding Window.close()
+ */
+Dialog.close java-gi-override-visibility=PUBLIC
+
+/*
+ * The virtual methods in the GtkBuilderScope interface are not
+ * generated automatically, but they are needed by BuilderJavaScope.
+ */
+BuilderScope
+    .get_type_from_name     java-gi-dont-skip
+    .get_type_from_function java-gi-dont-skip
+    .create_closure         java-gi-dont-skip
+
+/*
+ * The "introspectable=0" attribute is set on the function
+ * "Gtk::orderingFromCmpfunc" on Windows and macOS, but not on Linux.
+ * Make sure that it is the same on every platform.
+ */
+ordering_from_cmpfunc introspectable=0
+
+/*
+ * FontDialog::chooseFontAndFeaturesFinish has different
+ * transfer-ownership attributes between platforms. This might be
+ * caused by minor version differences. Disable the Java bindings for
+ * now.
+ */
+FontDialog.choose_font_and_features_finish java-gi-skip
+
+/*
+ * Because these classes implement GListModel, which is patched to
+ * implement java.util.List, their `void remove(int)` method conflicts
+ * with List's `boolean remove(int)`. Rename to `removeAt()`.
+ */
+MultiFilter.remove name=remove_at
+MultiSorter.remove name=remove_at
+StringList.remove  name=remove_at
+
+// MultiFilter implements ListModel<Filter> and supports mutation
+MultiFilter java-gi-generic-actual="Gtk.Filter" java-gi-list-mutable
+
+// AnyFilter implements ListModel<Filter>
+AnyFilter java-gi-generic-actual="Gtk.Filter"
+
+// EveryFilter implements ListModel<Filter>
+EveryFilter java-gi-generic-actual="Gtk.Filter"
+
+// MultiSorter implements ListModel<Sorter> and supports mutation
+MultiSorter java-gi-generic-actual="Gtk.Sorter" java-gi-list-mutable
+
+// StringList implements ListModel<StringObject> and supports splice
+StringList java-gi-generic-actual="Gtk.StringObject" java-gi-list-spliceable
+
+// Use StringObject.getString() for toString()
+StringObject java-gi-to-string="getString()"
+
+// Use StringFilter.getSearch() for toString()
+StringFilter java-gi-to-string="getSearch()"
