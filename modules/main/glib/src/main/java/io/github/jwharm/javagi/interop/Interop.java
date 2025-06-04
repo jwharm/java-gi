@@ -1101,6 +1101,43 @@ public class Interop {
     }
 
     /**
+     * Read a {@code NULL}-terminated array of structs from native memory,
+     * create a Proxy instance for each struct, and return an array of Proxy
+     * instances. The array must be terminated by a completely null-filled
+     * struct.
+     *
+     * @param  address address of the memory segment
+     * @param  cls     class of the Proxy type
+     * @param  make    constructor of the Proxy type
+     * @param  <T>     the type of the Proxy instances
+     * @return array of Proxy instances
+     */
+    public static <T extends Proxy>
+    T[] getStructArrayFrom(MemorySegment address,
+                           Class<T> cls,
+                           Function<MemorySegment, T> make,
+                           MemoryLayout layout) {
+        if (address == null || NULL.equals(address))
+            return null;
+
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        long size = layout.byteSize();
+        long offset = 0;
+        while (!isNullFilled(array, offset * size, size)) {
+            offset++;
+        }
+
+        return getStructArrayFrom(address, (int) offset, cls, make, layout);
+    }
+
+    private static boolean isNullFilled(MemorySegment segment, long offset, long length) {
+        for (long i = 0; i < length; i++)
+            if (segment.get(ValueLayout.JAVA_BYTE, offset + i) != 0)
+                return false;
+        return true;
+    }
+
+    /**
      * Read an array of structs from native memory, create a Proxy instance for
      * each struct, and return an array of Proxy instances.
      *
