@@ -35,7 +35,6 @@ public class Patches {
             new GLibPatch(),
             new GObjectPatch(),
             new GstPatch(),
-            new GstAudioPatch(),
             new GdkPatch(),
             new GtkPatch(),
             new HarfBuzzPatch(),

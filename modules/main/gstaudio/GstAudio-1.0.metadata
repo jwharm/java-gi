@@ -1,0 +1,26 @@
+/*
+ * Property "output-buffer-duration-fraction" has type "Gst.Fraction".
+ * A Gst.Fraction cannot automatically be put into a GValue, so we
+ * cannot generate a builder setter in Java.
+ */
+AudioAggregator.output-buffer-duration-fraction java-gi-skip
+
+/*
+ * Virtual method AudioSink::stop overrides BaseSink::stop but returns
+ * void instead of boolean. This is not allowed in Java, so it is
+ * removed from the Java bindings.
+ */
+AudioSink.stop java-gi-skip
+
+/*
+ * AudioInfo::fromCaps clashes with AudioInfo::newFromCaps because the
+ * "new" prefix is removed in Java-GI. The same happens in DsdInfo.
+ * Change the name of these methods to "withCaps".
+ */
+(Audio|Dsd)Info.from_caps name=with_caps
+
+/*
+ * Constructor AudioChannelMixer.new has two out-parameters, but they
+ * aren't annotated as such.
+ */
+AudioChannelMixer.new.(in|out)_position direction=inout
