@@ -37,36 +37,36 @@ PrintSettings.get name=get_string
  */
 PrintUnixDialog.get_settings name=get_print_settings
 
-/*
- * Widget.activate() is problematic for several subclasses that have
- * their own "activate" virtual method: in Java, a child class cannot
- * override a public method with a protected method. Rename
- * Widget.activate() to activateWidget()
- */
-Widget.activate name=activate_widget
+Widget
+    /*
+     * Widget.activate() is problematic for several subclasses that have
+     * their own "activate" virtual method: in Java, a child class cannot
+     * override a public method with a protected method. Rename
+     * Widget.activate() to activateWidget()
+     */
+    .activate name=activate_widget
 
-/*
- * Widget.activateAction() returns boolean.
- * ActionGroup.activateAction() returns void.
- * Class ApplicationWindow extends Widget and implements ActionGroup.
- * This doesn't compile in Java. We rename Widget.activateAction()
- * to activateActionIfExists() to resolve this.
- */
-Widget.activate_action name=activate_action_if_exists
+    /*
+     * Widget.activateAction() returns boolean.
+     * ActionGroup.activateAction() returns void.
+     * Class ApplicationWindow extends Widget and implements ActionGroup.
+     * This doesn't compile in Java. We rename Widget.activateAction()
+     * to activateActionIfExists() to resolve this.
+     */
+    .activate_action name=activate_action_if_exists
 
-/*
- * Furthermore, Widget.activateAction() is shadowed by
- * Widget.activateActionVariant() so we have to rename the "shadows"
- * attribute too.
- */
-Widget.activate_action_variant shadows=activate_action_if_exists
+    /*
+     * Furthermore, Widget.activateAction() is shadowed by
+     * Widget.activateActionVariant() so we have to rename the "shadows"
+     * attribute too.
+     */
+    .activate_action_variant shadows=activate_action_if_exists
 
 /*
  * Virtual method Widget.computeExpand(gboolean*, gboolean*) has two
  * out-parameters, but they aren't annotated as such.
  */
 Widget.compute_expand#virtual-method.(h|v)expand_p direction=inout
-
 WidgetClass.compute_expand.compute_expand.(h|v)expand_p direction=inout
 
 /*
