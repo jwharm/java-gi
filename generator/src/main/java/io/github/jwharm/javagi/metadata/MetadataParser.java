@@ -85,7 +85,7 @@ public class MetadataParser {
     private void parseMetadata(Repository repository) {
         next(); // read first token
         do {
-            parseIdentifier(repository.namespaces());
+            parseIdentifier(repository.namespaces(), false);
         } while (token != null); // "token == null" means end of file
     }
 
@@ -96,7 +96,7 @@ public class MetadataParser {
      * wildcards (*.bar.baz). The "nodes" parameter is the list of gir nodes
      * matched by the parent metadata identifier.
      */
-    private void parseIdentifier(List<? extends Node> nodes) {
+    private void parseIdentifier(List<? extends Node> nodes, boolean isSubIdentifier) {
         // skip empty lines
         while ("\n".equals(token))
             next();
@@ -105,9 +105,13 @@ public class MetadataParser {
             return; // end of file
 
         if (".".equals(token)) {
-            error(pos, "Unexpected '%s', expected a pattern.", token);
-            token = null;
-            return;
+            if (isSubIdentifier) {
+                next();
+            } else {
+                error(pos, "Unexpected '%s', expected a pattern.", token);
+                token = null;
+                return;
+            }
         }
 
         // Remember the current position for logging purposes
@@ -131,43 +135,34 @@ public class MetadataParser {
             warn(lastPos, "Invalid rule '%s': %s", identifier, e.getMessage());
         }
 
-        while (!"\n".equals(token) || ".".equals(next())) {
-            if (".".equals(token)) {
+        switch (token) {
+            case "." -> {
+                // parse sub-identifiers on the same line (recursively)
                 next();
-                parseIdentifier(childNodes);
-            } else {
-                parseAttributes(childNodes);
-                return;
+                parseIdentifier(childNodes, false);
             }
+            case "\n" -> {
+                // parse sub-identifiers on new lines (in a loop)
+                do {
+                    parseIdentifier(childNodes, true);
+                } while ("\n".equals(token) && ".".equals(peek()));
+            }
+            default -> parseAttributes(childNodes);
         }
     }
 
     /**
-     * Parse attributes and apply them to the gir nodes
+     * Parse attributes and apply them to the gir nodes.
      */
     private void parseAttributes(List<? extends Node> nodes) {
-        if (token == null || "\n".equals(token))
-            return;
-
-        String key = token;
-        while (next() != null) {
+        while (! (token == null || "\n".equals(token))) {
+            String key = token;
+            next();
             if ("=".equals(token)) {
-                // next token is the attribute value
-                String val = readValue();
-                if (val != null)
-                    setAttribute(nodes, key, val);
-                else
-                    return;
-
-                key = next();
-                if (token == null || "\n".equals(token))
-                    return;
+                setAttribute(nodes, key, readValue());
+                next();
             } else {
-                // when no value is specified, default to "1" (true)
                 setAttribute(nodes, key, "1");
-                key = token;
-                if ("\n".equals(token))
-                    return;
             }
         }
     }
@@ -201,6 +196,22 @@ public class MetadataParser {
             pos += token.length();
 
         return token;
+    }
+
+    /**
+     * Same as next() but don't update the global state
+     *
+     * @return the token that would be returned by next()
+     */
+    private String peek() {
+        String previousToken = token;
+        int previousPos = pos;
+        String newToken = next();
+        while ("\n".equals(newToken))
+            newToken = next();
+        token = previousToken;
+        pos = previousPos;
+        return newToken;
     }
 
     /**
@@ -291,6 +302,16 @@ public class MetadataParser {
      * Attribute value "()" means null, and the attribute is removed.
      */
     private void setAttribute(List<? extends Node> nodes, String key, String val) {
+        if (val == null) {
+            error(pos - 1, "Unexpected end of file");
+            return;
+        }
+
+        if ("\n".equals(val)) {
+            error(pos - 1, "Unexpected end of line");
+            return;
+        }
+
         for (var node : nodes) {
             if ("()".equals(val))
                 node.attributes().remove(key);
