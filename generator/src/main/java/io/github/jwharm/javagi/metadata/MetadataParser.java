@@ -22,6 +22,7 @@ package io.github.jwharm.javagi.metadata;
 import io.github.jwharm.javagi.gir.Node;
 import io.github.jwharm.javagi.gir.Parameters;
 import io.github.jwharm.javagi.gir.Repository;
+import io.github.jwharm.javagi.gir.TypeReference;
 
 import java.io.IOException;
 import java.lang.Class;
@@ -313,11 +314,33 @@ public class MetadataParser {
         }
 
         for (var node : nodes) {
-            if ("()".equals(val))
+            if ("java-gi-parent".equals(key))
+                reparent(node, val);
+            else if ("()".equals(val))
                 node.attributes().remove(key);
             else
                 node.attributes().put(key, val);
         }
+    }
+
+    /**
+     * Move a Gir node to another parent node
+     *
+     * @param node the node to reparent
+     * @param to the new parent node (must exist) and
+     */
+    private void reparent(Node node, String to) {
+        Node source = node.parent();
+        Node target = TypeReference.lookup(node.namespace(), to);
+
+        if (target == null) {
+            warn(pos, "Parent node '%s' not found", to);
+            return;
+        }
+
+        source.children().remove(node);
+        target.children().add(node);
+        node.setParent(target);
     }
 
     /**

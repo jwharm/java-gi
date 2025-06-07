@@ -60,13 +60,13 @@ public abstract class GirParserService implements BuildService<GirParserService.
     public Library getLibrary(String name, File metadata) {
         Repository repository = library.computeIfAbsent(name, this::parse);
 
+        for (var include : repository.includes())
+            getLibrary(include.name(), null);
+
         if (metadata != null && metadata.exists()) {
             var metadataParser = new MetadataParser();
             metadataParser.parse(repository, metadata.toPath());
         }
-
-        for (var include : repository.includes())
-            getLibrary(include.name(), null);
 
         return library;
     }

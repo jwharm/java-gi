@@ -23,6 +23,7 @@ import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.TypeName;
 
 import java.lang.foreign.MemorySegment;
+import java.util.NoSuchElementException;
 
 import static io.github.jwharm.javagi.util.Conversions.*;
 
@@ -40,8 +41,17 @@ public interface TypeReference {
             return null;
 
         int dot = name.indexOf('.');
-        if (dot == -1)
-            return namespace.registeredTypes().get(name);
+        if (dot == -1) {
+            RegisteredType target = namespace.registeredTypes().get(name);
+            if (target != null)
+                return target;
+
+            try {
+                return namespace.parent().library().lookupNamespace(name);
+            } catch (NoSuchElementException nse) {
+                return null;
+            }
+        }
 
         return namespace.parent()
                 .lookupNamespace(name.substring(0, dot))
