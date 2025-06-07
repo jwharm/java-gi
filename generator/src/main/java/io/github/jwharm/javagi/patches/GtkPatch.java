@@ -49,28 +49,6 @@ public class GtkPatch implements Patch {
             }
         }
 
-        if (!"Gtk".equals(namespace))
-            return element;
-
-        if (element instanceof Namespace ns) {
-            /*
-             * The functions StyleContext::addProviderForDisplay and
-             * StyleContext::removeProviderForDisplay are moved to the Gtk
-             * global class.
-             */
-            for (var cls : ns.classes().stream()
-                    .filter(c -> "StyleContext".equals(c.name()))
-                    .toList()) {
-                for (var func : cls.functions())
-                    ns = add(ns, func.withAttribute("deprecated", "0")
-                            .withAttribute("name", "style_context_" + func.name()));
-                remove(cls, Function.class, "c:identifier", "gtk_style_context_add_provider_for_display");
-                remove(cls, Function.class, "c:identifier", "gtk_style_context_remove_provider_for_display");
-            }
-
-            return ns;
-        }
-
         return element;
     }
 }

@@ -14,6 +14,14 @@ CustomLayoutClass     java-gi-skip
 CustomLayout          java-gi-skip
 
 /*
+ * The functions StyleContext::addProviderForDisplay and
+ * StyleContext::removeProviderForDisplay are moved to the Gtk
+ * global class.
+ */
+StyleContext.add_provider_for_display java-gi-parent=Gtk name=style_context_add_provider_for_display
+StyleContext.remove_provider_for_display java-gi-parent=Gtk name=style_context_remove_provider_for_display
+
+/*
  * ApplicationWindow.getId() overrides Buildable.getId() with a
  * different return type. Rename to getWindowId()
  */
