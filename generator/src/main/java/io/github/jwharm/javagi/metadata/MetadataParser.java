@@ -319,7 +319,45 @@ public class MetadataParser {
             else if ("()".equals(val))
                 node.attributes().remove(key);
             else
-                node.attributes().put(key, val);
+                node.attributes().put(key, applyPattern(node.attr(key), val));
+        }
+    }
+
+    /**
+     * Attributes are usually in the form of key=value, to replace the existing
+     * value with a new string literal. But the value can also take the form of
+     * a regex search/replace pattern that is applied on the original value.
+     * The search pattern must contain exactly one regex group (such as
+     * {@code "(.+)"}) for this to work. Examples:
+     * <ul>
+     *     <li>{@code Foo name="foo_(.+)/bar_$1} → "foo_abc" becomes "bar_abc"</li>
+     *     <li>{@code Foo name="foo_(.+)/$1} → "foo_abc" becomes "abc"</li>
+     *     <li>{@code Foo name="foo_(.+)} → shorthand form: "foo_abc" becomes "abc"</li>
+     * </ul>
+     *
+     * @param  name the original attribute value
+     * @param  value the value from the metadata file (could be a search/replace
+     *               pattern)
+     * @return the new attribute value
+     */
+    private String applyPattern(String name, String value) {
+        if (name == null || !value.contains("("))
+            // identical to "(.+)/replacement"
+            return value;
+
+        String pattern = value;
+        try {
+            // replace the whole value with the first match by default
+            String replacement = "$1";
+            String[] split = pattern.split("/");
+            if (split.length > 1) {
+                pattern = split[0];
+                replacement = split[1];
+            }
+            var regex = Pattern.compile(pattern);
+            return regex.matcher(name).replaceFirst(replacement);
+        } catch (Exception e) {
+            return value;
         }
     }
 

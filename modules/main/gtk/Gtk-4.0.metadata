@@ -18,8 +18,7 @@ CustomLayout          java-gi-skip
  * StyleContext::removeProviderForDisplay are moved to the Gtk
  * global class.
  */
-StyleContext.add_provider_for_display java-gi-parent=Gtk name=style_context_add_provider_for_display
-StyleContext.remove_provider_for_display java-gi-parent=Gtk name=style_context_remove_provider_for_display
+StyleContext.(add|remove)_provider_for_display java-gi-parent=Gtk name="style_context_(.+)"
 
 /*
  * ApplicationWindow.getId() overrides Buildable.getId() with a
