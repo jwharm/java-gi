@@ -353,8 +353,12 @@ public class MetadataParser {
         Node target = TypeReference.lookup(node.namespace(), to);
 
         if (target == null) {
-            warn(pos, "Parent node '%s' not found", to);
-            return;
+            try {
+                target = node.namespace().parent().library().lookupNamespace(to);
+            } catch (Exception e) {
+                warn(pos, "Type or namespace '%s' not found", to);
+                return;
+            }
         }
 
         source.children().remove(node);
