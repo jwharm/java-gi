@@ -33,6 +33,7 @@ import java.lang.foreign.Arena;
 import java.util.EnumSet;
 
 import static io.github.jwharm.javagi.util.Conversions.toCamelCase;
+import static java.util.function.Predicate.not;
 
 public class BuilderGenerator {
 
@@ -95,10 +96,12 @@ public class BuilderGenerator {
                         .build())
                 .addMethod(buildMethod())
                 .addMethods(cls.properties().stream()
+                        .filter(not(Property::skipJava))
                         .filter(Property::writable)
                         .map(this::setter)
                         ::iterator)
                 .addMethods(cls.properties().stream()
+                        .filter(not(Property::skipJava))
                         .filter(Property::writable)
                         .filter(TypedValue::isBitfield)
                         .map(this::setterVarargs)

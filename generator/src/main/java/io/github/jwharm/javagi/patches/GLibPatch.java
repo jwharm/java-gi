@@ -48,30 +48,8 @@ public class GLibPatch implements Patch {
                     List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
                                      emptyList())),
                     ns.platforms());
-            ns = add(ns, gtype);
-
-            /*
-             * These functions don't clean up the memory allocated for the
-             * callback function. It is replaced in Java-GI by wrappers
-             * around their respective "full" functions.
-             */
-            ns = remove(ns, Function.class, "name", "idle_add_once");
-            ns = remove(ns, Function.class, "name", "timeout_add_once");
-            ns = remove(ns, Function.class, "name", "timeout_add_seconds_once");
-
-            /*
-             * g_clear_error has attribute throws="1" but no gerror** parameter
-             * (or any other parameters) in the gir file.
-             */
-            return remove(ns, Function.class, "name", "clear_error");
+            return add(ns, gtype);
         }
-
-        /*
-         * GBytes is available in Java as a plain byte array. There are
-         * functions in the Interop class to read, write and free GBytes.
-         */
-        if (element instanceof Record r && "Bytes".equals(r.name()))
-            return r.withAttribute("java-gi-skip", "1");
 
         /*
          * GPid is defined as gint on Unix vs gpointer on Windows. The generated
@@ -89,27 +67,6 @@ public class GLibPatch implements Patch {
          */
         if (element instanceof Record r && "ThreadFunctions".equals(r.name())) {
             r.setPlatforms(Platform.LINUX | Platform.MACOS);
-            return r;
-        }
-
-        /*
-         * GVariant has a method "get_type" that clashes with the "getType()"
-         * method that is generated in Java. Therefore, it is renamed to
-         * "getVariantType()".
-         */
-        if (element instanceof Method m
-                && "g_variant_get_type".equals(m.callableAttrs().cIdentifier()))
-            return m.withAttribute("name", "get_variant_type");
-
-        /*
-         * The functions "g_main_context_query" and "g_main_context_check" have
-         * GPollFD[] parameters. Because the size of GPollFD is unknown, it is
-         * not possible to allocate the array with the correct size. For this
-         * reason, both methods are excluded.
-         */
-        if (element instanceof Record r && "MainContext".equals(r.name())) {
-            for (var m : List.of("query", "check"))
-                r = remove(r, Method.class, "name", m);
             return r;
         }
 
@@ -147,19 +104,6 @@ public class GLibPatch implements Patch {
                                                          emptyList())))),
                     a.platforms());
         }
-
-        /*
-         * GLib.ByteArray, GLib.HashTable, GLib.List and GLib.SList are not
-         * generated from the gir data. Java-GI provides custom ByteArray,
-         * HashTable, List and SList classes.
-         */
-        if (element instanceof Record r
-                && List.of("ByteArray", "HashTable", "List", "SList")
-                        .contains(r.name()))
-            return r.withAttribute("java-gi-custom", "1");
-
-        if (element instanceof Record r && "Variant".equals(r.name()))
-            return r.withAttribute("java-gi-to-string", "print(true)");
 
         return element;
     }

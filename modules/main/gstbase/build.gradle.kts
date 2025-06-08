@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GstBase"
+    metadata = file("GstBase-1.0.metadata")
 }

@@ -1,0 +1,20 @@
+/*
+ * Aggregator::peekNextSample is a virtual method with an invoker
+ * method, but the name of the "pad" parameter is "aggregatorPad".
+ * We rename the parameter to "pad" so it is the same.
+ */
+Aggregator.peek_next_sample#virtual-method.aggregator_pad name=pad
+
+/*
+ * Virtual method BaseSrc::query and BaseSink::query would be
+ * protected in Java, but they override a public method with the same
+ * name in Element. Therefore, they must also be public.
+ */
+Base(Src|Sink).query java-gi-override-visibility=PUBLIC
+
+/*
+ * ByteReader::dupStringUtf16 has a parameter with an array of int16
+ * values, but the size is unspecified, so we cannot convert this to a
+ * short[] array. Remove it from the Java bindings.
+ */
+ByteReader.dup_string_utf16 java-gi-skip

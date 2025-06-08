@@ -39,6 +39,10 @@ public interface Node {
     <T extends Node> T withChildren(GirElement... newChildren);
     <T extends Node> T withChildren(List<Node> newChildren);
 
+    default boolean skipJava() {
+        return attrBool("java-gi-skip", false);
+    }
+
     /**
      * Apply the predicate on this node and its children recursively, and
      * return whether a match was found.

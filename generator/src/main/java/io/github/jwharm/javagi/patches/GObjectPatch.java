@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Objects.requireNonNull;
 
 public class GObjectPatch implements Patch {
 
@@ -37,65 +35,6 @@ public class GObjectPatch implements Patch {
 
         if (!"GObject".equals(namespace))
             return element;
-
-        if (element instanceof Namespace ns) {
-            /*
-             * VaList parameters are excluded from the Java bindings.
-             * Therefore, the VaList marshaller classes and the
-             * "signal_set_va_marshaller" function are excluded too.
-             */
-            ns = remove(ns, Callback.class, "name", "VaClosureMarshal");
-            ns = remove(ns, Alias.class, "name", "SignalCVaMarshaller");
-            ns = remove(ns, Function.class, "name", "signal_set_va_marshaller");
-            return ns;
-        }
-
-        /*
-         * `TYPE_FLAG_RESERVED_ID_BIT` is defined as GType but that doesn't
-         * make sense in the Java bindings. Change it to a numeric type.
-         */
-        if (element instanceof Constant c
-                && "TYPE_FLAG_RESERVED_ID_BIT".equals(c.name())) {
-            Type type = new Type(
-                    Map.of("name", "gsize", "c:type", "gsize"),
-                    emptyList()
-            );
-            return c.withChildren(
-                    c.infoElements().doc(),
-                    c.infoElements().sourcePosition(),
-                    type);
-        }
-
-        /*
-         * Replace the gtype declaration in GObject with an alias for the GLib
-         * gtype that was added there, so it will inherit in Java and the
-         * instances of both classes can be used interchangeably in many cases.
-         */
-        if (element instanceof Alias a && "Type".equals(a.name())) {
-            Type type = new Type(
-                    Map.of("name", "GLib.Type", "c:type", "gtype"),
-                    emptyList()
-            );
-            return a.withChildren(a.infoElements().doc(), type)
-                    .withAttribute("java-gi-to-string",
-                                   "org.gnome.gobject.GObjects.typeName(this)");
-        }
-
-        /*
-         * The method "g_type_module_use" overrides "g_type_plugin_use", but
-         * with a different return type. This is not allowed in Java.
-         * Therefore, it is renamed from "use" to "use_type_module".
-         */
-        if (element instanceof Method m
-                && "g_type_module_use".equals(m.callableAttrs().cIdentifier()))
-            return m.withAttribute("name", "use_type_module");
-
-        /*
-         * Make GWeakRef generic (replacing all GObject arguments with generic
-         * type {@code <T extends GObject>}).
-         */
-        if (element instanceof Record r && "WeakRef".equals(r.name()))
-            return r.withAttribute("java-gi-generic", "1");
 
         /*
          * Change GInitiallyUnownedClass struct to refer to GObjectClass. Both
@@ -117,50 +56,6 @@ public class GObjectPatch implements Patch {
             );
             return r.withChildren(r.infoElements().doc(), field);
         }
-
-        /*
-         * GBytes is available in Java as a plain byte array. There are
-         * functions in the Interop class to read, write and free GBytes.
-         */
-        if (element instanceof Record r && "Bytes".equals(r.name()))
-            return r.withAttribute("java-gi-skip", "1");
-
-        /*
-         * Closure construction functions return floating references.
-         */
-        if (element instanceof Record r && "Closure".equals(r.name()))
-            return r.withAttribute("free-function", "g_closure_unref");
-
-        /*
-         * CClosure construction functions return floating references. As
-         * CClosure shouldn't be used from Java anyway, we remove these
-         * functions.
-         */
-        if (element instanceof Record r
-                && "CClosure".equals(r.name())) {
-            for (var fun : r.functions())
-                if (fun.name().startsWith("new"))
-                    r = remove (r, Function.class, "name", fun.name());
-            return r;
-        }
-
-        /*
-         * Workaround for https://gitlab.gnome.org/GNOME/glib/-/issues/3524
-         */
-        if (element instanceof Type t
-                && (("EnumValue".equals(t.name())
-                        && "const GEnumValue*".equals(t.cType()))
-                    || ("FlagsValue".equals(t.name())
-                        && "const GFlagsValue*".equals(t.cType())))) {
-            var name = requireNonNull(t.name());
-            var cType = "const G" + name;
-            return new Array(emptyMap(), List.of(
-                new Type(Map.of("name", name, "c:type", cType), emptyList())));
-        }
-
-        if (element instanceof Record r && "Value".equals(r.name()))
-            return r.withAttribute("java-gi-to-string",
-                    "org.gnome.gobject.GObjects.strdupValueContents(this)");
 
         return element;
     }

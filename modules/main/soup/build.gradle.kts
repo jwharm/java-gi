@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Soup"
+    metadata = file("Soup-3.0.metadata")
 }

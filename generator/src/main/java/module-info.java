@@ -1,5 +1,6 @@
 module io.github.jwharm.javagi.generator {
     requires java.compiler;
+    requires java.logging;
     requires java.xml;
     requires com.squareup.javapoet;
     requires info.picocli;

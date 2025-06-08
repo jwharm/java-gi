@@ -1,0 +1,6 @@
+/*
+ * Virtual method Auth.update() has a HashTable argument where the
+ * invoker method has a String argument. Remove the "invoker"
+ * attribute, so they are generated as two separate methods in Java.
+ */
+Auth.update invoker=()

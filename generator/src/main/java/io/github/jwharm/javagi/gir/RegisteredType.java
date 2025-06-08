@@ -154,10 +154,6 @@ public sealed interface RegisteredType
         return attr("java-gi-to-string");
     }
 
-    default boolean skipJava() {
-        return attrBool("java-gi-skip", false);
-    }
-
     default boolean customJava() {
         return attrBool("java-gi-custom", false);
     }

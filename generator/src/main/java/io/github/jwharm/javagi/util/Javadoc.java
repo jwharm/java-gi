@@ -329,7 +329,7 @@ public class Javadoc {
     private String convertTyperef(String ref) {
         String type = ref.substring(1);
         RegisteredType rt = TypeReference.lookup(doc.namespace(), type);
-        if (rt == null) {
+        if (rt == null || rt.skipJava()) {
             return "{@code " + ref.substring(1) + "}";
         } else {
             String typeName = rt.javaType();
@@ -477,7 +477,7 @@ public class Javadoc {
      */
     private String formatCIdentifier(String cIdentifier) {
         Node node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
-        if (node == null) return null;
+        if (node == null || node.skipJava()) return null;
 
         String type = switch(node.parent()) {
             case Namespace ns -> formatNS(node.namespace().name())
@@ -524,12 +524,13 @@ public class Javadoc {
             return checkLink(doc.namespace().name(), ns, identifier);
 
         // Valid [namespace.type] ?
-        if (namespace.registeredTypes().containsKey(identifier))
+        if (namespace.registeredTypes().values().stream().anyMatch(rt ->
+                identifier.equals(rt.name()) && !rt.skipJava()))
             return "{@link ";
 
         // Valid [namespace.func] ?
-        return namespace.functions().stream()
-                .anyMatch(f -> identifier.equals(f.name()))
+        return namespace.functions().stream().anyMatch(f ->
+                identifier.equals(f.name()) && !f.skipJava())
                     ? "{@link "
                     : "{@code ";
     }
@@ -541,7 +542,7 @@ public class Javadoc {
     private String checkLink(String ns, String type, String identifier) {
         RegisteredType rt = TypeReference.lookup(getNamespace(ns), type);
 
-        if (rt == null)
+        if (rt == null || rt.skipJava())
             return "{@code ";
 
         // Generating a link to an inner class is not implemented
