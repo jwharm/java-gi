@@ -51,8 +51,7 @@ public class MethodGenerator {
     }
 
     public static String getName(Callable func) {
-        String name = toJavaIdentifier(func.name());
-        return replaceJavaObjectMethodNames(name, func.parent() instanceof Interface);
+        return toJavaIdentifier(func.name());
     }
 
     public static boolean isGeneric(Callable func) {

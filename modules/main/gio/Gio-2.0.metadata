@@ -95,3 +95,10 @@ ListStore.remove name=remove_at
  */
 File.prefix_matches invoker=()
 
+/*
+ * Icon.toString() and SocketConnectable.toString() are default
+ * methods. Default methods are not allowed to override
+ * java.lang.Object methods, so we rename them.
+ */
+Icon.to_string name=serialize_to_string
+SocketConnectable.to_string name=format_as_string
