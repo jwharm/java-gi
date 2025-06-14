@@ -9,7 +9,7 @@ junit = "5.13.1"
 mavenpublish = "0.32.0"
 
 [libraries]
-javagi-generator = { module = "io.github.jwharm.javagi:generator", version.ref = "javagi" }
+javagi-generator = { module = "org.java-gi:generator", version.ref = "javagi" }
 cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "cairo" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }

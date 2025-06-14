@@ -27,7 +27,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
-group = "io.github.jwharm.javagi"
+group = "org.java-gi"
 version = libs.versions.javagi.get()
 
 java {

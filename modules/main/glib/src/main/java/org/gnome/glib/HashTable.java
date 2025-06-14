@@ -19,11 +19,11 @@
 
 package org.gnome.glib;
 
-import io.github.jwharm.javagi.base.Out;
-import io.github.jwharm.javagi.base.TransferOwnership;
-import io.github.jwharm.javagi.base.Proxy;
-import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.MemoryCleaner;
+import org.javagi.base.Out;
+import org.javagi.base.TransferOwnership;
+import org.javagi.base.Proxy;
+import org.javagi.interop.Interop;
+import org.javagi.interop.MemoryCleaner;
 import java.lang.Integer;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -40,7 +40,7 @@ import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static io.github.jwharm.javagi.interop.Interop.getAddress;
+import static org.javagi.interop.Interop.getAddress;
 import static java.lang.foreign.MemorySegment.NULL;
 
 /**

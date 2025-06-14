@@ -17,11 +17,11 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import io.github.jwharm.javagi.gir.GirParser;
-import io.github.jwharm.javagi.gir.Library;
-import io.github.jwharm.javagi.gir.Repository;
-import io.github.jwharm.javagi.metadata.MetadataParser;
-import io.github.jwharm.javagi.util.Platform;
+import org.javagi.gir.GirParser;
+import org.javagi.gir.Library;
+import org.javagi.gir.Repository;
+import org.javagi.metadata.MetadataParser;
+import org.javagi.util.Platform;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;

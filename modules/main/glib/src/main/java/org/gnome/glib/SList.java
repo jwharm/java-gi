@@ -19,10 +19,10 @@
 
 package org.gnome.glib;
 
-import io.github.jwharm.javagi.base.TransferOwnership;
-import io.github.jwharm.javagi.base.Proxy;
-import io.github.jwharm.javagi.base.ProxyInstance;
-import io.github.jwharm.javagi.interop.Interop;
+import org.javagi.base.TransferOwnership;
+import org.javagi.base.Proxy;
+import org.javagi.base.ProxyInstance;
+import org.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.foreign.*;
@@ -35,7 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static io.github.jwharm.javagi.interop.Interop.getAddress;
+import static org.javagi.interop.Interop.getAddress;
 
 /**
  * Java wrapper for <a href="https://docs.gtk.org/glib/struct.SList.html">GLib.SList</a>

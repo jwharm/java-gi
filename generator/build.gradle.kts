@@ -5,7 +5,7 @@ plugins {
     id("java-library")
 }
 
-group = "io.github.jwharm.javagi"
+group = "org.java-gi"
 version = libs.versions.javagi.get()
 
 repositories {
@@ -24,8 +24,8 @@ java {
 
 application {
     applicationName = "java-gi"
-    mainModule = "io.github.jwharm.javagi.generator"
-    mainClass = "io.github.jwharm.javagi.JavaGI"
+    mainModule = "org.javagi.generator"
+    mainClass = "org.javagi.JavaGI"
     applicationDefaultJvmArgs = listOf("-Dapp.version=$version")
 }
 

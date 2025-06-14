@@ -1,0 +1,5 @@
+/**
+ * Java-GI annotations to register a Java class as a Gtk composite template
+ * class.
+ */
+package org.javagi.gtk.annotations;

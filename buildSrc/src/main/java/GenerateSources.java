@@ -30,7 +30,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
-import static io.github.jwharm.javagi.JavaGI.generate;
+import static org.javagi.JavaGI.generate;
 
 /**
  * GenerateSources is a Gradle task that will generate Java source files for
