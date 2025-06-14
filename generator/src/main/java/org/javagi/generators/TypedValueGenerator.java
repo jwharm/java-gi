@@ -761,8 +761,8 @@ class TypedValueGenerator {
 
         } catch (NumberFormatException nfe) {
             // Do not write anything
-            System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: Value not allowed%n",
-                    v.name(), value);
+            System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: %s%n",
+                    v.name(), value, nfe.getMessage());
             return null;
         }
     }
