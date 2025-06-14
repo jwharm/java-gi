@@ -1,0 +1,5 @@
+/* Incorrect value of constant larger than 32 bits:
+ * https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/526
+ * Change the type to a gint64.
+ */
+ANNOTATION_CALCULATED_LARGE.gint#type name=gint64 c:type=gint64
