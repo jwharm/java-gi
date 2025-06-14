@@ -8,12 +8,12 @@ plugins {
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
-    coordinates("io.github.jwharm.javagi", project.name, project.version.toString())
+    coordinates("org.java-gi", project.name, project.version.toString())
     pom {
         val capitalizedId = project.name.replaceFirstChar(Char::titlecase)
         name = capitalizedId
         description = "Java language bindings for $capitalizedId, generated with Java-GI"
-        url = "https://jwharm.github.io/java-gi/"
+        url = "https://java-gi.org/"
         licenses {
             license {
                 name = "GNU Lesser General Public License, version 2.1"

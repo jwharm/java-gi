@@ -1,6 +1,6 @@
 package org.gnome.gi.gimarshallingtests;
 
-import io.github.jwharm.javagi.base.Out;
+import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;

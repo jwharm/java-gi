@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 Jan-Willem Harmannij
+ * Copyright (C) 2022-2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -18,9 +18,9 @@
  */
 package org.gnome.glib;
 
-import io.github.jwharm.javagi.base.ProxyInstance;
-import io.github.jwharm.javagi.interop.Interop;
-import io.github.jwharm.javagi.interop.MemoryCleaner;
+import org.javagi.base.ProxyInstance;
+import org.javagi.interop.Interop;
+import org.javagi.interop.MemoryCleaner;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;

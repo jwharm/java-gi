@@ -5,7 +5,8 @@ plugins {
 rootProject.name = "java-gi"
 
 includeBuild("generator")
-include ("adw")
+
+include("adw")
 include("gdk")
 include("gdkpixbuf")
 include("gio")
