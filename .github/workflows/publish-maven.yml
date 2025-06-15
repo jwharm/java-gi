@@ -53,7 +53,7 @@ jobs:
       
       - name: Run Gradle build
         working-directory: java-gi/
-        run:
+        run: |
           Xvfb :100 -ac &
           export DISPLAY=:100.0
           ./gradlew build javadoc
