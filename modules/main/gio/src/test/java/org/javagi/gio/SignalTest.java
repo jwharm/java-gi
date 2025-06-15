@@ -45,6 +45,16 @@ public class SignalTest {
     }
 
     @Test
+    public void connectSignalByName() {
+        var success = new AtomicBoolean(false);
+        Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);
+        SignalConnection<GObject.NotifyCallback> signal = app.connect("notify::application-id", _ -> success.set(true));
+        assertTrue(signal.isConnected());
+        app.setApplicationId("test.id2");
+        assertTrue(success.get());
+    }
+
+    @Test
     public void disconnectSignal() {
         var success = new AtomicBoolean(true);
         Application app = new Application("test.id1", ApplicationFlags.DEFAULT_FLAGS);

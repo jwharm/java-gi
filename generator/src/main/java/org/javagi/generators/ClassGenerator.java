@@ -367,6 +367,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     <p>
                     A {@code GObject} can have multiple bindings.
                     
+                    @param  <S> type of the source property
+                    @param  <T> type of the target property
                     @param  sourceProperty the property on this Object to bind
                     @param  target         the target {@code GObject}
                     @param  targetProperty the property on {@code target} to bind
@@ -387,30 +389,34 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec gobjectConnect() {
+        var C = TypeVariableName.get("C");
         return MethodSpec.methodBuilder("connect")
                 .addJavadoc("""
                     Connect a callback to a signal for this object. The handler will be
                     called before the default handler of the signal.
                     
+                    @param  <C>            type of the signal callback
                     @param  detailedSignal a string of the form "signal-name::detail"
                     @param  callback       the callback to connect
                     @return a SignalConnection object to track, block and disconnect the
                             signal connection
                     """)
                 .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(TypeVariableName.get("T"))
-                .returns(ClassNames.SIGNAL_CONNECTION)
+                .addTypeVariable(C)
+                .returns(ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
                 .addParameter(String.class, "detailedSignal")
-                .addParameter(TypeVariableName.get("T"), "callback")
+                .addParameter(C, "callback")
                 .addStatement("return connect(detailedSignal, callback, false)")
                 .build();
     }
 
     private MethodSpec gobjectConnectAfter() {
+        var C = TypeVariableName.get("C");
         return MethodSpec.methodBuilder("connect")
                 .addJavadoc("""
                     Connect a callback to a signal for this object.
                     
+                    @param <C>            type of the signal callback
                     @param detailedSignal a string of the form "signal-name::detail"
                     @param callback       the callback to connect
                     @param after          whether the handler should be called before or
@@ -419,17 +425,17 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                             signal connection
                     """)
                 .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(TypeVariableName.get("T"))
-                .returns(ClassNames.SIGNAL_CONNECTION)
+                .addTypeVariable(C)
+                .returns(ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
                 .addParameter(String.class, "detailedSignal")
-                .addParameter(TypeVariableName.get("T"), "callback")
+                .addParameter(C, "callback")
                 .addParameter(boolean.class, "after")
                 .addStatement("$1T closure = new $1T(callback)",
                         ClassNames.JAVA_CLOSURE)
                 .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
                         ClassNames.G_OBJECTS)
                 .addStatement("return new $T(handle(), handlerId, closure)",
-                        ClassNames.SIGNAL_CONNECTION)
+                        ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
                 .build();
     }
 
