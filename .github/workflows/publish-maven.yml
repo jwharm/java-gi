@@ -45,14 +45,18 @@ jobs:
             libgirepository1.0-dev
             libcairo2-dev
             libgtk-4-dev
+            xvfb
           version: 1.0
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
+      
       - name: Run Gradle build
         working-directory: java-gi/
-        run: ./gradlew build javadoc
+        run:
+          Xvfb :100 -ac &
+          export DISPLAY=:100.0
+          ./gradlew build javadoc
 
       - name: Run Mkdocs build
         working-directory: java-gi/
