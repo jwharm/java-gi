@@ -53,8 +53,7 @@ public class DocGenerator {
 
         // Methods and functions
         if (doc.parent() instanceof Callable func
-                && (! (doc.parent() instanceof Callback
-                        || doc.parent() instanceof Signal))) {
+                && (! (doc.parent() instanceof Callback || doc.parent() instanceof Signal))) {
 
             // Param
             Parameters parameters = func.parameters();
@@ -77,7 +76,7 @@ public class DocGenerator {
                 ReturnValue rv = func.returnValue();
                 if (rv != null && rv.infoElements().doc() != null)
                     writeDoc(builder,
-                             new Javadoc().convert(rv.infoElements().doc()),
+                            new Javadoc().convert(rv.infoElements().doc()),
                             "@return");
             }
 
@@ -87,8 +86,8 @@ public class DocGenerator {
                         "GErrorException see {@link org.gnome.glib.GError}",
                         "@throws");
             if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-                writeDoc(builder, "$T when run on a platform other than "
-                        + Platform.toString(func.platforms()),
+                writeDoc(builder,
+                        "$T when run on a platform other than " + Platform.toString(func.platforms()),
                         "@throws");
         }
 
@@ -98,23 +97,27 @@ public class DocGenerator {
                     "@param detail");
             writeDoc(builder, "the signal handler",
                     "@param handler");
-            writeDoc(builder, "a signal handler ID to keep track of the signal connection",
+            writeDoc(builder,
+                    "a signal handler ID to keep track of the signal connection",
                     "@return");
         }
 
         // Property setters
         if (doc.parent() instanceof Property p) {
             String identifier = toJavaIdentifier(p.name());
-            writeDoc(builder, identifier + " the value for the {@code " + p.name() + "} property",
+            writeDoc(builder,
+                    identifier + " the value for the {@code " + p.name() + "} property",
                     "@param");
-            writeDoc(builder, "the {@code Builder} instance is returned, to allow method chaining",
+            writeDoc(builder,
+                    "the {@code Builder} instance is returned, to allow method chaining",
                     "@return");
         }
 
         // Field setters
         if (doc.parent() instanceof Field f) {
             String identifier = toJavaIdentifier(f.name());
-            writeDoc(builder, identifier + " the value for the {@code " + f.name() + "} field",
+            writeDoc(builder,
+                    identifier + " the value for the {@code " + f.name() + "} field",
                     "@param");
         }
 
@@ -124,11 +127,11 @@ public class DocGenerator {
             writeDoc(builder, element.infoAttrs().version(), "@since");
 
         // Deprecated
-        if (doc.parent() instanceof Callable m
-                && m.callableAttrs().deprecated()
-                && m.infoElements().docDeprecated() != null) {
+        if (doc.parent() instanceof GirElement element
+                && element.infoAttrs().deprecated()
+                && element.infoElements().docDeprecated() != null) {
             writeDoc(builder,
-                     new Javadoc().convert(m.infoElements().docDeprecated()),
+                    new Javadoc().convert(element.infoElements().docDeprecated()),
                     "@deprecated");
         }
 
