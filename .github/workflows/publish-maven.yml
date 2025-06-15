@@ -35,10 +35,16 @@ jobs:
           path: 'java-gi'
           submodules: 'true'
 
-      - name: Install dependencies to build gobject-introspection-test
+      - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: meson pkg-config libglib2.0-dev libgirepository1.0-dev libcairo2-dev
+          packages: >
+            meson
+            pkg-config
+            libglib2.0-dev
+            libgirepository1.0-dev
+            libcairo2-dev
+            libgtk-4-dev
           version: 1.0
 
       - name: Setup Gradle

@@ -62,11 +62,6 @@ tasks.withType<Javadoc>().configureEach {
 }
 
 tasks.withType<Test>().configureEach {
-    // Don't run tests in Github action. The native libraries aren't installed.
-    if (System.getenv().containsKey("CI")) {
-        enabled = false
-    }
-
     useJUnitPlatform()
 
     // Log standard output and error streams when running tests
