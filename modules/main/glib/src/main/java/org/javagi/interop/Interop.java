@@ -23,6 +23,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
@@ -39,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
+import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -240,15 +242,39 @@ public class Interop {
      * {@link SegmentAllocator#allocateFrom(String)}, but return
      * {@link MemorySegment#NULL} for a {@code null} argument.
      *
-     * @param  string    the string to allocate as a native string (utf8 char*)
-     *                   (can be {@code null})
-     * @param  alloc the segment allocator to use
+     * @param  string the string to allocate as a native string (utf8 char*)
+     *                (can be {@code null})
+     * @param  alloc  the segment allocator to use
      * @return the allocated MemorySegment with the native utf8 string, or
      *         {@link MemorySegment#NULL}
      */
     public static MemorySegment allocateNativeString(String string,
                                                      SegmentAllocator alloc) {
         return string == null ? NULL : alloc.allocateFrom(string);
+    }
+
+    /**
+     * Allocate a native string using {@code g_malloc0()}.
+     * Will return {@link MemorySegment#NULL} for a {@code null} argument.
+     *
+     * @param  string the string to allocate as a native string (utf8 char*)
+     *                (can be {@code null})
+     * @return the allocated MemorySegment with the native utf8 string, that
+     *         must be freed with {@code g_free()}, or
+     *         {@link MemorySegment#NULL}
+     */
+    public static MemorySegment allocateUnownedString(String string) {
+        if (string == null)
+            return NULL;
+
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        MemorySegment segment = GLib.malloc0(bytes.length + 1);
+        if (segment == null)
+            throw new AssertionError("g_malloc() returned null");
+
+        segment = segment.reinterpret(bytes.length + 1);
+        MemorySegment.copy(bytes, 0, segment, JAVA_BYTE, 0, bytes.length);
+        return segment;
     }
 
     /**

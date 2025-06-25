@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import static org.javagi.gir.TransferOwnership.FULL;
 import static org.javagi.gir.TransferOwnership.NONE;
 import static org.javagi.util.Conversions.*;
 
@@ -156,10 +157,16 @@ class TypedValueGenerator {
                     "$interop:T.allocateNativeArray(" + identifier + ", false, _arena)",
                     "interop", ClassNames.INTEROP);
 
-        if (type.isString())
-            return PartialStatement.of(
-                    "$interop:T.allocateNativeString(" + identifier + ", _arena)",
-                    "interop", ClassNames.INTEROP);
+        if (type.isString()) {
+            if (v.transferOwnership() == FULL)
+                return PartialStatement.of(
+                        "$interop:T.allocateUnownedString(" + identifier + ")",
+                        "interop", ClassNames.INTEROP);
+            else
+                return PartialStatement.of(
+                        "$interop:T.allocateNativeString(" + identifier + ", _arena)",
+                        "interop", ClassNames.INTEROP);
+        }
 
         if (! (v instanceof Parameter p && p.isOutParameter()))
             if (type.cType() != null && type.cType().endsWith("**"))
