@@ -80,27 +80,75 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // Allocate memory for out-parameter
     private void pointerAllocation(MethodSpec.Builder builder) {
         if (p.isOutParameter() && array != null && !array.unknownSize()) {
+            PartialStatement stmt;
+
+            // Get the array element type
+            if (! (array.anyType() instanceof Type elemType))
+                return; // Nested arrays are not yet supported
+
             /*
-             * Out-parameter array with known size: If the array isn't null,
+             * Inout-parameter array with known size: If the array isn't null,
              * copy the contents into the native memory buffer. If it is null,
              * allocate a pointer.
              */
-            var stmt = PartialStatement.of(
-                            "$memorySegment:T _$name:LPointer = ($name:L == null || $name:L.get() == null)$W? ",
-                            "memorySegment", MemorySegment.class,
-                            "name", getName())
-                    .add("_arena.allocate(")
-                    .add(generateValueLayoutPlain(type))
-                    .add(")$W: ")
-                    .add("($memorySegment:T) ")
-                    .add(marshalJavaToNative(getName() + ".get()"))
-                    .add(";\n");
+            if (p.direction() == Direction.INOUT) {
+                stmt = PartialStatement.of(
+                                "$memorySegment:T _$name:LArray = ($name:L == null || $name:L.get() == null)$W? ",
+                                "memorySegment", MemorySegment.class,
+                                "name", getName())
+                        .add("_arena.allocate(")
+                        .add(generateValueLayoutPlain(elemType))
+                        .add(")$W: ")
+                        .add("($memorySegment:T) ")
+                        .add(marshalJavaToNative(getName() + ".get()"))
+                        .add(";\n");
+            }
+
+            /*
+             * Out-parameter array with known size: allocate a buffer and
+             * zero-initialize it.
+             */
+            else {
+                stmt = PartialStatement.of(
+                                "$memorySegment:T _$name:LArray = _arena.allocate(",
+                                "memorySegment", MemorySegment.class,
+                                "name", getName())
+                        .add(generateValueLayoutPlain(elemType))
+                        .add(", ")
+                        .add(array.sizeExpression(false))
+                        .add(").fill((byte) 0);\n");
+            }
             builder.addNamedCode(stmt.format(), stmt.arguments());
-        } else if ((p.isOutParameter() && !p.isDestroyNotifyParameter())
+
+            /*
+             * When "caller-allocates" is not set, and the c-type ends with
+             * "**", there is an extra level of indirection needed, so we
+             * allocate another pointer.
+             * In all other cases, we just refer to the already allocated
+             * memory.
+             */
+            if (!p.callerAllocates() && array.cType() != null && array.cType().endsWith("**")) {
+                stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = " +
+                                "_arena.allocateFrom($valueLayout:T.ADDRESS, _$name:LArray);\n",
+                        "memorySegment", MemorySegment.class,
+                        "valueLayout", ValueLayout.class,
+                        "name", getName());
+            } else {
+                stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = _$name:LArray;\n",
+                        "memorySegment", MemorySegment.class,
+                        "name", getName());
+            }
+            builder.addNamedCode(stmt.format(), stmt.arguments());
+        }
+
+        // Handle all other out-parameters & pointers to primitive values
+        else if ((p.isOutParameter() && !p.isDestroyNotifyParameter())
                 || (type != null
                     && type.isPointer()
                     && target instanceof Alias a
                     && a.isValueWrapper())) {
+
+            // Special case for length, user_data, and GBytes parameters
             if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
                     || (target != null && target.checkIsGBytes())) {
                 /*
@@ -113,12 +161,15 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         .add(generateValueLayoutPlain(type))
                         .add(");\n");
                 builder.addNamedCode(stmt.format(), stmt.arguments());
-            } else {
-                /*
-                 * Allocate a memory segment with the parameter's input value.
-                 * We do this for both "inout" and "out" parameters, even
-                 * though it should only be required for "inout".
-                 */
+            }
+
+            /*
+             * All other cases:
+             * Allocate a memory segment with the parameter's input value.
+             * We do this for both "inout" and "out" parameters, even
+             * though it should only be required for "inout".
+             */
+            else {
 
                 // Handle an Out<> parameter with a primitive type
                 if (type != null && type.isPrimitive()) {

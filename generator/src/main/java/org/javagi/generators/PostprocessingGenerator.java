@@ -99,44 +99,55 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 return;
             }
 
+            // Null-check
+            builder.beginControlFlow("if ($1L != null)", getName());
+
             // Pointer to array
             String len = array.sizeExpression(false);
             PartialStatement payload;
 
-            // Out-parameter array with known length
-            if (p.isOutParameter() && len != null && p.callerAllocates())
+            // Called-allocated out-parameter array with known length
+            if (p.isOutParameter() && len != null && p.callerAllocates()) {
                 payload = array.anyType() instanceof Type t && t.isPrimitive()
                         ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
-                                .add(generateValueLayoutPlain(t))
-                                .add(")")
+                        .add(generateValueLayoutPlain(t))
+                        .add(")")
                         : marshalNativeToJava("_%sPointer".formatted(getName()), false);
+            }
 
-            // Arrays with primitive values and known length
+            // Arrays with primitive values and known length: there's an extra
+            // level of indirection
             else if (len != null
                         && array.anyType() instanceof Type t
                         && t.isPrimitive()
-                        && !t.isBoolean())
-                payload = PartialStatement.of("_$name:LPointer$Z.get($valueLayout:T.ADDRESS, 0)$Z.reinterpret(" + len + " * ",
+                        && !t.isBoolean()) {
+                String varName = "_$name:LPointer";
+                if (array.cType() != null && array.cType().endsWith("**"))
+                    varName = "$interop:T.dereference(" + varName + ")";
+                payload = PartialStatement.of(varName + "$Z.reinterpret(" + len + " * ",
+                                "interop", ClassNames.INTEROP,
                                 "name", getName(),
                                 "valueLayout", ValueLayout.class)
                         .add(generateValueLayoutPlain(t))
                         .add(".byteSize(), _arena, null)$Z.toArray(")
                         .add(generateValueLayoutPlain(t))
                         .add(")");
+            }
 
             // Other arrays
-            else
-                payload = marshalNativeToJava("_" + getName() + "Pointer", false);
+            else {
+                payload = marshalNativeToJava("_$name:LPointer.get($valueLayout:T.ADDRESS, 0)", false)
+                        .add(null, "name", getName(), "valueLayout", ValueLayout.class);
+            }
 
             var stmt = PartialStatement.of(getName())
                     .add(".set(")
                     .add(payload)
                     .add(");\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
 
-            // Null-check
-            builder.beginControlFlow("if ($1L != null)", getName())
-                    .addNamedCode(stmt.format(), stmt.arguments())
-                    .endControlFlow();
+            // End null-check if-block
+            builder.endControlFlow();
         }
     }
 
