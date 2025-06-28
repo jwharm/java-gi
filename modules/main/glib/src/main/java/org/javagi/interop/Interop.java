@@ -217,6 +217,20 @@ public class Interop {
     }
 
     /**
+     * When reading an address from {@code pointer} results in a {@code NULL}
+     * value, raise a {@code NullPointerException}.
+     *
+     * @param pointer the pointer to read and compare against {@code NULL}
+     */
+    public static void checkNull(MemorySegment pointer) {
+        if (pointer
+                .reinterpret(ValueLayout.ADDRESS.byteSize())
+                .get(ValueLayout.ADDRESS, 0)
+                .equals(MemorySegment.NULL))
+            throw new NullPointerException("Null pointer: " + pointer);
+    }
+
+    /**
      * Get a GType by executing the provided get-type function.
      *
      * @return the gtype from the provided get-type function
