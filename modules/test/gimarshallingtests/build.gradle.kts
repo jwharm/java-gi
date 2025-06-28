@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GIMarshallingTests"
+    metadata = file("GIMarshallingTests-1.0.metadata")
 }
