@@ -161,10 +161,12 @@ public class Conversions {
 
     /**
      * Convert C type declaration into Java type declaration. Return
-     * {@code null} when conversion failed.
+     * {@code void} with an error in a comment when conversion failed.
      */
     public static String toJavaBaseType(String name) {
-        return name == null ? null : switch (name.toLowerCase()) {
+        if (name == null)
+            return "void /* unsupported null type */";
+        return switch (name.toLowerCase()) {
             case "gboolean" -> "boolean";
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
             case "gshort", "gushort", "gint16", "guint16" -> "short";
@@ -183,7 +185,7 @@ public class Conversions {
                  // treat va_list as an opaque pointer
                  "valist", "va_list" -> "MemorySegment";
             case "gtype" -> "org.gnome.glib.GType";
-            default -> null;
+            default -> "void /* unsupported type: " + name + " */";
         };
     }
 

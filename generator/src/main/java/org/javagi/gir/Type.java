@@ -72,7 +72,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
                     "int", "long", "short" -> primitiveTypeName(javaBaseType);
             case "String" -> TypeName.get(String.class);
             case "MemorySegment" -> TypeName.get(MemorySegment.class);
-            case null, default -> TypeReference.super.typeName();
+            default -> TypeReference.super.typeName();
         };
     }
 
@@ -95,11 +95,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     public boolean isPrimitive() {
         String type = toJavaBaseType(name());
-        if (type == null)
-            return false;
-
-        return List.of("boolean", "byte", "char", "double", "float", "int",
-                        "long", "short")
+        return List.of("boolean", "byte", "char", "double", "float", "int", "long", "short")
                 .contains(type);
     }
 
