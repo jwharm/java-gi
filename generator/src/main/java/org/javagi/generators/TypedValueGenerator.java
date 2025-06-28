@@ -534,7 +534,7 @@ class TypedValueGenerator {
         // Array with known size
         if ("java.lang.String".equals(type.javaType()))
             return PartialStatement.of(
-                    "$interop:L.getStringArrayFrom(" + identifier + ", " + size + ", " + free + ")",
+                    "$interop:T.getStringArrayFrom(" + identifier + ", " + size + ", " + free + ")",
                     "interop", ClassNames.INTEROP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
