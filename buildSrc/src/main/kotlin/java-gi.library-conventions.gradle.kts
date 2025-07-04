@@ -6,7 +6,6 @@ plugins {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
     coordinates("org.java-gi", project.name, project.version.toString())
     pom {
