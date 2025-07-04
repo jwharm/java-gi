@@ -38,7 +38,6 @@ import org.javagi.base.Out;
 import org.javagi.base.Proxy;
 import org.jetbrains.annotations.Nullable;
 
-import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 
