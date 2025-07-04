@@ -160,7 +160,7 @@ public class Interop {
      * the instance.
      *
      * @param  arena    a memory arena that can be closed (normally
-     *                  {@link Arena#ofConfined()} or {@link Arena#ofAuto()}.
+     *                  {@link Arena#ofConfined()} or {@link Arena#ofShared()}.
      * @param  instance an object
      * @return the arena (for method chaining)
      */
