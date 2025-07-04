@@ -19,7 +19,7 @@
 
 package org.javagi.base;
 
-import org.javagi.Constants;
+import org.javagi.base.Constants;
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 

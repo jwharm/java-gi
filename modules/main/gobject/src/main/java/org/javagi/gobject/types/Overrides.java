@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 
 /**
  * Helper class to register method overrides in a new GType.

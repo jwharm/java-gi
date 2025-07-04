@@ -31,7 +31,7 @@ import org.gnome.gtk.*;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 
 /**
  * The {@code BuilderJavaScope} class can be used with a {@link GtkBuilder} to

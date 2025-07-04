@@ -39,7 +39,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 import static org.javagi.gobject.annotations.Property.NOT_SET;
 import static java.lang.Character.isUpperCase;
 

@@ -30,7 +30,7 @@ import org.gnome.glib.LogLevelFlags;
 import org.gnome.gobject.Closure;
 import org.gnome.gobject.Value;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 
 /**
  * An implementation of {@link Closure} that can be used with Java callbacks.

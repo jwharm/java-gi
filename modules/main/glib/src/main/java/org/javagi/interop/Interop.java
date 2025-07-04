@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import org.javagi.Constants;
+import org.javagi.base.Constants;
 import org.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 

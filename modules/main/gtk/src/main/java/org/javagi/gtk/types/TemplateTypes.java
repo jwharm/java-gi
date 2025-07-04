@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 import static org.javagi.gobject.types.Types.*;
 import static java.util.Objects.requireNonNull;
 
