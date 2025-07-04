@@ -79,11 +79,20 @@ public class EnumGenerator extends RegisteredTypeGenerator {
         List<Member> uniques = filterDuplicateValues(en.members());
         for (Member m : uniques) {
             try {
+                // Enum value
                 TypeSpec.Builder spec = TypeSpec.anonymousClassBuilder(
                         "$L", Numbers.parseInt(m.value()));
+
+                // Javadoc
                 if (m.infoElements().doc() != null)
                     spec.addJavadoc(
                             new DocGenerator(m.infoElements().doc()).generate());
+
+                // Deprecated annotation
+                if (m.callableAttrs().deprecated())
+                    spec.addAnnotation(Deprecated.class);
+
+                // Build the enum constant
                 builder.addEnumConstant(toJavaConstantUpperCase(m.name()), spec.build());
             } catch (NumberFormatException nfe) {
                 log(m);
@@ -95,14 +104,23 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 .toList();
         for (Member m : duplicates) {
             try {
+                // Static field with constant value
                 var spec = FieldSpec.builder(
                                 en.typeName(),
                                 toJavaConstantUpperCase(m.name()),
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                         .initializer("of($L)", Numbers.parseInt(m.value()));
+
+                // Javadoc
                 if (m.infoElements().doc() != null)
                     spec.addJavadoc(
                             new DocGenerator(m.infoElements().doc()).generate());
+
+                // Deprecated annotation
+                if (m.callableAttrs().deprecated())
+                    spec.addAnnotation(Deprecated.class);
+
+                // Build the static field
                 builder.addField(spec.build());
             } catch (NumberFormatException nfe) {
                 log(m);
