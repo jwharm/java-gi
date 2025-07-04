@@ -50,13 +50,13 @@ import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 public class Interop {
 
     private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
-
     private final static long LONG_UNBOUNDED = Long.MAX_VALUE;
 
     private final static boolean LONG_AS_INT = Linker.nativeLinker()
             .canonicalLayouts().get("long").equals(ValueLayout.JAVA_INT);
 
     private final static Linker LINKER = Linker.nativeLinker();
+    private final static Cleaner CLEANER = Cleaner.create();
 
     private static SymbolLookup symbolLookup = LINKER.defaultLookup();
 
@@ -155,7 +155,7 @@ public class Interop {
     }
 
     /**
-     * Register a Cleaner that will close the arena when the instance is
+     * Register a Cleaner action that will close the arena when the instance is
      * garbage-collected, coupling the lifetime of the arena to the lifetime of
      * the instance.
      *
@@ -165,8 +165,7 @@ public class Interop {
      * @return the arena (for method chaining)
      */
     public static Arena attachArena(Arena arena, Object instance) {
-        Cleaner cleaner = Cleaner.create();
-        cleaner.register(instance, arena::close);
+        CLEANER.register(instance, arena::close);
         return arena;
     }
 
