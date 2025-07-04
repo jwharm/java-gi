@@ -106,7 +106,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             String len = array.sizeExpression(false);
             PartialStatement payload;
 
-            // Called-allocated out-parameter array with known length
+            // Caller-allocated out-parameter array with known length
             if (p.isOutParameter() && len != null && p.callerAllocates()) {
                 payload = array.anyType() instanceof Type t && t.isPrimitive()
                         ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
