@@ -1,1 +1,3 @@
+// SplitButton.getDirection() overrides Widget.getDirection()
+// with a different return type. Rename to getArrowDirection()
 SplitButton.get_direction name=get_arrow_direction
