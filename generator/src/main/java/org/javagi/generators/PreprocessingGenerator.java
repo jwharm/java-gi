@@ -121,13 +121,12 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             builder.addNamedCode(stmt.format(), stmt.arguments());
 
             /*
-             * When "caller-allocates" is not set, and the c-type ends with
-             * "**", there is an extra level of indirection needed, so we
-             * allocate another pointer.
+             * When the c-type ends with "**", there is an extra level of
+             * indirection needed, so we allocate another pointer.
              * In all other cases, we just refer to the already allocated
              * memory.
              */
-            if (!p.callerAllocates() && array.cType() != null && array.cType().endsWith("**")) {
+            if (array.cType() != null && array.cType().endsWith("**")) {
                 stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = " +
                                 "_arena.allocateFrom($valueLayout:T.ADDRESS, _$name:LArray);\n",
                         "memorySegment", MemorySegment.class,
