@@ -202,17 +202,15 @@ public class Interop {
     }
 
     /**
-     * First reinterpret the memory segments so they have equal size, then copy
-     * {@code src} into {@code dst}.
+     * Reinterpret both memory segments to the specified size and copy
+     * {@code size} bytes from {@code src} into {@code dst}.
      *
      * @param src source memory segment
      * @param dst destination memory segment
+     * @param size the number of bytes to copy
      */
-    public static void copy(MemorySegment src, MemorySegment dst) {
-        long size = max(src.byteSize(), dst.byteSize());
-        src.reinterpret(size);
-        dst.reinterpret(size);
-        dst.copyFrom(src);
+    public static void copy(MemorySegment src, MemorySegment dst, long size) {
+        dst.reinterpret(size).copyFrom(src.reinterpret(size));
     }
 
     /**
