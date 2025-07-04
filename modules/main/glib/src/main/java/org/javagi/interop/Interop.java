@@ -190,12 +190,11 @@ public class Interop {
      * Dereference a pointer
      *
      * @param  pointer the pointer to dereference
-     * @return the value of the pointer, or {@code null} in case of a pointer to
-     *         {@code NULL}.
+     * @return the value of the pointer
+     * @throws NullPointerException when the pointer is null or references null
      */
     public static MemorySegment dereference(MemorySegment pointer) {
-        if (pointer == null || NULL.equals(pointer))
-            return NULL;
+        checkNull(pointer);
 
         return pointer
                 .reinterpret(ValueLayout.ADDRESS.byteSize())
@@ -214,6 +213,23 @@ public class Interop {
         src.reinterpret(size);
         dst.reinterpret(size);
         dst.copyFrom(src);
+    }
+
+    /**
+     * When {@code pointer} is {@code null}, or {@code pointer} equals
+     * {@link MemorySegment#NULL} or reading an address from {@code pointer}
+     * returns {@link MemorySegment#NULL}, raise a {@code NullPointerException}.
+     *
+     * @param pointer the pointer to check
+     * @throws NullPointerException when the check failed
+     */
+    public static void checkNull(MemorySegment pointer) {
+        if (pointer == null
+                || pointer.equals(NULL)
+                || pointer.reinterpret(ValueLayout.ADDRESS.byteSize())
+                          .get(ValueLayout.ADDRESS, 0)
+                          .equals(NULL))
+            throw new NullPointerException("Null pointer: " + pointer);
     }
 
     /**
