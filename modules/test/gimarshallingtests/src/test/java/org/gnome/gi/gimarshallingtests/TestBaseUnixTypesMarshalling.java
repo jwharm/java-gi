@@ -21,15 +21,10 @@ package org.gnome.gi.gimarshallingtests;
 
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Disabled in CI because the dev_t and pid_t tests fail
- */
-@DisabledIfEnvironmentVariable(named="CI", matches="true")
 public class TestBaseUnixTypesMarshalling {
 
     // time_t
