@@ -253,10 +253,12 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             // struct, and copy the contents manually
             else if (hasMemoryLayout && copyFunc == null) {
                 var copyVar = v instanceof ReturnValue ? "_copy" : ("_" + getName() + "Copy");
-                builder.addStatement("$T $L = $T.malloc($T.getMemoryLayout().byteSize())",
-                            MemorySegment.class, copyVar, ClassNames.G_LIB, v.anyType().typeName())
-                        .addStatement("$T.copy($L.handle(), $L)",
-                            ClassNames.INTEROP, paramName, copyVar)
+                builder.addStatement("long $Lsize = $T.getMemoryLayout().byteSize()",
+                                copyVar, v.anyType().typeName())
+                        .addStatement("$T $L = $T.malloc($Lsize)",
+                            MemorySegment.class, copyVar, ClassNames.G_LIB, copyVar)
+                        .addStatement("$T.copy($L.handle(), $L, $Lsize)",
+                            ClassNames.INTEROP, paramName, copyVar, copyVar)
                         .addStatement("$L.address = $L", paramName, copyVar);
             }
 

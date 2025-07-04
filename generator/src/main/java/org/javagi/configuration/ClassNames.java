@@ -25,7 +25,6 @@ import com.squareup.javapoet.TypeVariableName;
 import static com.squareup.javapoet.ClassName.get;
 
 public final class ClassNames {
-    private static final String PKG_TOPLEVEL        = "org.javagi";
     private static final String PKG_BASE            = "org.javagi.base";
     private static final String PKG_INTEROP         = "org.javagi.interop";
     private static final String PKG_GIO             = "org.javagi.gio";
@@ -33,9 +32,8 @@ public final class ClassNames {
     private static final String PKG_GOBJECT_TYPES   = "org.javagi.gobject.types";
     private static final String PKG_GTK_TYPES       = "org.javagi.gtk.types";
 
-    public static final ClassName CONSTANTS = get(PKG_TOPLEVEL, "Constants");
-
     public static final ClassName ALIAS = get(PKG_BASE, "Alias");
+    public static final ClassName CONSTANTS = get(PKG_BASE, "Constants");
     public static final ClassName ENUMERATION = get(PKG_BASE, "Enumeration");
     public static final ClassName FLOATING = get(PKG_BASE, "Floating");
     public static final ClassName FUNCTION_POINTER = get(PKG_BASE, "FunctionPointer");

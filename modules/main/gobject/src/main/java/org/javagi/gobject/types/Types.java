@@ -36,7 +36,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.javagi.Constants.LOG_DOMAIN;
+import static org.javagi.base.Constants.LOG_DOMAIN;
 import static java.util.Objects.requireNonNull;
 import static org.gnome.gobject.GObjects.typeTestFlags;
 

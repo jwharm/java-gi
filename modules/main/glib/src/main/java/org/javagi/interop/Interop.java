@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import org.javagi.Constants;
+import org.javagi.base.Constants;
 import org.javagi.base.Enumeration;
 import org.gnome.glib.GLib;
 
@@ -38,7 +38,6 @@ import org.javagi.base.Out;
 import org.javagi.base.Proxy;
 import org.jetbrains.annotations.Nullable;
 
-import static java.lang.Long.max;
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 
@@ -50,13 +49,13 @@ import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 public class Interop {
 
     private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
-
     private final static long LONG_UNBOUNDED = Long.MAX_VALUE;
 
     private final static boolean LONG_AS_INT = Linker.nativeLinker()
             .canonicalLayouts().get("long").equals(ValueLayout.JAVA_INT);
 
     private final static Linker LINKER = Linker.nativeLinker();
+    private final static Cleaner CLEANER = Cleaner.create();
 
     private static SymbolLookup symbolLookup = LINKER.defaultLookup();
 
@@ -155,18 +154,17 @@ public class Interop {
     }
 
     /**
-     * Register a Cleaner that will close the arena when the instance is
+     * Register a Cleaner action that will close the arena when the instance is
      * garbage-collected, coupling the lifetime of the arena to the lifetime of
      * the instance.
      *
      * @param  arena    a memory arena that can be closed (normally
-     *                  {@link Arena#ofConfined()} or {@link Arena#ofAuto()}.
+     *                  {@link Arena#ofConfined()} or {@link Arena#ofShared()}.
      * @param  instance an object
      * @return the arena (for method chaining)
      */
     public static Arena attachArena(Arena arena, Object instance) {
-        Cleaner cleaner = Cleaner.create();
-        cleaner.register(instance, arena::close);
+        CLEANER.register(instance, arena::close);
         return arena;
     }
 
@@ -202,17 +200,15 @@ public class Interop {
     }
 
     /**
-     * First reinterpret the memory segments so they have equal size, then copy
-     * {@code src} into {@code dst}.
+     * Reinterpret both memory segments to the specified size and copy
+     * {@code size} bytes from {@code src} into {@code dst}.
      *
      * @param src source memory segment
      * @param dst destination memory segment
+     * @param size the number of bytes to copy
      */
-    public static void copy(MemorySegment src, MemorySegment dst) {
-        long size = max(src.byteSize(), dst.byteSize());
-        src.reinterpret(size);
-        dst.reinterpret(size);
-        dst.copyFrom(src);
+    public static void copy(MemorySegment src, MemorySegment dst, long size) {
+        dst.reinterpret(size).copyFrom(src.reinterpret(size));
     }
 
     /**
