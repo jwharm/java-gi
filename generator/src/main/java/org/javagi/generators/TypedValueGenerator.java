@@ -749,14 +749,22 @@ class TypedValueGenerator {
     }
 
     FieldSpec generateConstantDeclaration() {
-        final String value = ((Constant) v).value();
+        final Constant c = (Constant) v;
+        final String value = c.value();
         try {
-            var builder = FieldSpec.builder(getType(true), toJavaConstant(v.name()),
+            // Static field
+            var builder = FieldSpec.builder(getType(true), toJavaConstant(c.name()),
                     Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
-            if (v.infoElements().doc() != null)
-                builder.addJavadoc(new DocGenerator(v.infoElements().doc()).generate());
+            // Javadoc
+            if (c.infoElements().doc() != null)
+                builder.addJavadoc(new DocGenerator(c.infoElements().doc()).generate());
 
+            // Deprecated annotation
+            if (c.callableAttrs().deprecated())
+                builder.addAnnotation(Deprecated.class);
+
+            // Constant value initializer
             if (target instanceof Alias a && a.isValueWrapper())
                 builder.initializer("new $T($L)", a.typeName(), literal(a.anyType().typeName(), value));
             else if (target instanceof EnumType)
@@ -764,12 +772,13 @@ class TypedValueGenerator {
             else
                 builder.initializer(literal(type.typeName(), value).replace("$", "$$"));
 
+            // Build the static field
             return builder.build();
 
         } catch (NumberFormatException nfe) {
             // Do not write anything
             System.out.printf("Skipping <constant name=\"%s\" value=\"%s\">: %s%n",
-                    v.name(), value, nfe.getMessage());
+                    c.name(), value, nfe.getMessage());
             return null;
         }
     }
