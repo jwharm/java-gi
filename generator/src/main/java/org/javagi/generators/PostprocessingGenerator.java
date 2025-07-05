@@ -74,7 +74,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                                 ? ".setValue("
                                 : ".set(");
 
-                var layout = generateValueLayoutPlain(type);
+                var layout = getValueLayout(type);
                 String identifier = "_%sPointer.get(%s, 0)"
                         .formatted(getName(), layout.format());
 
@@ -110,7 +110,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             if (p.isOutParameter() && len != null && p.callerAllocates()) {
                 payload = array.anyType() instanceof Type t && t.isPrimitive()
                         ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
-                        .add(generateValueLayoutPlain(t))
+                        .add(getValueLayout(t))
                         .add(")")
                         : marshalNativeToJava("_%sPointer".formatted(getName()), false);
             }
@@ -128,9 +128,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                                 "interop", ClassNames.INTEROP,
                                 "name", getName(),
                                 "valueLayout", ValueLayout.class)
-                        .add(generateValueLayoutPlain(t))
+                        .add(getValueLayout(t))
                         .add(".byteSize(), _arena, null)$Z.toArray(")
-                        .add(generateValueLayoutPlain(t))
+                        .add(getValueLayout(t))
                         .add(")");
             }
 
@@ -322,7 +322,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
         if (target instanceof Alias a && a.isValueWrapper() && type.isPointer()) {
             var stmt = PartialStatement.of("$name:LParam.set(")
-                    .add(generateValueLayoutPlain(type))
+                    .add(getValueLayout(type))
                     .add(", 0, _$name:LAlias.getValue());\n", "name", getName());
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
@@ -335,7 +335,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         if (type != null) {
             var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
-                    .add(generateValueLayoutPlain(type))
+                    .add(getValueLayout(type))
                     .add(", 0, ")
                     .add(marshalJavaToNative("_" + getName() + "Out.get()"))
                     .add(");\n");

@@ -97,7 +97,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                 "memorySegment", MemorySegment.class,
                                 "name", getName())
                         .add("_arena.allocate(")
-                        .add(generateValueLayoutPlain(elemType))
+                        .add(getValueLayout(elemType))
                         .add(")$W: ")
                         .add("($memorySegment:T) ")
                         .add(marshalJavaToNative(getName() + ".get()"))
@@ -113,7 +113,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                 "$memorySegment:T _$name:LArray = _arena.allocate(",
                                 "memorySegment", MemorySegment.class,
                                 "name", getName())
-                        .add(generateValueLayoutPlain(elemType))
+                        .add(getMemoryLayout(elemType))
                         .add(", ")
                         .add(array.sizeExpression(false))
                         .add(").fill((byte) 0);\n");
@@ -157,7 +157,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                 "$memorySegment:T _$name:LPointer = _arena.allocate(",
                                 "memorySegment", MemorySegment.class,
                                 "name", getName())
-                        .add(generateValueLayoutPlain(type))
+                        .add(getMemoryLayout(type))
                         .add(");\n");
                 builder.addNamedCode(stmt.format(), stmt.arguments());
             }
@@ -177,7 +177,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                     "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
                                     "memorySegment", MemorySegment.class,
                                     "name", getName())
-                            .add(generateValueLayoutPlain(type))
+                            .add(getMemoryLayout(type))
                             .add(", ")
                             .add(marshalJavaToNative(identifier))
                             .add(");\n",
@@ -196,23 +196,40 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         nullCheck += " && " + identifier + " != null";
                     }
 
+                    var valueLayout = getMemoryLayout(type);
+
                     var stmt = PartialStatement.of(
                                     "$memorySegment:T _$name:LPointer = _arena.allocate($Z",
                                     "memorySegment", MemorySegment.class,
                                     "name", getName())
-                            .add(generateValueLayoutPlain(type))
+                            .add(valueLayout)
                             .add(");\n");
                     builder.addNamedCode(stmt.format(), stmt.arguments());
 
-                    // When the value is not null, write it into the allocated memory segment
-                    stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
-                            .add(generateValueLayoutPlain(type))
-                            .add(", 0, ")
-                            .add(marshalJavaToNative(identifier))
-                            .add(");\n");
-                    builder.beginControlFlow("if (" + nullCheck + ")")
-                            .addNamedCode(stmt.format(), stmt.arguments())
-                            .endControlFlow();
+                    // For inout parameters, when the value is not null, write it into the
+                    // allocated memory segment.
+                    if (p.direction() == Direction.INOUT) {
+                        if (valueLayout.format().endsWith(".getMemoryLayout()")) {
+                            stmt = PartialStatement.of("$interop:T.copy(")
+                                    .add(marshalJavaToNative(identifier))
+                                    .add(", _$name:LPointer, ")
+                                    .add(valueLayout)
+                                    .add(".byteSize());\n",
+                                            "interop", ClassNames.INTEROP,
+                                            "name", getName()
+                                    );
+                        } else {
+                            stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
+                                    .add(valueLayout)
+                                    .add(", 0, ")
+                                    .add(marshalJavaToNative(identifier))
+                                    .add(");\n");
+                        }
+
+                        builder.beginControlFlow("if (" + nullCheck + ")")
+                                .addNamedCode(stmt.format(), stmt.arguments())
+                                .endControlFlow();
+                    }
                 }
             }
         }
@@ -231,7 +248,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             // of the input array
             if (p.isArrayLengthParameter() && p.isOutParameter()) {
                 var stmt = PartialStatement.of("_$name:LPointer.set(", "name", getName())
-                        .add(generateValueLayoutPlain(type))
+                        .add(getValueLayout(type))
                         .add(", 0L,$W")
                         .add(arrayLengthStatement())
                         .add(");\n");
@@ -368,7 +385,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "$memorySegment:T $name:LParam = $name:L.reinterpret(",
                             "memorySegment", MemorySegment.class,
                             "name", getName())
-                    .add(generateValueLayoutPlain(type))
+                    .add(getValueLayout(type))
                     .add(".byteSize(), _arena, null);\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
 
@@ -376,7 +393,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "$aliasType:T _$name:LAlias = new $aliasType:T($name:LParam.get(",
                             "aliasType", type.typeName(),
                             "name", getName())
-                    .add(generateValueLayoutPlain(type))
+                    .add(getValueLayout(type))
                     .add(", 0));\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
         }
@@ -407,7 +424,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         "$memorySegment:T $name:LParam = $name:L.reinterpret(",
                         "memorySegment", MemorySegment.class,
                         "name", getName())
-                .add(generateValueLayoutPlain(type))
+                .add(getValueLayout(type))
                 .add(".byteSize(), _arena, null);\n");
         builder.addNamedCode(stmt.format(), stmt.arguments());
 
@@ -417,7 +434,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "outType", getType(),
                             "name", getName(),
                             "out", ClassNames.OUT)
-                    .add(generateValueLayoutPlain(type))
+                    .add(getValueLayout(type))
                     .add(", 0)")
                     .add(type.isBoolean() ? " != 0" : "")
                     .add(");\n");

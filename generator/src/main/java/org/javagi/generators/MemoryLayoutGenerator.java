@@ -103,6 +103,7 @@ public class MemoryLayoutGenerator {
                 "valueLayout", ValueLayout.class
         );
         int size = 0;
+        int alignment = 0;
         int bitfieldPosition = 0;
 
         for (int i = 0; i < nodes.size(); i++) {
@@ -121,6 +122,10 @@ public class MemoryLayoutGenerator {
 
             // Get the size of the field, in bytes
             int s = field.getSize(longAsInt);
+
+            // Update alignment
+            if (s > alignment && s <= 8)
+                alignment = s;
 
             // Bitfield?
             int bits = field.bits();
@@ -162,6 +167,15 @@ public class MemoryLayoutGenerator {
 
             size += s;
         }
+
+        // Add trailing padding, needed to allocate arrays
+        if (alignment > 0) {
+            int padding = (alignment - (size % alignment)) % alignment;
+            if (padding > 0) {
+                stmt.add(",\n$memoryLayout:T.paddingLayout(" + padding + ")");
+            }
+        }
+
         return stmt;
     }
 

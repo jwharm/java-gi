@@ -22,6 +22,7 @@ package org.javagi.generators;
 import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.util.Conversions;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
@@ -193,7 +194,6 @@ class TypedValueGenerator {
                 if (typedef != null)
                     yield marshalJavaToNative(typedef, identifier);
                 String stmt = switch(toJavaBaseType(t.name())) {
-                    case null -> null;
                     case "String", "MemorySegment", "void" -> identifier + ".getValue()";
                     default -> identifier + ".getValue()." + t.typeName() + "Value()";
                 };
@@ -783,12 +783,31 @@ class TypedValueGenerator {
         }
     }
 
-    PartialStatement generateValueLayoutPlain(Type type) {
+    // Generate a statement that represents ValueLayout for this type.
+    // Returns ValueLayout.ADDRESS for complex layouts.
+    PartialStatement getValueLayout(Type type) {
         String stmt = (type != null && type.isLong())
                 ? "($interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG)"
-                : "$valueLayout:T." + getValueLayoutPlain(type, false);
+                : "$valueLayout:T." + Conversions.getValueLayoutPlain(type, false);
         return PartialStatement.of(stmt,
                 "interop", ClassNames.INTEROP,
                 "valueLayout", ValueLayout.class);
+    }
+
+    // Generate a statement that retrieves a ValueLayout for primitive types,
+    // or the MemoryLayout of complex types.
+    PartialStatement getMemoryLayout(Type type) {
+        PartialStatement valueLayout = getValueLayout(type);
+        if (!type.isPrimitive()) {
+            var target = type.lookup();
+            if (target instanceof StandardLayoutType slt) {
+                if (new MemoryLayoutGenerator().canGenerate(slt)) {
+                    valueLayout = PartialStatement.of(
+                            "$" + target.typeTag() + ":T.getMemoryLayout()",
+                            target.typeTag(), target.typeName());
+                }
+            }
+        }
+        return valueLayout;
     }
 }
