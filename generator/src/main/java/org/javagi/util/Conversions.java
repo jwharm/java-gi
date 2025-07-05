@@ -171,12 +171,12 @@ public class Conversions {
             case "gchar", "guchar", "gint8", "guint8" -> "byte";
             case "gshort", "gushort", "gint16", "guint16" -> "short";
             case "gint", "guint", "gint32", "guint32", "gunichar",
-                 // assume 32-bit uid_t, gid_t and socklen_t
-                 "uid_t", "gid_t", "socklen_t" -> "int";
+                 // assume 32-bit uid_t, gid_t, pid_t and socklen_t
+                 "uid_t", "gid_t", "pid_t", "socklen_t" -> "int";
             case "gint64", "gssize", "gsize", "goffset", "guint64",
                  "gintptr", "guintptr", "glong", "gulong",
-                 // assume 64-bit time_t, dev_t, off_t and pid_t
-                 "time_t", "dev_t", "off_t", "pid_t" -> "long";
+                 // assume 64-bit time_t, dev_t and off_t
+                 "time_t", "dev_t", "off_t" -> "long";
             case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";

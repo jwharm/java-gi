@@ -163,33 +163,33 @@ public class TestBaseUnixTypesMarshalling {
 
     @Test
     void pid_tReturn() {
-        assertEquals(12345L, pidTReturn());
+        assertEquals(12345, pidTReturn());
     }
 
     @Test
     void pid_tIn() {
-        pidTIn(12345L);
+        pidTIn(12345);
     }
 
     @Test
     void pid_tOut() {
-        var v = new Out<>(0L);
+        var v = new Out<>(0);
         pidTOut(v);
-        assertEquals(12345L, v.get());
+        assertEquals(12345, v.get());
     }
 
     @Test
     void pid_tOutUninitialized() {
-        var v = new Out<>(0L);
+        var v = new Out<>(0);
         assertFalse(pidTOutUninitialized(v));
-        assertEquals(0L, v.get());
+        assertEquals(0, v.get());
     }
 
     @Test
     void pid_tInOut() {
-        var v = new Out<>(12345L);
+        var v = new Out<>(12345);
         pidTInout(v);
-        assertEquals(0L, v.get());
+        assertEquals(0, v.get());
     }
 
     // socklen_t
