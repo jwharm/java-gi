@@ -52,7 +52,7 @@ public final class ModuleInfo {
             entry("gdkwayland",                new Module("GdkWayland", "org.gnome.gdk", "", "")),
             entry("gdkx11",                    new Module("GdkX11", "org.gnome.gdk", "", "")),
             entry("graphene",                  new Module("Graphene", "org.gnome.graphene", "https://developer-old.gnome.org/graphene/stable/", "A thin layer of types for graphic libraries")),
-            entry("gsk",                       new Module("GSK", "org.gnome.gsk", "", "The rendering and scene graph API for GTK")),
+            entry("gsk",                       new Module("GSK", "org.gnome.gsk", "https://docs.gtk.org/gsk4/", "The rendering and scene graph API for GTK")),
             entry("gtk",                       new Module("GTK", "org.gnome.gtk", "https://docs.gtk.org/gtk4/", "GTK is a multi-platform toolkit for creating graphical user interfaces")),
             entry("gtksource",                 new Module("GtkSourceView", "org.gnome.gtksourceview", "https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/", "A text editor widget for code editing")),
             entry("adw",                       new Module("LibAdwaita", "org.gnome.adw", "https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/", "Building blocks for modern GNOME applications")),
