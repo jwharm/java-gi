@@ -22,41 +22,106 @@ package org.gnome.gi.gimarshallingtests;
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestArrayFixedSize {
-    private final int[] TEST_ARRAY = {-1, 0, 1, 2};
+    private final int[] TEST_INT_ARRAY = {-1, 0, 1, 2};
+    private final short[] TEST_SHORT_ARRAY = {-1, 0, 1, 2};
 
     @Test
-    void return_() {
-        assertArrayEquals(TEST_ARRAY, arrayFixedIntReturn());
+    void intReturn() {
+        assertArrayEquals(TEST_INT_ARRAY, arrayFixedIntReturn());
     }
 
     @Test
-    void in() {
-        arrayFixedIntIn(TEST_ARRAY);
+    void shortReturn() {
+        assertArrayEquals(TEST_SHORT_ARRAY, arrayFixedShortReturn());
+    }
+
+    @Test
+    void returnUnaligned() {
+        byte[] array = arrayFixedReturnUnaligned();
+        assertNotNull(array);
+        assertEquals(32, array.length);
+        assertArrayEquals(new byte[] {1, 2, 3, 4}, Arrays.copyOfRange(array, 0, 4));
+        cleanupUnalignedBuffer();
+    }
+
+    @Test
+    void intIn() {
+        arrayFixedIntIn(TEST_INT_ARRAY);
+    }
+
+    @Test
+    void shortIn() {
+        arrayFixedShortIn(TEST_SHORT_ARRAY);
+    }
+
+    @Test
+    void callerAllocatedOut() {
+        var v = new Out<int[]>();
+        arrayFixedCallerAllocatedOut(v);
+        assertArrayEquals(TEST_INT_ARRAY, v.get());
     }
 
     @Test
     void out() {
         var v = new Out<int[]>();
         arrayFixedOut(v);
-        assertArrayEquals(TEST_ARRAY, v.get());
+        assertArrayEquals(TEST_INT_ARRAY, v.get());
     }
 
     @Test
-    void uninitializedOut() {
+    void outUninitialized() {
         assertDoesNotThrow(() -> arrayFixedOutUninitialized(null));
 
-        var v = new Out<>(TEST_ARRAY);
+        var v = new Out<>(TEST_INT_ARRAY);
         assertFalse(arrayFixedOutUninitialized(v));
         assertArrayEquals(new int[] {0, 0, 0, 0}, v.get());
     }
 
     @Test
+    void outUunaligned() {
+        var v = new Out<byte[]>();
+        arrayFixedOutUnaligned(v);
+        byte[] array = v.get();
+        assertNotNull(array);
+        assertEquals(32, array.length);
+        assertArrayEquals(new byte[] {1, 2, 3, 4}, Arrays.copyOfRange(array, 0, 4));
+        cleanupUnalignedBuffer();
+    }
+
+    @Test
+    void outStruct() {
+        var v = new Out<SimpleStruct[]>();
+        arrayFixedOutStruct(v);
+        SimpleStruct[] structs = v.get();
+        assertNotNull(structs);
+        assertEquals(2, structs.length);
+    }
+
+    @Test
+    void outStructUninitialized() {
+        var v = new Out<SimpleStruct>();
+        assertFalse(arrayFixedOutStructUninitialized(v));
+        assertNull(v.get());
+    }
+
+    @Test
+    void outStructCallerAllocated() {
+        var v = new Out<SimpleStruct[]>();
+        arrayFixedCallerAllocatedStructOut(v);
+        SimpleStruct[] array = v.get();
+        assertNotNull(array);
+        assertEquals(4, array.length);
+    }
+
+    @Test
     void inout() {
-        var v = new Out<>(TEST_ARRAY);
+        var v = new Out<>(TEST_INT_ARRAY);
         arrayFixedInout(v);
         assertArrayEquals(new int[] {2, 1, 0, -1}, v.get());
     }
