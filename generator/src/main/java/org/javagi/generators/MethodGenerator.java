@@ -141,6 +141,10 @@ public class MethodGenerator {
         // Parameters
         generator.generateMethodParameters(builder, generic, true);
 
+        if ("gi_marshalling_tests_dev_t_inout".equals(func.callableAttrs().cIdentifier())) {
+            System.out.println("Type name: " + func.parameters().parameters().getFirst().anyType().name());
+        }
+
         // Exception
         if (func.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);

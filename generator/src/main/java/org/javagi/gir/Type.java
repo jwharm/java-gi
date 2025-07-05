@@ -32,8 +32,6 @@ import java.util.Objects;
 
 public final class Type extends GirElement implements AnyType, TypeReference {
 
-    private static boolean b = false;
-
     public Type(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);
     }
@@ -66,11 +64,6 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     public TypeName typeName() {
         if (checkIsGList() || checkIsGHashTable())
             return genericTypeName();
-
-        if (!b && "dev_t".equals(attr("name"))) {
-            System.out.printf("name='%s', toJavaBaseType='%s'%n", name(), toJavaBaseType(name()));
-            b = true;
-        }
 
         String javaBaseType = toJavaBaseType(name());
         return switch(javaBaseType) {
