@@ -1609,8 +1609,9 @@ public class Interop {
     public static <T extends Enum<T> & Enumeration>
     int enumSetToInt(Set<T> set) {
         int bitfield = 0;
-        for (T element : set)
-            bitfield |= element.getValue();
+        if (set != null)
+            for (T element : set)
+                bitfield |= element.getValue();
         return bitfield;
     }
 
@@ -1622,6 +1623,8 @@ public class Interop {
      *         Enumeration instances
      */
     public static int[] getValues(Enumeration[] array) {
+        if (array == null)
+            return null;
         int[] values = new int[array.length];
         for (int i = 0; i < array.length; i++)
             values[i] = array[i].getValue();

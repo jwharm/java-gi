@@ -190,20 +190,29 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 // Other Out<> parameters
                 else {
                     String identifier = getName();
-                    if (! (target instanceof Alias a && a.isValueWrapper()))
-                        identifier = identifier + ".get()";
-
-                    identifier = "(" + getName() + " == null ? null : " + identifier + ")";
+                    String nullCheck = identifier + " != null";
+                    if (! (target instanceof Alias a && a.isValueWrapper())) {
+                        identifier += ".get()";
+                        nullCheck += " && " + identifier + " != null";
+                    }
 
                     var stmt = PartialStatement.of(
-                                    "$memorySegment:T _$name:LPointer = _arena.allocateFrom($Z",
+                                    "$memorySegment:T _$name:LPointer = _arena.allocate($Z",
                                     "memorySegment", MemorySegment.class,
                                     "name", getName())
                             .add(generateValueLayoutPlain(type))
-                            .add(", ")
-                            .add(marshalJavaToNative(identifier))
                             .add(");\n");
                     builder.addNamedCode(stmt.format(), stmt.arguments());
+
+                    // When the value is not null, write it into the allocated memory segment
+                    stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
+                            .add(generateValueLayoutPlain(type))
+                            .add(", 0, ")
+                            .add(marshalJavaToNative(identifier))
+                            .add(");\n");
+                    builder.beginControlFlow("if (" + nullCheck + ")")
+                            .addNamedCode(stmt.format(), stmt.arguments())
+                            .endControlFlow();
                 }
             }
         }
