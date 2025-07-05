@@ -46,7 +46,7 @@ public class Javadoc {
             + "|(?<paramref>@{1,2}[^@\\s]\\w*)"
             + "|(?<hyperlink>\\[(?<desc>.+?)]\\((?<url>.+?)\\))"
             + "|(?<img>!\\[(?<imgdesc>.*?)]\\((?<imgurl>.+?)\\))"
-            + "|(?s)(?<picture><picture.*?>.*?<img src=\"(?<pictureurl>[^\"]+?)\".+?alt=\"(?<alt>[^\"]+?)\".+?</picture>)"
+            + "|(?s)(?<picture><picture.*?>.*?<img(?<imgattrs>[^>]+).+?</picture>)"
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+?)\\n+"
             + "|(?m)^(?<container>:::\\s.+)\\n*"
             + "|(?m)^\\s*(?<bulletpoint>[-*])\\s"
@@ -64,6 +64,9 @@ public class Javadoc {
             + "|(?<kbd>&lt;kbd&gt;(?<kbdcontent>.+?)&lt;/kbd&gt;)"
     ;
 
+    // A regex to parse an XML attribute key and value
+    private static final String REGEX_ATTRS = "\\s*(?<key>[^=]+)=\"(?<val>[^\"]+)\"";
+
     /*
      * These are the named groups for which the conversions to Javadoc are
      * applied. Other named groups are not matched separately, but only used as
@@ -80,10 +83,21 @@ public class Javadoc {
     // The compiled regex patterns
     private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
     private static final Pattern PATTERN_PASS_2 = Pattern.compile(REGEX_PASS_2);
+    private static final Pattern PATTERN_ATTRS = Pattern.compile(REGEX_ATTRS);
 
     private Documentation doc;
     private InstanceParameter instanceParameter;
     private boolean ul;
+
+    // Parse the value of an XML attribute from a string that contains zero or
+    // more attributes.
+    private String parseAttribute(String attrs, String key) {
+        Matcher matcher = PATTERN_ATTRS.matcher(attrs);
+        while (matcher.find())
+            if (key.equals(matcher.group("key")))
+                return matcher.group("val");
+        return null;
+    }
 
     // Lookup the instance parameter that this docstring might refer to, so
     // the reference to the parameter can be replaced with "this [type]".
@@ -173,8 +187,8 @@ public class Javadoc {
                                              m.group("imgdesc"),
                                              m.group("imgurl"));
             case "picture"     -> convertImg(m.group(),
-                                             m.group("alt"),
-                                             m.group("pictureurl"));
+                                             parseAttribute(m.group("imgattrs"), "alt"),
+                                             parseAttribute(m.group("imgattrs"), "src"));
             case "header"      -> convertHeader(m.group(),
                                                 m.group("headerlevel"));
             case "container"   -> convertContainer(m.group());
@@ -363,9 +377,16 @@ public class Javadoc {
 
     // Replace "! [...](...)" image links with <img src="..." alt="...">
     private String convertImg(String img, String desc, String url) {
+        if (url == null)
+            return img;
+
         String fullUrl = url;
         if (! url.startsWith("http"))
             fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
+
+        if (desc == null)
+            return "<img src=\"" + fullUrl + "\">";
+
         String alt = desc.replace("\"", "\\\"");
         return "<img src=\"" + fullUrl + "\" alt=\"" + alt + "\">";
     }
