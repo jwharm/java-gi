@@ -1,5 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 plugins {
     id("java-gi.module")
     id("com.vanniktech.maven.publish")
