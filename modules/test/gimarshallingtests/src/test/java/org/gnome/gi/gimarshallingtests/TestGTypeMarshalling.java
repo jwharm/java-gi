@@ -56,9 +56,9 @@ public class TestGTypeMarshalling {
 
     @Test
     void outUninitialized() {
-        var gtype = Types.STRING;
+        var gtype = new Type(Types.STRING.getValue());
         assertFalse(gtypeOutUninitialized(gtype));
-        assertEquals(Types.STRING, gtype);
+        assertEquals(0, gtype.getValue());
     }
 
     @Test

@@ -68,7 +68,7 @@ public class TestUtf8StringMarshalling {
     void noneOutUninitialized() {
         var v = new Out<>("");
         assertFalse(utf8NoneOutUninitialized(v));
-        assertEquals("", v.get());
+        assertNull(v.get());
     }
 
     @Test
@@ -82,7 +82,7 @@ public class TestUtf8StringMarshalling {
     void danglingOut() {
         var v = new Out<>(CONSTANT_UTF8);
         utf8DanglingOut(v);
-        assertEquals(CONSTANT_UTF8, v.get());
+        assertNull(v.get());
 
         v.set(null);
         utf8DanglingOut(v);
