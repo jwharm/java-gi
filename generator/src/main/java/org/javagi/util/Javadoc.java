@@ -231,6 +231,10 @@ public class Javadoc {
 
     // Replace `text` with {@code text}
     private String convertCode(String code) {
+        // When the code contains "{", "}" or "@", use a <code>...</code> block
+        if (code.contains("{") || code.contains("}") || code.contains("@"))
+            return "<code>" + code.substring(1, code.length() - 1) + "</code>";
+
         return "{@code " + code.substring(1, code.length() - 1) + "}";
     }
 
