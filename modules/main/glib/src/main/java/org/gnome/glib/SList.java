@@ -295,6 +295,15 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     }
 
     /**
+     * The memory layout of the native struct.
+     *
+     * @return the memory layout of one list node
+     */
+    public static MemoryLayout getMemoryLayout() {
+        return SListNode.getMemoryLayout();
+    }
+
+    /**
      * Represents a GLib.SList instance in native memory
      */
     private static class SListNode extends ProxyInstance {

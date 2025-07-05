@@ -280,6 +280,15 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
         return head == null ? MemorySegment.NULL : head.handle();
     }
 
+    /**
+     * The memory layout of the native struct.
+     *
+     * @return the memory layout of one list node
+     */
+    public static MemoryLayout getMemoryLayout() {
+        return ListNode.getMemoryLayout();
+    }
+
     private static class ListNode extends ProxyInstance {
 
         /**
