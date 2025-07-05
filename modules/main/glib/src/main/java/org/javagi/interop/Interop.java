@@ -348,12 +348,11 @@ public class Interop {
      * @return the resulting boolean
      */
     public static boolean getBooleanFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return false;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_INT, 0) != 0;
+            return address.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0) != 0;
         } finally {
             if (free)
                 GLib.free(address);
@@ -380,12 +379,11 @@ public class Interop {
      * @return the resulting byte
      */
     public static byte getByteFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_BYTE, 0);
+            return address.reinterpret(JAVA_BYTE.byteSize()).get(JAVA_BYTE, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -412,12 +410,11 @@ public class Interop {
      * @return the resulting char
      */
     public static char getCharacterFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_CHAR, 0);
+            return address.reinterpret(JAVA_CHAR.byteSize()).get(JAVA_CHAR, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -444,12 +441,11 @@ public class Interop {
      * @return the resulting double
      */
     public static double getDoubleFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_DOUBLE, 0);
+            return address.reinterpret(JAVA_DOUBLE.byteSize()).get(JAVA_DOUBLE, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -476,12 +472,11 @@ public class Interop {
      * @return the resulting float
      */
     public static float getFloatFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_FLOAT, 0);
+            return address.reinterpret(JAVA_FLOAT.byteSize()).get(JAVA_FLOAT, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -508,12 +503,11 @@ public class Interop {
      * @return the resulting integer
      */
     public static int getIntegerFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                          .get(JAVA_INT, 0);
+            return address.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -540,12 +534,11 @@ public class Interop {
      * @return the resulting long
      */
     public static long getLongFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                          .get(JAVA_LONG, 0);
+            return address.reinterpret(JAVA_LONG.byteSize()).get(JAVA_LONG, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -572,12 +565,11 @@ public class Interop {
      * @return the resulting short
      */
     public static short getShortFrom(MemorySegment address, boolean free) {
-        if (NULL.equals(address))
+        if (address == null || NULL.equals(address))
             return 0;
 
         try {
-            return address.reinterpret(LONG_UNBOUNDED)
-                    .get(JAVA_SHORT, 0);
+            return address.reinterpret(JAVA_SHORT.byteSize()).get(JAVA_SHORT, 0);
         } finally {
             if (free)
                 GLib.free(address);
