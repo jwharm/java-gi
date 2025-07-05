@@ -39,7 +39,7 @@ import org.javagi.base.Proxy;
 import org.jetbrains.annotations.Nullable;
 
 import static java.lang.foreign.MemorySegment.NULL;
-import static java.lang.foreign.ValueLayout.JAVA_BYTE;
+import static java.lang.foreign.ValueLayout.*;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -52,7 +52,7 @@ public class Interop {
     private final static long LONG_UNBOUNDED = Long.MAX_VALUE;
 
     private final static boolean LONG_AS_INT = Linker.nativeLinker()
-            .canonicalLayouts().get("long").equals(ValueLayout.JAVA_INT);
+            .canonicalLayouts().get("long").equals(JAVA_INT);
 
     private final static Linker LINKER = Linker.nativeLinker();
     private final static Cleaner CLEANER = Cleaner.create();
@@ -195,8 +195,8 @@ public class Interop {
         checkNull(pointer);
 
         return pointer
-                .reinterpret(ValueLayout.ADDRESS.byteSize())
-                .get(ValueLayout.ADDRESS, 0);
+                .reinterpret(ADDRESS.byteSize())
+                .get(ADDRESS, 0);
     }
 
     /**
@@ -222,8 +222,8 @@ public class Interop {
     public static void checkNull(MemorySegment pointer) {
         if (pointer == null
                 || pointer.equals(NULL)
-                || pointer.reinterpret(ValueLayout.ADDRESS.byteSize())
-                          .get(ValueLayout.ADDRESS, 0)
+                || pointer.reinterpret(ADDRESS.byteSize())
+                          .get(ADDRESS, 0)
                           .equals(NULL))
             throw new NullPointerException("Null pointer: " + pointer);
     }
@@ -237,7 +237,7 @@ public class Interop {
         if (getTypeFunction == null)
             return null;
 
-        FunctionDescriptor fdesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
+        FunctionDescriptor fdesc = FunctionDescriptor.of(JAVA_LONG);
 
         try {
             MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
@@ -353,7 +353,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_INT, 0) != 0;
+                    .get(JAVA_INT, 0) != 0;
         } finally {
             if (free)
                 GLib.free(address);
@@ -385,7 +385,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_BYTE, 0);
+                    .get(JAVA_BYTE, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -417,7 +417,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_CHAR, 0);
+                    .get(JAVA_CHAR, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -449,7 +449,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_DOUBLE, 0);
+                    .get(JAVA_DOUBLE, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -481,7 +481,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_FLOAT, 0);
+                    .get(JAVA_FLOAT, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -513,7 +513,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                          .get(ValueLayout.JAVA_INT, 0);
+                          .get(JAVA_INT, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -545,7 +545,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                          .get(ValueLayout.JAVA_LONG, 0);
+                          .get(JAVA_LONG, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -577,7 +577,7 @@ public class Interop {
 
         try {
             return address.reinterpret(LONG_UNBOUNDED)
-                    .get(ValueLayout.JAVA_SHORT, 0);
+                    .get(JAVA_SHORT, 0);
         } finally {
             if (free)
                 GLib.free(address);
@@ -588,16 +588,16 @@ public class Interop {
         return switch (o) {
             case MemorySegment m -> m;
             case String s    -> arena.allocateFrom(s);
-            case Boolean b   -> arena.allocateFrom(ValueLayout.JAVA_INT, b ? 1 : 0);
-            case Byte b      -> arena.allocateFrom(ValueLayout.JAVA_BYTE, b);
-            case Character c -> arena.allocateFrom(ValueLayout.JAVA_CHAR, c);
-            case Double d    -> arena.allocateFrom(ValueLayout.JAVA_DOUBLE, d);
-            case Float f     -> arena.allocateFrom(ValueLayout.JAVA_FLOAT, f);
-            case Integer i   -> arena.allocateFrom(ValueLayout.JAVA_INT, i);
+            case Boolean b   -> arena.allocateFrom(JAVA_INT, b ? 1 : 0);
+            case Byte b      -> arena.allocateFrom(JAVA_BYTE, b);
+            case Character c -> arena.allocateFrom(JAVA_CHAR, c);
+            case Double d    -> arena.allocateFrom(JAVA_DOUBLE, d);
+            case Float f     -> arena.allocateFrom(JAVA_FLOAT, f);
+            case Integer i   -> arena.allocateFrom(JAVA_INT, i);
             case Long l      -> longAsInt()
-                                    ? arena.allocateFrom(ValueLayout.JAVA_INT, l.intValue())
-                                    : arena.allocateFrom(ValueLayout.JAVA_LONG, l);
-            case Short s     -> arena.allocateFrom(ValueLayout.JAVA_SHORT, s);
+                                    ? arena.allocateFrom(JAVA_INT, l.intValue())
+                                    : arena.allocateFrom(JAVA_LONG, l);
+            case Short s     -> arena.allocateFrom(JAVA_SHORT, s);
             case Proxy p     -> p.handle();
             default          -> throw new IllegalArgumentException(
                     "Not a MemorySegment, String, primitive or Proxy");
@@ -618,15 +618,15 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.ADDRESS.byteSize();
+        long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
 
         String[] result = new String[length];
         for (int i = 0; i < length; i++) {
-            MemorySegment ptr = array.getAtIndex(ValueLayout.ADDRESS, i);
+            MemorySegment ptr = array.getAtIndex(ADDRESS, i);
             result[i] = getStringFrom(ptr);
             if (free)
-                GLib.free(array.getAtIndex(ValueLayout.ADDRESS, i));
+                GLib.free(array.getAtIndex(ADDRESS, i));
         }
 
         if (free)
@@ -652,11 +652,11 @@ public class Interop {
         ArrayList<String> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ADDRESS, offset);
             if (NULL.equals(ptr))
                 break;
             result.add(getStringFrom(ptr));
-            offset += ValueLayout.ADDRESS.byteSize();
+            offset += ADDRESS.byteSize();
         }
 
         if (free)
@@ -683,11 +683,11 @@ public class Interop {
         ArrayList<String[]> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ADDRESS, offset);
             if (NULL.equals(ptr))
                 break;
             result.add(getStringArrayFrom(ptr, free));
-            offset += ValueLayout.ADDRESS.byteSize();
+            offset += ADDRESS.byteSize();
         }
 
         if (free)
@@ -711,12 +711,12 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.ADDRESS.byteSize();
+        long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
 
         MemorySegment[] result = new MemorySegment[length];
         for (int i = 0; i < length; i++)
-            result[i] = array.getAtIndex(ValueLayout.ADDRESS, i);
+            result[i] = array.getAtIndex(ADDRESS, i);
 
         if (free)
             GLib.free(address);
@@ -742,11 +742,11 @@ public class Interop {
         ArrayList<MemorySegment> result = new ArrayList<>();
         long offset = 0;
         while (true) {
-            MemorySegment ptr = array.get(ValueLayout.ADDRESS, offset);
+            MemorySegment ptr = array.get(ADDRESS, offset);
             if (NULL.equals(ptr))
                 break;
             result.add(ptr);
-            offset += ValueLayout.ADDRESS.byteSize();
+            offset += ADDRESS.byteSize();
         }
 
         if (free)
@@ -799,7 +799,7 @@ public class Interop {
             return null;
 
         byte[] array = address.reinterpret(length, arena, null)
-                              .toArray(ValueLayout.JAVA_BYTE);
+                              .toArray(JAVA_BYTE);
 
         if (free)
             GLib.free(address);
@@ -824,7 +824,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(LONG_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.get(ValueLayout.JAVA_BYTE, idx) != 0) {
+        while (array.get(JAVA_BYTE, idx) != 0) {
             idx++;
         }
 
@@ -847,9 +847,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_CHAR.byteSize();
+        long size = JAVA_CHAR.byteSize();
         char[] array = address.reinterpret(length * size, arena, null)
-                              .toArray(ValueLayout.JAVA_CHAR);
+                              .toArray(JAVA_CHAR);
 
         if (free)
             GLib.free(address);
@@ -873,9 +873,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_DOUBLE.byteSize();
+        long size = JAVA_DOUBLE.byteSize();
         double[] array = address.reinterpret(length * size, arena, null)
-                                .toArray(ValueLayout.JAVA_DOUBLE);
+                                .toArray(JAVA_DOUBLE);
 
         if (free)
             GLib.free(address);
@@ -899,9 +899,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_FLOAT.byteSize();
+        long size = JAVA_FLOAT.byteSize();
         float[] array = address.reinterpret(length * size, arena, null)
-                               .toArray(ValueLayout.JAVA_FLOAT);
+                               .toArray(JAVA_FLOAT);
 
         if (free)
             GLib.free(address);
@@ -926,7 +926,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.getAtIndex(ValueLayout.JAVA_FLOAT, idx) != 0) {
+        while (array.getAtIndex(JAVA_FLOAT, idx) != 0) {
             idx++;
         }
 
@@ -949,9 +949,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_INT.byteSize();
+        long size = JAVA_INT.byteSize();
         int[] array = address.reinterpret(length * size, arena, null)
-                             .toArray(ValueLayout.JAVA_INT);
+                             .toArray(JAVA_INT);
 
         if (free)
             GLib.free(address);
@@ -976,7 +976,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.getAtIndex(ValueLayout.JAVA_INT, idx) != 0) {
+        while (array.getAtIndex(JAVA_INT, idx) != 0) {
             idx++;
         }
 
@@ -999,9 +999,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_LONG.byteSize();
+        long size = JAVA_LONG.byteSize();
         long[] array = address.reinterpret(length * size, arena, null)
-                              .toArray(ValueLayout.JAVA_LONG);
+                              .toArray(JAVA_LONG);
 
         if (free)
             GLib.free(address);
@@ -1026,7 +1026,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.getAtIndex(ValueLayout.JAVA_LONG, idx) != 0) {
+        while (array.getAtIndex(JAVA_LONG, idx) != 0) {
             idx++;
         }
 
@@ -1049,9 +1049,9 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        long size = ValueLayout.JAVA_SHORT.byteSize();
+        long size = JAVA_SHORT.byteSize();
         short[] array = address.reinterpret(length * size, arena, null)
-                               .toArray(ValueLayout.JAVA_SHORT);
+                               .toArray(JAVA_SHORT);
 
         if (free)
             GLib.free(address);
@@ -1076,7 +1076,7 @@ public class Interop {
         // Find the null byte
         MemorySegment array = address.reinterpret(INT_UNBOUNDED, arena, null);
         long idx = 0;
-        while (array.getAtIndex(ValueLayout.JAVA_SHORT, idx) != 0) {
+        while (array.getAtIndex(JAVA_SHORT, idx) != 0) {
             idx++;
         }
 
@@ -1103,8 +1103,8 @@ public class Interop {
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
         long offset = 0;
-        while (!NULL.equals(array.get(ValueLayout.ADDRESS, offset))) {
-            offset += ValueLayout.ADDRESS.byteSize();
+        while (!NULL.equals(array.get(ADDRESS, offset))) {
+            offset += ADDRESS.byteSize();
         }
 
         return getProxyArrayFrom(address, (int) offset, cls, make);
@@ -1134,7 +1134,7 @@ public class Interop {
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
-            result[i] = make.apply(array.getAtIndex(ValueLayout.ADDRESS, i));
+            result[i] = make.apply(array.getAtIndex(ADDRESS, i));
         }
         return result;
     }
@@ -1171,7 +1171,7 @@ public class Interop {
 
     private static boolean isNullFilled(MemorySegment segment, long offset, long length) {
         for (long i = 0; i < length; i++)
-            if (segment.get(ValueLayout.JAVA_BYTE, offset + i) != 0)
+            if (segment.get(JAVA_BYTE, offset + i) != 0)
                 return false;
         return true;
     }
@@ -1231,7 +1231,7 @@ public class Interop {
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
-            result[i] = make.apply(array.getAtIndex(ValueLayout.JAVA_INT, i));
+            result[i] = make.apply(array.getAtIndex(JAVA_INT, i));
         }
         return result;
     }
@@ -1252,15 +1252,15 @@ public class Interop {
             return NULL;
 
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ADDRESS, length);
 
         for (int i = 0; i < strings.length; i++) {
             var s = strings[i] == null ? NULL : arena.allocateFrom(strings[i]);
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
+            memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, strings.length, NULL);
+            memorySegment.setAtIndex(ADDRESS, strings.length, NULL);
 
         return memorySegment;
     }
@@ -1283,16 +1283,16 @@ public class Interop {
             return NULL;
 
         int length = zeroTerminated ? strvs.length + 1 : strvs.length;
-        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ADDRESS, length);
 
         for (int i = 0; i < strvs.length; i++) {
             var s = strvs[i] == null ? NULL
                     : allocateNativeArray(strvs[i], true, arena);
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
+            memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, strvs.length, NULL);
+            memorySegment.setAtIndex(ADDRESS, strvs.length, NULL);
 
         return memorySegment;
     }
@@ -1340,7 +1340,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_BYTE, copy);
+        return arena.allocateFrom(JAVA_BYTE, copy);
     }
 
     /**
@@ -1362,7 +1362,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_CHAR, copy);
+        return arena.allocateFrom(JAVA_CHAR, copy);
     }
 
     /**
@@ -1384,7 +1384,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_DOUBLE, copy);
+        return arena.allocateFrom(JAVA_DOUBLE, copy);
     }
 
     /**
@@ -1406,7 +1406,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_FLOAT, copy);
+        return arena.allocateFrom(JAVA_FLOAT, copy);
     }
 
     /**
@@ -1427,7 +1427,7 @@ public class Interop {
         int[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
-        return arena.allocateFrom(ValueLayout.JAVA_INT, copy);
+        return arena.allocateFrom(JAVA_INT, copy);
     }
 
     /**
@@ -1449,7 +1449,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_LONG, copy);
+        return arena.allocateFrom(JAVA_LONG, copy);
     }
 
     /**
@@ -1471,7 +1471,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(ValueLayout.JAVA_SHORT, copy);
+        return arena.allocateFrom(JAVA_SHORT, copy);
     }
 
     /**
@@ -1556,15 +1556,15 @@ public class Interop {
             return NULL;
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = arena.allocate(ValueLayout.ADDRESS, length);
+        var memorySegment = arena.allocate(ADDRESS, length);
 
         for (int i = 0; i < array.length; i++) {
             MemorySegment s = array[i] == null ? NULL : array[i];
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, i, s);
+            memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
         if (zeroTerminated)
-            memorySegment.setAtIndex(ValueLayout.ADDRESS, array.length, NULL);
+            memorySegment.setAtIndex(ADDRESS, array.length, NULL);
 
         return memorySegment;
     }
@@ -1665,8 +1665,8 @@ public class Interop {
      */
     public static byte[] fromGBytes(MemorySegment address) {
         try (var _arena = Arena.ofConfined()) {
-            MemorySegment _sizePointer = _arena.allocate(ValueLayout.JAVA_LONG);
-            _sizePointer.set(ValueLayout.JAVA_LONG, 0L, 0L);
+            MemorySegment _sizePointer = _arena.allocate(JAVA_LONG);
+            _sizePointer.set(JAVA_LONG, 0L, 0L);
             Out<Long> size = new Out<>();
             MemorySegment _result;
             try {
@@ -1674,7 +1674,7 @@ public class Interop {
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
-            size.set(_sizePointer.get(ValueLayout.JAVA_LONG, 0));
+            size.set(_sizePointer.get(JAVA_LONG, 0));
             return getByteArrayFrom(_result, size.get().intValue(), _arena, false);
         }
     }
@@ -1809,17 +1809,17 @@ public class Interop {
 
         private static final MethodHandle g_bytes_new = Interop.downcallHandle(
                 "g_bytes_new",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,ValueLayout.JAVA_LONG),
+                FunctionDescriptor.of(ADDRESS, ADDRESS,JAVA_LONG),
                 false);
 
         private static final MethodHandle g_bytes_get_data = Interop.downcallHandle(
                 "g_bytes_get_data",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS),
                 false);
 
         private static final MethodHandle g_bytes_unref = Interop.downcallHandle(
                 "g_bytes_unref",
-                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
+                FunctionDescriptor.ofVoid(ADDRESS),
                 false);
     }
 }
