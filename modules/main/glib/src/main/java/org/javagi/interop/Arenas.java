@@ -32,6 +32,25 @@ import java.util.concurrent.CompletableFuture;
  * hashcode that is passed in the user_data parameter.
  */
 public class Arenas {
+    /*
+     * We don't actually store arenas in the hashmap, but CompletableFutures.
+     *
+     * The purpose of the CF is to ensure the arena is only closed after the
+     * native function has returned. (Sometimes the DestroyNotify is called
+     * before that, for example when g_idle_add() runs a very short-lived
+     * callback function.) Because the native function and the DestroyNotify
+     * run in separate threads, we use a CF to communicate from the function’s
+     * thread that the DestroyNotify's thread is allowed to close the arena.
+     *
+     * This is why the hashmap doesn’t contain the arena, but a
+     * CompletableFuture. close_cb() retrieves the CF from the hashmap and
+     * queries its result. (This will block until the CF is completed.) Then it
+     * removes the hashmap entry and closes the arena.
+     *
+     * After the native method call has returned, readyToClose() is called.
+     * This will complete the CF, by passing it the arena, and close_cb() will
+     * not block on it anymore.
+     */
 
     // Contains all open callback arenas that are closed using DestroyNotify
     private static final Map<Integer, CompletableFuture<Arena>> ARENAS = new HashMap<>();
