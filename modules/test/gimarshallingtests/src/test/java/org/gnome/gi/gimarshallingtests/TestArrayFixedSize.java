@@ -77,14 +77,12 @@ public class TestArrayFixedSize {
     @Test
     void outUninitialized() {
         assertDoesNotThrow(() -> arrayFixedOutUninitialized(null));
-
         var v = new Out<>(TEST_INT_ARRAY);
-        assertFalse(arrayFixedOutUninitialized(v));
-        assertArrayEquals(new int[] {0, 0, 0, 0}, v.get());
+        assertThrows(NullPointerException.class, () -> arrayFixedOutUninitialized(v));
     }
 
     @Test
-    void outUunaligned() {
+    void outUnaligned() {
         var v = new Out<byte[]>();
         arrayFixedOutUnaligned(v);
         byte[] array = v.get();
