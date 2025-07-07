@@ -83,7 +83,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             PartialStatement stmt;
 
             // Get the array element type
-            if (! (array.anyType() instanceof Type elemType))
+            if (!(array.anyType() instanceof Type elemType))
                 return; // Nested arrays are not yet supported
 
             /*
@@ -105,10 +105,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             }
 
             /*
-             * Out-parameter array with known size: allocate a buffer and
-             * zero-initialize it.
+             * Caller-allocated out-parameter array with known size: allocate
+             * a buffer and zero-initialize it.
              */
-            else {
+            else if (p.callerAllocates()) {
                 stmt = PartialStatement.of(
                                 "$memorySegment:T _$name:LArray = _arena.allocate(",
                                 "memorySegment", MemorySegment.class,
@@ -118,6 +118,13 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         .add(array.sizeExpression(false))
                         .add(").fill((byte) 0);\n");
             }
+
+            else {
+                stmt = PartialStatement.of("$memorySegment:T _$name:LArray = $memorySegment:T.NULL;\n",
+                        "memorySegment", MemorySegment.class,
+                        "name", getName());
+            }
+
             builder.addNamedCode(stmt.format(), stmt.arguments());
 
             /*
