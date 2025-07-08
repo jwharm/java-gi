@@ -1094,12 +1094,12 @@ public class Interop {
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
-        long offset = 0;
-        while (!NULL.equals(array.get(ADDRESS, offset))) {
-            offset += ADDRESS.byteSize();
+        long idx = 0;
+        while (!NULL.equals(array.getAtIndex(ADDRESS, idx))) {
+            idx++;
         }
 
-        return getProxyArrayFrom(address, (int) offset, cls, make);
+        return getProxyArrayFrom(address, (int) idx, cls, make);
     }
 
     /**
@@ -1153,12 +1153,12 @@ public class Interop {
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
         long size = layout.byteSize();
-        long offset = 0;
-        while (!isNullFilled(array, offset * size, size)) {
-            offset++;
+        long idx = 0;
+        while (!isNullFilled(array, idx * size, size)) {
+            idx++;
         }
 
-        return getStructArrayFrom(address, (int) offset, cls, make, layout);
+        return getStructArrayFrom(address, (int) idx, cls, make, layout);
     }
 
     private static boolean isNullFilled(MemorySegment segment, long offset, long length) {
