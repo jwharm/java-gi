@@ -74,8 +74,8 @@ public final class Array extends GirElement implements AnyType {
     }
 
     public boolean unknownSize() {
-        return attr("fixed-size") == null
-                && !"1".equals(attr("zero-terminated"))
+        return !zeroTerminated()
+                && attr("fixed-size") == null
                 && attr("length") == null;
     }
     public String sizeExpression(boolean upcall) {
