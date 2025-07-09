@@ -150,7 +150,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 .returns(ArrayTypeName.of(alias.typeName()))
                 .addParameter(MemorySegment.class, "address")
                 .addParameter(long.class, "length")
-                .addParameter(boolean.class, "free")
+                .addParameter(ClassNames.TRANSFER_OWNERSHIP, "transfer")
                 .addStatement("$T array = new $T[(int) length]",
                         ArrayTypeName.of(alias.typeName()), alias.typeName());
 
@@ -170,7 +170,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         if (anyType instanceof Array a
                 && a.anyType() instanceof Type t
                 && t.typeName().equals(TypeName.get(String.class)))
-            spec.addStatement("array[i] = new $T($T.getStringArrayFrom(segment.get($T.$L, i * byteSize), free))",
+            spec.addStatement("array[i] = new $T($T.getStringArrayFrom(segment.get($T.$L, i * byteSize), transfer))",
                     alias.typeName(),
                     ClassNames.INTEROP,
                     ValueLayout.class,
@@ -178,7 +178,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         // String
         else if (anyType instanceof Type t
                 && t.typeName().equals(TypeName.get(String.class)))
-            spec.addStatement("array[i] = new $T($T.getStringFrom(segment.get($T.$L, i * byteSize), free))",
+            spec.addStatement("array[i] = new $T($T.getStringFrom(segment.get($T.$L, i * byteSize), transfer))",
                     alias.typeName(),
                     ClassNames.INTEROP,
                     ValueLayout.class,
@@ -191,7 +191,9 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                     layout);
 
         return spec.endControlFlow()
-                .addStatement("if (free) $T.free(address)", ClassNames.G_LIB)
+                .addStatement("if (transfer != $T.NONE) $T.free(address)",
+                        ClassNames.TRANSFER_OWNERSHIP,
+                        ClassNames.G_LIB)
                 .addStatement("return array")
                 .build();
     }

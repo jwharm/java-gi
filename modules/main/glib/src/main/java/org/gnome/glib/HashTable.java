@@ -20,7 +20,6 @@
 package org.gnome.glib;
 
 import org.javagi.base.Out;
-import org.javagi.base.TransferOwnership;
 import org.javagi.base.Proxy;
 import org.javagi.interop.Interop;
 import org.javagi.interop.MemoryCleaner;
@@ -40,6 +39,7 @@ import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static org.javagi.base.TransferOwnership.*;
 import static org.javagi.interop.Interop.getAddress;
 import static java.lang.foreign.MemorySegment.NULL;
 
@@ -404,7 +404,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeKey, null, TransferOwnership.CONTAINER);
+        return new List<>(_result, makeKey, null, CONTAINER);
     }
 
     /**
@@ -442,7 +442,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
                 throw new AssertionError(_err);
             }
             length.set(_lengthPointer.get(ValueLayout.JAVA_INT, 0));
-            return Interop.getAddressArrayFrom(_result, length.get(), true);
+            return Interop.getAddressArrayFrom(_result, length.get(), NONE);
         }
     }
 
@@ -467,7 +467,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), true);
+        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
     }
 
     /**
@@ -490,7 +490,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeValue, null, TransferOwnership.CONTAINER);
+        return new List<>(_result, makeValue, null, CONTAINER);
     }
 
     /**
@@ -514,7 +514,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), true);
+        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
     }
 
     /**
@@ -769,46 +769,6 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-    }
-
-    /**
-     * Removes all keys and their associated values from a {@code GHashTable}
-     * without calling the key destroy functions, returning the keys
-     * as a {@code GPtrArray} with the free func set to the this GLib.HashTable key
-     * destroy function.
-     *
-     * @return a {@code GPtrArray} containing each key of
-     * the table. Unref with with g_ptr_array_unref() when done.
-     */
-    public MemorySegment[] stealAllKeys() {
-        MemorySegment _result;
-        try {
-            _result = (MemorySegment) MethodHandles.g_hash_table_steal_all_keys.invokeExact(
-                    handle());
-        } catch (Throwable _err) {
-            throw new AssertionError(_err);
-        }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), true);
-    }
-
-    /**
-     * Removes all keys and their associated values from a {@code GHashTable}
-     * without calling the value destroy functions, returning the values
-     * as a {@code GPtrArray} with the free func set to the this GLib.HashTable value
-     * destroy function.
-     *
-     * @return a {@code GPtrArray} containing each value of
-     * the table. Unref with with g_ptr_array_unref() when done.
-     */
-    public MemorySegment[] stealAllValues() {
-        MemorySegment _result;
-        try {
-            _result = (MemorySegment) MethodHandles.g_hash_table_steal_all_values.invokeExact(
-                    handle());
-        } catch (Throwable _err) {
-            throw new AssertionError(_err);
-        }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), true);
     }
 
     /**

@@ -35,8 +35,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import static org.javagi.gir.TransferOwnership.FULL;
-import static org.javagi.gir.TransferOwnership.NONE;
+import static org.javagi.gir.TransferOwnership.*;
 import static org.javagi.util.Conversions.*;
 
 class TypedValueGenerator {
@@ -83,12 +82,13 @@ class TypedValueGenerator {
                         || target instanceof EnumType));
     }
 
-    String doFree() {
-        return switch(v) {
-            case Parameter    p when  p.transferOwnership() != NONE -> "true";
-            case ReturnValue rv when rv.transferOwnership() != NONE -> "true";
-            default -> "false";
+    String transfer() {
+        TransferOwnership transfer = switch(v) {
+            case Parameter    p ->  p.transferOwnership();
+            case ReturnValue rv -> rv.transferOwnership();
+            default -> NONE;
         };
+        return "$transferOwnership:T." + transfer.toString();
     }
 
     TypeName getType() {
@@ -290,8 +290,9 @@ class TypedValueGenerator {
         if (array != null && array.anyType() instanceof Array inner
                 && inner.anyType() instanceof Type t && t.isString())
             return PartialStatement.of(
-                    "$interop:T.getStrvArrayFrom(" + identifier + ", " + doFree() + ")",
-                    "interop", ClassNames.INTEROP);
+                    "$interop:T.getStrvArrayFrom(" + identifier + ", " + transfer() + ")",
+                    "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
         // Array
         if (array != null && array.anyType() instanceof Type t)
@@ -302,7 +303,6 @@ class TypedValueGenerator {
     }
 
     PartialStatement marshalNativeToJava(Type type, String identifier) {
-        String free = doFree();
         String targetTypeTag = target == null ? null : type.toTypeTag();
         boolean isTypeInstance = target instanceof Record
                 && "TypeInstance".equals(target.name());
@@ -311,8 +311,9 @@ class TypedValueGenerator {
 
         if (type.isString())
             return PartialStatement.of(
-                    "$interop:T.getStringFrom(" + identifier + ", " + free + ")",
-                    "interop", ClassNames.INTEROP);
+                    "$interop:T.getStringFrom(" + identifier + ", " + transfer() + ")",
+                    "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
         if (target instanceof Bitfield bitfield)
             return PartialStatement.of(
@@ -470,7 +471,6 @@ class TypedValueGenerator {
     }
 
     private PartialStatement marshalNativeToJavaArray(Type type, String size, String identifier) {
-        String free = doFree();
         RegisteredType target = type.lookup();
         String targetTypeTag = target != null ? type.toTypeTag() : null;
         String primitive = type.isPrimitive() ? primitiveClassName(type.javaType()) : null;
@@ -486,13 +486,15 @@ class TypedValueGenerator {
         if (size == null) {
             if ("java.lang.String".equals(type.javaType()))
                 return PartialStatement.of(
-                        "$interop:T.getStringArrayFrom(" + identifier + ", " + free + ")",
-                        "interop", ClassNames.INTEROP);
+                        "$interop:T.getStringArrayFrom(" + identifier + ", " + transfer() + ")",
+                        "interop", ClassNames.INTEROP,
+                        "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
             if ("java.lang.foreign.MemorySegment".equals(type.javaType()))
                 return PartialStatement.of(
-                        "$interop:T.getAddressArrayFrom(" + identifier + ", " + free + ")",
-                        "interop", ClassNames.INTEROP);
+                        "$interop:T.getAddressArrayFrom(" + identifier + ", " + transfer() + ")",
+                        "interop", ClassNames.INTEROP,
+                        "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
             if (target instanceof EnumType)
                 return PartialStatement.of(
@@ -503,13 +505,15 @@ class TypedValueGenerator {
 
             if (target instanceof Alias a && a.isValueWrapper())
                 return PartialStatement.of(
-                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", " + free + ")",
-                        targetTypeTag, target.typeName());
+                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", " + transfer() + ")",
+                        targetTypeTag, target.typeName(),
+                        "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
             if (type.isPrimitive())
                 return PartialStatement.of(
-                        "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", _arena, " + free + ")",
-                        "interop", ClassNames.INTEROP);
+                        "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", _arena, " + transfer() + ")",
+                        "interop", ClassNames.INTEROP,
+                        "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
             if (target instanceof Record && (! type.isPointer()) &&
                     (! (array != null && "GLib.PtrArray".equals(array.name()))))
@@ -534,14 +538,16 @@ class TypedValueGenerator {
         // Array with known size
         if ("java.lang.String".equals(type.javaType()))
             return PartialStatement.of(
-                    "$interop:T.getStringArrayFrom(" + identifier + ", " + size + ", " + free + ")",
+                    "$interop:T.getStringArrayFrom(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
         if ("java.lang.foreign.MemorySegment".equals(type.javaType()))
             return PartialStatement.of(
-                    "$interop:T.getAddressArrayFrom(" + identifier + ", " + size + ", " + free + ")",
+                    "$interop:T.getAddressArrayFrom(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
         if (target instanceof EnumType)
@@ -554,15 +560,17 @@ class TypedValueGenerator {
 
         if (target instanceof Alias a && a.isValueWrapper())
             return PartialStatement.of(
-                    "$targetType:T.fromNativeArray(" + identifier + ", " + size + ", " + free + ")",
+                    "$targetType:T.fromNativeArray(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "targetType", target.typeName(),
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
         if (type.isPrimitive() && array != null && array.anyType() instanceof Type)
             return PartialStatement.of(
-                    "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", " + size + ", _arena, " + free + ")",
+                    "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", " + size + ", _arena, " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "arrayType", toJavaQualifiedType(array.name(), array.namespace()));
 
         if (target instanceof Record && (! type.isPointer()) &&

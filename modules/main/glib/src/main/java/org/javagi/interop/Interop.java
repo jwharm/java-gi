@@ -28,18 +28,17 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import org.javagi.base.Constants;
-import org.javagi.base.Enumeration;
+import org.javagi.base.*;
 import org.gnome.glib.GLib;
 
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
-import org.javagi.base.Out;
-import org.javagi.base.Proxy;
+import org.javagi.base.Enumeration;
 import org.jetbrains.annotations.Nullable;
 
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.*;
+import static org.javagi.base.TransferOwnership.*;
 
 /**
  * The Interop class contains functionality for interoperability with native
@@ -301,7 +300,7 @@ public class Interop {
      * @return a String or null
      */
     public static String getStringFrom(MemorySegment address) {
-        return getStringFrom(address, false);
+        return getStringFrom(address, NONE);
     }
 
     /**
@@ -309,19 +308,19 @@ public class Interop {
      * {@code MemorySegment.getString()}. If an error occurs or when the
      * native address is NULL, null is returned.
      *
-     * @param  address the memory address of the native String
-     *                 (a {@code NULL}-terminated {@code char*})
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native String
+     *                  (a {@code NULL}-terminated {@code char*})
+     * @param  transfer ownership transfer
      * @return a String or null
      */
-    public static String getStringFrom(MemorySegment address, boolean free) {
+    public static String getStringFrom(MemorySegment address, TransferOwnership transfer) {
         if (NULL.equals(address))
             return null;
 
         try {
             return address.reinterpret(LONG_UNBOUNDED).getString(0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -335,26 +334,26 @@ public class Interop {
      * @return the resulting boolean
      */
     public static boolean getBooleanFrom(MemorySegment address) {
-        return getBooleanFrom(address, false);
+        return getBooleanFrom(address, NONE);
     }
 
     /**
      * Copy a boolean value from native memory. If the native address is NULL or
      * contains the value 0, false is returned; else, true is returned.
      *
-     * @param  address the memory address of the native boolean (0 is false, any
-     *                 other value is true)
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native boolean (0 is false, any
+     *                  other value is true)
+     * @param  transfer ownership transfer
      * @return the resulting boolean
      */
-    public static boolean getBooleanFrom(MemorySegment address, boolean free) {
+    public static boolean getBooleanFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return false;
 
         try {
             return address.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0) != 0;
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -367,25 +366,25 @@ public class Interop {
      * @return the resulting byte
      */
     public static byte getByteFrom(MemorySegment address) {
-        return getByteFrom(address, false);
+        return getByteFrom(address, NONE);
     }
 
     /**
      * Copy a byte value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native byte
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native byte
+     * @param  transfer ownership transfer
      * @return the resulting byte
      */
-    public static byte getByteFrom(MemorySegment address, boolean free) {
+    public static byte getByteFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_BYTE.byteSize()).get(JAVA_BYTE, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -398,25 +397,25 @@ public class Interop {
      * @return the resulting char
      */
     public static char getCharacterFrom(MemorySegment address) {
-        return getCharacterFrom(address, false);
+        return getCharacterFrom(address, NONE);
     }
 
     /**
      * Copy a char value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native char
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native char
+     * @param  transfer ownership transfer
      * @return the resulting char
      */
-    public static char getCharacterFrom(MemorySegment address, boolean free) {
+    public static char getCharacterFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_CHAR.byteSize()).get(JAVA_CHAR, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -429,25 +428,25 @@ public class Interop {
      * @return the resulting double
      */
     public static double getDoubleFrom(MemorySegment address) {
-        return getDoubleFrom(address, false);
+        return getDoubleFrom(address, NONE);
     }
 
     /**
      * Copy a double value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native double
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native double
+     * @param  transfer ownership transfer
      * @return the resulting double
      */
-    public static double getDoubleFrom(MemorySegment address, boolean free) {
+    public static double getDoubleFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_DOUBLE.byteSize()).get(JAVA_DOUBLE, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -460,25 +459,25 @@ public class Interop {
      * @return the resulting float
      */
     public static float getFloatFrom(MemorySegment address) {
-        return getFloatFrom(address, false);
+        return getFloatFrom(address, NONE);
     }
 
     /**
      * Copy a float value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native float
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native float
+     * @param  transfer ownership transfer
      * @return the resulting float
      */
-    public static float getFloatFrom(MemorySegment address, boolean free) {
+    public static float getFloatFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_FLOAT.byteSize()).get(JAVA_FLOAT, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -491,25 +490,25 @@ public class Interop {
      * @return the resulting integer
      */
     public static int getIntegerFrom(MemorySegment address) {
-        return getIntegerFrom(address, false);
+        return getIntegerFrom(address, NONE);
     }
 
     /**
      * Copy an integer value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native integer
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native integer
+     * @param  transfer ownership transfer
      * @return the resulting integer
      */
-    public static int getIntegerFrom(MemorySegment address, boolean free) {
+    public static int getIntegerFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_INT.byteSize()).get(JAVA_INT, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -522,25 +521,25 @@ public class Interop {
      * @return the resulting long
      */
     public static long getLongFrom(MemorySegment address) {
-        return getLongFrom(address, false);
+        return getLongFrom(address, NONE);
     }
 
     /**
      * Copy a long value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native long
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native long
+     * @param  transfer ownership transfer
      * @return the resulting long
      */
-    public static long getLongFrom(MemorySegment address, boolean free) {
+    public static long getLongFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_LONG.byteSize()).get(JAVA_LONG, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -553,25 +552,25 @@ public class Interop {
      * @return the resulting short
      */
     public static short getShortFrom(MemorySegment address) {
-        return getShortFrom(address, false);
+        return getShortFrom(address, NONE);
     }
 
     /**
      * Copy a short value from native memory. If the native address is NULL,
      * 0 is returned.
      *
-     * @param  address the memory address of the native short
-     * @param  free    if the address must be freed
+     * @param  address  the memory address of the native short
+     * @param  transfer ownership transfer
      * @return the resulting short
      */
-    public static short getShortFrom(MemorySegment address, boolean free) {
+    public static short getShortFrom(MemorySegment address, TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return 0;
 
         try {
             return address.reinterpret(JAVA_SHORT.byteSize()).get(JAVA_SHORT, 0);
         } finally {
-            if (free)
+            if (transfer != NONE)
                 GLib.free(address);
         }
     }
@@ -599,14 +598,14 @@ public class Interop {
     /**
      * Read an array of Strings with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  free    if the strings and the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  transfer ownership transfer
      * @return array of Strings
      */
     public static String[] getStringArrayFrom(MemorySegment address,
                                               int length,
-                                              boolean free) {
+                                              TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -617,11 +616,11 @@ public class Interop {
         for (int i = 0; i < length; i++) {
             MemorySegment ptr = array.getAtIndex(ADDRESS, i);
             result[i] = getStringFrom(ptr);
-            if (free)
+            if (transfer == FULL)
                 GLib.free(array.getAtIndex(ADDRESS, i));
         }
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(array);
         return result;
     }
@@ -630,12 +629,12 @@ public class Interop {
      * Read an array of Strings from a {@code NULL}-terminated array in native
      * memory.
      *
-     * @param  address address of the memory segment
-     * @param  free    if the strings and the array must be freed
+     * @param  address  address of the memory segment
+     * @param  transfer ownership transfer
      * @return array of Strings
      */
     public static String[] getStringArrayFrom(MemorySegment address,
-                                              boolean free) {
+                                              TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -651,8 +650,10 @@ public class Interop {
             offset += ADDRESS.byteSize();
         }
 
-        if (free)
+        if (transfer == FULL)
             GLib.strfreev(array);
+        else if (transfer == CONTAINER)
+            GLib.free(array);
 
         return result.toArray(new String[0]);
     }
@@ -661,12 +662,12 @@ public class Interop {
      * Read {@code NULL}-terminated arrays of Strings from a
      * {@code NULL}-terminated array in native memory.
      *
-     * @param  address address of the memory segment
-     * @param  free    if the strings and the array must be freed
+     * @param  address  address of the memory segment
+     * @param  transfer ownership transfer
      * @return two-dimensional array of Strings
      */
     public static String[][] getStrvArrayFrom(MemorySegment address,
-                                              boolean free) {
+                                              TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -678,11 +679,11 @@ public class Interop {
             MemorySegment ptr = array.get(ADDRESS, offset);
             if (NULL.equals(ptr))
                 break;
-            result.add(getStringArrayFrom(ptr, free));
+            result.add(getStringArrayFrom(ptr, transfer == FULL ? FULL : NONE));
             offset += ADDRESS.byteSize();
         }
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return result.toArray(new String[0][0]);
@@ -691,14 +692,14 @@ public class Interop {
     /**
      * Read an array of pointers with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  transfer ownership transfer
      * @return array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
                                                       int length,
-                                                      boolean free) {
+                                                      TransferOwnership transfer) {
 
         if (address == null || NULL.equals(address))
             return null;
@@ -710,7 +711,7 @@ public class Interop {
         for (int i = 0; i < length; i++)
             result[i] = array.getAtIndex(ADDRESS, i);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return result;
@@ -720,12 +721,12 @@ public class Interop {
      * Read an array of pointers from a {@code NULL}-terminated array in native
      * memory.
      *
-     * @param  address address of the memory segment
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  transfer ownership transfer
      * @return array of pointers
      */
     public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
-                                                      boolean free) {
+                                                      TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -741,7 +742,7 @@ public class Interop {
             offset += ADDRESS.byteSize();
         }
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return result.toArray(new MemorySegment[0]);
@@ -752,17 +753,17 @@ public class Interop {
      * The array is read from native memory as an array of integers with value
      * 1 or 0, and converted to booleans with 1 = true and 0 = false.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of booleans
      */
     public static boolean[] getBooleanArrayFrom(MemorySegment address,
                                                 long length,
                                                 Arena arena,
-                                                boolean free) {
-        int[] intArray = getIntegerArrayFrom(address, length, arena, free);
+                                                TransferOwnership transfer) {
+        int[] intArray = getIntegerArrayFrom(address, length, arena, transfer);
         if (intArray == null)
             return null;
 
@@ -777,23 +778,23 @@ public class Interop {
     /**
      * Read an array of bytes with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of bytes
      */
     public static byte[] getByteArrayFrom(MemorySegment address,
                                           long length,
                                           Arena arena,
-                                          boolean free) {
+                                          TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
         byte[] array = address.reinterpret(length, arena, null)
                               .toArray(JAVA_BYTE);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -802,14 +803,14 @@ public class Interop {
     /**
      * Read a {@code NULL}-terminated array of bytes from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of bytes
      */
     public static byte[] getByteArrayFrom(MemorySegment address,
                                           Arena arena,
-                                          boolean free) {
+                                          TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -820,22 +821,22 @@ public class Interop {
             idx++;
         }
 
-        return getByteArrayFrom(address, idx, arena, free);
+        return getByteArrayFrom(address, idx, arena, transfer);
     }
 
     /**
      * Read an array of chars with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of chars
      */
     public static char[] getCharacterArrayFrom(MemorySegment address,
                                                long length,
                                                Arena arena,
-                                               boolean free) {
+                                               TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -843,7 +844,7 @@ public class Interop {
         char[] array = address.reinterpret(length * size, arena, null)
                               .toArray(JAVA_CHAR);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -852,16 +853,16 @@ public class Interop {
     /**
      * Read an array of doubles with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of doubles
      */
     public static double[] getDoubleArrayFrom(MemorySegment address,
                                               long length,
                                               Arena arena,
-                                              boolean free) {
+                                              TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -869,7 +870,7 @@ public class Interop {
         double[] array = address.reinterpret(length * size, arena, null)
                                 .toArray(JAVA_DOUBLE);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -878,16 +879,16 @@ public class Interop {
     /**
      * Read an array of floats with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of floats
      */
     public static float[] getFloatArrayFrom(MemorySegment address,
                                             long length,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -895,7 +896,7 @@ public class Interop {
         float[] array = address.reinterpret(length * size, arena, null)
                                .toArray(JAVA_FLOAT);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -904,14 +905,14 @@ public class Interop {
     /**
      * Read a {@code NULL}-terminated array of float from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of floats
      */
     public static float[] getFloatArrayFrom(MemorySegment address,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -922,22 +923,22 @@ public class Interop {
             idx++;
         }
 
-        return getFloatArrayFrom(address, idx, arena, free);
+        return getFloatArrayFrom(address, idx, arena, transfer);
     }
 
     /**
      * Read an array of integers with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of integers
      */
     public static int[] getIntegerArrayFrom(MemorySegment address,
                                             long length,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -945,7 +946,7 @@ public class Interop {
         int[] array = address.reinterpret(length * size, arena, null)
                              .toArray(JAVA_INT);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -954,14 +955,14 @@ public class Interop {
     /**
      * Read a {@code NULL}-terminated array of integers from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of integers
      */
     public static int[] getIntegerArrayFrom(MemorySegment address,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -972,22 +973,22 @@ public class Interop {
             idx++;
         }
 
-        return getIntegerArrayFrom(address, idx, arena, free);
+        return getIntegerArrayFrom(address, idx, arena, transfer);
     }
 
     /**
      * Read an array of longs with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of longs
      */
     public static long[] getLongArrayFrom(MemorySegment address,
                                           long length,
                                           Arena arena,
-                                          boolean free) {
+                                          TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -995,7 +996,7 @@ public class Interop {
         long[] array = address.reinterpret(length * size, arena, null)
                               .toArray(JAVA_LONG);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -1004,14 +1005,14 @@ public class Interop {
     /**
      * Read a {@code NULL}-terminated array of longs from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of longs
      */
     public static long[] getLongArrayFrom(MemorySegment address,
                                           Arena arena,
-                                          boolean free) {
+                                          TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1022,22 +1023,22 @@ public class Interop {
             idx++;
         }
 
-        return getLongArrayFrom(address, idx, arena, free);
+        return getLongArrayFrom(address, idx, arena, transfer);
     }
 
     /**
      * Read an array of shorts with the requested length from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  length  length of the array
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of shorts
      */
     public static short[] getShortArrayFrom(MemorySegment address,
                                             long length,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1045,7 +1046,7 @@ public class Interop {
         short[] array = address.reinterpret(length * size, arena, null)
                                .toArray(JAVA_SHORT);
 
-        if (free)
+        if (transfer != NONE)
             GLib.free(address);
 
         return array;
@@ -1054,14 +1055,14 @@ public class Interop {
     /**
      * Read a {@code NULL}-terminated array of shorts from native memory.
      *
-     * @param  address address of the memory segment
-     * @param  arena   the memory scope
-     * @param  free    if the array must be freed
+     * @param  address  address of the memory segment
+     * @param  arena    the memory scope
+     * @param  transfer ownership transfer
      * @return array of shorts
      */
     public static short[] getShortArrayFrom(MemorySegment address,
                                             Arena arena,
-                                            boolean free) {
+                                            TransferOwnership transfer) {
         if (address == null || NULL.equals(address))
             return null;
 
@@ -1072,7 +1073,7 @@ public class Interop {
             idx++;
         }
 
-        return getShortArrayFrom(address, idx, arena, free);
+        return getShortArrayFrom(address, idx, arena, transfer);
     }
 
     /**
@@ -1670,10 +1671,15 @@ public class Interop {
                 throw new AssertionError(_err);
             }
             size.set(_sizePointer.get(JAVA_LONG, 0));
-            return getByteArrayFrom(_result, size.get().intValue(), _arena, false);
+            return getByteArrayFrom(_result, size.get().intValue(), _arena, NONE);
         }
     }
 
+    /**
+     * Free a GBytes with {@code g_bytes_unref()}
+     *
+     * @param address the address of the GBytes to free
+     */
     public static void freeGBytes(MemorySegment address) {
         try {
             DowncallHandles.g_bytes_unref.invokeExact(address);
