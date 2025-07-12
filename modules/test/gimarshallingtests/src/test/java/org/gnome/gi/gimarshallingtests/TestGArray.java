@@ -26,12 +26,13 @@ import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestGArray {
-    private final int[] TEST_INT_ARRAY = {-1, 0, 1, 2};
-
+    private static final int[] TEST_INT_ARRAY = {-1, 0, 1, 2};
     // G_MAXUINT64 becomes -1 when cast to Java's (signed) long
-    private final long[] TEST_UINT64_ARRAY = {0, -1};
-
-    private final String[] TEST_UTF8_ARRAY = {"0", "1", "2"};
+    private static final long[] TEST_UINT64_ARRAY = {0, -1};
+    private static final String[] TEST_UTF8_ARRAY = {"0", "1", "2"};
+    private static final int[] TEST_UCS4_ARRAY = {
+            0x63, 0x6f, 0x6e, 0x73, 0x74, 0x20,
+            0x2665, 0x20, 0x75, 0x74, 0x66, 0x38};
 
     @Test
     void intNoneReturn() {
@@ -89,5 +90,82 @@ public class TestGArray {
     @Test
     void utf8FullIn() {
         garrayUtf8FullIn(TEST_UTF8_ARRAY);
+    }
+
+    @Test
+    void utf8NoneOut() {
+        var v = new Out<String[]>();
+        garrayUtf8NoneOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8NoneOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> garrayUtf8NoneOutUninitialized(v));
+    }
+
+    @Test
+    void utf8ContainerOut() {
+        var v = new Out<String[]>();
+        garrayUtf8ContainerOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8ContainerOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> garrayUtf8ContainerOutUninitialized(v));
+    }
+
+    @Test
+    void utf8FullOut() {
+        var v = new Out<String[]>();
+        garrayUtf8FullOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8FullOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> garrayUtf8FullOutUninitialized(v));
+    }
+
+    @Test
+    void utf8FullOutCallerAllocated() {
+        var v = new Out<String[]>();
+        garrayUtf8FullOutCallerAllocated(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8NoneInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        garrayUtf8NoneInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
+
+    @Test
+    void utf8ContainerInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        garrayUtf8ContainerInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
+
+    @Test
+    void utf8FullInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        garrayUtf8FullInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
+
+    @Test
+    void boolNoneIn() {
+        garrayBoolNoneIn(new boolean[] {true, false, true, true});
+    }
+
+    @Test
+    void unicharNoneIn() {
+        garrayUnicharNoneIn(TEST_UCS4_ARRAY);
     }
 }
