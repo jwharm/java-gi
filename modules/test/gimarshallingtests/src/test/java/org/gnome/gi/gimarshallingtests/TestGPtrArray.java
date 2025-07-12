@@ -49,4 +49,19 @@ public class TestGPtrArray {
         assertNotNull(structs);
         assertEquals(3, structs.length);
     }
+
+    @Test
+    void utf8NoneIn() {
+        gptrarrayUtf8NoneIn(TEST_UTF8_ARRAY);
+    }
+
+    @Test
+    void utf8ContainerIn() {
+        gptrarrayUtf8ContainerIn(TEST_UTF8_ARRAY);
+    }
+
+    @Test
+    void utf8FullIn() {
+        gptrarrayUtf8FullIn(TEST_UTF8_ARRAY);
+    }
 }
