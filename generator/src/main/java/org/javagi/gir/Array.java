@@ -78,6 +78,7 @@ public final class Array extends GirElement implements AnyType {
                 && attr("fixed-size") == null
                 && attr("length") == null;
     }
+
     public String sizeExpression(boolean upcall) {
         if (attr("fixed-size") != null) return attr("fixed-size");
         TypedValue length = length();
@@ -97,6 +98,13 @@ public final class Array extends GirElement implements AnyType {
                 return "read" + toCamelCase(lf.name(), true) + "()";
         }
         return null;
+    }
+
+    public int allocatedSize(boolean longAsInt) {
+        int fixedSize = fixedSize();
+        if (fixedSize == -1)
+            return 8;
+        return fixedSize * anyType().allocatedSize(longAsInt);
     }
 
     public AnyType anyType() {

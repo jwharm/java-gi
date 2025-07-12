@@ -19,7 +19,6 @@
 
 package org.javagi.gir;
 
-import static com.squareup.javapoet.TypeName.*;
 import static org.javagi.util.CollectionUtils.*;
 
 import java.util.List;
@@ -51,43 +50,9 @@ public final class Field extends GirElement implements TypedValue {
      * @param longAsInt when true, long is 4 bytes, else long is 8 bytes
      */
     public int getSize(boolean longAsInt) {
-        return switch(anyType()) {
-            case null -> 8; // callback
-            case Array array -> getSize(array, longAsInt);
-            case Type type -> getSize(type, longAsInt);
-        };
-    }
-
-    private int getSize(Array array, boolean longAsInt) {
-        int fixedSize = array.fixedSize();
-        if (fixedSize == -1)
-            return 8;
-        return fixedSize * switch(array.anyType()) {
-            case Array nested -> getSize(nested, longAsInt);
-            case Type type -> getSize(type, longAsInt);
-        };
-    }
-
-    private int getSize(Type type, boolean longAsInt) {
-        if (type.lookup() instanceof Alias alias)
-            return switch (alias.anyType()) {
-                case Array a -> getSize(a, longAsInt);
-                case Type t -> getSize(t, longAsInt);
-            };
-
-        var typeName = type.typeName();
-        if (List.of(BYTE, CHAR).contains(typeName))
-            return 1;
-        if (SHORT.equals(typeName))
-            return 2;
-        if (List.of(BOOLEAN, INT, FLOAT).contains(typeName))
-            return 4;
-        if (type.lookup() instanceof EnumType)
-            return 4;
-        if (type.isLong() && longAsInt)
-            return 4;
-        else
-            return 8;
+        AnyType anyType = anyType();
+        return anyType == null ? 8 // callback
+                               : anyType.allocatedSize(longAsInt);
     }
 
     /**

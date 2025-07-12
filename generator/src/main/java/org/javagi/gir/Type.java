@@ -22,6 +22,7 @@ package org.javagi.gir;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
+import static com.squareup.javapoet.TypeName.*;
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.*;
 
@@ -191,6 +192,25 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             typeTag += "Array";
 
         return typeTag;
+    }
+
+    public int allocatedSize(boolean longAsInt) {
+        if (lookup() instanceof Alias alias)
+            return alias.anyType().allocatedSize(longAsInt);
+
+        var typeName = typeName();
+        if (List.of(BYTE, CHAR).contains(typeName))
+            return 1;
+        if (SHORT.equals(typeName))
+            return 2;
+        if (List.of(BOOLEAN, INT, FLOAT).contains(typeName))
+            return 4;
+        if (lookup() instanceof EnumType)
+            return 4;
+        if (isLong() && longAsInt)
+            return 4;
+        else
+            return 8;
     }
 
     private boolean overrideLongValue() {

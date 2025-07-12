@@ -25,6 +25,7 @@ public sealed interface AnyType extends Node permits Type, Array {
 
     TypeName typeName();
     String toTypeTag();
+    int allocatedSize(boolean longAsInt);
 
     default String name() {
         return attr("name");
