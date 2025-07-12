@@ -1424,6 +1424,22 @@ public class Interop {
     }
 
     /**
+     * Create a new GArray with the provided data
+     * @param data        memory segment containing the array data
+     * @param length      number of array elements
+     * @param elementSize element size
+     * @return the newly created GArray
+     */
+    public static MemorySegment newGArray(MemorySegment data, long length, long elementSize) {
+        try {
+            return (MemorySegment) DowncallHandles.g_array_new_take.invokeExact(
+                    data, length, 0, elementSize);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
+    /**
      * Allocate and initialize an (optionally {@code NULL}-terminated) array of
      * longs.
      *
@@ -1821,6 +1837,12 @@ public class Interop {
         private static final MethodHandle g_bytes_unref = Interop.downcallHandle(
                 "g_bytes_unref",
                 FunctionDescriptor.ofVoid(ADDRESS),
+                false);
+
+        private static final MethodHandle g_array_new_take = Interop.downcallHandle(
+                "g_array_new_take",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG),
                 false);
     }
 }

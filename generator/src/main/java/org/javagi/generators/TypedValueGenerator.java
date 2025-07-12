@@ -246,18 +246,19 @@ class TypedValueGenerator {
                 ? primitiveClassName(((Alias) target).anyType().typeName().toString())
                 : "";
 
-        if (isEnum || isPrimitiveAlias) {
-            return PartialStatement.of(
+        PartialStatement stmt;
+
+        if (isEnum || isPrimitiveAlias)
+            stmt = PartialStatement.of(
                     "$interop:T.allocateNativeArray($" + targetTypeTag + ":T.get"
                             + primitiveClassName + "Values(" + identifier + "), "
                             + array.zeroTerminated() + ", " + allocator + ")",
                     "arena", Arena.class,
                     "interop", ClassNames.INTEROP,
                     targetTypeTag, isEnum ? ClassNames.INTEROP : type.typeName());
-        }
 
-        if (target instanceof Record && (!type.isPointer()))
-            return PartialStatement.of(
+        else if (target instanceof Record && (!type.isPointer()))
+            stmt = PartialStatement.of(
                     "$interop:T.allocateNativeArray(" + identifier
                             + ", $" + targetTypeTag + ":T.getMemoryLayout(), "
                             + array.zeroTerminated() + ", " + allocator + ")",
@@ -265,11 +266,29 @@ class TypedValueGenerator {
                     targetTypeTag, target.typeName(),
                     "interop", ClassNames.INTEROP);
 
-        return PartialStatement.of(
-                "$interop:T.allocateNativeArray(" + identifier
-                        + ", " + array.zeroTerminated() + ", " + allocator + ")",
-                "arena", Arena.class,
-                "interop", ClassNames.INTEROP);
+        else
+            stmt = PartialStatement.of(
+                    "$interop:T.allocateNativeArray(" + identifier
+                            + ", " + array.zeroTerminated() + ", " + allocator + ")",
+                    "arena", Arena.class,
+                    "interop", ClassNames.INTEROP);
+
+        // GArray
+        // TODO: when ownership is not transferred, unref the GArray
+        if (array.name() != null && "GLib.Array".equals(array.name())) {
+            String elemSize = "" + array.anyType().allocatedSize(false);
+            if (type.isLong())
+                elemSize = "$interop:T.longAsInt() ? 4 : 8";
+
+            return PartialStatement.of(
+                    "$interop:T.newGArray(")
+                    .add(stmt)
+                    .add(", " + identifier + ".length, " + elemSize + ")",
+                    "arena", Arena.class,
+                    "interop", ClassNames.INTEROP);
+        }
+
+        return stmt;
     }
 
     PartialStatement marshalNativeToJava(String identifier, boolean upcall) {
