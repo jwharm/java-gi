@@ -35,6 +35,9 @@ import static org.javagi.util.Conversions.*;
 
 public class MemoryLayoutGenerator {
 
+    private int size = 0;
+    private int alignment = 0;
+
     // Check if a memory layout can be generated for this type.
     // Opaque structs have unknown memory layout.
     public boolean canGenerate(FieldContainer rt) {
@@ -51,6 +54,10 @@ public class MemoryLayoutGenerator {
         if (!canGenerate(fc))
             return null;
 
+        // Ensure that size and alignment are reset
+        size = 0;
+        alignment = 0;
+
         boolean hasLongFields = fc.deepMatch(
                 n -> n instanceof Type t && t.isLong(), Callback.class);
 
@@ -66,6 +73,9 @@ public class MemoryLayoutGenerator {
             var layout = generateGroupLayout(fc, true);
             addReturn(method, layout);
             method.nextControlFlow("else");
+            // Reset size and alignment
+            size = 0;
+            alignment = 0;
             layout = generateGroupLayout(fc, false);
             addReturn(method, layout);
             method.endControlFlow();
@@ -102,17 +112,15 @@ public class MemoryLayoutGenerator {
                 "memoryLayout", MemoryLayout.class,
                 "valueLayout", ValueLayout.class
         );
-        int size = 0;
-        int alignment = 0;
         int bitfieldPosition = 0;
+        int initialSize = size;
 
         for (int i = 0; i < nodes.size(); i++) {
             Node node = nodes.get(i);
 
             if (node instanceof FieldContainer fc) {
-                if (size > 0) stmt.add(",\n");
+                if (size > initialSize) stmt.add(",\n");
                 stmt.add(generateGroupLayout(fc, longAsInt));
-                size += 8; // Not correct, but that doesn't matter
                 continue;
             }
 
@@ -137,7 +145,7 @@ public class MemoryLayoutGenerator {
                                 && f.bits() == -1);
 
                 if (last || bitfieldPosition > (s * 8)) {
-                    if (size > 0) stmt.add(",\n");
+                    if (size > initialSize) stmt.add(",\n");
                     size += s;
                     stmt.add("$memoryLayout:T.paddingLayout(" + s + ")")
                         .add(" /* bitfield */");
@@ -146,7 +154,7 @@ public class MemoryLayoutGenerator {
                 continue;
             }
 
-            if (size > 0) stmt.add(",\n");
+            if (size > initialSize) stmt.add(",\n");
 
             // Calculate padding
             if (insertPadding) {
@@ -169,10 +177,11 @@ public class MemoryLayoutGenerator {
         }
 
         // Add trailing padding, needed to allocate arrays
-        if (alignment > 0) {
+        if (insertPadding && alignment > 0) {
             int padding = (alignment - (size % alignment)) % alignment;
             if (padding > 0) {
                 stmt.add(",\n$memoryLayout:T.paddingLayout(" + padding + ")");
+                size += padding;
             }
         }
 
