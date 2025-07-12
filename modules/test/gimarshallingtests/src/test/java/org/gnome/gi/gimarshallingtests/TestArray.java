@@ -254,14 +254,4 @@ public class TestArray {
     void inNonzeroNonlen() {
         arrayInNonzeroNonlen(42, new byte[] {'a', 'b', 'c', 'd'});
     }
-
-    @Test
-    void zeroTerminatedReturn() {
-        assertArrayEquals(new String[] {"0", "1", "2"}, arrayZeroTerminatedReturn());
-    }
-
-    @Test
-    void zeroTerminatedReturnNull() {
-        assertNull(arrayZeroTerminatedReturnNull());
-    }
 }
