@@ -134,6 +134,12 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                         .add(")");
             }
 
+            // GArrays
+            else if ("GLib.Array".equals(array.name()) && p.callerAllocates()) {
+                payload = marshalNativeToJava("_$name:LPointer", false)
+                        .add(null, "name", getName(), "valueLayout", ValueLayout.class);
+            }
+
             // Other arrays
             else {
                 payload = marshalNativeToJava("_$name:LPointer.get($valueLayout:T.ADDRESS, 0)", false)

@@ -109,14 +109,27 @@ public class PreprocessingGenerator extends TypedValueGenerator {
              * a buffer and zero-initialize it.
              */
             else if (p.callerAllocates()) {
-                stmt = PartialStatement.of(
-                                "$memorySegment:T _$name:LArray = _arena.allocate(",
-                                "memorySegment", MemorySegment.class,
-                                "name", getName())
-                        .add(getMemoryLayout(elemType))
-                        .add(", ")
-                        .add(array.sizeExpression(false))
-                        .add(").fill((byte) 0);\n");
+                if ("GLib.Array".equals(array.name())) {
+                    String elemSize = "" + array.anyType().allocatedSize(false);
+                    if (array.anyType() instanceof Type t && t.isLong())
+                        elemSize = "$interop:T.longAsInt() ? 4 : 8";
+                    stmt = PartialStatement.of(
+                            "$memorySegment:T _$name:LArray = $interop:T.newGArray($elemSize:L);\n",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName(),
+                            "interop", ClassNames.INTEROP,
+                            "elemSize", elemSize);
+
+                } else {
+                    stmt = PartialStatement.of(
+                                    "$memorySegment:T _$name:LArray = _arena.allocate(",
+                                    "memorySegment", MemorySegment.class,
+                                    "name", getName())
+                            .add(getMemoryLayout(elemType))
+                            .add(", ")
+                            .add(array.sizeExpression(false))
+                            .add(").fill((byte) 0);\n");
+                }
             }
 
             else {

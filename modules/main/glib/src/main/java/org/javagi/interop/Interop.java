@@ -1424,16 +1424,33 @@ public class Interop {
     }
 
     /**
-     * Create a new GArray with the provided data
-     * @param data        memory segment containing the array data
-     * @param length      number of array elements
-     * @param elementSize element size
+     * Create a new empty GArray.
+     *
+     * @param  elementSize element size
+     * @return the newly created GArray
+     */
+    public static MemorySegment newGArray(int elementSize) {
+        try {
+            MemorySegment garray = (MemorySegment) DowncallHandles.g_array_new.invokeExact(0, 0, elementSize);
+            return garray.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
+    /**
+     * Create a new GArray with the provided data.
+     *
+     * @param  data        memory segment containing the array data
+     * @param  length      number of array elements
+     * @param  elementSize element size
      * @return the newly created GArray
      */
     public static MemorySegment newGArray(MemorySegment data, long length, long elementSize) {
         try {
-            return (MemorySegment) DowncallHandles.g_array_new_take.invokeExact(
+            MemorySegment garray = (MemorySegment) DowncallHandles.g_array_new_take.invokeExact(
                     data, length, 0, elementSize);
+            return garray.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -1837,6 +1854,12 @@ public class Interop {
         private static final MethodHandle g_bytes_unref = Interop.downcallHandle(
                 "g_bytes_unref",
                 FunctionDescriptor.ofVoid(ADDRESS),
+                false);
+
+        private static final MethodHandle g_array_new = Interop.downcallHandle(
+                "g_array_new",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT),
                 false);
 
         private static final MethodHandle g_array_new_take = Interop.downcallHandle(
