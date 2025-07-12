@@ -29,6 +29,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.List;
 
+import static org.javagi.util.CollectionUtils.listOfNonNull;
+
 public class PostprocessingGenerator extends TypedValueGenerator {
 
     private final Callable func;
@@ -134,8 +136,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                         .add(")");
             }
 
-            // GArrays
-            else if ("GLib.Array".equals(array.name()) && p.callerAllocates()) {
+            // GArray & GPtrArray
+            else if (listOfNonNull("GLib.Array", "GLib.PtrArray").contains(array.name())
+                    && p.callerAllocates()) {
                 payload = marshalNativeToJava("_$name:LPointer", false)
                         .add(null, "name", getName(), "valueLayout", ValueLayout.class);
             }

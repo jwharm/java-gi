@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import org.gnome.glib.PtrArray;
 import org.javagi.base.*;
 import org.gnome.glib.GLib;
 
@@ -1431,8 +1432,8 @@ public class Interop {
      */
     public static MemorySegment newGArray(int elementSize) {
         try {
-            MemorySegment garray = (MemorySegment) DowncallHandles.g_array_new.invokeExact(0, 0, elementSize);
-            return garray.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
+            MemorySegment g_array = (MemorySegment) DowncallHandles.g_array_new.invokeExact(0, 0, elementSize);
+            return g_array.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -1448,11 +1449,46 @@ public class Interop {
      */
     public static MemorySegment newGArray(MemorySegment data, long length, long elementSize) {
         try {
-            MemorySegment garray = (MemorySegment) DowncallHandles.g_array_new_take.invokeExact(
+            MemorySegment g_array = (MemorySegment) DowncallHandles.g_array_new_take.invokeExact(
                     data, length, 0, elementSize);
-            return garray.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
+            return g_array.reinterpret(org.gnome.glib.Array.getMemoryLayout().byteSize());
         } catch (Throwable _err) {
             throw new AssertionError(_err);
+        }
+    }
+
+    /**
+     * Create a new empty GPtrArray.
+     *
+     * @return the newly create GPtrArray
+     */
+    public static MemorySegment newGPtrArray() {
+        try (var _arena = Arena.ofConfined()) {
+            MemorySegment _result;
+            try {
+                MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new.invokeExact();
+                return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+        }
+    }
+
+    /**
+     * Create a new empty GPtrArray.
+     *
+     * @return the newly create GPtrArray
+     */
+    public static MemorySegment newGPtrArray(MemorySegment data, long length) {
+        try (var _arena = Arena.ofConfined()) {
+            MemorySegment _result;
+            try {
+                MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new_take.invokeExact(
+                        data, length, NULL);
+                return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
         }
     }
 
@@ -1866,6 +1902,17 @@ public class Interop {
                 "g_array_new_take",
                 FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG),
+                false);
+
+        private static final MethodHandle g_ptr_array_new = Interop.downcallHandle(
+                "g_ptr_array_new",
+                FunctionDescriptor.of(ValueLayout.ADDRESS),
+                false);
+
+        private static final MethodHandle g_ptr_array_new_take = Interop.downcallHandle(
+                "g_ptr_array_new_take",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
                 false);
     }
 }

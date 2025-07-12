@@ -274,18 +274,27 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP);
 
         // GArray
-        // TODO: when ownership is not transferred, unref the GArray
+        // TODO: when ownership is not transferred, unref the GArray/GPtrArray
         if (array.name() != null && "GLib.Array".equals(array.name())) {
             String elemSize = "" + array.anyType().allocatedSize(false);
             if (type.isLong())
                 elemSize = "$interop:T.longAsInt() ? 4 : 8";
 
-            return PartialStatement.of(
-                    "$interop:T.newGArray(")
+            return PartialStatement.of("$interop:T.newGArray(")
                     .add(stmt)
                     .add(", " + identifier + ".length, " + elemSize + ")",
-                    "arena", Arena.class,
-                    "interop", ClassNames.INTEROP);
+                            "arena", Arena.class,
+                            "interop", ClassNames.INTEROP);
+        }
+
+        // GPtrArray
+        // TODO: when ownership is transferred, set the element_free_func
+        if (array.name() != null && "GLib.PtrArray".equals(array.name())) {
+            return PartialStatement.of("$interop:T.newGPtrArray(")
+                    .add(stmt)
+                    .add(", " + identifier + ".length)",
+                            "arena", Arena.class,
+                            "interop", ClassNames.INTEROP);
         }
 
         return stmt;

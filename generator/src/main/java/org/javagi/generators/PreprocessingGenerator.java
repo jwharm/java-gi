@@ -119,7 +119,12 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "name", getName(),
                             "interop", ClassNames.INTEROP,
                             "elemSize", elemSize);
-
+                } else if ("GLib.PtrArray".equals(array.name())) {
+                    stmt = PartialStatement.of(
+                            "$memorySegment:T _$name:LArray = $interop:T.newGPtrArray();\n",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName(),
+                            "interop", ClassNames.INTEROP);
                 } else {
                     stmt = PartialStatement.of(
                                     "$memorySegment:T _$name:LArray = _arena.allocate(",
