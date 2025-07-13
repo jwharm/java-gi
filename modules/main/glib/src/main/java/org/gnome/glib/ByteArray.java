@@ -65,8 +65,8 @@ public class ByteArray extends ProxyInstance {
     public static MemoryLayout getMemoryLayout() {
         return MemoryLayout.structLayout(
                 ValueLayout.ADDRESS.withName("data"),
-                MemoryLayout.paddingLayout(3),
-                ValueLayout.JAVA_INT.withName("len")
+                ValueLayout.JAVA_INT.withName("len"),
+                MemoryLayout.paddingLayout(4)
         ).withName("GByteArray");
     }
 
@@ -126,9 +126,9 @@ public class ByteArray extends ProxyInstance {
 
         MemorySegment result;
         try {
-            MemorySegment segment = malloc(data.length);
+            MemorySegment segment = malloc(data.length).reinterpret(data.length);
             segment.asByteBuffer().put(data, 0, data.length);
-            result = (MemorySegment) MethodHandles.g_byte_array_new_take.invokeExact(segment, data.length);
+            result = (MemorySegment) MethodHandles.g_byte_array_new_take.invokeExact(segment, (long) data.length);
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }

@@ -266,6 +266,10 @@ class TypedValueGenerator {
                     targetTypeTag, target.typeName(),
                     "interop", ClassNames.INTEROP);
 
+        else if ("GLib.ByteArray".equals(array.name()))
+            stmt = PartialStatement.of("$byteArray:T.takeUnowned(" + identifier + ").handle()",
+                    "byteArray", ClassNames.G_BYTE_ARRAY);
+
         else
             stmt = PartialStatement.of(
                     "$interop:T.allocateNativeArray(" + identifier
