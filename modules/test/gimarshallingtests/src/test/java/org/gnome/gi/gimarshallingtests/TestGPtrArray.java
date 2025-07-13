@@ -64,4 +64,64 @@ public class TestGPtrArray {
     void utf8FullIn() {
         gptrarrayUtf8FullIn(TEST_UTF8_ARRAY);
     }
+
+    @Test
+    void utf8NoneOut() {
+        var v = new Out<String[]>();
+        gptrarrayUtf8NoneOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8NoneOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> gptrarrayUtf8NoneOutUninitialized(v));
+    }
+
+    @Test
+    void utf8ContainerOut() {
+        var v = new Out<String[]>();
+        gptrarrayUtf8ContainerOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8ContainerOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> gptrarrayUtf8ContainerOutUninitialized(v));
+    }
+
+    @Test
+    void utf8FullOut() {
+        var v = new Out<String[]>();
+        gptrarrayUtf8FullOut(v);
+        assertArrayEquals(TEST_UTF8_ARRAY, v.get());
+    }
+
+    @Test
+    void utf8FullOutUninitialized() {
+        var v = new Out<String[]>();
+        assertThrows(NullPointerException.class, () -> gptrarrayUtf8FullOutUninitialized(v));
+    }
+
+    @Test
+    void utf8NoneInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        gptrarrayUtf8NoneInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
+
+    @Test
+    void utf8ContainerInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        gptrarrayUtf8ContainerInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
+
+    @Test
+    void utf8CFullInout() {
+        var v = new Out<>(TEST_UTF8_ARRAY);
+        gptrarrayUtf8FullInout(v);
+        assertArrayEquals(new String[] {"-2", "-1", "0", "1"}, v.get());
+    }
 }
