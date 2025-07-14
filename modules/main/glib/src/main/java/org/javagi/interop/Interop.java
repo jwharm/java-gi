@@ -691,6 +691,37 @@ public class Interop {
     }
 
     /**
+     * Read {@code length} arrays of Strings from native memory.
+     *
+     * @param  address  address of the memory segment
+     * @param  length   the length of the array
+     * @param  transfer ownership transfer
+     * @return two-dimensional array of Strings
+     */
+    public static String[][] getStrvArrayFrom(MemorySegment address,
+                                              int length,
+                                              TransferOwnership transfer) {
+        if (address == null || NULL.equals(address))
+            return null;
+
+        long size = ADDRESS.byteSize();
+        MemorySegment array = reinterpret(address, size * length);
+
+        ArrayList<String[]> result = new ArrayList<>();
+        long offset = 0;
+        for (int i = 0; i < length; i++) {
+            MemorySegment ptr = array.get(ADDRESS, offset);
+            result.add(getStringArrayFrom(ptr, transfer == FULL ? FULL : NONE));
+            offset += ADDRESS.byteSize();
+        }
+
+        if (transfer != NONE)
+            GLib.free(address);
+
+        return result.toArray(new String[0][0]);
+    }
+
+    /**
      * Read an array of pointers with the requested length from native memory.
      *
      * @param  address  address of the memory segment

@@ -322,11 +322,19 @@ class TypedValueGenerator {
 
         // String[][]
         if (array != null && array.anyType() instanceof Array inner
-                && inner.anyType() instanceof Type t && t.isString())
-            return PartialStatement.of(
-                    "$interop:T.getStrvArrayFrom(" + identifier + ", " + transfer() + ")",
+                && inner.anyType() instanceof Type t && t.isString()) {
+            String size = array.sizeExpression(upcall);
+            if (size == null)
+                return PartialStatement.of(
+                        "$interop:T.getStrvArrayFrom(" + identifier + ", " + transfer() + ")",
+                        "interop", ClassNames.INTEROP,
+                        "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
+            else
+                return PartialStatement.of(
+                    "$interop:T.getStrvArrayFrom(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
                     "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
+        }
 
         // Array
         if (array != null && array.anyType() instanceof Type t)
