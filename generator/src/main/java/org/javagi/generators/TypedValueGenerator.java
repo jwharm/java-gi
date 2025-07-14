@@ -136,16 +136,7 @@ class TypedValueGenerator {
         if (type != null)
             return marshalJavaToNative(type, identifier);
 
-        // String[][]
-        if (array != null && array.anyType() instanceof Array inner
-                && inner.anyType() instanceof Type t && t.isString()) {
-            boolean zeroTerminated = array.zeroTerminated();
-            return PartialStatement.of(
-                    "$interop:T.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", _arena)",
-                    "interop", ClassNames.INTEROP);
-        }
-
-        if (array != null && array.anyType() instanceof Type)
+        if (array != null)
             return marshalJavaArrayToNative(array, identifier);
 
         if (v instanceof Field f && f.callback() != null)
@@ -233,18 +224,34 @@ class TypedValueGenerator {
     }
 
     private PartialStatement marshalJavaArrayToNative(Array array, String identifier) {
+        if (array == null || array.anyType() == null)
+            return PartialStatement.of(
+                    "$memorySegment:T.NULL /* unsupported */",
+                    "memorySegment", MemorySegment.class);
+
         // When ownership is transferred, we must not free the allocated
         // memory -> use global scope
-        String allocator = (v instanceof Parameter p && p.transferOwnership() != NONE)
-                ? "$arena:T.global()" : "_arena";
+        var transfer = v instanceof Parameter p ? p.transferOwnership() : NONE;
+        String allocator = (transfer == CONTAINER || transfer == FULL) ? "$arena:T.global()" : "_arena";
 
-        Type type = (Type) array.anyType();
-        RegisteredType target = type.lookup();
+        // String[][]
+        if (array.anyType() instanceof Array inner
+                && inner.anyType() instanceof Type t && t.isString()) {
+            String elemAllocator = transfer == FULL ? "$arena:T.global()" : "_arena";
+            return PartialStatement.of(
+                    "$interop:T.allocateNativeArray(" + identifier + ", "
+                            + array.zeroTerminated() + ", " + allocator + ", " + elemAllocator + ")",
+                    "interop", ClassNames.INTEROP,
+                    "arena", Arena.class);
+        }
+
+        Type elemType = (Type) array.anyType();
+        RegisteredType target = elemType.lookup();
 
         boolean isEnum = target instanceof EnumType;
         boolean isPrimitiveAlias = target instanceof Alias a && a.isValueWrapper();
 
-        String targetTypeTag = isEnum ? "enumType" : type.toTypeTag();
+        String targetTypeTag = isEnum ? "enumType" : elemType.toTypeTag();
 
         String primitiveClassName = isPrimitiveAlias
                 ? primitiveClassName(((Alias) target).anyType().typeName().toString())
@@ -259,9 +266,9 @@ class TypedValueGenerator {
                             + array.zeroTerminated() + ", " + allocator + ")",
                     "arena", Arena.class,
                     "interop", ClassNames.INTEROP,
-                    targetTypeTag, isEnum ? ClassNames.INTEROP : type.typeName());
+                    targetTypeTag, isEnum ? ClassNames.INTEROP : elemType.typeName());
 
-        else if (target instanceof Record && (!type.isPointer()))
+        else if (target instanceof Record && (!elemType.isPointer()))
             stmt = PartialStatement.of(
                     "$interop:T.allocateNativeArray(" + identifier
                             + ", $" + targetTypeTag + ":T.getMemoryLayout(), "
@@ -271,7 +278,7 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP);
 
         else if ("GLib.ByteArray".equals(array.name())) {
-            var constructor = (v instanceof Parameter p && p.transferOwnership() != NONE) ? "takeUnowned" : "take";
+            var constructor = transfer != NONE ? "takeUnowned" : "take";
             stmt = PartialStatement.of("$byteArray:T." + constructor + "(" + identifier + ").handle()",
                     "byteArray", ClassNames.G_BYTE_ARRAY);
         }
@@ -287,7 +294,7 @@ class TypedValueGenerator {
         // TODO: when ownership is not transferred, unref the GArray/GPtrArray
         if (array.name() != null && "GLib.Array".equals(array.name())) {
             String elemSize = "" + array.anyType().allocatedSize(false);
-            if (type.isLong())
+            if (elemType.isLong())
                 elemSize = "$interop:T.longAsInt() ? 4 : 8";
 
             return PartialStatement.of("$interop:T.newGArray(")

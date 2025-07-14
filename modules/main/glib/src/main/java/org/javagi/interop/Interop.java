@@ -1267,7 +1267,7 @@ public class Interop {
      *
      * @param  strings        array of Strings
      * @param  zeroTerminated whether to add a {@code NULL} to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  arena          the segment allocator for the array
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(String[] strings,
@@ -1294,16 +1294,18 @@ public class Interop {
      * Allocate and initialize an (optionally {@code NULL}-terminated) array of
      * arrays of strings (a Strv-array).
      *
-     * @param  strvs          the array of String arrays
-     * @param  zeroTerminated whether to add a {@code NULL} to the array. The
-     *                        embedded arrays are always
-     *                        {@code NULL}-terminated.
-     * @param  arena          the segment allocator for memory allocation
+     * @param  strvs            the array of String arrays
+     * @param  zeroTerminated   whether to add a {@code NULL} to the array. The
+     *                          embedded arrays are always
+     *                          {@code NULL}-terminated.
+     * @param  arena            the segment allocator for the array
+     * @param  elementAllocator the segment allocator for the array elements
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(String[][] strvs,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    Arena arena,
+                                                    Arena elementAllocator) {
         if (strvs == null)
             return NULL;
 
@@ -1312,7 +1314,7 @@ public class Interop {
 
         for (int i = 0; i < strvs.length; i++) {
             var s = strvs[i] == null ? NULL
-                    : allocateNativeArray(strvs[i], true, arena);
+                    : allocateNativeArray(strvs[i], true, elementAllocator);
             memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
