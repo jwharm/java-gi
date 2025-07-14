@@ -136,10 +136,14 @@ class TypedValueGenerator {
         if (type != null)
             return marshalJavaToNative(type, identifier);
 
-        if (array != null && array.anyType() instanceof Array)
+        // String[][]
+        if (array != null && array.anyType() instanceof Array inner
+                && inner.anyType() instanceof Type t && t.isString()) {
+            boolean zeroTerminated = array.zeroTerminated();
             return PartialStatement.of(
-                    "$memorySegment:T.NULL /* unsupported */",
-                    "memorySegment", MemorySegment.class);
+                    "$interop:T.allocateNativeArray(" + identifier + ", " + zeroTerminated + ", _arena)",
+                    "interop", ClassNames.INTEROP);
+        }
 
         if (array != null && array.anyType() instanceof Type)
             return marshalJavaArrayToNative(array, identifier);
