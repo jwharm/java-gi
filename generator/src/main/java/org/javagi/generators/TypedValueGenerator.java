@@ -232,12 +232,12 @@ class TypedValueGenerator {
         // When ownership is transferred, we must not free the allocated
         // memory -> use global scope
         var transfer = v instanceof Parameter p ? p.transferOwnership() : NONE;
-        String allocator = (transfer == CONTAINER || transfer == FULL) ? "$arena:T.global()" : "_arena";
+        String allocator = (transfer == CONTAINER || transfer == FULL) ? "$interop:T.mallocAllocator()" : "_arena";
 
         // String[][]
         if (array.anyType() instanceof Array inner
                 && inner.anyType() instanceof Type t && t.isString()) {
-            String elemAllocator = transfer == FULL ? "$arena:T.global()" : "_arena";
+            String elemAllocator = transfer == FULL ? "$interop:T.mallocAllocator()" : "_arena";
             return PartialStatement.of(
                     "$interop:T.allocateNativeArray(" + identifier + ", "
                             + array.zeroTerminated() + ", " + allocator + ", " + elemAllocator + ")",
