@@ -19,31 +19,59 @@
 
 package org.gnome.gi.gimarshallingtests;
 
-import org.javagi.base.Out;
+import org.gnome.glib.Type;
+import org.javagi.gobject.types.Types;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestInitFunctionMarshalling {
+public class TestGType {
     @Test
-    void marshalsNull() {
-        assertTrue(initFunction(null));
+    void return_() {
+        assertEquals(Types.NONE, gtypeReturn());
     }
 
     @Test
-    void marshalsInoutEmptyArray() {
-        var params = new String[] {};
-        var v = new Out<>(params);
-        assertTrue(initFunction(v));
-        assertArrayEquals(params, v.get());
+    void stringReturn() {
+        assertEquals(Types.STRING, gtypeStringReturn());
     }
 
     @Test
-    void marshalsInoutArray() {
-        var params = new String[] {"--foo", "--bar"};
-        var v = new Out<>(params);
-        assertTrue(initFunction(v));
-        assertArrayEquals(new String[] {"--foo"}, v.get());
+    void in() {
+        gtypeIn(Types.NONE);
+    }
+
+    @Test
+    void stringIn() {
+        gtypeStringIn(Types.STRING);
+    }
+
+    @Test
+    void out() {
+        var gtype = new Type(1);
+        gtypeOut(gtype);
+        assertEquals(Types.NONE, gtype);
+    }
+
+    @Test
+    void outUninitialized() {
+        var gtype = new Type(Types.STRING.getValue());
+        assertFalse(gtypeOutUninitialized(gtype));
+        assertEquals(0, gtype.getValue());
+    }
+
+    @Test
+    void stringOut() {
+        var gtype = new Type(1);
+        gtypeStringOut(gtype);
+        assertEquals(Types.STRING, gtype);
+    }
+
+    @Test
+    void inOut() {
+        var gtype = new Type(Types.NONE.getValue());
+        gtypeInout(gtype);
+        assertEquals(Types.INT, gtype);
     }
 }

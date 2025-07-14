@@ -25,90 +25,90 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestIntMarshalling {
+public class TestInt32 {
     @Test
-    void testIntReturnMax() {
-        assertEquals(Integer.MAX_VALUE, intReturnMax());
+    void testInt32ReturnMax() {
+        assertEquals(Integer.MAX_VALUE, int32ReturnMax());
     }
 
     @Test
-    void testIntReturnMin() {
-        assertEquals(Integer.MIN_VALUE, intReturnMin());
+    void testInt32ReturnMin() {
+        assertEquals(Integer.MIN_VALUE, int32ReturnMin());
     }
 
     @Test
-    void testIntInMax() {
-        intInMax(Integer.MAX_VALUE);
+    void testInt32InMax() {
+        int32InMax(Integer.MAX_VALUE);
     }
 
     @Test
-    void testIntInMin() {
-        intInMin(Integer.MIN_VALUE);
+    void testInt32InMin() {
+        int32InMin(Integer.MIN_VALUE);
     }
 
     @Test
-    void testIntOutMax() {
+    void testInt32OutMax() {
         var v = new Out<>(0);
-        intOutMax(v);
+        int32OutMax(v);
         assertEquals(Integer.MAX_VALUE, v.get());
     }
 
     @Test
-    void testIntOutMin() {
+    void testInt32OutMin() {
         var v = new Out<>(0);
-        intOutMin(v);
+        int32OutMin(v);
         assertEquals(Integer.MIN_VALUE, v.get());
     }
 
     @Test
-    void testIntOutUninitialized() {
+    void testInt32OutUninitialized() {
         var v = new Out<>(0);
-        assertFalse(intOutUninitialized(v));
+        assertFalse(int32OutUninitialized(v));
         assertEquals(0, v.get());
     }
 
     @Test
-    void testIntOutMaxMin() {
+    void testInt32OutMaxMin() {
         var v = new Out<>(Integer.MAX_VALUE);
-        intInoutMaxMin(v);
+        int32InoutMaxMin(v);
         assertEquals(Integer.MIN_VALUE, v.get());
     }
 
     @Test
-    void testIntOutMinMax() {
+    void testInt32OutMinMax() {
         var v = new Out<>(Integer.MIN_VALUE);
-        intInoutMinMax(v);
+        int32InoutMinMax(v);
         assertEquals(Integer.MAX_VALUE, v.get());
     }
 
     @Test
-    void testUintReturn() {
-        assertEquals(-1, uintReturn());
+    void testUint32Return() {
+        assertEquals(-1, uint32Return());
     }
 
     @Test
-    void testUintIn() {
-        uintIn(-1);
+    void testUint32In() {
+        uint32In(-1);
     }
 
     @Test
-    void testUintOut() {
+    void testUint32Out() {
         var v = new Out<>(0);
-        uintOut(v);
+        uint32Out(v);
         assertEquals(-1, v.get());
     }
 
     @Test
-    void testUintOutUninitialized() {
+    void testUint32OutUninitialized() {
         var v = new Out<>(0);
-        assertFalse(uintOutUninitialized(v));
+        assertFalse(uint32OutUninitialized(v));
         assertEquals(0, v.get());
     }
 
     @Test
-    void testUintInout() {
+    void testUint32Inout() {
         var v = new Out<>(-1);
-        uintInout(v);
+        uint32Inout(v);
         assertEquals(0, v.get());
     }
 }

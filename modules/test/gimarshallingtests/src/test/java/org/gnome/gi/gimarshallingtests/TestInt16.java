@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestInt16Marshalling {
+public class TestInt16 {
     @Test
     void testInt16ReturnMax() {
         assertEquals(Short.MAX_VALUE, int16ReturnMax());

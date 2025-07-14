@@ -19,59 +19,50 @@
 
 package org.gnome.gi.gimarshallingtests;
 
-import org.gnome.glib.Type;
-import org.javagi.gobject.types.Types;
+import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGTypeMarshalling {
+public class TestFloat {
     @Test
     void return_() {
-        assertEquals(Types.NONE, gtypeReturn());
-    }
-
-    @Test
-    void stringReturn() {
-        assertEquals(Types.STRING, gtypeStringReturn());
+        assertEquals(Float.MAX_VALUE, floatReturn());
     }
 
     @Test
     void in() {
-        gtypeIn(Types.NONE);
-    }
-
-    @Test
-    void stringIn() {
-        gtypeStringIn(Types.STRING);
+        floatIn(Float.MAX_VALUE);
     }
 
     @Test
     void out() {
-        var gtype = new Type(1);
-        gtypeOut(gtype);
-        assertEquals(Types.NONE, gtype);
+        var v = new Out<>(0f);
+        floatOut(v);
+        assertEquals(Float.MAX_VALUE, v.get());
+    }
+
+    @Test
+    void noncanonicalNanOut() {
+        var v = new Out<>(0f);
+        floatNoncanonicalNanOut(v);
+        assertEquals(Float.NaN, v.get());
     }
 
     @Test
     void outUninitialized() {
-        var gtype = new Type(Types.STRING.getValue());
-        assertFalse(gtypeOutUninitialized(gtype));
-        assertEquals(0, gtype.getValue());
+        var v = new Out<>(0f);
+        assertFalse(floatOutUninitialized(v));
+        assertEquals(0f, v.get());
     }
 
     @Test
-    void stringOut() {
-        var gtype = new Type(1);
-        gtypeStringOut(gtype);
-        assertEquals(Types.STRING, gtype);
-    }
-
-    @Test
-    void inOut() {
-        var gtype = new Type(Types.NONE.getValue());
-        gtypeInout(gtype);
-        assertEquals(Types.INT, gtype);
+    void inout() {
+        var v = new Out<>(Float.MAX_VALUE);
+        floatInout(v);
+        // Expected value copied from GJS, because GLib G_MINFLOAT is not the
+        // same as java.lang.Float.MIN_VALUE
+        assertEquals((float) Math.pow(2, -126), v.get());
     }
 }

@@ -25,90 +25,75 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestInt32Marshalling {
+/*
+ * Native long values are cast to int in java-gi, because
+ * long is not 64 bits on all supported platforms. So we
+ * treat it as a 32 bit value to preserve cross-platform
+ * compatibility.
+ */
+public class TestLong {
     @Test
-    void testInt32ReturnMax() {
-        assertEquals(Integer.MAX_VALUE, int32ReturnMax());
+    void testLongReturnMax() {
+        assertEquals(-1, longReturnMax());
     }
 
     @Test
-    void testInt32ReturnMin() {
-        assertEquals(Integer.MIN_VALUE, int32ReturnMin());
+    void testLongReturnMin() {
+        assertEquals(0, longReturnMin());
     }
 
-    @Test
-    void testInt32InMax() {
-        int32InMax(Integer.MAX_VALUE);
-    }
+    // longInMax is not supported
+
+    // longInMin is not supported
 
     @Test
-    void testInt32InMin() {
-        int32InMin(Integer.MIN_VALUE);
-    }
-
-    @Test
-    void testInt32OutMax() {
+    void testLongOutMax() {
         var v = new Out<>(0);
-        int32OutMax(v);
-        assertEquals(Integer.MAX_VALUE, v.get());
-    }
-
-    @Test
-    void testInt32OutMin() {
-        var v = new Out<>(0);
-        int32OutMin(v);
-        assertEquals(Integer.MIN_VALUE, v.get());
-    }
-
-    @Test
-    void testInt32OutUninitialized() {
-        var v = new Out<>(0);
-        assertFalse(int32OutUninitialized(v));
-        assertEquals(0, v.get());
-    }
-
-    @Test
-    void testInt32OutMaxMin() {
-        var v = new Out<>(Integer.MAX_VALUE);
-        int32InoutMaxMin(v);
-        assertEquals(Integer.MIN_VALUE, v.get());
-    }
-
-    @Test
-    void testInt32OutMinMax() {
-        var v = new Out<>(Integer.MIN_VALUE);
-        int32InoutMinMax(v);
-        assertEquals(Integer.MAX_VALUE, v.get());
-    }
-
-    @Test
-    void testUint32Return() {
-        assertEquals(-1, uint32Return());
-    }
-
-    @Test
-    void testUint32In() {
-        uint32In(-1);
-    }
-
-    @Test
-    void testUint32Out() {
-        var v = new Out<>(0);
-        uint32Out(v);
+        longOutMax(v);
         assertEquals(-1, v.get());
     }
 
     @Test
-    void testUint32OutUninitialized() {
+    void testLongOutMin() {
         var v = new Out<>(0);
-        assertFalse(uint32OutUninitialized(v));
+        longOutMin(v);
         assertEquals(0, v.get());
     }
 
     @Test
-    void testUint32Inout() {
-        var v = new Out<>(-1);
-        uint32Inout(v);
+    void testLongOutUninitialized() {
+        var v = new Out<>(0);
+        assertFalse(longOutUninitialized(v));
         assertEquals(0, v.get());
     }
+
+    // longInoutMaxMin is not supported
+
+    // longInoutMinMax is not supported
+
+    @Test
+    void testUlongReturn() {
+        assertEquals(-1, ulongReturn());
+    }
+
+    @Test
+    void testUlongIn() {
+        ulongIn(-1);
+    }
+
+    @Test
+    void testUlongOut() {
+        var v = new Out<>(0);
+        ulongOut(v);
+        assertEquals(-1, v.get());
+    }
+
+    @Test
+    void testUlongOutUninitialized() {
+        var v = new Out<>(0);
+        assertFalse(ulongOutUninitialized(v));
+        assertEquals(0, v.get());
+    }
+
+    // ulongInout is not supported
 }

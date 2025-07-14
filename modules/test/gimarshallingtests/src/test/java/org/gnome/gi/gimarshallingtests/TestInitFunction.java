@@ -25,45 +25,25 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestDoubleMarshalling {
+public class TestInitFunction {
     @Test
-    void return_() {
-        assertEquals(Double.MAX_VALUE, doubleReturn());
+    void marshalsNull() {
+        assertTrue(initFunction(null));
     }
 
     @Test
-    void in() {
-        doubleIn(Double.MAX_VALUE);
+    void marshalsInoutEmptyArray() {
+        var params = new String[] {};
+        var v = new Out<>(params);
+        assertTrue(initFunction(v));
+        assertArrayEquals(params, v.get());
     }
 
     @Test
-    void out() {
-        var v = new Out<>(0d);
-        doubleOut(v);
-        assertEquals(Double.MAX_VALUE, v.get());
-    }
-
-    @Test
-    void noncanonicalNanOut() {
-        var v = new Out<>(0d);
-        doubleNoncanonicalNanOut(v);
-        assertEquals(Double.NaN, v.get());
-    }
-
-    @Test
-    void outUninitialized() {
-        var v = new Out<>(0d);
-        assertFalse(doubleOutUninitialized(v));
-        assertEquals(0d, v.get());
-    }
-
-    @Test
-    void inout() {
-        var v = new Out<>(Double.MAX_VALUE);
-        doubleInout(v);
-        // Expected value copied from GJS:
-        // GLib G_MINDOUBLE is the minimum normal value, which is not the same
-        // as the minimum denormal value java.lang.Float.MIN_VALUE
-        assertEquals(Math.pow(2, -1022), v.get());
+    void marshalsInoutArray() {
+        var params = new String[] {"--foo", "--bar"};
+        var v = new Out<>(params);
+        assertTrue(initFunction(v));
+        assertArrayEquals(new String[] {"--foo"}, v.get());
     }
 }

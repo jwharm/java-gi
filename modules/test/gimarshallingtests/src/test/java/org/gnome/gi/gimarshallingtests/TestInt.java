@@ -25,75 +25,90 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/*
- * Native long values are cast to int in java-gi, because
- * long is not 64 bits on all supported platforms. So we
- * treat it as a 32 bit value to preserve cross-platform
- * compatibility.
- */
-public class TestLongMarshalling {
+public class TestInt {
     @Test
-    void testLongReturnMax() {
-        assertEquals(-1, longReturnMax());
+    void testIntReturnMax() {
+        assertEquals(Integer.MAX_VALUE, intReturnMax());
     }
 
     @Test
-    void testLongReturnMin() {
-        assertEquals(0, longReturnMin());
+    void testIntReturnMin() {
+        assertEquals(Integer.MIN_VALUE, intReturnMin());
     }
 
-    // longInMax is not supported
-
-    // longInMin is not supported
+    @Test
+    void testIntInMax() {
+        intInMax(Integer.MAX_VALUE);
+    }
 
     @Test
-    void testLongOutMax() {
+    void testIntInMin() {
+        intInMin(Integer.MIN_VALUE);
+    }
+
+    @Test
+    void testIntOutMax() {
         var v = new Out<>(0);
-        longOutMax(v);
+        intOutMax(v);
+        assertEquals(Integer.MAX_VALUE, v.get());
+    }
+
+    @Test
+    void testIntOutMin() {
+        var v = new Out<>(0);
+        intOutMin(v);
+        assertEquals(Integer.MIN_VALUE, v.get());
+    }
+
+    @Test
+    void testIntOutUninitialized() {
+        var v = new Out<>(0);
+        assertFalse(intOutUninitialized(v));
+        assertEquals(0, v.get());
+    }
+
+    @Test
+    void testIntOutMaxMin() {
+        var v = new Out<>(Integer.MAX_VALUE);
+        intInoutMaxMin(v);
+        assertEquals(Integer.MIN_VALUE, v.get());
+    }
+
+    @Test
+    void testIntOutMinMax() {
+        var v = new Out<>(Integer.MIN_VALUE);
+        intInoutMinMax(v);
+        assertEquals(Integer.MAX_VALUE, v.get());
+    }
+
+    @Test
+    void testUintReturn() {
+        assertEquals(-1, uintReturn());
+    }
+
+    @Test
+    void testUintIn() {
+        uintIn(-1);
+    }
+
+    @Test
+    void testUintOut() {
+        var v = new Out<>(0);
+        uintOut(v);
         assertEquals(-1, v.get());
     }
 
     @Test
-    void testLongOutMin() {
+    void testUintOutUninitialized() {
         var v = new Out<>(0);
-        longOutMin(v);
+        assertFalse(uintOutUninitialized(v));
         assertEquals(0, v.get());
     }
 
     @Test
-    void testLongOutUninitialized() {
-        var v = new Out<>(0);
-        assertFalse(longOutUninitialized(v));
+    void testUintInout() {
+        var v = new Out<>(-1);
+        uintInout(v);
         assertEquals(0, v.get());
     }
-
-    // longInoutMaxMin is not supported
-
-    // longInoutMinMax is not supported
-
-    @Test
-    void testUlongReturn() {
-        assertEquals(-1, ulongReturn());
-    }
-
-    @Test
-    void testUlongIn() {
-        ulongIn(-1);
-    }
-
-    @Test
-    void testUlongOut() {
-        var v = new Out<>(0);
-        ulongOut(v);
-        assertEquals(-1, v.get());
-    }
-
-    @Test
-    void testUlongOutUninitialized() {
-        var v = new Out<>(0);
-        assertFalse(ulongOutUninitialized(v));
-        assertEquals(0, v.get());
-    }
-
-    // ulongInout is not supported
 }

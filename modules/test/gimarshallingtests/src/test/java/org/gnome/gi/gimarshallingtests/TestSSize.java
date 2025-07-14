@@ -25,90 +25,90 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestInt64Marshalling {
+public class TestSSize {
     @Test
-    void testInt64ReturnMax() {
-        assertEquals(Long.MAX_VALUE, int64ReturnMax());
+    void testSsizeReturnMax() {
+        assertEquals(Long.MAX_VALUE, ssizeReturnMax());
     }
 
     @Test
-    void testInt64ReturnMin() {
-        assertEquals(Long.MIN_VALUE, int64ReturnMin());
+    void testSsizeReturnMin() {
+        assertEquals(Long.MIN_VALUE, ssizeReturnMin());
     }
 
     @Test
-    void testInt64InMax() {
-        int64InMax(Long.MAX_VALUE);
+    void testSsizeInMax() {
+        ssizeInMax(Long.MAX_VALUE);
     }
 
     @Test
-    void testInt64InMin() {
-        int64InMin(Long.MIN_VALUE);
+    void testSsizeInMin() {
+        ssizeInMin(Long.MIN_VALUE);
     }
 
     @Test
-    void testInt64OutMax() {
+    void testSsizeOutMax() {
         var v = new Out<>(0L);
-        int64OutMax(v);
+        ssizeOutMax(v);
         assertEquals(Long.MAX_VALUE, v.get());
     }
 
     @Test
-    void testInt64OutMin() {
+    void testSsizeOutMin() {
         var v = new Out<>(0L);
-        int64OutMin(v);
+        ssizeOutMin(v);
         assertEquals(Long.MIN_VALUE, v.get());
     }
 
     @Test
-    void testInt64OutUninitialized() {
+    void testSsizeOutUninitialized() {
         var v = new Out<>(0L);
-        assertFalse(int64OutUninitialized(v));
+        assertFalse(ssizeOutUninitialized(v));
         assertEquals(0L, v.get());
     }
 
     @Test
-    void testInt64OutMaxMin() {
+    void testSsizeOutMaxMin() {
         var v = new Out<>(Long.MAX_VALUE);
-        int64InoutMaxMin(v);
+        ssizeInoutMaxMin(v);
         assertEquals(Long.MIN_VALUE, v.get());
     }
 
     @Test
-    void testInt64OutMinMax() {
+    void testSsizeOutMinMax() {
         var v = new Out<>(Long.MIN_VALUE);
-        int64InoutMinMax(v);
+        ssizeInoutMinMax(v);
         assertEquals(Long.MAX_VALUE, v.get());
     }
 
     @Test
-    void testUint64Return() {
-        assertEquals(-1L, uint64Return());
+    void testSizeReturn() {
+        assertEquals(-1L, sizeReturn());
     }
 
     @Test
-    void testUint64In() {
-        uint64In(-1L);
+    void testSizeIn() {
+        sizeIn(-1);
     }
 
     @Test
-    void testUint64Out() {
+    void testSizeOut() {
         var v = new Out<>(0L);
-        uint64Out(v);
+        sizeOut(v);
         assertEquals(-1L, v.get());
     }
 
     @Test
-    void testUint64OutUninitialized() {
+    void testSizeOutUninitialized() {
         var v = new Out<>(0L);
-        assertFalse(uint64OutUninitialized(v));
+        assertFalse(sizeOutUninitialized(v));
         assertEquals(0L, v.get());
     }
 
     @Test
-    void testUint64Inout() {
+    void testSizeInout() {
         var v = new Out<>(-1L);
-        uint64Inout(v);
+        sizeInout(v);
         assertEquals(0L, v.get());
     }
 }

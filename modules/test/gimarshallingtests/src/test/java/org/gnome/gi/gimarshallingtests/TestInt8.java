@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestInt8Marshalling {
+public class TestInt8 {
     @Test
     void testInt8ReturnMax() {
         assertEquals(Byte.MAX_VALUE, int8ReturnMax());

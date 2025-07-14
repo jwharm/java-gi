@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestBaseUnixTypesMarshalling {
+public class TestBaseUnixTypes {
 
     // time_t
 
