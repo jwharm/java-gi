@@ -297,8 +297,8 @@ public class Conversions {
      * Get the memory layout of this type. Pointers to primitive types are
      * treated as the actual type.
      */
-    public static String getValueLayoutPlain(Type t, boolean longAsInt) {
-        if (t == null) {
+    public static String getValueLayoutPlain(AnyType anyType, boolean longAsInt) {
+        if (! (anyType instanceof Type t)) {
             return "ADDRESS";
         }
         RegisteredType target = t.lookup();
@@ -312,8 +312,8 @@ public class Conversions {
             return "JAVA_" + t.javaType().toUpperCase();
         }
         if (target instanceof Alias a && a.isValueWrapper()
-                && a.anyType() instanceof Type type) {
-            return getValueLayoutPlain(type, longAsInt);
+                && a.anyType() instanceof Type typedef) {
+            return getValueLayoutPlain(typedef, longAsInt);
         }
         return "ADDRESS";
     }

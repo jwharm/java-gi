@@ -846,10 +846,10 @@ class TypedValueGenerator {
 
     // Generate a statement that represents ValueLayout for this type.
     // Returns ValueLayout.ADDRESS for complex layouts.
-    PartialStatement getValueLayout(Type type) {
-        String stmt = (type != null && type.isLong())
+    PartialStatement getValueLayout(AnyType anyType) {
+        String stmt = (anyType instanceof Type t && t.isLong())
                 ? "($interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG)"
-                : "$valueLayout:T." + Conversions.getValueLayoutPlain(type, false);
+                : "$valueLayout:T." + Conversions.getValueLayoutPlain(anyType, false);
         return PartialStatement.of(stmt,
                 "interop", ClassNames.INTEROP,
                 "valueLayout", ValueLayout.class);
@@ -857,10 +857,10 @@ class TypedValueGenerator {
 
     // Generate a statement that retrieves a ValueLayout for primitive types,
     // or the MemoryLayout of complex types.
-    PartialStatement getMemoryLayout(Type type) {
-        PartialStatement valueLayout = getValueLayout(type);
-        if (!type.isPrimitive()) {
-            var target = type.lookup();
+    PartialStatement getMemoryLayout(AnyType anyType) {
+        PartialStatement valueLayout = getValueLayout(anyType);
+        if (anyType instanceof Type t && (!t.isPrimitive())) {
+            var target = t.lookup();
             if (target instanceof StandardLayoutType slt) {
                 if (new MemoryLayoutGenerator().canGenerate(slt)) {
                     valueLayout = PartialStatement.of(

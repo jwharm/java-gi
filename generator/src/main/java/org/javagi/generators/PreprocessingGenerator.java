@@ -82,9 +82,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         if (p.isOutParameter() && array != null && !array.unknownSize()) {
             PartialStatement stmt;
 
-            // Get the array element type
-            if (!(array.anyType() instanceof Type elemType))
-                return; // Nested arrays are not yet supported
+            AnyType elemType = array.anyType();
 
             /*
              * Inout-parameter array with known size: If the array isn't null,
@@ -130,7 +128,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                     "$memorySegment:T _$name:LArray = _arena.allocate(",
                                     "memorySegment", MemorySegment.class,
                                     "name", getName())
-                            .add(getMemoryLayout(elemType))
+                            .add(elemType instanceof Type t ? getMemoryLayout(t) : getValueLayout(elemType))
                             .add(", ")
                             .add(array.sizeExpression(false))
                             .add(").fill((byte) 0);\n");
