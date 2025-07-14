@@ -37,4 +37,18 @@ public class TestGByteArray {
     void noneIn() {
         bytearrayNoneIn(TEST_BYTE_ARRAY);
     }
+
+    @Test
+    void fullOut() {
+        var v = new Out<byte[]>();
+        bytearrayFullOut(v);
+        assertArrayEquals(TEST_BYTE_ARRAY, v.get());
+    }
+
+    @Test
+    void fullInout() {
+        var v = new Out<>(TEST_BYTE_ARRAY);
+        bytearrayFullInout(v);
+        assertArrayEquals(new byte[] { 104, 101, 108, 0, -1 }, v.get());
+    }
 }
