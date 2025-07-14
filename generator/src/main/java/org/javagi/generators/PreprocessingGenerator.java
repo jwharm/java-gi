@@ -148,10 +148,19 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             /*
              * When the c-type ends with "**", there is an extra level of
              * indirection needed, so we allocate another pointer.
+             * The same goes for GStrv*, because that's actually a char***.
              * In all other cases, we just refer to the already allocated
              * memory.
              */
-            if (array.cType() != null && array.cType().endsWith("**")) {
+            boolean allocatePointer = false;
+            if (array.cType() != null) {
+                if (array.cType().endsWith("**"))
+                    allocatePointer = true;
+                else if (array.cType().equals("GStrv*"))
+                    allocatePointer = true;
+            }
+
+            if (allocatePointer) {
                 stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = " +
                                 "_arena.allocateFrom($valueLayout:T.ADDRESS, _$name:LArray);\n",
                         "memorySegment", MemorySegment.class,
