@@ -1,2 +1,0 @@
-// Java-GI doesn't support nested arrays in out- and inout-parameters.
-*array_of_gstrv*out java-gi-skip
