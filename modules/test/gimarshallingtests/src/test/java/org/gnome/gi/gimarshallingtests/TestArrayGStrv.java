@@ -32,26 +32,33 @@ public class TestArrayGStrv {
             new String[] {"6", "7", "8"}
     };
 
-    private void assertArrayEqualsTestArray(String[][] arrays) {
+    private static final String[][] TEST_STRINGS_ARRAY_OUT = {
+            new String[] {"-1", "0", "1", "2"},
+            new String[] {"-1", "3", "4", "5"},
+            new String[] {"-1", "6", "7", "8"},
+            new String[] {"-1", "9", "10", "11"}
+    };
+
+    private void assertArrayEqualsTestArray(String[][] testArray, String[][] arrays) {
         assertNotNull(arrays);
-        assertEquals(TEST_STRINGS_ARRAY.length, arrays.length);
+        assertEquals(testArray.length, arrays.length);
         for (int i = 0; i < arrays.length; i++)
-            assertArrayEquals(TEST_STRINGS_ARRAY[i], arrays[i]);
+            assertArrayEquals(testArray[i], arrays[i]);
     }
 
     @Test
     void transferFullReturn() {
-        assertArrayEqualsTestArray(lengthArrayOfGstrvTransferFullReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferFullReturn());
     }
 
     @Test
     void transferContainerReturn() {
-        assertArrayEqualsTestArray(lengthArrayOfGstrvTransferContainerReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferContainerReturn());
     }
 
     @Test
     void transferNoneReturn() {
-        assertArrayEqualsTestArray(lengthArrayOfGstrvTransferNoneReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferNoneReturn());
     }
 
     @Test
@@ -67,5 +74,47 @@ public class TestArrayGStrv {
     @Test
     void transferFullIn() {
         lengthArrayOfGstrvTransferFullIn(TEST_STRINGS_ARRAY);
+    }
+
+    @Test
+    void transferNoneOut() {
+        var v = new Out<String[][]>();
+        lengthArrayOfGstrvTransferNoneOut(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
+    }
+
+    @Test
+    void transferContainerOut() {
+        var v = new Out<String[][]>();
+        lengthArrayOfGstrvTransferContainerOut(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
+    }
+
+    @Test
+    void transferFullOut() {
+        var v = new Out<String[][]>();
+        lengthArrayOfGstrvTransferFullOut(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
+    }
+
+    @Test
+    void transferFullInout() {
+        var v = new Out<>(TEST_STRINGS_ARRAY);
+        lengthArrayOfGstrvTransferFullInout(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
+    }
+
+    @Test
+    void transferNoneInout() {
+        var v = new Out<>(TEST_STRINGS_ARRAY);
+        lengthArrayOfGstrvTransferNoneInout(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
+    }
+
+    @Test
+    void transferContainerInout() {
+        var v = new Out<>(TEST_STRINGS_ARRAY);
+        lengthArrayOfGstrvTransferContainerInout(v);
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
     }
 }
