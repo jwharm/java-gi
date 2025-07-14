@@ -154,6 +154,35 @@ public class Interop {
     }
 
     /**
+     * Create a SegmentAllocator that uses {@code malloc()} to allocate memory.
+     * <p>
+     * The returned allocator currently calls {@link GLib#tryMalloc0}, so the
+     * allocated memory is zero-initialized, but they may change in the future.
+     * <p>
+     * It is up to the user of this allocator to release the allocated memory,
+     * for example with {@link GLib#free}.
+     *
+     * @return the newly created SegmentAllocator
+     */
+    public static SegmentAllocator mallocAllocator() {
+        return (byteSize, _) -> {
+            if (byteSize < 0)
+                throw new IllegalArgumentException("Cannot malloc " + byteSize + " bytes");
+
+            // malloc doesn't allocate 0 bytes, but Java code expects to be
+            // able to allocate zero-length memory segments.
+            // I can't think of a better solution right now than to allocate
+            // 1 byte and reinterpret the returned MemorySegment's size to 0.
+            long allocSize = byteSize > 0 ? byteSize : (byteSize + 1);
+
+            MemorySegment segment = GLib.tryMalloc0(allocSize);
+            if (segment == null)
+                throw new InteropException("malloc of " + byteSize + " bytes failed");
+            return segment.reinterpret(byteSize);
+        };
+    }
+
+    /**
      * Register a Cleaner action that will close the arena when the instance is
      * garbage-collected, coupling the lifetime of the arena to the lifetime of
      * the instance.
@@ -576,20 +605,20 @@ public class Interop {
         }
     }
 
-    public static MemorySegment getAddress(Object o, Arena arena) {
+    public static MemorySegment getAddress(Object o, SegmentAllocator alloc) {
         return switch (o) {
             case MemorySegment m -> m;
-            case String s    -> arena.allocateFrom(s);
-            case Boolean b   -> arena.allocateFrom(JAVA_INT, b ? 1 : 0);
-            case Byte b      -> arena.allocateFrom(JAVA_BYTE, b);
-            case Character c -> arena.allocateFrom(JAVA_CHAR, c);
-            case Double d    -> arena.allocateFrom(JAVA_DOUBLE, d);
-            case Float f     -> arena.allocateFrom(JAVA_FLOAT, f);
-            case Integer i   -> arena.allocateFrom(JAVA_INT, i);
+            case String s    -> alloc.allocateFrom(s);
+            case Boolean b   -> alloc.allocateFrom(JAVA_INT, b ? 1 : 0);
+            case Byte b      -> alloc.allocateFrom(JAVA_BYTE, b);
+            case Character c -> alloc.allocateFrom(JAVA_CHAR, c);
+            case Double d    -> alloc.allocateFrom(JAVA_DOUBLE, d);
+            case Float f     -> alloc.allocateFrom(JAVA_FLOAT, f);
+            case Integer i   -> alloc.allocateFrom(JAVA_INT, i);
             case Long l      -> longAsInt()
-                                    ? arena.allocateFrom(JAVA_INT, l.intValue())
-                                    : arena.allocateFrom(JAVA_LONG, l);
-            case Short s     -> arena.allocateFrom(JAVA_SHORT, s);
+                                    ? alloc.allocateFrom(JAVA_INT, l.intValue())
+                                    : alloc.allocateFrom(JAVA_LONG, l);
+            case Short s     -> alloc.allocateFrom(JAVA_SHORT, s);
             case Proxy p     -> p.handle();
             default          -> throw new IllegalArgumentException(
                     "Not a MemorySegment, String, primitive or Proxy");
@@ -1267,20 +1296,20 @@ public class Interop {
      *
      * @param  strings        array of Strings
      * @param  zeroTerminated whether to add a {@code NULL} to the array
-     * @param  arena          the segment allocator for the array
+     * @param  alloc          the segment allocator for the array
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(String[] strings,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (strings == null)
             return NULL;
 
         int length = zeroTerminated ? strings.length + 1 : strings.length;
-        var memorySegment = arena.allocate(ADDRESS, length);
+        var memorySegment = alloc.allocate(ADDRESS, length);
 
         for (int i = 0; i < strings.length; i++) {
-            var s = strings[i] == null ? NULL : arena.allocateFrom(strings[i]);
+            var s = strings[i] == null ? NULL : alloc.allocateFrom(strings[i]);
             memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
@@ -1294,27 +1323,27 @@ public class Interop {
      * Allocate and initialize an (optionally {@code NULL}-terminated) array of
      * arrays of strings (a Strv-array).
      *
-     * @param  strvs            the array of String arrays
-     * @param  zeroTerminated   whether to add a {@code NULL} to the array. The
-     *                          embedded arrays are always
-     *                          {@code NULL}-terminated.
-     * @param  arena            the segment allocator for the array
-     * @param  elementAllocator the segment allocator for the array elements
+     * @param  strvs          the array of String arrays
+     * @param  zeroTerminated whether to add a {@code NULL} to the array. The
+     *                        embedded arrays are always
+     *                        {@code NULL}-terminated.
+     * @param  alloc          the segment allocator for the array
+     * @param  elementAlloc   the segment allocator for the array elements
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(String[][] strvs,
                                                     boolean zeroTerminated,
-                                                    Arena arena,
-                                                    Arena elementAllocator) {
+                                                    SegmentAllocator alloc,
+                                                    SegmentAllocator elementAlloc) {
         if (strvs == null)
             return NULL;
 
         int length = zeroTerminated ? strvs.length + 1 : strvs.length;
-        var memorySegment = arena.allocate(ADDRESS, length);
+        var memorySegment = alloc.allocate(ADDRESS, length);
 
         for (int i = 0; i < strvs.length; i++) {
             var s = strvs[i] == null ? NULL
-                    : allocateNativeArray(strvs[i], true, elementAllocator);
+                    : allocateNativeArray(strvs[i], true, elementAlloc);
             memorySegment.setAtIndex(ADDRESS, i, s);
         }
 
@@ -1326,17 +1355,17 @@ public class Interop {
 
     /**
      * Convert a boolean[] array into an int[] array, and calls
-     * {@link #allocateNativeArray(int[], boolean, Arena)}.
+     * {@link #allocateNativeArray(int[], boolean, SegmentAllocator)}.
      * Each boolean value "true" is converted 1, boolean value "false" to 0.
      *
      * @param  array          array of booleans
      * @param  zeroTerminated when true, an (int) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(boolean[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1345,7 +1374,7 @@ public class Interop {
             intArray[i] = array[i] ? 1 : 0;
         }
 
-        return allocateNativeArray(intArray, zeroTerminated, arena);
+        return allocateNativeArray(intArray, zeroTerminated, alloc);
     }
 
     /**
@@ -1354,12 +1383,12 @@ public class Interop {
      *
      * @param  array          array of bytes
      * @param  zeroTerminated when true, a (byte) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(byte[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1367,7 +1396,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_BYTE, copy);
+        return alloc.allocateFrom(JAVA_BYTE, copy);
     }
 
     /**
@@ -1376,12 +1405,12 @@ public class Interop {
      *
      * @param array          array of chars
      * @param zeroTerminated when true, a (char) 0 is appended to the array
-     * @param arena          the segment allocator for memory allocation
+     * @param alloc          the segment allocator for memory allocation
      * @return whe memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(char[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1389,7 +1418,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_CHAR, copy);
+        return alloc.allocateFrom(JAVA_CHAR, copy);
     }
 
     /**
@@ -1398,12 +1427,12 @@ public class Interop {
      *
      * @param  array          array of doubles
      * @param  zeroTerminated when true, a (double) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(double[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1411,7 +1440,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_DOUBLE, copy);
+        return alloc.allocateFrom(JAVA_DOUBLE, copy);
     }
 
     /**
@@ -1420,12 +1449,12 @@ public class Interop {
      *
      * @param  array          array of floats
      * @param  zeroTerminated when true, a (float) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(float[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1433,7 +1462,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_FLOAT, copy);
+        return alloc.allocateFrom(JAVA_FLOAT, copy);
     }
 
     /**
@@ -1442,19 +1471,19 @@ public class Interop {
      *
      * @param  array          array of floats
      * @param  zeroTerminated when true, a (int) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(int[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
         int[] copy = zeroTerminated ?
                 Arrays.copyOf(array, array.length + 1)
                 : array;
-        return arena.allocateFrom(JAVA_INT, copy);
+        return alloc.allocateFrom(JAVA_INT, copy);
     }
 
     /**
@@ -1531,12 +1560,12 @@ public class Interop {
      *
      * @param  array          array of longs
      * @param  zeroTerminated when true, a (long) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(long[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1544,7 +1573,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_LONG, copy);
+        return alloc.allocateFrom(JAVA_LONG, copy);
     }
 
     /**
@@ -1553,12 +1582,12 @@ public class Interop {
      *
      * @param  array          array of shorts
      * @param  zeroTerminated when true, a (short) 0 is appended to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(short[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1566,7 +1595,7 @@ public class Interop {
                 Arrays.copyOf(array, array.length + 1)
                 : array;
 
-        return arena.allocateFrom(JAVA_SHORT, copy);
+        return alloc.allocateFrom(JAVA_SHORT, copy);
     }
 
     /**
@@ -1575,12 +1604,12 @@ public class Interop {
      *
      * @param  array          array of Proxy instances
      * @param  zeroTerminated whether to add a {@code NULL} to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(Proxy[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
@@ -1589,7 +1618,7 @@ public class Interop {
             addressArray[i] = array[i] == null ? NULL : array[i].handle();
         }
 
-        return allocateNativeArray(addressArray, zeroTerminated, arena);
+        return allocateNativeArray(addressArray, zeroTerminated, alloc);
     }
 
     /**
@@ -1601,26 +1630,24 @@ public class Interop {
      * @param  layout         the memory layout of the struct
      * @param  zeroTerminated whether to terminate the array by a struct with
      *                        all members being {@code NULL}
-     * @param  arena          the allocator for memory allocation
+     * @param  alloc          the allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(Proxy[] array,
                                                     MemoryLayout layout,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
         if (array == null)
             return NULL;
 
         long size = layout.byteSize();
         int length = zeroTerminated ? array.length + 1 : array.length;
-        MemorySegment segment = arena.allocate(layout, length);
+        MemorySegment segment = alloc.allocate(layout, length);
 
         for (int i = 0; i < array.length; i++) {
             if (array[i] != null && (!NULL.equals(array[i].handle()))) {
                 // Copy array element to the native array
-                MemorySegment element = array[i].handle()
-                        .reinterpret(layout.byteSize(), arena, null);
-                segment.asSlice(i * layout.byteSize()).copyFrom(element);
+                segment.asSlice(i * layout.byteSize()).copyFrom(array[i].handle());
             } else {
                 // Fill the array slice with zeros
                 segment.asSlice(i * size, size).fill((byte) 0);
@@ -1640,18 +1667,18 @@ public class Interop {
      *
      * @param  array          array of MemorySegments
      * @param  zeroTerminated whether to add a {@code NULL} to the array
-     * @param  arena          the segment allocator for memory allocation
+     * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
     public static MemorySegment allocateNativeArray(MemorySegment[] array,
                                                     boolean zeroTerminated,
-                                                    Arena arena) {
+                                                    SegmentAllocator alloc) {
 
         if (array == null)
             return NULL;
 
         int length = zeroTerminated ? array.length + 1 : array.length;
-        var memorySegment = arena.allocate(ADDRESS, length);
+        var memorySegment = alloc.allocate(ADDRESS, length);
 
         for (int i = 0; i < array.length; i++) {
             MemorySegment s = array[i] == null ? NULL : array[i];
