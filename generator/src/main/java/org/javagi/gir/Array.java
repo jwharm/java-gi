@@ -77,7 +77,7 @@ public final class Array extends GirElement implements AnyType {
         return !zeroTerminated()
                 && attr("fixed-size") == null
                 && attr("length") == null
-                && !listOfNonNull("GLib.Array", "GLib.PtrArray").contains(name());
+                && !listOfNonNull("GLib.Array", "GLib.PtrArray", "GLib.ByteArray").contains(name());
     }
 
     public String sizeExpression(boolean upcall) {
