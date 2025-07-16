@@ -136,19 +136,25 @@ public class MetadataParser {
             warn(lastPos, "Invalid rule '%s': %s", identifier, e.getMessage());
         }
 
-        switch (token) {
-            case "." -> {
-                // parse sub-identifiers on the same line (recursively)
-                next();
-                parseIdentifier(childNodes, false);
+        if (token == null)
+            return;
+
+        if (!".\n".contains(token)) {
+            parseAttributes(childNodes);
+            if (isSubIdentifier)
+                return;
+        }
+
+        // parse sub-identifiers on the same line (recursively)
+        if (".".equals(token)) {
+            next();
+            parseIdentifier(childNodes, false);
+        }
+        // parse sub-identifiers on new lines (in a loop)
+        else {
+            while ("\n".equals(token) && ".".equals(peek())) {
+                parseIdentifier(childNodes, true);
             }
-            case "\n" -> {
-                // parse sub-identifiers on new lines (in a loop)
-                do {
-                    parseIdentifier(childNodes, true);
-                } while ("\n".equals(token) && ".".equals(peek()));
-            }
-            default -> parseAttributes(childNodes);
         }
     }
 
