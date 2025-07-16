@@ -182,6 +182,14 @@ public class MetadataParser {
         if (contents.charAt(pos) == '"') {
             int begin = ++pos;
             token = readToken("\"\n");
+
+            // empty string
+            if ("\"".equals(token)) {
+                pos++;
+                return "";
+            }
+
+            // end of line
             if (token == null || contents.charAt(pos + token.length()) == '\n') {
                 error(begin, "Unclosed string literal");
                 return null;
