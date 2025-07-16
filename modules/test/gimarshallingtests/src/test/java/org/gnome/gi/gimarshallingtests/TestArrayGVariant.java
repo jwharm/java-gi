@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestArrayGVariant {
     private final Variant[] TEST_VARIANT_ARRAY = new Variant[] {
-            new Variant("i", 27),
-            new Variant("s", "Hello")
+            new Variant("i", 27, null),
+            new Variant("s", "Hello", null)
     };
 
     @Test
