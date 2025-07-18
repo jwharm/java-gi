@@ -20,13 +20,12 @@
 package org.gnome.gi.gimarshallingtests;
 
 import org.javagi.base.Out;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestArrayGStrv {
+public class TestArrayGStrvZeroTerminated {
     private static final String[][] TEST_STRINGS_ARRAY = {
             new String[] {"0", "1", "2"},
             new String[] {"3", "4", "5"},
@@ -49,74 +48,73 @@ public class TestArrayGStrv {
 
     @Test
     void transferFullReturn() {
-        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferFullReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, zeroTerminatedArrayOfGstrvTransferFullReturn());
     }
 
     @Test
     void transferContainerReturn() {
-        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferContainerReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, zeroTerminatedArrayOfGstrvTransferContainerReturn());
     }
 
     @Test
     void transferNoneReturn() {
-        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, lengthArrayOfGstrvTransferNoneReturn());
+        assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, zeroTerminatedArrayOfGstrvTransferNoneReturn());
     }
 
     @Test
     void transferNoneIn() {
-        lengthArrayOfGstrvTransferNoneIn(TEST_STRINGS_ARRAY);
+        zeroTerminatedArrayOfGstrvTransferNoneIn(TEST_STRINGS_ARRAY);
     }
 
     @Test
     void transferContainerIn() {
-        lengthArrayOfGstrvTransferContainerIn(TEST_STRINGS_ARRAY);
+        zeroTerminatedArrayOfGstrvTransferContainerIn(TEST_STRINGS_ARRAY);
     }
 
     @Test
     void transferFullIn() {
-        lengthArrayOfGstrvTransferFullIn(TEST_STRINGS_ARRAY);
+        zeroTerminatedArrayOfGstrvTransferFullIn(TEST_STRINGS_ARRAY);
     }
 
     @Test
     void transferNoneOut() {
         var v = new Out<String[][]>();
-        lengthArrayOfGstrvTransferNoneOut(v);
+        zeroTerminatedArrayOfGstrvTransferNoneOut(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
     }
 
     @Test
     void transferContainerOut() {
         var v = new Out<String[][]>();
-        lengthArrayOfGstrvTransferContainerOut(v);
+        zeroTerminatedArrayOfGstrvTransferContainerOut(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
     }
 
     @Test
     void transferFullOut() {
         var v = new Out<String[][]>();
-        lengthArrayOfGstrvTransferFullOut(v);
+        zeroTerminatedArrayOfGstrvTransferFullOut(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY, v.get());
     }
 
     @Test
     void transferFullInout() {
         var v = new Out<>(TEST_STRINGS_ARRAY);
-        lengthArrayOfGstrvTransferFullInout(v);
+        zeroTerminatedArrayOfGstrvTransferFullInout(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
     }
 
     @Test
     void transferNoneInout() {
         var v = new Out<>(TEST_STRINGS_ARRAY);
-        lengthArrayOfGstrvTransferNoneInout(v);
+        zeroTerminatedArrayOfGstrvTransferNoneInout(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
     }
 
-    // See https://gitlab.gnome.org/GNOME/gobject-introspection-tests/-/merge_requests/20
-    @Test @Disabled
+    @Test
     void transferContainerInout() {
         var v = new Out<>(TEST_STRINGS_ARRAY);
-        lengthArrayOfGstrvTransferContainerInout(v);
+        zeroTerminatedArrayOfGstrvTransferContainerInout(v);
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
     }
 }
