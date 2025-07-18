@@ -241,7 +241,13 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     // For inout parameters, when the value is not null, write it into the
                     // allocated memory segment.
                     if (p.direction() == Direction.INOUT) {
-                        if (valueLayout.format().endsWith(".getMemoryLayout()")) {
+                        if (target != null && (target.checkIsGList() || target.checkIsGHashTable())) {
+                            stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
+                                    .add("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class)
+                                    .add(", 0, ")
+                                    .add(marshalJavaToNative(identifier))
+                                    .add(");\n");
+                        } else if (valueLayout.format().endsWith(".getMemoryLayout()")) {
                             stmt = PartialStatement.of("$interop:T.copy(")
                                     .add(marshalJavaToNative(identifier))
                                     .add(", _$name:LPointer, ")
