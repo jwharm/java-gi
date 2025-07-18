@@ -24,10 +24,7 @@ import org.javagi.base.Proxy;
 import org.javagi.interop.Interop;
 import org.javagi.interop.MemoryCleaner;
 import java.lang.Integer;
-import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -61,7 +58,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
     private final MemorySegment handle;
 
     // The Arena is used to allocate native Strings
-    private final Arena arena = Arena.ofAuto();
+    private final SegmentAllocator arena = Interop.mallocAllocator();
 
     // Used to construct a Java instance for a native object
     private final Function<MemorySegment, K> makeKey;
@@ -71,8 +68,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * Create a HashTable proxy instance for the provided memory address.
      *
      * @param address   the memory address of the native object
-     * @param makeKey   function that creates a K from a pointer
-     * @param makeValue function that creates a V from a pointer
+     * @param makeKey   a function that creates a K from a pointer
+     * @param makeValue a function that creates a V from a pointer
      */
     public HashTable(MemorySegment address,
                      Function<MemorySegment, K> makeKey,
@@ -92,6 +89,34 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
     public HashTable(MemorySegment address) {
         this(address, k -> (K) k, v -> (V) v);
     }
+
+    /**
+     * Construct a new HashTable using {@code g_hash_table_new}.
+     *
+     * @param hashFunc     a function to create a hash value from a key
+     * @param keyEqualFunc a function to check two keys for equality
+     * @param makeKey      a function that creates a K from a pointer
+     * @param makeValue    a function that creates a V from a pointer
+     */
+    public HashTable(HashFunc hashFunc,
+                     EqualFunc keyEqualFunc,
+                     Function<MemorySegment, K> makeKey,
+                     Function<MemorySegment, V> makeValue) {
+        this(constructNew(hashFunc, keyEqualFunc), makeKey, makeValue);
+        MemoryCleaner.takeOwnership(this);
+        MemoryCleaner.setBoxedType(this, HashTable.getType());
+    }
+
+    private static MemorySegment constructNew(HashFunc hashFunc, EqualFunc keyEqualFunc) {
+        try {
+            return (MemorySegment) MethodHandles.g_hash_table_new.invokeExact(
+                    (MemorySegment) (hashFunc == null ? NULL : hashFunc.toCallback(Arena.global())),
+                    (MemorySegment) (keyEqualFunc == null ? NULL : keyEqualFunc.toCallback(Arena.global())));
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
 
     public MemorySegment handle() {
         return handle;
