@@ -119,6 +119,10 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "glong".equals(cType) || "gulong".equals(cType);
     }
 
+    public boolean isInt32() {
+        return "int".equals(toJavaBaseType(name()));
+    }
+
     public boolean isPointer() {
         String cType = cType();
         return cType != null

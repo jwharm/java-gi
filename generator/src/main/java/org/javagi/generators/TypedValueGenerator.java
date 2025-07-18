@@ -483,6 +483,9 @@ class TypedValueGenerator {
         return switch (type.anyTypes().get(child)) {
             case Type t when t.isString() ->
                 PartialStatement.of("$interop:T::getStringFrom", "interop", ClassNames.INTEROP);
+            // GPOINTER_TO_INT()
+            case Type t when t.isInt32() && !t.isPointer() ->
+                PartialStatement.of("pointer -> (int) pointer.address()");
             case Type t when t.isPrimitive() ->
                 PartialStatement.of("$interop:T::get" + primitiveClassName(t.javaType()) + "From",
                         "interop", ClassNames.INTEROP);

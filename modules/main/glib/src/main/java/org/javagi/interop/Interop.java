@@ -614,7 +614,7 @@ public class Interop {
             case Character c -> alloc.allocateFrom(JAVA_CHAR, c);
             case Double d    -> alloc.allocateFrom(JAVA_DOUBLE, d);
             case Float f     -> alloc.allocateFrom(JAVA_FLOAT, f);
-            case Integer i   -> alloc.allocateFrom(JAVA_INT, i);
+            case Integer i   -> MemorySegment.ofAddress((long) i); // GINT_TO_POINTER()
             case Long l      -> longAsInt()
                                     ? alloc.allocateFrom(JAVA_INT, l.intValue())
                                     : alloc.allocateFrom(JAVA_LONG, l);

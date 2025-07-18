@@ -43,7 +43,8 @@ import static org.javagi.interop.Interop.getAddress;
  *
  * @param <E> The element type must be a {@link MemorySegment}, a
  *            {@link String}, a primitive value, or implement the {@link Proxy}
- *            interface.
+ *            interface. It is assumed that integers are stored in the pointer
+ *            with {@code GINT_TO_POINTER()} and {@code GPOINTER_TO_INT()}.
  */
 public class List<E> extends AbstractSequentialList<E> implements Proxy {
 
@@ -54,8 +55,8 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
     // Used to dispose the list and, optionally, its items
     private static final Cleaner CLEANER = Cleaner.create();
 
-    // The Arena is used to allocate native Strings
-    private final Arena arena = Arena.ofAuto();
+    // This allocator is used to allocate memory for native Strings
+    private final SegmentAllocator alloc = Interop.mallocAllocator();
 
     // Used to construct a Java instance for a native object
     private final Function<MemorySegment, E> make;
@@ -109,7 +110,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
     public List(Function<MemorySegment, E> make,
                 Consumer<E> free,
                 TransferOwnership ownership) {
-        this(null, make, free, ownership);
+        this(MemorySegment.NULL, make, free, ownership);
     }
 
     /**
@@ -136,7 +137,7 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
      */
     @Override
     public @NotNull ListIterator<E> listIterator(int index) {
-        return new ListIterator<>() {
+        ListIterator<E> iter = new ListIterator<>() {
 
             // Register the direction of the last iterator step
             enum Direction {
@@ -229,21 +230,27 @@ public class List<E> extends AbstractSequentialList<E> implements Proxy {
                         free.accept(make.apply(data));
                 }
 
-                last.writeData(getAddress(e, arena));
+                last.writeData(getAddress(e, alloc));
             }
 
             @Override
             public void add(E e) {
                 if (direction == Direction.BACKWARD) {
-                    head = ListNode.insertBefore(head, last, getAddress(e, arena));
+                    head = ListNode.insertBefore(head, last, getAddress(e, alloc));
                     last = last.readPrev();
                 } else {
                     ListNode next = last == null ? head : last.readNext();
-                    head = ListNode.insertBefore(head, next, getAddress(e, arena));
+                    head = ListNode.insertBefore(head, next, getAddress(e, alloc));
                     next();
                 }
             }
         };
+
+        // Move the iterator to the requested index
+        for (int i = 0; i < index; i++)
+            iter.next();
+
+        return iter;
     }
 
     /**

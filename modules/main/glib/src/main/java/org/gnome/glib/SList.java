@@ -57,8 +57,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     // Used to dispose the list and, optionally, its items
     private static final Cleaner CLEANER = Cleaner.create();
 
-    // The Arena is used to allocate native Strings
-    private final Arena arena = Arena.ofAuto();
+    // This allocator is used to allocate memory for native Strings
+    private final SegmentAllocator alloc = Interop.mallocAllocator();
 
     // Used to construct a Java instance for a native object
     private final Function<MemorySegment, E> make;
@@ -112,7 +112,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     public SList(Function<MemorySegment, E> make,
                  Consumer<E> free,
                  TransferOwnership ownership) {
-        this(null, make, free, ownership);
+        this(MemorySegment.NULL, make, free, ownership);
     }
 
     /**
@@ -148,7 +148,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     @Override
     public @NotNull ListIterator<E> listIterator(int index) {
 
-        return new ListIterator<>() {
+        ListIterator<E> iter = new ListIterator<>() {
 
             /*
              * last = the SList that was returned last
@@ -241,16 +241,16 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                         free.accept(make.apply(data));
                 }
 
-                last.writeData(getAddress(e, arena));
+                last.writeData(getAddress(e, alloc));
             }
 
             @Override
             public void add(E e) {
                 var next = peek();
                 if (index <= 0)
-                    head = SListNode.insertBefore(head, next, getAddress(e, arena));
+                    head = SListNode.insertBefore(head, next, getAddress(e, alloc));
                 else {
-                    prev = SListNode.insertBefore(last, next, getAddress(e, arena));
+                    prev = SListNode.insertBefore(last, next, getAddress(e, alloc));
                     if (prev == null)
                         throw new IllegalStateException();
                     last = prev.readNext();
@@ -258,6 +258,12 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 index++;
             }
         };
+
+        // Move the iterator to the requested index
+        for (int i = 0; i < index; i++)
+            iter.next();
+
+        return iter;
     }
 
     /**
