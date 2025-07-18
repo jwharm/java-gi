@@ -13,6 +13,9 @@ timeout_add_seconds_once java-gi-skip
  */
 clear_error java-gi-skip
 
+// g_clear_list has an out parameter with full ownership transfer.
+clear_list#function.list_ptr direction=inout transfer-ownership=full
+
 /*
  * GBytes is available in Java as a plain byte array. There are
  * functions in the Interop class to read, write and free GBytes.
@@ -46,4 +49,5 @@ HashTable java-gi-custom
 List      java-gi-custom
 SList     java-gi-custom
 
+// Use g_variant_print as the Variant.toString() method in Java.
 Variant java-gi-to-string="print(true)"
