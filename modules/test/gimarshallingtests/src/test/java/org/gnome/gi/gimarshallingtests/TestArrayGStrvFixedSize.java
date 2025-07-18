@@ -23,10 +23,9 @@ import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
-import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.fixedArrayOfGstrvTransferNoneReturn;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestArrayGStrvFixed {
+public class TestArrayGStrvFixedSize {
     private static final String[][] TEST_STRINGS_ARRAY = {
             new String[] {"0", "1", "2"},
             new String[] {"3", "4", "5"},

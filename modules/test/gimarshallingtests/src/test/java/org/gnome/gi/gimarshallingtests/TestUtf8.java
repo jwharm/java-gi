@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestUtf8String {
+public class TestUtf8 {
 
     private static final String CONSTANT_UTF8 = "const ♥ utf8";
 

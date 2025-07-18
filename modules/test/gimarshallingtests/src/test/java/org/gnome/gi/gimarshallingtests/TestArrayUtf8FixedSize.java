@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestArrayUtf8Fixed {
+public class TestArrayUtf8FixedSize {
     private final String[] IN_VALUES = new String[] { "🅰", "β", "c", "d" };
     private final String[] OUT_VALUES = new String[] { "a", "b", "¢", "🔠" };
 
