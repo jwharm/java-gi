@@ -35,6 +35,11 @@ public enum TransferOwnership {
     CONTAINER,
 
     /**
+     * The recipient owns the values but not the container
+     */
+    VALUES,
+
+    /**
      * The recipient owns the entire value
      */
     FULL

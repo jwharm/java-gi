@@ -354,7 +354,32 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     .endControlFlow();
         }
 
-        // Same, but for structs/unions: Disable the cleaner
+        // Transfer ownership of GList/GSList
+        else if (target != null && target.checkIsGList() && !type.isActuallyAnArray()) {
+            /* When full ownership is transferred to native code, our own code has no ownership anymore.
+             * When no ownership is transferred, it's the reverse (we keep full ownership).
+             * When native code becomes owner of the container, we keep ownership of the values.
+             */
+            String myOwnership = switch(p.transferOwnership()) {
+                case FULL -> "NONE";
+                case NONE -> "FULL";
+                case CONTAINER -> "VALUES";
+            };
+            if (p.isOutParameter()) {
+                builder.beginControlFlow("if ($1L != null && $1L.get() != null)",
+                        getName());
+                builder.addStatement("$L.get().setOwnership($T.$L)",
+                        getName(), ClassNames.TRANSFER_OWNERSHIP, myOwnership);
+            } else {
+                builder.beginControlFlow("if ($1L != null)",
+                        getName());
+                builder.addStatement("$L.setOwnership($T.$L)",
+                        getName(), ClassNames.TRANSFER_OWNERSHIP, myOwnership);
+            }
+            builder.endControlFlow();
+        }
+
+        // Transfer ownership of structs/unions: Disable the cleaner
         else if (target != null
                 && !(target instanceof Alias a && a.isValueWrapper())
                 && !target.checkIsGBytes()
@@ -369,7 +394,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     ClassNames.MEMORY_CLEANER);
         }
 
-        // Same, but for arrays
+        // Transfer ownership of arrays
         else if (array != null
                 && array.anyType() instanceof Type elemType
                 && p.transferOwnership() != TransferOwnership.NONE

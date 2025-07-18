@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.javagi.base.TransferOwnership.*;
 import static org.javagi.interop.Interop.getAddress;
 
 /**
@@ -70,9 +71,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     // operations on an SList can change/remove the head
     private SListNode head;
 
-    // Install a cleaner when ownership is "container" (memory of item is not
-    // managed) or "full"
-    private final TransferOwnership ownership;
+    // The finalizer is run by a Cleaner to free memory
+    private final Finalizer<E> finalizer;
 
     /**
      * Create a new {@code GLib.SList} wrapper.
@@ -92,12 +92,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 : new SListNode(address);
         this.make = make;
         this.free = free;
-        this.ownership = ownership;
-
-        if (ownership != TransferOwnership.NONE) {
-            var finalizer = new Finalizer<>(address, make, free, ownership);
-            CLEANER.register(this, finalizer);
-        }
+        this.finalizer = new Finalizer<>(address, make, free, ownership);
+        CLEANER.register(this, finalizer);
     }
 
     /**
@@ -126,6 +122,15 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                  Function<MemorySegment, E> make,
                  TransferOwnership ownership) {
         this(address, make, null, ownership);
+    }
+
+    /**
+     * Change ownership status of this list
+     *
+     * @param ownership the new ownership status
+     */
+    public void setOwnership(TransferOwnership ownership) {
+        finalizer.ownership = ownership;
     }
 
     /**
@@ -220,7 +225,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                 }
                 index--;
 
-                if (ownership == TransferOwnership.FULL && data != null) {
+                if ((finalizer.ownership == FULL || finalizer.ownership == VALUES)
+                        && data != null) {
                     if (free == null)
                         GLib.free(data);
                     else
@@ -234,7 +240,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                     throw new IllegalStateException();
 
                 var data = last.readData();
-                if (ownership == TransferOwnership.FULL && data != null) {
+                if ((finalizer.ownership == FULL || finalizer.ownership == VALUES)
+                        && data != null) {
                     if (free == null)
                         GLib.free(data);
                     else
@@ -474,18 +481,31 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
         }
     }
 
-    private record Finalizer<E>(MemorySegment address,
-                                Function<MemorySegment, E> make,
-                                Consumer<E> free,
-                                TransferOwnership ownership) implements Runnable {
+    private static final class Finalizer<E> implements Runnable {
+
+        private final MemorySegment address;
+        private final Function<MemorySegment, E> make;
+        private final Consumer<E> free;
+        private TransferOwnership ownership;
+
+        public Finalizer(MemorySegment address,
+                         Function<MemorySegment, E> make,
+                         Consumer<E> free,
+                         TransferOwnership ownership) {
+            this.address = address;
+            this.make = make;
+            this.free = free;
+            this.ownership = ownership;
+        }
+
         public void run() {
-            if (address == null || MemorySegment.NULL.equals(address))
+            if (ownership == NONE || address == null || MemorySegment.NULL.equals(address))
                 return;
 
             // The calls to GLib.free() and SListNode.free() must run on the
             // main thread, not in the Cleaner thread.
             SourceFunc action = () -> {
-                if (ownership == TransferOwnership.FULL) {
+                if (ownership == FULL || ownership == VALUES) {
                     var node = new SListNode(address);
                     do {
                         if (free == null)
@@ -496,7 +516,8 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
                     } while (node != null);
                 }
 
-                SListNode.free(new SListNode(address));
+                if (ownership != VALUES)
+                    SListNode.free(new SListNode(address));
                 return GLib.SOURCE_REMOVE;
             };
 
