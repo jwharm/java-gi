@@ -135,6 +135,12 @@ public final class Record extends Multiplatform
         if (callable != null)
             return callable;
 
+        // GValues are not boxed types
+        if ("GValue".equals(cType()))
+            return methods().stream()
+                    .filter(m -> "g_value_copy".equals(m.callableAttrs().cIdentifier()))
+                    .findAny().orElse(null);
+
         // boxed types: use g_boxed_copy
         if (getTypeFunc() != null)
             try {

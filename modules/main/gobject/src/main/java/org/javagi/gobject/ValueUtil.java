@@ -26,6 +26,8 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import org.javagi.base.Enumeration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static org.javagi.gobject.types.Types.*;
 import static org.gnome.gobject.GObjects.gtypeGetType;
@@ -45,7 +47,7 @@ public class ValueUtil {
      *             marshaled from the GValue, or {@code null} if {@code src} is
      *             null.
      */
-    public static Object valueToObject(Value src) {
+    public static @Nullable Object valueToObject(@Nullable Value src) {
         if (src == null)
             return null;
 
@@ -89,7 +91,7 @@ public class ValueUtil {
      * @param  dest the GValue to write to. Should not be {@code null}
      * @return {@code true} if the value was set, and {@code false} otherwise.
      */
-    public static boolean objectToValue(Object src, Value dest) {
+    public static boolean objectToValue(@Nullable Object src, @Nullable Value dest) {
         if (src == null || dest == null)
             return false;
 
@@ -123,7 +125,20 @@ public class ValueUtil {
      * Long values are 32 bit. To preserve cross-platform compatibility, Java-GI
      * converts all Java Long values to Integers.
      */
-    private static int toInt(Object src) {
+    private static int toInt(@NotNull Object src) {
         return src instanceof Long l ? l.intValue() : (Integer) src;
+    }
+
+    /**
+     * Allocate and initialize a new GValue, and copy {@code src} into it.
+     *
+     * @param src the GValue to copy
+     * @return the newly created GValue
+     */
+    public static @NotNull Value copy(@NotNull Value src) {
+        Value dest = new Value();
+        dest.init(src.readGType());
+        src.copy(dest);
+        return dest;
     }
 }

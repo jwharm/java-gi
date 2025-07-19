@@ -273,6 +273,20 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
             // Copy function is an instance method
             else if (copyFunc instanceof Method m) {
+                // Call ValueUtil.copy()
+                if ("g_value_copy".equals(m.callableAttrs().cIdentifier())) {
+                    if (v instanceof ReturnValue)
+                        builder.addStatement("$1L = $2T.copy($1L)",
+                                paramName, ClassNames.VALUE_UTIL);
+                    else
+                        builder.addStatement("$1L.set($2T.copy($3L))",
+                                getName(), ClassNames.VALUE_UTIL, paramName);
+
+                    // Don't register the copy with the memory cleaner. It has
+                    // been allocated with Arena.ofAuto().
+                    return;
+                }
+
                 if (v instanceof ReturnValue)
                     builder.addStatement("$1L = $1L.$2L()",
                             paramName, MethodGenerator.getName(m));
