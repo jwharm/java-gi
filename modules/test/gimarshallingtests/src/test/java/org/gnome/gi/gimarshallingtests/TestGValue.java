@@ -203,6 +203,34 @@ public class TestGValue {
     }
 
     @Test
+    void arrayRoundTrip() {
+        Value i = new Value();
+        i.init(Types.INT);
+        i.setInt(42);
+
+        Value s = new Value();
+        s.init(Types.STRING);
+        s.setString("42");
+
+        Value b = new Value();
+        b.init(Types.BOOLEAN);
+        b.setBoolean(true);
+
+        Value[] values = gvalueFlatArrayRoundTrip(i, s, b);
+
+        assertNotNull(values);
+        assertEquals(3, values.length);
+
+        assertNotNull(values[0]);
+        assertNotNull(values[1]);
+        assertNotNull(values[2]);
+
+        assertEquals(42, values[0].getInt());
+        assertEquals("42", values[1].getString());
+        assertTrue(values[2].getBoolean());
+    }
+
+    @Test
     void float_() {
         Value f = new Value();
         f.init(Types.FLOAT);
