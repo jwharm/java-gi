@@ -105,6 +105,11 @@ public sealed interface RegisteredType
         return cType() != null && "GBytes".equals(cType());
     }
 
+    /** Return true if this is GValue */
+    default boolean checkIsGValue() {
+        return cType() != null && "GValue".equals(cType());
+    }
+
     default boolean isFloating() {
         // GObject has a ref_sink function, but we don't want to treat all
         // GObjects as floating references.
