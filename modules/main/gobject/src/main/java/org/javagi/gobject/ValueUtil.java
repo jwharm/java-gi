@@ -133,9 +133,12 @@ public class ValueUtil {
      * Allocate and initialize a new GValue, and copy {@code src} into it.
      *
      * @param src the GValue to copy
-     * @return the newly created GValue
+     * @return the newly created GValue, or {@code null} if {@code src} is null
      */
-    public static @NotNull Value copy(@NotNull Value src) {
+    public static @Nullable Value copy(@Nullable Value src) {
+        if (src == null)
+            return null;
+
         Value dest = new Value();
         dest.init(src.readGType());
         src.copy(dest);
