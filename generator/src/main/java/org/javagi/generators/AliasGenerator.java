@@ -25,6 +25,7 @@ import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.javagi.util.PartialStatement;
 
 import javax.lang.model.element.Modifier;
 
@@ -140,10 +141,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec arrayConstructor(AnyType anyType) {
-        String layout = switch (anyType) {
-            case Array _ -> "ADDRESS";
-            case Type type -> getValueLayoutPlain(type, false);
-        };
+        PartialStatement layout = getValueLayoutPlain(anyType, false);
 
         var spec = MethodSpec.methodBuilder("fromNativeArray")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -158,8 +156,8 @@ public class AliasGenerator extends RegisteredTypeGenerator {
             spec.addStatement("long byteSize = $1T.longAsInt() ? $2T.JAVA_INT.byteSize() : $2T.JAVA_LONG.byteSize()",
                     ClassNames.INTEROP, ValueLayout.class);
         } else {
-            spec.addStatement("long byteSize = $T.$L.byteSize()",
-                    ValueLayout.class, layout);
+            var stmt = PartialStatement.of("long byteSize = ").add(layout).add(".byteSize();\n");
+            spec.addNamedCode(stmt.format(), stmt.arguments());
         }
 
         spec.addStatement("$T segment = address.reinterpret(byteSize * length)",
@@ -169,26 +167,33 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         // String[]
         if (anyType instanceof Array a
                 && a.anyType() instanceof Type t
-                && t.typeName().equals(TypeName.get(String.class)))
-            spec.addStatement("array[i] = new $T($T.getStringArrayFrom(segment.get($T.$L, i * byteSize), transfer))",
-                    alias.typeName(),
-                    ClassNames.INTEROP,
-                    ValueLayout.class,
-                    layout);
+                && t.typeName().equals(TypeName.get(String.class))) {
+            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T($interop:T.getStringArrayFrom(segment.get(",
+                            alias.typeTag(), alias.typeName(),
+                            "interop", ClassNames.INTEROP)
+                    .add(layout)
+                    .add(", i * byteSize), transfer));\n");
+            spec.addNamedCode(stmt.format(), stmt.arguments());
+        }
         // String
         else if (anyType instanceof Type t
-                && t.typeName().equals(TypeName.get(String.class)))
-            spec.addStatement("array[i] = new $T($T.getStringFrom(segment.get($T.$L, i * byteSize), transfer))",
-                    alias.typeName(),
-                    ClassNames.INTEROP,
-                    ValueLayout.class,
-                    layout);
+                && t.typeName().equals(TypeName.get(String.class))) {
+            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T($interop:T.getStringFrom(segment.get(",
+                            alias.typeTag(), alias.typeName(),
+                            "interop", ClassNames.INTEROP)
+                    .add(layout)
+                    .add(", i * byteSize), transfer));\n");
+            spec.addNamedCode(stmt.format(), stmt.arguments());
+        }
         // Primitive value
-        else
-            spec.addStatement("array[i] = new $T(segment.get($T.$L, i * byteSize))",
-                    alias.typeName(),
-                    ValueLayout.class,
-                    layout);
+        else {
+            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T(segment.get(",
+                            alias.typeTag(), alias.typeName(),
+                            "interop", ClassNames.INTEROP)
+                    .add(layout)
+                    .add(", i * byteSize));\n");
+            spec.addNamedCode(stmt.format(), stmt.arguments());
+        }
 
         return spec.endControlFlow()
                 .addStatement("if (transfer != $T.NONE) $T.free(address)",

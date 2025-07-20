@@ -22,7 +22,6 @@ package org.javagi.generators;
 import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
-import org.javagi.util.Conversions;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
@@ -850,12 +849,11 @@ class TypedValueGenerator {
     // Generate a statement that represents ValueLayout for this type.
     // Returns ValueLayout.ADDRESS for complex layouts.
     PartialStatement getValueLayout(AnyType anyType) {
-        String stmt = (anyType instanceof Type t && t.isLong())
-                ? "($interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG)"
-                : "$valueLayout:T." + Conversions.getValueLayoutPlain(anyType, false);
-        return PartialStatement.of(stmt,
-                "interop", ClassNames.INTEROP,
-                "valueLayout", ValueLayout.class);
+        return anyType instanceof Type t && t.isLong()
+                ? PartialStatement.of("$interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG",
+                        "valueLayout", ValueLayout.class,
+                        "interop", ClassNames.INTEROP)
+                : getValueLayoutPlain(anyType, false);
     }
 
     // Generate a statement that retrieves a ValueLayout for primitive types,

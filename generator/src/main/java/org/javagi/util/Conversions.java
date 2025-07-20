@@ -22,9 +22,11 @@ package org.javagi.util;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.javagi.configuration.ModuleInfo;
+import org.javagi.generators.MemoryLayoutGenerator;
 import org.javagi.gir.*;
 
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -284,12 +286,12 @@ public class Conversions {
      * Get the memory layout of this type. Pointer types are returned as
      * "ADDRESS".
      */
-    public static String getValueLayout(AnyType anyType, boolean longAsInt) {
+    public static PartialStatement getValueLayout(AnyType anyType, boolean longAsInt) {
+        var addressLayout = PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
         return switch (anyType) {
-            case null -> "ADDRESS";
-            case Array _ -> "ADDRESS";
-            case Type t -> t.isPointer() ? "ADDRESS"
-                                         : getValueLayoutPlain(t, longAsInt);
+            case null -> addressLayout;
+            case Array _ -> addressLayout;
+            case Type t -> t.isPointer() ? addressLayout : getValueLayoutPlain(t, longAsInt);
         };
     }
 
@@ -297,25 +299,48 @@ public class Conversions {
      * Get the memory layout of this type. Pointers to primitive types are
      * treated as the actual type.
      */
-    public static String getValueLayoutPlain(AnyType anyType, boolean longAsInt) {
+    public static PartialStatement getValueLayoutPlain(AnyType anyType, boolean longAsInt) {
+        var valueLayout = PartialStatement.of("$valueLayout:T.", "valueLayout", ValueLayout.class);
+
+        // Array
         if (! (anyType instanceof Type t)) {
-            return "ADDRESS";
+            return valueLayout.add("ADDRESS");
         }
+
         RegisteredType target = t.lookup();
+
+        // Enumeration, flags and boolean are int32
         if (target instanceof EnumType || t.isBoolean()) {
-            return "JAVA_INT";
+            return valueLayout.add("JAVA_INT");
         }
+
+        // Windows long is an int32
         if (t.isLong() && longAsInt) {
-            return "JAVA_INT";
+            return valueLayout.add("JAVA_INT");
         }
+
+        // Other primitive values
         if (t.isPrimitive()) {
-            return "JAVA_" + t.javaType().toUpperCase();
+            return valueLayout.add("JAVA_" + t.javaType().toUpperCase());
         }
+
+        // Recursive lookup for aliases
         if (target instanceof Alias a && a.isValueWrapper()
                 && a.anyType() instanceof Type typedef) {
             return getValueLayoutPlain(typedef, longAsInt);
         }
-        return "ADDRESS";
+
+        // Flat struct/union (not a pointer) with a known memory layout
+        if (!t.isPointer()
+                && target instanceof StandardLayoutType slt
+                && new MemoryLayoutGenerator().canGenerate(slt)) {
+            // use the struct/union layout
+            return PartialStatement.of("$" + target.typeTag() + ":T.getMemoryLayout()",
+                    target.typeTag(), target.typeName());
+        }
+
+        // Anything else is assumed to be a pointer
+        return valueLayout.add("ADDRESS");
     }
 
     /**
