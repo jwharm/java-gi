@@ -223,7 +223,6 @@ public class MemoryLayoutGenerator {
         }
 
         // Plain value layout
-        String layout = getValueLayout(type, longAsInt);
-        return PartialStatement.of("$valueLayout:T." + layout);
+        return getValueLayout(type, longAsInt);
     }
 }

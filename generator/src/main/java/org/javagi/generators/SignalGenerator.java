@@ -163,10 +163,7 @@ public class SignalGenerator {
                     .forEach(p -> p.generate(builder));
 
         // Determine ValueLayout for return value
-        var returnLayout = PartialStatement.of(
-                generator.generateValueLayout(returnValue.anyType()),
-                "interop", ClassNames.INTEROP,
-                "valueLayout", ValueLayout.class);
+        var returnLayout = generator.generateValueLayout(returnValue.anyType());
 
         // Allocate memory for return value
         if (!returnValue.anyType().isVoid()) {

@@ -53,7 +53,8 @@ public class CallableGenerator {
     }
 
     CodeBlock generateFunctionDescriptor() {
-        List<String> layouts = new ArrayList<>();
+        List<PartialStatement> layouts = new ArrayList<>();
+        var addressLayout = PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
 
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
@@ -61,7 +62,7 @@ public class CallableGenerator {
             layouts.add(generateValueLayout(returnType));
 
         if (callable instanceof Signal)
-            layouts.add("$valueLayout:T.ADDRESS");
+            layouts.add(addressLayout);
 
         if (callable.parameters() != null) {
             var iParam = callable.parameters().instanceParameter();
@@ -76,24 +77,25 @@ public class CallableGenerator {
         }
 
         if (callable.throws_())
-            layouts.add("$valueLayout:T.ADDRESS");
+            layouts.add(addressLayout);
 
         if (layouts.isEmpty())
             return CodeBlock.of("$T.ofVoid()", FunctionDescriptor.class);
 
-        return PartialStatement.of("$functionDescriptor:T."
-                        + (isVoid ? "ofVoid" : "of"))
-                .add(layouts.stream().collect(joining(",$W", "(", ")")),
-                        "functionDescriptor", FunctionDescriptor.class,
-                        "valueLayout", ValueLayout.class,
-                        "interop", ClassNames.INTEROP)
-                .toCodeBlock();
+        var stmt = PartialStatement.of("$functionDescriptor:T." + (isVoid ? "ofVoid" : "of"),
+                        "functionDescriptor", FunctionDescriptor.class)
+                .add(layouts.stream().map(PartialStatement::format).collect(joining(",$W", "(", ")")));
+        for (var layout : layouts)
+            stmt.arguments().putAll(layout.arguments());
+        return stmt.toCodeBlock();
     }
 
-    String generateValueLayout(AnyType anyType) {
+    PartialStatement generateValueLayout(AnyType anyType) {
         return anyType instanceof Type type && type.isLong()
-                ? "$interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG"
-                : "$valueLayout:T." + getValueLayout(anyType, false);
+                ? PartialStatement.of("$interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG",
+                        "valueLayout", ValueLayout.class,
+                        "interop", ClassNames.INTEROP)
+                : getValueLayout(anyType, false);
     }
 
     void generateMethodParameters(MethodSpec.Builder builder,
