@@ -115,6 +115,14 @@ public class TestArrayFixedSize {
         SimpleStruct[] array = v.get();
         assertNotNull(array);
         assertEquals(4, array.length);
+        assertEquals(-2, array[0].readLong());
+        assertEquals(-1, array[0].readInt8());
+        assertEquals(1, array[1].readLong());
+        assertEquals(2, array[1].readInt8());
+        assertEquals(3, array[2].readLong());
+        assertEquals(4, array[2].readInt8());
+        assertEquals(5, array[3].readLong());
+        assertEquals(6, array[3].readInt8());
     }
 
     @Test

@@ -131,9 +131,6 @@ public class TestArray {
         var struct1 = new SimpleStruct(1, (byte) 0);
         var struct2 = new SimpleStruct(2, (byte) 0);
         var struct3 = new SimpleStruct(3, (byte) 0);
-        struct1.writeLong(1);
-        struct2.writeLong(2);
-        struct3.writeLong(3);
         var structs = new SimpleStruct[] {struct1, struct2, struct3};
         arraySimpleStructIn(structs);
     }
