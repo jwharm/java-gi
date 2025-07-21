@@ -34,6 +34,7 @@ import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 
 import static org.javagi.util.Conversions.*;
 
@@ -100,12 +101,19 @@ public class FieldGenerator extends TypedValueGenerator {
         }
 
         // Read a pointer or primitive value from the struct
-        var carrierType = getCarrierTypeName(f.anyType(), true);
-        var getResult = "var _result = ($T) getMemoryLayout()$Z.varHandle($T.PathElement.groupElement($S)).get(handle(), 0)";
+        TypeName carrierType = getCarrierTypeName(f.anyType(), true);
+        spec.addStatement("$T _varHandle = getMemoryLayout().varHandle($T.PathElement.groupElement($S))",
+                VarHandle.class, MemoryLayout.class, f.name());
+        var getResult = PartialStatement.of("$carrierType:T _result = ", "carrierType", carrierType);
+        if (isLong)
+            getResult.add("$interop:T.longAsInt() ? (int) _varHandle.get(handle(), 0) : (int) (long) _varHandle.get(handle(), 0);\n",
+                    "interop", ClassNames.INTEROP);
+        else
+            getResult.add("($carrierType:T) _varHandle.get(handle(), 0);\n");
         var returnResult = PartialStatement.of("return ")
                 .add(marshalNativeToJava("_result", false))
                 .add(";\n");
-        return spec.addStatement(getResult, carrierType, MemoryLayout.class, f.name())
+        return spec.addNamedCode(getResult.format(), getResult.arguments())
                 .addNamedCode(returnResult.format(), returnResult.arguments())
                 .build();
     }
@@ -129,29 +137,36 @@ public class FieldGenerator extends TypedValueGenerator {
             spec.addJavadoc("@param _arena to control the memory allocation scope\n")
                 .addParameter(Arena.class, "_arena");
 
-        var stmt = PartialStatement.of(null,
-                        "memoryLayout", MemoryLayout.class,
-                        "memorySegment", MemorySegment.class,
-                        "fieldName", f.name());
+        var stmt = PartialStatement.of(
+                "$varHandle:T _varHandle = getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S));\n",
+                "varHandle", VarHandle.class,
+                "memoryLayout", MemoryLayout.class,
+                "fieldName", f.name());
+        spec.addNamedCode(stmt.format(), stmt.arguments());
 
-        if (type != null && type.isPointer()
-                && (type.isPrimitive() || (target instanceof EnumType))) {
-            // Pointer to a primitive value is an opaque MemorySegment
-            stmt.add(getName());
-        } else {
-            stmt.add(marshalJavaToNative(getName()));
+        if (isLong) {
+            spec.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
+            spec.addStatement("_varHandle.set(handle(), 0, $L)", getName());
+            spec.nextControlFlow("else");
+            spec.addStatement("_varHandle.set(handle(), 0, (long) $L)", getName());
+            spec.endControlFlow();
         }
 
-        if (checkNull())
-            spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), 0, (" + getName() + " == null ? $memorySegment:T.NULL : "
-                            + stmt.format() + "));\n",
-                    stmt.arguments());
-        else
-            spec.addNamedCode("getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S))$Z"
-                            + ".set(handle(), 0, "
-                            + stmt.format() + ");\n",
-                    stmt.arguments());
+        else {
+            stmt = PartialStatement.of(null, "memorySegment", MemorySegment.class);
+            if (type != null && type.isPointer() && (type.isPrimitive() || (target instanceof EnumType))) {
+                // Pointer to a primitive value is an opaque MemorySegment
+                stmt.add(getName());
+            } else {
+                stmt.add(marshalJavaToNative(getName()));
+            }
+
+            if (checkNull())
+                spec.addNamedCode("_varHandle.set(handle(), 0, (" + getName() + " == null ? $memorySegment:T.NULL : "
+                                + stmt.format() + "));\n", stmt.arguments());
+            else
+                spec.addNamedCode("_varHandle.set(handle(), 0, " + stmt.format() + ");\n", stmt.arguments());
+        }
 
         return spec.build();
     }

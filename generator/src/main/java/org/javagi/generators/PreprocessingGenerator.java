@@ -125,7 +125,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "interop", ClassNames.INTEROP);
                 } else {
                     stmt = PartialStatement.of(
-                                    "$memorySegment:T _$name:LArray = _arena.allocate(",
+                                    "$memorySegment:T _$name:LArray = $arena:T.ofAuto().allocate(",
+                                    "arena", Arena.class,
                                     "memorySegment", MemorySegment.class,
                                     "name", getName())
                             .add(elemType instanceof Type t ? getMemoryLayout(t) : getValueLayout(elemType))
