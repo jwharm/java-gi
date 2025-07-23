@@ -129,20 +129,14 @@ MultiFilter.remove name=remove_at
 MultiSorter.remove name=remove_at
 StringList.remove  name=remove_at
 
-// MultiFilter implements ListModel<Filter> and supports mutation
-MultiFilter java-gi-generic-actual="Gtk.Filter" java-gi-list-mutable
-
-// AnyFilter implements ListModel<Filter>
-AnyFilter java-gi-generic-actual="Gtk.Filter"
-
-// EveryFilter implements ListModel<Filter>
-EveryFilter java-gi-generic-actual="Gtk.Filter"
-
-// MultiSorter implements ListModel<Sorter> and supports mutation
-MultiSorter java-gi-generic-actual="Gtk.Sorter" java-gi-list-mutable
-
-// StringList implements ListModel<StringObject> and supports splice
-StringList java-gi-generic-actual="Gtk.StringObject" java-gi-list-spliceable
+// Set generic type on classes that implement GListModel
+AnyFilter     java-gi-generic-actual="Gtk.Filter"
+BookmarkList  java-gi-generic-actual="Gio.FileInfo"
+DirectoryList java-gi-generic-actual="Gio.FileInfo"
+EveryFilter   java-gi-generic-actual="Gtk.Filter"
+MultiFilter   java-gi-generic-actual="Gtk.Filter" java-gi-list-mutable
+MultiSorter   java-gi-generic-actual="Gtk.Sorter" java-gi-list-mutable
+StringList    java-gi-generic-actual="Gtk.StringObject" java-gi-list-spliceable
 
 // Use StringObject.getString() for toString()
 StringObject java-gi-to-string="getString()"

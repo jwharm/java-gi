@@ -1,3 +1,7 @@
 // SplitButton.getDirection() overrides Widget.getDirection()
 // with a different return type. Rename to getArrowDirection()
 SplitButton.get_direction name=get_arrow_direction
+
+// Set generic type of EnumListModel and ViewStackPages
+EnumListModel java-gi-generic-actual="Adw.EnumListItem"
+ViewStackPages java-gi-generic-actual="Adw.ViewStackPage"
