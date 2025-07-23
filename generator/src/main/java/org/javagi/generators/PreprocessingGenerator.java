@@ -243,7 +243,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     // allocated memory segment.
                     if (p.direction() == Direction.INOUT) {
                         if (target != null
-                                && (target.checkIsGList() || target.checkIsGHashTable() || target.checkIsGValue())) {
+                                && (target.checkIsGList() || target.checkIsGHashTable() || target.checkIsGValue() || target.checkIsGClosure())) {
                             stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
                                     .add("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class)
                                     .add(", 0, ")

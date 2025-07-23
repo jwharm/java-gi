@@ -30,7 +30,6 @@ import static java.util.function.Predicate.not;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public final class Record extends Multiplatform
@@ -49,18 +48,17 @@ public final class Record extends Multiplatform
 
     @Override
     public PartialStatement destructorName() {
+        if (isBoxedType())
+            return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + typeTag() + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
+                    typeTag(), typeName(),
+                    "gobjects", ClassNames.G_OBJECTS,
+                    "memorySegment", MemorySegment.class);
+
         Callable freeFunc = freeFunction();
         if (freeFunc == null)
             return PartialStatement.of("(_ -> {})");
 
         String tag = ((RegisteredType) freeFunc.parent()).typeTag();
-
-        if ("g_boxed_free".equals(freeFunc.callableAttrs().cIdentifier()))
-            return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
-                    tag, typeName(),
-                    "gobjects", ClassNames.G_OBJECTS,
-                    "memorySegment", MemorySegment.class);
-
         return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
                 tag, typeName(),
                 "freeFunc", toJavaIdentifier(freeFunc.name()));
@@ -135,24 +133,6 @@ public final class Record extends Multiplatform
         if (callable != null)
             return callable;
 
-        // GValues are not boxed types
-        if ("GValue".equals(cType()))
-            return methods().stream()
-                    .filter(m -> "g_value_copy".equals(m.callableAttrs().cIdentifier()))
-                    .findAny().orElse(null);
-
-        // boxed types: use g_boxed_copy
-        if (getTypeFunc() != null)
-            try {
-                return namespace().parent().lookupNamespace("GObject").functions()
-                        .stream()
-                        .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
-                        .findAny()
-                        .orElse(null);
-            } catch (NoSuchElementException ignored) {
-                // GObject namespace is not imported: g_boxed_copy not available
-            }
-
         // use heuristics: find instance method `copy()` or `ref()`
         for (var m : methods())
             if ("ref".equals(m.name()) || "copy".equals(m.name())
@@ -167,18 +147,6 @@ public final class Record extends Multiplatform
         var callable = StandardLayoutType.super.freeFunction();
         if (callable != null)
             return callable;
-
-        // boxed types: use g_boxed_free
-        if (getTypeFunc() != null)
-            try {
-                return namespace().parent().lookupNamespace("GObject").functions()
-                        .stream()
-                        .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
-                        .findAny()
-                        .orElse(null);
-            } catch (NoSuchElementException ignored) {
-                // GObject namespace is not imported: g_boxed_free not available
-            }
 
         // use heuristics: find function or method `free()` or `unref()`
         for (var n : children())

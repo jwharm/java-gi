@@ -19,6 +19,8 @@
 
 package org.javagi.gir;
 
+import java.util.List;
+
 public sealed interface StandardLayoutType
         extends FieldContainer
         permits Boxed, Record, Union {
@@ -36,6 +38,17 @@ public sealed interface StandardLayoutType
             return callable;
 
         return null;
+    }
+
+    default boolean isBoxedType() {
+        if (getTypeFunc() == null)
+            return false;
+
+        if (cType() == null)
+            return true;
+
+        // GValue and GVariant have a get-type func, but are not boxed types
+        return !List.of("GValue", "GVariant", "GClosure").contains(cType());
     }
 
     default Callable copyFunction() {

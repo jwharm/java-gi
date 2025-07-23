@@ -259,8 +259,7 @@ public class RegisteredTypeGenerator {
         }
 
         // Boxed types
-        if ((rt instanceof Record || rt instanceof Boxed || rt instanceof Union)
-                && rt.getTypeFunc() != null) {
+        if (rt instanceof StandardLayoutType slt && slt.freeFunction() == null && slt.isBoxedType()) {
             if (className == null)
                 builder.addStatement("$T.setBoxedType($L, getType())",
                         ClassNames.MEMORY_CLEANER,
@@ -273,7 +272,7 @@ public class RegisteredTypeGenerator {
         }
 
         // Record or union with free-function
-        else if (rt instanceof StandardLayoutType slt) {
+        if (rt instanceof StandardLayoutType slt) {
             var freeFunc = slt.freeFunction();
             if (freeFunc != null) {
                 builder.addStatement("$T.setFreeFunc($L, $S)",

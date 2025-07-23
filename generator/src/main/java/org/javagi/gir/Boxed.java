@@ -77,35 +77,6 @@ public final class Boxed extends Multiplatform implements StandardLayoutType {
         return true;
     }
 
-    @Override
-    public Callable copyFunction() {
-        // copy-function specified in annotation
-        var callable = StandardLayoutType.super.copyFunction();
-        if (callable != null)
-            return callable;
-
-        // use g_boxed_copy
-        return namespace().parent().lookupNamespace("GObject").functions()
-                .stream()
-                .filter(f -> "g_boxed_copy".equals(f.callableAttrs().cIdentifier()))
-                .findAny()
-                .orElse(null);
-    }
-
-    public Callable freeFunction() {
-        // free-function specified in annotation
-        var callable = StandardLayoutType.super.freeFunction();
-        if (callable != null)
-            return callable;
-
-        // use g_boxed_free
-        return namespace().parent().lookupNamespace("GObject").functions()
-                .stream()
-                .filter(f -> "g_boxed_free".equals(f.callableAttrs().cIdentifier()))
-                .findAny()
-                .orElse(null);
-    }
-
     public List<Function> functions() {
         return filter(children(), Function.class);
     }

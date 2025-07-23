@@ -210,7 +210,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (v instanceof Parameter p && !p.isOutParameter())
             return;
 
-        if (! (target instanceof StandardLayoutType)) // Record, Union or Boxed
+        if (! (target instanceof StandardLayoutType slt)) // Record, Union or Boxed
             return;
 
         if (target instanceof Record r)
@@ -240,7 +240,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         // No ownership transfer: Copy/ref the struct
         else {
             // Lookup the copy/ref function and the memory layout
-            var slt = (StandardLayoutType) target;
             var copyFunc = slt.copyFunction();
             var hasMemoryLayout = new MemoryLayoutGenerator().canGenerate(slt);
 
@@ -258,6 +257,20 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     || (copyFunc != null && copyFunc.name().equals(func.name()))) {
             }
 
+            // GValue: Call ValueUtil.copy()
+            else if (slt.checkIsGValue()) {
+                if (v instanceof ReturnValue)
+                    builder.addStatement("$1L = $2T.copy($1L)",
+                            paramName, ClassNames.VALUE_UTIL);
+                else
+                    builder.addStatement("$1L.set($2T.copy($3L))",
+                            getName(), ClassNames.VALUE_UTIL, paramName);
+
+                // Don't register the copy with the memory cleaner. It has
+                // been allocated with Arena.ofAuto().
+                return;
+            }
+
             // No copy function, but known memory layout size: malloc() a new
             // struct, and copy the contents manually
             else if (hasMemoryLayout && copyFunc == null) {
@@ -273,20 +286,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
             // Copy function is an instance method
             else if (copyFunc instanceof Method m) {
-                // Call ValueUtil.copy()
-                if ("g_value_copy".equals(m.callableAttrs().cIdentifier())) {
-                    if (v instanceof ReturnValue)
-                        builder.addStatement("$1L = $2T.copy($1L)",
-                                paramName, ClassNames.VALUE_UTIL);
-                    else
-                        builder.addStatement("$1L.set($2T.copy($3L))",
-                                getName(), ClassNames.VALUE_UTIL, paramName);
-
-                    // Don't register the copy with the memory cleaner. It has
-                    // been allocated with Arena.ofAuto().
-                    return;
-                }
-
                 if (v instanceof ReturnValue)
                     builder.addStatement("$1L = $1L.$2L()",
                             paramName, MethodGenerator.getName(m));
@@ -296,31 +295,20 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             }
 
             // Copy function is a function (static method)
-            else if (copyFunc instanceof Function f
-                    && f.parent() instanceof RegisteredType rt) {
-                // Call g_boxed_copy
-                if ("g_boxed_copy".equals(f.callableAttrs().cIdentifier())) {
-                    builder.addStatement(
-                            "$1L.address = $2T.$3L($4T.getType(), $1L.handle())",
-                            paramName,
-                            rt.typeName(),
-                            MethodGenerator.getName(f),
-                            v.anyType().typeName());
-                }
-                // Call the copy/ref function
-                else {
-                    if (v instanceof ReturnValue)
-                        builder.addStatement("$1L = $2T.$3L($1L)",
-                                paramName,
-                                rt.typeName(),
-                                MethodGenerator.getName(f));
-                    else
-                        builder.addStatement("$1L.set($2T.$3L($4L))",
-                                getName(),
-                                rt.typeName(),
-                                MethodGenerator.getName(f),
-                                paramName);
-                }
+            else if (copyFunc instanceof Function f && f.parent() instanceof RegisteredType rt) {
+                if (v instanceof ReturnValue)
+                    builder.addStatement("$1L = $2T.$3L($1L)",
+                            paramName, rt.typeName(), MethodGenerator.getName(f));
+                else
+                    builder.addStatement("$1L.set($2T.$3L($4L))",
+                            getName(), rt.typeName(), MethodGenerator.getName(f), paramName);
+            }
+
+            // No copy function, but Boxed type: Call g_boxed_copy()
+            else if (slt.isBoxedType()) {
+                builder.addStatement(
+                        "$1L.address = $2T.boxedCopy($4T.getType(), $1L.handle())",
+                        paramName, ClassNames.G_OBJECTS, v.anyType().typeName());
             }
 
             // Register the returned instance with the memory cleaner
