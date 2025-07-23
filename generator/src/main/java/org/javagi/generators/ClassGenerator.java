@@ -56,7 +56,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         if (cls.abstract_()) builder.addModifiers(Modifier.ABSTRACT);
         if (cls.final_()) builder.addModifiers(Modifier.FINAL);
         if (cls.generic()) builder.addTypeVariable(ClassNames.GENERIC_T);
-        TypeName actualGeneric = cls.actualGeneric();
+        TypeName actualGeneric = genericActualTypeName();
 
         Class parentClass = cls.parentClass();
         if (parentClass != null)
@@ -165,6 +165,13 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             builder.addType(downcallHandlesClass());
 
         return builder.build();
+    }
+
+    private TypeName genericActualTypeName() {
+        var actualGeneric = cls.genericActual();
+        return actualGeneric == null
+                ? ClassNames.GENERIC_T
+                : actualGeneric.typeName();
     }
 
     private MethodSpec parentAccessor() {

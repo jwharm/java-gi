@@ -32,3 +32,7 @@ FontFamily
     .get_name glib:get-property=name
     .is_monospace glib:get-property=name
     .is_variable glib:get-property=name
+
+// Set ListModel generic type on FontFamily and FontMap
+FontFamily java-gi-generic-actual="FontFace"
+FontMap    java-gi-generic-actual="FontFamily"

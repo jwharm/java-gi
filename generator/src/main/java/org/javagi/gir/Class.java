@@ -19,13 +19,10 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
-import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toJavaIdentifier;
-import static org.javagi.util.Conversions.toJavaQualifiedType;
 
 import java.util.List;
 import java.util.Map;
@@ -77,7 +74,8 @@ public final class Class extends Multiplatform
     }
 
     public boolean generic() {
-        if (!ClassNames.GENERIC_T.equals(actualGeneric())) return false;
+        if (genericActual() != null)
+            return false;
 
         if (attrBool("java-gi-generic", false))
             return true;
@@ -89,11 +87,11 @@ public final class Class extends Multiplatform
         return false;
     }
 
-    public TypeName actualGeneric() {
+    public RegisteredType genericActual() {
         String actualGenericName = attr("java-gi-generic-actual");
         if (actualGenericName == null)
-            return ClassNames.GENERIC_T;
-        return toJavaQualifiedType(actualGenericName, namespace());
+            return null;
+        return TypeReference.lookup(namespace(), actualGenericName);
     }
 
     public boolean mutableList() {
