@@ -177,7 +177,7 @@ public class ConstructorGenerator {
                     .add(stmt).add(";\n").format(),stmt.arguments());
         }
 
-        // GVariant constructors return floating references
+        // GVariant and GClosure constructors return floating references
         else if (parent instanceof Record rec
                 && List.of("GVariant", "GClosure").contains(rec.cType())) {
             builder.addNamedCode(PartialStatement.of("var _instance = ")
