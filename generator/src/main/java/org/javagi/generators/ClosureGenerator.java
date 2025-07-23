@@ -108,6 +108,7 @@ public class ClosureGenerator {
         MethodSpec.Builder upcall = MethodSpec.methodBuilder(name)
                 .returns(returnsVoid
                         ? TypeName.VOID
+                        : returnValue.anyType() instanceof Type t && t.isLong() ? TypeName.LONG
                         : getCarrierTypeName(returnValue.anyType(), false));
 
         // Javadoc
