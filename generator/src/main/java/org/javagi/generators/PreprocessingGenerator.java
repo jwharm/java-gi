@@ -390,43 +390,78 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         // Transfer ownership of structs/unions: Disable the cleaner
         else if (target != null
                 && !(target instanceof Alias a && a.isValueWrapper())
+                && !(target instanceof EnumType)
                 && !target.checkIsGBytes()
                 && p.transferOwnership() != TransferOwnership.NONE
-                && !p.isOutParameter()
-                && !(target instanceof Record r && r.foreign())
-                && (type.cType() == null || !type.cType().endsWith("**"))) {
+                && (p.direction() != Direction.OUT)
+                && !(target instanceof Record r && r.foreign())) {
+
+            if (checkNull())
+                builder.beginControlFlow("if ($1L != null)", getName());
+
+            var identifier = getName();
+            if (p.isOutParameter())
+                identifier += ".get()";
+
             builder.addStatement(
                     checkNull() ? "if ($1L != null) $2T.yieldOwnership($1L)"
                                 : "$2T.yieldOwnership($1L)",
-                    getName(),
+                    identifier,
                     ClassNames.MEMORY_CLEANER);
-        }
 
-        // Transfer ownership of arrays
-        else if (array != null
-                && array.anyType() instanceof Type elemType
-                && p.transferOwnership() != TransferOwnership.NONE
-                && !p.isOutParameter()
-                && elemType.lookup() != null) {
-            var elemTarget = elemType.lookup();
-            if (checkNull())
-                builder.beginControlFlow("if ($L != null)", getName());
-            builder.beginControlFlow("for (var _element : $L)", getName());
-            if (elemTarget.checkIsGObject()) {
-                builder.beginControlFlow("if (_element instanceof $T _gobject)",
-                                ClassNames.G_OBJECT)
-                        .addStatement("$T.debug($S, _gobject.handle().address())",
-                                ClassNames.GLIB_LOGGER,
-                                "Ref " + elemType.typeName() + " %ld")
-                        .addStatement("_gobject.ref()")
-                        .endControlFlow();
-            } else if (! (target instanceof Alias a && a.isValueWrapper())) {
-                builder.addStatement("if (_element != null) $T.yieldOwnership(_element)",
-                                ClassNames.MEMORY_CLEANER);
-            }
-            builder.endControlFlow();
             if (checkNull())
                 builder.endControlFlow();
+        }
+
+        // Yield ownership of array elements
+        else if (array != null
+                && array.anyType() instanceof Type elemType
+                && p.transferOwnership() == TransferOwnership.FULL
+                && p.direction() != Direction.OUT) {
+            var elemTarget = elemType.lookup();
+
+            // Check that the array elements can be owned
+            if (elemTarget != null
+                    && !(elemTarget instanceof Alias a && a.isValueWrapper())
+                    && !(elemTarget instanceof EnumType)
+                    && !elemTarget.checkIsGBytes()
+                    && !(elemTarget instanceof Record r && r.foreign())) {
+
+                // Check null
+                if (checkNull())
+                    builder.beginControlFlow("if ($L != null)", getName());
+
+                // Get name (or name.get() for inout parameter)
+                var identifier = getName();
+                if (p.isOutParameter())
+                    identifier += ".get()";
+
+                // Loop through the array elements
+                builder.beginControlFlow("for (var _element : $L)", identifier);
+
+                // Yield ownership of each array element
+                if (elemTarget.checkIsGObject()) {
+                    builder.beginControlFlow("if (_element instanceof $T _gobject)",
+                                    ClassNames.G_OBJECT)
+                            .addStatement("$T.debug($S, _gobject.handle().address())",
+                                    ClassNames.GLIB_LOGGER,
+                                    "Ref " + elemType.typeName() + " %ld")
+                            .addStatement("_gobject.ref()")
+                            .endControlFlow();
+                } else {
+                    builder.addStatement(
+                            checkNull() ? "if (_element != null) $1T.yieldOwnership(_element)"
+                                        : "$1T.yieldOwnership(_element)",
+                            ClassNames.MEMORY_CLEANER);
+                }
+
+                // End of loop
+                builder.endControlFlow();
+
+                // End of null-check
+                if (checkNull())
+                    builder.endControlFlow();
+            }
         }
     }
 
