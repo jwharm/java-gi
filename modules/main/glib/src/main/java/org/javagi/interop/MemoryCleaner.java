@@ -121,6 +121,11 @@ public class MemoryCleaner {
      */
     public static void takeOwnership(@NotNull Proxy proxy) {
         requireNonNull(proxy);
+
+        // Don't try to take ownership of a null pointer
+        if (MemorySegment.NULL.equals(proxy.handle()))
+            return;
+
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(true,
