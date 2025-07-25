@@ -19,11 +19,9 @@
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
-import org.gradle.api.tasks.Optional;
 
 import java.io.*;
 import java.nio.file.*;
@@ -45,9 +43,6 @@ public abstract class GenerateSources extends DefaultTask {
     @Input
     public abstract Property<String> getNamespace();
 
-    @InputFile @Optional
-    public abstract RegularFileProperty getMetadata();
-
     @InputFiles
     public abstract DirectoryProperty getMainJavaSourcesDirectory();
 
@@ -59,8 +54,7 @@ public abstract class GenerateSources extends DefaultTask {
         try {
             var buildService = getGirParserService().get();
             var namespace = getNamespace().get();
-            var metadata = getMetadata().getOrNull();
-            var library = buildService.getLibrary(namespace, metadata == null ? null : metadata.getAsFile());
+            var library = buildService.getLibrary(namespace);
             var packages = getPackages();
             var outputDirectory = getOutputDirectory().get().getAsFile();
             generate(namespace, library, packages, outputDirectory);

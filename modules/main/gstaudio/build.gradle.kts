@@ -8,5 +8,4 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GstAudio"
-    metadata = file("GstAudio-1.0.metadata")
 }
