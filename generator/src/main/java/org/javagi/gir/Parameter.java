@@ -66,8 +66,7 @@ public final class Parameter extends GirElement implements TypedValue {
             return (attr("closure") != null);
 
         // Method parameters that pass a user_data pointer to a closure
-        if (anyType() instanceof Type t
-                && List.of("gpointer", "gconstpointer").contains(t.cType())) {
+        if (anyType() instanceof Type t) {
             return parent().parameters().stream().anyMatch(p ->
                     p.anyType() instanceof Type type
                             && type.lookup() instanceof Callback
