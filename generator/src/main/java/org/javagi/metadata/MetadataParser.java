@@ -25,9 +25,8 @@ import org.javagi.gir.Repository;
 import org.javagi.gir.TypeReference;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.Class;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,14 +57,19 @@ public class MetadataParser {
      * Parse a metadata file and update the attributes on the matching nodes in
      * the Gir repository.
      *
-     * @param repository   the Gir repository to apply the metadata to
-     * @param metadataFile the metadata file to parse
+     * @param repository the Gir repository to apply the metadata to
      */
-    public void parse(Repository repository, Path metadataFile) {
-        filename = metadataFile.getFileName().toString();
+    public void parse(Repository repository) {
+        filename = "%s-%s.metadata".formatted(
+                repository.namespace().name(),
+                repository.namespace().version()
+        );
 
-        try {
-            contents = Files.readString(metadataFile);
+        try (InputStream is = MetadataParser.class.getResourceAsStream("/metadata/" + filename)) {
+            if (is == null) // No metadata found for this repository
+                return;
+
+            contents = new String(is.readAllBytes());
         } catch (IOException e) {
             error(-1, e.getMessage());
             return;

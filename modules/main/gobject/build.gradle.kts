@@ -8,5 +8,4 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GObject"
-    metadata = file("GObject-2.0.metadata")
 }

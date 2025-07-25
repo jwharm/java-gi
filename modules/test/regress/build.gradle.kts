@@ -10,5 +10,4 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Regress"
-    metadata = file("Regress-1.0.metadata")
 }

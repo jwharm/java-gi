@@ -33,21 +33,6 @@ public final class Library implements Serializable {
     private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
 
     /**
-     * Add a new GIR file to the Library, computing the model using the
-     * provided parse method. All GIR files are only parsed once: if a
-     * requested model was already parsed, the existing one is returned.
-     *
-     * @param  name name of the GIR repository
-     * @param  parser method that will parse a GIR file and return a Repository
-     * @return the Repository
-     */
-    public Repository computeIfAbsent(
-            String name,
-            java.util.function.Function<? super String, ? extends Repository> parser) {
-        return repositories.computeIfAbsent(name, parser);
-    }
-
-    /**
      * Add a GIR repository to the library
      *
      * @param name       the name of the gir file

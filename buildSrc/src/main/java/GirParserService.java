@@ -53,20 +53,21 @@ public abstract class GirParserService implements BuildService<GirParserService.
      * contain more Repositories than were requested.
      *
      * @param  name the name of the requested Repository
-     * @param  metadata a metadata file (optional)
      * @return a Library object with the Repository and its dependencies, and
      *         possibly other Repositories
      */
-    public Library getLibrary(String name, File metadata) {
-        Repository repository = library.computeIfAbsent(name, this::parse);
+    public Library getLibrary(String name) {
+        Repository repository = library.get(name);
+        if (repository != null)
+            return library;
 
+        // Parse the repository. This also adds it to the library and applies
+        // metadata (if any).
+        repository = parse(name);
+
+        // Make sure all dependencies are in the library
         for (var include : repository.includes())
-            getLibrary(include.name(), null);
-
-        if (metadata != null && metadata.exists()) {
-            var metadataParser = new MetadataParser();
-            metadataParser.parse(repository, metadata.toPath());
-        }
+            getLibrary(include.name());
 
         return library;
     }
@@ -109,14 +110,18 @@ public abstract class GirParserService implements BuildService<GirParserService.
             try {
                 int platform = Platform.getRuntimePlatform();
                 File girFile = findFile(baseFolder, moduleName + "-");
-                repository = GirParser.getInstance().parse(girFile, platform, repository);
+                repository = GirParser.getInstance().parse(girFile, platform, null);
             } catch (FileNotFoundException ignored) {
                 throw new FileNotFoundException("No GIR files found for %s in %s"
                         .formatted(moduleName, baseFolder.getName()));
             }
         }
 
-        repository.setLibrary(library);
+        // Add the repository to the library
+        library.put(moduleName, repository);
+
+        // Apply metadata (if it exists)
+        new MetadataParser().parse(repository);
 
         return repository;
     }
