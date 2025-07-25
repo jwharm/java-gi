@@ -72,4 +72,12 @@ public class TestCallback {
         assertEquals(48, a.get());
         assertEquals(49, b.get());
     }
+
+    @Test
+    void ownedBoxed() {
+        assertEquals(52, callbackOwnedBoxed(box -> {
+            assertEquals(1, box.readLong());
+            box.writeLong(52);
+        }));
+    }
 }
