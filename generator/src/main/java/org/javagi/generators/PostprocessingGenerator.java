@@ -50,6 +50,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         freeGBytes(builder);
         takeOwnership(builder);
         scope(builder);
+        reinterpretMalloc(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -328,6 +329,21 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 builder.addStatement("$1T.readyToClose(_$2LScope)",
                         ClassNames.ARENAS, getName());
         }
+    }
+
+    private void reinterpretMalloc(MethodSpec.Builder builder) {
+        var cIdentifier = func.callableAttrs().cIdentifier();
+        if (cIdentifier == null)
+            return;
+
+        if (! (v instanceof  ReturnValue))
+            return;
+
+        if (List.of("g_malloc", "g_malloc0").contains(cIdentifier))
+            builder.addStatement("_returnValue = _returnValue.reinterpret(nBytes)");
+
+        if (List.of("g_malloc_n", "g_malloc0_n").contains(cIdentifier))
+            builder.addStatement("_returnValue = _returnValue.reinterpret(nBlocks * nBlockBytes)");
     }
 
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
