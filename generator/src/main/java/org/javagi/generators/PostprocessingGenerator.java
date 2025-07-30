@@ -50,7 +50,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         freeGBytes(builder);
         takeOwnership(builder);
         scope(builder);
-        reinterpretMalloc(builder);
+        reinterpretReturnedSegment(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -230,12 +230,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         // With ownership transfer: Don't copy/ref the struct
         if (v.transferOwnership() != TransferOwnership.NONE) {
-            builder.beginControlFlow("if ($1L != null)", paramName)
-                    .addStatement("$1T.takeOwnership($2L)",
-                            ClassNames.MEMORY_CLEANER, paramName);
-            new RegisteredTypeGenerator(target)
-                    .setFreeFunc(builder, paramName, target.typeName());
-            builder.endControlFlow();
+            builder.beginControlFlow("if ($1L != null)", paramName);
         }
 
         // No ownership transfer: Copy/ref the struct
@@ -253,6 +248,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 return;
             }
 
+            builder.beginControlFlow("if ($1L != null)", paramName);
+
             // Don't copy the result of ref(), ref_sink() or copy()
             if (List.of("ref", "ref_sink", "copy").contains(func.name())
                     || (copyFunc != null && copyFunc.name().equals(func.name()))) {
@@ -269,20 +266,16 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
                 // Don't register the copy with the memory cleaner. It has
                 // been allocated with Arena.ofAuto().
+                builder.endControlFlow();
                 return;
             }
 
-            // No copy function, but known memory layout size: malloc() a new
-            // struct, and copy the contents manually
-            else if (hasMemoryLayout && copyFunc == null) {
-                var copyVar = v instanceof ReturnValue ? "_copy" : ("_" + getName() + "Copy");
-                builder.addStatement("long $Lsize = $T.getMemoryLayout().byteSize()",
-                                copyVar, v.anyType().typeName())
-                        .addStatement("$T $L = $T.malloc($Lsize)",
-                            MemorySegment.class, copyVar, ClassNames.G_LIB, copyVar)
-                        .addStatement("$T.copy($L.handle(), $L, $Lsize)",
-                            ClassNames.INTEROP, paramName, copyVar, copyVar)
-                        .addStatement("$L.address = $L", paramName, copyVar);
+            // No copy function, but it has a get-type function: Copy the
+            // segment using BoxedUtil.copy(). It will fallback to
+            // Interop.copy() when the type is not boxed.
+            else if (copyFunc == null && slt.getTypeFunc() != null) {
+                builder.addStatement("$1L.address = $2T.copy($3T.getType(), $1L,$W$3T.getMemoryLayout().byteSize())",
+                                paramName, ClassNames.BOXED_UTIL, v.anyType().typeName());
             }
 
             // Copy function is an instance method
@@ -304,20 +297,16 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     builder.addStatement("$1L.set($2T.$3L($4L))",
                             getName(), rt.typeName(), MethodGenerator.getName(f), paramName);
             }
-
-            // No copy function, but Boxed type: Call g_boxed_copy()
-            else if (slt.isBoxedType()) {
-                builder.addStatement(
-                        "$1L.address = $2T.boxedCopy($4T.getType(), $1L.handle())",
-                        paramName, ClassNames.G_OBJECTS, v.anyType().typeName());
-            }
-
-            // Register the returned instance with the memory cleaner
-            builder.addStatement("$T.takeOwnership($L)",
-                    ClassNames.MEMORY_CLEANER, paramName);
-            new RegisteredTypeGenerator(target)
-                    .setFreeFunc(builder, paramName, target.typeName());
         }
+
+        // Register the returned instance with the memory cleaner
+        builder.addStatement("$T.takeOwnership($L)",
+                ClassNames.MEMORY_CLEANER, paramName);
+        new RegisteredTypeGenerator(target)
+                .setFreeFunc(builder, paramName, target.typeName());
+
+        // End null-check
+        builder.endControlFlow();
     }
 
     // Mark arena for parameters with async or notified scope, ready to close
@@ -331,7 +320,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         }
     }
 
-    private void reinterpretMalloc(MethodSpec.Builder builder) {
+    private void reinterpretReturnedSegment(MethodSpec.Builder builder) {
         var cIdentifier = func.callableAttrs().cIdentifier();
         if (cIdentifier == null)
             return;
@@ -342,8 +331,11 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (List.of("g_malloc", "g_malloc0").contains(cIdentifier))
             builder.addStatement("_returnValue = _returnValue.reinterpret(nBytes)");
 
-        if (List.of("g_malloc_n", "g_malloc0_n").contains(cIdentifier))
+        else if (List.of("g_malloc_n", "g_malloc0_n").contains(cIdentifier))
             builder.addStatement("_returnValue = _returnValue.reinterpret(nBlocks * nBlockBytes)");
+
+        else if ("g_boxed_copy".equals(cIdentifier))
+            builder.addStatement("if (srcBoxed != null) _returnValue = _returnValue.reinterpret(srcBoxed.byteSize())");
     }
 
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {

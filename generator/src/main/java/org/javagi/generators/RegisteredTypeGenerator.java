@@ -258,21 +258,25 @@ public class RegisteredTypeGenerator {
             return;
         }
 
-        // Boxed types
-        if (rt instanceof StandardLayoutType slt && slt.freeFunction() == null && slt.isBoxedType()) {
-            if (className == null)
-                builder.addStatement("$T.setBoxedType($L, getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier);
-            else
-                builder.addStatement("$T.setBoxedType($L, $T.getType())",
-                        ClassNames.MEMORY_CLEANER,
-                        identifier,
-                        className);
-        }
-
-        // Record or union with free-function
+        // Record/union with free function
         if (rt instanceof StandardLayoutType slt) {
+            // (Possibly) boxed types, no free-func
+            if (slt.getTypeFunc() != null && slt.freeFunction() == null) {
+                if (className == null)
+                    builder.addStatement("$T _type = getType()",
+                            ClassNames.G_TYPE);
+                else
+                    builder.addStatement("$T _type = $T.getType()",
+                            ClassNames.G_TYPE, className);
+
+                builder.beginControlFlow("if ($T.isBoxed(_type))",
+                                ClassNames.BOXED_UTIL)
+                        .addStatement("$T.setBoxedType($L, _type)",
+                                ClassNames.MEMORY_CLEANER, identifier)
+                        .endControlFlow();
+            }
+
+            // Record or union with free-function
             var freeFunc = slt.freeFunction();
             if (freeFunc != null) {
                 builder.addStatement("$T.setFreeFunc($L, $S)",

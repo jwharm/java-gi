@@ -58,6 +58,7 @@ public final class ClassNames {
     public static final ClassName STRING_OBJECT = get("org.gnome.gtk", "StringObject");
 
     public static final ClassName BINDING_BUILDER = get(PKG_GOBJECT, "BindingBuilder");
+    public static final ClassName BOXED_UTIL = get(PKG_GOBJECT, "BoxedUtil");
     public static final ClassName BUILDER = get(PKG_GOBJECT, "Builder");
     public static final ClassName BUILDER_INTERFACE = get(PKG_GOBJECT, "BuilderInterface");
     public static final ClassName INSTANCE_CACHE = get(PKG_GOBJECT, "InstanceCache");

@@ -19,27 +19,21 @@
 
 package org.javagi.gimarshallingtests;
 
-import org.gnome.gi.gimarshallingtests.SimpleStruct;
+import org.gnome.gi.gimarshallingtests.PointerStruct;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestSimpleStruct {
+public class TestStructPointer {
     @Test
     void returnv() {
-        SimpleStruct struct = SimpleStruct.returnv();
+        PointerStruct struct = PointerStruct.returnv();
         assertNotNull(struct);
-        assertEquals(6, struct.readLong());
-        assertEquals(7, struct.readInt8());
+        assertEquals(42, struct.readLong());
     }
 
     @Test
     void inv() {
-        new SimpleStruct(6, (byte) 7).inv();
-    }
-
-    @Test
-    void method() {
-        new SimpleStruct(6, (byte) 7).method();
+        new PointerStruct(42).inv();
     }
 }

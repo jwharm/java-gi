@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2025 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -17,32 +17,29 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.javagi.gir;
+package org.javagi.gimarshallingtests;
 
-public sealed interface StandardLayoutType
-        extends FieldContainer
-        permits Boxed, Record, Union {
+import org.gnome.gi.gimarshallingtests.SimpleStruct;
+import org.junit.jupiter.api.Test;
 
-    default String cSymbolPrefix() {
-        return attr("c:symbol-prefix");
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TestStructSimple {
+    @Test
+    void returnv() {
+        SimpleStruct struct = SimpleStruct.returnv();
+        assertNotNull(struct);
+        assertEquals(6, struct.readLong());
+        assertEquals(7, struct.readInt8());
     }
 
-    private Callable lookup(String cIdentifier) {
-        if (cIdentifier == null)
-            return null;
-
-        Node node = namespace().parent().lookupCIdentifier(cIdentifier);
-        if (node instanceof Callable callable)
-            return callable;
-
-        return null;
+    @Test
+    void inv() {
+        new SimpleStruct(6, (byte) 7).inv();
     }
 
-    default Callable copyFunction() {
-        return lookup(attr("copy-function"));
-    }
-
-    default Callable freeFunction() {
-        return lookup(attr("free-function"));
+    @Test
+    void method() {
+        new SimpleStruct(6, (byte) 7).method();
     }
 }

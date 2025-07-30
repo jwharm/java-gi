@@ -33,6 +33,7 @@ import java.util.Objects;
 
 import static org.javagi.util.Conversions.*;
 import static org.javagi.util.Conversions.toJavaBaseType;
+import static org.javagi.util.Conversions.toJavaIdentifier;
 
 public class PreprocessingGenerator extends TypedValueGenerator {
 
@@ -229,7 +230,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         nullCheck += " && " + identifier + " != null";
                     }
 
-                    var valueLayout = getMemoryLayout(type);
+                    PartialStatement valueLayout = getMemoryLayout(type);
 
                     var stmt = PartialStatement.of(
                                     "$memorySegment:T _$name:LPointer = _arena.allocate($Z",
@@ -242,6 +243,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     // For inout parameters, when the value is not null, write it into the
                     // allocated memory segment.
                     if (p.direction() == Direction.INOUT) {
+                        Callable copyFunc = target instanceof StandardLayoutType slt ? slt.copyFunction() : null;
+
                         if (target != null
                                 && (target.checkIsGList() || target.checkIsGHashTable() || target.checkIsGValue() || target.checkIsGClosure())) {
                             stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
@@ -249,15 +252,32 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                     .add(", 0, ")
                                     .add(marshalJavaToNative(identifier))
                                     .add(");\n");
-                        } else if (valueLayout.format().endsWith(".getMemoryLayout()")) {
-                            stmt = PartialStatement.of("$interop:T.copy(")
-                                    .add(marshalJavaToNative(identifier))
-                                    .add(", _$name:LPointer, ")
-                                    .add(valueLayout)
-                                    .add(".byteSize());\n",
-                                            "interop", ClassNames.INTEROP,
-                                            "name", getName()
-                                    );
+                        } else if (copyFunc == null && valueLayout.format().endsWith(".getMemoryLayout()")) {
+                            builder.addStatement("long _$LSize = $T.getMemoryLayout().byteSize()",
+                                    getName(), v.anyType().typeName());
+                            stmt = PartialStatement.of("_$name:LPointer.set(")
+                                    .add("$valueLayout:T.ADDRESS",
+                                            "valueLayout", ValueLayout.class)
+                                    .add(", 0, ")
+                                    .add("$boxedUtil:T.copy(",
+                                            "boxedUtil", ClassNames.BOXED_UTIL)
+                                    .add("$" + target.typeTag() + ":T.getType(), ",
+                                            target.typeTag(), target.typeName())
+                                    .add("$name:L.get(), ",
+                                            "name", getName())
+                                    .add("$" + v.anyType().toTypeTag() + ":T.getMemoryLayout().byteSize()",
+                                            v.anyType().toTypeTag(), v.anyType().typeName())
+                                    .add(")")
+                                    .add(");\n");
+                        } else if (copyFunc != null) {
+                            stmt = PartialStatement.of("_$name:LPointer.set(")
+                                    .add("$valueLayout:T.ADDRESS",
+                                            "valueLayout", ValueLayout.class)
+                                    .add(", 0, ")
+                                    .add("$name:L.get().$copyFunc:L().handle()",
+                                            "name", getName(),
+                                            "copyFunc", toJavaIdentifier(copyFunc.name()))
+                                    .add(");\n");
                         } else {
                             stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
                                     .add(valueLayout)
