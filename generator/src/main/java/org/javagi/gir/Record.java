@@ -27,7 +27,6 @@ import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
 
-import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,20 +47,25 @@ public final class Record extends Multiplatform
 
     @Override
     public PartialStatement destructorName() {
-        if (isBoxedType())
-            return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + typeTag() + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
-                    typeTag(), typeName(),
-                    "gobjects", ClassNames.G_OBJECTS,
-                    "memorySegment", MemorySegment.class);
-
         Callable freeFunc = freeFunction();
-        if (freeFunc == null)
-            return PartialStatement.of("(_ -> {})");
 
-        String tag = ((RegisteredType) freeFunc.parent()).typeTag();
-        return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
-                tag, typeName(),
-                "freeFunc", toJavaIdentifier(freeFunc.name()));
+        // Use free-function
+        if (freeFunc != null) {
+            String tag = ((RegisteredType) freeFunc.parent()).typeTag();
+            return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
+                    tag, typeName(),
+                    "freeFunc", toJavaIdentifier(freeFunc.name()));
+        }
+
+        // No free-function, but (possibly) boxed type
+        if (getTypeFunc() != null) {
+            return PartialStatement.of("_b -> $boxedUtil:T.free($" + typeTag() + ":T.getType(), _b, (_ -> {}))",
+                    "boxedUtil", ClassNames.BOXED_UTIL,
+                    typeTag(), typeName());
+        }
+
+        // No free-function
+        return PartialStatement.of("(_ -> {})");
     }
 
     @Override

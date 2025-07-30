@@ -51,3 +51,5 @@ SList     java-gi-custom
 
 // Use g_variant_print as the Variant.toString() method in Java.
 Variant java-gi-to-string="print(true)"
+
+String free-function="g_string_free"
