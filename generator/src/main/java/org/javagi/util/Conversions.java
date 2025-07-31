@@ -155,7 +155,7 @@ public class Conversions {
         if (ns == null)
             return name;
 
-        return Stream.of("String", "Object", "Error", "Builder")
+        return Stream.of("Object", "Error", "Builder")
                 .anyMatch(kw -> kw.equalsIgnoreCase(name))
                         ? ns.cIdentifierPrefix() + name
                         : name;

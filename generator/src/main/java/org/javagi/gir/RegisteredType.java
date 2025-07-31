@@ -105,6 +105,11 @@ public sealed interface RegisteredType
         return cType() != null && "GBytes".equals(cType());
     }
 
+    /** Return true if this is GString */
+    default boolean checkIsGString() {
+        return cType() != null && "GString".equals(cType());
+    }
+
     /** Return true if this is GValue */
     default boolean checkIsGValue() {
         return cType() != null && "GValue".equals(cType());

@@ -51,6 +51,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         scope(builder);
         transferOwnership(builder);
         createGBytes(builder);
+        createGString(builder);
     }
 
     public void generateUpcall(MethodSpec.Builder builder) {
@@ -492,6 +493,18 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         getName(), ValueLayout.class, ClassNames.INTEROP);
             } else {
                 builder.addStatement("$1T _$3LGBytes = $2T.toGBytes($3L)",
+                        MemorySegment.class, ClassNames.INTEROP, getName());
+            }
+        }
+    }
+
+    private void createGString(MethodSpec.Builder builder) {
+        if (target != null && target.checkIsGString()) {
+            if (p.isOutParameter()) {
+                builder.addStatement("_$1LPointer.set($2T.ADDRESS, 0L, $3T.toGString($1L == null ? null : $1L.get()))",
+                        getName(), ValueLayout.class, ClassNames.INTEROP);
+            } else {
+                builder.addStatement("$1T _$3LGString = $2T.toGString($3L)",
                         MemorySegment.class, ClassNames.INTEROP, getName());
             }
         }

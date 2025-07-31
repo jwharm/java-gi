@@ -2,7 +2,7 @@ package org.javagi.glib;
 
 import org.javagi.base.Proxy;
 import org.javagi.interop.Interop;
-import org.gnome.glib.GString;
+import org.gnome.glib.Date;
 import org.gnome.glib.OptionFlags;
 import org.gnome.glib.Variant;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,6 @@ import java.util.Arrays;
 
 import static org.javagi.base.TransferOwnership.NONE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test conversion of strings and arrays to native memory and back
@@ -175,15 +174,18 @@ public class MarshalTest {
     @Test
     void testStructArray() {
         try (Arena arena = Arena.ofConfined()) {
-            GString[] input = {
-                    new GString("abc"),
-                    new GString((String) null),
-                    new GString("12345 67890")
+            Date[] input = {
+                    new Date(),
+                    new Date(),
+                    new Date()
             };
-            MemorySegment allocation = Interop.allocateNativeArray(input, GString.getMemoryLayout(), false, arena);
-            GString[] output = Interop.getStructArrayFrom(allocation, 3, GString.class, GString::new, GString.getMemoryLayout());
+            input[0].setParse("01/01/2000");
+            input[1].setParse("01/01/2001");
+            input[2].setParse("01/01/2002");
+            MemorySegment allocation = Interop.allocateNativeArray(input, Date.getMemoryLayout(), false, arena);
+            Date[] output = Interop.getStructArrayFrom(allocation, 3, Date.class, Date::new, Date.getMemoryLayout());
             for (int i = 0; i < input.length; i++)
-                assertTrue(input[i].equal(output[i]));
+                assertEquals(input[i].getYear(), output[i].getYear());
         }
     }
 
