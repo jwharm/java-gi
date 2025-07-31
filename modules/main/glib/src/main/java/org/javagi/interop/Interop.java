@@ -1818,6 +1818,56 @@ public class Interop {
     }
 
     /**
+     * Marshal a GString to a Java String.
+     *
+     * @param  address  address of a GString
+     * @param  transfer if not NONE, the GString is freed
+     * @return the Java String
+     */
+    public static String fromGString(MemorySegment address, TransferOwnership transfer) {
+        // This works, because str is the first member of the GString struct,
+        // and is guaranteed to be nul-terminated.
+        String string = Interop.getStringFrom(address);
+
+        if (transfer != NONE) {
+            // Free the GString (including the character data).
+            freeGString(address);
+        }
+
+        return string;
+    }
+
+    /**
+     * Marshal a Java String to a GString.
+     *
+     * @param  string a Java String
+     * @return the address of the GString
+     */
+    public static MemorySegment toGString(String string) {
+        MemorySegment allocatedString = Interop.allocateUnownedString(string);
+        MemorySegment result;
+        try {
+            result = (MemorySegment) DowncallHandles.g_string_new_take.invokeExact(allocatedString);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+        return result;
+    }
+
+    /**
+     * Free a GString (including the character data).
+     *
+     * @param address address of a GString
+     */
+    public static void freeGString(MemorySegment address) {
+        try {
+            MemorySegment ignored = (MemorySegment) DowncallHandles.g_string_free.invokeExact(address, 1);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
+    /**
      * Null-safe retrieve the value of a Boolean Out
      *
      * @param  val a possibly null {@code Out<Boolean>}
@@ -1973,6 +2023,17 @@ public class Interop {
                 "g_ptr_array_new_take",
                 FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+                false);
+
+        private static final MethodHandle g_string_new_take = Interop.downcallHandle(
+                "g_string_new_take",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                false);
+
+        private static final MethodHandle g_string_free = Interop.downcallHandle(
+                "g_string_free",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT),
                 false);
     }
 }

@@ -19,8 +19,9 @@
 
 package org.javagi.glib;
 
+import org.gnome.glib.ChecksumType;
+import org.gnome.glib.GLib;
 import org.javagi.base.GErrorException;
-import org.gnome.glib.GString;
 import org.gnome.glib.KeyFile;
 import org.junit.jupiter.api.Test;
 
@@ -31,11 +32,9 @@ public class BytesTest {
 
     @Test
     public void testFromGBytes() {
-        var input = "test";
-        var gstring = new GString(input);
-        var bytes = gstring.freeToBytes();
-        var output = new String(bytes);
-        assertEquals(input, output);
+        var expected = "e2fc714c4727ee9395f324cd2e7f331f";
+        var computed = GLib.computeChecksumForBytes(ChecksumType.MD5, "abcd".getBytes());
+        assertEquals(expected, computed);
     }
 
     @Test

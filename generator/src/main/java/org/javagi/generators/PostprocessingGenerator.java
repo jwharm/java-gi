@@ -25,7 +25,6 @@ import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.List;
 
@@ -48,6 +47,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         readPointer(builder);
         refGObject(builder);
         freeGBytes(builder);
+        freeGString(builder);
         takeOwnership(builder);
         scope(builder);
         reinterpretReturnedSegment(builder);
@@ -57,6 +57,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         writePrimitiveAliasPointer(builder);
         writeOutParameter(builder);
         freeGBytesUpcall(builder);
+        freeGStringUpcall(builder);
     }
 
     private void readPointer(MethodSpec.Builder builder) {
@@ -182,6 +183,27 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         }
     }
 
+    // Generate a call to Interop.freeGString()
+    private void freeGString(MethodSpec.Builder builder) {
+        if (target != null && target.checkIsGString()) {
+            if (v instanceof Parameter p
+                    && !p.isOutParameter()
+                    && p.transferOwnership() == TransferOwnership.NONE) {
+                builder.addStatement("$1T.freeGString(_$2LGString)",
+                        ClassNames.INTEROP, getName());
+            } else if (v instanceof Parameter p
+                    && p.isOutParameter()
+                    && p.transferOwnership() != TransferOwnership.NONE) {
+                builder.addStatement("$1T.freeGString(_$2LPointer.get(ValueLayout.ADDRESS, 0))",
+                        ClassNames.INTEROP, getName());
+            } else if (v instanceof ReturnValue rv
+                    && rv.transferOwnership() != TransferOwnership.NONE) {
+                builder.addStatement("$1T.freeGString($2L)",
+                        ClassNames.INTEROP, "_result");
+            }
+        }
+    }
+
     // Ref GObject when ownership is not transferred
     private void refGObject(MethodSpec.Builder builder) {
         if (v instanceof ReturnValue rv
@@ -204,7 +226,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     // Add cleaner to a struct/boxed/union pointer that we "own".
     // * Only for return values and out-parameters
     // * Exclude foreign types
-    // * GBytes has its own postprocessing
+    // * GBytes and GString have their own postprocessing
     // * GList/GSList have their own cleaner
     // * GTypeInstance/Class/Interface are special cases
     private void takeOwnership(MethodSpec.Builder builder) {
@@ -215,7 +237,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             return;
 
         if (target instanceof Record r)
-            if (r.foreign() || r.checkIsGBytes() || r.checkIsGList())
+            if (r.foreign()
+                    || r.checkIsGBytes()
+                    || r.checkIsGString()
+                    || r.checkIsGList())
                 return;
 
         if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
@@ -368,6 +393,15 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && target.checkIsGBytes()
                 && p.transferOwnership() != TransferOwnership.NONE) {
             builder.addStatement("$1T.freeGBytes($2L)", ClassNames.INTEROP, getName());
+        }
+    }
+
+    private void freeGStringUpcall(MethodSpec.Builder builder) {
+        if (v instanceof Parameter p
+                && target != null
+                && target.checkIsGString()
+                && p.transferOwnership() != TransferOwnership.NONE) {
+            builder.addStatement("$1T.freeGString($2L)", ClassNames.INTEROP, getName());
         }
     }
 }

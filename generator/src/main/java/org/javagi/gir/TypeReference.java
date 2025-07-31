@@ -65,6 +65,10 @@ public interface TypeReference {
             if (rec.checkIsGBytes())
                 return ArrayTypeName.of(byte.class);
 
+            // GString is treated as a String
+            if (rec.checkIsGString())
+                return TypeName.get(String.class);
+
             // A TypeClass or TypeInterface is an inner class
             var outer = rec.isGTypeStructFor();
             if (outer != null)

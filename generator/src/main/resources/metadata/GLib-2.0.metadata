@@ -22,6 +22,9 @@ clear_list#function.list_ptr direction=inout transfer-ownership=full
  */
 Bytes java-gi-skip
 
+// Likewise, GString is available in Java as a java.lang.String.
+String java-gi-skip
+
 /*
  * GVariant has a method "get_type" that clashes with the "getType()"
  * method that is generated in Java. Therefore, it is renamed to

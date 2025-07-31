@@ -19,10 +19,7 @@
 
 package org.javagi.metadata;
 
-import org.javagi.gir.Node;
-import org.javagi.gir.Parameters;
-import org.javagi.gir.Repository;
-import org.javagi.gir.TypeReference;
+import org.javagi.gir.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -301,7 +298,9 @@ public class MetadataParser {
                 var matchesEverything = "*".equals(pattern);
 
                 // node name matches pattern?
-                var name = child.attr("name");
+                var name = child instanceof Boxed
+                        ? child.attr("glib:name")
+                        : child.attr("name");
                 var matchesPattern = name != null && patternSpec.matcher(name).matches();
 
                 if (matchesEverything || matchesPattern) {

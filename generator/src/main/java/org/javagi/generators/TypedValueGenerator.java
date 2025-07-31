@@ -218,6 +218,14 @@ class TypedValueGenerator {
                     yield PartialStatement.of("_" + getName() + "GBytes");
                 }
             }
+            case Record rec when rec.checkIsGString() -> {
+                if (v instanceof ReturnValue) {
+                    yield PartialStatement.of("$interop:T.toGString(" + identifier + ")",
+                            "interop", ClassNames.INTEROP);
+                } else {
+                    yield PartialStatement.of("_" + getName() + "GString");
+                }
+            }
             default -> PartialStatement.of(identifier + ".handle()");
         };
     }
@@ -361,6 +369,21 @@ class TypedValueGenerator {
         boolean isTypeClass = target instanceof Record
                                     && "TypeClass".equals(target.name());
 
+        // Get parent node (parameter, return value, ...)
+        Node parent = type.parent();
+        while (parent instanceof AnyType)
+            parent = parent.parent();
+
+        // Find out how ownership is transferred
+        var transferOwnership = switch(parent) {
+            case Parameter p         -> p.transferOwnership();
+            case InstanceParameter i -> i.transferOwnership();
+            case ReturnValue r       -> r.transferOwnership();
+            case Property p          -> p.transferOwnership();
+            case Field _, Constant _ -> NONE;
+            default                  -> throw new IllegalStateException();
+        };
+
         if (type.isString())
             return PartialStatement.of(
                     "$interop:T.getStringFrom(" + identifier + ", " + transfer() + ")",
@@ -388,21 +411,6 @@ class TypedValueGenerator {
             // Generate lambdas or method references to create and destruct elements
             PartialStatement elementConstructor = getElementConstructor(type, 0);
             PartialStatement elementDestructor = getElementDestructor(type, 0);
-
-            // Get parent node (parameter, return value, ...)
-            Node parent = type.parent();
-            while (parent instanceof AnyType)
-                parent = parent.parent();
-
-            // Find out how ownership is transferred
-            var transferOwnership = switch(parent) {
-                case Parameter p         -> p.transferOwnership();
-                case InstanceParameter i -> i.transferOwnership();
-                case ReturnValue r       -> r.transferOwnership();
-                case Property p          -> p.transferOwnership();
-                case Field _             -> NONE;
-                default                  -> throw new IllegalStateException();
-            };
 
             var stmt = PartialStatement.of("new $" + targetTypeTag + ":T(" + identifier + ", ",
                             targetTypeTag, type.typeName())
@@ -433,6 +441,13 @@ class TypedValueGenerator {
         if (target != null && target.checkIsGBytes())
             return PartialStatement.of("$interop:T.fromGBytes(" + identifier + ")",
                     "interop", ClassNames.INTEROP);
+
+        if (target != null && target.checkIsGString())
+            return PartialStatement.of("$interop:T.fromGString(" + identifier
+                            + ", $transferOwnership:T.$transfer:L)",
+                    "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
+                    "transfer", transferOwnership);
 
         if ((target instanceof Record && !isTypeInstance && !isTypeClass)
                 || target instanceof Union
@@ -708,6 +723,9 @@ class TypedValueGenerator {
             if (rt.checkIsGBytes())
                 return PartialStatement.of("$types:T.BYTES", "types", ClassNames.TYPES);
 
+            if (rt.checkIsGString())
+                return PartialStatement.of("$types:T.GSTRING", "types", ClassNames.TYPES);
+
             if (rt.checkIsGHashTable())
                 return PartialStatement.of("$types:T.HASH_TABLE", "types", ClassNames.TYPES);
 
@@ -741,9 +759,13 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP);
         }
 
-        // GBytes has its own marshalling function in the Interop class
+        // GBytes and GString have their own marshalling functions in the Interop class
         if (target != null && target.checkIsGBytes())
             return PartialStatement.of("_value.setBoxed($interop:T.toGBytes(" + payloadIdentifier + "))",
+                    "interop", ClassNames.INTEROP);
+
+        if (target != null && target.checkIsGString())
+            return PartialStatement.of("_value.setBoxed($interop:T.toGString(" + payloadIdentifier + "))",
                     "interop", ClassNames.INTEROP);
 
         // Check for fundamental classes with their own GValue setters
