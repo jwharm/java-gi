@@ -18,7 +18,7 @@ TYPE_FLAG_RESERVED_ID_BIT.*#type name=gsize c:type=gsize
  * gtype that was added there, so it will inherit in Java and the
  * instances of both classes can be used interchangeably in many cases.
  */
-Type.*#type name=GLib.Type c:type=gtype
+Type.*#type name="GLib.Type" c:type=gtype
 
 // Implement GType.toString() with g_type_name()
 Type java-gi-to-string="org.gnome.gobject.GObjects.typeName(this)"

@@ -17,10 +17,10 @@ AudioSink.stop java-gi-skip
  * "new" prefix is removed in Java-GI. The same happens in DsdInfo.
  * Change the name of these methods to "withCaps".
  */
-(Audio|Dsd)Info.from_caps name=with_caps
+{Audio,Dsd}Info.from_caps name=with_caps
 
 /*
  * Constructor AudioChannelMixer.new has two out-parameters, but they
  * aren't annotated as such.
  */
-AudioChannelMixer.new.(in|out)_position direction=inout
+AudioChannelMixer.new.{in,out}_position direction=inout

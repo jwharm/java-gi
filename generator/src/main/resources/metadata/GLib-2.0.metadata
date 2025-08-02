@@ -54,11 +54,3 @@ SList     java-gi-custom
 
 // Use g_variant_print as the Variant.toString() method in Java.
 Variant java-gi-to-string="print(true)"
-
-/*
- * g_string_free cannot be used by the MemoryCleaner because it has an
- * extra boolean argument. But this causes Java-GI to treat it as a
- * boxed type, causing compile errors in the GLib module.
- * This is a temporary workaround.
- */
-String free-function="g_string_free"
