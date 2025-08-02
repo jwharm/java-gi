@@ -10,7 +10,7 @@ Aggregator.peek_next_sample#virtual-method.aggregator_pad name=pad
  * protected in Java, but they override a public method with the same
  * name in Element. Therefore, they must also be public.
  */
-Base(Src|Sink).query java-gi-override-visibility=PUBLIC
+Base{Src,Sink}.query java-gi-override-visibility=PUBLIC
 
 /*
  * ByteReader::dupStringUtf16 has a parameter with an array of int16

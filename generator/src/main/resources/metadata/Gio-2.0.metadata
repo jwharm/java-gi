@@ -61,7 +61,7 @@ AsyncInitable.new_finish java-gi-skip
  * virtual methods from the classes. They are still callable using the
  * (default) method definitions in the "Seekable" interface.
  */
-File(Input|Output|IO)Stream
+File{Input,Output,IO}Stream
     .tell java-gi-skip
     .seek java-gi-skip
     .can_truncate java-gi-skip

@@ -20,7 +20,8 @@
 import org.javagi.gir.GirParser;
 import org.javagi.gir.Library;
 import org.javagi.gir.Repository;
-import org.javagi.metadata.MetadataParser;
+import org.javagi.metadata.Matcher;
+import org.javagi.metadata.Parser;
 import org.javagi.util.Platform;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
@@ -121,7 +122,8 @@ public abstract class GirParserService implements BuildService<GirParserService.
         library.put(moduleName, repository);
 
         // Apply metadata (if it exists)
-        new MetadataParser().parse(repository);
+        String version = repository.namespace().version();
+        new Matcher().match(new Parser(moduleName, version).parse(), repository);
 
         return repository;
     }

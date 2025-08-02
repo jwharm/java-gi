@@ -18,7 +18,7 @@ CustomLayout          java-gi-skip
  * StyleContext::removeProviderForDisplay are moved to the Gtk
  * global class.
  */
-StyleContext.(add|remove)_provider_for_display java-gi-parent=Gtk name="style_context_{{value}}"
+StyleContext.{add,remove}_provider_for_display java-gi-parent=Gtk name="style_context_{{value}}"
 
 /*
  * ApplicationWindow.getId() overrides Buildable.getId() with a
@@ -73,8 +73,8 @@ Widget
  * Virtual method Widget.computeExpand(gboolean*, gboolean*) has two
  * out-parameters, but they aren't annotated as such.
  */
-Widget.compute_expand#virtual-method.(h|v)expand_p direction=inout
-WidgetClass.compute_expand.compute_expand.(h|v)expand_p direction=inout
+Widget.compute_expand#virtual-method.{h,v}expand_p direction=inout
+WidgetClass.compute_expand.compute_expand.{h,v}expand_p direction=inout
 
 /*
  * The invoker attribute isn't set automatically in the gir file,
@@ -89,7 +89,7 @@ MediaStream.play#virtual-method invoker=play
  * override a public method with the same name in Widget. Therefore,
  * they must also be public.
  */
-(Window|Popover).activate_default java-gi-override-visibility=PUBLIC
+{Window,Popover}.activate_default java-gi-override-visibility=PUBLIC
 
 /*
  * Same for Dialog.close() overriding Window.close()
