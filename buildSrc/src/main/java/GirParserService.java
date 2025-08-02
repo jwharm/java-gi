@@ -31,6 +31,8 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A Gradle build service that provides Library objects containing a GIR
@@ -45,6 +47,10 @@ public abstract class GirParserService implements BuildService<GirParserService.
     }
 
     private final Library library = new Library();
+
+    // A list of loaded repositories, used as a locking mechanism to prevent
+    // multiple repositories from being loaded concurrently in parallel builds.
+    private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
 
     /**
      * Create and return a Library that contains the requested Repository with
@@ -64,7 +70,8 @@ public abstract class GirParserService implements BuildService<GirParserService.
 
         // Parse the repository. This also adds it to the library and applies
         // metadata (if any).
-        repository = parse(name);
+        repositories.computeIfAbsent(name, this::parse);
+        repository = repositories.get(name);
 
         // Make sure all dependencies are in the library
         for (var include : repository.includes())
