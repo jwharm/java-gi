@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "PangoCairo"
+    version = "1.0"
 }

@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Gtk"
+    version = "4.0"
 }

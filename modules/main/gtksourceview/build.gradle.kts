@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GtkSource"
+    version = "5"
 }

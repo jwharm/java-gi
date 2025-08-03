@@ -43,6 +43,9 @@ public abstract class GenerateSources extends DefaultTask {
     @Input
     public abstract Property<String> getNamespace();
 
+    @Input
+    public abstract Property<String> getVersion();
+
     @InputFiles
     public abstract DirectoryProperty getMainJavaSourcesDirectory();
 
@@ -53,11 +56,12 @@ public abstract class GenerateSources extends DefaultTask {
     void execute() {
         try {
             var buildService = getGirParserService().get();
-            var namespace = getNamespace().get();
-            var library = buildService.getLibrary(namespace);
+            var name = getNamespace().get();
+            var version = getVersion().get();
+            var library = buildService.getLibrary(name, version);
             var packages = getPackages();
             var outputDirectory = getOutputDirectory().get().getAsFile();
-            generate(namespace, library, packages, outputDirectory);
+            generate(name, version, library, packages, outputDirectory);
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }

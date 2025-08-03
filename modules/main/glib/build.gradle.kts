@@ -4,4 +4,5 @@ plugins {
 
 tasks.withType<GenerateSources> {
     namespace = "GLib"
+    version = "2.0"
 }

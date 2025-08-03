@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "Utility"
+    version = "1.0"
 }

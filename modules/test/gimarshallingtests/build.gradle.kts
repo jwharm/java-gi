@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GIMarshallingTests"
+    version = "1.0"
 }

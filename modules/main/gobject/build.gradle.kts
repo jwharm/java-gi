@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GObject"
+    version = "2.0"
 }

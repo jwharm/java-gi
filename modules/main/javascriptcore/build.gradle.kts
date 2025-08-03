@@ -8,4 +8,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "JavaScriptCore"
+    version = "6.0"
 }

@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GdkPixbuf"
+    version = "2.0"
 }

@@ -10,4 +10,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "WebKit"
+    version = "6.0"
 }
