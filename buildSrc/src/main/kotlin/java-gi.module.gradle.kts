@@ -36,7 +36,9 @@ java {
 
 // Register a build service that will parse and cache GIR files
 gradle.sharedServices.registerIfAbsent("gir", GirParserService::class) {
-    parameters.inputDirectories.from(project(":ext").projectDir.resolve("gir-files"))
+    parameters.inputDirectories.from(
+        project(":ext").projectDir.resolve("gir-files"),
+        project(":ext").layout.buildDirectory.dir("meson"))
 }
 
 // Register the task that will generate Java sources from GIR files
