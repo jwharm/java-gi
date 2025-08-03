@@ -10,4 +10,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "WebKitWebProcessExtension"
+    version = "6.0"
 }

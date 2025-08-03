@@ -63,19 +63,19 @@ public abstract class GirParserService implements BuildService<GirParserService.
      * @return a Library object with the Repository and its dependencies, and
      *         possibly other Repositories
      */
-    public Library getLibrary(String name) {
+    public Library getLibrary(String name, String version) {
         Repository repository = library.get(name);
         if (repository != null)
             return library;
 
         // Parse the repository. This also adds it to the library and applies
         // metadata (if any).
-        repositories.computeIfAbsent(name, this::parse);
+        repositories.computeIfAbsent(name, n -> parse(n, version));
         repository = repositories.get(name);
 
         // Make sure all dependencies are in the library
         for (var include : repository.includes())
-            getLibrary(include.name());
+            getLibrary(include.name(), include.version());
 
         return library;
     }
@@ -84,68 +84,51 @@ public abstract class GirParserService implements BuildService<GirParserService.
      * Call parse(directory, moduleName) for all input directories, and
      * wrap exceptions in runtime exceptions.
      */
-    private Repository parse(String moduleName) {
+    private Repository parse(String name, String version) {
         for (File basePath : getParameters().getInputDirectories()) {
             try {
-                return parse(basePath, moduleName);
+                return parse(basePath, name, version);
             } catch (FileNotFoundException ignored) {
             } catch (XMLStreamException x) {
                 throw new RuntimeException(x);
             }
         }
         throw new RuntimeException(new FileNotFoundException(
-                "No GIR files found for %s".formatted(moduleName)));
+                "No GIR files found for %s-%s".formatted(name, version)));
     }
 
     // Read the GIR files for all platforms and parse them into a Repository.
-    private Repository parse(File baseFolder, String moduleName)
+    private Repository parse(File baseFolder, String name, String version)
             throws XMLStreamException, FileNotFoundException {
         Repository repository = null;
 
         // First try /macos, /windows and /linux subfolders.
         for (Integer platform : List.of(Platform.MACOS, Platform.WINDOWS, Platform.LINUX)) {
-            try {
-                File subFolder = new File(baseFolder, Platform.toString(platform));
-                File girFile = findFile(subFolder, moduleName + "-");
+            File subFolder = new File(baseFolder, Platform.toString(platform));
+            File girFile = new File(subFolder, name + "-" + version + ".gir");
+            if (girFile.exists())
                 repository = GirParser.getInstance().parse(girFile, platform, repository);
-            } catch (FileNotFoundException ignored) {
-            }
         }
 
         // If the gir file was not found in a platform-specific subfolder, try
         // the base folder.
         if (repository == null) {
-            try {
-                int platform = Platform.getRuntimePlatform();
-                File girFile = findFile(baseFolder, moduleName + "-");
+            int platform = Platform.getRuntimePlatform();
+            File girFile = new File(baseFolder, name + "-" + version + ".gir");
+            if (girFile.exists())
                 repository = GirParser.getInstance().parse(girFile, platform, null);
-            } catch (FileNotFoundException ignored) {
-                throw new FileNotFoundException("No GIR files found for %s in %s"
-                        .formatted(moduleName, baseFolder.getName()));
-            }
         }
 
+        if (repository == null)
+            throw new FileNotFoundException("No GIR files found for %s-%s in %s"
+                    .formatted(name, version, baseFolder.getName()));
+
         // Add the repository to the library
-        library.put(moduleName, repository);
+        library.put(name, repository);
 
         // Apply metadata (if it exists)
-        String version = repository.namespace().version();
-        new Matcher().match(new Parser(moduleName, version).parse(), repository);
+        new Matcher().match(new Parser(name, version).parse(), repository);
 
         return repository;
-    }
-
-    // Find a Gir file in the given folder with the given filename prefix.
-    private static File findFile(File folder, String prefix) throws FileNotFoundException {
-        File[] files = folder.listFiles();
-
-        if (files != null)
-            for (File file : files)
-                if (file.isFile()
-                        && file.getName().startsWith(prefix)
-                        && file.getName().endsWith(".gir"))
-                    return file;
-
-        throw new FileNotFoundException("%s.gir not found in %s".formatted(prefix, folder));
     }
 }

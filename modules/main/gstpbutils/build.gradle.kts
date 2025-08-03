@@ -11,4 +11,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "GstPbutils"
+    version = "1.0"
 }

@@ -10,4 +10,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "RegressUnix"
+    version = "1.0"
 }

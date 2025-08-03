@@ -9,4 +9,5 @@ dependencies {
 
 tasks.withType<GenerateSources> {
     namespace = "HarfBuzz"
+    version = "0.0"
 }

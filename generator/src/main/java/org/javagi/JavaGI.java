@@ -181,13 +181,14 @@ public class JavaGI implements Callable<Integer> {
                         .formatted(girFile.getName()));
 
             // Prepare module and package information
-            var namespace = repository.namespace().name();
-            var packageName = generatePackageName(namespace);
-            ModuleInfo.add(namespace, packageName, packageName, docUrl, summary);
+            var name = repository.namespace().name();
+            var version = repository.namespace().version();
+            var packageName = generatePackageName(name);
+            ModuleInfo.add(name, packageName, packageName, docUrl, summary);
             library.put(girFile.getName(), repository);
 
             // Create a directory for each module
-            var libDirectory = new File(outputDirectory, namespace.toLowerCase());
+            var libDirectory = new File(outputDirectory, name.toLowerCase());
 
             // No custom packages to export in module-info.java
             var packages = new HashSet<String>();
@@ -199,12 +200,12 @@ public class JavaGI implements Callable<Integer> {
             var ignored = srcDirectory.mkdirs();
 
             // Generate the language bindings
-            generate(namespace, library, packages, srcDirectory);
+            generate(name, version, library, packages, srcDirectory);
 
             if (generateProject) {
                 // Generate build.gradle script
                 writeBuildScript(libDirectory.toPath(), repository);
-                subprojects.add(namespace.toLowerCase());
+                subprojects.add(name.toLowerCase());
             }
         }
 
@@ -253,13 +254,14 @@ public class JavaGI implements Callable<Integer> {
     }
 
     // Generate Java language bindings for a GIR repository
-    public static void generate(String namespace,
+    public static void generate(String name,
+                                String version,
                                 Library library,
                                 Set<String> packages,
                                 File outputDirectory) throws IOException {
 
-        Namespace ns = library.lookupNamespace(namespace);
-        String packageName = ModuleInfo.packageName(namespace);
+        Namespace ns = library.lookupNamespace(name);
+        String packageName = ModuleInfo.packageName(name);
 
         // Generate class with namespace-global constants and functions
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
