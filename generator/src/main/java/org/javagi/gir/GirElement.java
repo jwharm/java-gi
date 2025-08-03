@@ -149,7 +149,7 @@ public abstract class GirElement implements Serializable, Node {
      *         child elements
      */
     public <T extends Node> T withChildren(GirElement... newChildren) {
-        return withChildren(Arrays.asList(newChildren));
+        return withChildren(listOfNonNull(newChildren));
     }
 
     /**
