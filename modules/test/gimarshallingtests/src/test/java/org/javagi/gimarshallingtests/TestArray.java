@@ -169,7 +169,7 @@ public class TestArray {
 
     @Test
     void enumIn() {
-        arrayEnumIn(new org.gnome.gi.gimarshallingtests.Enum[] {org.gnome.gi.gimarshallingtests.Enum.VALUE1, org.gnome.gi.gimarshallingtests.Enum.VALUE2, Enum.VALUE3});
+        arrayEnumIn(new Enum[] {Enum.VALUE1, Enum.VALUE2, Enum.VALUE3});
     }
 
     @Test
