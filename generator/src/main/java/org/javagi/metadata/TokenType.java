@@ -59,13 +59,6 @@ enum TokenType {
     STRING,
 
     /**
-     * A {@code ' '} or {@code \t}
-     * 
-     * @see Scanner#setSignificantWhitespace
-     */
-    WHITESPACE,
-
-    /**
      * A {@code \n} character
      */
     NEW_LINE,

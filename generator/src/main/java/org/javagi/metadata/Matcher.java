@@ -48,7 +48,7 @@ public class Matcher {
             logger.severe("Rule does not match anything");
         }
 
-        // Create gir <attribute> elements for the metadata arguments.
+        // Update gir attributes from the metadata arguments.
         // When the argument has no value, default to "1" (i.e. boolean "true").
         for (var arg : rule.args().entrySet()) {
             String value = arg.getValue();
@@ -102,16 +102,6 @@ public class Matcher {
      * Attribute value "()" means null, and the attribute is removed.
      */
     private void setAttribute(List<? extends Node> nodes, String key, String val) {
-        if (val == null) {
-            logger.severe("Unexpected end of file");
-            return;
-        }
-
-        if ("\n".equals(val)) {
-            logger.severe("Unexpected end of line");
-            return;
-        }
-
         for (var node : nodes) {
             if ("java-gi-parent".equals(key))
                 reparent(node, val);

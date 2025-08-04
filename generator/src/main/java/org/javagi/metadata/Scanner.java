@@ -46,9 +46,6 @@ class Scanner {
     int start = 0;
     int current = 0;
 
-    // Whether spaces and tabs should generate WHITESPACE tokens
-    private boolean significantWhitespace = false;
-
     /**
      * Create a new lexical scanner for metadata files.
      *
@@ -58,16 +55,6 @@ class Scanner {
     Scanner(String filename, String contents) {
         this.filename = filename;
         this.contents = contents;
-    }
-
-    /**
-     * Enable or disable {@code WHITESPACE} tokens for spaces and tabs. This is
-     * initially disabled.
-     *
-     * @param value whether whitespace is significant
-     */
-    void setSignificantWhitespace(boolean value) {
-        significantWhitespace = value;
     }
 
     /**
@@ -84,12 +71,9 @@ class Scanner {
         start = current;
         char c = advance();
         switch (c) {
-            case '\r' -> {
+            case ' ', '\t', '\r' -> {
                 // skipped
                 return next();
-            }
-            case ' ', '\t' -> {
-                return significantWhitespace ? createToken(WHITESPACE) : next();
             }
             case '.' -> {
                 return createToken(DOT);
