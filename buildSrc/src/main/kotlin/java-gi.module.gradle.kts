@@ -66,8 +66,14 @@ tasks.withType<Javadoc>().configureEach {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 
-    // Log standard output and error streams when running tests
-    testLogging.showStandardStreams = true
+    testLogging {
+        // Log execution of each individual test case in CI
+        if (System.getenv().containsKey("CI")) {
+            events("started", "passed", "failed", "skipped", "standard_out", "standard_error")
+        }
+        // Log standard output and error streams when running tests
+        showStandardStreams = true
+    }
 
     val ext = project(":ext")
     val mesonBuildDir = ext.layout.buildDirectory.dir("meson").get().asFile.absolutePath
