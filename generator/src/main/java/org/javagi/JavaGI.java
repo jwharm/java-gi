@@ -21,7 +21,6 @@ package org.javagi;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import org.javagi.configuration.LicenseNotice;
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.gir.*;
 import org.javagi.util.Platform;
@@ -34,6 +33,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -182,7 +182,6 @@ public class JavaGI implements Callable<Integer> {
 
             // Prepare module and package information
             var name = repository.namespace().name();
-            var version = repository.namespace().version();
             var packageName = generatePackageName(name);
             ModuleInfo.add(name, packageName, packageName, docUrl, summary);
             library.put(girFile.getName(), repository);
@@ -200,7 +199,7 @@ public class JavaGI implements Callable<Integer> {
             var ignored = srcDirectory.mkdirs();
 
             // Generate the language bindings
-            generate(name, version, library, packages, srcDirectory);
+            generate(name, library, packages, srcDirectory);
 
             if (generateProject) {
                 // Generate build.gradle script
@@ -255,7 +254,6 @@ public class JavaGI implements Callable<Integer> {
 
     // Generate Java language bindings for a GIR repository
     public static void generate(String name,
-                                String version,
                                 Library library,
                                 Set<String> packages,
                                 File outputDirectory) throws IOException {
@@ -263,9 +261,11 @@ public class JavaGI implements Callable<Integer> {
         Namespace ns = library.lookupNamespace(name);
         String packageName = ModuleInfo.packageName(name);
 
+        String licenseNotice = licenseNotice();
+
         // Generate class with namespace-global constants and functions
         var typeSpec = new NamespaceGenerator(ns).generateGlobalsClass();
-        writeJavaFile(typeSpec, packageName, outputDirectory);
+        writeJavaFile(typeSpec, packageName, licenseNotice, outputDirectory);
 
         // Generate package-info.java
         Path path = outputDirectory.toPath()
@@ -299,7 +299,7 @@ public class JavaGI implements Callable<Integer> {
                 case Union u -> new UnionGenerator(u).generate();
                 default -> null;
             };
-            writeJavaFile(typeSpec, packageName, outputDirectory);
+            writeJavaFile(typeSpec, packageName, licenseNotice, outputDirectory);
 
             // Write package-private helper classes for interfaces, containing
             // static downcall handles
@@ -308,6 +308,7 @@ public class JavaGI implements Callable<Integer> {
                 if (generator.hasDowncallHandles())
                     writeJavaFile(generator.downcallHandlesClass(),
                                   packageName,
+                                  licenseNotice,
                                   outputDirectory);
             }
         }
@@ -316,14 +317,24 @@ public class JavaGI implements Callable<Integer> {
     // Write a generated class into a Java file
     private static void writeJavaFile(TypeSpec typeSpec,
                                       String packageName,
+                                      String licenseNotice,
                                       File outputDirectory) throws IOException {
         if (typeSpec == null) return;
 
         JavaFile.builder(packageName, typeSpec)
-                .addFileComment(LicenseNotice.NOTICE)
+                .addFileComment(licenseNotice)
                 .indent("    ")
                 .build()
                 .writeTo(outputDirectory);
+    }
+
+    // Read the license notice (from src/main/resources)
+    private static String licenseNotice() throws IOException {
+        try (InputStream is = JavaGI.class.getResourceAsStream("/LicenseNotice.txt")) {
+            if (is == null)
+                throw new IOException("Cannot open resource LicenseNotice.txt");
+            return new String(is.readAllBytes());
+        }
     }
 
     private void writeBuildScript(Path basePath,

@@ -61,7 +61,7 @@ public abstract class GenerateSources extends DefaultTask {
             var library = buildService.getLibrary(name, version);
             var packages = getPackages();
             var outputDirectory = getOutputDirectory().get().getAsFile();
-            generate(name, version, library, packages, outputDirectory);
+            generate(name, library, packages, outputDirectory);
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
