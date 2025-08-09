@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
+import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeInstance;
 
 import org.javagi.base.Proxy;
@@ -77,8 +78,12 @@ public class TypeCache {
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL)) return null;
 
+        // Read the TypeClass from memory
+        TypeClass gclass = new TypeInstance(address).readGClass();
+        if (gclass == null) return null;
+
         // Read the gtype from memory
-        Type type = new TypeInstance(address).readGClass().readGType();
+        Type type = gclass.readGType();
         
         return getConstructor(type, fallback);
     }
