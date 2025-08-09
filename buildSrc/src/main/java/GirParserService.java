@@ -68,14 +68,16 @@ public abstract class GirParserService implements BuildService<GirParserService.
         if (repository != null)
             return library;
 
-        // Parse the repository. This also adds it to the library and applies
-        // metadata (if any).
+        // Parse the repository
         repositories.computeIfAbsent(name, n -> parse(n, version));
         repository = repositories.get(name);
 
-        // Make sure all dependencies are in the library
+        // Parse all dependencies and add them to the library
         for (var include : repository.includes())
             getLibrary(include.name(), include.version());
+
+        // Add the repository to the library
+        library.put(name, repository);
 
         return library;
     }
@@ -122,9 +124,6 @@ public abstract class GirParserService implements BuildService<GirParserService.
         if (repository == null)
             throw new FileNotFoundException("No GIR files found for %s-%s in %s"
                     .formatted(name, version, baseFolder.getName()));
-
-        // Add the repository to the library
-        library.put(name, repository);
 
         // Apply metadata (if it exists)
         new Matcher().match(new Parser(name, version).parse(), repository);

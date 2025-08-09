@@ -139,15 +139,15 @@ public class Matcher {
      */
     private void reparent(Node node, String to) {
         Node source = node.parent();
+        Namespace ns = node.namespace();
         Node target = TypeReference.lookup(node.namespace(), to);
 
+        if (target == null && to.equals(ns.name()))
+            target = ns;
+
         if (target == null) {
-            try {
-                target = node.namespace().parent().library().lookupNamespace(to);
-            } catch (Exception e) {
-                logger.severe("Type or namespace '" + to + "' not found");
-                return;
-            }
+            logger.severe("Type or namespace '" + to + "' not found");
+            return;
         }
 
         source.children().remove(node);
