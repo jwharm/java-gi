@@ -228,4 +228,113 @@ public class TestObjectVirtualMethod {
         tester.int8Out(v);
         assertEquals((byte) 40, v.get());
     }
+
+    @Test
+    void methodInt8ArgAndOutCaller() {
+        var v = new Out<Byte>();
+        tester.methodInt8ArgAndOutCaller((byte) 39, v);
+        assertEquals((byte) 42, v.get());
+    }
+
+    @Test
+    void methodInt8ArgAndOutCallee() {
+        var v = new Out<Byte>();
+        tester.methodInt8ArgAndOutCallee((byte) 38, v);
+        assertEquals((byte) 42, v.get());
+    }
+
+    @Test
+    void methodStrArgOutRet() {
+        var v = new Out<Integer>();
+        assertEquals("Called with a string", tester.methodStrArgOutRet("a string", v));
+        assertEquals(41, v.get());
+        assertEquals("Called with a 2nd string", tester.methodStrArgOutRet("a 2nd string", v));
+        assertEquals(41, v.get());
+    }
+
+    @Test
+    void methodWithDefaultImplementation() {
+        tester.methodWithDefaultImplementation((byte) 40);
+        assertEquals(42, tester.getProperty("int"));
+    }
+
+    @Test
+    void vfuncReturnValueOnly() {
+        assertEquals(42, tester.vfuncReturnValueOnly());
+    }
+
+    @Test
+    void vfuncOneOutParameter() {
+        var v = new Out<Float>();
+        tester.vfuncOneOutParameter(v);
+        assertEquals(43, v.get());
+    }
+
+    @Test
+    void vfuncMultipleOutParameters() {
+        var v1 = new Out<Float>();
+        var v2 = new Out<Float>();
+        tester.vfuncMultipleOutParameters(v1, v2);
+        assertEquals(44, v1.get());
+        assertEquals(45, v2.get());
+    }
+
+    @Test
+    void vfuncReturnValueAndOneOutParameter() {
+        var v = new Out<Integer>();
+        int ret = tester.vfuncReturnValueAndOneOutParameter(v);
+        assertEquals(46, v.get());
+        assertEquals(47, ret);
+    }
+
+    @Test
+    void vfuncReturnValueAndMultipleOutParameters() {
+        var v1 = new Out<Integer>();
+        var v2 = new Out<Integer>();
+        int ret = tester.vfuncReturnValueAndMultipleOutParameters(v1, v2);
+        assertEquals(48, v1.get());
+        assertEquals(49, v2.get());
+        assertEquals(50, ret);
+    }
+
+    @Test
+    void vfuncOneInoutParameter() {
+        var v = new Out<>(10f);
+        tester.vfuncOneInoutParameter(v);
+        assertEquals(50, v.get());
+    }
+
+    @Test
+    void vfuncMultipleInoutParameters() {
+        var v1 = new Out<>(10f);
+        var v2 = new Out<>(5f);
+        tester.vfuncMultipleInoutParameters(v1, v2);
+        assertEquals(50, v1.get());
+        assertEquals(-5, v2.get());
+    }
+
+    @Test
+    void vfuncReturnValueAndOneInoutParameter() {
+        var v = new Out<>(10);
+        int ret = tester.vfuncReturnValueAndOneInoutParameter(v);
+        assertEquals(49, ret);
+        assertEquals(50, v.get());
+    }
+
+    @Test
+    void vfuncReturnValueAndMultipleInoutParameters() {
+        var v1 = new Out<>(10);
+        var v2 = new Out<>(-51);
+        int ret = tester.vfuncReturnValueAndMultipleInoutParameters(v1, v2);
+        assertEquals(49, ret);
+        assertEquals(50, v1.get());
+        assertEquals(51, v2.get());
+    }
+
+    @Test
+    void vfuncArrayOutParameter() {
+        var v = new Out<float[]>();
+        tester.vfuncArrayOutParameter(v);
+        assertArrayEquals(new float[] {50, 51}, v.get());
+    }
 }
