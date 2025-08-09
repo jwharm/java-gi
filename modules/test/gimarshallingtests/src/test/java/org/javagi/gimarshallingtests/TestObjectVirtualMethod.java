@@ -26,10 +26,13 @@ import org.gnome.gio.Gio;
 import org.gnome.gio.IOErrorEnum;
 import org.gnome.glib.GLib;
 import org.gnome.glib.SpawnError;
+import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.Value;
 import org.javagi.base.GErrorException;
 import org.javagi.base.Out;
+import org.javagi.gobject.types.TypeCache;
+import org.javagi.gobject.types.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -336,5 +339,118 @@ public class TestObjectVirtualMethod {
         var v = new Out<float[]>();
         tester.vfuncArrayOutParameter(v);
         assertArrayEquals(new float[] {50, 51}, v.get());
+    }
+
+    @Test
+    void vfuncCallerAllocatedOutParameter() {
+        var value = new Value();
+        value.init(Types.INT);
+        tester.vfuncCallerAllocatedOutParameter(value);
+        assertEquals(52, value.getInt());
+    }
+
+    @Test
+    void vfuncMethWithError() {
+        assertDoesNotThrow(() -> assertTrue(tester.vfuncMethWithError(1)));
+        assertThrows(NullPointerException.class, () -> tester.vfuncMethWithError(4));
+        assertDoesNotThrow(() -> assertFalse(tester.vfuncMethWithError(5)));
+
+        try {
+            tester.vfuncMethWithError(2);
+            fail();
+        } catch(GErrorException e) {
+            assertEquals(Gio.ioErrorQuark(), e.getDomain());
+            assertEquals(IOErrorEnum.FAILED.getValue(), e.getCode());
+            assertEquals("I FAILED, but the test passed!", e.getMessage());
+        }
+
+        try {
+            tester.vfuncMethWithError(3);
+            fail();
+        } catch(GErrorException e) {
+            assertEquals(GLib.spawnErrorQuark(), e.getDomain());
+            assertEquals(SpawnError.TOO_BIG.getValue(), e.getCode());
+            assertEquals("This test is Too Big to Fail", e.getMessage());
+        }
+    }
+
+    @Test
+    void vfuncReturnEnum() {
+        assertEquals(Enum.VALUE2, tester.vfuncReturnEnum());
+    }
+
+    @Test
+    void vfuncOutEnum() {
+        var v = new Out<Enum>();
+        tester.vfuncOutEnum(v);
+        assertEquals(Enum.VALUE3, v.get());
+    }
+
+    @Test
+    void vfuncReturnFlags() {
+        assertEquals(Set.of(Flags.VALUE2), tester.vfuncReturnFlags());
+    }
+
+    @Test
+    void vfuncOutFlags() {
+        var v = new Out<Set<Flags>>();
+        tester.vfuncOutFlags(v);
+        assertEquals(Set.of(Flags.VALUE3), v.get());
+    }
+
+    @Test
+    void vfuncReturnObjectTransferNone() {
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncReturnObjectTransferNone(refCount, isFloating);
+        assertEquals(1, refCount.get());
+        assertFalse(isFloating.get());
+    }
+
+    @Test
+    void vfuncReturnObjectTransferFull() {
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncReturnObjectTransferFull(refCount, isFloating);
+        assertEquals(2, refCount.get());
+        assertFalse(isFloating.get());
+    }
+
+    @Test
+    void vfuncOutObjectTransferNone() {
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncOutObjectTransferNone(refCount, isFloating);
+        assertEquals(1, refCount.get());
+        assertFalse(isFloating.get());
+    }
+
+    @Test
+    void vfuncOutObjectTransferFull() {
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncOutObjectTransferFull(refCount, isFloating);
+        assertEquals(2, refCount.get());
+        assertFalse(isFloating.get());
+    }
+
+    @Test
+    void vfuncInObjectTransferNone() {
+        Type gtype = TypeCache.getType(VFuncTester.class);
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncInObjectTransferNone(gtype, refCount, isFloating);
+        assertEquals(2, refCount.get());
+        assertFalse(isFloating.get());
+    }
+
+    @Test
+    void vfuncInObjectTransferFull() {
+        Type gtype = TypeCache.getType(VFuncTester.class);
+        var refCount = new Out<Integer>();
+        var isFloating = new Out<Boolean>();
+        tester.getRefInfoForVfuncInObjectTransferFull(gtype, refCount, isFloating);
+        assertEquals(1, refCount.get());
+        assertFalse(isFloating.get());
     }
 }
