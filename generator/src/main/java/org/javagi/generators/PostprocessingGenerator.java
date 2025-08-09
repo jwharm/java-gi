@@ -56,6 +56,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     public void generateUpcall(MethodSpec.Builder builder) {
         writePrimitiveAliasPointer(builder);
         writeOutParameter(builder);
+        refGObjectUpcall(builder);
         freeGBytesUpcall(builder);
         freeGStringUpcall(builder);
     }
@@ -384,6 +385,24 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     .add(marshalJavaToNative("_" + getName() + "Out.get()"))
                     .add(");\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
+        }
+    }
+
+    // Ref GObject when ownership is transferred to a callback out-parameter
+    private void refGObjectUpcall(MethodSpec.Builder builder) {
+        if (v instanceof Parameter p
+                && target != null
+                && target.checkIsGObject()
+                && p.transferOwnership() == TransferOwnership.FULL
+                && p.isOutParameter()) {
+            String paramName = "_" + getName() + "Out";
+            builder.beginControlFlow("if ($L.get() instanceof $T _gobject)",
+                            paramName, ClassNames.G_OBJECT)
+                    .addStatement("$T.debug($S, _gobject.handle().address())",
+                            ClassNames.GLIB_LOGGER,
+                            "Ref " + getType() + " %ld")
+                    .addStatement("_gobject.ref()")
+                    .endControlFlow();
         }
     }
 
