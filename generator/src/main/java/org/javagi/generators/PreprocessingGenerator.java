@@ -369,13 +369,15 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // at some point while we still keep a pointer in the InstanceCache.
     private void transferOwnership(MethodSpec.Builder builder) {
         // GObjects where ownership is fully transferred away (unless it's an
-        // out parameter or a pointer)
+        // out parameter)
         if (target != null && target.checkIsGObject()
                 && p.transferOwnership() != TransferOwnership.NONE
-                && !p.isOutParameter()
-                && (type.cType() == null || !type.cType().endsWith("**"))) {
+                && p.direction() != Direction.OUT) {
+            String identifier = getName();
+            if (p.direction() == Direction.INOUT)
+                identifier = identifier + " != null && " + identifier + ".get()";
             builder.beginControlFlow("if ($L instanceof $T _gobject)",
-                            getName(), ClassNames.G_OBJECT)
+                            identifier, ClassNames.G_OBJECT)
                     .addStatement("$T.debug($S, _gobject.handle().address())",
                             ClassNames.GLIB_LOGGER,
                             "Ref " + type.typeName() + " %ld")
