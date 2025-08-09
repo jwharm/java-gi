@@ -31,7 +31,6 @@ import org.gnome.gobject.Value;
 import org.javagi.base.GErrorException;
 import org.javagi.base.Out;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -46,7 +45,7 @@ public class TestObjectVirtualMethod {
         }
 
         @Override
-        public void int8Out(Out<Byte> out) {
+        public void methodInt8Out(Out<Byte> out) {
             out.set((byte) 40);
         }
 
@@ -216,8 +215,7 @@ public class TestObjectVirtualMethod {
         assertEquals(39, tester.getProperty("int"));
     }
 
-    // Segfaults
-    @Test @Disabled
+    @Test
     void methodInt8Out() {
         var v = new Out<Byte>();
         tester.methodInt8Out(v);
