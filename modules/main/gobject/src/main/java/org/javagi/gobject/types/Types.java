@@ -657,8 +657,8 @@ public class Types {
             }
         }
 
-        // Replace all characters except a-z or A-Z with underscores
-        return typeNameInput.replaceAll("[^a-zA-Z]", "_");
+        // Replace all characters except a-z, A-Z or 0-9 with underscores
+        return typeNameInput.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     /**
