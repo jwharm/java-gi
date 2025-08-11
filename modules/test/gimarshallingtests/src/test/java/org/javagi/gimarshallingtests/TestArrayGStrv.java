@@ -20,7 +20,6 @@
 package org.javagi.gimarshallingtests;
 
 import org.javagi.base.Out;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
@@ -112,8 +111,7 @@ public class TestArrayGStrv {
         assertArrayEqualsTestArray(TEST_STRINGS_ARRAY_OUT, v.get());
     }
 
-    // See https://gitlab.gnome.org/GNOME/gobject-introspection-tests/-/merge_requests/20
-    @Test @Disabled
+    @Test
     void transferContainerInout() {
         var v = new Out<>(TEST_STRINGS_ARRAY);
         lengthArrayOfGstrvTransferContainerInout(v);

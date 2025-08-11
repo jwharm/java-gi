@@ -20,7 +20,6 @@
 package org.javagi.gimarshallingtests;
 
 import org.javagi.base.Out;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
@@ -88,8 +87,7 @@ public class TestArrayUtf8 {
         assertArrayEquals(OUT_VALUES, v.get());
     }
 
-    // See https://gitlab.gnome.org/GNOME/gobject-introspection-tests/-/merge_requests/20
-    @Test @Disabled
+    @Test
     void containerInout() {
         var v = new Out<>(IN_VALUES);
         lengthArrayUtf8ContainerInout(v);
