@@ -21,11 +21,13 @@ package org.javagi.gobject;
 
 import java.lang.foreign.MemorySegment;
 
+import org.gnome.glib.Variant;
 import org.javagi.base.Proxy;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import org.javagi.base.Enumeration;
+import org.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,17 +59,22 @@ public class ValueUtil {
 
         // Fundamental types
         if (type.equals(BOOLEAN))        return src.getBoolean();
-        if (type.equals(CHAR))           return src.getSchar();
+        if (type.equals(CHAR))           return (char) src.getSchar();
+        if (type.equals(UCHAR))          return (char) src.getUchar();
         if (type.equals(DOUBLE))         return src.getDouble();
         if (type.equals(FLOAT))          return src.getFloat();
         if (type.equals(INT))            return src.getInt();
+        if (type.equals(UINT))           return src.getUint();
         if (type.equals(LONG))           return src.getLong();
+        if (type.equals(ULONG))          return src.getUlong();
+        if (type.equals(INT64))          return src.getInt64();
         if (type.equals(STRING))         return src.getString();
         if (type.equals(ENUM))           return src.getEnum();
         if (type.equals(FLAGS))          return src.getFlags();
         if (type.equals(OBJECT))         return src.getObject();
         if (type.equals(POINTER))        return src.getPointer();
         if (type.equals(PARAM))          return src.getParam();
+        if (type.equals(VARIANT))        return src.getVariant();
 
         // GType
         if (type.equals(gtypeGetType())) return src.getGtype();
@@ -100,11 +107,15 @@ public class ValueUtil {
             return false;
 
         if      (type.equals(BOOLEAN))        dest.setBoolean((Boolean) src);
-        else if (type.equals(CHAR))           dest.setSchar((Byte) src);
+        else if (type.equals(CHAR))           dest.setSchar((byte) ((Character) src).charValue());
+        else if (type.equals(UCHAR))          dest.setUchar((byte) ((Character) src).charValue());
         else if (type.equals(DOUBLE))         dest.setDouble((Double) src);
         else if (type.equals(FLOAT))          dest.setFloat((Float) src);
         else if (type.equals(INT))            dest.setInt((Integer) src);
+        else if (type.equals(UINT))           dest.setUint((Integer) src);
         else if (type.equals(LONG))           dest.setLong(toInt(src));
+        else if (type.equals(ULONG))          dest.setUlong(toInt(src));
+        else if (type.equals(INT64))          dest.setInt64((Long) src);
         else if (type.equals(STRING))         dest.setString((String) src);
         else if (type.equals(ENUM))           dest.setEnum(((Enumeration) src).getValue());
         else if (type.equals(FLAGS))          dest.setFlags(((Enumeration) src).getValue());
@@ -112,6 +123,8 @@ public class ValueUtil {
         else if (type.equals(gtypeGetType())) dest.setGtype((Type) src);
         else if (type.equals(POINTER))        dest.setPointer((MemorySegment) src);
         else if (type.equals(PARAM))          dest.setParam((ParamSpec) src);
+        else if (type.equals(STRV))           dest.setBoxed(Interop.allocateNativeArray((String[]) src, true, Interop.mallocAllocator()));
+        else if (type.equals(VARIANT))        dest.setVariant((Variant) src);
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
         else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
         else if (typeIsA(type, FLAGS))        dest.setEnum(((Enumeration) src).getValue());
