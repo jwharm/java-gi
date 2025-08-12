@@ -34,112 +34,112 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestObjectProperties {
-    PropertiesObject obj;
+public class TestObjectPropertiesAccessors {
+    PropertiesAccessorsObject obj;
 
     @BeforeEach
     void constructObject() {
-        obj = new PropertiesObject();
+        obj = new PropertiesAccessorsObject();
     }
 
     @Test
     void getSetBoolean() {
-        obj.setProperty("some-boolean", true);
-        assertEquals(true, obj.getProperty("some-boolean"));
+        obj.setBoolean(true);
+        assertTrue(obj.getBoolean());
     }
 
     @Test
     void getSetChar() {
-        obj.setProperty("some-char", 'a');
-        assertEquals('a', obj.getProperty("some-char"));
+        obj.setChar((byte) 'a');
+        assertEquals((byte) 'a', obj.getChar());
     }
 
     @Test
     void getSetUChar() {
-        obj.setProperty("some-uchar", 'a');
-        assertEquals('a', obj.getProperty("some-uchar"));
+        obj.setUchar((byte) 'a');
+        assertEquals((byte) 'a', obj.getUchar());
     }
 
     @Test
     void getSetInt() {
-        obj.setProperty("some-int", 42);
-        assertEquals(42, obj.getProperty("some-int"));
+        obj.setInt(42);
+        assertEquals(42, obj.getInt());
     }
 
     @Test
     void getSetUInt() {
-        obj.setProperty("some-uint", 42);
-        assertEquals(42, obj.getProperty("some-uint"));
+        obj.setUint(42);
+        assertEquals(42, obj.getUint());
     }
 
     @Test
     void getSetLong() {
-        obj.setProperty("some-long", 42);
-        assertEquals(42, obj.getProperty("some-long"));
+        obj.setLong(42);
+        assertEquals(42, obj.getLong());
     }
 
     @Test
     void getSetULong() {
-        obj.setProperty("some-ulong", 42);
-        assertEquals(42, obj.getProperty("some-ulong"));
+        obj.setUlong(42);
+        assertEquals(42, obj.getUlong());
     }
 
     @Test
     void getSetInt64() {
-        obj.setProperty("some-int64", 42L);
-        assertEquals(42L, obj.getProperty("some-int64"));
+        obj.setInt64(Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, obj.getInt64());
     }
 
     @Test
     void getSetString() {
-        obj.setProperty("some-string", "test");
-        assertEquals("test", obj.getProperty("some-string"));
-        obj.setProperty("some-string", (String) null);
-        assertNull(obj.getProperty("some-string"));
+        obj.setString("test");
+        assertEquals("test", obj.getString());
+
+        obj.setString(null);
+        assertNull(obj.getString());
     }
 
     @Test
     void getSetFloat() {
         AtomicInteger count = new AtomicInteger(0);
         obj.onNotify("some-float", _ -> count.incrementAndGet());
-        obj.setProperty("some-float", 3.14f);
+        obj.setFloat(Float.NaN);
         assertEquals(1, count.get());
-        assertEquals(3.14f, obj.getProperty("some-float"));
+        assertEquals(Float.NaN, obj.getFloat());
     }
 
     @Test
     void getSetDouble() {
         AtomicInteger count = new AtomicInteger(0);
         obj.onNotify("some-double", _ -> count.incrementAndGet());
-        obj.setProperty("some-double", Math.E);
+        obj.setDouble(Math.E);
         assertEquals(1, count.get());
-        assertEquals(Math.E, obj.getProperty("some-double"));
+        assertEquals(Math.E, obj.getDouble());
     }
 
     @Test
     void getSetStrv() {
         var array = new String[] {"0", "1", "2"};
-        obj.setProperty("some-strv", array);
-        assertArrayEquals(array, (String[]) obj.getProperty("some-strv"));
+        obj.setStrv(array);
+        assertArrayEquals(array,obj.getStrv());
     }
 
     @Test
     void getSetBoxedStruct() {
         var in = new BoxedStruct();
         in.writeLong(6);
-        obj.setProperty("some-boxed-struct", in);
-        var out = (BoxedStruct) obj.getProperty("some-boxed-struct");
+        obj.setBoxedStruct(in);
+        var out = obj.getBoxedStruct();
+        assertNotNull(out);
         assertEquals(in.readLong(), out.readLong());
     }
 
     @Test
     void getSetBoxedGList() {
-        List<Integer> glist = glistIntNoneReturn();
-        obj.setProperty("some-boxed-glist", glist);
-        // Currently unsupported: The boxed type is not registered, and
-        // the type hint in the doc comment is not usable here
-        assertThrows(UnsupportedOperationException.class,
-                     () -> obj.getProperty("some-boxed-glist"));
+        List<Integer> in = glistIntNoneReturn();
+        obj.setBoxedGlist(in);
+        List<Integer> out = obj.getBoxedGlist();
+        assertIterableEquals(in, out);
     }
 
     @Test
@@ -147,75 +147,77 @@ public class TestObjectProperties {
         var in = new Value();
         in.init(Types.INT);
         in.setInt(42);
-        // cast to Object to ensure we use the correct overload
-        obj.setProperty("some-gvalue", (Object) in);
-        var out = (Value) obj.getProperty("some-gvalue");
+        obj.setGvalue(in);
+        var out = obj.getGvalue();
+        assertNotNull(out);
         assertEquals(in.getInt(), out.getInt());
     }
 
     @Test
     void getSetGVariant() {
         var in = new Variant("i", 42);
-        obj.setProperty("some-variant", in);
-        var out = (Variant) obj.getProperty("some-variant");
+        obj.setVariant(in);
+        var out = obj.getVariant();
+        assertNotNull(out);
         assertEquals(in.getInt32(), out.getInt32());
     }
 
     @Test
     void getSetGObject() {
         var in = new GObject();
-        obj.setProperty("some-object", in);
-        var out = (GObject) obj.getProperty("some-object");
+        obj.setObject(in);
+        var out = obj.getObject();
         assertEquals(in, out);
 
         in = new GIMarshallingTestsObject(42);
-        obj.setProperty("some-object", in);
-        out = (GIMarshallingTestsObject) obj.getProperty("some-object");
+        obj.setObject(in);
+        out = obj.getObject();
+        assertNotNull(out);
         assertEquals(42, out.getProperty("int"));
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void getSetFlags() {
         // Set a single flag
         Flags single = Flags.VALUE2;
-        obj.setProperty("some-flags", single);
-        Set<Flags> out = (Set<Flags>) obj.getProperty("some-flags");
+        obj.setFlags(single);
+        Set<Flags> out = obj.getFlags();
         assertEquals(Set.of(single), out);
 
         // Combine multiple flags
         Set<Flags> multiple = Set.of(Flags.VALUE1, Flags.VALUE2);
-        obj.setProperty("some-flags", multiple);
-        out = (Set<Flags>) obj.getProperty("some-flags");
+        obj.setFlags(multiple);
+        out = obj.getFlags();
+        assertEquals(multiple, out);
+
+        // Combine multiple flags in varargs parameter
+        obj.setFlags(Flags.VALUE2, Flags.VALUE1);
+        out = obj.getFlags();
         assertEquals(multiple, out);
     }
 
     @Test
     void getSetEnum() {
-        obj.setProperty("some-enum", GEnum.VALUE2);
-        assertEquals(GEnum.VALUE2, obj.getProperty("some-enum"));
+        obj.setEnum(GEnum.VALUE2);
+        assertEquals(GEnum.VALUE2, obj.getEnum());
     }
 
     @Test
     void getSetByteArray() {
         byte[] in = new byte[] {1, 2, 3};
-        obj.setProperty("some-byte-array", in);
-        byte[] out = (byte[]) obj.getProperty("some-byte-array");
+        obj.setByteArray(in);
+        byte[] out = obj.getByteArray();
         assertArrayEquals(in, out);
     }
 
     @Test
     void readOnlyProperty() {
-        assertEquals(42, obj.getProperty("some-readonly"));
-
-        // Java-GI doesn't check for read-only properties, so the following
-        // line will not throw, but GLib will log a CRITICAL error:
-        // obj.setProperty("some-readonly", 42);
+        assertEquals(42, obj.getReadonly());
     }
 
     @Test
     void deprecatedProperty() {
-        obj.setProperty("some-deprecated-int", 42);
-        assertEquals(42, obj.getProperty("some-deprecated-int"));
+        obj.setDeprecatedInt(42);
+        assertEquals(42, obj.getDeprecatedInt());
     }
 }
