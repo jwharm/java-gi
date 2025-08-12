@@ -19,12 +19,14 @@
 
 package org.javagi.gobject;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.Set;
 import java.util.function.Function;
 
 import org.gnome.glib.Variant;
 import org.javagi.base.Proxy;
+import org.gnome.glib.ByteArray;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
@@ -86,6 +88,17 @@ public class ValueUtil {
         // GStrv
         if (type.equals(STRV))
             return Interop.getStringArrayFrom(src.getBoxed(), TransferOwnership.FULL);
+
+        // GByteArray
+        if (type.equals(BYTE_ARRAY)) {
+            MemorySegment address = src.getBoxed();
+            ByteArray arr = new ByteArray(address);
+            MemorySegment data = Interop.dereference(address);
+            int length = arr.readLen();
+            try (var arena = Arena.ofConfined()) {
+                return Interop.getByteArrayFrom(data, length, arena, TransferOwnership.FULL);
+            }
+        }
 
         // Boxed type
         if (BoxedUtil.isBoxed(type)) {
@@ -197,6 +210,7 @@ public class ValueUtil {
         else if (type.equals(POINTER))        dest.setPointer((MemorySegment) src);
         else if (type.equals(PARAM))          dest.setParam((ParamSpec) src);
         else if (type.equals(STRV))           dest.setBoxed(Interop.allocateNativeArray((String[]) src, true, Interop.mallocAllocator()));
+        else if (type.equals(BYTE_ARRAY))     dest.setBoxed(ByteArray.take((byte[]) src).handle());
         else if (type.equals(VARIANT))        dest.setVariant((Variant) src);
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
         else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());

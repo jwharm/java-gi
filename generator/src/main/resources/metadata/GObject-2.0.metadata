@@ -49,5 +49,8 @@ CClosure.new*#function java-gi-skip
 // Implement GValue.toString() with g_strdup_value_contents()
 Value java-gi-to-string="org.gnome.gobject.GObjects.strdupValueContents(this)"
 
+// GByteArray is marshaled to a byte[]
+ByteArray java-gi-skip
+
 // GString is marshaled to a java.lang.String
 String java-gi-skip
