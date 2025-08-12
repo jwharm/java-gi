@@ -266,8 +266,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             var hasMemoryLayout = new MemoryLayoutGenerator().canGenerate(slt);
 
             // Don't automatically copy the return values of GLib functions
-            var skipNamespace = List.of("GLib", "GModule")
-                    .contains(target.namespace().name());
+            boolean skipNamespace = !target.namespace().parent().isInScope("GObject");
 
             // No copy function, and unknown size: copying is impossible
             if (skipNamespace || (!hasMemoryLayout && copyFunc == null)) {

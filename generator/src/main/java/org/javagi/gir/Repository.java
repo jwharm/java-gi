@@ -53,6 +53,33 @@ public final class Repository extends GirElement {
             throw new IllegalStateException("Gir file does not contain exactly one namespace");
     }
 
+    /**
+     * Check whether the requested namespace is in scope of this repository.
+     * In other words, check whether the requested namespace is in this
+     * repository or in one of its dependencies ({@code <include>} elements).
+     *
+     * @param otherNamespace the other namespace that may be in scope or not
+     * @return true when the other namespace is in scope, otherwise false
+     */
+    public boolean isInScope(String otherNamespace) {
+        if (otherNamespace == null)
+            return false;
+
+        for (var ns : namespaces()) {
+            if (otherNamespace.equals(ns.name()))
+                return true;
+        }
+
+        for (Include incl : includes()) {
+            var includedNamespace = lookupNamespace(incl.name());
+            var repository = includedNamespace.parent();
+            if (repository.isInScope(otherNamespace))
+                return true;
+        }
+
+        return false;
+    }
+
     public Node lookupCIdentifier(String cIdentifier) {
         return library().lookupCIdentifier(cIdentifier);
     }

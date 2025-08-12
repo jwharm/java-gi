@@ -25,7 +25,6 @@ import org.gnome.gobject.GObject;
 import org.gnome.gobject.Value;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,7 +36,7 @@ public class ClosureTest {
 
     @SuppressWarnings("unused")
     public interface MyInterface {
-        boolean timesTwo(MemorySegment p1, MemorySegment p2);
+        boolean timesTwo(Value src, Value dest);
     }
 
     @Test
@@ -49,7 +48,7 @@ public class ClosureTest {
         // Create a JavaClosure for the "timesTwo" method
         Method timesTwo = null;
         try {
-            timesTwo = ClosureTest.class.getMethod("timesTwo", MemorySegment.class, MemorySegment.class);
+            timesTwo = ClosureTest.class.getMethod("timesTwo", Value.class, Value.class);
         } catch (NoSuchMethodException ignored) {}
         JavaClosure closure = new JavaClosure(this, timesTwo);
 
@@ -87,9 +86,7 @@ public class ClosureTest {
     }
 
     // The method that is wrapped in a JavaClosure
-    public boolean timesTwo(MemorySegment boxed1, MemorySegment boxed2) {
-        Value src = new Value(boxed1);
-        Value dest = new Value(boxed2);
+    public boolean timesTwo(Value src, Value dest) {
         dest.setInt(src.getInt() * 2);
         return true;
     }

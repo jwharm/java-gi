@@ -34,6 +34,7 @@ import org.gnome.gobject.*;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -49,25 +50,45 @@ import static java.lang.Character.isUpperCase;
 public class Properties {
 
     /**
-     * Read the value type from the GParamSpec of a GObject property.
+     * Get the ParamSpec of a GObject property
      *
      * @param  objectClass  the GObject typeclass that has a property installed
      *                      with the provided name
      * @param  propertyName the name of the property
-     * @return the value type of the GParamSpec of the GObject property, or null
-     *         if not found
+     * @return the ParamSpec of the property
      */
-    public static Type readPropertyValueType(GObject.ObjectClass objectClass,
-                                             String propertyName) {
+    private static ParamSpec getParamSpec(GObject.ObjectClass objectClass,
+                                          String propertyName) {
         ParamSpec pspec = objectClass.findProperty(propertyName);
         if (pspec == null) {
             throw new IllegalArgumentException("Cannot find property \"%s\" for type %s\n"
-                    .formatted(
-                            propertyName,
-                            GObjects.typeName(objectClass.readGType())));
+                    .formatted(propertyName, GObjects.typeName(objectClass.readGType())));
         }
+        return pspec;
+    }
+
+    /**
+     * Read the value type from the GParamSpecClass.
+     *
+     * @return the value type of the GParamSpecClass, or null if not found
+     */
+    private static Type getValueType(ParamSpec pspec) {
         var pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
         return pclass == null ? null : pclass.readValueType();
+    }
+
+    /**
+     * Read the {@code value_type} field from the GParamSpec.
+     *
+     * @return the value type of the GParamSpec, or null if not found
+     */
+    private static Type getBoxedType(ParamSpec pspec) {
+        // ParamSpec is a class, not a record, so Java-GI doesn't generate
+        // read/write methods for its fields.
+        MemoryLayout.PathElement path = MemoryLayout.PathElement.groupElement("value_type");
+        VarHandle _varHandle = ParamSpec.getMemoryLayout().varHandle(path);
+        long _result = (long) _varHandle.get(pspec.handle(), 0);
+        return new Type(_result);
     }
 
     /**
@@ -81,7 +102,12 @@ public class Properties {
     public static void setProperty(GObject gobject, String propertyName,
                                    Object propertyValue) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
-        Type valueType = readPropertyValueType(gclass, propertyName);
+        ParamSpec pspec = getParamSpec(gclass, propertyName);
+        Type valueType = getValueType(pspec);
+
+        if (Types.BOXED.equals(valueType))
+            valueType = getBoxedType(pspec);
+
         try (var arena = Arena.ofConfined()) {
             var gvalue = new Value(arena).init(valueType);
             ValueUtil.objectToValue(propertyValue, gvalue);
@@ -101,13 +127,16 @@ public class Properties {
      */
     public static Object getProperty(GObject gobject, String propertyName) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
-        Type valueType = readPropertyValueType(gclass, propertyName);
+        ParamSpec pspec = getParamSpec(gclass, propertyName);
+        Type valueType = getValueType(pspec);
+
+        if (Types.BOXED.equals(valueType))
+            valueType = getBoxedType(pspec);
+
         try (var arena = Arena.ofConfined()) {
             var gvalue = new Value(arena).init(valueType);
             gobject.getProperty(propertyName, gvalue);
-            Object result = ValueUtil.valueToObject(gvalue);
-            gvalue.unset();
-            return result;
+            return ValueUtil.valueToObject(gvalue);
         }
     }
 

@@ -27,6 +27,8 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import org.javagi.base.Enumeration;
+import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.TypeCache;
 import org.javagi.interop.Interop;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,6 +71,7 @@ public class ValueUtil {
         if (type.equals(ULONG))          return src.getUlong();
         if (type.equals(INT64))          return src.getInt64();
         if (type.equals(STRING))         return src.getString();
+        if (type.equals(STRV))           return Interop.getStringArrayFrom(src.getBoxed(), TransferOwnership.FULL);
         if (type.equals(ENUM))           return src.getEnum();
         if (type.equals(FLAGS))          return src.getFlags();
         if (type.equals(OBJECT))         return src.getObject();
@@ -85,7 +88,15 @@ public class ValueUtil {
         if (typeIsA(type, FLAGS))        return src.getFlags();
 
         // Boxed types
-        return src.getBoxed();
+        if (BoxedUtil.isBoxed(type)) {
+            MemorySegment address = src.getBoxed();
+            var ctor = TypeCache.getConstructor(type, null);
+            if (ctor == null)
+                throw new UnsupportedOperationException("Unsupported boxed type: " + GObjects.typeName(type));
+            return ctor.apply(address);
+        }
+
+        throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
     }
 
     /**
@@ -128,7 +139,8 @@ public class ValueUtil {
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
         else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
         else if (typeIsA(type, FLAGS))        dest.setEnum(((Enumeration) src).getValue());
-        else                                  dest.setBoxed(((Proxy) src).handle());
+        else if (BoxedUtil.isBoxed(type))     dest.setBoxed(((Proxy) src).handle());
+        else throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
 
         return true;
     }
