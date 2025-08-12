@@ -29,6 +29,7 @@ import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeInstance;
 
+import org.javagi.base.Enumeration;
 import org.javagi.base.Proxy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,6 +48,9 @@ public class TypeCache {
             = new ConcurrentHashMap<>();
 
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
+            = new ConcurrentHashMap<>();
+
+    private final static Map<Type, Function<Integer, ? extends Enumeration>> enumTypeRegister
             = new ConcurrentHashMap<>();
 
     private final static Map<Class<?>, Type> classToTypeMap
@@ -162,6 +166,21 @@ public class TypeCache {
     }
 
     /**
+     * Get a function that will create a Enumeration instance for a given int
+     * value for the provided GType.
+     *
+     * @param type the GType of the enum/flags type
+     * @return the contructor function
+     * @param <T> the function will create Enum instances that implement the
+     *            Java-GI Enumeration interface
+     */
+    @SuppressWarnings("unchecked") // // Can't get the type of the HashMap exactly right
+    public static <T extends Enum<T> & Enumeration>
+    Function<Integer, T> getEnumConstructor(@NotNull Type type) {
+        return (Function<Integer, T>) enumTypeRegister.get(type);
+    }
+
+    /**
      * Return the GType that was registered for this class. If no type was
      * registered yet, this method will try to register it, and then return
      * the GType.
@@ -221,9 +240,10 @@ public class TypeCache {
     /**
      * Register the type and constructor function for the provided class
      *
-     * @param cls  Class in Java
-     * @param type The registered GType
-     * @param ctor Constructor function for this type
+     * @param cls           Class in Java
+     * @param type          The registered GType
+     * @param ctor          Constructor function for this type
+     * @param typeClassCtor Constructor function for the typeclass of this type
      */
     public static void register(Class<?> cls,
                                 Type type,
@@ -237,6 +257,25 @@ public class TypeCache {
                 typeClassRegister.put(type, typeClassCtor);
             classToTypeMap.put(cls, type);
         }
+    }
+
+    /**
+     * Register the type and constructor function for an enum/flags type
+     *
+     * @param cls  Class in Java
+     * @param type The registered GType
+     * @param ctor Constructor function for this type
+     */
+    public static <T extends Enum<T> & Enumeration> void registerEnum(
+            Class<T> cls,
+            Type type,
+            Function<Integer, T> ctor) {
+        requireNonNull(cls);
+        if (type != null) {
+            if (ctor != null)
+                enumTypeRegister.put(type, ctor);
+        }
+        classToTypeMap.put(cls, type);
     }
 
     /**
