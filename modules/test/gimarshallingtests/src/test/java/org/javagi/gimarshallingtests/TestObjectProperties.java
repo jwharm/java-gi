@@ -19,12 +19,16 @@
 
 package org.javagi.gimarshallingtests;
 
-import org.gnome.gi.gimarshallingtests.BoxedStruct;
-import org.gnome.gi.gimarshallingtests.PropertiesObject;
+import org.gnome.gi.gimarshallingtests.*;
 import org.gnome.glib.List;
+import org.gnome.glib.Variant;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.Value;
+import org.javagi.gobject.types.Types;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
@@ -136,5 +140,57 @@ public class TestObjectProperties {
         // the type hint in the doc comment is not usable here
         assertThrows(UnsupportedOperationException.class,
                      () -> obj.getProperty("some-boxed-glist"));
+    }
+
+    @Test
+    void getSetGValue() {
+        var in = new Value();
+        in.init(Types.INT);
+        in.setInt(42);
+        // cast to Object to ensure we use the correct overload
+        obj.setProperty("some-gvalue", (Object) in);
+        var out = (Value) obj.getProperty("some-gvalue");
+        assertEquals(in.getInt(), out.getInt());
+    }
+
+    @Test
+    void getSetGVariant() {
+        var in = new Variant("i", 42);
+        obj.setProperty("some-variant", in);
+        var out = (Variant) obj.getProperty("some-variant");
+        assertEquals(in.getInt32(), out.getInt32());
+    }
+
+    @Test
+    void getSetGObject() {
+        var in = new GObject();
+        obj.setProperty("some-object", in);
+        var out = (GObject) obj.getProperty("some-object");
+        assertEquals(in, out);
+
+        in = new GIMarshallingTestsObject(42);
+        obj.setProperty("some-object", in);
+        out = (GIMarshallingTestsObject) obj.getProperty("some-object");
+        assertEquals(42, out.getProperty("int"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getSetFlags() {
+        Set<Flags> in = Set.of(Flags.VALUE2);
+        obj.setProperty("some-flags", in);
+        Set<Flags> out = (Set<Flags>) obj.getProperty("some-flags");
+        assertEquals(in, out);
+
+        in = Set.of(Flags.VALUE1, Flags.VALUE2);
+        obj.setProperty("some-flags", in);
+        out = (Set<Flags>) obj.getProperty("some-flags");
+        assertEquals(in, out);
+    }
+
+    @Test
+    void getSetEnum() {
+        obj.setProperty("some-enum", GEnum.VALUE2);
+        assertEquals(GEnum.VALUE2, obj.getProperty("some-enum"));
     }
 }
