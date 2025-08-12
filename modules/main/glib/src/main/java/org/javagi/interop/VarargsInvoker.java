@@ -197,6 +197,8 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
                     allocateNativeArray(arr, false, arena).address();
             case String[] arr ->
                     allocateNativeArray(arr, false, arena).address();
+            case MemorySegment segment ->
+                    segment;
             case Boolean bool ->
                     bool ? 1 : 0;
             case String string ->
