@@ -59,6 +59,17 @@ public abstract class Alias<T> {
     }
 
     /**
+     * Return the simple class name of the alias and its value, formatted as
+     * {@code ClassName<value>}.
+     *
+     * @return a string representation of the alias type and value
+     */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "<" + this.value + ">";
+    }
+
+    /**
      * Compare two aliases for equality. This will compare both the type of the
      * aliases, and their values.
      *
