@@ -82,7 +82,7 @@ public class Properties {
      *
      * @return the value type of the GParamSpec, or null if not found
      */
-    private static Type getBoxedType(ParamSpec pspec) {
+    private static Type getInnerType(ParamSpec pspec) {
         // ParamSpec is a class, not a record, so Java-GI doesn't generate
         // read/write methods for its fields.
         MemoryLayout.PathElement path = MemoryLayout.PathElement.groupElement("value_type");
@@ -105,8 +105,8 @@ public class Properties {
         ParamSpec pspec = getParamSpec(gclass, propertyName);
         Type valueType = getValueType(pspec);
 
-        if (Types.BOXED.equals(valueType))
-            valueType = getBoxedType(pspec);
+        if (List.of(Types.BOXED, Types.ENUM, Types.FLAGS).contains(valueType))
+            valueType = getInnerType(pspec);
 
         try (var arena = Arena.ofConfined()) {
             var gvalue = new Value(arena).init(valueType);
@@ -130,8 +130,8 @@ public class Properties {
         ParamSpec pspec = getParamSpec(gclass, propertyName);
         Type valueType = getValueType(pspec);
 
-        if (Types.BOXED.equals(valueType))
-            valueType = getBoxedType(pspec);
+        if (List.of(Types.BOXED, Types.ENUM, Types.FLAGS).contains(valueType))
+            valueType = getInnerType(pspec);
 
         try (var arena = Arena.ofConfined()) {
             var gvalue = new Value(arena).init(valueType);

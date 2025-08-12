@@ -158,15 +158,13 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             if (!i.skipJava())
                 spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
 
-        for (Alias a : ns.aliases()) {
-            if (!a.skipJava()) {
-                RegisteredType target = a.lookup();
-                if (target instanceof Class c)
-                    spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
-                if (target instanceof Interface i)
-                    spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
-            }
-        }
+        for (Enumeration e : ns.enumerations())
+            if (!e.skipJava() && e.getTypeFunc() != null)
+                spec.addCode(registerEnum(e.constructorName(), e.typeName()));
+
+        for (Bitfield b : ns.bitfields())
+            if (!b.skipJava() && b.getTypeFunc() != null)
+                spec.addCode(registerEnum(b.constructorName(), b.typeName()));
 
         // Boxed types
         for (Record r : ns.records())
@@ -177,6 +175,24 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         for (Boxed b : ns.boxeds())
             if (!b.skipJava())
                 spec.addCode(register(b.constructorName(), b.typeName(), null));
+
+        for (Alias a : ns.aliases()) {
+            if (!a.skipJava()) {
+                RegisteredType target = a.lookup();
+                if (target instanceof Class c)
+                    spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
+                else if (target instanceof Interface i)
+                    spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
+                else if (target instanceof Enumeration e && e.getTypeFunc() != null)
+                    spec.addCode(registerEnum(e.constructorName(), a.typeName()));
+                else if (target instanceof Bitfield b && b.getTypeFunc() != null)
+                    spec.addCode(registerEnum(b.constructorName(), a.typeName()));
+                else if (target instanceof Record r && r.getTypeFunc() != null)
+                    spec.addCode(register(r.constructorName(), a.typeName(), null));
+                else if (target instanceof Boxed b)
+                    spec.addCode(register(b.constructorName(), a.typeName(), null));
+            }
+        }
 
         return spec.build();
     }
@@ -191,6 +207,19 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .add(constructor)
                 .add(typeClassName == null ? ", null" : ", $typeClassName:T::new",
                         "typeClassName", typeClassName)
+                .add(");\n");
+        return CodeBlock.builder()
+                .addNamed(stmt.format(), stmt.arguments())
+                .build();
+    }
+
+    private CodeBlock registerEnum(PartialStatement constructor,
+                                   ClassName typeName) {
+        var stmt = PartialStatement.of(
+                        "$typeCache:T.registerEnum($typeName:T.class, $typeName:T.getType(), ",
+                        "typeCache", ClassNames.TYPE_CACHE,
+                        "typeName", typeName)
+                .add(constructor)
                 .add(");\n");
         return CodeBlock.builder()
                 .addNamed(stmt.format(), stmt.arguments())
