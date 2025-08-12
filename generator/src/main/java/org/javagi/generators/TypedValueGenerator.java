@@ -275,7 +275,9 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP,
                     targetTypeTag, isEnum ? ClassNames.INTEROP : elemType.typeName());
 
-        else if (target instanceof Record && (!elemType.isPointer()))
+        else if (target instanceof Record
+                        && (!elemType.isPointer())
+                        && (!"GLib.PtrArray".equals(array.name())))
             stmt = PartialStatement.of(
                     "$interop:T.allocateNativeArray(" + identifier
                             + ", $" + targetTypeTag + ":T.getMemoryLayout(), "
