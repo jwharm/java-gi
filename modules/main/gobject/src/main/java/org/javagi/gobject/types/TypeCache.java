@@ -125,10 +125,13 @@ public class TypeCache {
         }
 
         // Check implemented interfaces
-        for (var iface : GObjects.typeInterfaces(type)) {
-            var result = tryConstruct(cls, iface);
-            if (result != null)
-                return result;
+        var typeInterfaces = GObjects.typeInterfaces(type);
+        if (typeInterfaces != null) {
+            for (var iface : typeInterfaces) {
+                var result = tryConstruct(cls, iface);
+                if (result != null)
+                    return result;
+            }
         }
 
         // Register the fallback constructor for this type

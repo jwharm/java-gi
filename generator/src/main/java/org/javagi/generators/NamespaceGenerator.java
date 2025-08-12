@@ -25,6 +25,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.gir.Record;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.util.PartialStatement;
 import org.javagi.util.Platform;
@@ -145,6 +146,10 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         MethodSpec.Builder spec = MethodSpec.methodBuilder("registerTypes")
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
+        // Type registration is only possible when the GObject module is available
+        if (!ns.parent().isInScope("GObject"))
+            return spec.build();
+
         for (Class c : ns.classes())
             if (!c.skipJava())
                 spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
@@ -163,6 +168,12 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             }
         }
 
+        // Boxed types
+        for (Record r : ns.records())
+            if (!r.skipJava() && r.getTypeFunc() != null)
+                spec.addCode(register(r.constructorName(), r.typeName(), null));
+
+        // Opaque boxed types
         for (Boxed b : ns.boxeds())
             if (!b.skipJava())
                 spec.addCode(register(b.constructorName(), b.typeName(), null));

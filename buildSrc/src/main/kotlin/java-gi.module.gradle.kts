@@ -64,6 +64,8 @@ tasks.withType<Javadoc>().configureEach {
 }
 
 tasks.withType<Test>().configureEach {
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
     useJUnitPlatform()
 
     testLogging {

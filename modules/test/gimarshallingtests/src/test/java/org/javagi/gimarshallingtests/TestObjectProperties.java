@@ -21,9 +21,8 @@ package org.javagi.gimarshallingtests;
 
 import org.gnome.gi.gimarshallingtests.BoxedStruct;
 import org.gnome.gi.gimarshallingtests.PropertiesObject;
-import org.gnome.glib.Strv;
+import org.gnome.glib.List;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -113,24 +112,29 @@ public class TestObjectProperties {
         assertEquals(Math.E, obj.getProperty("some-double"));
     }
 
-    @Test @Disabled // Boxed GValues not implemented yet
+    @Test
     void getSetStrv() {
         var array = new String[] {"0", "1", "2"};
         obj.setProperty("some-strv", array);
         assertArrayEquals(array, (String[]) obj.getProperty("some-strv"));
     }
 
-    @Test @Disabled // Boxed GValues not implemented yet
+    @Test
     void getSetBoxedStruct() {
-        var struct = new BoxedStruct();
-        obj.setProperty("some-boxed-struct", struct);
-        assertEquals(struct, obj.getProperty("some-boxed-struct"));
+        var in = new BoxedStruct();
+        in.writeLong(6);
+        obj.setProperty("some-boxed-struct", in);
+        var out = (BoxedStruct) obj.getProperty("some-boxed-struct");
+        assertEquals(in.readLong(), out.readLong());
     }
 
-    @Test @Disabled // Boxed GValues not implemented yet
+    @Test
     void getSetBoxedGList() {
-        var glist = glistIntNoneReturn();
+        List<Integer> glist = glistIntNoneReturn();
         obj.setProperty("some-boxed-glist", glist);
-        assertEquals(glist, obj.getProperty("some-boxed-glist"));
+        // Currently unsupported: The boxed type is not registered, and
+        // the type hint in the doc comment is not usable here
+        assertThrows(UnsupportedOperationException.class,
+                     () -> obj.getProperty("some-boxed-glist"));
     }
 }
