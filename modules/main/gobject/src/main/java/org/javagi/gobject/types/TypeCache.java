@@ -274,8 +274,8 @@ public class TypeCache {
         if (type != null) {
             if (ctor != null)
                 enumTypeRegister.put(type, ctor);
+            classToTypeMap.put(cls, type);
         }
-        classToTypeMap.put(cls, type);
     }
 
     /**
