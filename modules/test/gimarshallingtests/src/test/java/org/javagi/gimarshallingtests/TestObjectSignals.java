@@ -20,12 +20,10 @@
 package org.javagi.gimarshallingtests;
 
 import org.gnome.gi.gimarshallingtests.*;
-import org.javagi.interop.Interop;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.Arena;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -155,6 +153,22 @@ public class TestObjectSignals {
             assertEquals(-2, hashtable.get("2"));
         });
         obj.emitHashTableUtf8IntFull();
+        assertEquals(1, count.get());
+    }
+
+    // FIXME: The BoxedStruct is passed by value, but the FunctionDescriptor of
+    // the callback must have an ADDRESS parameter, not the actual layout, or
+    // else it will not work.
+    @Test @Disabled
+    void boxedStruct() {
+        AtomicInteger count = new AtomicInteger(0);
+        obj.onSomeBoxedStruct(struct -> {
+            count.incrementAndGet();
+            assertEquals(99, struct.readLong());
+            assertEquals("a string", struct.readString());
+            assertArrayEquals(new String[] {"foo", "bar", "baz"}, struct.readGStrv());
+        });
+        obj.emitBoxedStruct();
         assertEquals(1, count.get());
     }
 }
