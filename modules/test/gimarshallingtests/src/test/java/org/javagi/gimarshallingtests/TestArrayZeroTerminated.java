@@ -48,6 +48,19 @@ public class TestArrayZeroTerminated {
         BoxedStruct[] structs = arrayZeroTerminatedReturnStruct();
         assertNotNull(structs);
         assertEquals(3, structs.length);
+        assertEquals(42, structs[0].readLong());
+        assertEquals(43, structs[1].readLong());
+        assertEquals(44, structs[2].readLong());
+    }
+
+    @Test
+    void returnSequentialStruct() {
+        BoxedStruct[] structs = arrayZeroTerminatedReturnSequentialStruct();
+        assertNotNull(structs);
+        assertEquals(3, structs.length);
+        assertEquals(42, structs[0].readLong());
+        assertEquals(43, structs[1].readLong());
+        assertEquals(44, structs[2].readLong());
     }
 
     @Test
