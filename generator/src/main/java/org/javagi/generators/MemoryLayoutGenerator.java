@@ -147,7 +147,7 @@ public class MemoryLayoutGenerator {
                 if (last || bitfieldPosition > (s * 8)) {
                     if (size > initialSize) stmt.add(",\n");
                     size += s;
-                    stmt.add("$memoryLayout:T.paddingLayout(" + s + ")")
+                    stmt.add("$memoryLayout:T.sequenceLayout(" + s + ", $valueLayout:T.JAVA_BYTE)")
                         .add(" /* bitfield */");
                     bitfieldPosition = last ? 0 : bits;
                 }
