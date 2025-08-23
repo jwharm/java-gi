@@ -141,6 +141,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if ("GTypeInstance".equals(rec.cType()))
             addCallParentMethods();
 
+        if ("GVariant".equals(rec.cType()))
+            builder.addMethod(gvariantPack())
+                    .addMethod(gvariantUnpack())
+                    .addMethod(gvariantUnpackRecursive());
+
         return builder.build();
     }
 
@@ -342,5 +347,49 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .returns(boolean.class)
                 .addStatement("return this.callParent")
                 .build());
+    }
+
+    private MethodSpec gvariantPack() {
+        return MethodSpec.methodBuilder("pack")
+                .addJavadoc("""
+                        Create a GVariant from a Java Object.
+                        
+                        @param o the Java Object to pack into a GVariant
+                        @return the GVariant with the packed Object
+                        @see Variants#pack
+                        """)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(ClassNames.G_VARIANT)
+                .addParameter(Object.class, "object")
+                .addStatement("return $T.pack(object)", ClassNames.VARIANTS)
+                .build();
+    }
+
+    private MethodSpec gvariantUnpack() {
+        return MethodSpec.methodBuilder("unpack")
+                .addJavadoc("""
+                        Unpack a GVariant into a Java Object.
+                        
+                        @return the unpacked Java Object
+                        @see Variants#unpack
+                        """)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(Object.class)
+                .addStatement("return $T.unpack(this, false)", ClassNames.VARIANTS)
+                .build();
+    }
+
+    private MethodSpec gvariantUnpackRecursive() {
+        return MethodSpec.methodBuilder("unpackRecursive")
+                .addJavadoc("""
+                        Unpack a GVariant into a Java Object. Nested GVariants are recursively unpacked.
+                        
+                        @return the unpacked Java Object
+                        @see Variants#unpack
+                        """)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(Object.class)
+                .addStatement("return $T.unpack(this, true)", ClassNames.VARIANTS)
+                .build();
     }
 }
