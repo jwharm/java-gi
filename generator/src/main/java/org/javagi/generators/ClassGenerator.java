@@ -437,7 +437,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(String.class, "detailedSignal")
                 .addParameter(C, "callback")
                 .addParameter(boolean.class, "after")
-                .addStatement("$1T closure = new $1T(callback)",
+                .addStatement("$1T closure = new $1T(callback).ignoreFirstParameter()",
                         ClassNames.JAVA_CLOSURE)
                 .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
                         ClassNames.G_OBJECTS)

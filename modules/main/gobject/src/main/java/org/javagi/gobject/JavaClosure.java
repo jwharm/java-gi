@@ -39,11 +39,25 @@ import static org.javagi.base.Constants.LOG_DOMAIN;
  */
 public class JavaClosure extends Closure {
 
+    private boolean ignoreFirstParameter = false;
+
     // Take ownership of the allocated memory
     private JavaClosure(MemorySegment address) {
         super(address);
         ref();
         sink();
+    }
+
+    /**
+     * Ignore the first parameter of the closure. This is often the source of
+     * an event, a property binding, or something else that is not included in
+     * the Java API, so this option specifies to ignore it.
+     *
+     * @return this JavaClosure
+     */
+    public JavaClosure ignoreFirstParameter() {
+        ignoreFirstParameter = true;
+        return this;
     }
 
     /**
@@ -136,17 +150,24 @@ public class JavaClosure extends Closure {
         this(simple((int) getMemoryLayout().byteSize(), null).handle());
         setMarshal((closure, returnValue, paramValues, hint, data) -> {
             try {
+                // Convert the parameter Values into Java Objects
                 Object[] parameterObjects;
                 if (paramValues == null || paramValues.length == 0) {
                     parameterObjects = new Object[0];
-                } else {
-                    // Convert the parameter Values into Java Objects
+                } else if (ignoreFirstParameter) {
                     parameterObjects = new Object[paramValues.length - 1];
                     for (int v = 1; v < paramValues.length; v++) {
                         Object o = ValueUtil.valueToObject(paramValues[v]);
                         parameterObjects[v - 1] = o;
                     }
+                } else {
+                    parameterObjects = new Object[paramValues.length];
+                    for (int v = 0; v < paramValues.length; v++) {
+                        Object o = ValueUtil.valueToObject(paramValues[v]);
+                        parameterObjects[v] = o;
+                    }
                 }
+
                 // Invoke the method
                 method.setAccessible(true);
                 Object result = method.invoke(instance, parameterObjects);

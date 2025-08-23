@@ -50,7 +50,7 @@ public class ClosureTest {
         try {
             timesTwo = ClosureTest.class.getMethod("timesTwo", Value.class, Value.class);
         } catch (NoSuchMethodException ignored) {}
-        JavaClosure closure = new JavaClosure(this, timesTwo);
+        JavaClosure closure = new JavaClosure(this, timesTwo).ignoreFirstParameter();
 
         // Create a property binding to run "timesTwo" every time the "num" property on n1 or n2 is changed
         // Keep a reference to the Binding object instance alive, or else the property binding will be disconnected
@@ -71,7 +71,7 @@ public class ClosureTest {
         NumObject n2 = new NumObject();
         
         // Create a JavaClosure for the "timesTwo" method
-        JavaClosure closure = new JavaClosure((MyInterface) this::timesTwo);
+        JavaClosure closure = new JavaClosure((MyInterface) this::timesTwo).ignoreFirstParameter();
 
         // Create a property binding to run "timesTwo" every time the "num" property on n1 or n2 is changed
         // Keep a reference to the Binding object instance alive, or else the property binding will be disconnected

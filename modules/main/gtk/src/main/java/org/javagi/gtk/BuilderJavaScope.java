@@ -94,7 +94,7 @@ public final class BuilderJavaScope extends BuilderCScope
             // Find method with the right name
             Class<? extends GObject> cls = currentObject.getClass();
             Method method = getMethodForName(cls, function);
-            return new JavaClosure(currentObject, method);
+            return new JavaClosure(currentObject, method).ignoreFirstParameter();
         } catch (NoSuchMethodException e) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
                     "Cannot find method %s in class %s\n",

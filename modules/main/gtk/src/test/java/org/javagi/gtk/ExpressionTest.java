@@ -33,7 +33,8 @@ public class ExpressionTest {
     public void testClosureExpression() {
         Value value = new Value();
         Type integer = Types.INT;
-        Closure closure = new JavaClosure((IntBinaryOperator) (a, b) -> a * b);
+        Closure closure = new JavaClosure((IntBinaryOperator) (a, b) -> a * b)
+                                    .ignoreFirstParameter();
         Expression[] params = {
                 new ConstantExpression(integer, 2),
                 new ConstantExpression(integer, 3)
