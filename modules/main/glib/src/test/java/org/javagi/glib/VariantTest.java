@@ -157,4 +157,15 @@ public class VariantTest {
         List<?> list2 = (List<?>) o2;
         assertInstanceOf(Variant.class, list2.getFirst());
     }
+
+    @Test
+    void tuple() {
+        Variant tuple = new Variant("(ins)", 42, (short) 43, "44");
+        Object unpacked = tuple.unpack();
+        ArrayList<Object> expected = new ArrayList<>();
+        expected.add(42);
+        expected.add((short) 43);
+        expected.add("44");
+        assertEquals(expected, unpacked);
+    }
 }
