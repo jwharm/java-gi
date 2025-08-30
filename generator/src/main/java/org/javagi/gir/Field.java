@@ -51,6 +51,8 @@ public final class Field extends GirElement implements TypedValue {
      */
     public int getSize(boolean longAsInt) {
         AnyType anyType = anyType();
+        if (anyType instanceof Type t && t.isPointer())
+            return 8;
         return anyType == null ? 8 // callback
                                : anyType.allocatedSize(longAsInt);
     }
