@@ -77,6 +77,7 @@ public class GErrorException extends Exception {
         this.domain = gerror.readDomain();
         this.code = gerror.readCode();
         this.message = gerror.readMessage();
+        gerror.free();
     }
 
     /**

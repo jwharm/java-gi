@@ -213,24 +213,20 @@ public class ClosureGenerator {
         // Catch exceptions and set the GError** value
         if (closure.throws_()) {
             if (methodToInvoke.endsWith("invoke")) {
-                upcall.nextControlFlow("catch ($T _ite)",
-                        InvocationTargetException.class);
-                upcall.beginControlFlow("if (_ite.getCause() instanceof $T _ge)",
-                        ClassNames.GERROR_EXCEPTION);
+                upcall.nextControlFlow("catch ($T _ite)", InvocationTargetException.class)
+                      .beginControlFlow("if (_ite.getCause() instanceof $T _ge)", ClassNames.GERROR_EXCEPTION);
             } else {
-                upcall.nextControlFlow("catch ($T _ge)",
-                        ClassNames.GERROR_EXCEPTION);
+                upcall.nextControlFlow("catch ($T _ge)", ClassNames.GERROR_EXCEPTION);
             }
-            upcall.addStatement("$1T _gerror = new $1T(_ge.getDomain(), _ge.getCode(), _ge.getMessage())",
-                    ClassNames.G_ERROR);
-            upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())",
-                    ValueLayout.class);
+            upcall.addStatement("$1T _gerror = $1T.literal(_ge.getDomain(), _ge.getCode(), _ge.getMessage())", ClassNames.G_ERROR)
+                  .addStatement("$T.yieldOwnership(_gerror)", ClassNames.MEMORY_CLEANER)
+                  .addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())", ValueLayout.class);
             if (!returnsVoid)
                 returnNull(upcall);
             if (methodToInvoke.endsWith("invoke")) {
-                upcall.nextControlFlow("else");
-                upcall.addStatement("throw _ite");
-                upcall.endControlFlow();
+                upcall.nextControlFlow("else")
+                      .addStatement("throw _ite")
+                      .endControlFlow();
             }
             upcall.endControlFlow();
         }
