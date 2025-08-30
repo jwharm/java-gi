@@ -22,12 +22,10 @@ package org.javagi.gir;
 import java.util.List;
 import java.util.Map;
 
-public final class VirtualMethod extends Multiplatform implements Callable {
+public final class VirtualMethod extends GirElement implements Callable {
 
-    public VirtualMethod(Map<String, String> attributes,
-                         List<Node> children,
-                         int platforms) {
-        super(attributes, children, platforms);
+    public VirtualMethod(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     public Method invoker() {

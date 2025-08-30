@@ -25,28 +25,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Union
-        extends Multiplatform
-        implements StandardLayoutType {
+public final class Union extends GirElement implements StandardLayoutType {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Union(Map<String, String> attributes,
-                 List<Node> children,
-                 int platforms) {
-        super(attributes, children, platforms);
+    public Union(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
     public Union mergeWith(RegisteredType rt) {
         if (rt instanceof Union other)
-            return new Union(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Union(attributes(), union(children(), other.children()));
         return this;
     }
 

@@ -24,7 +24,6 @@ import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.Conversions;
 import org.javagi.util.PartialStatement;
-import org.javagi.util.Platform;
 import org.javagi.gir.Class;
 
 import javax.lang.model.element.Modifier;
@@ -102,11 +101,7 @@ public class MethodGenerator {
         if ((! (func instanceof Constructor)) // not for private constructor helper methods
                 && (func.infoElements().doc() != null)) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
-            if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                        .addJavadoc(javadoc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
-            else
-                builder.addJavadoc(javadoc);
+            builder.addJavadoc(javadoc);
         }
 
         // Deprecated annotation
@@ -144,10 +139,6 @@ public class MethodGenerator {
         // Exception
         if (func.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
-
-        // Platform check
-        if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addStatement(Platform.generateSupportCheck(func.platforms()));
 
         // try-block for arena
         if (func.allocatesMemory())

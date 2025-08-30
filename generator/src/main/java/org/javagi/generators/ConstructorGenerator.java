@@ -24,7 +24,6 @@ import com.squareup.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
-import org.javagi.util.Platform;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
 
@@ -80,11 +79,7 @@ public class ConstructorGenerator {
         // Javadoc
         if (ctor.infoElements().doc() != null) {
             String doc = new DocGenerator(ctor.infoElements().doc()).generate();
-            if (ctor.doPlatformCheck())
-                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                       .addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
-            else
-                builder.addJavadoc(doc);
+            builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -141,10 +136,7 @@ public class ConstructorGenerator {
         // Javadoc
         if (ctor.infoElements().doc() != null) {
             String doc = new DocGenerator(ctor.infoElements().doc()).generate();
-            if (ctor.doPlatformCheck())
-                builder.addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
-            else
-                builder.addJavadoc(doc);
+            builder.addJavadoc(doc);
         }
 
         // Deprecated annotation
@@ -158,10 +150,6 @@ public class ConstructorGenerator {
         // Exception
         if (ctor.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
-
-        // Platform check
-        if (ctor.doPlatformCheck())
-            builder.addStatement(Platform.generateSupportCheck(ctor.platforms()));
 
         builder.addStatement("var _result = $L($L)",
                 privateMethodName,

@@ -30,12 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Boxed extends Multiplatform implements StandardLayoutType {
+public final class Boxed extends GirElement implements StandardLayoutType {
 
-    public Boxed(Map<String, String> attributes,
-                 List<Node> children,
-                 int platforms) {
-        super(attributes, children, platforms);
+    public Boxed(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -51,10 +49,7 @@ public final class Boxed extends Multiplatform implements StandardLayoutType {
     @Override
     public Boxed mergeWith(RegisteredType rt) {
         if (rt instanceof Boxed other)
-            return new Boxed(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Boxed(attributes(), union(children(), other.children()));
         return this;
     }
 

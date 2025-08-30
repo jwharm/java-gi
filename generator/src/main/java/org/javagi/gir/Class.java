@@ -28,13 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Class extends Multiplatform
-        implements RegisteredType, FieldContainer {
+public final class Class extends GirElement implements RegisteredType, FieldContainer {
 
-    public Class(Map<String, String> attributes,
-                 List<Node> children,
-                 int platforms) {
-        super(attributes, children, platforms);
+    public Class(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -66,10 +63,7 @@ public final class Class extends Multiplatform
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Class other)
-            return new Class(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Class(attributes(), union(children(), other.children()));
         return this;
     }
 

@@ -25,12 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Bitfield extends Multiplatform implements EnumType {
+public final class Bitfield extends GirElement implements EnumType {
 
-    public Bitfield(Map<String, String> attributes,
-                    List<Node> children,
-                    int platforms) {
-        super(attributes, children, platforms);
+    public Bitfield(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -41,10 +39,7 @@ public final class Bitfield extends Multiplatform implements EnumType {
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Bitfield other)
-            return new Bitfield(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Bitfield(attributes(), union(children(), other.children()));
         return this;
     }
 

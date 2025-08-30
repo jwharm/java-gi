@@ -25,12 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Enumeration extends Multiplatform implements EnumType {
+public final class Enumeration extends GirElement implements EnumType {
 
-    public Enumeration(Map<String, String> attributes,
-                       List<Node> children,
-                       int platforms) {
-        super(attributes, children, platforms);
+    public Enumeration(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -40,10 +38,7 @@ public final class Enumeration extends Multiplatform implements EnumType {
 
     public Enumeration mergeWith(RegisteredType rt) {
         if (rt instanceof Enumeration other)
-            return new Enumeration(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Enumeration(attributes(), union(children(), other.children()));
         return this;
     }
 

@@ -261,11 +261,7 @@ public class CallableGenerator {
         // Javadoc
         if (callable.infoElements().doc() != null) {
             String doc = new DocGenerator(callable.infoElements().doc()).generate();
-            if (callable instanceof Multiplatform mp && mp.doPlatformCheck())
-                builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                       .addJavadoc(doc, ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
-            else
-                builder.addJavadoc(doc);
+            builder.addJavadoc(doc);
         }
 
         // Deprecated annotation

@@ -46,7 +46,11 @@ public abstract class GirElement implements Serializable, Node {
 
     GirElement(Map<String, String> attributes, List<Node> children) {
         this.attributes = attributes;
-        this.children = children;
+        setChildren(children);
+    }
+
+    private void setChildren(List<Node> children) {
+        this.children = new ArrayList<>(children); // ArrayList ensures mutability
         for (Node c : children) c.setParent(this);
     }
 
@@ -163,9 +167,7 @@ public abstract class GirElement implements Serializable, Node {
      */
     @SuppressWarnings("unchecked")
     public <T extends Node> T withChildren(List<Node> children) {
-        this.children = children;
-        for (var child : children)
-            child.setParent(this);
+        setChildren(children);
         return (T) this;
     }
 

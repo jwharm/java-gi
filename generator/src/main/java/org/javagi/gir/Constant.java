@@ -23,12 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Constant extends Multiplatform implements TypedValue {
+public final class Constant extends GirElement implements TypedValue {
 
-    public Constant(Map<String, String> attributes,
-                    List<Node> children,
-                    int platforms) {
-        super(attributes, children, platforms);
+    public Constant(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override

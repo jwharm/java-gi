@@ -24,13 +24,10 @@ import static org.javagi.util.CollectionUtils.*;
 import java.util.List;
 import java.util.Map;
 
-public final class Callback extends Multiplatform
-        implements RegisteredType, Callable {
+public final class Callback extends GirElement implements RegisteredType, Callable {
 
-    public Callback(Map<String, String> attributes,
-                    List<Node> children,
-                    int platforms) {
-        super(attributes, children, platforms);
+    public Callback(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
