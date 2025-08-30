@@ -167,7 +167,13 @@ public class CallableGenerator {
 
             // Generate null-check. But don't null-check parameters that are
             // hidden from the Java API, or primitive values
-            if (generator.checkNull())
+            boolean nullCheck = generator.checkNull();
+
+            // Always translate a `null` GList/GSlist to native NULL
+            if (p.anyType() instanceof Type t && t.checkIsGList())
+                nullCheck = true;
+
+            if (nullCheck)
                 stmt.add("($memorySegment:T) (" + name + " == null ? $memorySegment:T.NULL : ");
 
             // cast int parameter to a long
@@ -217,7 +223,7 @@ public class CallableGenerator {
                 stmt.add(generator.marshalJavaToNative(name));
 
             // Closing parentheses for null-check
-            if (generator.checkNull())
+            if (nullCheck)
                 stmt.add(")");
         }
 
