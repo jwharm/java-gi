@@ -19,50 +19,49 @@
 
 package org.javagi.regress;
 
-import org.gnome.glib.Variant;
+import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestVariant {
+public class TestUtf8 {
+    private static final String CONST_STR = "const ♥ utf8";
+    private static final String NONCONST_STR = "nonconst ♥ utf8";
+
     @Test
-    void i() {
-        var v = testGvariantI();
-        assertNotNull(v);
-        assertEquals(1, v.unpack());
+    void constReturn() {
+        assertEquals(CONST_STR, testUtf8ConstReturn());
     }
 
     @Test
-    void s() {
-        var v = testGvariantS();
-        assertNotNull(v);
-        assertEquals("one", v.unpack());
+    void nonconstReturn() {
+        assertEquals(NONCONST_STR, testUtf8NonconstReturn());
     }
 
     @Test
-    void asv() {
-        var v = testGvariantAsv();
-        assertNotNull(v);
-        assertEquals(Map.of("name", "foo", "timeout", 10), v.unpackRecursive());
+    void constIn() {
+        testUtf8ConstIn(CONST_STR);
     }
 
     @Test
-    void v() {
-        var v = testGvariantV();
-        assertNotNull(v);
-        assertInstanceOf(Variant.class, v.unpack());
-        assertInstanceOf(String.class, v.unpackRecursive());
-        assertEquals("contents", v.unpackRecursive());
+    void out() {
+        var out = new Out<String>();
+        testUtf8Out(out);
+        assertEquals(NONCONST_STR, out.get());
     }
 
     @Test
-    void as() {
-        var v = testGvariantAs();
-        assertNotNull(v);
-        assertEquals(List.of("one", "two", "three"), v.unpackRecursive());
+    void inout() {
+        var inout = new Out<>(CONST_STR);
+        testUtf8Inout(inout);
+        assertEquals(NONCONST_STR, inout.get());
+    }
+
+    @Test
+    void filenameReturn() {
+        assertEquals(List.of("åäö", "/etc/fstab"), testFilenameReturn());
     }
 }

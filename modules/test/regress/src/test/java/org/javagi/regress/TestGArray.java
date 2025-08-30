@@ -19,50 +19,19 @@
 
 package org.javagi.regress;
 
-import org.gnome.glib.Variant;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
 
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestVariant {
+public class TestGArray {
     @Test
-    void i() {
-        var v = testGvariantI();
-        assertNotNull(v);
-        assertEquals(1, v.unpack());
+    void containerReturn() {
+        assertArrayEquals(new String[] {"regress"}, testGarrayContainerReturn());
     }
 
     @Test
-    void s() {
-        var v = testGvariantS();
-        assertNotNull(v);
-        assertEquals("one", v.unpack());
-    }
-
-    @Test
-    void asv() {
-        var v = testGvariantAsv();
-        assertNotNull(v);
-        assertEquals(Map.of("name", "foo", "timeout", 10), v.unpackRecursive());
-    }
-
-    @Test
-    void v() {
-        var v = testGvariantV();
-        assertNotNull(v);
-        assertInstanceOf(Variant.class, v.unpack());
-        assertInstanceOf(String.class, v.unpackRecursive());
-        assertEquals("contents", v.unpackRecursive());
-    }
-
-    @Test
-    void as() {
-        var v = testGvariantAs();
-        assertNotNull(v);
-        assertEquals(List.of("one", "two", "three"), v.unpackRecursive());
+    void fullReturn() {
+        assertArrayEquals(new String[] {"regress"}, testGarrayFullReturn());
     }
 }

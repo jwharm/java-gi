@@ -19,50 +19,54 @@
 
 package org.javagi.regress;
 
-import org.gnome.glib.Variant;
+import org.gnome.glib.SList;
+import org.javagi.base.Out;
+import org.javagi.base.TransferOwnership;
+import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestVariant {
+public class TestGSList {
+    private static final List<String> STR_LIST = List.of("1", "2", "3");
+
     @Test
-    void i() {
-        var v = testGvariantI();
-        assertNotNull(v);
-        assertEquals(1, v.unpack());
+    void noneReturn() {
+        assertIterableEquals(STR_LIST, testGslistNothingReturn());
+        assertIterableEquals(STR_LIST, testGslistNothingReturn2());
     }
 
     @Test
-    void s() {
-        var v = testGvariantS();
-        assertNotNull(v);
-        assertEquals("one", v.unpack());
+    void containerReturn() {
+        assertIterableEquals(STR_LIST, testGslistContainerReturn());
     }
 
     @Test
-    void asv() {
-        var v = testGvariantAsv();
-        assertNotNull(v);
-        assertEquals(Map.of("name", "foo", "timeout", 10), v.unpackRecursive());
+    void fullReturn() {
+        assertIterableEquals(STR_LIST, testGslistEverythingReturn());
     }
 
     @Test
-    void v() {
-        var v = testGvariantV();
-        assertNotNull(v);
-        assertInstanceOf(Variant.class, v.unpack());
-        assertInstanceOf(String.class, v.unpackRecursive());
-        assertEquals("contents", v.unpackRecursive());
+    void noneIn() {
+        var list = new org.gnome.glib.SList<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        list.addAll(STR_LIST);
+        testGslistNothingIn(list);
+        testGslistNothingIn2(list);
     }
 
     @Test
-    void as() {
-        var v = testGvariantAs();
-        assertNotNull(v);
-        assertEquals(List.of("one", "two", "three"), v.unpackRecursive());
+    void nullIn() {
+        testGslistNullIn(null);
+    }
+
+    @Test
+    void nullOut() {
+        var out = new Out<SList<String>>();
+        testGslistNullOut(out);
+        assertNotNull(out.get());
+        assertTrue(out.get().isEmpty());
     }
 }

@@ -3,3 +3,15 @@
  * Change the type to a gint64.
  */
 ANNOTATION_CALCULATED_LARGE.gint#type name=gint64 c:type=gint64
+
+/* c:type of the TestStruct[] elements is incorrectly specified as
+ * "RegressTestStructA*" in the gir file. It is not an array of pointers;
+ * the array contains the flat structs. */
+test_array_struct_out*.arr.*#array.TestStructA#type c:type=RegressTestStructA
+
+// Field declarations with a missing c:type.
+TestStructD
+    .array2.*.TestObj c:type="TestObj*"
+    .field.TestObj c:type="TestObj*"
+    .list.*.TestObj c:type="TestObj*"
+    .garray.*.TestObj c:type="TestObj*"
