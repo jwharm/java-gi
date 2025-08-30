@@ -68,7 +68,7 @@ jobs:
           mv java-gi/build/docs/javadoc site/javadoc
 
       - name: Upload Site Artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: 'site'
 
