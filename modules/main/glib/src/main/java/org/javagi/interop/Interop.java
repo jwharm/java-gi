@@ -620,6 +620,8 @@ public class Interop {
                                     : alloc.allocateFrom(JAVA_LONG, l);
             case Short s     -> alloc.allocateFrom(JAVA_SHORT, s);
             case Proxy p     -> p.handle();
+            case Type t      -> MemorySegment.ofAddress(t.getValue()); // GTYPE_TO_POINTER()
+            case Alias<?> a  -> getAddress(a.getValue(), alloc);
             default          -> throw new IllegalArgumentException(
                     "Not a MemorySegment, String, primitive or Proxy");
         };
@@ -1717,7 +1719,7 @@ public class Interop {
                     enumSet.add(flag);
                 } catch (IllegalStateException e) {
                     GLib.log(Constants.LOG_DOMAIN,
-                             LogLevelFlags.LEVEL_WARNING,
+                             LogLevelFlags.LEVEL_DEBUG,
                              "Unexpected flag %d in enum %s\n",
                              n,
                              cls == null ? "NULL" : cls.getName());
