@@ -83,9 +83,8 @@ public class Matcher {
                 var name = child instanceof Boxed
                         ? child.attr("glib:name")
                         : child.attr("name");
-                var matchesPattern = name != null && pattern.matcher(name).matches();
-
-                if (matchesPattern) {
+                if (name == null) name = "";
+                if (pattern.matcher(name).matches()) {
                     // node type matches selector?
                     if (rule.selector() == null || rule.selector().equals(getTagName(child.getClass()))) {
                         result.add(child);
