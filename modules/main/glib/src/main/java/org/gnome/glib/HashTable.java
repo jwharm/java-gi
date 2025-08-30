@@ -757,6 +757,9 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @return the number of key/value pairs in the {@code GHashTable}.
      */
     public int size() {
+        if (NULL.equals(handle()))
+            return 0;
+
         int _result;
         try {
             _result = (int) MethodHandles.g_hash_table_size.invokeExact(handle());
