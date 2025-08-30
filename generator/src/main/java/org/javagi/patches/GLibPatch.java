@@ -45,29 +45,8 @@ public class GLibPatch implements Patch {
              */
             var gtype = new Alias(
                     Map.of("name", "Type", "c:type", "GType"),
-                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"),
-                                     emptyList())),
-                    ns.platforms());
+                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"), emptyList())));
             return add(ns, gtype);
-        }
-
-        /*
-         * GPid is defined as gint on Unix vs gpointer on Windows. The generated
-         * Java class is an int Alias, so we remove the Windows support.
-         */
-        if (element instanceof Alias a && "Pid".equals(a.name())) {
-            a.setPlatforms(Platform.LINUX | Platform.MACOS);
-            return a;
-        }
-
-        /*
-         * GThreadFunctions contains a virtual function pointer with a "gulong"
-         * parameter, which can cause problems on Windows. GThreadFunctions is
-         * deprecated, so we can safely remove the Windows support.
-         */
-        if (element instanceof Record r && "ThreadFunctions".equals(r.name())) {
-            r.setPlatforms(Platform.LINUX | Platform.MACOS);
-            return r;
         }
 
         /*
@@ -96,13 +75,11 @@ public class GLibPatch implements Patch {
          * array.
          */
         if (element instanceof Alias a && "Strv".equals(a.name())) {
-            return new Alias(a.attributes(),
-                    listOfNonNull(a.infoElements().doc(),
-                            a.infoElements().sourcePosition(),
-                            new Array(Map.of("zero-terminated", "1"),
-                                        List.of(new Type(Map.of("name", "utf8"),
-                                                         emptyList())))),
-                    a.platforms());
+            return new Alias(a.attributes(), listOfNonNull(
+                    a.infoElements().doc(),
+                    a.infoElements().sourcePosition(),
+                    new Array(Map.of("zero-terminated", "1"),
+                              List.of(new Type(Map.of("name", "utf8"), emptyList())))));
         }
 
         return element;

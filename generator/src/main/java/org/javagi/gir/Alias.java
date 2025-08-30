@@ -27,12 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Alias extends Multiplatform implements RegisteredType {
+public final class Alias extends GirElement implements RegisteredType {
 
-    public Alias(Map<String, String> attributes,
-                 List<Node> children,
-                 int platforms) {
-        super(attributes, children, platforms);
+    public Alias(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -79,10 +77,7 @@ public final class Alias extends Multiplatform implements RegisteredType {
     @Override
     public Alias mergeWith(RegisteredType rt) {
         if (rt instanceof Alias other)
-            return new Alias(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Alias(attributes(), union(children(), other.children()));
         return this;
     }
 

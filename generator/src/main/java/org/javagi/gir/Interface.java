@@ -30,18 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Interface extends Multiplatform
-        implements RegisteredType, FieldContainer {
+public final class Interface extends GirElement implements RegisteredType, FieldContainer {
 
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
     }
 
-    public Interface(Map<String, String> attributes,
-                     List<Node> children,
-                     int platforms) {
-        super(attributes, children, platforms);
+    public Interface(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -67,10 +64,7 @@ public final class Interface extends Multiplatform
     @Override
     public Interface mergeWith(RegisteredType rt) {
         if (rt instanceof Interface other)
-            return new Interface(
-                    attributes(),
-                    union(children(), other.children()),
-                    platforms() | other.platforms());
+            return new Interface(attributes(), union(children(), other.children()));
         return this;
     }
 

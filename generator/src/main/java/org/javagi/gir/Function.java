@@ -23,12 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Function extends Multiplatform implements Callable {
+public final class Function extends GirElement implements Callable {
 
-    public Function(Map<String, String> attributes,
-                    List<Node> children,
-                    int platforms) {
-        super(attributes, children, platforms);
+    public Function(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override

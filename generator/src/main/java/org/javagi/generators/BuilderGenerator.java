@@ -23,7 +23,6 @@ import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
-import org.javagi.util.Platform;
 import org.javagi.gir.Class;
 import org.jetbrains.annotations.Nullable;
 
@@ -261,15 +260,8 @@ public class BuilderGenerator {
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
                         """, rt.typeName().simpleName(), ClassNames.G_OBJECT);
-        if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addException(ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION)
-                    .addJavadoc("@throws $T when run on an unsupported platform",
-                    ClassNames.UNSUPPORTED_PLATFORM_EXCEPTION);
 
         builder.beginControlFlow("try");
-
-        if (rt instanceof Multiplatform mp && mp.doPlatformCheck())
-            builder.addStatement(Platform.generateSupportCheck(rt.platforms()));
 
         return builder.addStatement("var _instance = ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
                         rt.typeName(),

@@ -11,7 +11,7 @@ import static java.util.Collections.emptyMap;
 
 public class GstPatch implements Patch {
 
-    // Utility function quickly create a <type name="gint" c:type="gint"/>
+    // Utility function to quickly create a <type name="gint" c:type="gint"/>
     private static Type gintType() {
         return new Type(Map.of("name", "gint", "c:type", "gint"), emptyList());
     }
@@ -36,19 +36,13 @@ public class GstPatch implements Patch {
             // Add integer constants for all GstMapFlags members
             ns = add(ns, new Constant(
                     Map.of("name", "MAP_READ", "value", "1"),
-                    List.of(new Doc(emptyMap(), "map for read access"),
-                            gintType()),
-                    ns.platforms()));
+                    List.of(new Doc(emptyMap(), "map for read access"), gintType())));
             ns = add(ns, new Constant(
                     Map.of("name", "MAP_WRITE", "value", "2"),
-                    List.of(new Doc(emptyMap(), "map for write access"),
-                            gintType()),
-                    ns.platforms()));
+                    List.of(new Doc(emptyMap(), "map for write access"), gintType())));
             ns = add(ns, new Constant(
                     Map.of("name", "MAP_FLAG_LAST", "value", "65536"),
-                    List.of(new Doc(emptyMap(), "first flag that can be used for custom purposes"),
-                            gintType()),
-                    ns.platforms()));
+                    List.of(new Doc(emptyMap(), "first flag that can be used for custom purposes"), gintType())));
 
             // Remove GstMapFlags
             return remove(ns, Bitfield.class, "name", "MapFlags");

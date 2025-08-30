@@ -29,17 +29,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class Namespace extends Multiplatform implements RegisteredType {
+public final class Namespace extends GirElement implements RegisteredType {
 
     private final Map<Integer, String> sharedLibraries;
+    private int platforms;
 
     public Namespace(Map<String, String> attributes,
                      List<Node> children,
                      int platforms,
                      Map<Integer, String> sharedLibraries) {
-        super(attributes, children, platforms);
+        super(attributes, children);
         this.sharedLibraries = sharedLibraries;
         this.sharedLibraries.put(platforms, sharedLibrary());
+        this.platforms = platforms;
+    }
+
+    public void setPlatforms(int platforms) {
+        this.platforms = platforms;
+    }
+
+    public int platforms() {
+        return this.platforms;
     }
 
     @Override

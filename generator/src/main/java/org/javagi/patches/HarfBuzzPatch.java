@@ -20,7 +20,6 @@
 package org.javagi.patches;
 
 import org.javagi.util.Patch;
-import org.javagi.util.Platform;
 import org.javagi.gir.*;
 
 import java.util.List;
@@ -98,10 +97,8 @@ public class HarfBuzzPatch implements Patch {
                 "hb_script_t",
                 "hb_style_tag_t"
         );
-        if (element instanceof Bitfield b
-                && b.platforms() == Platform.WINDOWS
-                && enums.contains(b.cType()))
-            return new Enumeration(b.attributes(), b.children(), b.platforms());
+        if (element instanceof Bitfield b && enums.contains(b.cType()))
+            return new Enumeration(b.attributes(), b.children());
 
         /*
          * Return type of function "hb_font_set_var_named_instance" is wrong

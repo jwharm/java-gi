@@ -30,6 +30,7 @@ import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
 import java.util.Map;
 
 import static org.gnome.gi.regress.Regress.*;
@@ -49,32 +50,29 @@ public class TestGHashTable {
         assertEquals(EXPECTED_HASH, testGhashNothingReturn2());
     }
 
-    HashTable<String, Value> gvalueMap() {
+    HashTable<String, Value> gvalueMap(Arena arena) {
         HashTable<String, Value> map = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
                 Interop::getStringFrom,
                 Value::new);
 
-        Value v1 = new Value();
+        Value v1 = new Value(arena);
         v1.init(Types.INT);
         v1.setInt(12);
-        Value v2 = new Value();
+        Value v2 = new Value(arena);
         v2.init(Types.BOOLEAN);
         v2.setBoolean(true);
-        Value v3 = new Value();
+        Value v3 = new Value(arena);
         v3.init(Types.STRING);
         v3.setString("some text");
-        Value v4 = new Value();
+        Value v4 = new Value(arena);
         v4.init(Types.STRV);
-        v4.setBoxed(Interop.allocateNativeArray(
-                new String[] {"first", "second", "third"},
-                true,
-                Interop.mallocAllocator()));
-        Value v5 = new Value();
+        v4.setBoxed(Interop.allocateNativeArray(new String[] {"first", "second", "third"}, true, arena));
+        Value v5 = new Value(arena);
         v5.init(TestFlags.getType());
         v5.setFlags(TestFlags.FLAG1.getValue() | TestFlags.FLAG3.getValue());
-        Value v6 = new Value();
+        Value v6 = new Value(arena);
         v6.init(TestEnum.getType());
         v6.setEnum(TestEnum.VALUE2.getValue());
 
@@ -103,12 +101,16 @@ public class TestGHashTable {
 
     @Test
     void gvalueReturn() {
-        compareGvalueMaps(gvalueMap(), testGhashGvalueReturn());
+        try (Arena arena = Arena.ofConfined()) {
+            compareGvalueMaps(gvalueMap(arena), testGhashGvalueReturn());
+        }
     }
 
     @Test
     void gvalueIn() {
-        testGhashGvalueIn(gvalueMap());
+        try (Arena arena = Arena.ofConfined()) {
+            testGhashGvalueIn(gvalueMap(arena));
+        }
     }
 
     @Test

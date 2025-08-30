@@ -34,7 +34,6 @@ public sealed interface RegisteredType
                 Interface, Namespace, FieldContainer {
 
     RegisteredType mergeWith(RegisteredType rt);
-    int platforms();
     InfoAttrs infoAttrs();
     InfoElements infoElements();
 

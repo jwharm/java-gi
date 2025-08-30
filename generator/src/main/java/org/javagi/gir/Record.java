@@ -31,13 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Record extends Multiplatform
-        implements StandardLayoutType {
+public final class Record extends GirElement implements StandardLayoutType {
 
-    public Record(Map<String, String> attributes,
-                  List<Node> children,
-                  int platforms) {
-        super(attributes, children, platforms);
+    public Record(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override
@@ -82,13 +79,9 @@ public final class Record extends Multiplatform
                         union(children(), other.children())
                                 .stream()
                                 .filter(not(Field.class::isInstance))
-                                .toList(),
-                        platforms() | other.platforms());
+                                .toList());
             else
-                return new Record(
-                        attributes(),
-                        union(children(), other.children()),
-                        platforms() | other.platforms());
+                return new Record(attributes(), union(children(), other.children()));
         }
         return this;
     }

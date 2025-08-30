@@ -80,8 +80,7 @@ public class BasePatch implements Patch {
                                     func.infoElements().doc(),
                                     func.infoElements().sourcePosition(),
                                     rt,
-                                    new Parameters(paramList)),
-                            func.platforms());
+                                    new Parameters(paramList)));
 
                     // Add method to enumeration
                     children.add(method);

@@ -26,12 +26,10 @@ import java.util.Map;
 
 import static org.javagi.util.Conversions.toJavaSimpleType;
 
-public final class Signal extends Multiplatform implements Callable {
+public final class Signal extends GirElement implements Callable {
 
-    public Signal(Map<String, String> attributes,
-                  List<Node> children,
-                  int platforms) {
-        super(attributes, children, platforms);
+    public Signal(Map<String, String> attributes, List<Node> children) {
+        super(attributes, children);
     }
 
     @Override

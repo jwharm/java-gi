@@ -26,7 +26,6 @@ import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
-import org.javagi.util.Platform;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
 
@@ -219,10 +218,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addStatement("super($T.ofAuto().allocate(getMemoryLayout()))",
                     Arena.class);
 
-        // Platform check
-        if (rec.doPlatformCheck())
-            spec.addStatement(Platform.generateSupportCheck(rec.platforms()));
-
         return spec.build();
     }
 
@@ -284,10 +279,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         toCamelCase(f.name(), true),
                         toJavaIdentifier(f.name()));
         });
-
-        // Platform check
-        if (rec.doPlatformCheck())
-            spec.addStatement(Platform.generateSupportCheck(rec.platforms()));
 
         return spec.build();
     }

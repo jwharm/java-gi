@@ -20,7 +20,6 @@
 package org.javagi.generators;
 
 import org.javagi.util.Javadoc;
-import org.javagi.util.Platform;
 import org.javagi.gir.*;
 
 import static org.javagi.util.Conversions.toJavaIdentifier;
@@ -84,10 +83,6 @@ public class DocGenerator {
             if (func.callableAttrs().throws_())
                 writeDoc(builder,
                         "GErrorException see {@link org.gnome.glib.GError}",
-                        "@throws");
-            if (func instanceof Multiplatform mp && mp.doPlatformCheck())
-                writeDoc(builder,
-                        "$T when run on a platform other than " + Platform.toString(func.platforms()),
                         "@throws");
         }
 

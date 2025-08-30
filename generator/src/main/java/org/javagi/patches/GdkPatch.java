@@ -20,7 +20,6 @@
 package org.javagi.patches;
 
 import org.javagi.util.Patch;
-import org.javagi.util.Platform;
 import org.javagi.gir.Bitfield;
 import org.javagi.gir.Doc;
 import org.javagi.gir.GirElement;
@@ -48,9 +47,7 @@ public class GdkPatch implements Patch {
          * We preserve and ignore the internal flags in our Java EnumSet by
          * adding placeholder "INTERNAL_n" flags for the missing ones.
          */
-        if (element instanceof Bitfield bf
-                && bf.platforms() == Platform.ALL
-                && "ModifierType".equals(bf.name())) {
+        if (element instanceof Bitfield bf && "ModifierType".equals(bf.name())) {
             var children = new ArrayList<>(bf.children());
             Doc doc = new Doc(emptyMap(),
                     "Internal flag. Your code should preserve and ignore this flag.");
