@@ -98,7 +98,7 @@ public class PackageInfoGenerator {
         builder.append("""
                  */
                 package %s;
-                """.formatted(ModuleInfo.packageName(ns.name())));
+                """.formatted(ModuleInfo.javaPackage(ns.name())));
 
         return builder.toString();
     }

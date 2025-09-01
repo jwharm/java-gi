@@ -52,7 +52,7 @@ public class Conversions {
             return toJavaQualifiedType(rt.name(), rt.namespace());
         }
         return ClassName.get(
-                ModuleInfo.packageName(ns.name()),
+                ModuleInfo.javaPackage(ns.name()),
                 toJavaSimpleType(typeName, ns));
     }
 

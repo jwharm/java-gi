@@ -46,27 +46,39 @@ public abstract class GirParserService implements BuildService<GirParserService.
         ConfigurableFileCollection getInputDirectories();
     }
 
-    private final Library library = new Library();
-
-    // A list of loaded repositories, used as a locking mechanism to prevent
-    // multiple repositories from being loaded concurrently in parallel builds.
+    // A list of loaded repositories, also used as a locking mechanism to
+    // prevent multiple repositories from being loaded concurrently in
+    // parallel builds.
     private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
 
     /**
-     * Create and return a Library that contains the requested Repository with
-     * its dependencies.
-     * <p>
-     * When building multiple modules, the library is shared, so it will often
-     * contain more Repositories than were requested.
+     * Create and return a Library that contains the requested Repositories
+     * with their dependencies.
      *
-     * @param  name the name of the requested Repository
-     * @return a Library object with the Repository and its dependencies, and
-     *         possibly other Repositories
+     * @param  girFiles the names and versions of the requested Repositories
+     * @return a Library object with the Repositories and their dependencies
      */
-    public Library getLibrary(String name, String version) {
+    public Library getLibrary(List<String> girFiles) {
+        Library library = new Library();
+        for (String repo : girFiles) {
+            int dash = repo.indexOf('-');
+            if (dash <= 0 || dash >= (repo.length() - 1))
+                throw new IllegalArgumentException("Repository not in 'name-version' format: " + repo);
+            String name = repo.substring(0, dash);
+            String version = repo.substring(dash + 1);
+            addToLibrary(library, name, version);
+        }
+        return library;
+    }
+
+    /*
+     * Parse the requested gir file and its dependencies, and add them
+     * to the library.
+     */
+    private void addToLibrary(Library library, String name, String version) {
         Repository repository = library.get(name);
         if (repository != null)
-            return library;
+            return;
 
         // Parse the repository
         repositories.computeIfAbsent(name, n -> parse(n, version));
@@ -74,12 +86,10 @@ public abstract class GirParserService implements BuildService<GirParserService.
 
         // Parse all dependencies and add them to the library
         for (var include : repository.includes())
-            getLibrary(include.name(), include.version());
+            addToLibrary(library, include.name(), include.version());
 
         // Add the repository to the library
         library.put(name, repository);
-
-        return library;
     }
 
     /*

@@ -184,7 +184,8 @@ public class JavaGI implements Callable<Integer> {
             var name = repository.namespace().name();
             var packageName = generatePackageName(name);
             ModuleInfo.add(name, packageName, packageName, docUrl, summary);
-            library.put(girFile.getName(), repository);
+            library.put(name, repository);
+            library.setExported(name);
 
             // Create a directory for each module
             var libDirectory = new File(outputDirectory, name.toLowerCase());
@@ -199,7 +200,8 @@ public class JavaGI implements Callable<Integer> {
             var ignored = srcDirectory.mkdirs();
 
             // Generate the language bindings
-            generate(name, library, packages, srcDirectory);
+            generate(name, library, srcDirectory);
+            generateModuleInfo(library, packages, srcDirectory);
 
             if (generateProject) {
                 // Generate build.gradle script
@@ -255,11 +257,10 @@ public class JavaGI implements Callable<Integer> {
     // Generate Java language bindings for a GIR repository
     public static void generate(String name,
                                 Library library,
-                                Set<String> packages,
                                 File outputDirectory) throws IOException {
 
         Namespace ns = library.lookupNamespace(name);
-        String packageName = ModuleInfo.packageName(name);
+        String packageName = ModuleInfo.javaPackage(name);
 
         String licenseNotice = licenseNotice();
 
@@ -273,11 +274,6 @@ public class JavaGI implements Callable<Integer> {
                 .resolve("package-info.java");
         String packageInfo = new PackageInfoGenerator(ns).generate();
         Files.writeString(path, packageInfo, CREATE, WRITE, TRUNCATE_EXISTING);
-
-        // Generate module-info.java
-        path = outputDirectory.toPath().resolve("module-info.java");
-        String moduleInfo = new ModuleInfoGenerator(ns, packages).generate();
-        Files.writeString(path, moduleInfo, CREATE, WRITE, TRUNCATE_EXISTING);
 
         // Generate classes for all registered types in this namespace
         for (var rt : ns.registeredTypes().values()) {
@@ -307,11 +303,20 @@ public class JavaGI implements Callable<Integer> {
                 var generator = new InterfaceGenerator(i);
                 if (generator.hasDowncallHandles())
                     writeJavaFile(generator.downcallHandlesClass(),
-                                  packageName,
-                                  licenseNotice,
-                                  outputDirectory);
+                            packageName,
+                            licenseNotice,
+                            outputDirectory);
             }
         }
+    }
+
+    // Generate module-info.java
+    public static void generateModuleInfo(Library library,
+                                          Set<String> packages,
+                                          File outputDirectory) throws IOException {
+        Path path = outputDirectory.toPath().resolve("module-info.java");
+        String moduleInfo = new ModuleInfoGenerator(library, packages).generate();
+        Files.writeString(path, moduleInfo, CREATE, WRITE, TRUNCATE_EXISTING);
     }
 
     // Write a generated class into a Java file

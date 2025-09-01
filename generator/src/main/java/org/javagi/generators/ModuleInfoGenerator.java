@@ -21,54 +21,79 @@ package org.javagi.generators;
 
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.gir.Include;
+import org.javagi.gir.Library;
 import org.javagi.gir.Namespace;
 
+import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.function.Predicate.not;
 
 public class ModuleInfoGenerator {
 
-    private final Namespace ns;
+    private final Library library;
     private final Set<String> packageNames;
     private final StringBuilder builder;
 
-    public ModuleInfoGenerator(Namespace ns, Set<String> packageNames) {
-        this.ns = ns;
+    private final Set<String> exports = new HashSet<>();
+    private final Set<String> requires = new HashSet<>();
+
+    public ModuleInfoGenerator(Library library, Set<String> packageNames) {
+        this.library = library;
         this.packageNames = packageNames;
         this.builder = new StringBuilder();
     }
 
     public String generate() {
+        String name = null;
+        exports.addAll(packageNames);
+
+        for (String exported : library.getExported()) {
+            Namespace ns = library.lookupNamespace(exported);
+
+            // Get the name of the created module
+            name = ModuleInfo.javaModule(ns.name());
+
+            // Export all java-gi packages
+            String modulePackageName = ModuleInfo.javaPackage(ns.name());
+            exports.add(modulePackageName);
+
+            // List the required modules
+            ns.parent().includes().stream()
+                    .map(Include::name)
+                    .map(ModuleInfo::javaModule)
+                    .forEach(requires::add);
+        }
+
+        if (name == null)
+            throw new IllegalStateException("Unknown module name");
+
         builder.append("""
                 module %s {
                     requires static java.compiler;
                     requires static org.jetbrains.annotations;
-                """.formatted(ModuleInfo.packageName(ns.name())));
+                """.formatted(name));
 
-        String freetype = "org.freedesktop.freetype";
-        String cairo = "org.freedesktop.cairo";
+        exports.stream().sorted().forEach(this::appendExports);
+        requires.stream()
+                .filter(not(name::equals))
+                .filter(not(exports::contains))
+                .sorted()
+                .forEach(this::appendRequires);
 
-        ns.parent().includes().stream()
-                .map(Include::name)
-                .map(ModuleInfo::packageName)
-                // A minimal set of FreeType bindings is included in the Cairo module
-                .map(name -> name.replace(freetype, cairo))
-                .forEach(this::requires);
-
-        String modulePackageName = ModuleInfo.packageName(ns.name());
-        exports(modulePackageName);
-        packageNames.stream()
-                .filter(name -> ! name.equals(modulePackageName))
-                .forEach(this::exports);
+        if (! "org.gnome.glib".equalsIgnoreCase(name))
+            for (String pkg : packageNames)
+                builder.append("    opens ").append(pkg).append(" to org.gnome.glib;\n");
 
         builder.append("}\n");
         return builder.toString();
     }
 
-    private void requires(String module) {
+    private void appendRequires(String module) {
         builder.append("    requires transitive ").append(module).append(";\n");
     }
 
-    private void exports(String packageName) {
+    private void appendExports(String packageName) {
         builder.append("    exports ").append(packageName).append(";\n");
     }
 }

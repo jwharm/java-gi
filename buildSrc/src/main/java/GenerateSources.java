@@ -19,9 +19,11 @@
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
+import org.javagi.JavaGI;
 
 import java.io.*;
 import java.nio.file.*;
@@ -41,10 +43,7 @@ public abstract class GenerateSources extends DefaultTask {
     public abstract Property<GirParserService> getGirParserService();
 
     @Input
-    public abstract Property<String> getNamespace();
-
-    @Input
-    public abstract Property<String> getVersion();
+    public abstract ListProperty<String> getGirFiles();
 
     @InputFiles
     public abstract DirectoryProperty getMainJavaSourcesDirectory();
@@ -56,12 +55,15 @@ public abstract class GenerateSources extends DefaultTask {
     void execute() {
         try {
             var buildService = getGirParserService().get();
-            var name = getNamespace().get();
-            var version = getVersion().get();
-            var library = buildService.getLibrary(name, version);
-            var packages = getPackages();
+            var girFiles = getGirFiles().get();
+            var library = buildService.getLibrary(girFiles);
             var outputDirectory = getOutputDirectory().get().getAsFile();
-            generate(name, library, packages, outputDirectory);
+            for (String repo : girFiles) {
+                String name = repo.substring(0, repo.indexOf('-'));
+                library.setExported(name);
+                generate(name, library, outputDirectory);
+            }
+            JavaGI.generateModuleInfo(library, getPackages(), outputDirectory);
         } catch (Exception e) {
             throw new TaskExecutionException(this, e);
         }
