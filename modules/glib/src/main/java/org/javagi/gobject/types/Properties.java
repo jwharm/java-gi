@@ -110,8 +110,8 @@ public class Properties {
 
         try (var arena = Arena.ofConfined()) {
             var gvalue = new Value(arena).init(valueType);
-            ValueUtil.objectToValue(propertyValue, gvalue);
-            gobject.setProperty(propertyName, gvalue);
+            if (ValueUtil.objectToValue(propertyValue, gvalue))
+                gobject.setProperty(propertyName, gvalue);
             gvalue.unset();
         }
     }
