@@ -68,11 +68,11 @@ public final class ModuleInfo {
             entry("xlib",                      new Module("XLib", "org.freedesktop.xorg.xlib", "org.gnome.gtk", "", "")),
 
             // Regression test modules
-            entry("gimarshallingtests",        new Module("GIMarshallingTests", "org.gnome.gi.gimarshallingtests", "org.gnome.gi.gimarshallingtests", "", "")),
-            entry("regress",                   new Module("Regress", "org.gnome.gi.regress", "org.gnome.gi.gimarshallingtests", "", "")),
-            entry("regressunix",               new Module("RegressUnix", "org.gnome.gi.regressunix", "org.gnome.gi.gimarshallingtests", "", "")),
-            entry("utility",                   new Module("Utility", "org.gnome.gi.utility", "org.gnome.gi.gimarshallingtests", "", "")),
-            entry("warnlib",                   new Module("WarnLib", "org.gnome.gi.warnlib", "org.gnome.gi.gimarshallingtests", "", ""))
+            entry("gimarshallingtests",        new Module("GIMarshallingTests", "org.gnome.gi.gimarshallingtests", "org.gnome.gobjectintrospectiontests", "", "")),
+            entry("regress",                   new Module("Regress", "org.gnome.gi.regress", "org.gnome.gobjectintrospectiontests", "", "")),
+            entry("regressunix",               new Module("RegressUnix", "org.gnome.gi.regressunix", "org.gnome.gobjectintrospectiontests", "", "")),
+            entry("utility",                   new Module("Utility", "org.gnome.gi.utility", "org.gnome.gobjectintrospectiontests", "", "")),
+            entry("warnlib",                   new Module("WarnLib", "org.gnome.gi.warnlib", "org.gnome.gobjectintrospectiontests", "", ""))
     );
 
     public static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
