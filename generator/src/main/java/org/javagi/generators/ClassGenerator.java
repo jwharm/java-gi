@@ -275,7 +275,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     Creates a new instance of a GObject-derived class with the provided
                     property values. For your own GObject-derived Java classes, a GType
                     must have been registered using
-                    {@link io.github.jwharm.javagi.gobject.types.Types#register(Class<?>)}
+                    {@link org.javagi.gobject.types.Types#register(Class<?>)}
                     
                     @param  objectClass the Java class of the new GObject
                     @param  propertyNamesAndValues pairs of property names and values

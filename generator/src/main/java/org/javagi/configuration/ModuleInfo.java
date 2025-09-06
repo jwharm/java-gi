@@ -38,9 +38,9 @@ public final class ModuleInfo {
     public static final Map<String, Module> INCLUDED_MODULES = Map.ofEntries(
             // Main modules
             entry("glib",                      new Module("GLib", "org.gnome.glib", "org.gnome.glib", "https://docs.gtk.org/glib/", "A general-purpose, portable utility library, which provides many useful data types, macros, type conversions, string utilities, file utilities, a mainloop abstraction, and so on")),
-            entry("gobject",                   new Module("GObject", "org.gnome.gobject", "org.gnome.glib", "https://docs.gtk.org/glib/" ,"The base type system and object class")),
-            entry("gmodule",                   new Module("GModule", "org.gnome.gmodule", "org.gnome.glib", "https://docs.gtk.org/glib/", "A portable API for dynamically loading modules")),
-            entry("gio",                       new Module("GIO", "org.gnome.gio", "org.gnome.glib", "https://docs.gtk.org/glib/", "A library providing useful classes for general purpose I/O, networking, IPC, settings, and other high level application functionality")),
+            entry("gobject",                   new Module("GObject", "org.gnome.gobject", "org.gnome.glib", "https://docs.gtk.org/gobject/" ,"The base type system and object class")),
+            entry("gmodule",                   new Module("GModule", "org.gnome.gmodule", "org.gnome.glib", "https://docs.gtk.org/gmodule/", "A portable API for dynamically loading modules")),
+            entry("gio",                       new Module("GIO", "org.gnome.gio", "org.gnome.glib", "https://docs.gtk.org/gio/", "A library providing useful classes for general purpose I/O, networking, IPC, settings, and other high level application functionality")),
             entry("cairo",                     new Module("Cairo", "org.freedesktop.cairo", "org.freedesktop.cairo", "", "")), // requires cairo-java-bindings
             entry("freetype2",                 new Module("FreeType2", "org.freedesktop.freetype", "org.freedesktop.cairo", "", "")), // requires cairo-java-bindings
             entry("harfbuzz",                  new Module("HarfBuzz", "org.freedesktop.harfbuzz", "org.freedesktop.harfbuzz", "", "The HarfBuzz text shaping engine")),

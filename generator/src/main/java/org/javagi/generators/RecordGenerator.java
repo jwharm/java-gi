@@ -345,7 +345,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addJavadoc("""
                         Create a GVariant from a Java Object.
                         
-                        @param o the Java Object to pack into a GVariant
+                        @param object the Java Object to pack into a GVariant
                         @return the GVariant with the packed Object
                         @see Variants#pack
                         """)

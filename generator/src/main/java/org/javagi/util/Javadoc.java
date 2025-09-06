@@ -43,8 +43,8 @@ public class Javadoc {
             + "|(?<link>\\[(?<type>.+?)@(?<path>(?<part1>[^.\\]]+)?\\.?(?<part2>[^.\\]:]+)?[.:]?(?<part3>[^]]+?)?)])"
             + "|(?<constantref>%\\w+)"
             + "|(?<typeref>#[^#\\s]\\w*)"
-            + "|(?<paramref>@{1,2}[^@\\s]\\w*)"
-            + "|(?<hyperlink>\\[(?<desc>.+?)]\\((?<url>.+?)\\))"
+            + "|(?<paramref>@{1,2}[^@\\s][^\\s`]*)" // "[^\s`]" matches until whitespace or `code`
+            + "|(?s)(?<hyperlink>\\[(?<desc>[^]]+)]\\((?<url>[^)]+)\\))"
             + "|(?<img>!\\[(?<imgdesc>.*?)]\\((?<imgurl>.+?)\\))"
             + "|(?s)(?<picture><picture.*?>.*?<img(?<imgattrs>[^>]+).+?</picture>)"
             + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+?)\\n+"
@@ -231,11 +231,12 @@ public class Javadoc {
 
     // Replace `text` with {@code text}
     private String convertCode(String code) {
-        // When the code contains "{", "}" or "@", use a <code>...</code> block
-        if (code.contains("{") || code.contains("}") || code.contains("@"))
-            return "<code>" + code.substring(1, code.length() - 1) + "</code>";
-
-        return "{@code " + code.substring(1, code.length() - 1) + "}";
+        String snippet = code.substring(1, code.length() - 1);
+        // Escape {, } and @
+        snippet = snippet.replace("{", "&#123;")
+                         .replace("}", "&#125;")
+                         .replace("@", "&#64;");
+        return "{@code " + snippet + "}";
     }
 
     // Replace [...] links with {@link ...} links
@@ -376,7 +377,15 @@ public class Javadoc {
 
     // Replace "[...](...)" with <a href="...">...</a>
     private String convertHyperlink(String link, String desc, String url) {
-        return "<a href=\"" + url + "\">" + desc + "</a>";
+        String fullUrl = url;
+
+        // Remove any newline characters from the url string
+        fullUrl = fullUrl.replace("\n", "").replace("\r", "");
+
+        if (! fullUrl.startsWith("http"))
+            fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + fullUrl;
+
+        return "<a href=\"" + fullUrl + "\">" + desc + "</a>";
     }
 
     // Replace "! [...](...)" image links with <img src="..." alt="...">
