@@ -106,6 +106,7 @@ public class BuilderGenerator {
                         .map(this::setterVarargs)
                         ::iterator)
                 .addMethods(cls.signals().stream()
+                        .filter(not(Signal::skipJava))
                         .map(this::connector)
                         ::iterator)
                 .build();

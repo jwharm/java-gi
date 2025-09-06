@@ -88,6 +88,7 @@ public sealed interface Callable
 
             // va_list parameters are not supported
             if (parameter.anyType() instanceof Type type
+                    && type.cType() != null
                     && List.of("va_list", "va_list*").contains(type.cType()))
                 return true;
         }

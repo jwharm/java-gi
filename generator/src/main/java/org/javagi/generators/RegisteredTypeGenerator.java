@@ -114,11 +114,13 @@ public class RegisteredTypeGenerator {
 
     protected void addSignals(TypeSpec.Builder builder) {
         for (Signal s : filter(rt.children(), Signal.class)) {
-            var generator = new SignalGenerator(s);
-            builder.addType(generator.generateFunctionalInterface());
-            builder.addMethod(generator.generateConnectMethod());
-            if (!generator.emitMethodExists())
-                builder.addMethod(generator.generateEmitMethod());
+            if (!s.skip()) {
+                var generator = new SignalGenerator(s);
+                builder.addType(generator.generateFunctionalInterface());
+                builder.addMethod(generator.generateConnectMethod());
+                if (!generator.emitMethodExists())
+                    builder.addMethod(generator.generateEmitMethod());
+            }
         }
     }
 
