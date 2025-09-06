@@ -19,16 +19,29 @@
 
 package org.javagi.gir;
 
+/**
+ * Specifies the ownership of the responsibility to free function parameters.
+ */
 public enum TransferOwnership {
-    NONE,      // "none"
-    CONTAINER, // "container"
-    FULL;      // "full"
+    /**
+     * The data is owned by the caller
+     */
+    NONE,
+
+    /**
+     * The callee takes ownership of the data container, but not the data inside it
+     */
+    CONTAINER,
+
+    /**
+     * The callee takes ownership of the data, and is responsible for freeing it
+     */
+    FULL;
 
     /**
      * Defaults to "none" when unspecified
      */
     public static TransferOwnership from(String value) {
-        return value == null ? NONE
-                : TransferOwnership.valueOf(value.toUpperCase());
+        return value == null ? NONE : TransferOwnership.valueOf(value.toUpperCase());
     }
 }

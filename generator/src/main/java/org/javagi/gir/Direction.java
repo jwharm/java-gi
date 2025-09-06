@@ -19,10 +19,24 @@
 
 package org.javagi.gir;
 
+/**
+ * Specifies the direction of function parameters.
+ */
 public enum Direction {
-    OUT,   // "out"
-    IN,    // "in"
-    INOUT; // "inout"
+    /**
+     * The argument will be modified by the function
+     */
+    OUT,
+
+    /**
+     * Normal function argument
+     */
+    IN,
+
+    /**
+     * The argument will be set by the function
+     */
+    INOUT;
 
     public static Direction from(String value) {
         return value == null ? null : Direction.valueOf(value.toUpperCase());

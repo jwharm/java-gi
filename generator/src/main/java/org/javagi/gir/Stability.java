@@ -19,10 +19,13 @@
 
 package org.javagi.gir;
 
+/**
+ * Specifies the stability status of a GIR element.
+ */
 public enum Stability {
-    STABLE,   // "Stable"
-    UNSTABLE, // "Unstable"
-    PRIVATE;  // "Private"
+    STABLE,
+    UNSTABLE,
+    PRIVATE;
 
     public static Stability from(String value) {
         return value == null ? null : Stability.valueOf(value.toUpperCase());

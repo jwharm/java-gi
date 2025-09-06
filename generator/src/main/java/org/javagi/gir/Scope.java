@@ -19,28 +19,36 @@
 
 package org.javagi.gir;
 
+/**
+ * Specifies the lifetime of callbacks.
+ */
 public enum Scope {
     /**
      * Valid until the GDestroyNotify argument is called. Can be called multiple
      * times before the GDestroyNotify is called.
      */
-    NOTIFIED, // "notified"
+    NOTIFIED,
+
     /**
      * Only valid for the duration of the first callback invocation. Can only be
      * called once.
      */
-    ASYNC,    // "async"
+    ASYNC,
+
     /**
      * Only valid for the duration of the call. Can be called multiple times
      * during the call.
      */
-    CALL,     // "call"
+    CALL,
+
     /**
      * Valid until the process terminates.
      */
-    FOREVER,  // "forever"
+    FOREVER,
+
     /**
-     * Default scope when not specified: bound to instance lifetime
+     * Default scope when not specified: bound to instance lifetime.
+     * This is a custom java-gi identifier that does not exist in the GIR data.
      */
     BOUND;
 

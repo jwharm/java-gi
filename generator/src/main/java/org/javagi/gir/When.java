@@ -19,9 +19,23 @@
 
 package org.javagi.gir;
 
+/**
+ * Specifies when a signal handler is called.
+ */
 public enum When {
+    /**
+     * The default handler is called before the handlers added via {@code g_signal_connect()}
+     */
     FIRST,   // "first"
+
+    /**
+     * The default handler is called after the handlers added via {@code g_signal_connect()}
+     */
     LAST,    // "last"
+
+    /**
+     * The default handler is called after the handlers added via {@code g_signal_connect_after()}
+     */
     CLEANUP; // "cleanup"
 
     public static When from(String value) {
