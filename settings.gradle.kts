@@ -18,7 +18,7 @@ include("pango")
 include("soup")
 include("webkit")
 
-// All child projects are located in modules/main or modules/test
+// All child projects are located in the modules/ directory
 for (p in rootProject.children) {
     p.projectDir = File(settingsDir, "modules/${p.name}")
 }

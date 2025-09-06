@@ -49,13 +49,15 @@ tasks.withType<Javadoc>().configureEach {
     })
 
     // Exclude external dependencies from the classpath
-    classpath = files(mainModules.flatMap { subproject ->
-        subproject.sourceSets["main"].compileClasspath.filter { file ->
-            val path = file.absolutePath.replace("\\", "/")
-            path.contains("/org.jetbrains/annotations/")
-                || path.contains("/io.github.jwharm.cairobindings/cairo/")
-        }
-    })
+    doFirst {
+        classpath = files(mainModules.flatMap { subproject ->
+            subproject.sourceSets["main"].compileClasspath.filter { file ->
+                val path = file.absolutePath.replace("\\", "/")
+                path.contains("/org.jetbrains/annotations/")
+                        || path.contains("/io.github.jwharm.cairobindings/cairo/")
+            }
+        })
+    }
 
     // Ensure all source code is generated before the Javadoc task starts
     mainModules.forEach {
