@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGObjectConstruct {
+public class TestObjectConstruct {
     @Test
     void createWithNew() {
         TestObj object2 = new TestObj();
