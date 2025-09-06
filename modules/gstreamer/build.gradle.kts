@@ -7,5 +7,5 @@ dependencies {
 }
 
 tasks.withType<GenerateSources> {
-    girFiles.set(listOf("Gst-1.0", "GstAudio-1.0", "GstBase-1.0", "GstPbutils-1.0", "GstVideo-1.0"))
+    girFiles.set(listOf("Gst-1.0", "GstApp-1.0", "GstAudio-1.0", "GstBase-1.0", "GstPbutils-1.0", "GstVideo-1.0"))
 }

@@ -1,0 +1,8 @@
+// AppSrc.setCaps() and AppSink.setCaps() override BaseSrc.setCaps() with a
+// different return type, which is not allowed in Java. Rename both methods to
+// setCapabilities().
+App{Src,Sink}.set_caps name=set_capabilities
+
+// The "try-pull-object" signal returns a GstMiniObject directly (not a
+// pointer), but java-gi doesn't support that right now. Exclude it for now.
+AppSink.try-pull-object java-gi-skip
