@@ -51,3 +51,10 @@ ByteArray java-gi-skip
 
 // GString is marshaled to a java.lang.String
 String java-gi-skip
+
+/*
+ * The GObject gir file contains boxed type definitions for many GLib types.
+ * We already register those in GLib.java so we can skip the GObject
+ * definitions.
+ */
+*#glib:boxed java-gi-skip

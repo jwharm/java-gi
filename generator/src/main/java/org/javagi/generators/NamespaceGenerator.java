@@ -146,10 +146,6 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         MethodSpec.Builder spec = MethodSpec.methodBuilder("registerTypes")
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
-        // Type registration is only possible when the GObject module is available
-        if (!ns.parent().isInScope("GObject"))
-            return spec.build();
-
         for (Class c : ns.classes())
             if (!c.skipJava())
                 spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
