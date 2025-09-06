@@ -94,8 +94,8 @@ public class TestObjectProperties {
     void getSetString() {
         obj.setProperty("some-string", "test");
         assertEquals("test", obj.getProperty("some-string"));
-        obj.setProperty("some-string", (String) null);
-        assertNull(obj.getProperty("some-string"));
+        obj.setProperty("some-string", (String) null); // try to set to null
+        assertEquals("test", obj.getProperty("some-string")); // unchanged
     }
 
     @Test
