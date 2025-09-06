@@ -38,7 +38,7 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
         fun buttonClicked() {
             ...
         }
-    }        
+    }
         ...
     ```
 
@@ -138,3 +138,8 @@ Load the compiled resource bundle in Java during startup of your application:
         
         ...
     ```
+
+## Using Blueprint with Java-GI
+
+The UI files used for Gtk composite template classes are quite verbose XML files. With [Blueprint](https://gnome.pages.gitlab.gnome.org/blueprint-compiler/), application developers write the UI in a concise, easy-to-read format. Blueprint can be used with Java-GI too, because it is compiled to XML with the `blueprint-compiler` tool. To automate the Blueprint compile step, add a Gradle task similar to the `compileResources` task described above. (Make sure to run `blueprint-compiler` before `glib-compile-resources`.)
+
