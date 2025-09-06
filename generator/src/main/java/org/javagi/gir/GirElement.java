@@ -45,7 +45,7 @@ public abstract class GirElement implements Serializable, Node {
     }
 
     GirElement(Map<String, String> attributes, List<Node> children) {
-        this.attributes = attributes;
+        this.attributes = new HashMap<>(attributes); // HashMap ensures mutability
         setChildren(children);
     }
 

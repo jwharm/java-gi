@@ -480,7 +480,7 @@ public class Javadoc {
         Namespace namespace = doc.namespace();
         if (namespace.name().equals(ns)) return "";
         try {
-            return ModuleInfo.packageName(ns) + ".";
+            return ModuleInfo.javaPackage(ns) + ".";
         } catch (NoSuchElementException e) {
             return "";
         }

@@ -31,6 +31,7 @@ import static org.javagi.util.CollectionUtils.filter;
 public final class Library implements Serializable {
 
     private final Map<String, Repository> repositories = new ConcurrentHashMap<>();
+    private final Set<String> exported = new HashSet<>();
 
     /**
      * Add a GIR repository to the library
@@ -44,13 +45,25 @@ public final class Library implements Serializable {
     }
 
     /**
-     * Get a repository from the library with the requested gir file name
+     * Get a repository from the library with the requested namespace name
      *
      * @param  name the name of the namespace
      * @return the repository, or {@code null} if not found
      */
     public Repository get(String name) {
         return repositories.get(name);
+    }
+
+    public boolean contains(String name) {
+        return repositories.containsKey(name);
+    }
+
+    public void setExported(String name) {
+        exported.add(name);
+    }
+
+    public Set<String> getExported() {
+        return exported;
     }
 
     public Namespace lookupNamespace(String name) {
