@@ -374,8 +374,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() != TransferOwnership.NONE
                 && p.direction() != Direction.OUT) {
             String identifier = getName();
+
             if (p.direction() == Direction.INOUT)
                 identifier = identifier + " != null && " + identifier + ".get()";
+
             builder.beginControlFlow("if ($L instanceof $T _gobject)",
                             identifier, ClassNames.G_OBJECT)
                     .addStatement("$T.debug($S, _gobject.handle().address())",
@@ -386,28 +388,22 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         }
 
         // Transfer ownership of GList/GSList
-        else if (target != null && target.checkIsGList() && !type.isActuallyAnArray()) {
-            /* When full ownership is transferred to native code, our own code has no ownership anymore.
-             * When no ownership is transferred, it's the reverse (we keep full ownership).
-             * When native code becomes owner of the container, we keep ownership of the values.
-             */
-            String myOwnership = switch(p.transferOwnership()) {
-                case FULL -> "NONE";
-                case NONE -> "FULL";
-                case CONTAINER -> "VALUES";
-            };
+        else if (target != null && target.checkIsGList()
+                && !type.isActuallyAnArray()
+                && p.transferOwnership() != TransferOwnership.NONE) {
+            // When full ownership is transferred to native code, our own code has no ownership anymore.
+            // When native code becomes owner of the container, we keep ownership of the values.
+            String owned = p.transferOwnership() == TransferOwnership.FULL ? "NONE" : "VALUES";
+
             if (p.isOutParameter()) {
-                builder.beginControlFlow("if ($1L != null && $1L.get() != null)",
-                        getName());
-                builder.addStatement("$L.get().setOwnership($T.$L)",
-                        getName(), ClassNames.TRANSFER_OWNERSHIP, myOwnership);
+                builder.beginControlFlow("if ($1L != null && $1L.get() != null)", getName())
+                       .addStatement("$L.get().setOwnership($T.$L)", getName(), ClassNames.TRANSFER_OWNERSHIP, owned)
+                       .endControlFlow();
             } else {
-                builder.beginControlFlow("if ($1L != null)",
-                        getName());
-                builder.addStatement("$L.setOwnership($T.$L)",
-                        getName(), ClassNames.TRANSFER_OWNERSHIP, myOwnership);
+                builder.beginControlFlow("if ($1L != null)", getName())
+                       .addStatement("$L.setOwnership($T.$L)", getName(), ClassNames.TRANSFER_OWNERSHIP, owned)
+                       .endControlFlow();
             }
-            builder.endControlFlow();
         }
 
         // Transfer ownership of structs/unions: Disable the cleaner
