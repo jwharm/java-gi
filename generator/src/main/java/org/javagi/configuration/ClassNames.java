@@ -38,12 +38,10 @@ public final class ClassNames {
     public static final ClassName FLOATING = get(PKG_BASE, "Floating");
     public static final ClassName FUNCTION_POINTER = get(PKG_BASE, "FunctionPointer");
     public static final ClassName GERROR_EXCEPTION = get(PKG_BASE, "GErrorException");
-    public static final ClassName GLIB_LOGGER = get(PKG_BASE, "GLibLogger");
     public static final ClassName OUT = get(PKG_BASE, "Out");
     public static final ClassName PROXY = get(PKG_BASE, "Proxy");
     public static final ClassName PROXY_INSTANCE = get(PKG_BASE, "ProxyInstance");
     public static final ClassName TRANSFER_OWNERSHIP = get(PKG_BASE, "TransferOwnership");
-    public static final ClassName UNSUPPORTED_PLATFORM_EXCEPTION = get(PKG_BASE, "UnsupportedPlatformException");
 
     public static final ClassName ARENAS = get(PKG_INTEROP, "Arenas");
     public static final ClassName ARENA_CLOSE_ACTION = get(PKG_INTEROP, "ArenaCloseAction");

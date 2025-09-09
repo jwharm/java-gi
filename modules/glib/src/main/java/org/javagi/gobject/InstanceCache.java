@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.javagi.base.Floating;
-import org.javagi.base.GLibLogger;
 import org.javagi.gobject.types.TypeCache;
 import org.javagi.interop.Interop;
 import org.gnome.glib.MainContext;
@@ -263,11 +262,9 @@ public class InstanceCache {
      */
     public static Proxy getForTypeClass(MemorySegment address,
                                         Function<MemorySegment, ? extends Proxy> fallback) {
-        // Null check
-        if (address == null || MemorySegment.NULL.equals(address)) {
-            GLibLogger.debug("InstanceCache.getForTypeClass: address is NULL\n");
+        // Don't try to dereference a null pointer
+        if (address == null || MemorySegment.NULL.equals(address))
             return null;
-        }
 
         // Get the GType of the GTypeClass
         Type type = new TypeClass(address).readGType();
@@ -299,10 +296,6 @@ public class InstanceCache {
         var existing = references.putIfAbsent(address, new Ref.Strong<>(object));
         if (existing != null)
             return existing.get();
-
-        GLibLogger.debug("New %s %ld",
-                object.getClass().getName(),
-                address == null ? 0L : address.address());
 
         // Sink floating references
         if (object instanceof Floating floatingReference)
@@ -398,8 +391,6 @@ public class InstanceCache {
     private static void handleToggleNotify(MemorySegment ignored,
                                            MemorySegment object,
                                            int isLastRef) {
-        GLibLogger.debug("Toggle %ld, is_last_ref=%d",
-                object == null ? 0 : object.address(), isLastRef);
         if (isLastRef != 0)
             references.computeIfPresent(object, (_, v) -> v.asWeak());
         else
@@ -421,7 +412,6 @@ public class InstanceCache {
     }
 
     public static int removeToggleRef(MemorySegment address) {
-        GLibLogger.debug("Unref %ld", address.address());
         try {
             g_object_remove_toggle_ref.invokeExact(
                     address, toggle_notify, MemorySegment.NULL);

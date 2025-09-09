@@ -288,8 +288,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         }
 
                         builder.beginControlFlow("if (" + nullCheck + ")")
-                                .addNamedCode(stmt.format(), stmt.arguments())
-                                .endControlFlow();
+                               .addNamedCode(stmt.format(), stmt.arguments())
+                               .endControlFlow();
                     }
                 }
             }
@@ -316,8 +316,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 builder.addNamedCode(stmt.format(), stmt.arguments());
             }
             // Declare an Out<> instance
-            builder.addStatement("$1T $2L = new $3T<>()",
-                    getType(), getName(), ClassNames.OUT);
+            builder.addStatement("$1T $2L = new $3T<>()", getType(), getName(), ClassNames.OUT);
         } else {
             // Declare a primitive value
             var stmt = PartialStatement.of("$type:T $name:L =$W",
@@ -354,8 +353,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // Arena for parameters with async or notified scope
     private void scope(MethodSpec.Builder builder) {
         if (p.scope() == Scope.NOTIFIED && p.destroy() != null)
-            builder.addStatement("final $1T _$2LScope = $1T.ofShared()",
-                            Arena.class, getName());
+            builder.addStatement("final $1T _$2LScope = $1T.ofShared()", Arena.class, getName());
 
         if (p.scope() == Scope.ASYNC && !p.isDestroyNotifyParameter())
             builder.addStatement("final $1T _$2LScope = $1T.ofShared()",
@@ -374,17 +372,12 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() != TransferOwnership.NONE
                 && p.direction() != Direction.OUT) {
             String identifier = getName();
-
             if (p.direction() == Direction.INOUT)
                 identifier = identifier + " != null && " + identifier + ".get()";
 
-            builder.beginControlFlow("if ($L instanceof $T _gobject)",
-                            identifier, ClassNames.G_OBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle().address())",
-                            ClassNames.GLIB_LOGGER,
-                            "Ref " + type.typeName() + " %ld")
-                    .addStatement("_gobject.ref()")
-                    .endControlFlow();
+            builder.beginControlFlow("if ($L instanceof $T _gobject)", identifier, ClassNames.G_OBJECT)
+                   .addStatement("_gobject.ref()")
+                   .endControlFlow();
         }
 
         // Transfer ownership of GList/GSList
@@ -460,13 +453,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
                 // Yield ownership of each array element
                 if (elemTarget.checkIsGObject()) {
-                    builder.beginControlFlow("if (_element instanceof $T _gobject)",
-                                    ClassNames.G_OBJECT)
-                            .addStatement("$T.debug($S, _gobject.handle().address())",
-                                    ClassNames.GLIB_LOGGER,
-                                    "Ref " + elemType.typeName() + " %ld")
-                            .addStatement("_gobject.ref()")
-                            .endControlFlow();
+                    builder.beginControlFlow("if (_element instanceof $T _gobject)", ClassNames.G_OBJECT)
+                           .addStatement("_gobject.ref()")
+                           .endControlFlow();
                 } else {
                     builder.addStatement(
                             checkNull() ? "if (_element != null) $1T.yieldOwnership(_element)"

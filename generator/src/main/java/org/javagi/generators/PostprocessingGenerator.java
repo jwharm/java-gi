@@ -22,6 +22,7 @@ package org.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.gir.Class;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
@@ -75,13 +76,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 var stmt = PartialStatement.of(null, "valueLayout", ValueLayout.class);
 
                 stmt.add(getName())
-                        .add((target instanceof Alias a && a.isValueWrapper())
-                                ? ".setValue("
-                                : ".set(");
+                    .add((target instanceof Alias a && a.isValueWrapper()) ? ".setValue(" : ".set(");
 
                 var layout = getValueLayout(type);
-                String identifier = "_%sPointer.get(%s, 0)"
-                        .formatted(getName(), layout.format());
+                String identifier = "_%sPointer.get(%s, 0)".formatted(getName(), layout.format());
 
                 if ((target instanceof Alias a && a.isValueWrapper())
                         || (type.isPrimitive() && type.isPointer())) {
@@ -96,8 +94,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 // Null-check
                 if (checkNull())
                     builder.beginControlFlow("if ($1L != null)", getName())
-                            .addNamedCode(stmt.format(), stmt.arguments())
-                            .endControlFlow();
+                           .addNamedCode(stmt.format(), stmt.arguments())
+                           .endControlFlow();
                 else
                     builder.addNamedCode(stmt.format(), stmt.arguments());
 
@@ -115,8 +113,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             if (p.isOutParameter() && len != null && p.callerAllocates()) {
                 payload = array.anyType() instanceof Type t && t.isPrimitive()
                         ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
-                        .add(getValueLayout(t))
-                        .add(")")
+                            .add(getValueLayout(t))
+                            .add(")")
                         : marshalNativeToJava("_%sPointer".formatted(getName()), false);
             }
 
@@ -214,13 +212,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 // don't call ref() from ref() itself
                 && (! "ref".equals(func.name()))
                 && (! "ref_sink".equals(func.name()))) {
-            builder.beginControlFlow("if (_returnValue instanceof $T _gobject)",
-                            ClassNames.G_OBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle().address())",
-                            ClassNames.GLIB_LOGGER,
-                            "Ref " + getType() + " %ld")
-                    .addStatement("_gobject.ref()")
-                    .endControlFlow();
+            builder.beginControlFlow("if (_returnValue instanceof $T _gobject)", ClassNames.G_OBJECT)
+                   .addStatement("_gobject.ref()")
+                   .endControlFlow();
         }
     }
 
@@ -395,13 +389,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() == TransferOwnership.FULL
                 && p.isOutParameter()) {
             String paramName = "_" + getName() + "Out";
-            builder.beginControlFlow("if ($L.get() instanceof $T _gobject)",
-                            paramName, ClassNames.G_OBJECT)
-                    .addStatement("$T.debug($S, _gobject.handle().address())",
-                            ClassNames.GLIB_LOGGER,
-                            "Ref " + getType() + " %ld")
-                    .addStatement("_gobject.ref()")
-                    .endControlFlow();
+            builder.beginControlFlow("if ($L.get() instanceof $T _gobject)", paramName, ClassNames.G_OBJECT)
+                   .addStatement("_gobject.ref()")
+                   .endControlFlow();
         }
     }
 
