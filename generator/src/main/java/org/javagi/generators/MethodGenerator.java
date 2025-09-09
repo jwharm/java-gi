@@ -359,11 +359,6 @@ public class MethodGenerator {
             default -> throw new IllegalStateException("Virtual Method parent must be a class or an interface");
         }
 
-        // Function pointer null-check
-        builder.addStatement("if (_func.equals($T.NULL)) throw new $T()",
-                MemorySegment.class,
-                NullPointerException.class);
-
         // Result assignment
         PartialStatement invoke = new PartialStatement();
         var returnType = returnValue.anyType();

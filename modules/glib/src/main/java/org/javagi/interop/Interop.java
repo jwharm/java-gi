@@ -113,10 +113,13 @@ public class Interop {
      * @param  fdesc   function descriptor of the native function
      * @param  options linker options
      * @return the newly created MethodHandle
+     * @throws NullPointerException when {@code symbol} or {@code fdesc} is null
      */
     public static MethodHandle downcallHandle(MemorySegment symbol,
                                               FunctionDescriptor fdesc,
                                               Linker.Option... options) {
+        if (symbol == null || fdesc == null)
+            throw new NullPointerException();
         return LINKER.downcallHandle(symbol, fdesc, options);
     }
 
