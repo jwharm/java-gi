@@ -22,12 +22,17 @@ package org.javagi.regress;
 import org.gnome.gi.regress.TestObj;
 import org.gnome.gi.regress.TestSimpleBoxedA;
 import org.gnome.gi.regress.TestSubObj;
+import org.gnome.gio.Gio;
+import org.gnome.gio.IOErrorEnum;
+import org.gnome.glib.GError;
 import org.gnome.glib.GLib;
 import org.gnome.glib.HashTable;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -103,7 +108,7 @@ public class TestObjectSignals {
         assertEquals(1, counter.get());
     }
 
-    @Test @Disabled("The assertion ret == G_MAXINT64 fails, reason unknown")
+    @Test @Disabled("Assert(ret == G_MAXINT64) fails, reason unknown")
     void int64() {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
@@ -116,7 +121,7 @@ public class TestObjectSignals {
         assertEquals(1, counter.get());
     }
 
-    @Test @Disabled("The assertion ret == G_MAXUINT64 fails, reason unknown")
+    @Test @Disabled("Assert(ret == G_MAXUINT64) fails, reason unknown")
     void uint64() {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
@@ -185,6 +190,95 @@ public class TestObjectSignals {
         var array = new String[] {"a", "bb", "ccc"};
         o.emit("sig-with-strv", (Object) array);
         assertEquals(1, counter.get());
+        o.emitSigWithStrv(array);
+        assertEquals(2, counter.get());
     }
 
+    @Test @Disabled("Not yet implemented")
+    void strvFull() {
+        var o = TestObj.builder().build();
+        var counter = new AtomicInteger(0);
+        o.onSigWithStrvFull(arr -> {
+            assertArrayEquals(new String[] {"a", "bb", "ccc"}, arr);
+            counter.incrementAndGet();
+        });
+        var array = new String[] {"a", "bb", "ccc"};
+        o.emit("sig-with-strv-full", (Object) array);
+        assertEquals(1, counter.get());
+        o.emitSigWithStrvFull(array);
+        assertEquals(2, counter.get());
+    }
+
+    @Test @Disabled("Not yet implemented")
+    void intArrayRet() {
+        var o = TestObj.builder().build();
+        o.onSigWithIntarrayRet(a -> {
+            int[] array = new int[a];
+            for (int i = 0; i < a; i++)
+                array[i] = i;
+            return array;
+        });
+        int[] ret = o.emitSigWithIntarrayRet(5);
+        assertArrayEquals(new int[] {0, 1, 2, 3, 4}, ret);
+    }
+
+    @Test
+    void arrayLenProp() {
+        var o = TestObj.builder().build();
+        var counter = new AtomicInteger(0);
+        o.onSigWithArrayLenProp(array -> {
+            assertArrayEquals(new int[] {0, 1, 2, 3, 4}, array);
+            counter.incrementAndGet();
+        });
+        // FIXME: we still have to allocate the array manually
+        try (var arena = Arena.ofConfined()) {
+            var data = Interop.allocateNativeArray(new int[] {0, 1, 2, 3, 4}, false, arena);
+            o.emit("sig-with-array-len-prop", data, 5);
+        }
+        assertEquals(1, counter.get());
+        o.emitSigWithArrayLenProp();
+        assertEquals(2, counter.get());
+    }
+
+    @Test
+    void inoutInt() {
+        var o = TestObj.builder().build();
+        o.onSigWithInoutInt(position -> {
+            assertEquals(42, position.get());
+            position.set(43);
+        });
+        // FIXME: we still have to allocate the array manually
+        try (var arena = Arena.ofConfined()) {
+            var value = arena.allocateFrom(ValueLayout.JAVA_INT, 42);
+            o.emit("sig-with-inout-int", value);
+            assertEquals(43, value.get(ValueLayout.JAVA_INT, 0));
+
+        }
+        o.emitSigWithInoutInt();
+    }
+
+    @Test @Disabled("Not yet implemented")
+    void gerror() {
+        var o = TestObj.builder().build();
+        o.onSigWithGerror(err -> {
+            assertNotNull(err);
+            // This only works when we manually dereference the pointer like this:
+                var err2 = new GError(Interop.dereference(err.address));
+                assertEquals(Gio.ioErrorQuark(), err2.readDomain());
+                assertEquals(IOErrorEnum.FAILED.getValue(), err2.readCode());
+            // I'm not sure why this is necessary here, so I disabled the test for now.
+        });
+        o.emitSigWithError();
+    }
+
+    @Test
+    void gerrorNull() {
+        var o = TestObj.builder().build();
+        o.onSigWithGerror(err -> {
+            assertNotNull(err);
+            assertThrows(NullPointerException.class, () -> Interop.checkNull(err.handle()));
+        });
+        o.emitSigWithNullError();
+        o.emit("sig-with-gerror", (Object) null);
+    }
 }
