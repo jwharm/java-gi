@@ -1,0 +1,6 @@
+.md-header {
+  background-image: url('../img/header.svg');
+  background-repeat: repeat-x;
+  background-size: auto 48px;
+  background-position: top left;
+}
