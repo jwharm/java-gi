@@ -143,9 +143,8 @@ public class ClosureGenerator {
         if (closure.throws_())
             upcall.addParameter(MemorySegment.class, "_gerrorPointer");
 
-        // Try-catch block for reflection calls
-        if (methodToInvoke.endsWith("invoke"))
-            upcall.beginControlFlow("try");
+        // Try-catch block for uncaught exceptions
+        upcall.beginControlFlow("try");
 
         /*
          * In the upcall method, memory allocations are only necessary for
@@ -165,7 +164,7 @@ public class ClosureGenerator {
                     .map(PreprocessingGenerator::new)
                     .forEach(p -> p.generateUpcall(upcall));
 
-        // Try-block for exceptions
+        // Try-block for GErrorExceptions
         if (closure.throws_())
             upcall.beginControlFlow("try");
 
@@ -231,22 +230,29 @@ public class ClosureGenerator {
             upcall.endControlFlow();
         }
 
-        // Close try-catch block for reflection calls
+        // Catch exceptions from reflection calls
         if (methodToInvoke.endsWith("invoke")) {
-            upcall.nextControlFlow("catch ($T ite)",
+            upcall.nextControlFlow("catch ($T _ite)",
                     InvocationTargetException.class);
-            upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, ite.getCause().toString() + $S + $L)",
+            upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _ite.getCause().toString() + $S)",
                     ClassNames.G_LIB,
                     ClassNames.CONSTANTS,
                     ClassNames.G_LOG_LEVEL_FLAGS,
-                    " in ",
-                    methodName);
+                    " in " + methodName);
             if (!returnsVoid)
                 returnNull(upcall);
-            upcall.nextControlFlow("catch (Exception e)");
-            upcall.addStatement("throw new RuntimeException(e)");
-            upcall.endControlFlow();
         }
+
+        // Catch other exceptions
+        upcall.nextControlFlow("catch ($T _t)", Throwable.class);
+        upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _t.toString() + $S)",
+                ClassNames.G_LIB,
+                ClassNames.CONSTANTS,
+                ClassNames.G_LOG_LEVEL_FLAGS,
+                " in " + methodName);
+        if (!returnsVoid)
+            returnNull(upcall);
+        upcall.endControlFlow();
 
         return upcall.build();
     }
