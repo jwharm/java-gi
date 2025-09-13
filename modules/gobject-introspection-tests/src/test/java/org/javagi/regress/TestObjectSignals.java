@@ -19,7 +19,6 @@
 
 package org.javagi.regress;
 
-import org.gnome.gi.regress.TestEnum;
 import org.gnome.gi.regress.TestObj;
 import org.gnome.gi.regress.TestSimpleBoxedA;
 import org.gnome.gi.regress.TestSubObj;
@@ -69,8 +68,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithObj(obj -> {
-            counter.incrementAndGet();
             assertEquals(33, obj.getProperty("int"));
+            counter.incrementAndGet();
         });
         var testObj = TestSubObj.builder().build();
         testObj.setProperty("int", 33);
@@ -83,8 +82,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithObjFull(obj -> {
-            counter.incrementAndGet();
             assertEquals(5, obj.getProperty("int"));
+            counter.incrementAndGet();
         });
         o.emitSigWithObjFull(); // argument from native function
         assertEquals(1, counter.get());
@@ -95,8 +94,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithObjFull(obj -> {
-            counter.incrementAndGet();
             assertEquals(33, obj.getProperty("int"));
+            counter.incrementAndGet();
         });
         var testObj = TestSubObj.builder().build();
         testObj.setProperty("int", 33);
@@ -109,8 +108,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithInt64Prop(number -> {
-            counter.incrementAndGet();
             assertEquals(GLib.MAXINT64, number);
+            counter.incrementAndGet();
             return GLib.MAXINT64;
         });
         o.emitSigWithInt64();
@@ -122,8 +121,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithUint64Prop(number -> {
-            counter.incrementAndGet();
             assertEquals(GLib.MAXUINT64, number);
+            counter.incrementAndGet();
             return GLib.MAXUINT64;
         });
         o.emitSigWithUint64();
@@ -135,8 +134,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithArrayProp(arr -> {
-            counter.incrementAndGet();
             assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5}, arr);
+            counter.incrementAndGet();
         });
         var array = new int[] {0, 1, 2, 3, 4, 5};
         o.emit("sig-with-array-prop", (Object) array);
@@ -148,8 +147,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithArrayLenProp(arr -> {
-            counter.incrementAndGet();
             assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5}, arr);
+            counter.incrementAndGet();
         });
         var array = new int[] {0, 1, 2, 3, 4, 5};
         o.emit("sig-with-array-len-prop", (Object) array);
@@ -168,8 +167,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithHashProp(hash -> {
-            counter.incrementAndGet();
             assertInstanceOf(HashTable.class, hash);
+            counter.incrementAndGet();
         });
         o.emit("sig-with-hash-prop", hashTable1);
         assertEquals(1, counter.get());
@@ -180,8 +179,8 @@ public class TestObjectSignals {
         var o = TestObj.builder().build();
         var counter = new AtomicInteger(0);
         o.onSigWithStrv(arr -> {
-            counter.incrementAndGet();
             assertArrayEquals(new String[] {"a", "bb", "ccc"}, arr);
+            counter.incrementAndGet();
         });
         var array = new String[] {"a", "bb", "ccc"};
         o.emit("sig-with-strv", (Object) array);
