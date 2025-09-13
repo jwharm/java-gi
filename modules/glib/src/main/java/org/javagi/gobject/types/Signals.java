@@ -268,6 +268,11 @@ public class Signals {
             int nParams = query.readNParams();
             Type[] paramTypes = query.readParamTypes();
 
+            // Check the number of input parameters
+            if (nParams != params.length)
+                throw new IllegalArgumentException("Invalid number of parameters: expected %d, got %d"
+                        .formatted(nParams, params.length));
+
             // Allocate Values array for the instance parameter and other
             // parameters
             var values = new Value[nParams+1];
