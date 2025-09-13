@@ -91,7 +91,9 @@ public class TestArrays {
 
     @Test
     void fixedSizeIntIn() {
-        assertEquals(10, testArrayFixedSizeIntIn(new int[] {1, 2, 3, 4}));
+        assertEquals(10, testArrayFixedSizeIntIn(new int[] {0, 1, 2, 3, 4}));
+        assertThrows(IllegalArgumentException.class, () -> testArrayFixedSizeIntIn(new int[] {0, 1, 2, 3}));
+        assertEquals(10, testArrayFixedSizeIntIn(new int[] {0, 1, 2, 3, 4, 5}));
     }
 
     @Test

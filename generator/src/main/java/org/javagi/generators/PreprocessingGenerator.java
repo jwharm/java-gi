@@ -25,6 +25,7 @@ import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
+import java.lang.Class;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -48,6 +49,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         nullCheck(builder);
         pointerAllocation(builder);
         arrayLength(builder);
+        arraySizeCheck(builder);
         scope(builder);
         transferOwnership(builder);
         createGBytes(builder);
@@ -348,6 +350,28 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 .add(arrayParam.isOutParameter()
                         ? "$arr:L.get() == null ? $zero:L : $cast:L$arr:L.get().length"
                         : "$arr:L.length");
+    }
+
+    private void arraySizeCheck(MethodSpec.Builder builder) {
+        if (!p.isOutParameter()
+                && array != null
+                && array.fixedSize() != -1) {
+            boolean checkNull = checkNull();
+            String name = getName();
+            String size = "" + array.fixedSize();
+            Class<?> error = IllegalArgumentException.class;
+
+            if (checkNull)
+                builder.beginControlFlow("if ($L != null)", name);
+
+            builder.beginControlFlow("if ($L.length < $L)", name, size)
+                    .addStatement("throw new $T($S)", error, name + ".length is less than " + size)
+                    .endControlFlow()
+                    .addJavadoc("@throws $T when length of {@code $L} is less than $L\n", error, name, size);
+
+            if (checkNull)
+                builder.endControlFlow();
+        }
     }
 
     // Arena for parameters with async or notified scope
