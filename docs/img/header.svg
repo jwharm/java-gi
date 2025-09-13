@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="48" viewBox="0 0 280 48" preserveAspectRatio="none">
+  <defs>
+    <!-- Flat dark rainbow colors -->
+    <pattern id="rainbow-ribbons-flat-dark" patternUnits="userSpaceOnUse" width="280" height="48" patternTransform="skewX(-30)">
+      <rect width="40" height="48" x="0" fill="#993333"></rect>
+      <rect width="40" height="48" x="40" fill="#cc6633"></rect>
+      <rect width="40" height="48" x="80" fill="#999933"></rect>
+      <rect width="40" height="48" x="120" fill="#339933"></rect>
+      <rect width="40" height="48" x="160" fill="#333399"></rect>
+      <rect width="40" height="48" x="200" fill="#663399"></rect>
+      <rect width="40" height="48" x="240" fill="#803380"></rect>
+      <!-- Thin soft separators to mimic ribbon edges -->
+      <g opacity="0.1">
+        <rect x="40" width="2" height="48" fill="white"></rect>
+        <rect x="80" width="2" height="48" fill="white"></rect>
+        <rect x="120" width="2" height="48" fill="white"></rect>
+        <rect x="160" width="2" height="48" fill="white"></rect>
+        <rect x="200" width="2" height="48" fill="white"></rect>
+        <rect x="240" width="2" height="48" fill="white"></rect>
+      </g>
+    </pattern>
+  </defs>
+
+  <!-- Flat rainbow stripe -->
+  <rect width="280" height="48" fill="url(#rainbow-ribbons-flat-dark)"></rect>
+</svg>

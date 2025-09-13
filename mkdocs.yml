@@ -73,3 +73,5 @@ plugins:
   - macros:
       module_name: docs/macros/mkdocs-macros
 
+extra_css:
+  - stylesheets/extra.css
