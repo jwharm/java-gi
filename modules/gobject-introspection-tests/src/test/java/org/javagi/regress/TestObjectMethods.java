@@ -33,7 +33,7 @@ public class TestObjectMethods {
 
     @Test
     void instanceMethodFull() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         o.instanceMethodFull();
     }
 

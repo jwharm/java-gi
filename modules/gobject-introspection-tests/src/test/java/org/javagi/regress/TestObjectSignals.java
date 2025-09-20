@@ -70,7 +70,7 @@ public class TestObjectSignals {
 
     @Test
     void object() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithObj(obj -> {
             assertEquals(33, obj.getProperty("int"));
@@ -84,7 +84,7 @@ public class TestObjectSignals {
 
     @Test
     void objectFull() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithObjFull(obj -> {
             assertEquals(5, obj.getProperty("int"));
@@ -96,7 +96,7 @@ public class TestObjectSignals {
 
     @Test
     void objectFullWithArg() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithObjFull(obj -> {
             assertEquals(33, obj.getProperty("int"));
@@ -110,7 +110,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Assert(ret == G_MAXINT64) fails, reason unknown")
     void int64() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithInt64Prop(number -> {
             assertEquals(GLib.MAXINT64, number);
@@ -123,7 +123,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Assert(ret == G_MAXUINT64) fails, reason unknown")
     void uint64() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithUint64Prop(number -> {
             assertEquals(GLib.MAXUINT64, number);
@@ -136,7 +136,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Not yet implemented")
     void array() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithArrayProp(arr -> {
             assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5}, arr);
@@ -149,7 +149,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Not yet implemented")
     void arrayLen() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithArrayLenProp(arr -> {
             assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5}, arr);
@@ -169,7 +169,7 @@ public class TestObjectSignals {
                 Interop::getByteFrom);
         hashTable1.putAll(Map.of("a", (byte) 1, "b", (byte) 2));
 
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithHashProp(hash -> {
             assertInstanceOf(HashTable.class, hash);
@@ -181,7 +181,7 @@ public class TestObjectSignals {
 
     @Test
     void strv() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithStrv(arr -> {
             assertArrayEquals(new String[] {"a", "bb", "ccc"}, arr);
@@ -196,7 +196,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Not yet implemented")
     void strvFull() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithStrvFull(arr -> {
             assertArrayEquals(new String[] {"a", "bb", "ccc"}, arr);
@@ -211,7 +211,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Not yet implemented")
     void intArrayRet() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         o.onSigWithIntarrayRet(a -> {
             int[] array = new int[a];
             for (int i = 0; i < a; i++)
@@ -224,7 +224,7 @@ public class TestObjectSignals {
 
     @Test
     void arrayLenProp() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         var counter = new AtomicInteger(0);
         o.onSigWithArrayLenProp(array -> {
             assertArrayEquals(new int[] {0, 1, 2, 3, 4}, array);
@@ -242,7 +242,7 @@ public class TestObjectSignals {
 
     @Test
     void inoutInt() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         o.onSigWithInoutInt(position -> {
             assertEquals(42, position.get());
             position.set(43);
@@ -259,7 +259,7 @@ public class TestObjectSignals {
 
     @Test @Disabled("Not yet implemented")
     void gerror() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         o.onSigWithGerror(err -> {
             assertNotNull(err);
             // This only works when we manually dereference the pointer like this:
@@ -273,7 +273,7 @@ public class TestObjectSignals {
 
     @Test
     void gerrorNull() {
-        var o = TestObj.builder().build();
+        var o = new TestObj();
         o.onSigWithGerror(err -> {
             assertNotNull(err);
             assertThrows(NullPointerException.class, () -> Interop.checkNull(err.handle()));
