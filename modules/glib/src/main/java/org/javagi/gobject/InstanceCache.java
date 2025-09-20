@@ -360,6 +360,9 @@ public class InstanceCache {
                         rest);
                 if (proxy.address == null)
                     proxy.address = address.reinterpret(size);
+
+                // Ensure the new object is cached
+                put(address, proxy);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
