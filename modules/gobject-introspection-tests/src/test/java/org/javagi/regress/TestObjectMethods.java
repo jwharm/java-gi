@@ -20,9 +20,12 @@
 package org.javagi.regress;
 
 import org.gnome.gi.regress.*;
+import org.gnome.gobject.GObject;
 import org.javagi.base.GErrorException;
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -178,5 +181,41 @@ public class TestObjectMethods {
     void nullObjectIn() {
         funcObjNullIn(null);
         funcObjNullableIn(null);
+    }
+
+    @Test
+    void nullObjectOut() {
+        var out = new Out<TestObj>();
+        TestObj.nullOut(out);
+        assertNull(out.get());
+    }
+
+    @Test
+    void gpointerWithTypeAnnotationIn() {
+        var o2 = new GObject();
+        new TestObj().notNullableTypedGpointerIn(o2);
+    }
+
+    @Test
+    void gpointerWithElementTypeAnnotationIn() {
+        var bytes = new byte[] {1, 2};
+        new TestObj().notNullableElementTypedGpointerIn(bytes);
+    }
+
+    @Test
+    void nameConflictWithProperty() {
+        // Ensure that the "name-conflict" property can be set with the builder
+        var o = TestObj.builder()
+                .setNameConflict(42)
+                .build();
+        assertEquals(42, o.getProperty("name-conflict"));
+
+        // Ensure that the "void nameConflict()" method is present on the class
+        try {
+            Method m = TestObj.class.getDeclaredMethod("nameConflict");
+            assertEquals(Void.TYPE, m.getReturnType());
+        } catch (NoSuchMethodException e) {
+            fail(e);
+        }
     }
 }

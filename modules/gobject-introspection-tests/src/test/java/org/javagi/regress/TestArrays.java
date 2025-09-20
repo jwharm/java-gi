@@ -19,6 +19,7 @@
 
 package org.javagi.regress;
 
+import org.gnome.gi.regress.TestObj;
 import org.gnome.gio.Icon;
 import org.gnome.gio.SimpleAction;
 import org.gnome.glib.Type;
@@ -133,5 +134,15 @@ public class TestArrays {
     @Test
     void intNullIn() {
         testArrayIntNullIn(null);
+    }
+
+    @Test
+    void fixedSizeObjectOut() {
+        var objs = new Out<TestObj[]>();
+        testArrayFixedOutObjects(objs);
+        assertNotNull(objs.get());
+        assertEquals(2, objs.get().length);
+        assertInstanceOf(TestObj.class, objs.get()[0]);
+        assertInstanceOf(TestObj.class, objs.get()[1]);
     }
 }
