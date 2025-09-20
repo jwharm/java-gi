@@ -145,6 +145,17 @@ public class MethodGenerator {
             builder.beginControlFlow("try (var _arena = $T.ofConfined())",
                     Arena.class);
 
+        // When ownership of the instance parameter is transferred away, the
+        // instance is consumed. Add a ref() call to prevent this.
+        if (func.parameters() != null
+                && func.parameters().instanceParameter() != null
+                && func.parameters().instanceParameter().transferOwnership() == TransferOwnership.FULL) {
+            if (func.parameters().instanceParameter().type().lookup().checkIsGObject())
+                builder.addStatement("ref()");
+            else
+                builder.addStatement("$T.yieldOwnership(this)", ClassNames.MEMORY_CLEANER);
+        }
+
         // Preprocessing
         if (func.parameters() != null)
             func.parameters().parameters().stream()
