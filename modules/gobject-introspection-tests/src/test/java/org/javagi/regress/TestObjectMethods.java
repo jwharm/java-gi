@@ -20,8 +20,11 @@
 package org.javagi.regress;
 
 import org.gnome.gi.regress.*;
+import org.javagi.base.GErrorException;
+import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
+import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestObjectMethods {
@@ -40,5 +43,140 @@ public class TestObjectMethods {
     @Test
     void staticMethod() {
         assertEquals(5, TestObj.staticMethod(5));
+    }
+
+    @Test
+    void forcedMethod() {
+        var o = new TestObj();
+        o.forcedMethod();
+    }
+
+    @Test
+    void tortureSignature0() {
+        var o = new TestObj();
+        var y = new Out<Double>();
+        var z = new Out<Integer>();
+        var q = new Out<Integer>();
+        o.tortureSignature0(42, y, z, "foo", q, 7);
+        assertEquals(42, y.get(), 0.01);
+        assertEquals(84, z.get());
+        assertEquals(10, q.get());
+    }
+
+    @Test
+    void tortureSignature1Fail() {
+        var o = new TestObj();
+        var y = new Out<Double>();
+        var z = new Out<Integer>();
+        var q = new Out<Integer>();
+        assertThrows(GErrorException.class, () -> o.tortureSignature1(42, y, z, "foo", q, 7));
+    }
+
+    @Test
+    void tortureSignature1Success() {
+        var o = new TestObj();
+        var y = new Out<Double>();
+        var z = new Out<Integer>();
+        var q = new Out<Integer>();
+        try {
+            o.tortureSignature1(11, y, z, "barbaz", q, 8);
+        } catch (GErrorException e) {
+            fail();
+        }
+        assertEquals(11, y.get(), 0.01);
+        assertEquals(22, z.get());
+        assertEquals(14, q.get());
+    }
+
+    // Java-GI does not skip return values or parameters when annotated with (skip).
+    @Test
+    void doesNotSkipReturnVal() {
+        var o = new TestObj();
+        try {
+            boolean result = o.skipReturnVal(0, null, 0.0, null, null, 0, 0);
+            assertTrue(result);
+        } catch (GErrorException e) {
+            fail();
+        }
+    }
+
+    // Java-GI does not skip return values or parameters when annotated with (skip).
+    @Test
+    void doesNotSkipParam() {
+        var o = new TestObj();
+        var b = new Out<Integer>();
+        var d = new Out<>(2);
+        var sum = new Out<Integer>();
+        try {
+            boolean result = o.skipParam(1, b, 1.5, d, sum, 3, 4);
+            assertTrue(result);
+        } catch (GErrorException e) {
+            fail();
+        }
+        assertEquals(2, b.get());
+        assertEquals(3, d.get());
+        assertEquals(43, sum.get());
+    }
+
+    // Java-GI does not skip return values or parameters when annotated with (skip).
+    @Test
+    void doesNotSkipOutParam() {
+        var o = new TestObj();
+        var b = new Out<Integer>();
+        var d = new Out<>(2);
+        var sum = new Out<Integer>();
+        try {
+            boolean result = o.skipOutParam(1, b, 1.5, d, sum, 3, 4);
+            assertTrue(result);
+        } catch (GErrorException e) {
+            fail();
+        }
+        assertEquals(2, b.get());
+        assertEquals(3, d.get());
+        assertEquals(43, sum.get());
+    }
+
+    // Java-GI does not skip return values or parameters when annotated with (skip).
+    @Test
+    void doesNotSkipInoutParam() {
+        var o = new TestObj();
+        var b = new Out<Integer>();
+        var d = new Out<>(2);
+        var sum = new Out<Integer>();
+        try {
+            boolean result = o.skipInoutParam(1, b, 1.5, d, sum, 3, 4);
+            assertTrue(result);
+        } catch (GErrorException e) {
+            fail();
+        }
+        assertEquals(2, b.get());
+        assertEquals(3, d.get());
+        assertEquals(43, sum.get());
+    }
+
+    @Test
+    void staticMethodHasOneArgument() {
+        try {
+            assertNotNull(TestObj.fromFile(""));
+        } catch (GErrorException e) {
+            fail();
+        }
+    }
+
+    @Test
+    void skipsDestroyNotifyAndUserDataArguments() {
+        TestObj.callback(() -> 0);
+    }
+
+    @Test
+    void virtualFunction() {
+        var o = new TestObj();
+        assertEquals(42, o.doMatrix("meaningless string"));
+    }
+
+    @Test
+    void nullObjectIn() {
+        funcObjNullIn(null);
+        funcObjNullableIn(null);
     }
 }
