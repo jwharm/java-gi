@@ -79,6 +79,9 @@ public class Arenas {
      * @param data pointer to the hashcode of the Arena to close
      */
     public static void close_cb(MemorySegment data) {
+        if (MemorySegment.NULL.equals(data))
+            return;
+
         int hashCode = data.reinterpret(ValueLayout.JAVA_INT.byteSize())
                            .get(ValueLayout.JAVA_INT, 0);
         ARENAS.get(hashCode).thenAccept(arena -> {
@@ -108,6 +111,8 @@ public class Arenas {
      * @param arena the cached Arena
      */
     public static void readyToClose(Arena arena) {
-        ARENAS.get(arena.hashCode()).complete(arena);
+        CompletableFuture<Arena> future = ARENAS.get(arena.hashCode());
+        if (future != null)
+            future.complete(arena);
     }
 }
