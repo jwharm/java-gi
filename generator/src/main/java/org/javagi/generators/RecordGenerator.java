@@ -111,13 +111,14 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (memoryLayout != null) {
             builder.addMethod(memoryLayout);
 
-            if (noNewConstructor())
+            if (outerClass == null && noNewConstructor()) {
                 builder.addMethod(constructor(true))
-                       .addMethod(constructor(false));
+                        .addMethod(constructor(false));
 
-            if (outerClass == null && hasFieldSetters() && noNewConstructor())
-                builder.addMethod(constructorWithParameters(true))
-                       .addMethod(constructorWithParameters(false));
+                if (hasFieldSetters())
+                    builder.addMethod(constructorWithParameters(true))
+                            .addMethod(constructorWithParameters(false));
+            }
 
             for (Field f : rec.fields())
                 generateField(f);
