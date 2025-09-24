@@ -1149,7 +1149,7 @@ public class Types {
         if (cls.isInterface()) {
             var typeInterface = getTypeInterface(cls);
             if (typeInterface == null)
-                throw new TypeRegistrationException("Unknown TypeTypeInterface");
+                throw new TypeRegistrationException("Unknown TypeInterface");
 
             if (getLayout(typeInterface) == null)
                 throw new TypeRegistrationException("Unknown memory layout");
