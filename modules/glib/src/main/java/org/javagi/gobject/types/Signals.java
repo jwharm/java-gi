@@ -31,6 +31,7 @@ import org.gnome.gobject.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
@@ -138,6 +139,9 @@ public class Signals {
 
         else if (cls.equals(long.class) || cls.equals(Long.class))
             return Types.LONG;
+
+        else if (cls.equals(MemorySegment.class))
+            return Types.POINTER;
 
         else if (cls.equals(String.class))
             return Types.STRING;
