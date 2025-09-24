@@ -22,6 +22,8 @@ package org.javagi.regress;
 import org.gnome.gi.regress.*;
 import org.gnome.gio.AsyncResult;
 import org.gnome.gio.Cancellable;
+import org.gnome.gio.Gio;
+import org.gnome.gio.IOErrorEnum;
 import org.gnome.glib.GLib;
 import org.gnome.glib.HashTable;
 import org.gnome.glib.MainLoop;
@@ -281,6 +283,38 @@ public class TestCallbacks {
         testHashTableCallback(hashtable, t -> {
             hasBeenCalled.set(true);
             assertEquals(hashtable, t);
+        });
+        assertTrue(hasBeenCalled.get());
+    }
+
+    @Test
+    void gerror() {
+        var hasBeenCalled = new AtomicBoolean(false);
+        testGerrorCallback(e -> {
+            hasBeenCalled.set(true);
+            assertEquals(e.readDomain(), Gio.ioErrorQuark());
+            assertEquals(e.readCode(), IOErrorEnum.NOT_SUPPORTED.getValue());
+        });
+        assertTrue(hasBeenCalled.get());
+    }
+
+    @Test
+    void gerrorNull() {
+        var hasBeenCalled = new AtomicBoolean(false);
+        testNullGerrorCallback(e -> {
+            hasBeenCalled.set(true);
+            assertNull(e);
+        });
+        assertTrue(hasBeenCalled.get());
+    }
+
+    @Test
+    void gerrorOwned() {
+        var hasBeenCalled = new AtomicBoolean(false);
+        testOwnedGerrorCallback(e -> {
+            hasBeenCalled.set(true);
+            assertEquals(e.readDomain(), Gio.ioErrorQuark());
+            assertEquals(e.readCode(), IOErrorEnum.PERMISSION_DENIED.getValue());
         });
         assertTrue(hasBeenCalled.get());
     }
