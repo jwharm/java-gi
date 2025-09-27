@@ -108,6 +108,10 @@ public final class Array extends GirElement implements AnyType {
         return fixedSize * anyType().allocatedSize(longAsInt);
     }
 
+    public int elementSize(boolean longAsInt) {
+        return anyType().allocatedSize(longAsInt);
+    }
+
     public AnyType anyType() {
         return findAny(children(), AnyType.class);
     }
