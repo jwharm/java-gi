@@ -20,8 +20,10 @@
 package org.javagi.regress;
 
 import org.gnome.gi.regress.*;
+import org.gnome.glib.Variant;
 import org.junit.jupiter.api.Test;
 
+import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestInitiallyUnowned {
@@ -29,5 +31,12 @@ public class TestInitiallyUnowned {
     void construct() {
         var o = new TestFloating();
         assertNotNull(o);
+    }
+
+    @Test
+    void transferFloatingVariant() {
+        Variant variant = getVariant();
+        assertNotNull(variant);
+        assertEquals(42, variant.unpack());
     }
 }
