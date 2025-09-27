@@ -162,6 +162,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                     && t.lookup() instanceof Record)
                 // Copy contents from nested struct
                 builder.addMethod(generator.generateReadCopyMethod());
+            else if (f.anyType() instanceof Array a && a.fixedSize() > 0)
+                // Copy contents from array
+                builder.addMethod(generator.generateReadArrayMethod());
             else
                 // Read pointer or primitive value
                 builder.addMethod(generator.generateReadMethod());
@@ -199,6 +202,9 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 && t.lookup() instanceof Record)
             // Generate write-method to copy contents to nested struct
             builder.addMethod(generator.generateWriteCopyMethod());
+        else if (f.anyType() instanceof Array a && a.fixedSize() > 0)
+            // Generate write-method to copy contents to nested array
+            builder.addMethod(generator.generateWriteArrayMethod());
         else if (cb == null || outerClass == null)
             // Generate write/override method for a pointer or primitive value
             builder.addMethod(generator.generateWriteMethod());

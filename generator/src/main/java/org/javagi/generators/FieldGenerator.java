@@ -217,6 +217,63 @@ public class FieldGenerator extends TypedValueGenerator {
         return spec.build();
     }
 
+    public MethodSpec generateReadArrayMethod() {
+        var calcOffset = "long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))";
+        var returnSlice = PartialStatement.of("return ")
+                .add(marshalNativeToJava("handle().asSlice(_offset)", false))
+                .add(";\n");
+
+        return MethodSpec.methodBuilder(methodName(READ_PREFIX))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(getType())
+                .addJavadoc("""
+                        Read the value of the field {@code $1L}.
+                        
+                        @return The value of the field {@code $1L}
+                        """, f.name())
+                .beginControlFlow("try ($1T _arena = $1T.ofConfined())", Arena.class)
+                .addStatement(calcOffset, MemoryLayout.class, f.name())
+                .addNamedCode(returnSlice.format(), returnSlice.arguments())
+                .endControlFlow()
+                .build();
+    }
+
+    public MethodSpec generateWriteArrayMethod() {
+        var stmt = PartialStatement.of("$memorySegment:T _" + getName() + "Array = ",
+                "memorySegment", MemorySegment.class)
+                .add(marshalJavaToNative(getName()))
+                .add(";\n");
+
+        var spec = MethodSpec.methodBuilder(
+                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+                .addModifiers(Modifier.PUBLIC)
+                .addJavadoc("""
+                        Write a value in the field {@code $1L}.
+                        
+                        @param $2L The new value for the field {@code $1L}
+                        """, f.name(), getName())
+                .addParameter(getType(), getName())
+                .addParameter(Arena.class, "_arena")
+                .addStatement("$T _path = $T.PathElement.groupElement($S)",
+                        MemoryLayout.PathElement.class, MemoryLayout.class, f.name())
+                .addStatement("long _offset = getMemoryLayout().byteOffset(_path)")
+                .addNamedCode(stmt.format(), stmt.arguments())
+                .addStatement("$T _slice = handle().asSlice(_offset, getMemoryLayout().select(_path))",
+                        MemorySegment.class);
+
+        if (checkNull())
+            spec.beginControlFlow("if ($L == null)", getName())
+                    .addStatement("_slice.fill((byte) 0)")
+                    .nextControlFlow("else");
+
+        spec.addStatement("_slice.copyFrom(_$LArray)", getName());
+
+        if (checkNull())
+            spec.endControlFlow();
+
+        return spec.build();
+    }
+
     public MethodSpec generateOverrideMethod() {
         return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""

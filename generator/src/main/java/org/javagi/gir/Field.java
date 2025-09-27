@@ -58,6 +58,19 @@ public final class Field extends GirElement implements TypedValue {
     }
 
     /**
+     * Get the memory alignment of this field, in bytes
+     * @param longAsInt when true, long is 4 bytes, else long is 8 bytes
+     */
+    public int getAlignment(boolean longAsInt) {
+        AnyType anyType = anyType();
+        if (anyType instanceof Type t)
+            return t.isPointer() ? 8 : t.allocatedSize(longAsInt);
+        if (anyType instanceof Array a)
+            return a.fixedSize() < 0 ? 8 : a.elementSize(longAsInt);
+        return 8; // callback
+    }
+
+    /**
      * Check whether this field should not be exposed
      */
     public boolean isDisguised() {

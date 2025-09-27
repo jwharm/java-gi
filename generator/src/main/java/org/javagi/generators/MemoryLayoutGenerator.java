@@ -131,9 +131,13 @@ public class MemoryLayoutGenerator {
             // Get the size of the field, in bytes
             int s = field.getSize(longAsInt);
 
+            // Get the alignment of the field, in bytes
+            // (In a SequenceLayout, this is the size of one element)
+            int aln = field.getAlignment(longAsInt);
+
             // Update alignment
-            if (s > alignment && s <= 8)
-                alignment = s;
+            if (aln > alignment && aln <= 8)
+                alignment = aln;
 
             // Bitfield?
             int bits = field.bits();
@@ -158,10 +162,10 @@ public class MemoryLayoutGenerator {
 
             // Calculate padding
             if (insertPadding) {
-                // If the previous field had a smaller byte-size than this one,
+                // If the previous field had a smaller alignment than this one,
                 // add padding (to a maximum of 8 bytes)
-                if (size % s % 8 > 0) {
-                    int padding = (s - (size % s)) % 8;
+                if (size % aln % 8 > 0) {
+                    int padding = (aln - (size % aln)) % 8;
                     stmt.add("$memoryLayout:T.paddingLayout(" + padding + ")")
                         .add(",\n");
                     size += padding;
