@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestArrays {
+public class TestArray {
     @Test
     void intIn() {
         assertEquals(10, testArrayIntIn(new int[] {1, 2, 3, 4}));

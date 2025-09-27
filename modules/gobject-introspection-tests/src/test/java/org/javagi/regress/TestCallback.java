@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestCallbacks {
+public class TestCallback {
     @Test
     void callback() {
         assertEquals(42, testCallback(() -> 42));
@@ -180,7 +180,7 @@ public class TestCallbacks {
     void instanceMethod() {
         var count = new AtomicInteger(0);
         var o = new TestObj();
-        TestCallback callback = count::incrementAndGet;
+        org.gnome.gi.regress.TestCallback callback = count::incrementAndGet;
         o.instanceMethodCallback(callback);
         assertEquals(1, count.get());
         o.instanceMethodCallback(null);
@@ -212,7 +212,7 @@ public class TestCallbacks {
     @Test
     void staticMethod() {
         var count = new AtomicInteger(0);
-        TestCallback callback = count::incrementAndGet;
+        org.gnome.gi.regress.TestCallback callback = count::incrementAndGet;
         TestObj.staticMethodCallback(callback);
         assertEquals(1, count.get());
         TestObj.staticMethodCallback(null);

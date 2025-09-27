@@ -28,7 +28,7 @@ import java.util.Arrays;
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestArraysFixedSize {
+public class TestArrayFixedSize {
     @Test
     void struct() {
         var struct = new TestStructFixedArray();
