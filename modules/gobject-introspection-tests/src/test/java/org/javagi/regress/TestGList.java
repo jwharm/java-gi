@@ -21,7 +21,6 @@ package org.javagi.regress;
 
 import org.gnome.gi.regress.TestObj;
 import org.gnome.gi.regress.TestSubObj;
-import org.gnome.glib.SList;
 import org.gnome.glib.Type;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
@@ -69,7 +68,7 @@ public class TestGList {
 
     @Test
     void nullOut() {
-        var out = new Out<SList<String>>();
+        var out = new Out<org.gnome.glib.List<String>>();
         testGlistNullOut(out);
         assertNotNull(out.get());
         assertTrue(out.get().isEmpty());
