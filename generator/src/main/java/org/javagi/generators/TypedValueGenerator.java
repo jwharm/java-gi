@@ -516,6 +516,13 @@ class TypedValueGenerator {
                     var elemTypeTag = elemTarget.typeTag();
                     yield PartialStatement.of("(_ptr -> $" + elemTypeTag + ":T.of($interop:T.getIntegerFrom(_ptr)))",
                             elemTypeTag, enumType.typeName(), "interop", ClassNames.INTEROP);
+                } else if (elemTarget.checkIsGObject()) {
+                    var elemTypeTag = elemTarget.typeTag();
+                    var stmt = elemTarget.constructorName();
+                    yield PartialStatement.of("_ptr -> ($" + elemTypeTag + ":T) $instanceCache:T.getForType(_ptr, ",
+                                    "instanceCache", ClassNames.INSTANCE_CACHE,
+                                    elemTypeTag, elemTarget.typeName())
+                            .add(stmt).add(")");
                 } else {
                     yield elemTarget.constructorName();
                 }
