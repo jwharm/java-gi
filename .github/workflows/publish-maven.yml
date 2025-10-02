@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -50,13 +50,43 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      
+
+      - name: Enable core dumps
+        run: |
+          ulimit -c unlimited
+          echo '/tmp/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
+
       - name: Run Gradle build
         working-directory: java-gi/
         run: |
           Xvfb :100 -ac &
           export DISPLAY=:100.0
           ./gradlew build javadoc
+        env:
+          _JAVA_OPTIONS: >-
+            -XX:+UnlockDiagnosticVMOptions
+            -XX:+ErrorFile=hs_err_pid%p.log
+            -XX:+HeapDumpOnOutOfMemoryError
+            -XX:HeapDumpPath=.
+
+      - name: Upload JVM crash logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jvm-crash-logs
+          path: |
+            java-gi/hs_err_pid*.log
+            java-gi/replay_pid*.log
+            java-gi/*.hprof
+          if-no-files-found: ignore
+
+      - name: Upload core dumps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-dumps
+          path: /tmp/core.*
+          if-no-files-found: ignore
 
       - name: Run Mkdocs build
         working-directory: java-gi/
