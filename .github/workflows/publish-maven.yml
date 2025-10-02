@@ -75,8 +75,11 @@ jobs:
         with:
           name: jvm-crash-logs
           path: |
+            hs_err_pid*.log
             java-gi/hs_err_pid*.log
+            replay_pid*.log
             java-gi/replay_pid*.log
+            *.hprof
             java-gi/*.hprof
           if-no-files-found: ignore
 
