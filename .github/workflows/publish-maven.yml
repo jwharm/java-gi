@@ -65,7 +65,7 @@ jobs:
         env:
           _JAVA_OPTIONS: >-
             -XX:+UnlockDiagnosticVMOptions
-            -XX:+ErrorFile=hs_err_pid%p.log
+            -XX:ErrorFile=hs_err_pid%p.log
             -XX:+HeapDumpOnOutOfMemoryError
             -XX:HeapDumpPath=.
 
