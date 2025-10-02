@@ -26,14 +26,12 @@ import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
-import org.gnome.glib.PtrArray;
+import org.gnome.glib.*;
 import org.javagi.base.*;
-import org.gnome.glib.GLib;
 
-import org.gnome.glib.LogLevelFlags;
-import org.gnome.glib.Type;
 import org.javagi.base.Enumeration;
 import org.jetbrains.annotations.Nullable;
 
@@ -1525,6 +1523,23 @@ public class Interop {
     }
 
     /**
+     * Create a new empty GByteArray.
+     *
+     * @return the newly create GByteArray
+     */
+    public static MemorySegment newGByteArray() {
+        try (var _arena = Arena.ofConfined()) {
+            MemorySegment _result;
+            try {
+                MemorySegment g_byte_array = (MemorySegment) DowncallHandles.g_byte_array_new.invokeExact();
+                return g_byte_array.reinterpret(ByteArray.getMemoryLayout().byteSize());
+            } catch (Throwable _err) {
+                throw new AssertionError(_err);
+            }
+        }
+    }
+
+    /**
      * Create a new empty GPtrArray.
      *
      * @return the newly create GPtrArray
@@ -2017,6 +2032,11 @@ public class Interop {
                 "g_array_new_take",
                 FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG),
+                false);
+
+        private static final MethodHandle g_byte_array_new = Interop.downcallHandle(
+                "g_byte_array_new",
+                FunctionDescriptor.of(ValueLayout.ADDRESS),
                 false);
 
         private static final MethodHandle g_ptr_array_new = Interop.downcallHandle(

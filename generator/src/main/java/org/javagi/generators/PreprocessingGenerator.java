@@ -111,6 +111,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
              * a buffer and zero-initialize it.
              */
             else if (p.callerAllocates()) {
+
+                // Allocate new GArray
                 if ("GLib.Array".equals(array.name())) {
                     String elemSize = "" + array.anyType().allocatedSize(false);
                     if (array.anyType() instanceof Type t && t.isLong())
@@ -121,13 +123,28 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                             "name", getName(),
                             "interop", ClassNames.INTEROP,
                             "elemSize", elemSize);
-                } else if ("GLib.PtrArray".equals(array.name())) {
+                }
+
+                // Allocate new GPtrArray
+                else if ("GLib.PtrArray".equals(array.name())) {
                     stmt = PartialStatement.of(
                             "$memorySegment:T _$name:LArray = $interop:T.newGPtrArray();\n",
                             "memorySegment", MemorySegment.class,
                             "name", getName(),
                             "interop", ClassNames.INTEROP);
-                } else {
+                }
+
+                // Allocate new GByteArray
+                else if ("GLib.ByteArray".equals(array.name())) {
+                    stmt = PartialStatement.of(
+                            "$memorySegment:T _$name:LArray = $interop:T.newGByteArray();\n",
+                            "memorySegment", MemorySegment.class,
+                            "name", getName(),
+                            "interop", ClassNames.INTEROP);
+                }
+
+                // Allocate new regular array
+                else {
                     stmt = PartialStatement.of(
                                     "$memorySegment:T _$name:LArray = $arena:T.ofAuto().allocate(",
                                     "arena", Arena.class,
@@ -163,13 +180,17 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     allocatePointer = true;
             }
 
+            // Allocate pointer "_fooPointer" that points to "_fooArray"
             if (allocatePointer) {
                 stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = " +
                                 "_arena.allocateFrom($valueLayout:T.ADDRESS, _$name:LArray);\n",
                         "memorySegment", MemorySegment.class,
                         "valueLayout", ValueLayout.class,
                         "name", getName());
-            } else {
+            }
+
+            // When no pointer was allocated, "_fooPointer" is equal to "_fooArray"
+            else {
                 stmt = PartialStatement.of("$memorySegment:T _$name:LPointer = _$name:LArray;\n",
                         "memorySegment", MemorySegment.class,
                         "name", getName());
@@ -187,9 +208,8 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             // Special case for length, user_data, and GBytes parameters
             if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
                     || (target != null && target.checkIsGBytes())) {
-                /*
-                 * Allocate an empty memory segment with the correct layout
-                 */
+
+                // Allocate an empty memory segment with the correct layout
                 var stmt = PartialStatement.of(
                                 "$memorySegment:T _$name:LPointer = _arena.allocate(",
                                 "memorySegment", MemorySegment.class,
@@ -248,6 +268,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     if (p.direction() == Direction.INOUT) {
                         Callable copyFunc = target instanceof StandardLayoutType slt ? slt.copyFunction() : null;
 
+                        // Marshal GList, GHashTable, GValue and GClosure
                         if (target != null
                                 && (target.checkIsGList() || target.checkIsGHashTable() || target.checkIsGValue() || target.checkIsGClosure())) {
                             stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
@@ -255,7 +276,12 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                     .add(", 0, ")
                                     .add(marshalJavaToNative(identifier))
                                     .add(");\n");
-                        } else if (copyFunc == null && valueLayout.format().endsWith(".getMemoryLayout()")) {
+                        }
+
+                        // Boxed copy
+                        else if (target != null
+                                && copyFunc == null
+                                && valueLayout.format().endsWith(".getMemoryLayout()")) {
                             builder.addStatement("long _$LSize = $T.getMemoryLayout().byteSize()",
                                     getName(), v.anyType().typeName());
                             stmt = PartialStatement.of("_$name:LPointer.set(")
@@ -272,7 +298,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                             v.anyType().toTypeTag(), v.anyType().typeName())
                                     .add(")")
                                     .add(");\n");
-                        } else if (copyFunc != null) {
+                        }
+
+                        // Call the copy-function
+                        else if (copyFunc != null) {
                             stmt = PartialStatement.of("_$name:LPointer.set(")
                                     .add("$valueLayout:T.ADDRESS",
                                             "valueLayout", ValueLayout.class)
@@ -281,7 +310,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                                             "name", getName(),
                                             "copyFunc", toJavaIdentifier(copyFunc.name()))
                                     .add(");\n");
-                        } else {
+                        }
+
+                        // Run regular marshaling code
+                        else {
                             stmt = PartialStatement.of("_$name:LPointer.set($Z", "name", getName())
                                     .add(valueLayout)
                                     .add(", 0, ")
