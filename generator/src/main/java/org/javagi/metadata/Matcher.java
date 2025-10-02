@@ -45,7 +45,7 @@ public class Matcher {
 
         // Log unused entries
         if (matchingNodes.isEmpty()) {
-            logger.severe("Rule does not match anything");
+            logger.severe("Rule '" + rule.glob() + "' does not match anything");
         }
 
         // Update gir attributes from the metadata arguments.
