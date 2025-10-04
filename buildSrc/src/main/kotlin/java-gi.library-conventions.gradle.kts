@@ -28,7 +28,7 @@ mavenPublishing {
         scm {
             connection = "scm:git:git://github.com/jwharm/java-gi.git"
             developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
-            url = "https://github.com/jwharm/java-gi/tree/master"
+            url = "https://github.com/jwharm/java-gi/tree/main"
         }
     }
 }
