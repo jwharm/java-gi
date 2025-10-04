@@ -25,6 +25,7 @@ import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
@@ -194,146 +195,182 @@ public class TestAnnotationObject {
 
     @Test
     void withVoidPointer() {
-
+        o.withVoidp(null);
+        o.withVoidp(MemorySegment.NULL);
     }
 
     @Test
     void getObjects() {
-
+        var objects = o.getObjects();
+        assertIterableEquals(List.of(o), objects);
     }
 
     @Test
     void createObject() {
-
+        var o2 = o.createObject();
+        assertSame(o, o2);
     }
 
     @Test
     void buffer() {
-
+        try (Arena arena = Arena.ofConfined()) {
+            var bytes = arena.allocate(16);
+            o.useBuffer(bytes);
+        }
     }
 
     @Test
     void arrayZeroTerminated() {
-
+        o.computeSum(new int[] {1, 2, 3});
     }
 
     @Test
     void arrayLength() {
-
+        o.computeSumN(new int[] {1, 2, 3});
     }
 
     @Test
     void arrayZeroTerminatedAndLengthInt() {
-
+        o.computeSumNz(new int[] {1, 2, 3});
     }
 
     @Test
     void arrayZeroTerminatedAndLengthString() {
-
+        var argv = new Out<>(new String[] {"--num", "5", "--no-florp"});
+        o.parseArgs(argv);
+        var stringOut = new Out<String>();
+        boolean result = o.stringOut(stringOut);
+        assertFalse(result);
+        assertNull(stringOut.get());
     }
 
     @Test
     void foreach() {
+        o.foreach((_, _) -> {});
+    }
 
+    @Test
+    void setArray() {
+        o.setData(new byte[] {104, 105, 106, 107});
+    }
+
+    @Test
+    void setArrayWithElementType() {
+        o.setData2(new byte[] {104, 105, 106, 107});
+    }
+
+    @Test
+    void setArrayWithOverriddenElementType() {
+        o.setData3(new byte[] {104, 105, 106, 107});
     }
 
     @Test
     void allowNone() {
-
+        assertNull(o.allowNone("foo"));
     }
 
     @Test
     void noTransfer() {
-
+        assertNull(o.notrans());
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     void doNotUse() {
-
+        assertNull(o.doNotUse());
     }
 
     @Test
     void watch() {
-
+        o.watch((_, _) -> {});
     }
 
     @Test
     void hiddenSelf() {
+        o.hiddenSelf();
+    }
 
+    @Test
+    void annotationInit() {
+        var argv = new Out<>(new String[] {"--num", "5", "--no-florp"});
+        Regress.annotationInit(argv);
     }
 
     @Test
     void returnArray() {
-
+        assertNull(Regress.annotationReturnArray());
     }
 
     @Test
     void returnStringZeroTerminated() {
-
+        assertNull(Regress.annotationStringZeroTerminated());
     }
 
     @Test
     void outStringZeroTerminated() {
-
+        var out = new Out<>(new String[] {"in", "out"});
+        Regress.annotationStringZeroTerminatedOut(out);
+        assertArrayEquals(new String[] {"in", "out"}, out.get());
     }
 
     @Test
     void versioned() {
-
+        Regress.annotationVersioned();
     }
 
     @Test
     void stringArrayLength() {
-
+        Regress.annotationStringArrayLength(new String[] {"foo", "bar"});
     }
 
     @Test
     void extraAnnos() {
+        o.extraAnnos();
+    }
 
+    @Test @Disabled("Unsupported")
+    void customDestroy() {
+        // Regress.annotationCustomDestroy(a -> a);
+        Regress.annotationCustomDestroyCleanup();
     }
 
     @Test
-    void customDestroy() {
-
-    } // (& custom destroy cleanup)
-
-    @Test
     void getSourceFile() {
-
+        assertNull(Regress.annotationGetSourceFile());
     }
 
     @Test
     void setSourceFile() {
-
+        Regress.annotationSetSourceFile("résumé.txt");
     }
 
     @Test
     void attributeFunc() {
-
+        assertEquals(42, Regress.annotationAttributeFunc(o, "foo"));
     }
 
     @Test
     void invalidAnnotation() {
-
+        Regress.annotationInvalidRegressAnnotation(42);
     }
 
     @Test
     void testParsingBug630862() {
-
+        assertNull(Regress.annotationTestParsingBug630862());
     }
 
     @Test
     void testCommentBug631690() {
-
+        Regress.annotationSpaceAfterCommentBug631690();
     }
 
     @Test
     void returnFilename() {
-
+        assertEquals("a utf-8 filename", Regress.annotationReturnFilename());
     }
 
     @Test
     void transferFloating() {
-
+        assertNull(Regress.annotationTransferFloating(o));
     }
 }
