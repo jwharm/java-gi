@@ -87,7 +87,7 @@ public class ValueUtil {
 
         // GStrv
         if (type.equals(STRV))
-            return Interop.getStringArrayFrom(src.getBoxed(), TransferOwnership.FULL);
+            return Interop.getStringArrayFrom(src.getBoxed(), TransferOwnership.NONE);
 
         // GByteArray
         if (type.equals(BYTE_ARRAY)) {
@@ -96,7 +96,7 @@ public class ValueUtil {
             MemorySegment data = Interop.dereference(address);
             int length = arr.readLen();
             try (var arena = Arena.ofConfined()) {
-                return Interop.getByteArrayFrom(data, length, arena, TransferOwnership.FULL);
+                return Interop.getByteArrayFrom(data, length, arena, TransferOwnership.NONE);
             }
         }
 

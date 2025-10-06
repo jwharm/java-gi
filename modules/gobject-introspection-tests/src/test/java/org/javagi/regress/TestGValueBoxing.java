@@ -22,7 +22,6 @@ package org.javagi.regress;
 import org.gnome.glib.Date;
 import org.gnome.glib.DateMonth;
 import org.gnome.gobject.Value;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.regress.Regress.*;
@@ -41,7 +40,6 @@ public class TestGValueBoxing {
     }
 
     @Test
-    @Disabled("Cannot free (unset) the returned (transfer full) GValue")
     void withStrv() {
         Value value = testStrvInGvalue();
         String[] strv = (String[]) valueToObject(value);
