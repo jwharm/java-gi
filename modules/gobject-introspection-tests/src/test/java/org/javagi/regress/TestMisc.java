@@ -20,6 +20,7 @@
 package org.javagi.regress;
 
 import org.gnome.gi.regress.*;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
@@ -61,5 +62,24 @@ public class TestMisc {
         assertEquals(100, ANNOTATION_CALCULATED_DEFINE);
         assertEquals(1000000, ANNOTATION_CALCULATED_LARGE_DIV);
         assertEquals(10000000000L, ANNOTATION_CALCULATED_LARGE);
+    }
+
+    @Test
+    void stringWithInvalidBytes() {
+        // This uses Java's MemorySegment.getString() under the hood.
+        // Apparently, this accepts malformed UTF8 data.
+        String[] invalidStrings = testArrayOfNonUtf8Strings();
+        assertNotNull(invalidStrings);
+
+        // The array actually has 2 elements, and the second value is NULL.
+        // Because the array is null-terminated, only 1 element is retrieved.
+        assertEquals(1, invalidStrings.length);
+        assertNotNull(invalidStrings[0]);
+    }
+
+    @Test
+    @Disabled("Not supported")
+    void bitmaskFundamentalType() {
+        assertNotNull(Bitmask.getType());
     }
 }

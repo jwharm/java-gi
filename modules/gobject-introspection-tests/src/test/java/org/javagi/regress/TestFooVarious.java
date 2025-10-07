@@ -19,9 +19,11 @@
 
 package org.javagi.regress;
 
+import org.gnome.gi.regress.FooForeignStruct;
 import org.gnome.gi.regress.FooObject;
 import org.gnome.gi.utility.*;
 import org.javagi.base.Out;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.gnome.gi.regress.Regress.*;
@@ -63,5 +65,38 @@ public class TestFooVarious {
     void objectGlobalMethod() {
         var o = new UtilityObject();
         FooObject.aGlobalMethod(o);
+    }
+
+    @Test
+    void unsigned() {
+        fooTestUnsigned(0xffff_ffff);
+    }
+
+    @Test
+    void stringArrayChar() {
+        fooTestStringArray(new String[] {});
+    }
+
+    @Test
+    void stringArrayGchar() {
+        fooTestStringArrayWithG(new String[] {});
+    }
+
+    @Test
+    void garray() {
+        assertNull(fooTestArray());
+    }
+
+    @Test
+    @Disabled("Not supported")
+    void errorType() {
+        // throw a GErrorException of type FooError
+    }
+
+    @Test
+    void foreignStruct() {
+        var s1 = new FooForeignStruct();
+        s1.writeRegressFoo(777);
+        assertEquals(777, s1.readRegressFoo());
     }
 }
