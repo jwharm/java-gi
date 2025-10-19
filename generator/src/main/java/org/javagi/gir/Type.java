@@ -111,7 +111,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     public boolean isBoolean() {
-        return "gboolean".equals(name()) && (!"_Bool".equals(cType()));
+        return "gboolean".equals(name());
     }
 
     public boolean isLong() {
@@ -237,6 +237,11 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             return false;
 
         Type that = (Type) o;
+
+        // Booleans can have different c types (such as "bool" and "_Bool")
+        if (this.isBoolean() && that.isBoolean())
+            return true;
+
         if (this.cType() != null && that.cType() != null)
             return this.cType().equals(that.cType());
         else
@@ -245,6 +250,8 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public int hashCode() {
+        if (isBoolean())
+            return Objects.hash(name());
         if (cType() != null)
             return Objects.hash(cType());
         else
