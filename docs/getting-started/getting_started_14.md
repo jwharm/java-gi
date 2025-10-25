@@ -61,13 +61,15 @@ Then, we create the GTK XML resource file in our Java resources folder (i.e `src
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <gresource prefix="/icons">
+    <gresource prefix="/icons/scalable/actions">
         <file alias="penguin-symbolic.svg" preprocess="xml-stripblanks">icons/penguin-symbolic.svg</file>
     </gresource>
 </gresources>
 ```
 
 The `.svg` extension is required to be able to add the icon to the applications icon theme.
+Furthermore, the `/scalable/actions/` prefix is necessary for GTK to treat the icons as repaintable.
+Otherwise, the icons won't be visible with dark theme enable.
 
 #### Gradle build script to compile GTK resources file
 
@@ -108,7 +110,7 @@ We now add a gradle task to our Gradle build script to compile the GTK resources
 We can now use the icon using `Image.fromResource` and the string name of the icon, which is this `prefix` of the icon, concatenated with its `alias`:
 
 ```Java
-var image = Image.fromResource("/icons/key-symbolic.svg");
+var image = Image.fromResource("/icons/scalable/actions/icons/key-symbolic.svg");
 ```
 
 ##### Use the icon in a template
