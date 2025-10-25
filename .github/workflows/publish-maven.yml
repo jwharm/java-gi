@@ -45,7 +45,8 @@ jobs:
             libgirepository1.0-dev
             libcairo2-dev
             libgtk-4-dev
-            xvfb
+            xvfb         # support headless gtk tests
+            at-spi2-core # fix a11y dbus error when testing libsecret
           version: 1.0
 
       - name: Setup Gradle
