@@ -62,7 +62,7 @@ public class MemoryLayoutGenerator {
                 n -> n instanceof Type t && t.isLong(), Callback.class);
 
         var method = MethodSpec.methodBuilder("getMemoryLayout")
-                .addJavadoc("The memory layout of the native struct.\n")
+                .addJavadoc("The memory layout of the native struct.\n\n")
                 .addJavadoc("@return the memory layout\n")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(MemoryLayout.class);

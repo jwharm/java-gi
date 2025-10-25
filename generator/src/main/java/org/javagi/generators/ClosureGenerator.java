@@ -340,6 +340,7 @@ public class ClosureGenerator {
                 .addJavadoc("""
                         Creates a native function pointer to the {@link #upcall} method.
                         
+                        @param arena the arena in which the function pointer is allocated
                         @return the native function pointer
                         """)
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)

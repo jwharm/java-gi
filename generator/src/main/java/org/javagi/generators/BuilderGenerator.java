@@ -57,6 +57,8 @@ public class BuilderGenerator {
                         with the specified properties.
                         Use the various {@code set...()} methods to set properties,
                         and finish construction with {@link Builder#build()}.
+                        
+                        @return the builder object
                         """, rt.typeName().simpleName())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(

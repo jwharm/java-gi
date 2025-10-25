@@ -229,7 +229,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     protected MethodSpec paramSpecGetTypeMethod() {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
-                    Get the GType of the $L class
+                    Get the GType of the $L class.
                     
                     @return always {@link $T#PARAM}
                     """, cls.cType(), ClassNames.TYPES)
