@@ -46,7 +46,6 @@ jobs:
             libcairo2-dev
             libgtk-4-dev
             xvfb
-            at-spi2-core
           version: 1.0
 
       - name: Setup Gradle
