@@ -125,7 +125,7 @@ This should be placed inside a `GtkApplication` `activate()` method because othe
 Now the icon can be used with its name.
 
 ```xml
-<object class="AdwViewStackPage" id="artistsPage">
+<object class="AdwViewStackPage">
     <property name="icon-name">penguin-symbolic</property>
 ...
 </object>
