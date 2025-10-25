@@ -297,8 +297,15 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             // segment using BoxedUtil.copy(). It will fallback to
             // Interop.copy() when the type is not boxed.
             else if (copyFunc == null && slt.getTypeFunc() != null) {
-                builder.addStatement("$1L.address = $2T.copy($3T.getType(), $1L,$W$3T.getMemoryLayout().byteSize())",
-                                paramName, ClassNames.BOXED_UTIL, v.anyType().typeName());
+                if (v instanceof ReturnValue) {
+                    // reassign _returnValue to boxed copy
+                    builder.addStatement("$1L = new $3T($2T.copy($3T.getType(), $1L,$W$3T.getMemoryLayout().byteSize()))",
+                            paramName, ClassNames.BOXED_UTIL, v.anyType().typeName());
+                } else {
+                    // set out-parameter to boxed copy
+                    builder.addStatement("$1L.set(new $3T($2T.copy($3T.getType(), $1L.get(),$W$3T.getMemoryLayout().byteSize())))",
+                            getName(), ClassNames.BOXED_UTIL, v.anyType().typeName());
+                }
             }
 
             // Copy function is an instance method
