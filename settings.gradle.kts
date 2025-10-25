@@ -16,6 +16,7 @@ include("gtksourceview")
 include("harfbuzz")
 include("pango")
 include("rsvg")
+include("secret")
 include("soup")
 include("webkit")
 
