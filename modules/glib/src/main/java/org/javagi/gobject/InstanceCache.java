@@ -22,6 +22,7 @@ package org.javagi.gobject;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.javagi.base.Floating;
+import org.javagi.base.ProxyInstance;
 import org.javagi.gobject.types.TypeCache;
 import org.javagi.interop.Interop;
 import org.gnome.glib.MainContext;
@@ -154,6 +156,8 @@ public class InstanceCache {
 
     private static final MemorySegment toggle_notify;
 
+    private static final VarHandle ADDRESS_FIELD;
+
     static {
         GObjects.javagi$ensureInitialized();
 
@@ -171,6 +175,16 @@ public class InstanceCache {
             toggle_notify = Linker.nativeLinker()
                     .upcallStub(handle, fdesc, Arena.global());
         } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Initialize the ADDRESS_FIELD VarHandle. This is used to update the
+        // (private) address field of a newly constructed GObject instance.
+        try {
+            ADDRESS_FIELD = MethodHandles
+                    .privateLookupIn(ProxyInstance.class, MethodHandles.lookup())
+                    .findVarHandle(ProxyInstance.class, "address", MemorySegment.class);
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
@@ -233,7 +247,7 @@ public class InstanceCache {
             var actualType = ti.readGClass().readGType();
             var creatingType = TypeCache.getType(proxy.getClass());
             if (actualType.equals(creatingType)) {
-                proxy.address = newInstance.handle();
+                ADDRESS_FIELD.set(proxy, newInstance.handle());
                 put(address, proxy);
                 return proxy;
             }
@@ -358,8 +372,8 @@ public class InstanceCache {
                         (MemorySegment) (first == null ? MemorySegment.NULL
                                 : Interop.allocateNativeString(first, _arena)),
                         rest);
-                if (proxy.address == null)
-                    proxy.address = address.reinterpret(size);
+                if (proxy.handle() == null)
+                    ADDRESS_FIELD.set(proxy, address.reinterpret(size));
 
                 // Ensure the new object is cached
                 put(address, proxy);

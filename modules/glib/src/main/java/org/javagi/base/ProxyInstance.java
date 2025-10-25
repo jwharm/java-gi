@@ -27,6 +27,15 @@ import java.util.Objects;
  */
 public class ProxyInstance implements Proxy {
 
+    /**
+     * The native memory address
+     *
+     * @deprecated This field <strong>will become {@code private}</strong> in a
+     *             future release. Use {@link #handle()} instead.
+     *
+     * @see #handle()
+     */
+    @Deprecated
     public MemorySegment address;
 
     /**

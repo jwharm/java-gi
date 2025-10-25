@@ -263,7 +263,7 @@ public class TestObjectSignals {
         o.onSigWithGerror(err -> {
             assertNotNull(err);
             // This only works when we manually dereference the pointer like this:
-                var err2 = new GError(Interop.dereference(err.address));
+                var err2 = new GError(Interop.dereference(err.handle()));
                 assertEquals(Gio.ioErrorQuark(), err2.readDomain());
                 assertEquals(IOErrorEnum.FAILED.getValue(), err2.readCode());
             // I'm not sure why this is necessary here, so I disabled the test for now.
