@@ -69,7 +69,7 @@ Then, we create the GTK XML resource file in our Java resources folder (i.e `src
 
 The `.svg` extension is required to be able to add the icon to the applications icon theme.
 Furthermore, the `/scalable/actions/` prefix is necessary for GTK to treat the icons as repaintable.
-Otherwise, the icons won't be visible with dark theme enable.
+Otherwise, the icons won't be visible when the dark theme is enabled.
 
 #### Gradle build script to compile GTK resources file
 
@@ -115,8 +115,7 @@ var image = Image.fromResource("/icons/scalable/actions/icons/key-symbolic.svg")
 
 ##### Use the icon in a template
 
-To be able to use the icon inside a template
-it has to be added to the applications icon theme.
+To be able to use the icon inside a template it has to be added to the applications icon theme.
 
 ```java
 var theme = IconTheme.getForDisplay(Display.getDefault());
@@ -129,7 +128,7 @@ Now the icon can be used with its name.
 ```xml
 <object class="AdwViewStackPage">
     <property name="icon-name">penguin-symbolic</property>
-...
+    ...
 </object>
 ```
 
