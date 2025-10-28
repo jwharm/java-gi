@@ -246,6 +246,22 @@ public class TemplateTypes {
     Consumer<T> getTemplateInstanceInit(Class<T> cls) {
 
         return (widget) -> {
+            /*
+             * When a custom subclass is instantiated from native code (for
+             * example by GtkBuilder), a constructor that takes a MemorySegment
+             * parameter must exist, otherwise Java-GI cannot create a Java
+             * proxy object for it (and will fallback to a parent class).
+             */
+            if ((! widget.getClass().equals(cls))
+                    && (getAddressConstructor(cls) == null)) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING,
+                    """
+                    No constructor with MemorySegment parameter in class %s!
+                    As a fallback, Java-GI creates '%s' instances for %s objects in a GtkBuilder ui definition.
+                    To resolve this, add the following constructor: public %s(MemorySegment address) { super(address); }
+                    """, cls.getName(), widget.getClass().getSimpleName(), cls.getSimpleName(), cls.getSimpleName());
+            }
+
             widget.initTemplate();
             for (Field field : cls.getDeclaredFields()) {
                 if (field.isAnnotationPresent(GtkChild.class)) {
