@@ -156,10 +156,7 @@ public class TestObjectSignals {
         assertEquals(1, count.get());
     }
 
-    // FIXME: The BoxedStruct is passed by value, but the FunctionDescriptor of
-    // the callback must have an ADDRESS parameter, not the actual layout, or
-    // else it will not work.
-    @Test @Disabled
+    @Test
     void boxedStruct() {
         AtomicInteger count = new AtomicInteger(0);
         obj.onSomeBoxedStruct(struct -> {
