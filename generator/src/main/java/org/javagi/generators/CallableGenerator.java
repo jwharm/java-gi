@@ -59,7 +59,7 @@ public class CallableGenerator {
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
-            layouts.add(generateValueLayout(returnType));
+            layouts.add(generateValueLayoutWithFixForSignals(returnType));
 
         if (callable instanceof Signal)
             layouts.add(addressLayout);
@@ -72,7 +72,7 @@ public class CallableGenerator {
                     callable.parameters().parameters().stream()
                             .filter(not(Parameter::varargs))
                             .map(Parameter::anyType)
-                            .map(this::generateValueLayout)
+                            .map(this::generateValueLayoutWithFixForSignals)
                             .toList());
         }
 
@@ -88,6 +88,24 @@ public class CallableGenerator {
         for (var layout : layouts)
             stmt.arguments().putAll(layout.arguments());
         return stmt.toCodeBlock();
+    }
+
+    /**
+     * For plain struct types (i.e. struct, union, boxed types) that are not
+     * passed by reference but by value, the FunctionDescriptor normally
+     * contains the complete memory layout of the struct. But for signals,
+     * it must be ValueLayout.ADDRESS. I'm not sure why, but the JVM segfaults
+     * otherwise.
+     */
+    PartialStatement generateValueLayoutWithFixForSignals(AnyType anyType) {
+        if (callable instanceof Signal
+                && anyType instanceof Type t
+                && !t.isPointer()
+                && t.lookup() instanceof StandardLayoutType slt
+                && new MemoryLayoutGenerator().canGenerate(slt)) {
+            return PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
+        }
+        return generateValueLayout(anyType);
     }
 
     PartialStatement generateValueLayout(AnyType anyType) {
