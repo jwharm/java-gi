@@ -52,11 +52,9 @@ glib-compile-resources exampleapp.gresource.xml
 You can run this automatically before Gradle compiles the application, by adding a custom task to `build.gradle`:
 
 ```groovy
-tasks.register('compileResources') {
-    exec {
-        workingDir 'src/main/resources'
-        commandLine 'glib-compile-resources', 'exampleapp.gresource.xml'
-    }
+tasks.register('compileResources', Exec) {
+    workingDir 'src/main/resources'
+    commandLine 'glib-compile-resources', 'exampleapp.gresource.xml'
 }
 
 tasks.named('classes') {

@@ -77,11 +77,9 @@ The path to the UI file is treated by Java-GI as a [GResource](https://docs.gtk.
 === "Gradle (Groovy)"
 
     ```groovy
-    tasks.register('compileResources') {
-        exec {
-            workingDir 'src/main/resources'
-            commandLine 'glib-compile-resources', 'example.gresource.xml'
-        }
+    tasks.register('compileResources', Exec) {
+        workingDir 'src/main/resources'
+        commandLine 'glib-compile-resources', 'example.gresource.xml'
     }
 
     tasks.named('compileJava') {
