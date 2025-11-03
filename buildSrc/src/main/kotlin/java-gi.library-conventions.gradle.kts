@@ -4,6 +4,7 @@ plugins {
 }
 
 mavenPublishing {
+    publishToMavenCentral()
     signAllPublications()
     coordinates("org.java-gi", project.name, project.version.toString())
     pom {
