@@ -24,10 +24,10 @@ import org.gnome.gi.regress.TestSimpleBoxedA;
 import org.gnome.gi.regress.TestSubObj;
 import org.gnome.gio.Gio;
 import org.gnome.gio.IOErrorEnum;
-import org.gnome.glib.GError;
 import org.gnome.glib.GLib;
 import org.gnome.glib.HashTable;
 import org.javagi.interop.Interop;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +58,7 @@ public class TestObjectSignals {
         // Calling o.connect("invalid-signal") doesn't throw, but logs a critical error.
     }
 
-    @Test @Disabled("FIXME: boxed signal parameters should be passed by reference")
+    @Test
     void staticScopeArg() {
         var o = new TestObj();
         var b = new TestSimpleBoxedA();
@@ -257,16 +257,13 @@ public class TestObjectSignals {
         o.emitSigWithInoutInt();
     }
 
-    @Test @Disabled("Not yet implemented")
+    @Test
     void gerror() {
         var o = new TestObj();
         o.onSigWithGerror(err -> {
             assertNotNull(err);
-            // This only works when we manually dereference the pointer like this:
-                var err2 = new GError(Interop.dereference(err.handle()));
-                assertEquals(Gio.ioErrorQuark(), err2.readDomain());
-                assertEquals(IOErrorEnum.FAILED.getValue(), err2.readCode());
-            // I'm not sure why this is necessary here, so I disabled the test for now.
+            assertEquals(Gio.ioErrorQuark(), err.readDomain());
+            assertEquals(IOErrorEnum.FAILED.getValue(), err.readCode());
         });
         o.emitSigWithError();
     }
@@ -274,10 +271,7 @@ public class TestObjectSignals {
     @Test
     void gerrorNull() {
         var o = new TestObj();
-        o.onSigWithGerror(err -> {
-            assertNotNull(err);
-            assertThrows(NullPointerException.class, () -> Interop.checkNull(err.handle()));
-        });
+        o.onSigWithGerror(Assertions::assertNull);
         o.emitSigWithNullError();
         o.emit("sig-with-gerror", (Object) null);
     }
