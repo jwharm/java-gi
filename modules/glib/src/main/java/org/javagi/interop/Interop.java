@@ -54,6 +54,7 @@ public class Interop {
 
     private final static Linker LINKER = Linker.nativeLinker();
     private final static Cleaner CLEANER = Cleaner.create();
+    private final static FunctionDescriptor GET_TYPE_FDESC = FunctionDescriptor.of(JAVA_LONG);
 
     private static SymbolLookup symbolLookup = LINKER.defaultLookup();
 
@@ -81,8 +82,7 @@ public class Interop {
      * @param  fdesc function descriptor of the native function
      * @return the MethodHandle
      */
-    public static MethodHandle downcallHandle(String name,
-                                              FunctionDescriptor fdesc) {
+    public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
         return downcallHandle(name, fdesc, false);
     }
 
@@ -95,9 +95,7 @@ public class Interop {
      * @param  variadic whether the function has varargs
      * @return the newly created MethodHandle
      */
-    public static MethodHandle downcallHandle(String name,
-                                              FunctionDescriptor fdesc,
-                                              boolean variadic) {
+    public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, boolean variadic) {
         return symbolLookup.find(name).map(addr -> variadic
                 ? VarargsInvoker.create(addr, fdesc)
                 : LINKER.downcallHandle(addr, fdesc)).orElse(null);
@@ -206,12 +204,11 @@ public class Interop {
      * @param  newSize new size for the MemorySegment
      * @return the same MemorySegment reinterpreted to at least {@code newSize}
      */
-    public static MemorySegment reinterpret(MemorySegment address,
-                                            long newSize) {
+    public static MemorySegment reinterpret(MemorySegment address, long newSize) {
         if (address == null || address.byteSize() >= newSize)
             return address;
-
-        return address.reinterpret(newSize);
+        else
+            return address.reinterpret(newSize);
     }
 
     /**
@@ -223,10 +220,7 @@ public class Interop {
      */
     public static MemorySegment dereference(MemorySegment pointer) {
         checkNull(pointer);
-
-        return pointer
-                .reinterpret(ADDRESS.byteSize())
-                .get(ADDRESS, 0);
+        return pointer.reinterpret(ADDRESS.byteSize()).get(ADDRESS, 0);
     }
 
     /**
@@ -252,9 +246,7 @@ public class Interop {
     public static void checkNull(MemorySegment pointer) {
         if (pointer == null
                 || pointer.equals(NULL)
-                || pointer.reinterpret(ADDRESS.byteSize())
-                          .get(ADDRESS, 0)
-                          .equals(NULL))
+                || pointer.reinterpret(ADDRESS.byteSize()).get(ADDRESS, 0).equals(NULL))
             throw new NullPointerException("Null pointer: " + pointer);
     }
 
@@ -267,10 +259,8 @@ public class Interop {
         if (getTypeFunction == null)
             return null;
 
-        FunctionDescriptor fdesc = FunctionDescriptor.of(JAVA_LONG);
-
         try {
-            MethodHandle handle = downcallHandle(getTypeFunction, fdesc, false);
+            MethodHandle handle = downcallHandle(getTypeFunction, GET_TYPE_FDESC, false);
             if (handle == null)
                 return null;
             return new Type((long) handle.invokeExact());
@@ -290,8 +280,7 @@ public class Interop {
      * @return the allocated MemorySegment with the native utf8 string, or
      *         {@link MemorySegment#NULL}
      */
-    public static MemorySegment allocateNativeString(String string,
-                                                     SegmentAllocator alloc) {
+    public static MemorySegment allocateNativeString(String string, SegmentAllocator alloc) {
         return string == null ? NULL : alloc.allocateFrom(string);
     }
 
@@ -606,10 +595,30 @@ public class Interop {
         }
     }
 
+    /**
+     * Allocate memory for this object. Java-GI must be able to marshal the
+     * object, which means it must implement the {@link Proxy} interface, a
+     * primitive type, a String, an {@link Enumeration}, a
+     * {@code Set<Enumeration>}, or an existing MemorySegment (returned as-is).
+     * <p>
+     * For most primitive types, the value is written in a newly allocated
+     * memory segment. Integers however are returned as an address; for the
+     * reason why, read the GLib documentation for the {@code GINT_TO_POINTER}
+     * and {@code GPOINTER_TO_INT} macros. The same is done for GTypes
+     * (for compatibility with {@code GTYPE_TO_POINTER} and vice versa).
+     *
+     * @param o the object to allocate memory for
+     * @param alloc the memory allocator
+     * @return the allocated memory holding the object
+     */
+    @SuppressWarnings("unchecked") // The cast to Set<Enumeration> is checked
     public static MemorySegment getAddress(Object o, SegmentAllocator alloc) {
         return switch (o) {
+            // existing MemorySegment
             case MemorySegment m -> m;
+            // string
             case String s    -> alloc.allocateFrom(s);
+            // primitive value
             case Boolean b   -> alloc.allocateFrom(JAVA_INT, b ? 1 : 0);
             case Byte b      -> alloc.allocateFrom(JAVA_BYTE, b);
             case Character c -> alloc.allocateFrom(JAVA_CHAR, c);
@@ -620,11 +629,21 @@ public class Interop {
                                     ? alloc.allocateFrom(JAVA_INT, l.intValue())
                                     : alloc.allocateFrom(JAVA_LONG, l);
             case Short s     -> alloc.allocateFrom(JAVA_SHORT, s);
+            // proxy instance
             case Proxy p     -> p.handle();
+            // gtype
             case Type t      -> MemorySegment.ofAddress(t.getValue()); // GTYPE_TO_POINTER()
+            // alias
             case Alias<?> a  -> getAddress(a.getValue(), alloc);
-            default          -> throw new IllegalArgumentException(
-                    "Not a MemorySegment, String, primitive or Proxy");
+            // enum
+            case Enumeration e -> getAddress(e.getValue(), alloc);
+            // flags (empty set)
+            case Set<?> s when s.isEmpty() -> getAddress(0, alloc);
+            // flags
+            case Set<?> s when s.iterator().next() instanceof Enumeration ->
+                                    getAddress(enumSetToInt((Set<Enumeration>) s), alloc);
+            default -> throw new IllegalArgumentException(
+                    "Not a MemorySegment, String, primitive, enum/flags or Proxy type");
         };
     }
 
@@ -855,8 +874,7 @@ public class Interop {
         if (address == null || NULL.equals(address))
             return null;
 
-        byte[] array = address.reinterpret(length, arena, null)
-                              .toArray(JAVA_BYTE);
+        byte[] array = address.reinterpret(length, arena, null).toArray(JAVA_BYTE);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -905,8 +923,7 @@ public class Interop {
             return null;
 
         long size = JAVA_CHAR.byteSize();
-        char[] array = address.reinterpret(length * size, arena, null)
-                              .toArray(JAVA_CHAR);
+        char[] array = address.reinterpret(length * size, arena, null).toArray(JAVA_CHAR);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -931,8 +948,7 @@ public class Interop {
             return null;
 
         long size = JAVA_DOUBLE.byteSize();
-        double[] array = address.reinterpret(length * size, arena, null)
-                                .toArray(JAVA_DOUBLE);
+        double[] array = address.reinterpret(length * size, arena, null).toArray(JAVA_DOUBLE);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -957,8 +973,7 @@ public class Interop {
             return null;
 
         long size = JAVA_FLOAT.byteSize();
-        float[] array = address.reinterpret(length * size, arena, null)
-                               .toArray(JAVA_FLOAT);
+        float[] array = address.reinterpret(length * size, arena, null).toArray(JAVA_FLOAT);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -1007,8 +1022,7 @@ public class Interop {
             return null;
 
         long size = JAVA_INT.byteSize();
-        int[] array = address.reinterpret(length * size, arena, null)
-                             .toArray(JAVA_INT);
+        int[] array = address.reinterpret(length * size, arena, null).toArray(JAVA_INT);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -1057,8 +1071,7 @@ public class Interop {
             return null;
 
         long size = JAVA_LONG.byteSize();
-        long[] array = address.reinterpret(length * size, arena, null)
-                              .toArray(JAVA_LONG);
+        long[] array = address.reinterpret(length * size, arena, null).toArray(JAVA_LONG);
 
         if (transfer != NONE)
             GLib.free(address);
@@ -1723,9 +1736,7 @@ public class Interop {
      * @return an EnumSet containing the enum values as set in the bitfield
      */
     public static <T extends Enum<T> & Enumeration>
-    EnumSet<T> intToEnumSet(Class<T> cls,
-                            Function<Integer, T> make,
-                            int bitfield) {
+    EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
         int n = bitfield;
         EnumSet<T> enumSet = EnumSet.noneOf(cls);
         int position = 0;
@@ -1752,15 +1763,13 @@ public class Interop {
     /**
      * Create a bitfield from the provided Set of enums
      *
-     * @param  <T> an enum implementing the Java-GI Enumeration interface
      * @param  set the set of enums
      * @return the resulting bitfield
      */
-    public static <T extends Enum<T> & Enumeration>
-    int enumSetToInt(Set<T> set) {
+    public static int enumSetToInt(Set<? extends Enumeration> set) {
         int bitfield = 0;
         if (set != null)
-            for (T element : set)
+            for (Enumeration element : set)
                 bitfield |= element.getValue();
         return bitfield;
     }
