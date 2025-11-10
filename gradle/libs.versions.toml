@@ -5,7 +5,7 @@ cairo = "1.18.4.2"
 picocli = "4.7.7"
 javapoet = "1.13.0"
 annotations = "26.0.2-1"
-junit = "6.0.0"
+junit = "6.0.1"
 mavenpublish = "0.34.0"
 
 [libraries]
