@@ -44,7 +44,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("org.javagi:gtk:0.13.0")
+        implementation("org.java-gi:gtk:0.13.0")
     }
     ```
 
@@ -57,7 +57,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
 === "Leiningen"
 
     ```clojure
-    [org.javagi/gtk "0.13.0"]
+    [org.java-gi/gtk "0.13.0"]
     ```
 
 === "bld"
@@ -65,7 +65,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     ```java
     repositories = List.of(MAVEN_CENTRAL);
     scope(main)
-        .include(dependency("org.javagi",
+        .include(dependency("org.java-gi",
                             "gtk",
                             version(0,13,0)));
     ```
