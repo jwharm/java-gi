@@ -18,9 +18,9 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
 
     ```xml
     <dependency>
-      <groupId>io.github.jwharm.javagi</groupId>
+      <groupId>org.java-gi</groupId>
       <artifactId>gtk</artifactId>
-      <version>0.12.2</version>
+      <version>0.13.0</version>
     </dependency>
     ```
 
@@ -32,7 +32,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation 'io.github.jwharm.javagi:gtk:0.12.2'
+        implementation 'org.java-gi:gtk:0.13.0'
     }
     ```
 
@@ -44,20 +44,20 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("io.github.jwharm.javagi:gtk:0.12.2")
+        implementation("org.javagi:gtk:0.13.0")
     }
     ```
 
 === "Scala SBT"
 
     ```scala
-    libraryDependencies += "io.github.jwharm.javagi" % "gtk" % "0.12.2"
+    libraryDependencies += "org.java-gi" % "gtk" % "0.13.0"
     ```
 
 === "Leiningen"
 
     ```clojure
-    [io.github.jwharm.javagi/gtk "0.12.2"]
+    [org.javagi/gtk "0.13.0"]
     ```
 
 === "bld"
@@ -65,12 +65,12 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     ```java
     repositories = List.of(MAVEN_CENTRAL);
     scope(main)
-        .include(dependency("io.github.jwharm.javagi",
+        .include(dependency("org.javagi",
                             "gtk",
-                            version(0,12,2)));
+                            version(0,13,0)));
     ```
 
-This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gst`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=io.github.jwharm.javagi).
+This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gstreamer`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=org.java-gi).
 
 ## Application code
 

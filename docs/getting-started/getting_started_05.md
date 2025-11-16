@@ -7,7 +7,7 @@ Thankfully, GTK supports the separation of user interface layout from your busin
 Create a new file with the following content named `Example4.java`.
 
 ```java
-import io.github.jwharm.javagi.base.GErrorException;
+import org.javagi.base.GErrorException;
 import org.gnome.gio.ApplicationFlags;
 import org.gnome.gtk.*;
 

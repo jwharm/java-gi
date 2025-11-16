@@ -107,7 +107,7 @@ Load the compiled resource bundle in Java during startup of your application:
 === "Java"
 
     ```java
-    import io.github.jwharm.javagi.base.GErrorException;
+    import org.javagi.base.GErrorException;
     import org.gnome.gio.Resource;
 
     ...
