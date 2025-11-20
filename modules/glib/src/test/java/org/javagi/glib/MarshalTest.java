@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
+import java.util.Set;
 
 import static org.javagi.base.TransferOwnership.NONE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test conversion of strings and arrays to native memory and back
@@ -199,8 +201,11 @@ public class MarshalTest {
             };
             int[] values = Interop.getValues(input);
             MemorySegment allocation = Interop.allocateNativeArray(values, false, arena);
-            OptionFlags[] output = Interop.getArrayFromIntPointer(allocation, 3, OptionFlags.class, OptionFlags::of);
-            assertEquals(Arrays.toString(input), Arrays.toString(output));
+            Set<?>[] output = Interop.getArrayFromIntPointer(allocation, 3, Set.class, OptionFlags::of);
+            assertEquals(3, output.length);
+            assertTrue(output[0].size() == 1 && output[0].contains(OptionFlags.IN_MAIN));
+            assertTrue(output[1].size() == 1 && output[1].contains(OptionFlags.FILENAME));
+            assertTrue(output[2].size() == 1 && output[2].contains(OptionFlags.NOALIAS));
         }
     }
 }

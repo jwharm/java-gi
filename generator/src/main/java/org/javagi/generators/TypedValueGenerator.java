@@ -392,22 +392,14 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP,
                     "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
-        if (target instanceof Bitfield bitfield)
-            return PartialStatement.of(
-                    "$interop:T.intToEnumSet($" + targetTypeTag + ":T.class, "
-                            + "$" + targetTypeTag + ":T::of, "
-                            + identifier + ")",
-                    "interop", ClassNames.INTEROP,
-                    targetTypeTag, bitfield.typeName());
-
-        if (target instanceof Enumeration)
+        if (target instanceof EnumType)
             return PartialStatement.of(
                     "$" + targetTypeTag + ":T.of(" + identifier + ")",
                     targetTypeTag, target.typeName());
 
         // Generate constructor call for GList/GSList with generic element types
         if (target != null && type.checkIsGList()) {
-            if (type.anyTypes() == null || type.anyTypes().size() > 1)
+            if (type.anyTypes().size() != 1)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
             // Generate lambdas or method references to create and destruct elements
