@@ -50,7 +50,7 @@ public class TypeCache {
     private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
             = new ConcurrentHashMap<>();
 
-    private final static Map<Type, Function<Integer, ? extends Enumeration>> enumTypeRegister
+    private final static Map<Type, Function<Integer, ?>> enumTypeRegister
             = new ConcurrentHashMap<>();
 
     private final static Map<Class<?>, Type> classToTypeMap
@@ -167,17 +167,14 @@ public class TypeCache {
 
     /**
      * Get a function that will create a Enumeration instance for a given int
-     * value for the provided GType.
+     * value for the provided GType. For flags types, the function will create
+     * {@code Set<Enumeration>} instances.
      *
      * @param type the GType of the enum/flags type
      * @return the contructor function
-     * @param <T> the function will create Enum instances that implement the
-     *            Java-GI Enumeration interface
      */
-    @SuppressWarnings("unchecked") // // Can't get the type of the HashMap exactly right
-    public static <T extends Enum<T> & Enumeration>
-    Function<Integer, T> getEnumConstructor(@NotNull Type type) {
-        return (Function<Integer, T>) enumTypeRegister.get(type);
+    public static Function<Integer, ?> getEnumConstructor(@NotNull Type type) {
+        return enumTypeRegister.get(type);
     }
 
     /**
@@ -269,7 +266,7 @@ public class TypeCache {
     public static <T extends Enum<T> & Enumeration> void registerEnum(
             Class<T> cls,
             Type type,
-            Function<Integer, T> ctor) {
+            Function<Integer, ?> ctor) {
         requireNonNull(cls);
         if (type != null) {
             if (ctor != null)

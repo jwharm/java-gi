@@ -121,26 +121,13 @@ public class ValueUtil {
         // Flags
         if (typeIsA(type, FLAGS)) {
             int value = src.getFlags();
-            return intToFlags(value, type);
+            var ctor = TypeCache.getEnumConstructor(type);
+            if (ctor == null)
+                throw new UnsupportedOperationException("Unsupported flags type: " + GObjects.typeName(type));
+            return ctor.apply(value);
         }
 
         throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
-    }
-
-    /**
-     * Use the TypeCache to create a set of Java enum values for the provided bitfield (int).
-     *
-     * @param value the bitfield
-     * @param type  the GType of the Flags type
-     * @param <T>   the Flags type
-     * @return an EnumSet of Java enum values
-     */
-    private static <T extends Enum<T> & Enumeration> Object intToFlags(int value, Type type) {
-        Function<Integer, T> ctor = TypeCache.getEnumConstructor(type);
-        if (ctor == null)
-            throw new UnsupportedOperationException("Unsupported enum type: " + GObjects.typeName(type));
-        var cls = getEnumClass(ctor, type);
-        return Interop.intToEnumSet(cls, ctor, value);
     }
 
     /**

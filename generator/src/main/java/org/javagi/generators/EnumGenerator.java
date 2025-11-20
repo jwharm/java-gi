@@ -64,11 +64,13 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 .addField(TypeName.INT, "value", Modifier.PRIVATE, Modifier.FINAL)
                 .addMethod(valueConstructor())
                 .addMethod(staticConstructor())
-                .addMethod(addressConstructor())
                 .addMethod(getValueMethod());
 
         if (en instanceof Bitfield)
-            builder.addMethod(addressSetConstructor());
+            builder.addMethod(staticFlagsConstructor())
+                   .addMethod(addressSetConstructor());
+        else
+            builder.addMethod(addressConstructor());
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
@@ -111,8 +113,14 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 var spec = FieldSpec.builder(
                                 en.typeName(),
                                 toJavaConstantUpperCase(m.name()),
-                                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("of($L)", Numbers.parseInt(m.value()));
+                                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+
+                // Parse the value
+                int value = Numbers.parseInt(m.value());
+                if (en instanceof Bitfield)
+                    spec.initializer("ofFlag($L)", value);
+                else
+                    spec.initializer("of($L)", value);
 
                 // Javadoc
                 if (m.infoElements().doc() != null)
@@ -151,15 +159,21 @@ public class EnumGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec staticConstructor() {
-        MethodSpec.Builder spec = MethodSpec.methodBuilder("of")
-                .addJavadoc("""
+        MethodSpec.Builder spec;
+        if (en instanceof Bitfield) {
+            spec = MethodSpec.methodBuilder("ofFlag")
+                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
+        } else {
+            spec = MethodSpec.methodBuilder("of")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+        }
+        spec.addJavadoc("""
                         Create a new $1L for the provided value
                         
                         @param value the $2L value
                         @return the $2L for the provided value
                         """, toJavaSimpleType(en.name(), en.namespace()),
                              en instanceof Bitfield ? "bitfield" : "enum")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(en.typeName())
                 .addParameter(TypeName.INT, "value")
                 .beginControlFlow("return switch(value)");
@@ -175,6 +189,22 @@ public class EnumGenerator extends RegisteredTypeGenerator {
         return spec.addStatement("default -> throw new $T($S + value)",
                         IllegalStateException.class, "Unexpected value: ")
                 .endControlFlow("") // empty string to force a ";"
+                .build();
+    }
+
+    private MethodSpec staticFlagsConstructor() {
+        return MethodSpec.methodBuilder("of")
+                .addJavadoc("""
+                        Create a new {@code EnumSet<$1L>} for the provided bitfield
+                        
+                        @param flags the $1L bitfield
+                        @return the EnumSet for the provided bitfield
+                        """, toJavaSimpleType(en.name(), en.namespace()))
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(Set.class), en.typeName()))
+                .addParameter(TypeName.INT, "flags")
+                .addStatement("return $1T.intToEnumSet($2T.class, $2T::ofFlag, flags)",
+                        ClassNames.INTEROP, en.typeName())
                 .build();
     }
 
@@ -195,7 +225,7 @@ public class EnumGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec addressSetConstructor() {
-        return MethodSpec.methodBuilder("setOf")
+        return MethodSpec.methodBuilder("of")
                 .addJavadoc("""
                         Create a new {@code EnumSet<$1L>} for the bitfield
                         in the provided memory address.
@@ -206,7 +236,7 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(ParameterizedTypeName.get(ClassName.get(Set.class), en.typeName()))
                 .addParameter(MemorySegment.class, "address")
-                .addStatement("return $1T.intToEnumSet($2T.class, $2T::of, (int) address.address())",
+                .addStatement("return $1T.intToEnumSet($2T.class, $2T::ofFlag, (int) address.address())",
                         ClassNames.INTEROP, en.typeName())
                 .build();
     }

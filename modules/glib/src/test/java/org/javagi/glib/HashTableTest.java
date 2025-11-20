@@ -46,7 +46,7 @@ public class HashTableTest {
                 GLib::strHash,
                 GLib::strEqual,
                 Interop::getStringFrom,
-                IOFlags::setOf);
+                IOFlags::of);
         table2.put("flags", set);
         assertEquals(set, table2.get("flags"));
     }
