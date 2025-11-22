@@ -44,11 +44,11 @@ A class with a `@GtkTemplate` annotation will be registered as a Gtk composite t
 
 In the above class, the `header_bar` and `label` fields and the `buttonClicked` callback function are all declared the UI file. During class initialization, the fields are set to the associated widget.
 
-Because the registration of composite template classes uses reflection, you must add the following `exports` statement to your `module-info.java` file:
+If you use Java modules (with a `module-info.java`), add the following `opens` statement to `module-info.java` to allow Java-GI's reflection to work:
 
 ```
 module my.module.name {
-    exports my.package.name to org.gnome.gobject,org.gnome.gtk;
+    opens my.package.name to org.gnome.glib,org.gnome.gtk;
 }
 ```
 
