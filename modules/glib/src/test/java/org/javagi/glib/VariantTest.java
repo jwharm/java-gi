@@ -20,6 +20,7 @@
 package org.javagi.glib;
 
 import org.gnome.glib.Variant;
+import org.gnome.glib.VariantType;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -167,5 +168,11 @@ public class VariantTest {
         expected.add((short) 43);
         expected.add("44");
         assertEquals(expected, unpacked);
+    }
+
+    @Test
+    void toStringOverride() {
+        assertEquals("'abc'", Variant.string("abc").toString());
+        assertEquals("ms", new VariantType("ms").toString());
     }
 }

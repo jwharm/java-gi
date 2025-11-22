@@ -59,8 +59,11 @@ SList     java-gi-custom
  */
 {List,SList}.free_full java-gi-skip
 
-// Implement GType.toString() with g_type_name()
+// Use g_type_name for GType.toString()
 Type java-gi-to-string="org.gnome.gobject.GObjects.typeName(this)"
 
-// Use g_variant_print as the Variant.toString() method in Java.
+// Use g_variant_print for Variant.toString()
 Variant java-gi-to-string="print(true)"
+
+// Use g_variant_type_dup_string for VariantType.toString()
+VariantType java-gi-to-string="dupString()"
