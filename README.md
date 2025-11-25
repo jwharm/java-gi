@@ -260,11 +260,9 @@ try {
 
 ### Portability
 
-The published bindings are cross-platform: You can use the same jar on all supported operating systems (64-bit Linux, Windows and MacOS) provided that the native libraries are installed. Platform-specific types and methods (like `Gtk.PrintUnixDialog`) check the operating system at runtime and throw an `UnsupportedPlatformException` when necessary.
+The published bindings are cross-platform: You can use the same jar on all supported operating systems (64-bit Linux, Windows and MacOS) provided that the native libraries are installed, but be careful not to use platform-specific types and functions if you care about cross-platform compatibility.
 
-## Known issues
-
-Java-GI is still under active development. The most notable issues and missing features are currently:
+## Pitfalls
 
 - Java does not distinguish between signed and unsigned data types. Be extra careful when native code returns, for example, a `guint`.
-- Java-GI makes heavy use of [Cleaners](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ref/Cleaner.html) to free memory or decrease an object's refcount. Cleaners are triggered during garbage collection of a Java instance. However, Java doesn't guarantee when, and if, the GC will run, and what it will clean, leading to memory leaks.
+- Java-GI uses [Cleaners](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/ref/Cleaner.html) to free memory or decrease an object's refcount. Cleaners are triggered during garbage collection of a Java instance. However, Java doesn't guarantee when, and if, the GC will run, which means that it can be hard to predict when (and if) native memory is released.
