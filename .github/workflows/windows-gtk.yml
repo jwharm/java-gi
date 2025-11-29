@@ -22,7 +22,7 @@ jobs:
       contents: write
     steps:
       - name: Clone
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           path: scripts
@@ -37,7 +37,7 @@ jobs:
         with:
           arch: x64
       - name: Clone pkgconf
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: 'pkgconf/pkgconf'
           submodules: recursive
@@ -58,7 +58,7 @@ jobs:
           7z x gettext.zip -ogettext
           echo "${{ github.workspace }}\gettext\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Clone GTK tree
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.gtktag }}
           repository: 'GNOME/gtk'
@@ -78,7 +78,7 @@ jobs:
           cp executable.zip executable-gtk.zip
           echo "${{ github.workspace }}\dist\bin"  | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Clone gobject-introspection
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: 'GNOME/gobject-introspection'
           submodules: recursive
@@ -89,7 +89,7 @@ jobs:
           meson compile -C gobject-introspection\build
           meson install -C gobject-introspection\build
       - name: Clone libadwaita tree
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.libadwaitatag }}
           repository: 'GNOME/libadwaita'
