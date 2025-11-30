@@ -19,24 +19,22 @@
 
 package org.javagi.base;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.foreign.MemorySegment;
 import java.util.Objects;
 
 /**
  * Base type for a Java proxy object to an instance in native memory.
  */
+@NullMarked
 public class ProxyInstance implements Proxy {
 
     /**
      * The native memory address
-     *
-     * @deprecated This field <strong>will become {@code private}</strong> in a
-     *             future release. Use {@link #handle()} instead.
-     *
-     * @see #handle()
      */
-    @Deprecated
-    public MemorySegment address;
+    private @Nullable MemorySegment address;
 
     /**
      * Create a new {@code ProxyInstance} object for an instance in native
@@ -44,7 +42,7 @@ public class ProxyInstance implements Proxy {
      *
      * @param address the memory address of the instance
      */
-    public ProxyInstance(MemorySegment address) {
+    public ProxyInstance(@Nullable MemorySegment address) {
         this.address = address;
     }
 
@@ -54,7 +52,7 @@ public class ProxyInstance implements Proxy {
      * @return the memory address of the instance
      */
     @Override
-    public MemorySegment handle() {
+    public @Nullable MemorySegment handle() {
         return address;
     }
 
@@ -66,7 +64,7 @@ public class ProxyInstance implements Proxy {
      * @return whether the instances are equal
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ProxyInstance that = (ProxyInstance) o;

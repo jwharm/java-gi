@@ -30,6 +30,8 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -47,6 +49,7 @@ import static java.lang.Character.isUpperCase;
 /**
  * Helper class to register properties in a new GType.
  */
+@NullMarked
 public class Properties {
 
     /**
@@ -72,7 +75,7 @@ public class Properties {
      *
      * @return the value type of the GParamSpecClass, or null if not found
      */
-    private static Type getValueType(ParamSpec pspec) {
+    private static @Nullable Type getValueType(ParamSpec pspec) {
         var pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
         return pclass == null ? null : pclass.readValueType();
     }
@@ -125,7 +128,7 @@ public class Properties {
      * @throws IllegalArgumentException if a property with this name is not
      *                                  found for the object
      */
-    public static Object getProperty(GObject gobject, String propertyName) {
+    public static @Nullable Object getProperty(GObject gobject, String propertyName) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
         ParamSpec pspec = getParamSpec(gclass, propertyName);
         Type valueType = getValueType(pspec);
@@ -434,7 +437,7 @@ public class Properties {
     private final Map<Integer, Method> getters;
     private final Map<Integer, Method> setters;
     private final Map<Integer, ParamSpec> paramSpecs;
-    private final Map<Integer, Object> defaultValues;
+    private final Map<Integer, @Nullable Object> defaultValues;
     private int index = 0;
 
     public Properties() {
@@ -546,7 +549,7 @@ public class Properties {
      * @param  cls  the class that possibly contains @Property annotations
      * @return a class initializer that registers the properties
      */
-    public Consumer<TypeClass> installProperties(Class<?> cls) {
+    public @Nullable Consumer<TypeClass> installProperties(Class<?> cls) {
         inferProperties(cls);
         if (index == 0)
             return null;
@@ -678,12 +681,12 @@ public class Properties {
         };
     }
 
-    private static void overrideGetProperty(Proxy instance, GetPropertyCallback getProperty, Arena _arena) {
+    private static void overrideGetProperty(Proxy instance, @Nullable GetPropertyCallback getProperty, Arena _arena) {
         GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("get_property"))
                 .set(instance.handle(), 0, (getProperty == null ? MemorySegment.NULL : getProperty.toCallback(_arena)));
     }
 
-    private static void overrideSetProperty(Proxy instance, SetPropertyCallback setProperty, Arena _arena) {
+    private static void overrideSetProperty(Proxy instance, @Nullable SetPropertyCallback setProperty, Arena _arena) {
         GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("set_property"))
                 .set(instance.handle(), 0, (setProperty == null ? MemorySegment.NULL : setProperty.toCallback(_arena)));
     }
@@ -693,7 +696,7 @@ public class Properties {
      */
     @FunctionalInterface
     public interface GetPropertyCallback extends FunctionPointer {
-        void run(GObject object, int propertyId, Value value, ParamSpec pspec);
+        void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
             run((GObject) InstanceCache.getForType(object, GObject::new),
@@ -715,7 +718,7 @@ public class Properties {
      */
     @FunctionalInterface
     public interface SetPropertyCallback extends FunctionPointer {
-        void run(GObject object, int propertyId, Value value, ParamSpec pspec);
+        void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
             run((GObject) InstanceCache.getForType(object, GObject::new),

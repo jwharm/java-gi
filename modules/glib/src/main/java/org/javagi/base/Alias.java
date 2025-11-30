@@ -19,6 +19,8 @@
 
 package org.javagi.base;
 
+import org.jspecify.annotations.Nullable;
+
 import java.lang.foreign.MemorySegment;
 import java.util.Objects;
 
@@ -77,7 +79,7 @@ public abstract class Alias<T> {
      * @return whether the aliases are equal
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Alias<?> alias = (Alias<?>) o;
@@ -102,7 +104,7 @@ public abstract class Alias<T> {
      * @param  array the array of Alias objects
      * @return an array of MemorySegments
      */
-    public static MemorySegment[] getAddressValues(Alias<MemorySegment>[] array) {
+    public static MemorySegment @Nullable [] getAddressValues(Alias<MemorySegment>[] array) {
         MemorySegment[] values = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
             values[i] = array[i].getValue();

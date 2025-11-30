@@ -25,6 +25,8 @@ import org.javagi.interop.Arenas;
 import org.javagi.interop.Interop;
 import org.gnome.gobject.ConnectFlags;
 import org.gnome.gobject.Value;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
  * @param <S> the type of the Builder that is returned
  */
 @SuppressWarnings("rawtypes")
+@NullMarked
 public abstract class Builder<S extends Builder> implements BuilderInterface {
 
     /**
@@ -60,7 +63,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
     /**
      * List of all property values that are set
      */
-    private final ArrayList<Value> values = new ArrayList<>();
+    private final ArrayList<@Nullable Value> values = new ArrayList<>();
 
     /**
      * List of all signals that must be connected
@@ -84,7 +87,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @param value value of the property (a {@code GValue})
      */
     @Override
-    public void addBuilderProperty(String name, Value value) {
+    public void addBuilderProperty(String name, @Nullable Value value) {
         names.add(name);
         values.add(value);
     }
@@ -108,7 +111,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @param callback the signal callback
      */
     @Override
-    public void connect(String name, String detail, FunctionPointer callback) {
+    public void connect(String name, @Nullable String detail, FunctionPointer callback) {
         boolean isDetailed = detail != null && !detail.isBlank();
         String fullName = name + (isDetailed ? ("::" + detail) : "");
         connectRequests.add(new ConnectRequest(fullName, callback));
@@ -150,7 +153,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      *
      * @return a {@code GValue} array of property names
      */
-    public Value[] getValues() {
+    public Value @Nullable [] getValues() {
         return values.toArray(new Value[0]);
     }
 }

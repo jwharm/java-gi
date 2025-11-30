@@ -20,11 +20,13 @@
 package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public interface ListModelJavaListMutable<E extends GObject> extends ListModelJavaList<E> {
+@NullMarked
+public interface ListModelJavaListMutable<E extends @Nullable GObject> extends ListModelJavaList<E> {
 
     void removeAt(int index);
     void append(E e);
@@ -106,7 +108,7 @@ public interface ListModelJavaListMutable<E extends GObject> extends ListModelJa
      * {@inheritDoc}
      */
     @Override
-    default @NonNull List<E> subList(int fromIndex, int toIndex) {
+    default List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 

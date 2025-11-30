@@ -28,6 +28,8 @@ import org.javagi.interop.Interop;
 import org.gnome.glib.Quark;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -45,6 +47,7 @@ import java.util.function.Consumer;
 /**
  * Helper class to register signals in a new GType.
  */
+@NullMarked
 public class Signals {
 
     /*
@@ -172,7 +175,7 @@ public class Signals {
      * @param cls  the class that possibly contains @Signal annotations
      * @return a class initializer that registers the signals
      */
-    public static Consumer<TypeClass> installSignals(Class<?> cls) {
+    public static @Nullable Consumer<TypeClass> installSignals(Class<?> cls) {
 
         List<SignalDeclaration> signalDeclarations = new ArrayList<>();
         
@@ -248,9 +251,9 @@ public class Signals {
      * @throws IllegalArgumentException if a signal with this name is not found
      *                                  for the object
      */
-    public static Object emit(GObject gobject,
-                              String detailedSignal,
-                              Object... params) {
+    public static @Nullable Object emit(GObject gobject,
+                                        String detailedSignal,
+                                        Object... params) {
         Type gtype = TypeCache.getType(gobject.getClass());
 
         // Parse the detailed signal name into a signal id and detail quark
@@ -307,8 +310,7 @@ public class Signals {
 
             // Cleanup the allocated values
             for (Value value : values) {
-                if (value != null)
-                    value.unset();
+                value.unset();
             }
             returnValue.unset();
 

@@ -851,7 +851,7 @@ public class Types {
      *         found
      */
     public static <T extends @Nullable Proxy>
-    @Nullable Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
+    @Nullable Function<@Nullable MemorySegment, T> getAddressConstructor(Class<T> cls) {
         Constructor<T> ctor;
         try {
             // Get memory address constructor

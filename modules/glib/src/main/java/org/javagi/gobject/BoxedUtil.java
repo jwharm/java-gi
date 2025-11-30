@@ -24,6 +24,8 @@ import org.gnome.gobject.GObjects;
 import org.javagi.base.Proxy;
 import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
 import java.util.function.Consumer;
@@ -31,6 +33,7 @@ import java.util.function.Consumer;
 /**
  * Utility functions for boxed types
  */
+@NullMarked
 public class BoxedUtil {
 
     /**
@@ -55,18 +58,22 @@ public class BoxedUtil {
      * @return the newly created copy of {@code struct}. The caller has
      *         ownership and is responsible for freeing it.
      */
-    public static <T extends Proxy> MemorySegment copy(Type type, T struct, long size) {
+    public static <T extends @Nullable Proxy> @Nullable MemorySegment copy(@Nullable Type type, T struct, long size) {
         if (struct == null || struct.handle() == null)
             return null;
 
-        if (struct.handle().equals(MemorySegment.NULL))
+        MemorySegment handle = struct.handle();
+        if (handle == null)
+            return null;
+
+        if (handle.equals(MemorySegment.NULL))
             return MemorySegment.NULL;
 
         if (type != null && isBoxed(type))
             return GObjects.boxedCopy(type, struct.handle());
 
         MemorySegment copy = Interop.mallocAllocator().allocate(size);
-        Interop.copy(struct.handle(), copy, size);
+        Interop.copy(handle, copy, size);
         return copy;
     }
 
@@ -79,8 +86,11 @@ public class BoxedUtil {
      * @param freeFunc a function that will free {@code struct} (only used when
      *                 {@code type} is not a boxed type)
      */
-    public static <T extends Proxy> void free(Type type, T struct, Consumer<T> freeFunc) {
-        if (struct == null || struct.handle() == null || struct.handle().equals(MemorySegment.NULL))
+    public static <T extends @Nullable Proxy> void free(@Nullable Type type, T struct, @Nullable Consumer<T> freeFunc) {
+        if (struct == null)
+            return;
+        MemorySegment handle = struct.handle();
+        if (handle == null || handle.equals(MemorySegment.NULL))
             return;
 
         if (type != null && isBoxed(type))

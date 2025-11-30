@@ -20,11 +20,14 @@
 package org.javagi.gobject;
 
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
 import static org.gnome.gobject.BindingFlags.*;
 
 /**
@@ -35,13 +38,14 @@ import static org.gnome.gobject.BindingFlags.*;
  *
  * @see GObject#bindProperty(String, GObject, String)
  */
+@NullMarked
 public class BindingBuilder<S, T> {
-    private GObject source;
-    private String sourceProperty;
-    private GObject target;
-    private String targetProperty;
-    private Function<S, T> transformTo;
-    private Function<T, S> transformFrom;
+    private @Nullable GObject source;
+    private @Nullable String sourceProperty;
+    private @Nullable GObject target;
+    private @Nullable String targetProperty;
+    private @Nullable Function<S, T> transformTo;
+    private @Nullable Function<T, S> transformFrom;
     private final Set<BindingFlags> flags = EnumSet.noneOf(BindingFlags.class);
 
     /**
@@ -160,6 +164,8 @@ public class BindingBuilder<S, T> {
             throw new IllegalArgumentException("The INVERT_BOOLEAN flag cannot "
                     + "be used when passing custom transformation functions");
         }
+
+        requireNonNull(source);
 
         BindingTransformFunc to = transformTo == null ? null : this::applyTransformTo;
         BindingTransformFunc from = transformFrom == null ? null : this::applyTransformFrom;

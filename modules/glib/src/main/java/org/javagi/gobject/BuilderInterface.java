@@ -21,6 +21,7 @@ package org.javagi.gobject;
 
 import org.javagi.base.FunctionPointer;
 import org.gnome.gobject.Value;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 
@@ -42,7 +43,7 @@ public interface BuilderInterface {
      * @param name  name of the property
      * @param value value of the property (a {@code GValue})
      */
-    void addBuilderProperty(String name, Value value);
+    void addBuilderProperty(String name, @Nullable Value value);
 
     /**
      * Add the provided signal to the builder
@@ -59,5 +60,5 @@ public interface BuilderInterface {
      * @param detail   the signal detail
      * @param callback the signal callback
      */
-    void connect(String name, String detail, FunctionPointer callback);
+    void connect(String name, @Nullable String detail, FunctionPointer callback);
 }
