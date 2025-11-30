@@ -93,12 +93,15 @@ public class Overrides {
      * @return a lambda to run during class initialization that will register
      *         the virtual functions
      */
-    public static <T extends TypeInstance, TC extends TypeClass>
+    public static <TC extends TypeClass>
     Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
 
-        Class<TC> typeStruct = Types.getTypeClass(cls);
-        if (typeStruct == null)
+        Class<TC> typeStruct;
+        try {
+            typeStruct = Types.getTypeClass(cls);
+        } catch (IllegalStateException _) {
             return null;
+        }
         Class<?> parentClass = cls.getSuperclass();
 
         // Find all overridden methods

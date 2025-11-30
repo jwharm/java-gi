@@ -19,12 +19,16 @@
 
 package org.javagi.base;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.foreign.MemorySegment;
 
 /**
  * Represents an instance of a proxy object with a handle to an object in
  * native memory.
  */
+@NullMarked
 public interface Proxy {
 
     /**
@@ -32,5 +36,5 @@ public interface Proxy {
      *
      * @return the native memory address
      */
-    MemorySegment handle();
+    @Nullable MemorySegment handle();
 }

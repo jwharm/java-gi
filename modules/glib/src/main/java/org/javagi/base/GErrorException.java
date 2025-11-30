@@ -23,7 +23,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 import org.gnome.glib.GError;
-import org.jetbrains.annotations.ApiStatus;
 
 import org.gnome.glib.Quark;
 
@@ -70,7 +69,6 @@ public class GErrorException extends Exception {
      *
      * @param gerrorPtr pointer to a GError in native memory
      */
-    @ApiStatus.Internal
     public GErrorException(MemorySegment gerrorPtr) {
         super(readMessage(gerrorPtr));
         GError gerror = dereference(gerrorPtr);

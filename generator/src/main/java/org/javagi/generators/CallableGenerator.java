@@ -23,8 +23,7 @@ import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.FunctionDescriptor;
@@ -147,11 +146,10 @@ public class CallableGenerator {
                 if (generic && type.equals(ClassNames.G_OBJECT))
                     type = ClassNames.GENERIC_T;
 
-                var spec = ParameterSpec.builder(type, generator.getName());
                 if (p.nullable())
-                    spec.addAnnotation(Nullable.class);
-                else if (p.notNull())
-                    spec.addAnnotation(NotNull.class);
+                    type = type.annotated(AnnotationSpec.builder(Nullable.class).build());
+
+                var spec = ParameterSpec.builder(type, generator.getName());
                 builder.addParameter(spec.build());
             }
         }
@@ -297,8 +295,13 @@ public class CallableGenerator {
         var returnValue = callable.returnValue();
         if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
-        else if ((!ctor) || namedCtor)
-            builder.returns(new TypedValueGenerator(returnValue).getType());
+        else if ((!ctor) || namedCtor) {
+            TypeName tn = new TypedValueGenerator(returnValue).getType();
+            if (returnValue.nullable())
+                builder.returns(tn.annotated(AnnotationSpec.builder(Nullable.class).build()));
+            else
+                builder.returns(tn);
+        }
 
         // Parameters
         generateMethodParameters(builder, generic, false);

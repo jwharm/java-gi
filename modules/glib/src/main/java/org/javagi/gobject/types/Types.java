@@ -26,8 +26,8 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -45,6 +45,7 @@ import static org.gnome.gobject.GObjects.typeTestFlags;
  * check gtype characteristics, and static methods to register a Java class as
  * a new GObject-derived GType.
  */
+@NullMarked
 @SuppressWarnings("unused")
 public class Types {
 
@@ -196,7 +197,7 @@ public class Types {
     /**
      * The {@code GType} for {@code GDate}.
      */
-    public static final Type DATE = Interop.getType("g_date_get_type");
+    public static final Type DATE = requireNonNull(Interop.getType("g_date_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code null}-terminated
@@ -204,12 +205,12 @@ public class Types {
      *
      * @since 2.4
      */
-    public static final Type STRV = Interop.getType("g_strv_get_type");
+    public static final Type STRV = requireNonNull(Interop.getType("g_strv_get_type"));
 
     /**
      * The {@code GType} for {@code GString}.
      */
-    public static final Type GSTRING = Interop.getType("g_gstring_get_type");
+    public static final Type GSTRING = requireNonNull(Interop.getType("g_gstring_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GHashTable}
@@ -217,15 +218,14 @@ public class Types {
      *
      * @since 2.10
      */
-    public static final Type HASH_TABLE =
-            Interop.getType("g_hash_table_get_type");
+    public static final Type HASH_TABLE = requireNonNull(Interop.getType("g_hash_table_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GRegex} reference.
      *
      * @since 2.14
      */
-    public static final Type REGEX = Interop.getType("g_regex_get_type");
+    public static final Type REGEX = requireNonNull(Interop.getType("g_regex_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMatchInfo}
@@ -233,15 +233,14 @@ public class Types {
      *
      * @since 2.30
      */
-    public static final Type MATCH_INFO =
-            Interop.getType("g_match_info_get_type");
+    public static final Type MATCH_INFO = requireNonNull(Interop.getType("g_match_info_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GArray} reference.
      *
      * @since 2.22
      */
-    public static final Type ARRAY = Interop.getType("g_array_get_type");
+    public static final Type ARRAY = requireNonNull(Interop.getType("g_array_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GByteArray}
@@ -249,8 +248,7 @@ public class Types {
      *
      * @since 2.22
      */
-    public static final Type BYTE_ARRAY =
-            Interop.getType("g_byte_array_get_type");
+    public static final Type BYTE_ARRAY = requireNonNull(Interop.getType("g_byte_array_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GPtrArray}
@@ -258,185 +256,170 @@ public class Types {
      *
      * @since 2.22
      */
-    public static final Type PTR_ARRAY =
-            Interop.getType("g_ptr_array_get_type");
+    public static final Type PTR_ARRAY = requireNonNull(Interop.getType("g_ptr_array_get_type"));
 
     /**
      * The {@code GType} for {@code GBytes}.
      *
      * @since 2.32
      */
-    public static final Type BYTES = Interop.getType("g_bytes_get_type");
+    public static final Type BYTES = requireNonNull(Interop.getType("g_bytes_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantType}.
      *
      * @since 2.24
      */
-    public static final Type VARIANT_TYPE =
-            Interop.getType("g_variant_type_get_gtype");
+    public static final Type VARIANT_TYPE = requireNonNull(Interop.getType("g_variant_type_get_gtype"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GError}.
      *
      * @since 2.26
      */
-    public static final Type ERROR = Interop.getType("g_error_get_type");
+    public static final Type ERROR = requireNonNull(Interop.getType("g_error_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GDateTime}.
      *
      * @since 2.26
      */
-    public static final Type DATE_TIME =
-            Interop.getType("g_date_time_get_type");
+    public static final Type DATE_TIME = requireNonNull(Interop.getType("g_date_time_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GTimeZone}.
      *
      * @since 2.34
      */
-    public static final Type TIME_ZONE =
-            Interop.getType("g_time_zone_get_type");
+    public static final Type TIME_ZONE = requireNonNull(Interop.getType("g_time_zone_get_type"));
 
     /**
      * The {@code GType} for {@code GIOChannel}.
      */
-    public static final Type IO_CHANNEL =
-            Interop.getType("g_io_channel_get_type");
+    public static final Type IO_CHANNEL = requireNonNull(Interop.getType("g_io_channel_get_type"));
 
     /**
      * The {@code GType} for {@code GIOCondition}.
      */
-    public static final Type IO_CONDITION =
-            Interop.getType("g_io_condition_get_type");
+    public static final Type IO_CONDITION = requireNonNull(Interop.getType("g_io_condition_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantBuilder}.
      *
      * @since 2.30
      */
-    public static final Type VARIANT_BUILDER =
-            Interop.getType("g_variant_builder_get_type");
+    public static final Type VARIANT_BUILDER = requireNonNull(Interop.getType("g_variant_builder_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GVariantDict}.
      *
      * @since 2.40
      */
-    public static final Type VARIANT_DICT =
-            Interop.getType("g_variant_dict_get_type");
+    public static final Type VARIANT_DICT = requireNonNull(Interop.getType("g_variant_dict_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainLoop}.
      *
      * @since 2.30
      */
-    public static final Type MAIN_LOOP =
-            Interop.getType("g_main_loop_get_type");
+    public static final Type MAIN_LOOP = requireNonNull(Interop.getType("g_main_loop_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMainContext}.
      *
      * @since 2.30
      */
-    public static final Type MAIN_CONTEXT =
-            Interop.getType("g_main_context_get_type");
+    public static final Type MAIN_CONTEXT = requireNonNull(Interop.getType("g_main_context_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GSource}.
      *
      * @since 2.30
      */
-    public static final Type SOURCE = Interop.getType("g_source_get_type");
+    public static final Type SOURCE = requireNonNull(Interop.getType("g_source_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GPollFD}.
      *
      * @since 2.36
      */
-    public static final Type POLLFD = Interop.getType("g_pollfd_get_type");
+    public static final Type POLLFD = requireNonNull(Interop.getType("g_pollfd_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMarkupParseContext}.
      *
      * @since 2.36
      */
-    public static final Type MARKUP_PARSE_CONTEXT =
-            Interop.getType("g_markup_parse_context_get_type");
+    public static final Type MARKUP_PARSE_CONTEXT = requireNonNull(Interop.getType("g_markup_parse_context_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GKeyFile}.
      *
      * @since 2.32
      */
-    public static final Type KEY_FILE = Interop.getType("g_key_file_get_type");
+    public static final Type KEY_FILE = requireNonNull(Interop.getType("g_key_file_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GMappedFile}.
      *
      * @since 2.40
      */
-    public static final Type MAPPED_FILE =
-            Interop.getType("g_mapped_file_get_type");
+    public static final Type MAPPED_FILE = requireNonNull(Interop.getType("g_mapped_file_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GThread}.
      *
      * @since 2.36
      */
-    public static final Type THREAD = Interop.getType("g_thread_get_type");
+    public static final Type THREAD = requireNonNull(Interop.getType("g_thread_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GChecksum}.
      *
      * @since 2.36
      */
-    public static final Type CHECKSUM = Interop.getType("g_checksum_get_type");
+    public static final Type CHECKSUM = requireNonNull(Interop.getType("g_checksum_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GOptionGroup}.
      *
      * @since 2.44
      */
-    public static final Type OPTION_GROUP =
-            Interop.getType("g_option_group_get_type");
+    public static final Type OPTION_GROUP = requireNonNull(Interop.getType("g_option_group_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GUri}.
      *
      * @since 2.66
      */
-    public static final Type URI = Interop.getType("g_uri_get_type");
+    public static final Type URI = requireNonNull(Interop.getType("g_uri_get_type"));
 
     /**
      * The {@code GType} for {@code GTree}.
      *
      * @since 2.68
      */
-    public static final Type TREE = Interop.getType("g_tree_get_type");
+    public static final Type TREE = requireNonNull(Interop.getType("g_tree_get_type"));
 
     /**
      * The {@code GType} for {@code GPatternSpec}.
      *
      * @since 2.70
      */
-    public static final Type PATTERN_SPEC =
-            Interop.getType("g_pattern_spec_get_type");
+    public static final Type PATTERN_SPEC = requireNonNull(Interop.getType("g_pattern_spec_get_type"));
 
     /**
      * The {@code GType} for a boxed type holding a {@code GBookmarkFile}.
      *
      * @since 2.76
      */
-    public static final Type BOOKMARK_FILE =
-            Interop.getType("g_bookmark_file_get_type");
+    public static final Type BOOKMARK_FILE = requireNonNull(Interop.getType("g_bookmark_file_get_type"));
 
     /**
      * First fundamental type number to create a new fundamental type id with
      * G_TYPE_MAKE_FUNDAMENTAL() reserved for GLib.
      */
-    public static final long RESERVED_GLIB_FIRST	= 22L;
+    public static final long RESERVED_GLIB_FIRST = 22L;
 
     /**
      * Last fundamental type number reserved for GLib.
@@ -531,8 +514,7 @@ public class Types {
      * @return {@code true} if {@code type} is instantiable
      */
     public static boolean IS_INSTANTIATABLE(Type type) {
-        return typeTestFlags(type,
-                             TypeFundamentalFlags.INSTANTIATABLE.getValue());
+        return typeTestFlags(type, TypeFundamentalFlags.INSTANTIATABLE.getValue());
     }
 
     /**
@@ -554,8 +536,7 @@ public class Types {
      * @return {@code true} if {@code type} is deep derivable
      */
     public static boolean IS_DEEP_DERIVABLE(Type type) {
-        return typeTestFlags(type,
-                             TypeFundamentalFlags.DEEP_DERIVABLE.getValue());
+        return typeTestFlags(type, TypeFundamentalFlags.DEEP_DERIVABLE.getValue());
     }
 
     /**
@@ -673,9 +654,7 @@ public class Types {
      *         layout that copies the memory layout declared in the direct
      *         superclass.
      */
-    public static <T extends TypeInstance>
-    MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
-
+    public static <T extends TypeInstance> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
             // Get instance-memorylayout of this class
             MemoryLayout instanceLayout = getLayout(cls);
             if (instanceLayout != null)
@@ -684,13 +663,8 @@ public class Types {
             // If no memory layout was defined, create a default memory layout
             // that only has a pointer to the parent class' memory layout.
             MemoryLayout parentLayout = getLayout(cls.getSuperclass());
-
-            if (parentLayout == null) {
-                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Cannot find memory layout definition for class %s\n",
-                        cls.getSimpleName());
-                return null;
-            }
+            if (parentLayout == null)
+                throw new IllegalStateException("No memory layout definition found for class " + cls.getSimpleName());
 
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_instance")
@@ -699,14 +673,14 @@ public class Types {
 
     /**
      * Return the inner TypeClass class, or the inner TypeClass from the
-     * superclass, or null if not found.
+     * superclass.
      *
      * @param  cls  the class that contains (or whose superclass contains) an
      *              inner TypeClass class
-     * @return the TypeClass class, or null if not found
+     * @return the TypeClass class
      */
     @SuppressWarnings("unchecked")
-    public static <TC extends TypeClass> Class<TC> getTypeClass(Class<?> cls) {
+    public static @Nullable <TC extends TypeClass> Class<TC> getTypeClass(Class<?> cls) {
 
         // Get the type-struct. This is an inner class that extends ObjectClass.
         for (Class<?> gclass : cls.getDeclaredClasses()) {
@@ -755,13 +729,11 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
-        requireNonNull(typeClass,
-                "No TypeClass for class " + cls.getSimpleName());
+        requireNonNull(typeClass, "No TypeClass for class " + cls.getSimpleName());
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeClass);
-        requireNonNull(parentLayout,
-                "No memory layout for class " + typeClass.getSimpleName());
+        requireNonNull(parentLayout, "No memory layout for class " + typeClass.getSimpleName());
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
@@ -780,13 +752,11 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeInterface.
         // If the type-struct is unavailable, get it from the parent class.
         Class<? extends TypeInterface> typeIface = getTypeInterface(cls);
-        requireNonNull(typeIface,
-                "No TypeInterface for interface " + cls.getSimpleName());
+        requireNonNull(typeIface, "No TypeInterface for interface " + cls.getSimpleName());
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeIface);
-        requireNonNull(parentLayout,
-                "No memory layout for interface " + typeIface.getSimpleName());
+        requireNonNull(parentLayout, "No memory layout for interface " + typeIface.getSimpleName());
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("g_iface")
@@ -794,7 +764,7 @@ public class Types {
     }
 
     // Find a static method that returns the GType of this class
-    private static Method getGTypeMethod(Class<?> cls) {
+    private static @Nullable Method getGTypeMethod(Class<?> cls) {
         Method gtypeMethod = null;
 
         // Find a static method that is annotated with @GType and read its value
@@ -805,13 +775,15 @@ public class Types {
             }
         }
 
-        // Find a static method with return type org.gnome.glib.Type.class
+        // Find a static "getType()" method that returns a org.gnome.glib.Type
         for (Method method : cls.getDeclaredMethods()) {
             if (Modifier.isStatic(method.getModifiers())
+                    && method.getName().equalsIgnoreCase("getType")
                     && method.getReturnType().equals(Type.class)) {
                 gtypeMethod = method;
             }
         }
+
         return gtypeMethod;
     }
 
@@ -824,7 +796,7 @@ public class Types {
      * @param  cls the class for which to return the declared MemoryLayout
      * @return the declared MemoryLayout
      */
-    public static MemoryLayout getLayout(Class<?> cls) {
+    public static @Nullable MemoryLayout getLayout(Class<?> cls) {
         // Find a method that is annotated with @MemoryLayout and execute it
         for (Method m : cls.getDeclaredMethods()) {
             if (m.isAnnotationPresent(Layout.class)) {
@@ -878,9 +850,8 @@ public class Types {
      * @return the memory address constructor for this class, or null if not
      *         found
      */
-    public static <T extends Proxy>
-    Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
-
+    public static <T extends @Nullable Proxy>
+    @Nullable Function<MemorySegment, T> getAddressConstructor(Class<T> cls) {
         Constructor<T> ctor;
         try {
             // Get memory address constructor
@@ -918,9 +889,7 @@ public class Types {
      * @return the instance initializer, or a no-op ({@code $ -> {}}) if not
      *         found
      */
-    public static <T extends TypeInstance>
-    Consumer<T> getInstanceInit(Class<T> cls) {
-
+    public static <T extends TypeInstance> Consumer<T> getInstanceInit(Class<T> cls) {
         // Find instance initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (method.isAnnotationPresent(InstanceInit.class)) {
@@ -966,7 +935,7 @@ public class Types {
      * @return the class initializer, or null if not found
      */
     public static <T extends TypeInstance, TC extends TypeClass>
-    Consumer<TC> getClassInit(Class<T> cls) {
+    @Nullable Consumer<TC> getClassInit(Class<T> cls) {
         // Find class initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (method.isAnnotationPresent(ClassInit.class)) {
@@ -1003,15 +972,9 @@ public class Types {
      * @return the interface initializer, or null if not found
      */
     public static <T extends TypeInstance, TI extends TypeInterface>
-    Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
+    @Nullable Consumer<TI> getInterfaceInit(Class<T> cls, Class<?> iface) {
         // Find all overridden methods
         Class<TI> typeStruct = getTypeInterface(iface);
-        if (typeStruct == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeInterface class for interface %s\n",
-                    iface);
-            return null;
-        }
 
         // Find interface initializer function
         for (Method method : cls.getDeclaredMethods()) {
@@ -1133,7 +1096,7 @@ public class Types {
     /*
      * Perform sanity checks on the class that will be registered
      */
-    private static void checkClassDefinition(Class<?> cls) {
+    private static void checkClassDefinition(@Nullable Class<?> cls) {
         if (cls == null)
             throw new TypeRegistrationException("Class is null");
 
@@ -1148,9 +1111,6 @@ public class Types {
 
         if (cls.isInterface()) {
             var typeInterface = getTypeInterface(cls);
-            if (typeInterface == null)
-                throw new TypeRegistrationException("Unknown TypeInterface");
-
             if (getLayout(typeInterface) == null)
                 throw new TypeRegistrationException("Unknown memory layout");
         }
@@ -1209,9 +1169,7 @@ public class Types {
 
         // Assert that `cls` is a Proxy class
         if (! Proxy.class.isAssignableFrom(cls)) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Class does not implement Proxy interface\n");
-            return null;
+            throw new IllegalArgumentException("Class does not implement Proxy interface");
         }
         @SuppressWarnings("unchecked") // checked by isAssignableFrom()
         var proxy = (Class<? extends Proxy>) cls;
@@ -1264,11 +1222,8 @@ public class Types {
 
             Set<TypeFlags> flags = getTypeFlags(cls);
 
-            if (memoryLayout == null
-                    || ((!cls.isInterface()) && instanceLayout == null)) {
-                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                        "Cannot register type %s\n", cls.getSimpleName());
-                return null;
+            if ((!cls.isInterface()) && instanceLayout == null) {
+                throw new IllegalArgumentException("No instance layout found for " + cls.getSimpleName());
             }
 
             // Override virtual methods and install properties and signals
@@ -1334,19 +1289,14 @@ public class Types {
                         }
                     }
                 } catch (ClassCastException cce) {
-                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                            "Class %s does not derive from TypeInstance\n",
-                            cls.getSimpleName());
-                    return null;
+                    throw new IllegalArgumentException("Class %s does not derive from TypeInstance"
+                            .formatted(cls.getSimpleName()));
                 }
             }
             return type;
 
         } catch (Exception e) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s\n",
-                    cls.getSimpleName(), e.toString());
-            return null;
+            throw new IllegalArgumentException("Cannot register " + cls.getSimpleName(), e);
         }
     }
 
@@ -1365,8 +1315,8 @@ public class Types {
                                           String typeName,
                                           MemoryLayout interfaceLayout,
                                           Consumer<TypeClass> classInit,
-                                          Function<MemorySegment, ? extends Proxy> ctor,
-                                          Function<MemorySegment, ? extends Proxy> typeClassCtor,
+                                          @Nullable Function<MemorySegment, ? extends Proxy> ctor,
+                                          @Nullable Function<MemorySegment, ? extends Proxy> typeClassCtor,
                                           Set<TypeFlags> flags) {
         TypeInfo typeInfo = new TypeInfo(
                 (short) interfaceLayout.byteSize(),
@@ -1511,8 +1461,8 @@ public class Types {
                   Consumer<TypeClass> classInit,
                   MemoryLayout instanceLayout,
                   Consumer<TypeInstance> instanceInit,
-                  Function<MemorySegment, ? extends Proxy> constructor,
-                  Function<MemorySegment, ? extends Proxy> typeClassConstructor,
+                  @Nullable Function<MemorySegment, ? extends Proxy> constructor,
+                  @Nullable Function<MemorySegment, ? extends Proxy> typeClassConstructor,
                   Set<TypeFlags> flags) {
 
         Type type = GObjects.typeRegisterStaticSimple(
@@ -1538,7 +1488,7 @@ public class Types {
      * @param <Z>  {@code func} must accept the type of {@code cls} as its
      *             parameter
      */
-    public static <Z> void applyIfNotNull(@Nullable Consumer<? super Z> func, @NotNull Z cls) {
+    public static <Z> void applyIfNotNull(@Nullable Consumer<? super Z> func, Z cls) {
         if (func != null)
             func.accept(cls);
     }

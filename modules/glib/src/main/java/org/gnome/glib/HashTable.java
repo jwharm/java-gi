@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import static org.javagi.base.TransferOwnership.*;
 import static org.javagi.interop.Interop.getAddress;
@@ -126,11 +126,11 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @inheritDoc
      */
     @Override
-    public @NotNull Set<Entry<K, V>> entrySet() {
+    public @NonNull Set<Entry<K, V>> entrySet() {
         final var iterator = getKeys().iterator();
         return new AbstractSet<>() {
             @Override
-            public @NotNull Iterator<Entry<K, V>> iterator() {
+            public @NonNull Iterator<Entry<K, V>> iterator() {
                 return new Iterator<>() {
                     K key = null;
 

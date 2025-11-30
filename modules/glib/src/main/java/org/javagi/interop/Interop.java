@@ -33,7 +33,7 @@ import org.gnome.glib.*;
 import org.javagi.base.*;
 
 import org.javagi.base.Enumeration;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.*;
@@ -255,7 +255,7 @@ public class Interop {
      *
      * @return the gtype from the provided get-type function
      */
-    public static Type getType(String getTypeFunction) {
+    public static @Nullable Type getType(String getTypeFunction) {
         if (getTypeFunction == null)
             return null;
 
@@ -612,8 +612,10 @@ public class Interop {
      * @return the allocated memory holding the object
      */
     @SuppressWarnings("unchecked") // The cast to Set<Enumeration> is checked
-    public static MemorySegment getAddress(Object o, SegmentAllocator alloc) {
+    public static MemorySegment getAddress(@Nullable Object o, SegmentAllocator alloc) {
         return switch (o) {
+            // null pointer
+            case null        -> MemorySegment.NULL;
             // existing MemorySegment
             case MemorySegment m -> m;
             // string

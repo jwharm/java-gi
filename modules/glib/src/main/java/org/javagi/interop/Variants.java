@@ -21,11 +21,12 @@ package org.javagi.interop;
 
 import org.gnome.glib.Variant;
 import org.gnome.glib.VariantType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
+@NullMarked
 public class Variants {
 
     /**
@@ -71,7 +72,7 @@ public class Variants {
             return value == null ? null : unpack(value, recursive);
         } else if (t.isArray()) {
             if (t.element().isDictEntry()) {
-                Map<Object,Object> map = new HashMap<>();
+                Map<@Nullable Object, @Nullable Object> map = new HashMap<>();
                 for (int i = 0; i < v.nChildren(); i++) {
                     Variant entry = v.getChildValue(i);
                     Object key = unpack(entry.getChildValue(0), recursive);
@@ -80,14 +81,14 @@ public class Variants {
                 }
                 return map;
             } else {
-                List<Object> list = new ArrayList<>();
+                List<@Nullable Object> list = new ArrayList<>();
                 for (int i = 0; i < v.nChildren(); i++) {
                     list.add(unpack(v.getChildValue(i), recursive));
                 }
                 return list;
             }
         } else if (t.isTuple()) {
-            List<Object> tuple = new ArrayList<>();
+            List<@Nullable Object> tuple = new ArrayList<>();
             for (int i = 0; i < v.nChildren(); i++) {
                 tuple.add(unpack(v.getChildValue(i), recursive));
             }
@@ -124,7 +125,7 @@ public class Variants {
      * @param o the Java Object to pack into a GVariant
      * @return the GVariant with the packed Object
      */
-    public static @NotNull Variant pack(@Nullable Object o) {
+    public static Variant pack(@Nullable Object o) {
         return switch (o) {
             case Character c -> Variant.string(c.toString());
             case Collection<?> c -> {
@@ -160,7 +161,7 @@ public class Variants {
      * @param o a Java Object to create a GVariant formatString for
      * @return the generated formatString
      */
-    private static @NotNull String formatString(@Nullable Object o) {
+    private static String formatString(@Nullable Object o) {
         return switch (o) {
             case null -> "mv";
             case Boolean _ -> "b";

@@ -22,7 +22,8 @@ package org.javagi.interop;
 import org.javagi.base.Proxy;
 import org.gnome.glib.GLib;
 import org.gnome.glib.Type;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
@@ -31,8 +32,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * This class keeps a cache of all memory addresses for which a Proxy object
@@ -47,6 +46,7 @@ import static java.util.Objects.requireNonNull;
  * will not free the memory. Take and yield ownership with
  * {@link #takeOwnership} and {@link #yieldOwnership}.
  */
+@NullMarked
 public class MemoryCleaner {
 
     private static final Cleaner CLEANER = Cleaner.create();
@@ -58,7 +58,7 @@ public class MemoryCleaner {
      *
      * @param proxy The proxy instance
      */
-    private static @NotNull Cached getOrRegister(@NotNull Proxy proxy) {
+    private static Cached getOrRegister(Proxy proxy) {
         MemorySegment address = proxy.handle();
         synchronized (cache) {
             Cached cached = cache.get(address);
@@ -80,10 +80,7 @@ public class MemoryCleaner {
      * @param proxy    the proxy instance
      * @param freeFunc the specialized cleanup function to call
      */
-    public static void setFreeFunc(@NotNull Proxy proxy,
-                                   @NotNull String freeFunc) {
-        requireNonNull(proxy);
-        requireNonNull(freeFunc);
+    public static void setFreeFunc(Proxy proxy, String freeFunc) {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(cached.owned,
@@ -100,10 +97,7 @@ public class MemoryCleaner {
      * @param proxy     the proxy instance
      * @param boxedType the boxed type
      */
-    public static void setBoxedType(@NotNull Proxy proxy,
-                                    @NotNull Type boxedType) {
-        requireNonNull(proxy);
-        requireNonNull(boxedType);
+    public static void setBoxedType(Proxy proxy, Type boxedType) {
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
             cache.put(proxy.handle(), new Cached(cached.owned,
@@ -119,9 +113,7 @@ public class MemoryCleaner {
      *
      * @param proxy  the proxy instance
      */
-    public static void takeOwnership(@NotNull Proxy proxy) {
-        requireNonNull(proxy);
-
+    public static void takeOwnership(Proxy proxy) {
         // Don't try to take ownership of a null pointer
         if (MemorySegment.NULL.equals(proxy.handle()))
             return;
@@ -141,8 +133,7 @@ public class MemoryCleaner {
      *
      * @param proxy  the proxy instance
      */
-    public static void yieldOwnership(@NotNull Proxy proxy) {
-        requireNonNull(proxy);
+    public static void yieldOwnership(Proxy proxy) {
         synchronized (cache) {
             Cached cached = cache.get(proxy.handle());
             if (cached != null) {
@@ -164,11 +155,13 @@ public class MemoryCleaner {
      *
      * @param address the memory address to free
      */
-    public static void free(MemorySegment address) {
-        synchronized (cache) {
-            Cached cached = cache.get(address);
-            if (cached != null)
-                cached.cleanable.clean();
+    public static void free(@Nullable MemorySegment address) {
+        if (address != null) {
+            synchronized (cache) {
+                Cached cached = cache.get(address);
+                if (cached != null)
+                    cached.cleanable.clean();
+            }
         }
     }
 
@@ -183,8 +176,8 @@ public class MemoryCleaner {
      * @param cleanable a cleaning action that will be run by the GC
      */
     private record Cached(boolean owned,
-                          String freeFunc,
-                          Type boxedType,
+                          @Nullable String freeFunc,
+                          @Nullable Type boxedType,
                           Cleaner.Cleanable cleanable) {
     }
 

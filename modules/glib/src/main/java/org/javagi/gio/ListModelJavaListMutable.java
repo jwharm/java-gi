@@ -20,8 +20,7 @@
 package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -107,11 +106,10 @@ public interface ListModelJavaListMutable<E extends GObject> extends ListModelJa
      * {@inheritDoc}
      */
     @Override
-    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+    default @NonNull List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    @ApiStatus.Internal
     class SubList<E extends GObject, List extends ListModelJavaListMutable<E>>
             extends ListModelJavaList.SubList<E, List>
             implements ListModelJavaListMutable<E> {

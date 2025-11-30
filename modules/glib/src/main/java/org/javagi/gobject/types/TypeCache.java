@@ -31,8 +31,8 @@ import org.gnome.gobject.TypeInstance;
 
 import org.javagi.base.Enumeration;
 import org.javagi.base.Proxy;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import static org.javagi.gobject.types.Types.IS_FUNDAMENTAL;
 import static java.util.Objects.requireNonNull;
@@ -42,12 +42,13 @@ import static java.util.Objects.requireNonNull;
  * Using this register, the correct Java class is always instantiated, based on
  * the GType of the native object instance.
  */
+@NullMarked
 public class TypeCache {
 
-    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
+    private final static Map<Type, Function<@Nullable MemorySegment, ? extends Proxy>> typeRegister
             = new ConcurrentHashMap<>();
 
-    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
+    private final static Map<Type, Function<@Nullable MemorySegment, ? extends Proxy>> typeClassRegister
             = new ConcurrentHashMap<>();
 
     private final static Map<Type, Function<Integer, ?>> enumTypeRegister
@@ -76,19 +77,20 @@ public class TypeCache {
      * @return         the constructor, or {@code null} if address is
      *                 {@code null} or a null-pointer
      */
-    public static Function<MemorySegment, ? extends Proxy>
-    getConstructor(MemorySegment address,
+    public static @Nullable Function<MemorySegment, ? extends Proxy>
+    getConstructor(@Nullable MemorySegment address,
                    Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check on the memory address
-        if (address == null || address.equals(MemorySegment.NULL)) return null;
+        if (address == null || address.equals(MemorySegment.NULL))
+            return null;
 
         // Read the TypeClass from memory
         TypeClass gclass = new TypeInstance(address).readGClass();
-        if (gclass == null) return null;
+        if (gclass == null)
+            return null;
 
         // Read the gtype from memory
         Type type = gclass.readGType();
-        
         return getConstructor(type, fallback);
     }
     
@@ -106,9 +108,8 @@ public class TypeCache {
      * @return         the constructor, or {@code null} if address is
      *                 {@code null} or a null-pointer
      */
-    public static Function<MemorySegment, ? extends Proxy> getConstructor(
-            @NotNull Type type,
-            @Nullable Function<MemorySegment, ? extends Proxy> fallback) {
+    public static @Nullable Function<@Nullable MemorySegment, ? extends Proxy>
+    getConstructor(Type type, @Nullable Function<@Nullable MemorySegment, ? extends Proxy> fallback) {
         // Find the constructor in the typeRegister and return it
         Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
         if (ctor != null)
@@ -150,8 +151,8 @@ public class TypeCache {
 
     // Register and return the constructor registered for {@code type}, if it
     // produces an instance of {@code base}.
-    private static Function<MemorySegment, ? extends Proxy>
-    tryConstruct(Class<?> base, Type type) {
+    private static @Nullable Function<@Nullable MemorySegment, ? extends Proxy>
+    tryConstruct(@Nullable Class<?> base, Type type) {
         var ctor = typeRegister.get(type);
         if (base == null)
             return ctor;
@@ -173,7 +174,7 @@ public class TypeCache {
      * @param type the GType of the enum/flags type
      * @return the contructor function
      */
-    public static Function<Integer, ?> getEnumConstructor(@NotNull Type type) {
+    public static @Nullable Function<Integer, ?> getEnumConstructor(Type type) {
         return enumTypeRegister.get(type);
     }
 
@@ -229,8 +230,7 @@ public class TypeCache {
         }
     }
 
-    public static Function<MemorySegment, ? extends Proxy>
-    getTypeClassConstructor(@NotNull Type type) {
+    public static @Nullable Function<MemorySegment, ? extends Proxy> getTypeClassConstructor(Type type) {
         return typeClassRegister.get(type);
     }
 
@@ -243,9 +243,9 @@ public class TypeCache {
      * @param typeClassCtor Constructor function for the typeclass of this type
      */
     public static void register(Class<?> cls,
-                                Type type,
-                                Function<MemorySegment, ? extends Proxy> ctor,
-                                Function<MemorySegment, ? extends Proxy> typeClassCtor) {
+                                @Nullable Type type,
+                                @Nullable Function<MemorySegment, ? extends Proxy> ctor,
+                                @Nullable Function<MemorySegment, ? extends Proxy> typeClassCtor) {
         requireNonNull(cls);
         if (type != null) {
             if (ctor != null)
@@ -265,8 +265,8 @@ public class TypeCache {
      */
     public static <T extends Enum<T> & Enumeration> void registerEnum(
             Class<T> cls,
-            Type type,
-            Function<Integer, ?> ctor) {
+            @Nullable Type type,
+            @Nullable Function<Integer, ?> ctor) {
         requireNonNull(cls);
         if (type != null) {
             if (ctor != null)

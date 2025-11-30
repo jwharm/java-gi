@@ -19,7 +19,8 @@
 
 package org.javagi.interop;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -27,6 +28,7 @@ import java.util.Arrays;
  * Utility functions to split an array of variadic arguments into a first
  * argument and a null-terminated array of remaining arguments.
  */
+@NullMarked
 public class VarargsUtil {
 
     /**

@@ -22,7 +22,6 @@ package org.javagi.gobject;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.gnome.glib.Variant;
 import org.javagi.base.Proxy;
@@ -34,8 +33,8 @@ import org.javagi.base.Enumeration;
 import org.javagi.base.TransferOwnership;
 import org.javagi.gobject.types.TypeCache;
 import org.javagi.interop.Interop;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import static org.javagi.gobject.types.Types.*;
 import static org.gnome.gobject.GObjects.gtypeGetType;
@@ -44,6 +43,7 @@ import static org.gnome.gobject.GObjects.typeIsA;
 /**
  * Utility functions to convert a {@link Value} to and from a Java Object.
  */
+@NullMarked
 public class ValueUtil {
     
     /**
@@ -131,36 +131,6 @@ public class ValueUtil {
     }
 
     /**
-     * Get the Java class of {@code T}.
-     * <p>
-     * We need to know the Java class of flags types, but all we have is a
-     * constructor function (usually {@code ClassName#of(int)}). So we apply
-     * the constructor for a random value and call {@code getClass()} on the
-     * result. Ideally, there should be a 0 member (i.e. no flags set) but that
-     * is not always the case. So we try all 32 bits, until a valid one is
-     * found.
-     *
-     * @param ctor the constructor that will be run
-     * @param type the GType, only used for logging purposes
-     * @param <T> the flags type
-     * @return the Java class of T
-     */
-    private static <T> Class<T> getEnumClass(Function<Integer, T> ctor, Type type) {
-        for (int i = 0; i < 32; i++) {
-            try {
-                T instance = ctor.apply(2^i);
-                // If this cast doesn't succeed, someone is apparently creating
-                // hierarchies of flags types, which is entirely unsupported
-                @SuppressWarnings("unchecked")
-                Class<T> cls = (Class<T>) instance.getClass();
-                return cls;
-            } catch (IllegalStateException ignored) {
-            }
-        }
-        throw new UnsupportedOperationException("Cannot get Java class for " + GObjects.typeName(type));
-    }
-
-    /**
      * Read the GType of the {@code dest} GValue and set the {@code src} object
      * (or boxed primitive value) as its value using the corresponding setter in
      * the {@link Value} proxy class.
@@ -201,7 +171,7 @@ public class ValueUtil {
         else if (type.equals(VARIANT))        dest.setVariant((Variant) src);
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
         else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
-        else if (typeIsA(type, FLAGS))        dest.setFlags(flagsToInt(type, src));
+        else if (typeIsA(type, FLAGS))        dest.setFlags(flagsToInt(src));
         else if (BoxedUtil.isBoxed(type))     dest.setBoxed(((Proxy) src).handle());
         else throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
 
@@ -211,12 +181,11 @@ public class ValueUtil {
     /**
      * Convert a flags parameter to a bitfield (int).
      *
-     * @param type the GType of the flags type
      * @param src  either a single enum value, or a Set of enum values
      * @param <T>  the flags type
      * @return the bitfield (int) value
      */
-    private static <T extends Enum<T> & Enumeration> int flagsToInt(Type type, Object src) {
+    private static <T extends Enum<T> & Enumeration> int flagsToInt(Object src) {
         if (src instanceof Enumeration e)
             return e.getValue();
 
@@ -230,7 +199,7 @@ public class ValueUtil {
      * Long values are 32 bit. To preserve cross-platform compatibility, Java-GI
      * converts all Java Long values to Integers.
      */
-    private static int toInt(@NotNull Object src) {
+    private static int toInt(Object src) {
         return src instanceof Long l ? l.intValue() : (Integer) src;
     }
 

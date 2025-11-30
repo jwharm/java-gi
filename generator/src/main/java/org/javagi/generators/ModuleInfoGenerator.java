@@ -71,7 +71,7 @@ public class ModuleInfoGenerator {
         builder.append("""
                 module %s {
                     requires static java.compiler;
-                    requires static org.jetbrains.annotations;
+                    requires transitive org.jspecify;
                 """.formatted(name));
 
         exports.stream().sorted().forEach(this::appendExports);

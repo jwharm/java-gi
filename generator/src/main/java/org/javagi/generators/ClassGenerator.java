@@ -25,7 +25,6 @@ import org.javagi.gir.Class;
 import org.javagi.gir.Interface;
 import org.javagi.gir.Record;
 import org.javagi.util.GeneratedAnnotationBuilder;
-import org.jetbrains.annotations.NotNull;
 
 import javax.lang.model.element.Modifier;
 
@@ -505,7 +504,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addParameter(ParameterizedTypeName.get(
                         ClassName.get(Collection.class),
                         WildcardTypeName.subtypeOf(actualGeneric)
-                ).annotated(AnnotationSpec.builder(NotNull.class).build()), "additions")
+                ), "additions")
                 .addStatement("splice(index, nRemovals, additions.toArray($T[]::new))", actualGeneric)
                 .build();
     }

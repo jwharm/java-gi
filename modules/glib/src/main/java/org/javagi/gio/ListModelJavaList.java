@@ -21,8 +21,7 @@ package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
 import org.gnome.gio.ListModel;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -93,7 +92,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull Iterator<E> iterator() {
+    default @NonNull Iterator<E> iterator() {
         return listIterator();
     }
 
@@ -101,7 +100,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default Object @NotNull [] toArray() {
+    default Object @NonNull [] toArray() {
         return toArray(new Object[0]);
     }
 
@@ -110,7 +109,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      */
     @Override
     @SuppressWarnings("unchecked") // Unchecked casts are unavoidable here
-    default <T> T @NotNull [] toArray(T @NotNull [] a) {
+    default <T> T @NonNull [] toArray(T @NonNull [] a) {
         int size = size();
         T[] data = a.length >= size ? a :
                 (T[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -154,7 +153,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          collection.
      */
     @Override
-    default boolean containsAll(@NotNull Collection<?> c) {
+    default boolean containsAll(@NonNull Collection<?> c) {
         for (Object item : c)
             if (! contains(item))
                 return false;
@@ -168,7 +167,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          for all elements in the specified collection.
      */
     @Override
-    default boolean addAll(@NotNull Collection<? extends E> c) {
+    default boolean addAll(@NonNull Collection<? extends E> c) {
         boolean changed = false;
         for (E item : c) {
             add(item);
@@ -184,7 +183,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          for all elements in the specified collection.
      */
     @Override
-    default boolean addAll(int index, @NotNull Collection<? extends E> c) {
+    default boolean addAll(int index, @NonNull Collection<? extends E> c) {
         boolean changed = false;
         for (E item : c) {
             add(index++, item);
@@ -200,7 +199,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          all elements that are in the specified collection.
      */
     @Override
-    default boolean removeAll(@NotNull Collection<?> c) {
+    default boolean removeAll(@NonNull Collection<?> c) {
         boolean changed = false;
         for (Object item : c) {
             if (remove(item))
@@ -216,7 +215,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          all elements that are not in the specified collection.
      */
     @Override
-    default boolean retainAll(@NotNull Collection<?> c) {
+    default boolean retainAll(@NonNull Collection<?> c) {
         boolean changed = false;
         for (E item : this) {
             if (!c.contains(item))
@@ -306,7 +305,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull ListIterator<E> listIterator() {
+    default @NonNull ListIterator<E> listIterator() {
         return listIterator(0);
     }
 
@@ -314,7 +313,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull ListIterator<E> listIterator(int index) {
+    default @NonNull ListIterator<E> listIterator(int index) {
         return new ListIterator<>() {
             int next = index; // Index of the next element to be returned
             int last = -1;    // Index of the last returned element
@@ -385,11 +384,10 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+    default @NonNull List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    @ApiStatus.Internal
     class SubList<E extends GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
         protected final List list;
         protected final int fromIndex;
