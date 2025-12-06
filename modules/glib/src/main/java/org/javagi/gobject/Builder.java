@@ -63,7 +63,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
     /**
      * List of all property values that are set
      */
-    private final ArrayList<@Nullable Value> values = new ArrayList<>();
+    private final ArrayList<Value> values = new ArrayList<>();
 
     /**
      * List of all signals that must be connected
@@ -87,7 +87,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      * @param value value of the property (a {@code GValue})
      */
     @Override
-    public void addBuilderProperty(String name, @Nullable Value value) {
+    public void addBuilderProperty(String name, Value value) {
         names.add(name);
         values.add(value);
     }
@@ -153,7 +153,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      *
      * @return a {@code GValue} array of property names
      */
-    public @Nullable Value [] getValues() {
+    public Value [] getValues() {
         return values.toArray(new Value[0]);
     }
 }

@@ -23,7 +23,6 @@ import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.*;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.FunctionDescriptor;
@@ -146,33 +145,10 @@ public class CallableGenerator {
                 if (generic && type.equals(ClassNames.G_OBJECT))
                     type = ClassNames.GENERIC_T;
 
-                if (isNullable(p))
-                    type = type.annotated(AnnotationSpec.builder(Nullable.class).build());
-
-                var spec = ParameterSpec.builder(type, generator.getName());
+                var spec = ParameterSpec.builder(generator.annotated(type), generator.getName());
                 builder.addParameter(spec.build());
             }
         }
-    }
-
-    /**
-     * Check if a parameter must be annotated as @Nullable.
-     * The module is @NullMarked so we only add @Nullable where required.
-     */
-    private static boolean isNullable(Parameter p) {
-        // Explicitly specified as not-null
-        if (p.notNull())
-            return false;
-
-        // Explicitly specified as null
-        if (p.nullable())
-            return true;
-
-        return switch (p.anyType()) {
-            case null -> true;            // callback can be null
-            case Array _ -> false;        // array is default not nullable
-            case Type t -> t.isPointer(); // pointer is default nullable
-        };
     }
 
     PartialStatement marshalParameters(boolean intAsLong) {
@@ -316,11 +292,8 @@ public class CallableGenerator {
         if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
         else if ((!ctor) || namedCtor) {
-            TypeName tn = new TypedValueGenerator(returnValue).getType();
-            if (returnValue.nullable())
-                builder.returns(tn.annotated(AnnotationSpec.builder(Nullable.class).build()));
-            else
-                builder.returns(tn);
+            var generator = new TypedValueGenerator(returnValue);
+            builder.returns(generator.annotated(generator.getType()));
         }
 
         // Parameters

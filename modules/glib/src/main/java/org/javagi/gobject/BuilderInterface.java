@@ -43,7 +43,7 @@ public interface BuilderInterface {
      * @param name  name of the property
      * @param value value of the property (a {@code GValue})
      */
-    void addBuilderProperty(String name, @Nullable Value value);
+    void addBuilderProperty(String name, Value value);
 
     /**
      * Add the provided signal to the builder

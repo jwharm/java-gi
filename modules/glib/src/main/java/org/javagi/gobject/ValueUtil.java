@@ -36,6 +36,7 @@ import org.javagi.interop.Interop;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static org.javagi.gobject.types.Types.*;
 import static org.gnome.gobject.GObjects.gtypeGetType;
@@ -105,7 +106,7 @@ public class ValueUtil {
 
         // Boxed type
         if (BoxedUtil.isBoxed(type)) {
-            MemorySegment address = src.getBoxed();
+            MemorySegment address = requireNonNull(src.getBoxed());
             var ctor = TypeCache.getConstructor(type, null);
             if (ctor == null)
                 throw new UnsupportedOperationException("Unsupported boxed type: " + type);

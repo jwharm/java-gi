@@ -212,13 +212,17 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 // don't call ref() from ref() itself
                 && (! "ref".equals(func.name()))
                 && (! "ref_sink".equals(func.name()))) {
-            if (target instanceof Class)
-                builder.addStatement("_returnValue.ref()");
-            else
+            if (target instanceof Class) {
+                if (checkNull())
+                    builder.addStatement("if (_returnValue != null) _returnValue.ref()");
+                else
+                    builder.addStatement("_returnValue.ref()");
+            } else {
                 // For interfaces and aliases, check if it's actually a GObject instance
                 builder.beginControlFlow("if (_returnValue instanceof $T _gobject)", ClassNames.G_OBJECT)
                        .addStatement("_gobject.ref()")
                        .endControlFlow();
+            }
         }
     }
 

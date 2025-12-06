@@ -21,6 +21,7 @@ package org.javagi.regress;
 
 import org.gnome.gi.regress.FooForeignStruct;
 import org.gnome.gi.regress.FooObject;
+import org.gnome.gi.regress.Regress;
 import org.gnome.gi.utility.*;
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Disabled;
@@ -84,7 +85,7 @@ public class TestFooVarious {
 
     @Test
     void garray() {
-        assertNull(fooTestArray());
+        assertThrows(NullPointerException.class, Regress::fooTestArray);
     }
 
     @Test

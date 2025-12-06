@@ -77,7 +77,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         var spec = MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(typeName)
+                .returns(annotated(typeName))
                 .addJavadoc("Read the value of the field {@code $L}.\n\n", f.name());
         if (isArray)
             spec.addJavadoc("@param length the number of {@code $L} to read", f.name());
@@ -133,7 +133,7 @@ public class FieldGenerator extends TypedValueGenerator {
         // Override the type of long values
         boolean isLong = type != null && type.isLong();
         TypeName typeName = isLong ? TypeName.INT : getType();
-        spec.addParameter(typeName, getName());
+        spec.addParameter(annotated(typeName), getName());
 
         if (f.allocatesMemory())
             spec.addJavadoc("@param _arena to control the memory allocation scope\n")
@@ -176,7 +176,7 @@ public class FieldGenerator extends TypedValueGenerator {
     public MethodSpec generateReadCopyMethod() {
         return MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(getType())
+                .returns(annotated(getType()))
                 .addJavadoc("""
                         Read the value of the field {@code $1L}.
                         
@@ -200,7 +200,7 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName())
-                .addParameter(getType(), getName())
+                .addParameter(annotated(getType()), getName())
                 .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
                         MemoryLayout.class, f.name())
                 .addStatement("$T _slice = handle().asSlice(_offset, $T.getMemoryLayout())",
@@ -227,7 +227,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         return MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(getType())
+                .returns(annotated(getType()))
                 .addJavadoc("""
                         Read the value of the field {@code $1L}.
                         
@@ -254,7 +254,7 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName())
-                .addParameter(getType(), getName())
+                .addParameter(annotated(getType()), getName())
                 .addParameter(Arena.class, "_arena")
                 .addStatement("$T _path = $T.PathElement.groupElement($S)",
                         MemoryLayout.PathElement.class, MemoryLayout.class, f.name())

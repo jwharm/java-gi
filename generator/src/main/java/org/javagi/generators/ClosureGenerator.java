@@ -37,6 +37,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Objects;
 
 import static org.javagi.util.Conversions.*;
 import static java.util.Comparator.comparing;
@@ -145,6 +146,10 @@ public class ClosureGenerator {
 
         // Try-catch block for uncaught exceptions
         upcall.beginControlFlow("try");
+
+        // Null-check the Method field
+        if (methodToInvoke.endsWith("invoke"))
+            upcall.addStatement("$T.requireNonNull($L, $S)", Objects.class, methodName, "No method override");
 
         /*
          * In the upcall method, memory allocations are only necessary for

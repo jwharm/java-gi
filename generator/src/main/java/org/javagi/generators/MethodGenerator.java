@@ -25,7 +25,6 @@ import org.javagi.gir.*;
 import org.javagi.util.Conversions;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
@@ -132,11 +131,8 @@ public class MethodGenerator {
         else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
         else {
-            TypeName tn = new TypedValueGenerator(returnValue).getType();
-            if (returnValue.nullable())
-                builder.returns(tn.annotated(AnnotationSpec.builder(Nullable.class).build()));
-            else
-                builder.returns(tn);
+            var generator = new TypedValueGenerator(returnValue);
+            builder.returns(generator.annotated(generator.getType()));
         }
 
         // Parameters

@@ -25,6 +25,7 @@ import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
@@ -59,19 +60,39 @@ class TypedValueGenerator {
         if (v instanceof InstanceParameter)
             return false;
 
-        if (v instanceof Parameter p &&
-                (p.notNull()
+        if (v instanceof Parameter p) {
+            if (p.notNull()
                     || p.varargs()
                     || p.isErrorParameter()
                     || p.isUserDataParameter()
                     || p.isDestroyNotifyParameter()
-                    || p.isArrayLengthParameter()))
-            return false;
+                    || p.isArrayLengthParameter())
+                return false;
+
+            if (p.nullable())
+                return true;
+        }
+
+        if (v instanceof ReturnValue rv) {
+            if (rv.anyType().isVoid())
+                return false;
+
+            if (rv.nullable())
+                return true;
+
+            if (rv.notNull())
+                return false;
+
+            // Returned arrays are not null
+            if (array != null)
+                return false;
+        }
 
         // A NULL GList is just empty
         if (type != null && type.checkIsGList())
             return false;
 
+        // It is nullable when it is not a primitive type
         return ! (type != null
                     && !type.isPointer()
                     && (type.isPrimitive()
@@ -79,6 +100,13 @@ class TypedValueGenerator {
                                 && a.anyType() instanceof Type t
                                 && t.isPrimitive())
                         || target instanceof EnumType));
+    }
+
+    TypeName annotated(TypeName typeName) {
+        if (checkNull())
+            return typeName.annotated(AnnotationSpec.builder(Nullable.class).build());
+        else
+            return typeName;
     }
 
     String transfer() {
