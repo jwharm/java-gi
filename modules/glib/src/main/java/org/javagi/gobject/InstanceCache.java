@@ -340,10 +340,10 @@ public class InstanceCache {
     public static void newGObject(GObject proxy,
                                   @Nullable Type objectType,
                                   long size,
-                                  @Nullable Object... properties) {
+                                  @Nullable Object @Nullable ... properties) {
         // Split varargs into first property name and the rest
         String first;
-        Object[] rest;
+        @Nullable Object[] rest;
         if (properties == null || properties.length == 0) {
             first = null;
             rest = new Object[] {};
@@ -369,7 +369,7 @@ public class InstanceCache {
                         (MemorySegment) (first == null ? MemorySegment.NULL
                                 : Interop.allocateNativeString(first, _arena)),
                         rest);
-                if (proxy.handle() == null)
+                if (MemorySegment.NULL.equals(proxy.handle()))
                     ADDRESS_FIELD.set(proxy, address.reinterpret(size));
 
                 // Ensure the new object is cached

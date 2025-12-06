@@ -86,7 +86,7 @@ public class SList<E> extends AbstractSequentialList<@Nullable E> implements Pro
      *                  safely be set to {@code null}.
      * @param ownership whether to free memory automatically
      */
-    public SList(@Nullable MemorySegment address,
+    public SList(MemorySegment address,
                  Function<MemorySegment, E> make,
                  @Nullable Consumer<E> free,
                  TransferOwnership ownership) {
@@ -333,7 +333,7 @@ public class SList<E> extends AbstractSequentialList<@Nullable E> implements Pro
          *
          * @param address the memory address of the native object
          */
-        public SListNode(@Nullable MemorySegment address) {
+        public SListNode(MemorySegment address) {
             super(Interop.reinterpret(address, getMemoryLayout().byteSize()));
         }
 

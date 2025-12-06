@@ -258,7 +258,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .varargs(true)
                 .addStatement("var constructor = $T.getConstructor(objectType, null)",
                         ClassNames.TYPE_CACHE)
-                .addStatement("var proxy = (T) constructor.apply(null)")
+                .addStatement("var proxy = (T) constructor.apply($T.NULL)", MemorySegment.class)
                 .addStatement("$T.newGObject(proxy, objectType, getMemoryLayout().byteSize(), propertyNamesAndValues)",
                         ClassNames.INSTANCE_CACHE)
                 .addStatement("return proxy")
@@ -297,7 +297,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("Creates a new $1L.", name())
                 .addModifiers(Modifier.PUBLIC)
-                .addStatement("super(($T) null)", MemorySegment.class)
+                .addStatement("super($T.NULL)", MemorySegment.class)
                 .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), (Object[]) null)",
                         ClassNames.INSTANCE_CACHE, ClassNames.TYPE_CACHE)
                 .build();

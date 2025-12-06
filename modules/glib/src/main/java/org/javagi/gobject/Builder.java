@@ -153,7 +153,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
      *
      * @return a {@code GValue} array of property names
      */
-    public Value @Nullable [] getValues() {
+    public @Nullable Value [] getValues() {
         return values.toArray(new Value[0]);
     }
 }

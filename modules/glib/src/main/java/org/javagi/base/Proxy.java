@@ -20,7 +20,6 @@
 package org.javagi.base;
 
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
 
@@ -36,5 +35,5 @@ public interface Proxy {
      *
      * @return the native memory address
      */
-    @Nullable MemorySegment handle();
+    MemorySegment handle();
 }

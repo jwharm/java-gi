@@ -633,7 +633,7 @@ public class Types {
         // Check for an annotation that overrides the type name
         if (cls.isAnnotationPresent(RegisteredType.class)) {
             var annotation = cls.getAnnotation(RegisteredType.class);
-            if (! "".equals(annotation.name())) {
+            if (!annotation.name().isEmpty()) {
                 typeNameInput = namespace + annotation.name();
             }
         }

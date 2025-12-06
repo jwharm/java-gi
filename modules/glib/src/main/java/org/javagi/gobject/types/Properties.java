@@ -42,6 +42,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.javagi.base.Constants.LOG_DOMAIN;
 import static org.javagi.gobject.annotations.Property.NOT_SET;
 import static java.lang.Character.isUpperCase;
@@ -594,7 +595,10 @@ public class Properties {
                                 "Error in %s.getProperty('%s'): Cannot write return-value " +
                                         "with Java type %s into GValue with GType %s\n",
                                 cls.getSimpleName(), name, output.getClass().getSimpleName(),
-                                value == null ? "null" : GObjects.typeName(value.readGType()));
+                                value == null
+                                        ? "null"
+                                        : requireNonNullElse(GObjects.typeName(value.readGType()),
+                                                             "null"));
                     }
                 }
             }, Arena.global());

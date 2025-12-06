@@ -616,6 +616,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
      */
     public boolean lookupExtended(@Nullable K lookupKey,
                                   @Nullable Out<K> origKey, @Nullable Out<V> value) {
+        requireNonNull(makeKey, "Key marshal was not setup");
         requireNonNull(makeValue, "Value marshal was not setup");
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _origKeyPointer = _arena.allocate(ValueLayout.ADDRESS);

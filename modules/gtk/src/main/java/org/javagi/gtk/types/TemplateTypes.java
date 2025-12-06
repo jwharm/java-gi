@@ -88,14 +88,14 @@ public class TemplateTypes {
 
         // Check if the GtkTemplate annotation overrides the type name
         var gtkTemplate = cls.getAnnotation(GtkTemplate.class);
-        if (! "".equals(gtkTemplate.name())) {
+        if (!gtkTemplate.name().isEmpty()) {
             typeNameInput = namespace + gtkTemplate.name();
         }
 
         // Check for a RegisteredType annotation that overrides the name
         else if (cls.isAnnotationPresent(RegisteredType.class)) {
             var registeredType = cls.getAnnotation(RegisteredType.class);
-            if (! "".equals(registeredType.name())) {
+            if (!registeredType.name().isEmpty()) {
                 typeNameInput = namespace + registeredType.name();
             }
         }
@@ -115,7 +115,7 @@ public class TemplateTypes {
         if (!field.isAnnotationPresent(GtkChild.class))
             throw new IllegalArgumentException();
         String name = field.getAnnotation(GtkChild.class).name();
-        return "".equals(name) ? field.getName() : name;
+        return name.isEmpty() ? field.getName() : name;
     }
 
     /**

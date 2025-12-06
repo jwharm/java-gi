@@ -60,13 +60,10 @@ public class BoxedUtil {
      */
     public static <T extends @Nullable Proxy>
     @Nullable MemorySegment copy(@Nullable Type type, T struct, long size) {
-        if (struct == null || struct.handle() == null)
+        if (struct == null)
             return null;
 
         MemorySegment handle = struct.handle();
-        if (handle == null)
-            return null;
-
         if (handle.equals(MemorySegment.NULL))
             return MemorySegment.NULL;
 
@@ -91,12 +88,13 @@ public class BoxedUtil {
     void free(@Nullable Type type, T struct, @Nullable Consumer<T> freeFunc) {
         if (struct == null)
             return;
+
         MemorySegment handle = struct.handle();
-        if (handle == null || handle.equals(MemorySegment.NULL))
+        if (handle.equals(MemorySegment.NULL))
             return;
 
         if (type != null && isBoxed(type))
-            GObjects.boxedFree(type, struct.handle());
+            GObjects.boxedFree(type, handle);
         else if (freeFunc != null)
             freeFunc.accept(struct);
     }

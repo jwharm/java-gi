@@ -45,10 +45,10 @@ import static java.util.Objects.requireNonNull;
 @NullMarked
 public class TypeCache {
 
-    private final static Map<Type, Function<@Nullable MemorySegment, ? extends Proxy>> typeRegister
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeRegister
             = new ConcurrentHashMap<>();
 
-    private final static Map<Type, Function<@Nullable MemorySegment, ? extends Proxy>> typeClassRegister
+    private final static Map<Type, Function<MemorySegment, ? extends Proxy>> typeClassRegister
             = new ConcurrentHashMap<>();
 
     private final static Map<Type, Function<Integer, ?>> enumTypeRegister
@@ -78,9 +78,9 @@ public class TypeCache {
      *                 {@code null} or a null-pointer
      */
     public static @Nullable Function<MemorySegment, ? extends Proxy>
-    getConstructor(@Nullable MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
+    getConstructor(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check on the memory address
-        if (address == null || address.equals(MemorySegment.NULL))
+        if (address.equals(MemorySegment.NULL))
             return null;
 
         // Read the TypeClass from memory
@@ -107,8 +107,8 @@ public class TypeCache {
      * @return         the constructor, or {@code null} if address is
      *                 {@code null} or a null-pointer
      */
-    public static @Nullable Function<@Nullable MemorySegment, ? extends Proxy>
-    getConstructor(Type type, @Nullable Function<@Nullable MemorySegment, ? extends Proxy> fallback) {
+    public static @Nullable Function<MemorySegment, ? extends Proxy>
+    getConstructor(Type type, @Nullable Function<MemorySegment, ? extends Proxy> fallback) {
         // Find the constructor in the typeRegister and return it
         Function<MemorySegment, ? extends Proxy> ctor = typeRegister.get(type);
         if (ctor != null)
@@ -116,7 +116,7 @@ public class TypeCache {
 
         // Get the class of the fallback constructor. Whatever constructor we
         // return, must produce instances derived from this class.
-        var cls = fallback == null ? null : fallback.apply(null).getClass();
+        var cls = fallback == null ? null : fallback.apply(MemorySegment.NULL).getClass();
 
         // Check parent type, unless it is a fundamental type (like GObject),
         // which would be the most generic and useless type we can use. So in
@@ -150,14 +150,14 @@ public class TypeCache {
 
     // Register and return the constructor registered for {@code type}, if it
     // produces an instance of {@code base}.
-    private static @Nullable Function<@Nullable MemorySegment, ? extends Proxy>
+    private static @Nullable Function<MemorySegment, ? extends Proxy>
     tryConstruct(@Nullable Class<?> base, Type type) {
         var ctor = typeRegister.get(type);
         if (base == null)
             return ctor;
 
         if (ctor != null) {
-            if (base.isAssignableFrom(ctor.apply(null).getClass())) {
+            if (base.isAssignableFrom(ctor.apply(MemorySegment.NULL).getClass())) {
                 typeRegister.put(type, ctor);
                 return ctor;
             }

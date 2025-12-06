@@ -34,7 +34,7 @@ public class ProxyInstance implements Proxy {
     /**
      * The native memory address
      */
-    private @Nullable MemorySegment address;
+    private MemorySegment address;
 
     /**
      * Create a new {@code ProxyInstance} object for an instance in native
@@ -42,7 +42,7 @@ public class ProxyInstance implements Proxy {
      *
      * @param address the memory address of the instance
      */
-    public ProxyInstance(@Nullable MemorySegment address) {
+    public ProxyInstance(MemorySegment address) {
         this.address = address;
     }
 
@@ -52,7 +52,7 @@ public class ProxyInstance implements Proxy {
      * @return the memory address of the instance
      */
     @Override
-    public @Nullable MemorySegment handle() {
+    public MemorySegment handle() {
         return address;
     }
 

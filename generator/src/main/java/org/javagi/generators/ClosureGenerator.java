@@ -234,7 +234,7 @@ public class ClosureGenerator {
         if (methodToInvoke.endsWith("invoke")) {
             upcall.nextControlFlow("catch ($T _ite)",
                     InvocationTargetException.class);
-            upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _ite.getCause().toString() + $S)",
+            upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _ite.getCause() + $S)",
                     ClassNames.G_LIB,
                     ClassNames.CONSTANTS,
                     ClassNames.G_LOG_LEVEL_FLAGS,
@@ -245,7 +245,7 @@ public class ClosureGenerator {
 
         // Catch other exceptions
         upcall.nextControlFlow("catch ($T _t)", Throwable.class);
-        upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _t.toString() + $S)",
+        upcall.addStatement("$T.log($T.LOG_DOMAIN, $T.LEVEL_WARNING, _t + $S)",
                 ClassNames.G_LIB,
                 ClassNames.CONSTANTS,
                 ClassNames.G_LOG_LEVEL_FLAGS,

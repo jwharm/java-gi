@@ -292,7 +292,7 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
      *         {@link MemorySegment#NULL} if the head is {@code null}.
      */
     @Override
-    public @Nullable MemorySegment handle() {
+    public MemorySegment handle() {
         return head == null ? MemorySegment.NULL : head.handle();
     }
 
@@ -312,7 +312,7 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
          *
          * @param address the memory address of the native object
          */
-        ListNode(@Nullable MemorySegment address) {
+        ListNode(MemorySegment address) {
             super(Interop.reinterpret(address, getMemoryLayout().byteSize()));
         }
 

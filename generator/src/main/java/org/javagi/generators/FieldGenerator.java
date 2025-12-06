@@ -19,12 +19,14 @@
 
 package org.javagi.generators;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -283,7 +285,8 @@ public class FieldGenerator extends TypedValueGenerator {
                         """, f.name())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
-                .addParameter(java.lang.reflect.Method.class, "method")
+                .addParameter(TypeName.get(java.lang.reflect.Method.class)
+                        .annotated(AnnotationSpec.builder(Nullable.class).build()), "method")
                 .addStatement("this._$LMethod = method", getName())
                 .addCode(new CallableGenerator(cb)
                                 .generateFunctionDescriptorDeclaration())

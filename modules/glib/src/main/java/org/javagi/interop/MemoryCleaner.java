@@ -82,7 +82,7 @@ public class MemoryCleaner {
      */
     public static void setFreeFunc(Proxy proxy, String freeFunc) {
         MemorySegment address = proxy.handle();
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (MemorySegment.NULL.equals(address))
             return;
 
         synchronized (cache) {
@@ -100,7 +100,7 @@ public class MemoryCleaner {
      */
     public static void setBoxedType(Proxy proxy, @Nullable Type boxedType) {
         MemorySegment address = proxy.handle();
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (MemorySegment.NULL.equals(address))
             return;
 
         synchronized (cache) {
@@ -117,7 +117,7 @@ public class MemoryCleaner {
      */
     public static void takeOwnership(Proxy proxy) {
         MemorySegment address = proxy.handle();
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (MemorySegment.NULL.equals(address))
             return;
 
         synchronized (cache) {
@@ -134,7 +134,7 @@ public class MemoryCleaner {
      */
     public static void yieldOwnership(Proxy proxy) {
         MemorySegment address = proxy.handle();
-        if (address == null || MemorySegment.NULL.equals(address))
+        if (MemorySegment.NULL.equals(address))
             return;
 
         synchronized (cache) {

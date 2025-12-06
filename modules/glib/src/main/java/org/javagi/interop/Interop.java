@@ -233,9 +233,8 @@ public class Interop {
      * @param  newSize new size for the MemorySegment
      * @return the same MemorySegment reinterpreted to at least {@code newSize}
      */
-    public static @Nullable MemorySegment reinterpret(@Nullable MemorySegment address,
-                                                      long newSize) {
-        if (address == null || address.byteSize() >= newSize)
+    public static MemorySegment reinterpret(MemorySegment address, long newSize) {
+        if (address.byteSize() >= newSize)
             return address;
         else
             return address.reinterpret(newSize);
@@ -1667,12 +1666,7 @@ public class Interop {
         MemorySegment[] addressArray = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
             Proxy p = array[i];
-            if (p == null)
-                addressArray[i] = NULL;
-            else {
-                MemorySegment handle = p.handle();
-                addressArray[i] = (handle == null ? NULL : handle);
-            }
+            addressArray[i] = (p == null ? NULL : p.handle());
         }
 
         return allocateNativeArray(addressArray, zeroTerminated, alloc);
@@ -1703,14 +1697,7 @@ public class Interop {
 
         for (int i = 0; i < array.length; i++) {
             Proxy p = array[i];
-            MemorySegment handle;
-            if (p == null)
-                handle = NULL;
-            else {
-                handle = p.handle();
-                if (handle == null)
-                    handle = NULL;
-            }
+            MemorySegment handle = (p == null ? NULL : p.handle());
 
             if (!NULL.equals(handle)) {
                 // Copy array element to the native array

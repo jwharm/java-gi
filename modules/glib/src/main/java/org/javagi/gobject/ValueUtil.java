@@ -95,7 +95,7 @@ public class ValueUtil {
         // GByteArray
         if (type.equals(BYTE_ARRAY)) {
             MemorySegment address = src.getBoxed();
-            ByteArray arr = new ByteArray(address);
+            ByteArray arr = new ByteArray(requireNonNullElse(address, MemorySegment.NULL));
             MemorySegment data = Interop.dereference(address);
             int length = arr.readLen();
             try (var arena = Arena.ofConfined()) {
