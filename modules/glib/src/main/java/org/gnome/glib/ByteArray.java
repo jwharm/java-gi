@@ -21,6 +21,9 @@ package org.gnome.glib;
 import org.javagi.base.ProxyInstance;
 import org.javagi.interop.Interop;
 import org.javagi.interop.MemoryCleaner;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
@@ -28,6 +31,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
+import static java.util.Objects.requireNonNull;
 import static org.gnome.glib.GLib.malloc;
 
 /**
@@ -35,6 +39,7 @@ import static org.gnome.glib.GLib.malloc;
  * automatically marshals {@code GByteArray} instances from and to java
  * {@code byte[]} primitives.
  */
+@NullMarked
 public class ByteArray extends ProxyInstance {
     static {
         GLib.javagi$ensureInitialized();
@@ -54,7 +59,7 @@ public class ByteArray extends ProxyInstance {
      *
      * @return the GType
      */
-    public static Type getType() {
+    public static @Nullable Type getType() {
         return Interop.getType("g_byte_array_get_type");
     }
 
@@ -104,12 +109,10 @@ public class ByteArray extends ProxyInstance {
      * @param data byte data for the array
      * @return a new {@code GByteArray}
      */
-    public static ByteArray take(byte[] data) {
+    public static ByteArray take(byte @Nullable [] data) {
         var instance = takeUnowned(data);
-        if (instance != null) {
-            MemoryCleaner.takeOwnership(instance);
-            MemoryCleaner.setFreeFunc(instance, "g_byte_array_unref");
-        }
+        MemoryCleaner.takeOwnership(instance);
+        MemoryCleaner.setFreeFunc(instance, "g_byte_array_unref");
         return instance;
     }
 
@@ -120,30 +123,33 @@ public class ByteArray extends ProxyInstance {
      * @param data byte data for the array
      * @return a new {@code GByteArray}
      */
-    public static ByteArray takeUnowned(byte[] data) {
-        if (data == null)
+    public static ByteArray takeUnowned(byte @Nullable [] data) {
+        if (data == null || data.length == 0)
             return new ByteArray();
 
         MemorySegment result;
         try {
-            MemorySegment segment = malloc(data.length).reinterpret(data.length);
+            MemorySegment segment = requireNonNull(malloc(data.length)).reinterpret(data.length);
             segment.asByteBuffer().put(data, 0, data.length);
             result = (MemorySegment) MethodHandles.g_byte_array_new_take.invokeExact(segment, (long) data.length);
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return MemorySegment.NULL.equals(result) ? null : new ByteArray(result);
+        return MemorySegment.NULL.equals(result) ? new ByteArray() : new ByteArray(result);
     }
 
     private static final class MethodHandles {
         static final VarHandle vh_len = getMemoryLayout().varHandle(
                 MemoryLayout.PathElement.groupElement("len"));
 
-        static final MethodHandle g_byte_array_new = Interop.downcallHandle("g_byte_array_new",
-                FunctionDescriptor.of(ValueLayout.ADDRESS), false);
+        static final MethodHandle g_byte_array_new = Interop.downcallHandle(
+                "g_byte_array_new",
+                FunctionDescriptor.of(ValueLayout.ADDRESS),
+                false);
 
         static final MethodHandle g_byte_array_new_take = Interop.downcallHandle(
-                "g_byte_array_new_take", FunctionDescriptor.of(ValueLayout.ADDRESS,
-                        ValueLayout.ADDRESS, ValueLayout.JAVA_LONG), false);
+                "g_byte_array_new_take",
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG),
+                false);
     }
 }

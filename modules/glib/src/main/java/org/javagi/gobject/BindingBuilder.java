@@ -141,7 +141,7 @@ public class BindingBuilder<S, T> {
      * Set the transformation function from this GObject to the {@code target},
      * or {@code null} to use the default.
      */
-    public BindingBuilder<S, T> transformTo(Function<S, T> transformTo) {
+    public BindingBuilder<S, T> transformTo(@Nullable Function<S, T> transformTo) {
         this.transformTo = transformTo;
         return this;
     }
@@ -150,7 +150,7 @@ public class BindingBuilder<S, T> {
      * Set the transformation function from the {@code target} to this GObject,
      * or {@code null} to use the default
      */
-    public BindingBuilder<S, T> transformFrom(Function<T, S> transformFrom) {
+    public BindingBuilder<S, T> transformFrom(@Nullable Function<T, S> transformFrom) {
         this.transformFrom = transformFrom;
         return this;
     }

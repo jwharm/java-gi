@@ -33,6 +33,8 @@ import java.lang.ref.Cleaner;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * This class keeps a cache of all memory addresses for which a Proxy object
  * was created (except for GObject instances; those are handled in the
@@ -59,18 +61,16 @@ public class MemoryCleaner {
      * @param proxy The proxy instance
      */
     private static Cached getOrRegister(Proxy proxy) {
-        MemorySegment address = proxy.handle();
-        synchronized (cache) {
-            Cached cached = cache.get(address);
-            if (cached == null) {
-                // Put the address in the cache
-                var finalizer = new StructFinalizer(address);
-                var cleanable = CLEANER.register(proxy, finalizer);
-                cached = new Cached(false, null, null, cleanable);
-                cache.put(address, cached);
-            }
-            return cached;
+        MemorySegment address = requireNonNull(proxy.handle());
+        Cached cached = cache.get(address);
+        if (cached == null) {
+            // Put the address in the cache
+            var finalizer = new StructFinalizer(address);
+            var cleanable = CLEANER.register(proxy, finalizer);
+            cached = new Cached(false, null, null, cleanable);
+            cache.put(address, cached);
         }
+        return cached;
     }
 
     /**
@@ -81,12 +81,13 @@ public class MemoryCleaner {
      * @param freeFunc the specialized cleanup function to call
      */
     public static void setFreeFunc(Proxy proxy, String freeFunc) {
+        MemorySegment address = proxy.handle();
+        if (address == null || MemorySegment.NULL.equals(address))
+            return;
+
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
-            cache.put(proxy.handle(), new Cached(cached.owned,
-                                                 freeFunc,
-                                                 cached.boxedType,
-                                                 cached.cleanable));
+            cache.put(address, new Cached(cached.owned, freeFunc, cached.boxedType, cached.cleanable));
         }
     }
 
@@ -97,13 +98,14 @@ public class MemoryCleaner {
      * @param proxy     the proxy instance
      * @param boxedType the boxed type
      */
-    public static void setBoxedType(Proxy proxy, Type boxedType) {
+    public static void setBoxedType(Proxy proxy, @Nullable Type boxedType) {
+        MemorySegment address = proxy.handle();
+        if (address == null || MemorySegment.NULL.equals(address))
+            return;
+
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
-            cache.put(proxy.handle(), new Cached(cached.owned,
-                                                 cached.freeFunc,
-                                                 boxedType,
-                                                 cached.cleanable));
+            cache.put(address, new Cached(cached.owned, cached.freeFunc, boxedType, cached.cleanable));
         }
     }
 
@@ -114,16 +116,13 @@ public class MemoryCleaner {
      * @param proxy  the proxy instance
      */
     public static void takeOwnership(Proxy proxy) {
-        // Don't try to take ownership of a null pointer
-        if (MemorySegment.NULL.equals(proxy.handle()))
+        MemorySegment address = proxy.handle();
+        if (address == null || MemorySegment.NULL.equals(address))
             return;
 
         synchronized (cache) {
             Cached cached = getOrRegister(proxy);
-            cache.put(proxy.handle(), new Cached(true,
-                                                 cached.freeFunc,
-                                                 cached.boxedType,
-                                                 cached.cleanable));
+            cache.put(address, new Cached(true, cached.freeFunc, cached.boxedType, cached.cleanable));
         }
     }
 
@@ -134,13 +133,14 @@ public class MemoryCleaner {
      * @param proxy  the proxy instance
      */
     public static void yieldOwnership(Proxy proxy) {
+        MemorySegment address = proxy.handle();
+        if (address == null || MemorySegment.NULL.equals(address))
+            return;
+
         synchronized (cache) {
-            Cached cached = cache.get(proxy.handle());
+            Cached cached = cache.get(address);
             if (cached != null) {
-                cache.put(proxy.handle(), new Cached(false,
-                                                     cached.freeFunc,
-                                                     cached.boxedType,
-                                                     cached.cleanable));
+                cache.put(address, new Cached(false, cached.freeFunc, cached.boxedType, cached.cleanable));
                 cached.cleanable.clean();
             }
         }
@@ -189,10 +189,8 @@ public class MemoryCleaner {
 
         private static final MethodHandle g_boxed_free = Interop.downcallHandle(
                 "g_boxed_free",
-                FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG,
-                                          ValueLayout.ADDRESS),
-                false
-        );
+                FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+                false);
 
         /**
          * This method is run by the {@link Cleaner} when the last Proxy object

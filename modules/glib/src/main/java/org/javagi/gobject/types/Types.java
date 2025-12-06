@@ -664,7 +664,7 @@ public class Types {
             // that only has a pointer to the parent class' memory layout.
             MemoryLayout parentLayout = getLayout(cls.getSuperclass());
             if (parentLayout == null)
-                throw new IllegalStateException("No memory layout definition found for class " + cls.getSimpleName());
+                throw new IllegalStateException("No memory layout definition found for class " + cls);
 
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_instance")
@@ -729,11 +729,11 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
-        requireNonNull(typeClass, "No TypeClass for class " + cls.getSimpleName());
+        requireNonNull(typeClass, "No TypeClass for class " + cls);
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeClass);
-        requireNonNull(parentLayout, "No memory layout for class " + typeClass.getSimpleName());
+        requireNonNull(parentLayout, "No memory layout for class " + typeClass);
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
@@ -752,11 +752,11 @@ public class Types {
         // Get the type-struct. This is an inner class that extends TypeInterface.
         // If the type-struct is unavailable, get it from the parent class.
         Class<? extends TypeInterface> typeIface = getTypeInterface(cls);
-        requireNonNull(typeIface, "No TypeInterface for interface " + cls.getSimpleName());
+        requireNonNull(typeIface, "No TypeInterface for interface " + cls);
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeIface);
-        requireNonNull(parentLayout, "No memory layout for interface " + typeIface.getSimpleName());
+        requireNonNull(parentLayout, "No memory layout for interface " + typeIface);
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("g_iface")
@@ -1012,10 +1012,8 @@ public class Types {
     public static Set<TypeFlags> getTypeFlags(Class<?> cls) {
         // Set type flags
         Set<TypeFlags> flags = EnumSet.noneOf(TypeFlags.class);
-        if (Modifier.isAbstract(cls.getModifiers()))
-            flags.add(TypeFlags.ABSTRACT);
-        if (Modifier.isFinal(cls.getModifiers()))
-            flags.add(TypeFlags.FINAL);
+        if (Modifier.isAbstract(cls.getModifiers())) flags.add(TypeFlags.ABSTRACT);
+        if (Modifier.isFinal(cls.getModifiers()))    flags.add(TypeFlags.FINAL);
         return flags;
     }
 
@@ -1168,9 +1166,9 @@ public class Types {
         }
 
         // Assert that `cls` is a Proxy class
-        if (! Proxy.class.isAssignableFrom(cls)) {
-            throw new IllegalArgumentException("Class does not implement Proxy interface");
-        }
+        if (! Proxy.class.isAssignableFrom(cls))
+            throw new IllegalArgumentException(cls + " does not implement Proxy interface");
+
         @SuppressWarnings("unchecked") // checked by isAssignableFrom()
         var proxy = (Class<? extends Proxy>) cls;
 
@@ -1222,9 +1220,8 @@ public class Types {
 
             Set<TypeFlags> flags = getTypeFlags(cls);
 
-            if ((!cls.isInterface()) && instanceLayout == null) {
-                throw new IllegalArgumentException("No instance layout found for " + cls.getSimpleName());
-            }
+            if ((!cls.isInterface()) && instanceLayout == null)
+                throw new IllegalArgumentException("No instance layout found for " + cls);
 
             // Override virtual methods and install properties and signals
             // before running a user-defined class init.
@@ -1289,14 +1286,13 @@ public class Types {
                         }
                     }
                 } catch (ClassCastException cce) {
-                    throw new IllegalArgumentException("Class %s does not derive from TypeInstance"
-                            .formatted(cls.getSimpleName()));
+                    throw new IllegalArgumentException(cls + " does not derive from TypeInstance");
                 }
             }
             return type;
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Cannot register " + cls.getSimpleName(), e);
+            throw new IllegalArgumentException("Cannot register " + cls, e);
         }
     }
 

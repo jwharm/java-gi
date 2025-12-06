@@ -19,6 +19,7 @@
 
 package org.javagi.gtk.types;
 
+import org.javagi.base.Constants;
 import org.javagi.base.FunctionPointer;
 import org.javagi.base.Proxy;
 import org.javagi.gobject.InstanceCache;
@@ -37,6 +38,8 @@ import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeFlags;
 import org.gnome.gobject.TypeInstance;
 import org.gnome.gtk.Widget;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -58,6 +61,7 @@ import static java.util.Objects.requireNonNull;
  * To register a Java class as a "regular" GObject class, see 
  * {@link Types#register(Class)}
  */
+@NullMarked
 public class TemplateTypes {
 
     /**
@@ -121,9 +125,7 @@ public class TemplateTypes {
      * @param  typeName the name of the struct
      * @return the generated memory layout
      */
-    private static MemoryLayout getTemplateInstanceLayout(Class<?> cls,
-                                                          String typeName) {
-
+    private static MemoryLayout getTemplateInstanceLayout(Class<?> cls, String typeName) {
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
         requireNonNull(parentLayout,
                 "No memory layout for class " + cls.getSimpleName());
@@ -161,9 +163,7 @@ public class TemplateTypes {
      * @param  oldSize  the total length of the layouts so far
      * @return the new length of the layouts
      */
-    private static long add(MemoryLayout layout,
-                            ArrayList<MemoryLayout> elements,
-                            long oldSize) {
+    private static long add(MemoryLayout layout, ArrayList<MemoryLayout> elements, long oldSize) {
         long size = oldSize;
         long s = layout.byteSize();
         if (size % s % 8 > 0) {
@@ -186,8 +186,7 @@ public class TemplateTypes {
      * The lambda will be run during class initialization.
      */
     private static <T extends Widget>
-    Consumer<GObject.ObjectClass> getTemplateClassInit(Class<T> cls,
-                                                       MemoryLayout layout) {
+    Consumer<GObject.ObjectClass> getTemplateClassInit(Class<T> cls, MemoryLayout layout) {
 
         var annotation = cls.getAnnotation(GtkTemplate.class);
         String ui = annotation.ui();
@@ -210,12 +209,12 @@ public class TemplateTypes {
                 try {
                     var parent = GObject.ObjectClass.getMemoryLayout();
                     var func = Overrides.lookupVirtualMethodParent(
-                                    object.handle(), parent, "dispose");
+                                    requireNonNull(object.handle()), parent, "dispose");
                     var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
                     var downcall = Interop.downcallHandle(func, desc);
                     downcall.invokeExact(object.handle());
                 } catch (Throwable _err) {
-                    throw new AssertionError("Unexpected exception occurred: ", _err);
+                    GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, _err + " in dispose");
                 }
             }, Arena.global());
 
@@ -352,10 +351,7 @@ public class TemplateTypes {
             );
 
         } catch (Exception e) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot register type %s: %s\n",
-                    cls == null ? "null" : cls.getName(), e.getMessage());
-            return null;
+            throw new TypeRegistrationException(e);
         }
     }
 
@@ -378,7 +374,7 @@ public class TemplateTypes {
         }
     }
 
-    private static void overrideDispose(Proxy instance, DisposeCallback dispose, Arena _arena) {
+    private static void overrideDispose(Proxy instance, @Nullable DisposeCallback dispose, Arena _arena) {
         GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("dispose"))
                 .set(instance.handle(), 0, (dispose == null ? MemorySegment.NULL : dispose.toCallback(_arena)));
     }
@@ -389,7 +385,7 @@ public class TemplateTypes {
 
         @SuppressWarnings("unused") // called from foreign function
         default void upcall(MemorySegment object) {
-            run((GObject) InstanceCache.getForType(object, GObject::new));
+            run((GObject) requireNonNull(InstanceCache.getForType(object, GObject::new)));
         }
 
         default MemorySegment toCallback(Arena arena) {

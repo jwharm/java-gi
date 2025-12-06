@@ -36,6 +36,7 @@ import org.javagi.interop.Interop;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.javagi.gobject.types.Types.*;
 import static org.gnome.gobject.GObjects.gtypeGetType;
 import static org.gnome.gobject.GObjects.typeIsA;
@@ -87,7 +88,9 @@ public class ValueUtil {
 
         // GStrv
         if (type.equals(STRV))
-            return Interop.getStringArrayFrom(src.getBoxed(), TransferOwnership.NONE);
+            return Interop.getStringArrayFrom(
+                    requireNonNullElse(src.getBoxed(), MemorySegment.NULL),
+                    TransferOwnership.NONE);
 
         // GByteArray
         if (type.equals(BYTE_ARRAY)) {
@@ -105,7 +108,7 @@ public class ValueUtil {
             MemorySegment address = src.getBoxed();
             var ctor = TypeCache.getConstructor(type, null);
             if (ctor == null)
-                throw new UnsupportedOperationException("Unsupported boxed type: " + GObjects.typeName(type));
+                throw new UnsupportedOperationException("Unsupported boxed type: " + type);
             return ctor.apply(address);
         }
 
@@ -114,7 +117,7 @@ public class ValueUtil {
             int value = src.getEnum();
             var ctor = TypeCache.getEnumConstructor(type);
             if (ctor == null)
-                throw new UnsupportedOperationException("Unsupported enum type: " + GObjects.typeName(type));
+                throw new UnsupportedOperationException("Unsupported enum type: " + type);
             return ctor.apply(value);
         }
 
@@ -123,11 +126,11 @@ public class ValueUtil {
             int value = src.getFlags();
             var ctor = TypeCache.getEnumConstructor(type);
             if (ctor == null)
-                throw new UnsupportedOperationException("Unsupported flags type: " + GObjects.typeName(type));
+                throw new UnsupportedOperationException("Unsupported flags type: " + type);
             return ctor.apply(value);
         }
 
-        throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
+        throw new UnsupportedOperationException("Unsupported type: " + type);
     }
 
     /**
@@ -173,7 +176,7 @@ public class ValueUtil {
         else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
         else if (typeIsA(type, FLAGS))        dest.setFlags(flagsToInt(src));
         else if (BoxedUtil.isBoxed(type))     dest.setBoxed(((Proxy) src).handle());
-        else throw new UnsupportedOperationException("Unsupported type: " + GObjects.typeName(type));
+        else throw new UnsupportedOperationException("Unsupported type: " + type);
 
         return true;
     }

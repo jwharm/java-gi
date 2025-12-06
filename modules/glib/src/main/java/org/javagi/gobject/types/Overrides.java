@@ -98,7 +98,6 @@ public class Overrides {
      */
     public static <TC extends TypeClass>
     @Nullable Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
-
         Class<TC> typeStruct;
         try {
             typeStruct = Types.getTypeClass(cls);
@@ -171,8 +170,7 @@ public class Overrides {
      */
     private static Method findMethod(Class<?> cls,
                                      String methodName,
-                                     Class<?>... paramTypes)
-            throws NoSuchMethodException {
+                                     Class<?>... paramTypes) throws NoSuchMethodException {
         Class<?> currentClass = cls;
         while (currentClass != null) {
             try {
@@ -183,6 +181,7 @@ public class Overrides {
                 currentClass = currentClass.getSuperclass();
             }
         }
+
         // Method not found in class hierarchy
         throw new NoSuchMethodException("Method %s not found in class hierarchy."
                 .formatted(methodName));

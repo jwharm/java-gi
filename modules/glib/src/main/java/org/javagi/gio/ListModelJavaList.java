@@ -102,7 +102,7 @@ public interface ListModelJavaList<E extends @Nullable GObject> extends List<E> 
      * {@inheritDoc}
      */
     @Override
-    default Object [] toArray() {
+    default @Nullable Object [] toArray() {
         return toArray(new Object[0]);
     }
 
@@ -111,7 +111,7 @@ public interface ListModelJavaList<E extends @Nullable GObject> extends List<E> 
      */
     @Override
     @SuppressWarnings("unchecked") // Unchecked casts are unavoidable here
-    default <T extends @Nullable Object> T @Nullable [] toArray(T @Nullable [] a) {
+    default <T extends @Nullable Object> @Nullable T [] toArray(@Nullable T [] a) {
         int size = size();
         T[] data = a.length >= size ? a :
                 (T[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -390,7 +390,7 @@ public interface ListModelJavaList<E extends @Nullable GObject> extends List<E> 
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    class SubList<E extends GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
         protected final List list;
         protected final int fromIndex;
         protected int toIndex;

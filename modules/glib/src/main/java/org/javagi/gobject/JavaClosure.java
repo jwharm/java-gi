@@ -19,7 +19,10 @@
 
 package org.javagi.gobject;
 
+import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -29,7 +32,11 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.gobject.Closure;
 import org.gnome.gobject.Value;
+import org.javagi.interop.Interop;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static org.javagi.base.Constants.LOG_DOMAIN;
 
 /**
@@ -37,15 +44,14 @@ import static org.javagi.base.Constants.LOG_DOMAIN;
  * In most cases, the callback will be invoked using reflection. For two common 
  * cases (Runnable and BooleanSupplier), the callback will be invoked directly.
  */
+@NullMarked
 public class JavaClosure extends Closure {
 
     private boolean ignoreFirstParameter = false;
 
     // Take ownership of the allocated memory
     private JavaClosure(MemorySegment address) {
-        super(address);
-        ref();
-        sink();
+        super(Interop.reinterpret(address, Closure.getMemoryLayout().byteSize()));
     }
 
     /**
@@ -67,9 +73,8 @@ public class JavaClosure extends Closure {
      * @param callback a callback with signature {@code void run()}
      */
     public JavaClosure(Runnable callback) {
-        this(simple((int) getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, paramValues, hint, data) ->
-                callback.run());
+        this(allocateAndInitClosure());
+        setMarshal((_, _, _, _, _) -> callback.run());
     }
     
     /**
@@ -79,8 +84,8 @@ public class JavaClosure extends Closure {
      * @param callback a callback with signature {@code boolean run()}
      */
     public JavaClosure(BooleanSupplier callback) {
-        this(simple((int) getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, paramValues, hint, data) -> {
+        this(allocateAndInitClosure());
+        setMarshal((_, returnValue, _, _, _) -> {
             if (returnValue != null)
                 returnValue.setBoolean(callback.getAsBoolean());
         });
@@ -110,11 +115,9 @@ public class JavaClosure extends Closure {
      * @throws IllegalArgumentException if {@code cls} is not a functional
      *                                  interface
      */
-    public static Method getSingleMethod(Class<?> cls)
-            throws IllegalArgumentException {
-
+    public static Method getSingleMethod(Class<?> cls) throws IllegalArgumentException {
         if (cls.isEnum() || cls.isArray())
-            throw new IllegalArgumentException(cls + " is not a functional interface");
+            throw new IllegalArgumentException(cls + " is an enum or array");
 
         Method samMethod = null;
         for (Method method : cls.getDeclaredMethods()) {
@@ -123,13 +126,13 @@ public class JavaClosure extends Closure {
 
             // If there is more than one SAM, return null (ambiguous)
             if (samMethod != null)
-                throw new IllegalArgumentException(cls + " is not a functional interface: more than one method found.");
+                throw new IllegalArgumentException(cls + " has more then one instance method");
 
             samMethod = method;
         }
         // Check that a SAM exists
         if (samMethod == null)
-            throw new IllegalArgumentException(cls + " is not a functional interface: method not found.");
+            throw new IllegalArgumentException(cls + " does not have an instance method");
 
         return samMethod;
     }
@@ -146,9 +149,11 @@ public class JavaClosure extends Closure {
      * @param method   the method to invoke.
      *                 See {@link Method#invoke(Object, Object...)}
      */
-    public JavaClosure(Object instance, Method method) {
-        this(simple((int) getMemoryLayout().byteSize(), null).handle());
-        setMarshal((closure, returnValue, paramValues, hint, data) -> {
+    public JavaClosure(@Nullable Object instance, Method method) {
+        this(allocateAndInitClosure());
+        requireNonNull(method);
+
+        setMarshal((_, returnValue, paramValues, _, _) -> {
             try {
                 // Convert the parameter Values into Java Objects
                 Object[] parameterObjects;
@@ -188,11 +193,26 @@ public class JavaClosure extends Closure {
                     LOG_DOMAIN,
                     LogLevelFlags.LEVEL_CRITICAL,
                     "JavaClosure: Cannot invoke method %s in class %s: %s\n",
-                    method == null ? "null" : method.getName(),
+                    method.getName(),
                     instance == null ? "null" : instance.getClass().getName(),
                     e.toString()
                 );
             }
         });
     }
+
+    private static MemorySegment allocateAndInitClosure() {
+        try {
+            return (MemorySegment) g_closure_new_simple.invokeExact(
+                    (int) Closure.getMemoryLayout().byteSize(),
+                    MemorySegment.NULL);
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
+        }
+    }
+
+    private static final MethodHandle g_closure_new_simple = Interop.downcallHandle(
+            "g_closure_new_simple",
+            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS),
+            false);
 }

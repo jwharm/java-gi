@@ -104,7 +104,7 @@ public abstract class Alias<T> {
      * @param  array the array of Alias objects
      * @return an array of MemorySegments
      */
-    public static MemorySegment @Nullable [] getAddressValues(Alias<MemorySegment>[] array) {
+    public static MemorySegment [] getAddressValues(Alias<MemorySegment>[] array) {
         MemorySegment[] values = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
             values[i] = array[i].getValue();

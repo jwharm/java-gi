@@ -58,7 +58,8 @@ public class BoxedUtil {
      * @return the newly created copy of {@code struct}. The caller has
      *         ownership and is responsible for freeing it.
      */
-    public static <T extends @Nullable Proxy> @Nullable MemorySegment copy(@Nullable Type type, T struct, long size) {
+    public static <T extends @Nullable Proxy>
+    @Nullable MemorySegment copy(@Nullable Type type, T struct, long size) {
         if (struct == null || struct.handle() == null)
             return null;
 
@@ -86,7 +87,8 @@ public class BoxedUtil {
      * @param freeFunc a function that will free {@code struct} (only used when
      *                 {@code type} is not a boxed type)
      */
-    public static <T extends @Nullable Proxy> void free(@Nullable Type type, T struct, @Nullable Consumer<T> freeFunc) {
+    public static <T extends @Nullable Proxy>
+    void free(@Nullable Type type, T struct, @Nullable Consumer<T> freeFunc) {
         if (struct == null)
             return;
         MemorySegment handle = struct.handle();

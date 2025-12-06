@@ -93,7 +93,7 @@ public interface ListModelJavaListSpliceable<E extends @Nullable GObject> extend
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    class SubList<E extends GObject, List extends ListModelJavaListSpliceable<E>>
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaListSpliceable<E>>
             extends ListModelJavaListMutable.SubList<E, List>
             implements ListModelJavaListSpliceable<E> {
 

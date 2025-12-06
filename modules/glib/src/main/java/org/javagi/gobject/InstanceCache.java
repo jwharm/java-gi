@@ -42,6 +42,8 @@ import org.javagi.base.Proxy;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Caches TypeInstances so the same instance is used for the same memory
  * address.
@@ -66,7 +68,7 @@ public class InstanceCache {
                 this(new WeakReference<>(proxy));
             }
             public T get() {
-                return proxy.get();
+                return requireNonNull(proxy.get());
             }
         }
 
@@ -338,11 +340,11 @@ public class InstanceCache {
     public static void newGObject(GObject proxy,
                                   @Nullable Type objectType,
                                   long size,
-                                  Object... properties) {
+                                  @Nullable Object... properties) {
         // Split varargs into first property name and the rest
         String first;
         Object[] rest;
-        if (properties.length == 0) {
+        if (properties == null || properties.length == 0) {
             first = null;
             rest = new Object[] {};
         } else {

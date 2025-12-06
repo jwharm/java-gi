@@ -112,7 +112,7 @@ public interface ListModelJavaListMutable<E extends @Nullable GObject> extends L
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    class SubList<E extends GObject, List extends ListModelJavaListMutable<E>>
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaListMutable<E>>
             extends ListModelJavaList.SubList<E, List>
             implements ListModelJavaListMutable<E> {
 

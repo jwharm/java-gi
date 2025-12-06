@@ -33,10 +33,13 @@ import org.gnome.glib.*;
 import org.javagi.base.*;
 
 import org.javagi.base.Enumeration;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.*;
+import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static org.javagi.base.TransferOwnership.*;
 
 /**
@@ -44,6 +47,7 @@ import static org.javagi.base.TransferOwnership.*;
  * code.
  */
 @SuppressWarnings("unused") // Not all marshaling methods are used currently.
+@NullMarked
 public class Interop {
 
     private final static int INT_UNBOUNDED = Integer.MAX_VALUE;
@@ -57,6 +61,20 @@ public class Interop {
     private final static FunctionDescriptor GET_TYPE_FDESC = FunctionDescriptor.of(JAVA_LONG);
 
     private static SymbolLookup symbolLookup = LINKER.defaultLookup();
+
+    private final static MethodHandle FUNCTION_NOT_FOUND_MH;
+
+    static {
+        try {
+            FUNCTION_NOT_FOUND_MH = MethodHandles.lookup().findStatic(
+                    Interop.class,
+                    "functionNotFound",
+                    MethodType.methodType(Object.class, Object[].class)
+            );
+        } catch (ReflectiveOperationException e) {
+            throw new InteropException(e);
+        }
+    }
 
     public static boolean longAsInt() {
         return LONG_AS_INT;
@@ -98,7 +116,19 @@ public class Interop {
     public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, boolean variadic) {
         return symbolLookup.find(name).map(addr -> variadic
                 ? VarargsInvoker.create(addr, fdesc)
-                : LINKER.downcallHandle(addr, fdesc)).orElse(null);
+                : LINKER.downcallHandle(addr, fdesc)).orElse(FUNCTION_NOT_FOUND_MH);
+    }
+
+    /**
+     * A MethodHandle to this function is returned when a downcall handle was
+     * requested for a foreign function that was not found by the linker.
+     *
+     * @param args ignored
+     * @return     ignored
+     * @throws InteropException always thrown
+     */
+    public static Object functionNotFound(Object[] args) {
+        throw new InteropException("Cannot call foreign function: symbol was not found");
     }
 
     /**
@@ -109,13 +139,12 @@ public class Interop {
      * @param  fdesc   function descriptor of the native function
      * @param  options linker options
      * @return the newly created MethodHandle
-     * @throws NullPointerException when {@code symbol} or {@code fdesc} is null
+     * @throws NullPointerException when {@code symbol} is null
      */
     public static MethodHandle downcallHandle(MemorySegment symbol,
                                               FunctionDescriptor fdesc,
                                               Linker.Option... options) {
-        if (symbol == null || fdesc == null)
-            throw new NullPointerException();
+        requireNonNull(symbol);
         return LINKER.downcallHandle(symbol, fdesc, options);
     }
 
@@ -204,7 +233,8 @@ public class Interop {
      * @param  newSize new size for the MemorySegment
      * @return the same MemorySegment reinterpreted to at least {@code newSize}
      */
-    public static MemorySegment reinterpret(MemorySegment address, long newSize) {
+    public static @Nullable MemorySegment reinterpret(@Nullable MemorySegment address,
+                                                      long newSize) {
         if (address == null || address.byteSize() >= newSize)
             return address;
         else
@@ -218,7 +248,7 @@ public class Interop {
      * @return the value of the pointer
      * @throws NullPointerException when the pointer is null or references null
      */
-    public static MemorySegment dereference(MemorySegment pointer) {
+    public static MemorySegment dereference(@Nullable MemorySegment pointer) {
         checkNull(pointer);
         return pointer.reinterpret(ADDRESS.byteSize()).get(ADDRESS, 0);
     }
@@ -243,7 +273,7 @@ public class Interop {
      * @param pointer the pointer to check
      * @throws NullPointerException when the check failed
      */
-    public static void checkNull(MemorySegment pointer) {
+    public static void checkNull(@Nullable MemorySegment pointer) {
         if (pointer == null
                 || pointer.equals(NULL)
                 || pointer.reinterpret(ADDRESS.byteSize()).get(ADDRESS, 0).equals(NULL))
@@ -255,13 +285,13 @@ public class Interop {
      *
      * @return the gtype from the provided get-type function
      */
-    public static @Nullable Type getType(String getTypeFunction) {
+    public static @Nullable Type getType(@Nullable String getTypeFunction) {
         if (getTypeFunction == null)
             return null;
 
         try {
             MethodHandle handle = downcallHandle(getTypeFunction, GET_TYPE_FDESC, false);
-            if (handle == null)
+            if (handle == FUNCTION_NOT_FOUND_MH)
                 return null;
             return new Type((long) handle.invokeExact());
         } catch (Throwable err) {
@@ -280,7 +310,8 @@ public class Interop {
      * @return the allocated MemorySegment with the native utf8 string, or
      *         {@link MemorySegment#NULL}
      */
-    public static MemorySegment allocateNativeString(String string, SegmentAllocator alloc) {
+    public static MemorySegment allocateNativeString(@Nullable String string,
+                                                     SegmentAllocator alloc) {
         return string == null ? NULL : alloc.allocateFrom(string);
     }
 
@@ -294,7 +325,7 @@ public class Interop {
      *         must be freed with {@code g_free()}, or
      *         {@link MemorySegment#NULL}
      */
-    public static MemorySegment allocateUnownedString(String string) {
+    public static MemorySegment allocateUnownedString(@Nullable String string) {
         if (string == null)
             return NULL;
 
@@ -319,7 +350,7 @@ public class Interop {
      *                 (a {@code NULL}-terminated {@code char*})
      * @return a String or null
      */
-    public static String getStringFrom(MemorySegment address) {
+    public static @Nullable String getStringFrom(MemorySegment address) {
         return getStringFrom(address, NONE);
     }
 
@@ -333,7 +364,7 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return a String or null
      */
-    public static String getStringFrom(MemorySegment address, TransferOwnership transfer) {
+    public static @Nullable String getStringFrom(MemorySegment address, TransferOwnership transfer) {
         if (NULL.equals(address))
             return null;
 
@@ -367,7 +398,7 @@ public class Interop {
      * @return the resulting boolean
      */
     public static boolean getBooleanFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return false;
 
         try {
@@ -398,7 +429,7 @@ public class Interop {
      * @return the resulting byte
      */
     public static byte getByteFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -429,7 +460,7 @@ public class Interop {
      * @return the resulting char
      */
     public static char getCharacterFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -460,7 +491,7 @@ public class Interop {
      * @return the resulting double
      */
     public static double getDoubleFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -491,7 +522,7 @@ public class Interop {
      * @return the resulting float
      */
     public static float getFloatFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -522,7 +553,7 @@ public class Interop {
      * @return the resulting integer
      */
     public static int getIntegerFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -553,7 +584,7 @@ public class Interop {
      * @return the resulting long
      */
     public static long getLongFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -584,7 +615,7 @@ public class Interop {
      * @return the resulting short
      */
     public static short getShortFrom(MemorySegment address, TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return 0;
 
         try {
@@ -632,7 +663,7 @@ public class Interop {
                                     : alloc.allocateFrom(JAVA_LONG, l);
             case Short s     -> alloc.allocateFrom(JAVA_SHORT, s);
             // proxy instance
-            case Proxy p     -> p.handle();
+            case Proxy p     -> requireNonNullElse(p.handle(), NULL);
             // gtype
             case Type t      -> MemorySegment.ofAddress(t.getValue()); // GTYPE_TO_POINTER()
             // alias
@@ -657,16 +688,16 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of Strings
      */
-    public static String[] getStringArrayFrom(MemorySegment address,
-                                              int length,
-                                              TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static @Nullable String @Nullable [] getStringArrayFrom(
+            MemorySegment address, int length, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
 
-        String[] result = new String[length];
+        var result = new @Nullable String[length];
         for (int i = 0; i < length; i++) {
             MemorySegment ptr = array.getAtIndex(ADDRESS, i);
             result[i] = getStringFrom(ptr);
@@ -687,14 +718,15 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of Strings
      */
-    public static String[] getStringArrayFrom(MemorySegment address,
-                                              TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static @Nullable String @Nullable [] getStringArrayFrom(
+            MemorySegment address, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
 
-        ArrayList<String> result = new ArrayList<>();
+        ArrayList<@Nullable String> result = new ArrayList<>();
         long offset = 0;
         while (true) {
             MemorySegment ptr = array.get(ADDRESS, offset);
@@ -720,14 +752,15 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return two-dimensional array of Strings
      */
-    public static String[][] getStrvArrayFrom(MemorySegment address,
-                                              TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static @Nullable String @Nullable [] @Nullable [] getStrvArrayFrom(
+            MemorySegment address, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
 
-        ArrayList<String[]> result = new ArrayList<>();
+        var result = new ArrayList<@Nullable String @Nullable []>();
         long offset = 0;
         while (true) {
             MemorySegment ptr = array.get(ADDRESS, offset);
@@ -751,16 +784,16 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return two-dimensional array of Strings
      */
-    public static String[][] getStrvArrayFrom(MemorySegment address,
-                                              int length,
-                                              TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static @Nullable String @Nullable [] @Nullable [] getStrvArrayFrom(
+            MemorySegment address, int length, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
 
-        ArrayList<String[]> result = new ArrayList<>();
+        var result = new ArrayList<@Nullable String @Nullable []>();
         long offset = 0;
         for (int i = 0; i < length; i++) {
             MemorySegment ptr = array.get(ADDRESS, offset);
@@ -782,15 +815,15 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of pointers
      */
-    public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
-                                                      int length,
-                                                      TransferOwnership transfer) {
+    public static MemorySegment @Nullable [] getAddressArrayFrom(
+            MemorySegment address, int length, TransferOwnership transfer) {
 
-        if (address == null || NULL.equals(address))
+        if (NULL.equals(address))
             return null;
 
         long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
 
         MemorySegment[] result = new MemorySegment[length];
         for (int i = 0; i < length; i++)
@@ -810,12 +843,13 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of pointers
      */
-    public static MemorySegment[] getAddressArrayFrom(MemorySegment address,
-                                                      TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static MemorySegment @Nullable [] getAddressArrayFrom(
+            MemorySegment address, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
 
         ArrayList<MemorySegment> result = new ArrayList<>();
         long offset = 0;
@@ -844,10 +878,8 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of booleans
      */
-    public static boolean[] getBooleanArrayFrom(MemorySegment address,
-                                                long length,
-                                                Arena arena,
-                                                TransferOwnership transfer) {
+    public static boolean @Nullable [] getBooleanArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         int[] intArray = getIntegerArrayFrom(address, length, arena, transfer);
         if (intArray == null)
             return null;
@@ -869,11 +901,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of bytes
      */
-    public static byte[] getByteArrayFrom(MemorySegment address,
-                                          long length,
-                                          Arena arena,
-                                          TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static byte @Nullable [] getByteArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         byte[] array = address.reinterpret(length, arena, null).toArray(JAVA_BYTE);
@@ -892,10 +922,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of bytes
      */
-    public static byte[] getByteArrayFrom(MemorySegment address,
-                                          Arena arena,
-                                          TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static byte @Nullable [] getByteArrayFrom(
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         // Find the null byte
@@ -917,11 +946,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of chars
      */
-    public static char[] getCharacterArrayFrom(MemorySegment address,
-                                               long length,
-                                               Arena arena,
-                                               TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static char @Nullable [] getCharacterArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_CHAR.byteSize();
@@ -942,11 +969,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of doubles
      */
-    public static double[] getDoubleArrayFrom(MemorySegment address,
-                                              long length,
-                                              Arena arena,
-                                              TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static double @Nullable [] getDoubleArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_DOUBLE.byteSize();
@@ -967,11 +992,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of floats
      */
-    public static float[] getFloatArrayFrom(MemorySegment address,
-                                            long length,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static float @Nullable [] getFloatArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_FLOAT.byteSize();
@@ -991,10 +1014,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of floats
      */
-    public static float[] getFloatArrayFrom(MemorySegment address,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static float @Nullable [] getFloatArrayFrom(
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         // Find the null byte
@@ -1016,11 +1038,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of integers
      */
-    public static int[] getIntegerArrayFrom(MemorySegment address,
-                                            long length,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static int @Nullable [] getIntegerArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_INT.byteSize();
@@ -1040,10 +1060,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of integers
      */
-    public static int[] getIntegerArrayFrom(MemorySegment address,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static int @Nullable [] getIntegerArrayFrom(
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         // Find the null byte
@@ -1065,11 +1084,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of longs
      */
-    public static long[] getLongArrayFrom(MemorySegment address,
-                                          long length,
-                                          Arena arena,
-                                          TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static long @Nullable [] getLongArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_LONG.byteSize();
@@ -1089,10 +1106,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of longs
      */
-    public static long[] getLongArrayFrom(MemorySegment address,
-                                          Arena arena,
-                                          TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static long @Nullable [] getLongArrayFrom(
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         // Find the null byte
@@ -1114,11 +1130,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of shorts
      */
-    public static short[] getShortArrayFrom(MemorySegment address,
-                                            long length,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static short @Nullable [] getShortArrayFrom(
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         long size = JAVA_SHORT.byteSize();
@@ -1139,10 +1153,9 @@ public class Interop {
      * @param  transfer ownership transfer
      * @return array of shorts
      */
-    public static short[] getShortArrayFrom(MemorySegment address,
-                                            Arena arena,
-                                            TransferOwnership transfer) {
-        if (address == null || NULL.equals(address))
+    public static short @Nullable [] getShortArrayFrom(
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
+        if (NULL.equals(address))
             return null;
 
         // Find the null byte
@@ -1167,13 +1180,14 @@ public class Interop {
      * @return array of Proxy instances
      */
     public static <T extends Proxy>
-    T[] getProxyArrayFrom(MemorySegment address,
-                          Class<T> cls,
-                          Function<MemorySegment, T> make) {
-        if (address == null || NULL.equals(address))
+    T @Nullable [] getProxyArrayFrom(MemorySegment address,
+                                     Class<T> cls,
+                                     Function<MemorySegment, T> make) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
         long idx = 0;
         while (!NULL.equals(array.getAtIndex(ADDRESS, idx))) {
             idx++;
@@ -1194,15 +1208,16 @@ public class Interop {
      * @return array of Proxy instances
      */
     public static <T extends Proxy>
-    T[] getProxyArrayFrom(MemorySegment address,
-                          int length,
-                          Class<T> cls,
-                          Function<MemorySegment, T> make) {
-        if (address == null || NULL.equals(address))
+    T @Nullable [] getProxyArrayFrom(MemorySegment address,
+                                     int length,
+                                     Class<T> cls,
+                                     Function<MemorySegment, T> make) {
+        if (NULL.equals(address))
             return null;
 
         long size = AddressLayout.ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -1224,14 +1239,15 @@ public class Interop {
      * @return array of Proxy instances
      */
     public static <T extends Proxy>
-    T[] getStructArrayFrom(MemorySegment address,
-                           Class<T> cls,
-                           Function<MemorySegment, T> make,
-                           MemoryLayout layout) {
-        if (address == null || NULL.equals(address))
+    T @Nullable [] getStructArrayFrom(MemorySegment address,
+                                      Class<T> cls,
+                                      Function<MemorySegment, T> make,
+                                      MemoryLayout layout) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
         long size = layout.byteSize();
         long idx = 0;
         while (!isNullFilled(array, idx * size, size)) {
@@ -1260,15 +1276,16 @@ public class Interop {
      * @return array of Proxy instances
      */
     public static <T extends Proxy>
-    T[] getStructArrayFrom(MemorySegment address,
-                           int length,
-                           Class<T> cls,
-                           Function<MemorySegment, T> make,
-                           MemoryLayout layout) {
-        if (address == null || NULL.equals(address))
+    T @Nullable [] getStructArrayFrom(MemorySegment address,
+                                      int length,
+                                      Class<T> cls,
+                                      Function<MemorySegment, T> make,
+                                      MemoryLayout layout) {
+        if (NULL.equals(address))
             return null;
 
         MemorySegment array = reinterpret(address, layout.byteSize() * length);
+        requireNonNull(array);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         List<MemorySegment> elements = array.elements(layout).toList();
@@ -1291,15 +1308,14 @@ public class Interop {
      * @param  <T>     the type to construct
      * @return array of constructed instances
      */
-    public static <T> T[] getArrayFromIntPointer(MemorySegment address,
-                                                 int length,
-                                                 Class<T> cls,
-                                                 Function<Integer, T> make) {
-        if (address == null || NULL.equals(address))
+    public static <T> T @Nullable [] getArrayFromIntPointer(
+            MemorySegment address, int length, Class<T> cls, Function<Integer, T> make) {
+        if (NULL.equals(address))
             return null;
 
         long size = AddressLayout.ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
 
         @SuppressWarnings("unchecked") T[] result = (T[]) Array.newInstance(cls, length);
         for (int i = 0; i < length; i++) {
@@ -1317,7 +1333,7 @@ public class Interop {
      * @param  alloc          the segment allocator for the array
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(String[] strings,
+    public static MemorySegment allocateNativeArray(@Nullable String @Nullable [] strings,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (strings == null)
@@ -1349,7 +1365,7 @@ public class Interop {
      * @param  elementAlloc   the segment allocator for the array elements
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(String[][] strvs,
+    public static MemorySegment allocateNativeArray(@Nullable String @Nullable [] @Nullable [] strvs,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc,
                                                     SegmentAllocator elementAlloc) {
@@ -1381,7 +1397,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return The memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(boolean[] array,
+    public static MemorySegment allocateNativeArray(boolean @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1404,7 +1420,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(byte[] array,
+    public static MemorySegment allocateNativeArray(byte @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1426,7 +1442,7 @@ public class Interop {
      * @param alloc          the segment allocator for memory allocation
      * @return whe memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(char[] array,
+    public static MemorySegment allocateNativeArray(char @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1448,7 +1464,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(double[] array,
+    public static MemorySegment allocateNativeArray(double @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1470,7 +1486,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(float[] array,
+    public static MemorySegment allocateNativeArray(float @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1492,7 +1508,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(int[] array,
+    public static MemorySegment allocateNativeArray(int @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1598,7 +1614,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(long[] array,
+    public static MemorySegment allocateNativeArray(long @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1620,7 +1636,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(short[] array,
+    public static MemorySegment allocateNativeArray(short @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1642,7 +1658,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(Proxy[] array,
+    public static MemorySegment allocateNativeArray(@Nullable Proxy @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
         if (array == null)
@@ -1650,7 +1666,13 @@ public class Interop {
 
         MemorySegment[] addressArray = new MemorySegment[array.length];
         for (int i = 0; i < array.length; i++) {
-            addressArray[i] = array[i] == null ? NULL : array[i].handle();
+            Proxy p = array[i];
+            if (p == null)
+                addressArray[i] = NULL;
+            else {
+                MemorySegment handle = p.handle();
+                addressArray[i] = (handle == null ? NULL : handle);
+            }
         }
 
         return allocateNativeArray(addressArray, zeroTerminated, alloc);
@@ -1668,7 +1690,7 @@ public class Interop {
      * @param  alloc          the allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(Proxy[] array,
+    public static MemorySegment allocateNativeArray(@Nullable Proxy @Nullable [] array,
                                                     MemoryLayout layout,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
@@ -1680,9 +1702,19 @@ public class Interop {
         MemorySegment segment = alloc.allocate(layout, length);
 
         for (int i = 0; i < array.length; i++) {
-            if (array[i] != null && (!NULL.equals(array[i].handle()))) {
+            Proxy p = array[i];
+            MemorySegment handle;
+            if (p == null)
+                handle = NULL;
+            else {
+                handle = p.handle();
+                if (handle == null)
+                    handle = NULL;
+            }
+
+            if (!NULL.equals(handle)) {
                 // Copy array element to the native array
-                segment.asSlice(i * layout.byteSize()).copyFrom(array[i].handle());
+                segment.asSlice(i * layout.byteSize()).copyFrom(handle);
             } else {
                 // Fill the array slice with zeros
                 segment.asSlice(i * size, size).fill((byte) 0);
@@ -1705,7 +1737,7 @@ public class Interop {
      * @param  alloc          the segment allocator for memory allocation
      * @return the memory segment of the native array
      */
-    public static MemorySegment allocateNativeArray(MemorySegment[] array,
+    public static MemorySegment allocateNativeArray(@Nullable MemorySegment @Nullable [] array,
                                                     boolean zeroTerminated,
                                                     SegmentAllocator alloc) {
 
@@ -1753,7 +1785,7 @@ public class Interop {
                              LogLevelFlags.LEVEL_DEBUG,
                              "Unexpected flag %d in enum %s\n",
                              n,
-                             cls == null ? "NULL" : cls.getName());
+                             cls.getName());
                 }
             }
             position++;
@@ -1768,7 +1800,7 @@ public class Interop {
      * @param  set the set of enums
      * @return the resulting bitfield
      */
-    public static int enumSetToInt(Set<? extends Enumeration> set) {
+    public static int enumSetToInt(@Nullable Set<? extends Enumeration> set) {
         int bitfield = 0;
         if (set != null)
             for (Enumeration element : set)
@@ -1783,7 +1815,7 @@ public class Interop {
      * @return an array containing the integer values of the provided
      *         Enumeration instances
      */
-    public static int[] getValues(Enumeration[] array) {
+    public static int @Nullable [] getValues(Enumeration @Nullable [] array) {
         if (array == null)
             return null;
         int[] values = new int[array.length];
@@ -1798,7 +1830,7 @@ public class Interop {
      * @param  data the Java byte array
      * @return the GBytes
      */
-    public static MemorySegment toGBytes(byte[] data) {
+    public static MemorySegment toGBytes(byte @Nullable [] data) {
         try (var _arena = Arena.ofConfined()) {
             long size = data == null ? 0L : data.length;
             MemorySegment _result;
@@ -1819,7 +1851,7 @@ public class Interop {
      * @param  address the memory address of the GBytes
      * @return the Java byte array
      */
-    public static byte[] fromGBytes(MemorySegment address) {
+    public static byte @Nullable [] fromGBytes(MemorySegment address) {
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _sizePointer = _arena.allocate(JAVA_LONG);
             _sizePointer.set(JAVA_LONG, 0L, 0L);
@@ -1855,7 +1887,7 @@ public class Interop {
      * @param  transfer if not NONE, the GString is freed
      * @return the Java String
      */
-    public static String fromGString(MemorySegment address, TransferOwnership transfer) {
+    public static @Nullable String fromGString(MemorySegment address, TransferOwnership transfer) {
         // This works, because str is the first member of the GString struct,
         // and is guaranteed to be nul-terminated.
         String string = Interop.getStringFrom(address);
@@ -1874,7 +1906,7 @@ public class Interop {
      * @param  string a Java String
      * @return the address of the GString
      */
-    public static MemorySegment toGString(String string) {
+    public static MemorySegment toGString(@Nullable String string) {
         MemorySegment allocatedString = Interop.allocateUnownedString(string);
         MemorySegment result;
         try {

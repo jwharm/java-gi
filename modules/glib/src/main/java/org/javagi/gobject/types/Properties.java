@@ -60,8 +60,7 @@ public class Properties {
      * @param  propertyName the name of the property
      * @return the ParamSpec of the property
      */
-    private static ParamSpec getParamSpec(GObject.ObjectClass objectClass,
-                                          String propertyName) {
+    private static ParamSpec getParamSpec(GObject.ObjectClass objectClass, String propertyName) {
         ParamSpec pspec = objectClass.findProperty(propertyName);
         if (pspec == null) {
             throw new IllegalArgumentException("Cannot find property \"%s\" for type %s\n"
@@ -102,8 +101,7 @@ public class Properties {
      * @throws IllegalArgumentException if a property with this name is not
      *                                  found for the object
      */
-    public static void setProperty(GObject gobject, String propertyName,
-                                   Object propertyValue) {
+    public static void setProperty(GObject gobject, String propertyName, @Nullable Object propertyValue) {
         GObject.ObjectClass gclass = (GObject.ObjectClass) gobject.readGClass();
         ParamSpec pspec = getParamSpec(gclass, propertyName);
         Type valueType = getValueType(pspec);
@@ -247,21 +245,18 @@ public class Properties {
         throw new IllegalArgumentException("Invalid property type " + type.getSimpleName());
     }
 
-    static void checkParameters(String property, String minimumValue,
-                                String maximumValue, String defaultValue,
-                                boolean defAllowed) {
-        if (!NOT_SET.equals(minimumValue))
-            throw new IllegalArgumentException(
-                    "No minimum value allowed on property " + property);
-        if (!NOT_SET.equals(maximumValue))
-            throw new IllegalArgumentException(
-                    "No maximum value allowed on property " + property);
-        if (!defAllowed && !NOT_SET.equals(defaultValue))
-            throw new IllegalArgumentException(
-                    "No default value allowed on property " + property);
+    private static void checkParameters(String property, String minimumValue,
+                                        String maximumValue, String defaultValue,
+                                        boolean defAllowed) {
+        if (!notSet(minimumValue))
+            throw new IllegalArgumentException("No minimum value allowed on property " + property);
+        if (!notSet(maximumValue))
+            throw new IllegalArgumentException("No maximum value allowed on property " + property);
+        if (!defAllowed && !notSet(defaultValue))
+            throw new IllegalArgumentException("No default value allowed on property " + property);
     }
 
-    static boolean notSet(String s) {
+    private static boolean notSet(String s) {
         return NOT_SET.equals(s);
     }
 
@@ -286,8 +281,7 @@ public class Properties {
             var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
             var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecChar(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecChar(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecDouble.class)) {
@@ -295,8 +289,7 @@ public class Properties {
             var maxVal = notSet(max) ? Double.MAX_VALUE : Double.parseDouble(max);
             var defVal = notSet(def) ? 0.0d : Double.parseDouble(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecDouble(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecDouble(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecFloat.class)) {
@@ -304,8 +297,7 @@ public class Properties {
             var maxVal = notSet(max) ? Float.MAX_VALUE : Float.parseFloat(max);
             var defVal = notSet(def) ? 0.0f : Float.parseFloat(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecFloat(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecFloat(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecGType.class)) {
@@ -320,8 +312,7 @@ public class Properties {
             var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
             var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecInt(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecInt(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecInt64.class)) {
@@ -329,8 +320,7 @@ public class Properties {
             var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
             var defVal = notSet(def) ? 0L : Long.parseLong(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecInt64(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecInt64(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecLong.class)) {
@@ -338,9 +328,8 @@ public class Properties {
             var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
             var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecLong(name, name, name,
-                    minVal, maxVal, defVal, flags);
-            }
+            paramSpec = GObjects.paramSpecLong(name, name, name, minVal, maxVal, defVal, flags);
+        }
 
         else if (pClass.equals(ParamSpecObject.class)) {
             checkParameters(name, min, max, def, false);
@@ -365,8 +354,7 @@ public class Properties {
             var maxVal = notSet(max) ? Byte.MAX_VALUE : Byte.parseByte(max);
             var defVal = notSet(def) ? (byte) 0 : Byte.parseByte(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecUchar(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecUchar(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecUInt.class)) {
@@ -374,8 +362,7 @@ public class Properties {
             var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
             var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecUint(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecUint(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecUInt64.class)) {
@@ -383,8 +370,7 @@ public class Properties {
             var maxVal = notSet(max) ? Long.MAX_VALUE : Long.parseLong(max);
             var defVal = notSet(def) ? 0L : Long.parseLong(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecUint64(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecUint64(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecULong.class)) {
@@ -392,8 +378,7 @@ public class Properties {
             var maxVal = notSet(max) ? Integer.MAX_VALUE : Integer.parseInt(max);
             var defVal = notSet(def) ? 0 : Integer.parseInt(def);
             defaultValues.put(index, defVal);
-            paramSpec = GObjects.paramSpecUlong(name, name, name,
-                    minVal, maxVal, defVal, flags);
+            paramSpec = GObjects.paramSpecUlong(name, name, name, minVal, maxVal, defVal, flags);
         }
 
         else if (pClass.equals(ParamSpecUnichar.class)) {
@@ -404,8 +389,7 @@ public class Properties {
         }
 
         else {
-            throw new IllegalArgumentException(
-                    "Unsupported property type: " + pClass.getSimpleName());
+            throw new IllegalArgumentException("Unsupported property type: " + pClass.getSimpleName());
         }
 
         paramSpecs.put(index, paramSpec);
@@ -617,7 +601,6 @@ public class Properties {
 
             // Override the set_property virtual method
             overrideSetProperty(gclass, (object, propertyId, value, _) -> {
-
                 // Check for invalid property IDs
                 if (propertyId < 1 || propertyId > index) {
                     GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -681,14 +664,26 @@ public class Properties {
         };
     }
 
-    private static void overrideGetProperty(Proxy instance, @Nullable GetPropertyCallback getProperty, Arena _arena) {
-        GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("get_property"))
-                .set(instance.handle(), 0, (getProperty == null ? MemorySegment.NULL : getProperty.toCallback(_arena)));
+    private static final VarHandle get_property =
+            GObject.ObjectClass.getMemoryLayout().varHandle(
+                    MemoryLayout.PathElement.groupElement("get_property"));
+
+    private static void overrideGetProperty(Proxy instance,
+                                            @Nullable GetPropertyCallback getProperty,
+                                            Arena _arena) {
+        MemorySegment callback = getProperty == null ? MemorySegment.NULL : getProperty.toCallback(_arena);
+        get_property.set(instance.handle(), 0, callback);
     }
 
-    private static void overrideSetProperty(Proxy instance, @Nullable SetPropertyCallback setProperty, Arena _arena) {
-        GObject.ObjectClass.getMemoryLayout().varHandle(MemoryLayout.PathElement.groupElement("set_property"))
-                .set(instance.handle(), 0, (setProperty == null ? MemorySegment.NULL : setProperty.toCallback(_arena)));
+    private static final VarHandle set_property =
+            GObject.ObjectClass.getMemoryLayout().varHandle(
+                    MemoryLayout.PathElement.groupElement("set_property"));
+
+    private static void overrideSetProperty(Proxy instance,
+                                            @Nullable SetPropertyCallback setProperty,
+                                            Arena _arena) {
+        MemorySegment callback = setProperty == null ? MemorySegment.NULL : setProperty.toCallback(_arena);
+        set_property.set(instance.handle(), 0, callback);
     }
 
     /**
@@ -699,10 +694,18 @@ public class Properties {
         void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            run((GObject) InstanceCache.getForType(object, GObject::new),
-                    propertyId,
-                    MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new));
+            Proxy o = InstanceCache.getForType(object, GObject::new);
+            if (! (o instanceof GObject gobject)) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "get_property for invalid GObject\n");
+                return;
+            }
+            Proxy p = InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new);
+            if (! (p instanceof ParamSpec gparamspec)) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "get_property for invalid GParamSpec\n");
+                return;
+            }
+            Value gvalue = MemorySegment.NULL.equals(value) ? null : new Value(value);
+            run(gobject, propertyId, gvalue, gparamspec);
         }
 
         default MemorySegment toCallback(Arena arena) {
@@ -721,10 +724,18 @@ public class Properties {
         void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            run((GObject) InstanceCache.getForType(object, GObject::new),
-                    propertyId,
-                    MemorySegment.NULL.equals(value) ? null : new Value(value),
-                    (ParamSpec) InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new));
+            Proxy o = InstanceCache.getForType(object, GObject::new);
+            if (! (o instanceof GObject gobject)) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "set_property for invalid GObject\n");
+                return;
+            }
+            Proxy p = InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new);
+            if (! (p instanceof ParamSpec gparamspec)) {
+                GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "set_property for invalid GParamSpec\n");
+                return;
+            }
+            Value gvalue = MemorySegment.NULL.equals(value) ? null : new Value(value);
+            run(gobject, propertyId, gvalue, gparamspec);
         }
 
         default MemorySegment toCallback(Arena arena) {

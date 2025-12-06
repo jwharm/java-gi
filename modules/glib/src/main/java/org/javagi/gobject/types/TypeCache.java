@@ -78,8 +78,7 @@ public class TypeCache {
      *                 {@code null} or a null-pointer
      */
     public static @Nullable Function<MemorySegment, ? extends Proxy>
-    getConstructor(@Nullable MemorySegment address,
-                   Function<MemorySegment, ? extends Proxy> fallback) {
+    getConstructor(@Nullable MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL))
             return null;
@@ -230,6 +229,12 @@ public class TypeCache {
         }
     }
 
+    /**
+     * Get the Java constructor for a typeclass
+     *
+     * @param type a typeclass
+     * @return a constructor for a wrapper class in Java for the typeclass
+     */
     public static @Nullable Function<MemorySegment, ? extends Proxy> getTypeClassConstructor(Type type) {
         return typeClassRegister.get(type);
     }
