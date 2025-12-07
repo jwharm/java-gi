@@ -119,38 +119,54 @@ class TypedValueGenerator {
     }
 
     TypeName getType() {
-        return getType(true);
+        return getType(true, false);
+    }
+
+    TypeName getAnnotatedType(boolean setOfBitfield) {
+        return getType(setOfBitfield, checkNull());
     }
 
     TypeName getType(boolean setOfBitfield) {
+        return getType(setOfBitfield, false);
+    }
+
+    private TypeName getType(boolean setOfBitfield, boolean annotate) {
         if (type != null && type.isActuallyAnArray())
-            return ArrayTypeName.of(getType(type, setOfBitfield));
+            return ArrayTypeName.of(getType(type, setOfBitfield, annotate));
 
         if (v instanceof Field f && f.callback() != null)
             return f.parent().typeName().nestedClass(
                     toJavaSimpleType(f.name() + "_callback", f.namespace()));
 
         try {
-            return getType(v.anyType(), setOfBitfield);
+            return getType(v.anyType(), setOfBitfield, annotate);
         } catch (NullPointerException npe) {
             throw new NoSuchElementException("Cannot find " + type);
         }
     }
 
-    private TypeName getType(AnyType anyType, boolean setOfBitfield) {
+    private TypeName getType(AnyType anyType, boolean setOfBitfield, boolean annotate) {
+        TypeName typeName = (annotate && checkNull())
+                ? anyType.nullableAnnotatedTypeName()
+                : anyType.typeName();
+
         // Wrap Bitfield return value into a Set<>
-        TypeName typeName = anyType.typeName();
         typeName = (setOfBitfield && v.isBitfield())
                 ? ParameterizedTypeName.get(ClassName.get(Set.class), typeName)
                 : typeName;
 
-        if (v instanceof Parameter p && p.isOutParameter())
-            return ParameterizedTypeName.get(ClassNames.OUT, typeName.box());
+        if (v instanceof Parameter p && p.isOutParameter()) {
+            var innerType = typeName;
+            if (p.anyType() instanceof Type t && t.isPrimitive()) {
+                innerType = t.typeName().box();
+            }
+            return annotated(ParameterizedTypeName.get(ClassNames.OUT, innerType));
+        }
 
         if (type != null
                 && type.isPointer()
                 && (type.isPrimitive() || target instanceof EnumType))
-            return TypeName.get(MemorySegment.class);
+            return annotated(TypeName.get(MemorySegment.class));
 
         return typeName;
     }

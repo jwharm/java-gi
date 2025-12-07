@@ -131,8 +131,7 @@ public class MethodGenerator {
         else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
         else {
-            var generator = new TypedValueGenerator(returnValue);
-            builder.returns(generator.annotated(generator.getType()));
+            builder.returns(new TypedValueGenerator(returnValue).getAnnotatedType(true));
         }
 
         // Parameters

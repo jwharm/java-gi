@@ -131,21 +131,21 @@ public class CallableGenerator {
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
-                var type = generator.getType(setOfBitfield);
+                var type = generator.getAnnotatedType(setOfBitfield);
 
                 // Trailing flags parameter can be variadic
                 if ((!setOfBitfield)
                         && p.isBitfield()
                         && p.isLastParameter()
                         && (!p.isOutParameter())) {
-                    type = ArrayTypeName.of(type);
+                    type = generator.annotated(ArrayTypeName.of(type));
                     builder.varargs(true);
                 }
 
                 if (generic && type.equals(ClassNames.G_OBJECT))
                     type = ClassNames.GENERIC_T;
 
-                var spec = ParameterSpec.builder(generator.annotated(type), generator.getName());
+                var spec = ParameterSpec.builder(type, generator.getName());
                 builder.addParameter(spec.build());
             }
         }
@@ -293,7 +293,7 @@ public class CallableGenerator {
             builder.returns(ClassNames.GENERIC_T);
         else if ((!ctor) || namedCtor) {
             var generator = new TypedValueGenerator(returnValue);
-            builder.returns(generator.annotated(generator.getType()));
+            builder.returns(generator.getAnnotatedType(true));
         }
 
         // Parameters
