@@ -258,7 +258,11 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         // With ownership transfer: Don't copy/ref the struct
         if (v.transferOwnership() != TransferOwnership.NONE) {
-            builder.beginControlFlow("if ($1L != null)", paramName);
+            if (v instanceof Parameter) {
+                builder.beginControlFlow("if ($L != null && $L != null)", getName(), paramName);
+            } else {
+                builder.beginControlFlow("if ($L != null)", paramName);
+            }
         }
 
         // No ownership transfer: Copy/ref the struct
