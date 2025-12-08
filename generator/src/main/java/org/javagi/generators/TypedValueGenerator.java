@@ -146,22 +146,21 @@ class TypedValueGenerator {
     }
 
     private TypeName getType(AnyType anyType, boolean setOfBitfield, boolean annotate) {
+        if (v instanceof Parameter p && p.isOutParameter()) {
+            TypeName typeName = anyType.typeName();
+
+            if (setOfBitfield && v.isBitfield())
+                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), typeName.box());
+
+            return annotated(ParameterizedTypeName.get(ClassNames.OUT, typeName.box()));
+        }
+
         TypeName typeName = (annotate && checkNull())
                 ? anyType.nullableAnnotatedTypeName()
                 : anyType.typeName();
 
-        // Wrap Bitfield return value into a Set<>
-        typeName = (setOfBitfield && v.isBitfield())
-                ? ParameterizedTypeName.get(ClassName.get(Set.class), typeName)
-                : typeName;
-
-        if (v instanceof Parameter p && p.isOutParameter()) {
-            var innerType = typeName;
-            if (p.anyType() instanceof Type t && t.isPrimitive()) {
-                innerType = t.typeName().box();
-            }
-            return annotated(ParameterizedTypeName.get(ClassNames.OUT, innerType));
-        }
+        if (setOfBitfield && v.isBitfield())
+                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), anyType.typeName().box());
 
         if (type != null
                 && type.isPointer()
