@@ -53,8 +53,7 @@ tasks.withType<Javadoc>().configureEach {
         classpath = files(mainModules.flatMap { subproject ->
             subproject.sourceSets["main"].compileClasspath.filter { file ->
                 val path = file.absolutePath.replace("\\", "/")
-                path.contains("/org.jetbrains/annotations/")
-                        || path.contains("/io.github.jwharm.cairobindings/cairo/")
+                path.contains("/org.jspecify/") || path.contains("/io.github.jwharm.cairobindings/cairo/")
             }
         })
     }
