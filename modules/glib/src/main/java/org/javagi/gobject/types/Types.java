@@ -1256,14 +1256,7 @@ public class Types {
                         for (Class<?> iface : cls.getInterfaces()) {
                             if (Proxy.class.isAssignableFrom(iface)) {
                                 Type ifaceType;
-                                try {
-                                    ifaceType = TypeCache.getType(iface);
-                                } catch (IllegalArgumentException iae) {
-                                    GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                                            "Cannot implement interface %s on class %s: No GType\n",
-                                            iface.getSimpleName(), cls.getSimpleName());
-                                    continue;
-                                }
+                                ifaceType = TypeCache.getType(iface);
 
                                 InterfaceInfo interfaceInfo = new InterfaceInfo(arena);
                                 Consumer<TypeInterface> ifaceOverridesInit =
