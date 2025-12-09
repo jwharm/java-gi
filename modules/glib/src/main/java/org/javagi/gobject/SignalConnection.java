@@ -22,8 +22,12 @@ package org.javagi.gobject;
 import org.gnome.gobject.Closure;
 import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a signal connection. With a {@code SignalConnection} object, a
@@ -33,6 +37,7 @@ import java.lang.foreign.MemorySegment;
  * @param <T> the type of the signal
  */
 @SuppressWarnings("unused")
+@NullMarked
 public class SignalConnection<T> {
     /*
      * "unused" warnings are disabled with @SuppressWarnings("unused") because:
@@ -44,7 +49,7 @@ public class SignalConnection<T> {
 
     private final GObject instance;
     private final int handlerId;
-    private final Closure closure;
+    private final @Nullable Closure closure;
 
     /**
      * Create a SignalConnection instance for the provided GObject instance and
@@ -54,7 +59,7 @@ public class SignalConnection<T> {
      * @param handlerId the handler ID of the signal
      */
     public SignalConnection(MemorySegment instance, int handlerId) {
-        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new);
+        this.instance = (GObject) requireNonNull(InstanceCache.getForType(instance, GObject::new));
         this.handlerId = handlerId;
         this.closure = null;
     }
@@ -67,8 +72,8 @@ public class SignalConnection<T> {
      * @param handlerId the handler ID of the signal
      * @param closure   closure for the signal callback
      */
-    public SignalConnection(MemorySegment instance, int handlerId, Closure closure) {
-        this.instance = (GObject) InstanceCache.getForType(instance, GObject::new);
+    public SignalConnection(MemorySegment instance, int handlerId, @Nullable Closure closure) {
+        this.instance = (GObject) requireNonNull(InstanceCache.getForType(instance, GObject::new));
         this.handlerId = handlerId;
         this.closure = closure;
     }

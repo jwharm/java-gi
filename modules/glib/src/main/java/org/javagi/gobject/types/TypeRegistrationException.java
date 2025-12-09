@@ -19,8 +19,14 @@
 
 package org.javagi.gobject.types;
 
+import org.jspecify.annotations.Nullable;
+
 public class TypeRegistrationException extends RuntimeException {
-    public TypeRegistrationException(String message) {
+    public TypeRegistrationException(@Nullable String message) {
         super(message);
+    }
+
+    public TypeRegistrationException(@Nullable Throwable cause) {
+        super(cause);
     }
 }

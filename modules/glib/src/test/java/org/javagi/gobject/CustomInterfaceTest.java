@@ -80,9 +80,6 @@ public class CustomInterfaceTest {
 
     @RegisteredType(name="JavaGiTestObjectWithInterface")
     public static class TestObject extends GObject implements TestInterface {
-        public TestObject() {
-            super();
-        }
     }
 
     @RegisteredType(name="JavaGiFooInterface", prerequisites = {GObject.class})
@@ -96,10 +93,6 @@ public class CustomInterfaceTest {
 
     @RegisteredType(name="JavaGiBarClass")
     public static class BarClass extends GObject implements FooInterface {
-        public BarClass() {
-            super();
-        }
-
         private int number = 0;
 
         @Override

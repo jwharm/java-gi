@@ -19,6 +19,9 @@
 
 package org.javagi.base;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 /**
  * A wrapper class for out-parameters of (usually primitive) values. When a
  * method expects an {@code Out<>} object, the user must create it, optionally
@@ -28,9 +31,10 @@ package org.javagi.base;
  *
  * @param <T> The parameter type.
  */
+@NullMarked
 public class Out<T> {
     
-    private T value;
+    private @Nullable T value;
     
     /**
      * Create an Out object with no initial value.
@@ -43,7 +47,7 @@ public class Out<T> {
      *
      * @param value the initial value
      */
-    public Out(T value) {
+    public Out(@Nullable T value) {
         this.value = value;
     }
     
@@ -52,7 +56,7 @@ public class Out<T> {
      *
      * @return the value of the out-parameter
      */
-    public T get() {
+    public @Nullable T get() {
         return value;
     }
     
@@ -61,7 +65,7 @@ public class Out<T> {
      *
      * @param value the value to set
      */
-    public void set(T value) {
+    public void set(@Nullable T value) {
         this.value = value;
     }
 }

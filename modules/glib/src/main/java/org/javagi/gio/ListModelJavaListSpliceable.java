@@ -20,18 +20,18 @@
 package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-public interface ListModelJavaListSpliceable<E extends GObject> extends ListModelJavaListMutable<E> {
+@NullMarked
+public interface ListModelJavaListSpliceable<E extends @Nullable GObject> extends ListModelJavaListMutable<E> {
 
-    void splice(int position, int nRemovals, @Nullable E[] additions);
-    void splice(int position, int nRemovals, @NotNull Collection<? extends E> additions);
+    void splice(int position, int nRemovals, @Nullable E @Nullable [] additions);
+    void splice(int position, int nRemovals, Collection<? extends E> additions);
 
     /**
      * {@inheritDoc}
@@ -69,7 +69,7 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
      * @apiNote This implementation delegates to {@link #splice(int, int, Collection)}.
      */
     @Override
-    default boolean addAll(@NotNull Collection<? extends E> c) {
+    default boolean addAll(Collection<? extends E> c) {
         splice(size(), 0, Objects.requireNonNull(c));
         return !c.isEmpty();
     }
@@ -80,7 +80,7 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
      * @apiNote This implementation delegates to {@link #splice(int, int, Collection)}.
      */
     @Override
-    default boolean addAll(int index, @NotNull Collection<? extends E> c) {
+    default boolean addAll(int index, Collection<? extends E> c) {
         splice(index, 0, Objects.requireNonNull(c));
         return !c.isEmpty();
     }
@@ -89,12 +89,11 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
      * {@inheritDoc}
      */
     @Override
-    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+    default List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    @ApiStatus.Internal
-    class SubList<E extends GObject, List extends ListModelJavaListSpliceable<E>>
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaListSpliceable<E>>
             extends ListModelJavaListMutable.SubList<E, List>
             implements ListModelJavaListSpliceable<E> {
 
@@ -103,7 +102,7 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
         }
 
         @Override
-        public void splice(int position, int nRemovals, @Nullable E[] additions) {
+        public void splice(int position, int nRemovals, @Nullable E @Nullable [] additions) {
             if (position < 0 || nRemovals < 0 || position + nRemovals > size())
                 throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);
@@ -112,7 +111,7 @@ public interface ListModelJavaListSpliceable<E extends GObject> extends ListMode
         }
 
         @Override
-        public void splice(int position, int nRemovals, @NotNull Collection<? extends E> additions) {
+        public void splice(int position, int nRemovals, Collection<? extends E> additions) {
             if (position < 0 || nRemovals < 0 || position + nRemovals > size())
                 throw new IndexOutOfBoundsException();
             list.splice(position + fromIndex, nRemovals, additions);

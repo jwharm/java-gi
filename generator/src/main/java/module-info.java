@@ -4,7 +4,7 @@ module org.javagi.generator {
     requires java.xml;
     requires com.squareup.javapoet;
     requires info.picocli;
-    requires org.jetbrains.annotations;
+    requires org.jspecify;
     exports org.javagi;
     exports org.javagi.configuration;
     exports org.javagi.generators;

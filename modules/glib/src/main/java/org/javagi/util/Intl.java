@@ -22,6 +22,8 @@ package org.javagi.util;
 import org.gnome.glib.GLib;
 import org.javagi.interop.Interop;
 import org.javagi.interop.Platform;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -58,9 +60,10 @@ import java.text.MessageFormat;
  * <a href="https://www.gnu.org/software/gettext">GNU Gettext documentation</a>
  * for details.
  */
+@NullMarked
 public class Intl {
 
-    private static String domain = null;
+    private static @Nullable String domain = null;
 
     static {
         switch (Platform.getRuntimePlatform()) {
@@ -93,7 +96,7 @@ public class Intl {
      * @return the current base directory for domain {@code domainname}, or
      *         {@code null} if an error occured.
      */
-    public static String bindtextdomain(String domainname, String dirname) {
+    public static @Nullable String bindtextdomain(String domainname, String dirname) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) bindtextdomain.invokeExact(
                     Interop.allocateNativeString(domainname, arena),
@@ -110,7 +113,7 @@ public class Intl {
      * @param domainname the message domain
      * @return the message domain, or {@code null} if an error occured.
      */
-    public static String textdomain(String domainname) {
+    public static @Nullable String textdomain(String domainname) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) textdomain.invokeExact(
                     Interop.allocateNativeString(domainname, arena));

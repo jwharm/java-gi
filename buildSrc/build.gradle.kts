@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     implementation(libs.javapoet)
-    implementation(libs.annotations)
+    implementation(libs.jspecify)
     implementation(libs.javagi.generator)
     implementation(libs.mavenpublish)
 }

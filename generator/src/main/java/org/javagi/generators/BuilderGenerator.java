@@ -24,12 +24,13 @@ import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.Arena;
 import java.util.EnumSet;
+import java.util.Objects;
 
 import static org.javagi.util.Conversions.toCamelCase;
 import static java.util.function.Predicate.not;
@@ -139,6 +140,7 @@ public class BuilderGenerator {
 
         TypedValueGenerator generator = new TypedValueGenerator(prp);
         PartialStatement gtype = generator.getGTypeDeclaration();
+        gtype.add(null, "type", ClassNames.G_TYPE, "objects", Objects.class);
 
         // Javadoc
         if (prp.infoElements().doc() != null)
@@ -160,8 +162,9 @@ public class BuilderGenerator {
         PartialStatement valueSetter = generator.getValueSetter(gtype, generator.getName())
                 .add(";\n");
         return builder.addStatement("$T _arena = getArena()", Arena.class)
+                .addNamedCode("$type:T _gtype = $objects:T.requireNonNull(" + gtype.format() + ");\n", gtype.arguments())
                 .addStatement("$1T _value = new $1T(_arena)", ClassNames.G_VALUE)
-                .addNamedCode("_value.init(" + gtype.format() + ");\n", gtype.arguments())
+                .addStatement("_value.init(_gtype)")
                 .addNamedCode(valueSetter.format(), valueSetter.arguments())
                 .addStatement("addBuilderProperty($S, _value)", prp.name())
                 .addStatement("return (B) this")
@@ -252,7 +255,7 @@ public class BuilderGenerator {
     }
 
     private MethodSpec buildMethod() {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("build")
+        return MethodSpec.methodBuilder("build")
                 .addModifiers(Modifier.PUBLIC)
                 .returns(rt.typeName())
                 .addJavadoc("""
@@ -262,18 +265,15 @@ public class BuilderGenerator {
                         
                         @return a new instance of {@code $1L} with the properties
                                 that were set in the Builder object.
-                        """, rt.typeName().simpleName(), ClassNames.G_OBJECT);
-
-        builder.beginControlFlow("try");
-
-        return builder.addStatement("var _instance = ($1T) $2T.withProperties($1T.getType(), getNames(), getValues())",
-                        rt.typeName(),
-                        ClassNames.G_OBJECT)
+                        """, rt.typeName().simpleName(), ClassNames.G_OBJECT)
+                .beginControlFlow("try")
+                .addStatement("var _gtype = $T.requireNonNull($T.getType())", Objects.class, rt.typeName())
+                .addStatement("var _instance = ($T) $T.withProperties(_gtype, getNames(), getValues())",
+                        rt.typeName(), ClassNames.G_OBJECT)
                 .addStatement("connectSignals(_instance.handle())")
                 .addStatement("return _instance")
                 .nextControlFlow("finally")
-                .addStatement("for ($T _value : getValues()) _value.unset()",
-                        ClassNames.G_VALUE)
+                .addStatement("for ($T _value : getValues()) _value.unset()", ClassNames.G_VALUE)
                 .addStatement("getArena().close()")
                 .endControlFlow()
                 .build();

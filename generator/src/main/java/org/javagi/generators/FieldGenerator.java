@@ -19,12 +19,14 @@
 
 package org.javagi.generators;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -71,7 +73,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         // Override the type of long values
         boolean isLong = type != null && type.isLong();
-        TypeName typeName = isLong ? TypeName.INT : getType();
+        TypeName typeName = isLong ? TypeName.INT : getAnnotatedType(true);
 
         var spec = MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
@@ -130,7 +132,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         // Override the type of long values
         boolean isLong = type != null && type.isLong();
-        TypeName typeName = isLong ? TypeName.INT : getType();
+        TypeName typeName = isLong ? TypeName.INT : getAnnotatedType(true);
         spec.addParameter(typeName, getName());
 
         if (f.allocatesMemory())
@@ -174,7 +176,7 @@ public class FieldGenerator extends TypedValueGenerator {
     public MethodSpec generateReadCopyMethod() {
         return MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(getType())
+                .returns(getAnnotatedType(true))
                 .addJavadoc("""
                         Read the value of the field {@code $1L}.
                         
@@ -198,7 +200,7 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName())
-                .addParameter(getType(), getName())
+                .addParameter(getAnnotatedType(true), getName())
                 .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
                         MemoryLayout.class, f.name())
                 .addStatement("$T _slice = handle().asSlice(_offset, $T.getMemoryLayout())",
@@ -225,7 +227,7 @@ public class FieldGenerator extends TypedValueGenerator {
 
         return MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(getType())
+                .returns(getAnnotatedType(true))
                 .addJavadoc("""
                         Read the value of the field {@code $1L}.
                         
@@ -252,7 +254,7 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @param $2L The new value for the field {@code $1L}
                         """, f.name(), getName())
-                .addParameter(getType(), getName())
+                .addParameter(getAnnotatedType(true), getName())
                 .addParameter(Arena.class, "_arena")
                 .addStatement("$T _path = $T.PathElement.groupElement($S)",
                         MemoryLayout.PathElement.class, MemoryLayout.class, f.name())
@@ -283,7 +285,8 @@ public class FieldGenerator extends TypedValueGenerator {
                         """, f.name())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
-                .addParameter(java.lang.reflect.Method.class, "method")
+                .addParameter(TypeName.get(java.lang.reflect.Method.class)
+                        .annotated(AnnotationSpec.builder(Nullable.class).build()), "method")
                 .addStatement("this._$LMethod = method", getName())
                 .addCode(new CallableGenerator(cb)
                                 .generateFunctionDescriptorDeclaration())

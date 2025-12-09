@@ -24,6 +24,7 @@ import com.squareup.javapoet.TypeName;
 public sealed interface AnyType extends Node permits Type, Array {
 
     TypeName typeName();
+    TypeName nullableAnnotatedTypeName();
     String toTypeTag();
     int allocatedSize(boolean longAsInt);
 

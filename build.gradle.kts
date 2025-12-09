@@ -34,7 +34,7 @@ tasks.withType<Javadoc>().configureEach {
         this as StandardJavadocDocletOptions
         addStringOption("tag", "apiNote:a:API Note:")
         addStringOption("Xdoclint:none", "-quiet")
-        addStringOption("-add-modules", "org.jetbrains.annotations,org.freedesktop.cairo")
+        addStringOption("-add-modules", "org.jspecify,org.freedesktop.cairo")
         encoding = "UTF-8"
     }
     exclude("**/module-info.java")

@@ -21,8 +21,8 @@ package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
 import org.gnome.gio.ListModel;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -46,7 +46,8 @@ import java.util.*;
  *
  * @param <E> The item type must be a GObject.
  */
-public interface ListModelJavaList<E extends GObject> extends List<E> {
+@NullMarked
+public interface ListModelJavaList<E extends @Nullable GObject> extends List<E> {
 
     int getNItems();
     E getItem(int position);
@@ -77,7 +78,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default boolean contains(Object o) {
+    default boolean contains(@Nullable Object o) {
         if (o == null)
             return false;
 
@@ -93,7 +94,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull Iterator<E> iterator() {
+    default Iterator<E> iterator() {
         return listIterator();
     }
 
@@ -101,7 +102,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default Object @NotNull [] toArray() {
+    default @Nullable Object [] toArray() {
         return toArray(new Object[0]);
     }
 
@@ -110,7 +111,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      */
     @Override
     @SuppressWarnings("unchecked") // Unchecked casts are unavoidable here
-    default <T> T @NotNull [] toArray(T @NotNull [] a) {
+    default <T extends @Nullable Object> @Nullable T [] toArray(@Nullable T [] a) {
         int size = size();
         T[] data = a.length >= size ? a :
                 (T[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -138,7 +139,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * @apiNote This operation is implemented by calling {@link #remove(int)} on the result of {@link #indexOf(Object)}.
      */
     @Override
-    default boolean remove(Object o) {
+    default boolean remove(@Nullable Object o) {
         int index = indexOf(o);
         if (index < 0)
             return false;
@@ -154,7 +155,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          collection.
      */
     @Override
-    default boolean containsAll(@NotNull Collection<?> c) {
+    default boolean containsAll(Collection<?> c) {
         for (Object item : c)
             if (! contains(item))
                 return false;
@@ -168,7 +169,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          for all elements in the specified collection.
      */
     @Override
-    default boolean addAll(@NotNull Collection<? extends E> c) {
+    default boolean addAll(Collection<? extends E> c) {
         boolean changed = false;
         for (E item : c) {
             add(item);
@@ -184,7 +185,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          for all elements in the specified collection.
      */
     @Override
-    default boolean addAll(int index, @NotNull Collection<? extends E> c) {
+    default boolean addAll(int index, Collection<? extends E> c) {
         boolean changed = false;
         for (E item : c) {
             add(index++, item);
@@ -200,7 +201,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          all elements that are in the specified collection.
      */
     @Override
-    default boolean removeAll(@NotNull Collection<?> c) {
+    default boolean removeAll(Collection<?> c) {
         boolean changed = false;
         for (Object item : c) {
             if (remove(item))
@@ -216,7 +217,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      *          all elements that are not in the specified collection.
      */
     @Override
-    default boolean retainAll(@NotNull Collection<?> c) {
+    default boolean retainAll(Collection<?> c) {
         boolean changed = false;
         for (E item : this) {
             if (!c.contains(item))
@@ -276,12 +277,12 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default int indexOf(Object o) {
+    default int indexOf(@Nullable Object o) {
         for (int i = 0; i < size(); i++) {
             E item = get(i);
             if (o == null && item == null)
                 return i;
-            if (item.equals(o))
+            if (Objects.equals(item, o))
                 return i;
         }
         return -1;
@@ -291,12 +292,12 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default int lastIndexOf(Object o) {
+    default int lastIndexOf(@Nullable Object o) {
         for (int i = size() - 1; i >= 0; i--) {
             E item = get(i);
             if (o == null && item == null)
                 return i;
-            if (item.equals(o))
+            if (Objects.equals(item, o))
                 return i;
         }
         return -1;
@@ -306,7 +307,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull ListIterator<E> listIterator() {
+    default ListIterator<E> listIterator() {
         return listIterator(0);
     }
 
@@ -314,7 +315,7 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull ListIterator<E> listIterator(int index) {
+    default ListIterator<E> listIterator(int index) {
         return new ListIterator<>() {
             int next = index; // Index of the next element to be returned
             int last = -1;    // Index of the last returned element
@@ -385,12 +386,11 @@ public interface ListModelJavaList<E extends GObject> extends List<E> {
      * {@inheritDoc}
      */
     @Override
-    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+    default List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    @ApiStatus.Internal
-    class SubList<E extends GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaList<E>> implements ListModelJavaList<E> {
         protected final List list;
         protected final int fromIndex;
         protected int toIndex;

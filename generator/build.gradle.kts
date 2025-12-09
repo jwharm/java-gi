@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     implementation(libs.picocli)
-    implementation(libs.annotations)
+    implementation(libs.jspecify)
     implementation(libs.javapoet)
 }
 

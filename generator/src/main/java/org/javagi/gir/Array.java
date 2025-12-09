@@ -19,8 +19,10 @@
 
 package org.javagi.gir;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.TypeName;
+import org.jspecify.annotations.Nullable;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toCamelCase;
@@ -39,6 +41,12 @@ public final class Array extends GirElement implements AnyType {
     @Override
     public TypeName typeName() {
         return ArrayTypeName.of(anyType().typeName());
+    }
+
+    @Override
+    public TypeName nullableAnnotatedTypeName() {
+        return ArrayTypeName.of(anyType().nullableAnnotatedTypeName())
+                .annotated(AnnotationSpec.builder(Nullable.class).build());
     }
 
     public String toTypeTag() {

@@ -471,11 +471,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             if (p.isOutParameter())
                 identifier += ".get()";
 
-            builder.addStatement(
-                    checkNull() ? "if ($1L != null) $2T.yieldOwnership($1L)"
-                                : "$2T.yieldOwnership($1L)",
-                    identifier,
-                    ClassNames.MEMORY_CLEANER);
+            builder.addStatement("$T.yieldOwnership($L)", ClassNames.MEMORY_CLEANER, identifier);
 
             if (checkNull())
                 builder.endControlFlow();

@@ -28,6 +28,8 @@ import org.javagi.interop.Interop;
 import org.gnome.glib.Quark;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -45,6 +47,7 @@ import java.util.function.Consumer;
 /**
  * Helper class to register signals in a new GType.
  */
+@NullMarked
 public class Signals {
 
     /*
@@ -113,50 +116,20 @@ public class Signals {
     /*
      * Infer the GType from the Java class.
      */
-    private static Type inferType(Class<?> cls)
-            throws IllegalArgumentException {
-
-        if (cls.equals(void.class) || cls.equals(Void.class))
-            return Types.NONE;
-
-        else if (cls.equals(boolean.class) || cls.equals(Boolean.class))
-            return Types.BOOLEAN;
-
-        else if (cls.equals(byte.class) || cls.equals(Byte.class))
-            return Types.CHAR;
-
-        else if (cls.equals(char.class) || cls.equals(Character.class))
-            return Types.CHAR;
-
-        else if (cls.equals(double.class) || cls.equals(Double.class))
-            return Types.DOUBLE;
-
-        else if (cls.equals(float.class) || cls.equals(Float.class))
-            return Types.FLOAT;
-
-        else if (cls.equals(int.class) || cls.equals(Integer.class))
-            return Types.INT;
-
-        else if (cls.equals(long.class) || cls.equals(Long.class))
-            return Types.LONG;
-
-        else if (cls.equals(MemorySegment.class))
-            return Types.POINTER;
-
-        else if (cls.equals(String.class))
-            return Types.STRING;
-
-        else if (GObject.class.isAssignableFrom(cls))
-            // GObject class
-            return TypeCache.getType(cls);
-
-        else if (ProxyInstance.class.isAssignableFrom(cls))
-            // Struct
-            return Types.BOXED;
-
-        else if (Proxy.class.isAssignableFrom(cls))
-            // GObject interface
-            return TypeCache.getType(cls);
+    private static Type inferType(Class<?> cls) throws IllegalArgumentException {
+        if      (cls.equals(void.class)    || cls.equals(Void.class))       return Types.NONE;
+        else if (cls.equals(boolean.class) || cls.equals(Boolean.class))    return Types.BOOLEAN;
+        else if (cls.equals(byte.class)    || cls.equals(Byte.class))       return Types.CHAR;
+        else if (cls.equals(char.class)    || cls.equals(Character.class))  return Types.CHAR;
+        else if (cls.equals(double.class)  || cls.equals(Double.class))     return Types.DOUBLE;
+        else if (cls.equals(float.class)   || cls.equals(Float.class))      return Types.FLOAT;
+        else if (cls.equals(int.class)     || cls.equals(Integer.class))    return Types.INT;
+        else if (cls.equals(long.class)    || cls.equals(Long.class))       return Types.LONG;
+        else if (cls.equals(MemorySegment.class))                           return Types.POINTER;
+        else if (cls.equals(String.class))                                  return Types.STRING;
+        else if (GObject.class.isAssignableFrom(cls))      /* gobject */    return TypeCache.getType(cls);
+        else if (ProxyInstance.class.isAssignableFrom(cls)) /* struct */    return Types.BOXED;
+        else if (Proxy.class.isAssignableFrom(cls))      /* interface */    return TypeCache.getType(cls);
 
         throw new IllegalArgumentException("Cannot infer gtype for class "
                 + cls.getName()
@@ -172,7 +145,7 @@ public class Signals {
      * @param cls  the class that possibly contains @Signal annotations
      * @return a class initializer that registers the signals
      */
-    public static Consumer<TypeClass> installSignals(Class<?> cls) {
+    public static @Nullable Consumer<TypeClass> installSignals(Class<?> cls) {
 
         List<SignalDeclaration> signalDeclarations = new ArrayList<>();
         
@@ -248,9 +221,9 @@ public class Signals {
      * @throws IllegalArgumentException if a signal with this name is not found
      *                                  for the object
      */
-    public static Object emit(GObject gobject,
-                              String detailedSignal,
-                              Object... params) {
+    public static @Nullable Object emit(GObject gobject,
+                                        String detailedSignal,
+                                        Object... params) {
         Type gtype = TypeCache.getType(gobject.getClass());
 
         // Parse the detailed signal name into a signal id and detail quark
@@ -307,8 +280,7 @@ public class Signals {
 
             // Cleanup the allocated values
             for (Value value : values) {
-                if (value != null)
-                    value.unset();
+                value.unset();
             }
             returnValue.unset();
 
@@ -317,23 +289,18 @@ public class Signals {
     }
 
     /**
-     * Get the single abstract method (SAM) implementation of a class that
-     * implements a functional interface. A functional interface is an
-     * interface with exactly one abstract method.
+     * Get the single abstract method (SAM) implementation of a functional
+     * interface. A functional interface has exactly one abstract method.
      *
      * @param  cls a functional interface
      * @return the Method reference to the method that implements the SAM
      * @throws IllegalArgumentException if {@code cls} is not a functional
      *                                  interface
      */
-    public static Method getSingleAbstractMethod(Class<?> cls)
-            throws IllegalArgumentException {
-
-        // Check if the class is not an enum or array
-        if ((! cls.isInterface()) || cls.isEnum() || cls.isArray()) {
-            throw new IllegalArgumentException("%s is not a functional interface"
-                    .formatted(cls));
-        }
+    public static Method getSingleAbstractMethod(Class<?> cls) throws IllegalArgumentException {
+        // Ensure that it's an interface, and not an enum or array
+        if ((! cls.isInterface()) || cls.isEnum() || cls.isArray())
+            throw new IllegalArgumentException(cls + " is not a functional interface");
 
         // Loop through all declared methods
         Method samMethod = null;
@@ -349,16 +316,14 @@ public class Signals {
 
             // If there is more than one SAM, return null (ambiguous)
             if (samMethod != null)
-                throw new IllegalArgumentException("%s is not a functional interface: more than one abstract method found."
-                        .formatted(cls));
+                throw new IllegalArgumentException(cls + " has more than one abstract method");
 
             samMethod = method;
         }
 
         // Check that a SAM exists
         if (samMethod == null)
-            throw new IllegalArgumentException("%s is not a functional interface: abstract method not found."
-                    .formatted(cls));
+            throw new IllegalArgumentException(cls + " does not have an abstract method");
 
         return samMethod;
     }

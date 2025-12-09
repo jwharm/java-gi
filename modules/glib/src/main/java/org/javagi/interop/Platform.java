@@ -19,6 +19,8 @@
 
 package org.javagi.interop;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The Platform enum represents the runtime platform.
  */
@@ -27,7 +29,7 @@ public enum Platform {
     LINUX,
     MACOS;
 
-    private static Platform runtimePlatform = null;
+    private static @Nullable Platform runtimePlatform = null;
 
     /**
      * Determine the runtime platform

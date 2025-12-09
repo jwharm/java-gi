@@ -28,6 +28,7 @@ import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -182,7 +183,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
          */
         else if (outerClass != null && cb.parameters() != null) {
             builder.addField(FieldSpec.builder(
-                            java.lang.reflect.Method.class,
+                            TypeName.get(java.lang.reflect.Method.class)
+                                    .annotated(AnnotationSpec.builder(Nullable.class).build()),
                             "_" + generator.getName() + "Method",
                             Modifier.PRIVATE)
                     .build());

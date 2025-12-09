@@ -39,11 +39,16 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.*;
 
 import org.javagi.base.Proxy;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Caches TypeInstances so the same instance is used for the same memory
  * address.
  */
+@NullMarked
 public class InstanceCache {
 
     /*
@@ -63,7 +68,7 @@ public class InstanceCache {
                 this(new WeakReference<>(proxy));
             }
             public T get() {
-                return proxy == null ? null : proxy.get();
+                return requireNonNull(proxy.get());
             }
         }
 
@@ -93,18 +98,14 @@ public class InstanceCache {
         private final ThreadLocal<ArrayList<T>> CONSTRUCT_STACK;
 
         ConstructStack() {
-            CONSTRUCT_STACK = new ThreadLocal<>();
-            CONSTRUCT_STACK.set(new ArrayList<>());
+            CONSTRUCT_STACK = ThreadLocal.withInitial(ArrayList::new);
         }
 
         boolean isEmpty() {
-            var stack = CONSTRUCT_STACK.get();
-            return stack == null || stack.isEmpty();
+            return CONSTRUCT_STACK.get().isEmpty();
         }
 
         void push(T object) {
-            if (CONSTRUCT_STACK.get() == null)
-                CONSTRUCT_STACK.set(new ArrayList<>());
             CONSTRUCT_STACK.get().add(object);
         }
 
@@ -196,7 +197,7 @@ public class InstanceCache {
      * @param  address get the Proxy object for this address from the cache
      * @return the instance (if found), or null (if not found)
      */
-    private static Proxy lookup(MemorySegment address) {
+    private static @Nullable Proxy lookup(@Nullable MemorySegment address) {
         
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL))
@@ -219,8 +220,8 @@ public class InstanceCache {
      *                  in the TypeCache
      * @return a Proxy instance for the provided memory address
      */
-    public static Proxy getForType(MemorySegment address,
-                                   Function<MemorySegment, ? extends Proxy> fallback) {
+    public static @Nullable Proxy getForType(MemorySegment address,
+                                             Function<MemorySegment, ? extends Proxy> fallback) {
         
         // Get instance from the cache
         Proxy instance = lookup(address);
@@ -235,10 +236,6 @@ public class InstanceCache {
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
-
-        // Null check on the new instance
-        if (newInstance == null)
-            return null;
 
         // If this instance is newly constructed
         if (!constructStack.isEmpty()
@@ -274,8 +271,8 @@ public class InstanceCache {
      *                  in the TypeCache
      * @return a Proxy instance for the provided memory address
      */
-    public static Proxy getForTypeClass(MemorySegment address,
-                                        Function<MemorySegment, ? extends Proxy> fallback) {
+    public static @Nullable Proxy getForTypeClass(@Nullable MemorySegment address,
+                                                  Function<MemorySegment, ? extends Proxy> fallback) {
         // Don't try to dereference a null pointer
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
@@ -341,12 +338,12 @@ public class InstanceCache {
      *                   A trailing {@code null} will be added automatically.
      */
     public static void newGObject(GObject proxy,
-                                  Type objectType,
+                                  @Nullable Type objectType,
                                   long size,
-                                  Object... properties) {
+                                  @Nullable Object @Nullable ... properties) {
         // Split varargs into first property name and the rest
         String first;
-        Object[] rest;
+        @Nullable Object[] rest;
         if (properties == null || properties.length == 0) {
             first = null;
             rest = new Object[] {};
@@ -372,7 +369,7 @@ public class InstanceCache {
                         (MemorySegment) (first == null ? MemorySegment.NULL
                                 : Interop.allocateNativeString(first, _arena)),
                         rest);
-                if (proxy.handle() == null)
+                if (MemorySegment.NULL.equals(proxy.handle()))
                     ADDRESS_FIELD.set(proxy, address.reinterpret(size));
 
                 // Ensure the new object is cached
@@ -450,13 +447,8 @@ public class InstanceCache {
      *
      * @param address memory address of the object instance to be cleaned
      */
-    private record ToggleRefFinalizer(MemorySegment address)
-            implements Runnable {
-
+    private record ToggleRefFinalizer(MemorySegment address) implements Runnable {
         public void run() {
-            if (address == null)
-                return;
-
             // g_object_remove_toggle_ref must be called from the main context
             var defaultContext = MainContext.default_();
             if (defaultContext != null) {

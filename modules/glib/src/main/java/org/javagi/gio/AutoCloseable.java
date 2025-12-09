@@ -25,7 +25,8 @@ import org.gnome.gio.Cancellable;
 import org.gnome.gio.IOStream;
 import org.gnome.gio.InputStream;
 import org.gnome.gio.OutputStream;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 
@@ -38,6 +39,7 @@ import java.io.IOException;
  * ({@link IOStream}, {@link InputStream} and {@link OutputStream}) so they
  * become {@code AutoCloseable} and can be used in a try-with-resources block.
  */
+@NullMarked
 public interface AutoCloseable extends java.lang.AutoCloseable {
 
     /**
@@ -66,6 +68,6 @@ public interface AutoCloseable extends java.lang.AutoCloseable {
      * @return {@code true} on success, {@code false} on failure
      * @throws GErrorException See {@link GError}
      */
-    boolean close(@Nullable org.gnome.gio.Cancellable cancellable)
+    boolean close(@Nullable Cancellable cancellable)
             throws GErrorException;
 }

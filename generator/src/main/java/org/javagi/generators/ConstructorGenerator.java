@@ -31,6 +31,7 @@ import javax.lang.model.element.Modifier;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.javagi.util.Conversions.toJavaIdentifier;
 import static java.util.function.Predicate.not;
@@ -159,10 +160,12 @@ public class ConstructorGenerator {
         var generator = new TypedValueGenerator(ctor.returnValue());
         PartialStatement stmt = generator.marshalNativeToJava("_result", false);
 
-        // Ref GObject
+        // Return GObject
         if (parent.checkIsGObject()) {
-            builder.addNamedCode(PartialStatement.of("return ")
-                    .add(stmt).add(";\n").format(),stmt.arguments());
+            stmt.add(null, "objects", Objects.class);
+            builder.addNamedCode(PartialStatement.of("return $objects:T.requireNonNull(")
+                    .add(stmt)
+                    .add(");\n").format(), stmt.arguments());
         }
 
         // GVariant and GClosure constructors return floating references

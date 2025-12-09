@@ -22,6 +22,8 @@ package org.javagi.interop;
 import org.javagi.base.Alias;
 import org.javagi.base.Enumeration;
 import org.javagi.base.Proxy;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -29,11 +31,13 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.javagi.interop.Interop.*;
 
 /**
  * Generate a MethodHandle for a variadic function.
  */
+@NullMarked
 record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
 
     private static final MethodHandle METHOD_HANDLE;
@@ -89,9 +93,14 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
      * Invoked by METHOD_HANDLE.
      */
     @SuppressWarnings("unused")
-    private Object invoke(Object[] args) throws Throwable {
+    private Object invoke(@Nullable Object[] args) throws Throwable {
+        if (args.length < 1)
+            throw new IllegalArgumentException("Missing vararg collector argument");
+
         // The last argument is the array of vararg collector
-        Object[] varargs = (Object[]) args[args.length - 1];
+        var varargs = (@Nullable Object[]) args[args.length - 1];
+        if (varargs == null)
+            throw new IllegalArgumentException("Vararg collector argument is null");
 
         // number of fixed and variable arguments
         int nNamedArgs = fdesc.argumentLayouts().size();
@@ -171,7 +180,7 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
      * Arrays are allocated to native memory as-is (no additional NULL is
      * appended: the caller must do this).
      */
-    private Object marshalArgument(Object o, Arena arena) {
+    private Object marshalArgument(@Nullable Object o, Arena arena) {
         return switch(o) {
             case null ->
                     MemorySegment.NULL;
@@ -210,9 +219,9 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
             case Enumeration enumeration ->
                     enumeration.getValue();
             case Enumeration[] enumerations ->
-                    getValues(enumerations);
+                    marshalArgument(getValues(enumerations), arena);
             case Proxy proxy ->
-                    proxy.handle();
+                    requireNonNullElse(proxy.handle(), MemorySegment.NULL);
             case Byte _, Character _, Double _, Float _, Integer _, Short _, Long _ ->
                     o;
             default ->

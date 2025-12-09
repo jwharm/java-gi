@@ -23,20 +23,22 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 import org.gnome.glib.GError;
-import org.jetbrains.annotations.ApiStatus;
 
 import org.gnome.glib.Quark;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A GErrorException is thrown when a GError is returned by native code. See
  * <a href="https://docs.gtk.org/glib/error-reporting.html">the Gtk
  * documentation on error reporting</a> for details about GError.
  */
+@NullMarked
 public class GErrorException extends Exception {
 
     private final Quark domain;
     private final int code;
-    private final String message;
+    private final @Nullable String message;
 
     /**
      * Check if an error is set.
@@ -70,7 +72,6 @@ public class GErrorException extends Exception {
      *
      * @param gerrorPtr pointer to a GError in native memory
      */
-    @ApiStatus.Internal
     public GErrorException(MemorySegment gerrorPtr) {
         super(readMessage(gerrorPtr));
         GError gerror = dereference(gerrorPtr);
@@ -93,8 +94,8 @@ public class GErrorException extends Exception {
      */
     public GErrorException(Quark domain,
                            int code,
-                           String message,
-                           Object... args) {
+                           @Nullable String message,
+                           @Nullable Object... args) {
         super(message);
         this.domain = domain;
         this.code = code;
@@ -127,17 +128,5 @@ public class GErrorException extends Exception {
      */
     public GError toGError() {
         return new GError(domain, code, message);
-    }
-
-    /**
-     * Create a new GError instance with the domain, code and message of this
-     * GErrorException.
-     *
-     * @return a newly created GError instance
-     * @deprecated see {@link #toGError()}
-     */
-    @Deprecated
-    public GError getGError() {
-        return toGError();
     }
 }
