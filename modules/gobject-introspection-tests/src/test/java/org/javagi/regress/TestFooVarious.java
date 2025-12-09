@@ -85,7 +85,7 @@ public class TestFooVarious {
 
     @Test
     void garray() {
-        assertThrows(NullPointerException.class, Regress::fooTestArray);
+        assertNull(fooTestArray());
     }
 
     @Test

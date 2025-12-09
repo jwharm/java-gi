@@ -53,10 +53,51 @@ class TypedValueGenerator {
     }
 
     /**
-     * We cannot null-check primitive values.
-     * @return true if this parameter is not a primitive value
+     * Check if this type can be null
      */
     boolean checkNull() {
+        if (v instanceof InstanceParameter)
+            return false;
+
+        if (v instanceof Parameter p) {
+            if (p.notNull()
+                    || p.varargs()
+                    || p.isErrorParameter()
+                    || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter())
+                return false;
+
+            if (p.nullable())
+                return true;
+        }
+
+        if (v instanceof ReturnValue rv) {
+            if (rv.anyType().isVoid())
+                return false;
+
+            if (rv.nullable())
+                return true;
+        }
+
+        // A NULL GList is just empty
+        if (type != null && type.checkIsGList())
+            return false;
+
+        // It is nullable when it is not a primitive type
+        return ! (type != null
+                    && !type.isPointer()
+                    && (type.isPrimitive()
+                        || (target instanceof Alias a
+                                && a.anyType() instanceof Type t
+                                && t.isPrimitive())
+                        || target instanceof EnumType));
+    }
+
+    /**
+     * Check if this type must be annotated as nullable
+     */
+    boolean annotateNull() {
         if (v instanceof InstanceParameter)
             return false;
 
@@ -92,42 +133,38 @@ class TypedValueGenerator {
         if (type != null && type.checkIsGList())
             return false;
 
+        // All pointer types are nullable by default, except for GError**, but
+        // that parameter is hidden from the Java api anyway.
+        if (type != null && type.isPointer())
+            return false;
+
         // It is nullable when it is not a primitive type
         return ! (type != null
-                    && !type.isPointer()
-                    && (type.isPrimitive()
-                        || (target instanceof Alias a
-                                && a.anyType() instanceof Type t
-                                && t.isPrimitive())
-                        || target instanceof EnumType));
+                && !type.isPointer()
+                && (type.isPrimitive()
+                || (target instanceof Alias a
+                && a.anyType() instanceof Type t
+                && t.isPrimitive())
+                || target instanceof EnumType));
     }
 
     TypeName annotated(TypeName typeName) {
-        if (checkNull())
+        if (annotateNull())
             return typeName.annotated(AnnotationSpec.builder(Nullable.class).build());
         else
             return typeName;
-    }
-
-    String transfer() {
-        TransferOwnership transfer = switch(v) {
-            case Parameter    p ->  p.transferOwnership();
-            case ReturnValue rv -> rv.transferOwnership();
-            default -> NONE;
-        };
-        return "$transferOwnership:T." + transfer.toString();
     }
 
     TypeName getType() {
         return getType(true, false);
     }
 
-    TypeName getAnnotatedType(boolean setOfBitfield) {
-        return getType(setOfBitfield, checkNull());
-    }
-
     TypeName getType(boolean setOfBitfield) {
         return getType(setOfBitfield, false);
+    }
+
+    TypeName getAnnotatedType(boolean setOfBitfield) {
+        return getType(setOfBitfield, annotateNull());
     }
 
     private TypeName getType(boolean setOfBitfield, boolean annotate) {
@@ -155,7 +192,7 @@ class TypedValueGenerator {
             return annotated(ParameterizedTypeName.get(ClassNames.OUT, typeName.box()));
         }
 
-        TypeName typeName = (annotate && checkNull())
+        TypeName typeName = (annotate && annotateNull())
                 ? anyType.nullableAnnotatedTypeName()
                 : anyType.typeName();
 
@@ -172,6 +209,15 @@ class TypedValueGenerator {
 
     String getName() {
         return "...".equals(v.name()) ? "varargs" : toJavaIdentifier(v.name());
+    }
+
+    private String transfer() {
+        TransferOwnership transfer = switch(v) {
+            case Parameter    p ->  p.transferOwnership();
+            case ReturnValue rv -> rv.transferOwnership();
+            default -> NONE;
+        };
+        return "$transferOwnership:T." + transfer.toString();
     }
 
     PartialStatement marshalJavaToNative(String identifier) {

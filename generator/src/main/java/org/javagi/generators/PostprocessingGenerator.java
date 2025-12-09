@@ -91,13 +91,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 }
                 stmt.add(");\n");
 
-                // Null-check
-                if (checkNull())
-                    builder.beginControlFlow("if ($1L != null)", getName())
-                           .addNamedCode(stmt.format(), stmt.arguments())
-                           .endControlFlow();
-                else
-                    builder.addNamedCode(stmt.format(), stmt.arguments());
+                // Always do a null-check
+                builder.beginControlFlow("if ($1L != null)", getName())
+                       .addNamedCode(stmt.format(), stmt.arguments())
+                       .endControlFlow();
 
                 return;
             }
@@ -213,10 +210,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && (! "ref".equals(func.name()))
                 && (! "ref_sink".equals(func.name()))) {
             if (target instanceof Class) {
-                if (checkNull())
-                    builder.addStatement("if (_returnValue != null) _returnValue.ref()");
-                else
-                    builder.addStatement("_returnValue.ref()");
+                builder.addStatement("if (_returnValue != null) _returnValue.ref()");
             } else {
                 // For interfaces and aliases, check if it's actually a GObject instance
                 builder.beginControlFlow("if (_returnValue instanceof $T _gobject)", ClassNames.G_OBJECT)
