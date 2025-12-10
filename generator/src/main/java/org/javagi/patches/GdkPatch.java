@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
+import static java.util.function.Predicate.not;
 
 public class GdkPatch implements Patch {
     @Override
@@ -49,12 +50,14 @@ public class GdkPatch implements Patch {
          */
         if (element instanceof Bitfield bf && "ModifierType".equals(bf.name())) {
             var children = new ArrayList<>(bf.children());
+            var firstMemberIdx = 1 + (int) children.stream().takeWhile(not(Member.class::isInstance)).count();
+
             Doc doc = new Doc(emptyMap(),
                     "Internal flag. Your code should preserve and ignore this flag.");
             for (int bit = 0; bit < 31; bit++) {
                 var value = Integer.toString(1 << bit);
                 if (bf.members().stream().noneMatch(m -> m.value().equals(value)))
-                    children.add(bit + 2, new Member(
+                    children.add(bit + firstMemberIdx, new Member(
                             Map.of("name", "INTERNAL_" + bit, "value", value),
                             List.of(doc)));
             }
