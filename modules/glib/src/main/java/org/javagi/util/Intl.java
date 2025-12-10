@@ -21,14 +21,20 @@ package org.javagi.util;
 
 import org.gnome.glib.GLib;
 import org.javagi.interop.Interop;
+import org.javagi.interop.InteropException;
 import org.javagi.interop.Platform;
 
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility class to translate text to the current locale using GNU Gettext.
@@ -64,10 +70,27 @@ public class Intl {
 
     static {
         switch (Platform.getRuntimePlatform()) {
-            case LINUX -> Interop.loadLibrary("libgettextlib.so");
+            case LINUX -> tryLoadLibraryVersions();
             case WINDOWS -> Interop.loadLibrary("libgettextlib.dll");
             case MACOS -> Interop.loadLibrary("libgettextlib.dylib");
         }
+    }
+
+    // The Flatpak runtimes have different versions of libgettextlib-0.xx.y.so,
+    // so we search for the file with a wildcard.
+    private static void tryLoadLibraryVersions() {
+        var libnames = new ArrayList<String>();
+        try (var stream = Files.find(Path.of("/usr/lib/x86_64-linux-gnu"), 1,
+                        (path, _) -> path.getFileName().toString().matches("libgettextlib.*.so"))) {
+            stream.forEach(a -> libnames.add(a.toString()));
+        } catch (IOException ignored) {}
+        for (String libname : libnames) {
+            try {
+                Interop.loadLibrary(libname);
+                return;
+            } catch (InteropException ignored) {}
+        }
+        throw new InteropException("Cannot find libgettextlib.so");
     }
 
     // #include <libintl.h>
