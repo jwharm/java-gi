@@ -1,16 +1,4 @@
 /*
- * Win32NetworkMonitor is a record type with only two fields: a
- * pointer to the parent instance and a pointer to the private data.
- * This results in constructors that clash with the default java-gi
- * Proxy constructor. Technically this is a bug in java-gi, but it
- * occurs only for the Win32NetworkMonitor type and this type has no
- * functionality in the Java bindings: no fields, no methods,
- * nothing useful. So we remove it from the Java bindings for now.
- */
-Win32NetworkMonitor java-gi-skip
-Win32NetworkMonitorClass java-gi-skip
-
-/*
  * The method "g_io_module_load" overrides "g_type_module_load", but
  * returns void instead of boolean. This is not allowed in Java.
  * Therefore, the method in IOModule is renamed fom "load" to
