@@ -66,6 +66,10 @@ public final class Library implements Serializable {
         return exported;
     }
 
+    public void clearExported() {
+        exported.clear();
+    }
+
     public Namespace lookupNamespace(String name) {
         for (Repository repo : repositories.values())
             for (Namespace ns : repo.namespaces())
