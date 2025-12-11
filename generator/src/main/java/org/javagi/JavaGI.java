@@ -202,6 +202,7 @@ public class JavaGI implements Callable<Integer> {
             // Generate the language bindings
             generate(name, library, srcDirectory);
             generateModuleInfo(library, packages, srcDirectory);
+            library.clearExported();
 
             if (generateProject) {
                 // Generate build.gradle script
@@ -382,8 +383,9 @@ public class JavaGI implements Callable<Integer> {
             return "    api(\"io.github.jwharm.cairobindings:cairo:1.18.4.1\")";
         }
         else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
+            String mavenName = ModuleInfo.mavenName(name);
             String version = System.getProperty("app.version");
-            return "    api(\"io.github.jwharm.javagi:" + name + ":" + version + "\")";
+            return "    api(\"" + mavenName + ":" + version + "\")";
         } else {
             return "    api(project(\":" + name + "\"))";
         }
