@@ -20,7 +20,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     <dependency>
       <groupId>org.java-gi</groupId>
       <artifactId>gtk</artifactId>
-      <version>0.13.0</version>
+      <version>0.13.1</version>
     </dependency>
     ```
 
@@ -32,7 +32,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation 'org.java-gi:gtk:0.13.0'
+        implementation 'org.java-gi:gtk:0.13.1'
     }
     ```
 
@@ -44,20 +44,20 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("org.java-gi:gtk:0.13.0")
+        implementation("org.java-gi:gtk:0.13.1")
     }
     ```
 
 === "Scala SBT"
 
     ```scala
-    libraryDependencies += "org.java-gi" % "gtk" % "0.13.0"
+    libraryDependencies += "org.java-gi" % "gtk" % "0.13.1"
     ```
 
 === "Leiningen"
 
     ```clojure
-    [org.java-gi/gtk "0.13.0"]
+    [org.java-gi/gtk "0.13.1"]
     ```
 
 === "bld"
@@ -67,7 +67,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     scope(main)
         .include(dependency("org.java-gi",
                             "gtk",
-                            version(0,13,0)));
+                            version(0,13,1)));
     ```
 
 This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gstreamer`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=org.java-gi).

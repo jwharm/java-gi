@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.java-gi:gtk:0.13.0'
+    implementation 'org.java-gi:gtk:0.13.1'
 }
 
 java {
