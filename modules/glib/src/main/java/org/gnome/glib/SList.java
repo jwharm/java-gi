@@ -23,7 +23,8 @@ import org.javagi.base.TransferOwnership;
 import org.javagi.base.Proxy;
 import org.javagi.base.ProxyInstance;
 import org.javagi.interop.Interop;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -49,7 +50,8 @@ import static org.javagi.interop.Interop.getAddress;
  *            {@link String}, a primitive value, or implement the {@link Proxy}
  *            interface.
  */
-public class SList<E> extends AbstractSequentialList<E> implements Proxy {
+@NullMarked
+public class SList<E> extends AbstractSequentialList<@Nullable E> implements Proxy {
 
     static {
         GLib.javagi$ensureInitialized();
@@ -65,11 +67,11 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
     private final Function<MemorySegment, E> make;
 
     // Used to free a removed object
-    private final Consumer<E> free;
+    private @Nullable final Consumer<E> free;
 
     // The current head of the SList. It is a mutable field, because add/remove
     // operations on an SList can change/remove the head
-    private SListNode head;
+    private @Nullable SListNode head;
 
     // The finalizer is run by a Cleaner to free memory
     private final Finalizer<E> finalizer;
@@ -86,7 +88,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
      */
     public SList(MemorySegment address,
                  Function<MemorySegment, E> make,
-                 Consumer<E> free,
+                 @Nullable Consumer<E> free,
                  TransferOwnership ownership) {
         this.head = MemorySegment.NULL.equals(address) ? null
                 : new SListNode(address);
@@ -151,7 +153,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
      *         sequence).
      */
     @Override
-    public @NotNull ListIterator<E> listIterator(int index) {
+    public ListIterator<E> listIterator(int index) {
 
         ListIterator<E> iter = new ListIterator<>() {
 
@@ -159,11 +161,11 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
              * last = the SList that was returned last
              * prev = the SList that was returned before the last
              */
-            private SListNode prev = null, last = null;
+            private @Nullable SListNode prev = null, last = null;
 
             private int index = -1;
 
-            private SListNode peek() {
+            private @Nullable SListNode peek() {
                 return last == null ? head : last.readNext();
             }
 
@@ -173,7 +175,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
             }
 
             @Override
-            public E next() {
+            public @Nullable E next() {
                 if (!hasNext())
                     throw new NoSuchElementException();
                 prev = last;
@@ -304,7 +306,12 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
      */
     @Override
     public MemorySegment handle() {
-        return head == null ? MemorySegment.NULL : head.handle();
+        MemorySegment handle = null;
+        if (head != null)
+            handle = head.handle();
+        if (handle != null)
+            return handle;
+        return MemorySegment.NULL;
     }
 
     /**
@@ -372,7 +379,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @return The value of the field {@code data}
          */
-        MemorySegment readData() {
+        @Nullable MemorySegment readData() {
             return (MemorySegment) DATA.get(handle(), 0);
         }
 
@@ -381,7 +388,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @param data The new value for the field {@code data}
          */
-        void writeData(MemorySegment data) {
+        void writeData(@Nullable MemorySegment data) {
             DATA.set(handle(), 0, (data == null ? MemorySegment.NULL : data));
         }
 
@@ -390,7 +397,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @return The value of the field {@code next}
          */
-        SListNode readNext() {
+        @Nullable SListNode readNext() {
             var result = (MemorySegment) NEXT.get(handle(), 0);
             return MemorySegment.NULL.equals(result) ? null
                     : new SListNode(result);
@@ -409,7 +416,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          * @param  link node to delete
          * @return the new head of {@code list}
          */
-        static SListNode deleteLink(SListNode list, SListNode link) {
+        static @Nullable SListNode deleteLink(@Nullable SListNode list, @Nullable SListNode link) {
             var listPtr = list == null ? MemorySegment.NULL : list.handle();
             var linkPtr = link == null ? MemorySegment.NULL : link.handle();
             try {
@@ -430,9 +437,9 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          * @param  data    data to put in the newly-inserted node
          * @return the new head of the list.
          */
-        static SListNode insertBefore(SListNode slist,
-                                      SListNode sibling,
-                                      MemorySegment data) {
+        static @Nullable SListNode insertBefore(@Nullable SListNode slist,
+                                                @Nullable SListNode sibling,
+                                                @Nullable MemorySegment data) {
             var listPtr = slist == null ? MemorySegment.NULL : slist.handle();
             var sbPtr = sibling == null ? MemorySegment.NULL : sibling.handle();
             var dataPtr = data == null ? MemorySegment.NULL : data;
@@ -456,7 +463,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          * @param  list a {@code GSList}
          * @return the number of elements in the {@code GSList}
          */
-        static int length(SListNode list) {
+        static int length(@Nullable SListNode list) {
             var listPtr = list == null ? MemorySegment.NULL : list.handle();
             try {
                 return (int) g_slist_length.invokeExact(listPtr);
@@ -471,7 +478,7 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
          *
          * @param list The first link of a {@code GSList}.
          */
-        static void free(SListNode list) {
+        static void free(@Nullable SListNode list) {
             var listPtr = list == null ? MemorySegment.NULL : list.handle();
             try {
                 g_slist_free.invokeExact(listPtr);
@@ -483,14 +490,14 @@ public class SList<E> extends AbstractSequentialList<E> implements Proxy {
 
     private static final class Finalizer<E> implements Runnable {
 
-        private final MemorySegment address;
-        private final Function<MemorySegment, E> make;
-        private final Consumer<E> free;
+        private final @Nullable MemorySegment address;
+        private final Function<@Nullable MemorySegment, E> make;
+        private final @Nullable Consumer<E> free;
         private TransferOwnership ownership;
 
-        public Finalizer(MemorySegment address,
+        public Finalizer(@Nullable MemorySegment address,
                          Function<MemorySegment, E> make,
-                         Consumer<E> free,
+                         @Nullable Consumer<E> free,
                          TransferOwnership ownership) {
             this.address = address;
             this.make = make;

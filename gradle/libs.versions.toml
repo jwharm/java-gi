@@ -1,19 +1,19 @@
 [versions]
-javagi = "0.13.1"
+javagi = "0.14.0"
 jdk = "22"
 cairo = "1.18.4.2"
 picocli = "4.7.7"
 javapoet = "1.13.0"
-annotations = "26.0.2-1"
-junit = "6.0.0"
-mavenpublish = "0.34.0"
+jspecify = "1.0.0"
+junit = "6.0.1"
+mavenpublish = "0.35.0"
 
 [libraries]
 javagi-generator = { module = "org.java-gi:generator", version.ref = "javagi" }
 cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "cairo" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mavenpublish = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "mavenpublish" }

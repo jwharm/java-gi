@@ -20,12 +20,13 @@
 package org.javagi.gio;
 
 import org.gnome.gobject.GObject;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public interface ListModelJavaListMutable<E extends GObject> extends ListModelJavaList<E> {
+@NullMarked
+public interface ListModelJavaListMutable<E extends @Nullable GObject> extends ListModelJavaList<E> {
 
     void removeAt(int index);
     void append(E e);
@@ -107,12 +108,11 @@ public interface ListModelJavaListMutable<E extends GObject> extends ListModelJa
      * {@inheritDoc}
      */
     @Override
-    default @NotNull List<E> subList(int fromIndex, int toIndex) {
+    default List<E> subList(int fromIndex, int toIndex) {
         return new SubList<>(this, fromIndex, toIndex);
     }
 
-    @ApiStatus.Internal
-    class SubList<E extends GObject, List extends ListModelJavaListMutable<E>>
+    class SubList<E extends @Nullable GObject, List extends ListModelJavaListMutable<E>>
             extends ListModelJavaList.SubList<E, List>
             implements ListModelJavaListMutable<E> {
 

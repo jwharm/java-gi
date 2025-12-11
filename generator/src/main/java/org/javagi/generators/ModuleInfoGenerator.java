@@ -69,9 +69,11 @@ public class ModuleInfoGenerator {
             throw new IllegalStateException("Unknown module name");
 
         builder.append("""
-                module %s {
+                import org.jspecify.annotations.NullMarked;
+                
+                @NullMarked module %s {
                     requires static java.compiler;
-                    requires static org.jetbrains.annotations;
+                    requires transitive org.jspecify;
                 """.formatted(name));
 
         exports.stream().sorted().forEach(this::appendExports);

@@ -28,6 +28,7 @@ import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -138,8 +139,10 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (rec.toStringTarget() != null)
             builder.addMethod(toStringRedirect());
 
-        if ("GTypeInstance".equals(rec.cType()))
+        if ("GTypeInstance".equals(rec.cType())) {
             addCallParentMethods();
+            builder.addMethod(cast());
+        }
 
         if ("GVariant".equals(rec.cType()))
             builder.addMethod(gvariantPack())
@@ -180,7 +183,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
          */
         else if (outerClass != null && cb.parameters() != null) {
             builder.addField(FieldSpec.builder(
-                            java.lang.reflect.Method.class,
+                            TypeName.get(java.lang.reflect.Method.class)
+                                    .annotated(AnnotationSpec.builder(Nullable.class).build()),
                             "_" + generator.getName() + "Method",
                             Modifier.PRIVATE)
                     .build());
@@ -345,6 +349,34 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .returns(boolean.class)
                 .addStatement("return this.callParent")
                 .build());
+    }
+
+    private MethodSpec cast() {
+        TypeVariableName T = TypeVariableName.get("T", ClassNames.G_TYPE_INSTANCE);
+        return MethodSpec.methodBuilder("cast")
+                .addJavadoc("""
+                        Cast this instance to the requested type, if the GTypes are compatible.
+                        
+                        @param to the intended class
+                        @param <T> the type of the intended class (must be a GTypeInstance)
+                        @return a new instance of the requested class
+                        @throws $T when {@code to} is not a registered GType
+                        @throws $T when the GType of this instance does not derive from the GType of {@code to}
+                        """, IllegalArgumentException.class, ClassCastException.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addTypeVariable(T)
+                .returns(T)
+                .addParameter(ParameterizedTypeName.get(ClassName.get(java.lang.Class.class), T), "to")
+                .addStatement("$T fromType = readGClass().readGType()", ClassNames.G_TYPE)
+                .addStatement("$T toType = $T.getType(to)", ClassNames.G_TYPE, ClassNames.TYPE_CACHE)
+                .beginControlFlow("if (toType == null)")
+                .addStatement("throw new $T(to.getName() + $S)", IllegalArgumentException.class, " is not a registered GType")
+                .endControlFlow()
+                .beginControlFlow("if (! $T.typeIsA(fromType, toType))", ClassNames.G_OBJECTS)
+                .addStatement("throw new $T(fromType + $S + toType)", ClassCastException.class, " is not a ")
+                .endControlFlow()
+                .addStatement("return (T) $T.getConstructor(toType, null).apply(handle())", ClassNames.TYPE_CACHE)
+                .build();
     }
 
     private MethodSpec gvariantPack() {

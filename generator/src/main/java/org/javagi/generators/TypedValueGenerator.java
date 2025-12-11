@@ -25,6 +25,7 @@ import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
@@ -52,26 +53,38 @@ class TypedValueGenerator {
     }
 
     /**
-     * We cannot null-check primitive values.
-     * @return true if this parameter is not a primitive value
+     * Check if this type can be null
      */
     boolean checkNull() {
         if (v instanceof InstanceParameter)
             return false;
 
-        if (v instanceof Parameter p &&
-                (p.notNull()
+        if (v instanceof Parameter p) {
+            if (p.notNull()
                     || p.varargs()
                     || p.isErrorParameter()
                     || p.isUserDataParameter()
                     || p.isDestroyNotifyParameter()
-                    || p.isArrayLengthParameter()))
-            return false;
+                    || p.isArrayLengthParameter())
+                return false;
+
+            if (p.nullable())
+                return true;
+        }
+
+        if (v instanceof ReturnValue rv) {
+            if (rv.anyType().isVoid())
+                return false;
+
+            if (rv.nullable())
+                return true;
+        }
 
         // A NULL GList is just empty
         if (type != null && type.checkIsGList())
             return false;
 
+        // It is nullable when it is not a primitive type
         return ! (type != null
                     && !type.isPointer()
                     && (type.isPrimitive()
@@ -81,54 +94,130 @@ class TypedValueGenerator {
                         || target instanceof EnumType));
     }
 
-    String transfer() {
-        TransferOwnership transfer = switch(v) {
-            case Parameter    p ->  p.transferOwnership();
-            case ReturnValue rv -> rv.transferOwnership();
-            default -> NONE;
-        };
-        return "$transferOwnership:T." + transfer.toString();
+    /**
+     * Check if this type must be annotated as nullable
+     */
+    boolean annotateNull() {
+        if (v instanceof InstanceParameter)
+            return false;
+
+        if (v instanceof Parameter p) {
+            if (p.notNull()
+                    || p.varargs()
+                    || p.isErrorParameter()
+                    || p.isUserDataParameter()
+                    || p.isDestroyNotifyParameter()
+                    || p.isArrayLengthParameter())
+                return false;
+
+            if (p.nullable())
+                return true;
+        }
+
+        if (v instanceof ReturnValue rv) {
+            if (rv.anyType().isVoid())
+                return false;
+
+            if (rv.nullable())
+                return true;
+
+            if (rv.notNull())
+                return false;
+
+            // Returned arrays are not null
+            if (array != null)
+                return false;
+        }
+
+        // A NULL GList is just empty
+        if (type != null && type.checkIsGList())
+            return false;
+
+        // All pointer types are nullable by default, except for GError**, but
+        // that parameter is hidden from the Java api anyway.
+        if (type != null && type.isPointer())
+            return false;
+
+        // It is nullable when it is not a primitive type
+        return ! (type != null
+                && !type.isPointer()
+                && (type.isPrimitive()
+                || (target instanceof Alias a
+                && a.anyType() instanceof Type t
+                && t.isPrimitive())
+                || target instanceof EnumType));
+    }
+
+    TypeName annotated(TypeName typeName) {
+        if (annotateNull())
+            return typeName.annotated(AnnotationSpec.builder(Nullable.class).build());
+        else
+            return typeName;
     }
 
     TypeName getType() {
-        return getType(true);
+        return getType(true, false);
     }
 
     TypeName getType(boolean setOfBitfield) {
+        return getType(setOfBitfield, false);
+    }
+
+    TypeName getAnnotatedType(boolean setOfBitfield) {
+        return getType(setOfBitfield, annotateNull());
+    }
+
+    private TypeName getType(boolean setOfBitfield, boolean annotate) {
         if (type != null && type.isActuallyAnArray())
-            return ArrayTypeName.of(getType(type, setOfBitfield));
+            return ArrayTypeName.of(getType(type, setOfBitfield, annotate));
 
         if (v instanceof Field f && f.callback() != null)
             return f.parent().typeName().nestedClass(
                     toJavaSimpleType(f.name() + "_callback", f.namespace()));
 
         try {
-            return getType(v.anyType(), setOfBitfield);
+            return getType(v.anyType(), setOfBitfield, annotate);
         } catch (NullPointerException npe) {
             throw new NoSuchElementException("Cannot find " + type);
         }
     }
 
-    private TypeName getType(AnyType anyType, boolean setOfBitfield) {
-        // Wrap Bitfield return value into a Set<>
-        TypeName typeName = anyType.typeName();
-        typeName = (setOfBitfield && v.isBitfield())
-                ? ParameterizedTypeName.get(ClassName.get(Set.class), typeName)
-                : typeName;
+    private TypeName getType(AnyType anyType, boolean setOfBitfield, boolean annotate) {
+        if (v instanceof Parameter p && p.isOutParameter()) {
+            TypeName typeName = anyType.typeName();
 
-        if (v instanceof Parameter p && p.isOutParameter())
-            return ParameterizedTypeName.get(ClassNames.OUT, typeName.box());
+            if (setOfBitfield && v.isBitfield())
+                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), typeName.box());
+
+            return annotated(ParameterizedTypeName.get(ClassNames.OUT, typeName.box()));
+        }
+
+        TypeName typeName = (annotate && annotateNull())
+                ? anyType.nullableAnnotatedTypeName()
+                : anyType.typeName();
+
+        if (setOfBitfield && v.isBitfield())
+                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), anyType.typeName().box());
 
         if (type != null
                 && type.isPointer()
                 && (type.isPrimitive() || target instanceof EnumType))
-            return TypeName.get(MemorySegment.class);
+            return annotated(TypeName.get(MemorySegment.class));
 
         return typeName;
     }
 
     String getName() {
         return "...".equals(v.name()) ? "varargs" : toJavaIdentifier(v.name());
+    }
+
+    private String transfer() {
+        TransferOwnership transfer = switch(v) {
+            case Parameter    p ->  p.transferOwnership();
+            case ReturnValue rv -> rv.transferOwnership();
+            default -> NONE;
+        };
+        return "$transferOwnership:T." + transfer.toString();
     }
 
     PartialStatement marshalJavaToNative(String identifier) {
@@ -392,22 +481,14 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP,
                     "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
-        if (target instanceof Bitfield bitfield)
-            return PartialStatement.of(
-                    "$interop:T.intToEnumSet($" + targetTypeTag + ":T.class, "
-                            + "$" + targetTypeTag + ":T::of, "
-                            + identifier + ")",
-                    "interop", ClassNames.INTEROP,
-                    targetTypeTag, bitfield.typeName());
-
-        if (target instanceof Enumeration)
+        if (target instanceof EnumType)
             return PartialStatement.of(
                     "$" + targetTypeTag + ":T.of(" + identifier + ")",
                     targetTypeTag, target.typeName());
 
         // Generate constructor call for GList/GSList with generic element types
         if (target != null && type.checkIsGList()) {
-            if (type.anyTypes() == null || type.anyTypes().size() > 1)
+            if (type.anyTypes().size() != 1)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
             // Generate lambdas or method references to create and destruct elements

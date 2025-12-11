@@ -39,7 +39,6 @@ To handle these two cases, we override the `activate()` method, which gets calle
 To learn more about `GApplication` entry points, consult the GIO [documentation](https://docs.gtk.org/gio/class.Application.html).
 
 ```java
-import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.gio.ApplicationFlags;
 import org.gnome.gio.File;
 import org.gnome.glib.List;
@@ -47,7 +46,6 @@ import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;
 import org.gnome.gtk.Application;
 import org.gnome.gtk.Window;
-import java.lang.foreign.MemorySegment;
 
 public class ExampleApp extends Application {
 
@@ -82,7 +80,6 @@ public class ExampleApp extends Application {
 Another important class that is part of the application support in GTK is {{ javadoc('Gtk.ApplicationWindow') }}. It is typically subclassed as well. Our subclass does not do anything yet, so we will just get an empty window.
 
 ```java
-import io.github.jwharm.javagi.gobject.types.Types;
 import org.gnome.gio.File;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObject;

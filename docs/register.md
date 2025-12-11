@@ -37,11 +37,11 @@ When instantiating a new Java instance of the class, the call to `super()` will 
 !!! info
     In Java-GI version 0.11.* and below, the GType must be explicitly registered with a call to `Types.register(classname.class)`, and the constructor must be a static factory method. Since Java-GI 0.12.0, this is not necessary anymore.
 
-If your Java application is module-based, you must export your package to the `org.gnome.gobject` module in your `module-info.java` file, to allow the reflection to work:
+If your Java application is module-based, you must "open" your package to the `org.gnome.glib` module in your `module-info.java` file, to allow the reflection to work:
 
 ```
 module my.module.name {
-    exports my.package.name to org.gnome.gobject;
+    opens my.package.name to org.gnome.glib;
 }
 ```
 

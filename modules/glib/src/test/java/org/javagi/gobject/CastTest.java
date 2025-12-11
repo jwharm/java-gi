@@ -17,34 +17,36 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.javagi.interop;
+package org.javagi.gobject;
 
-import org.jspecify.annotations.Nullable;
+import org.gnome.gobject.Binding;
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.SignalGroup;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * The Platform enum represents the runtime platform.
+ * Test the TypeInstance.cast() method
  */
-public enum Platform {
-    WINDOWS,
-    LINUX,
-    MACOS;
+public class CastTest {
+    @Test
+    void testCast() {
+        SignalGroup s1 = new SignalGroup(GObject.getType());
 
-    private static @Nullable Platform runtimePlatform = null;
+        GObject obj = s1.cast(GObject.class);
 
-    /**
-     * Determine the runtime platform
-     * @return the runtime platform: "windows", "linux" or "macos"
-     */
-    public static Platform getRuntimePlatform() {
-        if (runtimePlatform == null) {
-            String osName = System.getProperty("os.name").toLowerCase();
-            if (osName.contains("win"))
-                runtimePlatform = WINDOWS;
-            else if (osName.contains("nux"))
-                runtimePlatform = LINUX;
-            else if (osName.contains("mac") || osName.contains("darwin"))
-                runtimePlatform = MACOS;
-        }
-        return runtimePlatform;
+        assertThrows(ClassCastException.class, () -> {
+            SignalGroup s2 = (SignalGroup) obj;
+        });
+
+        assertDoesNotThrow(() -> {
+            SignalGroup s3 = obj.cast(SignalGroup.class);
+        });
+
+        assertThrows(ClassCastException.class, () -> {
+            Binding b = obj.cast(Binding.class);
+        });
     }
 }

@@ -26,6 +26,7 @@ import org.javagi.util.Conversions;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -66,7 +67,8 @@ public class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_TYPE)
+                .returns(ClassNames.G_TYPE
+                        .annotated(AnnotationSpec.builder(Nullable.class).build()))
                 .addStatement("return $T.getType($S)",
                         ClassNames.INTEROP,
                         rt.getTypeFunc())

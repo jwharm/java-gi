@@ -23,8 +23,6 @@ import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.FunctionDescriptor;
@@ -133,14 +131,14 @@ public class CallableGenerator {
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
-                var type = generator.getType(setOfBitfield);
+                var type = generator.getAnnotatedType(setOfBitfield);
 
                 // Trailing flags parameter can be variadic
                 if ((!setOfBitfield)
                         && p.isBitfield()
                         && p.isLastParameter()
                         && (!p.isOutParameter())) {
-                    type = ArrayTypeName.of(type);
+                    type = generator.annotated(ArrayTypeName.of(type));
                     builder.varargs(true);
                 }
 
@@ -148,10 +146,6 @@ public class CallableGenerator {
                     type = ClassNames.GENERIC_T;
 
                 var spec = ParameterSpec.builder(type, generator.getName());
-                if (p.nullable())
-                    spec.addAnnotation(Nullable.class);
-                else if (p.notNull())
-                    spec.addAnnotation(NotNull.class);
                 builder.addParameter(spec.build());
             }
         }
@@ -297,8 +291,10 @@ public class CallableGenerator {
         var returnValue = callable.returnValue();
         if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
-        else if ((!ctor) || namedCtor)
-            builder.returns(new TypedValueGenerator(returnValue).getType());
+        else if ((!ctor) || namedCtor) {
+            var generator = new TypedValueGenerator(returnValue);
+            builder.returns(generator.getAnnotatedType(true));
+        }
 
         // Parameters
         generateMethodParameters(builder, generic, false);

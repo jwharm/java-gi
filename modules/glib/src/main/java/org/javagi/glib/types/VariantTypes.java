@@ -21,12 +21,15 @@ package org.javagi.glib.types;
 
 import org.gnome.glib.Variant;
 import org.gnome.glib.VariantType;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class contains G_VARIANT_TYPE_... declarations and conversion functions
  * from Java classes to GVariant types and vice versa.
  */
 @SuppressWarnings("unused")
+@NullMarked
 public class VariantTypes {
 
     // GVariant types, adapted from <glib/gvarianttype.h>
@@ -214,7 +217,7 @@ public class VariantTypes {
      * @param  object a Java object instance
      * @return the VariantType
      */
-    public static VariantType objectToVariantType(Object object) {
+    public static @Nullable VariantType objectToVariantType(@Nullable Object object) {
         return switch(object) {
             case Boolean _ -> BOOLEAN;
             case Byte _    -> BYTE;
@@ -223,7 +226,7 @@ public class VariantTypes {
             case Long _    -> INT64;
             case Short _   -> INT16;
             case String _  -> STRING;
-            default        -> null;
+            case null, default -> null;
         };
     }
 
@@ -234,14 +237,15 @@ public class VariantTypes {
      * @param  variant a {@link Variant} instance
      * @return the Java class
      */
-    public static Class<?> variantToClass(Variant variant) {
-        return variant.isOfType(BOOLEAN)   ? Boolean.class
-                : variant.isOfType(BYTE)   ? Byte.class
-                : variant.isOfType(DOUBLE) ? Double.class
-                : variant.isOfType(INT32)  ? Integer.class
-                : variant.isOfType(INT64)  ? Long.class
-                : variant.isOfType(INT16)  ? Short.class
-                : variant.isOfType(STRING) ? String.class
+    public static @Nullable Class<?> variantToClass(@Nullable Variant variant) {
+        return variant == null ? null
+                : variant.isOfType(BOOLEAN) ? Boolean.class
+                : variant.isOfType(BYTE)    ? Byte.class
+                : variant.isOfType(DOUBLE)  ? Double.class
+                : variant.isOfType(INT32)   ? Integer.class
+                : variant.isOfType(INT64)   ? Long.class
+                : variant.isOfType(INT16)   ? Short.class
+                : variant.isOfType(STRING)  ? String.class
                 : null;
     }
 }

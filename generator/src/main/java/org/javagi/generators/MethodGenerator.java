@@ -130,8 +130,9 @@ public class MethodGenerator {
             builder.returns(ClassNames.GENERIC_T);
         else if (func instanceof Constructor)
             builder.returns(MemorySegment.class);
-        else
-            builder.returns(new TypedValueGenerator(returnValue).getType());
+        else {
+            builder.returns(new TypedValueGenerator(returnValue).getAnnotatedType(true));
+        }
 
         // Parameters
         generator.generateMethodParameters(builder, generic, true);

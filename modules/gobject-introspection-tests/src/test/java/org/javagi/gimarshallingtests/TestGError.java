@@ -57,7 +57,7 @@ public class TestGError {
 
     @Test
     void outUninitialized() {
-        assertThrows(NullPointerException.class, () -> gerrorOutUninitialized(null, null));
+        assertDoesNotThrow(() -> gerrorOutUninitialized(null, null));
         var error = new Out<GError>();
         var debug = new Out<String>();
         assertDoesNotThrow(() -> gerrorOutUninitialized(error, debug));
@@ -74,7 +74,7 @@ public class TestGError {
 
     @Test
     void outTransferNoneUninitialized() {
-        assertThrows(NullPointerException.class, () -> gerrorOutTransferNoneUninitialized(null, null));
+        assertDoesNotThrow(() -> gerrorOutTransferNoneUninitialized(null, null));
         var error = new Out<GError>();
         var debug = new Out<String>();
         assertDoesNotThrow(() -> gerrorOutTransferNoneUninitialized(error, debug));

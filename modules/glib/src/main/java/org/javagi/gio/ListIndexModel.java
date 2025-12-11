@@ -26,14 +26,16 @@ import org.javagi.gobject.types.TypeCache;
 import org.gnome.gio.ListModel;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An implementation of the {@link ListModel} interface that returns the
  * index of a list item instead of an actual item. The index can be used
  * to retrieve Java objects from a regular {@link java.util.List}.
  */
-public class ListIndexModel extends GObject
-        implements ListModel<ListIndexModel.ListIndex> {
+@NullMarked
+public class ListIndexModel extends GObject implements ListModel<ListIndexModel.ListIndex> {
 
     private ArrayList<ListIndex> items = new ArrayList<>();
 
@@ -120,7 +122,7 @@ public class ListIndexModel extends GObject
      * @return a {@link ListIndex} with the requested position as its value
      */
     @Override
-    public ListIndex getItem(int position) {
+    public @Nullable ListIndex getItem(int position) {
         if (position < 0 || position >= getNItems())
             return null;
         return items.get(position);

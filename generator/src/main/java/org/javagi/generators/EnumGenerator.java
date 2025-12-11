@@ -19,10 +19,7 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.Bitfield;
 import org.javagi.gir.EnumType;
@@ -32,9 +29,11 @@ import org.javagi.util.Numbers;
 
 import javax.lang.model.element.Modifier;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.javagi.util.Conversions.toJavaConstantUpperCase;
 import static org.javagi.util.Conversions.toJavaSimpleType;
@@ -66,6 +65,12 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 .addMethod(valueConstructor())
                 .addMethod(staticConstructor())
                 .addMethod(getValueMethod());
+
+        if (en instanceof Bitfield)
+            builder.addMethod(staticFlagsConstructor())
+                   .addMethod(addressSetConstructor());
+        else
+            builder.addMethod(addressConstructor());
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
@@ -108,8 +113,14 @@ public class EnumGenerator extends RegisteredTypeGenerator {
                 var spec = FieldSpec.builder(
                                 en.typeName(),
                                 toJavaConstantUpperCase(m.name()),
-                                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("of($L)", Numbers.parseInt(m.value()));
+                                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+
+                // Parse the value
+                int value = Numbers.parseInt(m.value());
+                if (en instanceof Bitfield)
+                    spec.initializer("ofFlag($L)", value);
+                else
+                    spec.initializer("of($L)", value);
 
                 // Javadoc
                 if (m.infoElements().doc() != null)
@@ -148,15 +159,21 @@ public class EnumGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec staticConstructor() {
-        MethodSpec.Builder spec = MethodSpec.methodBuilder("of")
-                .addJavadoc("""
+        MethodSpec.Builder spec;
+        if (en instanceof Bitfield) {
+            spec = MethodSpec.methodBuilder("ofFlag")
+                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC);
+        } else {
+            spec = MethodSpec.methodBuilder("of")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+        }
+        spec.addJavadoc("""
                         Create a new $1L for the provided value
                         
                         @param value the $2L value
                         @return the $2L for the provided value
                         """, toJavaSimpleType(en.name(), en.namespace()),
                              en instanceof Bitfield ? "bitfield" : "enum")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(en.typeName())
                 .addParameter(TypeName.INT, "value")
                 .beginControlFlow("return switch(value)");
@@ -172,6 +189,55 @@ public class EnumGenerator extends RegisteredTypeGenerator {
         return spec.addStatement("default -> throw new $T($S + value)",
                         IllegalStateException.class, "Unexpected value: ")
                 .endControlFlow("") // empty string to force a ";"
+                .build();
+    }
+
+    private MethodSpec staticFlagsConstructor() {
+        return MethodSpec.methodBuilder("of")
+                .addJavadoc("""
+                        Create a new {@code EnumSet<$1L>} for the provided bitfield
+                        
+                        @param flags the $1L bitfield
+                        @return the EnumSet for the provided bitfield
+                        """, toJavaSimpleType(en.name(), en.namespace()))
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(Set.class), en.typeName()))
+                .addParameter(TypeName.INT, "flags")
+                .addStatement("return $1T.intToEnumSet($2T.class, $2T::ofFlag, flags)",
+                        ClassNames.INTEROP, en.typeName())
+                .build();
+    }
+
+    private MethodSpec addressConstructor() {
+        return MethodSpec.methodBuilder("of")
+                .addJavadoc("""
+                        Create a new $1L for the value in the provided memory address.
+                        
+                        @param address the memory address holding a $2L value
+                        @return the $2L for the value in the provided memory address
+                        """, toJavaSimpleType(en.name(), en.namespace()),
+                        en instanceof Bitfield ? "bitfield" : "enum")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(en.typeName())
+                .addParameter(MemorySegment.class, "address")
+                .addStatement("return of((int) address.address())")
+                .build();
+    }
+
+    private MethodSpec addressSetConstructor() {
+        return MethodSpec.methodBuilder("of")
+                .addJavadoc("""
+                        Create a new {@code EnumSet<$1L>} for the bitfield
+                        in the provided memory address.
+                        
+                        @param address the memory address holding a bitfield value
+                        @return the EnumSet for the bitfield in the provided memory address
+                        """, toJavaSimpleType(en.name(), en.namespace()))
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(Set.class), en.typeName()))
+                .addParameter(MemorySegment.class, "address")
+                .addStatement("return $1T.intToEnumSet($2T.class, $2T::ofFlag, (int) address.address())",
+                        ClassNames.INTEROP, en.typeName())
                 .build();
     }
 

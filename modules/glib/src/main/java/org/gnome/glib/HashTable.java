@@ -33,9 +33,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static org.javagi.base.TransferOwnership.*;
 import static org.javagi.interop.Interop.getAddress;
 import static java.lang.foreign.MemorySegment.NULL;
@@ -50,7 +51,8 @@ import static java.lang.foreign.MemorySegment.NULL;
  * that require or return a GHashTable. It is not meant to be used as a
  * replacement for Java's own HashMap.
  */
-public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
+@NullMarked
+public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> implements Proxy {
     static {
         GLib.javagi$ensureInitialized();
     }
@@ -61,8 +63,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
     private final SegmentAllocator arena = Interop.mallocAllocator();
 
     // Used to construct a Java instance for a native object
-    private final Function<MemorySegment, K> makeKey;
-    private final Function<MemorySegment, V> makeValue;
+    private final @Nullable Function<MemorySegment, K> makeKey;
+    private final @Nullable Function<MemorySegment, V> makeValue;
 
     /**
      * Create a HashTable proxy instance for the provided memory address.
@@ -72,8 +74,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @param makeValue a function that creates a V from a pointer
      */
     public HashTable(MemorySegment address,
-                     Function<MemorySegment, K> makeKey,
-                     Function<MemorySegment, V> makeValue) {
+                     @Nullable Function<MemorySegment, K> makeKey,
+                     @Nullable Function<MemorySegment, V> makeValue) {
         this.handle = address;
         this.makeKey = makeKey;
         this.makeValue = makeValue;
@@ -98,8 +100,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @param makeKey      a function that creates a K from a pointer
      * @param makeValue    a function that creates a V from a pointer
      */
-    public HashTable(HashFunc hashFunc,
-                     EqualFunc keyEqualFunc,
+    public HashTable(@Nullable HashFunc hashFunc,
+                     @Nullable EqualFunc keyEqualFunc,
                      Function<MemorySegment, K> makeKey,
                      Function<MemorySegment, V> makeValue) {
         this(constructNew(hashFunc, keyEqualFunc), makeKey, makeValue);
@@ -107,7 +109,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         MemoryCleaner.setBoxedType(this, HashTable.getType());
     }
 
-    private static MemorySegment constructNew(HashFunc hashFunc, EqualFunc keyEqualFunc) {
+    private static MemorySegment constructNew(@Nullable HashFunc hashFunc,
+                                              @Nullable EqualFunc keyEqualFunc) {
         try {
             return (MemorySegment) MethodHandles.g_hash_table_new.invokeExact(
                     (MemorySegment) (hashFunc == null ? NULL : hashFunc.toCallback(Arena.global())),
@@ -126,13 +129,13 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @inheritDoc
      */
     @Override
-    public @NotNull Set<Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         final var iterator = getKeys().iterator();
         return new AbstractSet<>() {
             @Override
-            public @NotNull Iterator<Entry<K, V>> iterator() {
+            public Iterator<Entry<K, V>> iterator() {
                 return new Iterator<>() {
-                    K key = null;
+                    @Nullable K key = null;
 
                     @Override
                     public boolean hasNext() {
@@ -140,8 +143,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
                     }
 
                     @Override
-                    public Entry<K, V> next() {
-                        key = iterator.next();
+                    public Entry<@Nullable K, @Nullable V> next() {
+                        key = requireNonNull(iterator.next());
                         V value = lookup(key);
                         return new AbstractMap.SimpleEntry<>(key, value);
                     }
@@ -162,7 +165,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             }
 
             @Override
-            public boolean add(Entry<K, V> kvEntry) {
+            public boolean add(Entry<@Nullable K, @Nullable V> kvEntry) {
                 V current = lookup(kvEntry.getKey());
                 if (current != null && current.equals(kvEntry.getValue()))
                     return false;
@@ -177,7 +180,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @inheritDoc
      */
     @Override
-    public V put(K key, V value) {
+    public V put(@Nullable K key, @Nullable V value) {
         V prev = get(key);
         return replace_(key, value) ? null : prev;
     }
@@ -187,7 +190,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      *
      * @return the GType
      */
-    public static Type getType() {
+    public static @Nullable Type getType() {
         return Interop.getType("g_hash_table_get_type");
     }
 
@@ -213,7 +216,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @param keyEqualFunc a function to check two keys for equality
      * @return a new {@code GHashTable}
      */
-    public static HashTable<MemorySegment, MemorySegment> new_(HashFunc hashFunc, EqualFunc keyEqualFunc) {
+    public static HashTable<MemorySegment, MemorySegment> new_(@Nullable HashFunc hashFunc,
+                                                               @Nullable EqualFunc keyEqualFunc) {
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_new.invokeExact(
@@ -222,11 +226,9 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        var _instance = NULL.equals(_result) ? null : new HashTable<MemorySegment, MemorySegment>(_result);
-        if (_instance != null) {
-            MemoryCleaner.takeOwnership(_instance);
-            MemoryCleaner.setBoxedType(_instance, HashTable.getType());
-        }
+        var _instance = new HashTable<MemorySegment, MemorySegment>(_result);
+        MemoryCleaner.takeOwnership(_instance);
+        MemoryCleaner.setBoxedType(_instance, HashTable.getType());
         return _instance;
     }
 
@@ -315,11 +317,12 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      *     requested property is found, {@code null} is returned.
      */
     public V find(HRFunc predicate) {
+        requireNonNull(makeValue, "Value marshal was not setup");
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _result;
             try {
                 _result = (MemorySegment) MethodHandles.g_hash_table_find.invokeExact(handle(),
-                        (MemorySegment) (predicate == null ? NULL : predicate.toCallback(_arena)),
+                        predicate.toCallback(_arena),
                         NULL);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
@@ -348,7 +351,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         try (var _arena = Arena.ofConfined()) {
             try {
                 MethodHandles.g_hash_table_foreach.invokeExact(handle(),
-                        (MemorySegment) (func == null ? NULL : func.toCallback(_arena)),
+                        func.toCallback(_arena),
                         NULL);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
@@ -374,7 +377,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             int _result;
             try {
                 _result = (int) MethodHandles.g_hash_table_foreach_remove.invokeExact(handle(),
-                        (MemorySegment) (func == null ? NULL : func.toCallback(_arena)),
+                        func.toCallback(_arena),
                         NULL);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
@@ -400,7 +403,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
             int _result;
             try {
                 _result = (int) MethodHandles.g_hash_table_foreach_steal.invokeExact(handle(),
-                        (MemorySegment) (func == null ? NULL : func.toCallback(_arena)),
+                        func.toCallback(_arena),
                         NULL);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
@@ -423,6 +426,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      *     when done using the list.
      */
     public List<K> getKeys() {
+        requireNonNull(makeKey, "Key marshal was not setup");
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_get_keys.invokeExact(handle());
@@ -509,6 +513,7 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      *     when done using the list.
      */
     public List<V> getValues() {
+        requireNonNull(makeValue, "Value marshal was not setup");
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_get_values.invokeExact(handle());
@@ -581,7 +586,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      * @param key the key to look up
      * @return the associated value, or {@code null} if the key is not found
      */
-    public V lookup(@Nullable K key) {
+    public @Nullable V lookup(@Nullable K key) {
+        requireNonNull(makeValue, "Value marshal was not setup");
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_lookup.invokeExact(handle(),
@@ -610,6 +616,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      */
     public boolean lookupExtended(@Nullable K lookupKey,
                                   @Nullable Out<K> origKey, @Nullable Out<V> value) {
+        requireNonNull(makeKey, "Key marshal was not setup");
+        requireNonNull(makeValue, "Value marshal was not setup");
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _origKeyPointer = _arena.allocate(ValueLayout.ADDRESS);
             MemorySegment _valuePointer = _arena.allocate(ValueLayout.ADDRESS);
@@ -651,12 +659,9 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        var _instance = NULL.equals(_result) ? null
-                : new HashTable<>(_result, makeKey, makeValue);
-        if (_instance != null) {
-            MemoryCleaner.takeOwnership(_instance);
-            MemoryCleaner.setBoxedType(_instance, HashTable.getType());
-        }
+        var _instance = new HashTable<>(_result, makeKey, makeValue);
+        MemoryCleaner.takeOwnership(_instance);
+        MemoryCleaner.setBoxedType(_instance, HashTable.getType());
         return _instance;
     }
 
@@ -666,10 +671,9 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      *
      * @return the passed in {@code GHashTable}
      */
-    public HashTable<K,V> ref() {
-        MemorySegment _result;
+    public HashTable<K, V> ref() {
         try {
-            _result = (MemorySegment) MethodHandles.g_hash_table_ref.invokeExact(handle());
+            MemorySegment ignored = (MemorySegment) MethodHandles.g_hash_table_ref.invokeExact(handle());
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
@@ -827,6 +831,8 @@ public class HashTable<K,V> extends AbstractMap<K,V> implements Proxy {
      */
     public boolean stealExtended(@Nullable K lookupKey,
                                  @Nullable Out<K> stolenKey, @Nullable Out<V> stolenValue) {
+        requireNonNull(makeKey, "Key marshal was not setup");
+        requireNonNull(makeValue, "Value marshal was not setup");
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _stolenKeyPointer = _arena.allocate(ValueLayout.ADDRESS);
             MemorySegment _stolenValuePointer = _arena.allocate(ValueLayout.ADDRESS);

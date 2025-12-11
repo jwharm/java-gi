@@ -26,6 +26,8 @@ import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
 import org.gnome.glib.Type;
 import org.gnome.gobject.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -40,6 +42,7 @@ import static org.javagi.base.Constants.LOG_DOMAIN;
 /**
  * Helper class to register method overrides in a new GType.
  */
+@NullMarked
 public class Overrides {
 
     /*
@@ -93,12 +96,16 @@ public class Overrides {
      * @return a lambda to run during class initialization that will register
      *         the virtual functions
      */
-    public static <T extends TypeInstance, TC extends TypeClass>
-    Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
-
-        Class<TC> typeStruct = Types.getTypeClass(cls);
-        if (typeStruct == null)
+    public static <TC extends TypeClass>
+    @Nullable Consumer<TypeClass> overrideClassMethods(Class<?> cls) {
+        Class<TC> typeStruct;
+        try {
+            typeStruct = Types.getTypeClass(cls);
+            if (typeStruct == null)
+                return null;
+        } catch (IllegalStateException _) {
             return null;
+        }
         Class<?> parentClass = cls.getSuperclass();
 
         // Find all overridden methods
@@ -163,8 +170,7 @@ public class Overrides {
      */
     private static Method findMethod(Class<?> cls,
                                      String methodName,
-                                     Class<?>... paramTypes)
-            throws NoSuchMethodException {
+                                     Class<?>... paramTypes) throws NoSuchMethodException {
         Class<?> currentClass = cls;
         while (currentClass != null) {
             try {
@@ -175,6 +181,7 @@ public class Overrides {
                 currentClass = currentClass.getSuperclass();
             }
         }
+
         // Method not found in class hierarchy
         throw new NoSuchMethodException("Method %s not found in class hierarchy."
                 .formatted(methodName));
@@ -194,15 +201,10 @@ public class Overrides {
      *         register the virtual functions
      */
     static <T extends TypeInstance, TI extends TypeInterface>
-    Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
+    @Nullable Consumer<TI> overrideInterfaceMethods(Class<T> cls, Class<?> iface) {
 
         // Lookup the memory address constructor for the TypeInterface
         Class<TI> typeStruct = Types.getTypeInterface(iface);
-        if (typeStruct == null) {
-            GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
-                    "Cannot find TypeInterface class for interface %s\n", iface);
-            return null;
-        }
         var constructor = Types.getAddressConstructor(typeStruct);
         if (constructor == null) {
             GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL,
@@ -261,26 +263,6 @@ public class Overrides {
 
     /**
      * Returns a function pointer to the specified virtual method. The pointer
-     * is retrieved from the TypeClass.
-     *
-     * @param  address     the memory address of the object instance
-     * @param  classLayout the memory layout of the object's TypeClass
-     * @param  name        the name of the virtual method (as defined in the
-     *                     TypeClass)
-     * @return a function pointer to the requested virtual method
-     */
-    public static MemorySegment lookupVirtualMethod(MemorySegment address,
-                                                    MemoryLayout classLayout,
-                                                    String name) {
-        var path = MemoryLayout.PathElement.groupElement(name);
-        return address
-                .get(ValueLayout.ADDRESS.withTargetLayout(classLayout), 0)
-                .get(ValueLayout.ADDRESS,
-                     classLayout.byteOffset(path));
-    }
-
-    /**
-     * Returns a function pointer to the specified virtual method. The pointer
      * is retrieved from the TypeClass of the parent class of the instance.
      *
      * @param  address     the memory address of the object instance
@@ -305,40 +287,6 @@ public class Overrides {
             var path = MemoryLayout.PathElement.groupElement(name);
             return parentClass.reinterpret(layout.byteSize())
                     .get(ValueLayout.ADDRESS, layout.byteOffset(path));
-        } catch (Throwable t) {
-            throw new InteropException(t);
-        }
-    }
-
-    /**
-     * Returns a function pointer to the specified virtual method. The pointer
-     * is retrieved from the TypeInterface with the specified GType.
-     *
-     * @param  address     the memory address of the object instance
-     * @param  classLayout the memory layout of the object's TypeClass
-     * @param  name        the name of the virtual method (as defined in the
-     *                     TypeInterface)
-     * @param  ifaceType   the GType of the interface that declares the virtual
-     *                     method
-     * @return a function pointer to the requested virtual method
-     */
-    public static MemorySegment lookupVirtualMethod(MemorySegment address,
-                                                    MemoryLayout classLayout,
-                                                    String name,
-                                                    Type ifaceType) {
-        try {
-            // Get the TypeClass
-            MemorySegment myClass = address.get(ValueLayout.ADDRESS, 0);
-
-            // Get the TypeInterface implemented by the TypeClass
-            MemorySegment iface = (MemorySegment) g_type_interface_peek
-                    .invokeExact(myClass,ifaceType.getValue().longValue());
-
-            // Return a pointer to the requested virtual method address in the
-            // dispatch table
-            var path = MemoryLayout.PathElement.groupElement(name);
-            return iface.reinterpret(classLayout.byteSize())
-                    .get(ValueLayout.ADDRESS, classLayout.byteOffset(path));
         } catch (Throwable t) {
             throw new InteropException(t);
         }
