@@ -370,7 +370,7 @@ public class JavaGI implements Callable<Integer> {
                 }
                 
                 dependencies {
-                    compileOnly("org.jetbrains:annotations:26.0.1")
+                    implementation("org.jspecify:jspecify:1.0.0")
                 %s
                 }
                 """.formatted(String.join("\n", dependencies));
