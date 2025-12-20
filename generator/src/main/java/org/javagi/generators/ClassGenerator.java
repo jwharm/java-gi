@@ -113,11 +113,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         else if (cls.isInstanceOf("GObject", "ParamSpec"))
             builder.addMethod(paramSpecGetTypeMethod());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator()
-                .generateMemoryLayout(cls);
-        if (memoryLayout != null)
-            builder.addMethod(memoryLayout);
-
+        builder.addMethod(new MemoryLayoutGenerator().generateMemoryLayout(cls));
         builder.addMethod(parentAccessor());
         builder.addMethod(memoryAddressConstructor());
 

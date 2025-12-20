@@ -107,18 +107,17 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(memoryAddressConstructor());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator()
-                                            .generateMemoryLayout(rec);
-        if (memoryLayout != null) {
-            builder.addMethod(memoryLayout);
+        MemoryLayoutGenerator memoryLayoutGenerator = new MemoryLayoutGenerator();
+        builder.addMethod(memoryLayoutGenerator.generateMemoryLayout(rec));
 
+        if (memoryLayoutGenerator.canGenerate(rec)) {
             if (outerClass == null && noNewConstructor()) {
                 builder.addMethod(constructor(true))
-                        .addMethod(constructor(false));
+                       .addMethod(constructor(false));
 
                 if (hasFieldSetters())
                     builder.addMethod(constructorWithParameters(true))
-                            .addMethod(constructorWithParameters(false));
+                           .addMethod(constructorWithParameters(false));
             }
 
             for (Field f : rec.fields())
@@ -146,8 +145,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         if ("GVariant".equals(rec.cType()))
             builder.addMethod(gvariantPack())
-                    .addMethod(gvariantUnpack())
-                    .addMethod(gvariantUnpackRecursive());
+                   .addMethod(gvariantUnpack())
+                   .addMethod(gvariantUnpackRecursive());
 
         return builder.build();
     }

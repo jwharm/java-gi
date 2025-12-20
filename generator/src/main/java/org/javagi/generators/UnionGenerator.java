@@ -53,12 +53,11 @@ public class UnionGenerator extends RegisteredTypeGenerator {
                 .addStaticBlock(staticBlock())
                 .addMethod(memoryAddressConstructor());
 
-        MethodSpec memoryLayout = new MemoryLayoutGenerator()
-                                            .generateMemoryLayout(union);
-        if (memoryLayout != null) {
-            builder.addMethod(memoryLayout);
+        MemoryLayoutGenerator memoryLayoutGenerator = new MemoryLayoutGenerator();
+        builder.addMethod(memoryLayoutGenerator.generateMemoryLayout(union));
+
+        if (memoryLayoutGenerator.canGenerate(union))
             builder.addMethod(constructor());
-        }
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());

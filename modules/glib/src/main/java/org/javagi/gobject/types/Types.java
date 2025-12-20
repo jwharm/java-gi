@@ -53,6 +53,9 @@ public class Types {
         GObjects.javagi$ensureInitialized();
     }
 
+    // The name of an unknown memory layout in generated classes
+    private final static String UNKNOWN_LAYOUT = "javagi$unknown";
+
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
     private static final long FUNDAMENTAL_SHIFT = 2;
@@ -648,13 +651,11 @@ public class Types {
      * the memory layout defined in the direct superclass.
      *
      * @param  cls      the class to provide a memory layout for
-     * @param  typeName the name given tot the generated memory layout
-     * @param  <T>      the class must extend {@link TypeInstance}
      * @return the declared memory layout, or if not found, a generated memory
      *         layout that copies the memory layout declared in the direct
      *         superclass.
      */
-    public static <T extends TypeInstance> MemoryLayout getInstanceLayout(Class<T> cls, String typeName) {
+    public static MemoryLayout getInstanceLayout(Class<?> cls) {
             // Get instance-memorylayout of this class
             MemoryLayout instanceLayout = getLayout(cls);
             if (instanceLayout != null)
@@ -662,13 +663,14 @@ public class Types {
 
             // If no memory layout was defined, create a default memory layout
             // that only has a pointer to the parent class' memory layout.
-            MemoryLayout parentLayout = getLayout(cls.getSuperclass());
-            if (parentLayout == null)
-                throw new IllegalStateException("No memory layout definition found for class " + cls);
+            MemoryLayout parentLayout = getInstanceLayout(cls.getSuperclass());
+
+            if (UNKNOWN_LAYOUT.equals(parentLayout.name().orElse("")))
+                throw new TypeRegistrationException("Parent class " + cls.getSuperclass() + " has unknown memory layout");
 
             return MemoryLayout.structLayout(
                     parentLayout.withName("parent_instance")
-            ).withName(typeName);
+            ).withName(getName(cls));
     }
 
     /**
@@ -678,33 +680,32 @@ public class Types {
      * @param  cls  the class that contains (or whose superclass contains) an
      *              inner TypeClass class
      * @return the TypeClass class
+     * @throws IllegalArgumentException when no typeclass is found
      */
     @SuppressWarnings("unchecked")
-    public static @Nullable <TC extends TypeClass> Class<TC> getTypeClass(Class<?> cls) {
-
+    public static <TC extends TypeClass> Class<TC> getTypeClass(Class<?> cls) {
         // Get the type-struct. This is an inner class that extends ObjectClass.
-        for (Class<?> gclass : cls.getDeclaredClasses()) {
-            if (TypeClass.class.isAssignableFrom(gclass)) {
-                return (Class<TC>) gclass;
-            }
-        }
-        // If the type-struct is unavailable, get it from the parent class.
-        if (cls.getSuperclass() != null) {
-            for (Class<?> gclass : cls.getSuperclass().getDeclaredClasses()) {
+        Class<?> c = cls;
+        while (c != null) {
+            for (Class<?> gclass : c.getDeclaredClasses()) {
                 if (TypeClass.class.isAssignableFrom(gclass)) {
                     return (Class<TC>) gclass;
                 }
             }
+            // If the type-struct is unavailable, get it from the parent class (recursively).
+            c = c.getSuperclass();
         }
-        return null;
+        throw new IllegalArgumentException("No typeclass for " + cls);
     }
 
     /**
-     * Return the inner TypeInterface class, or null if not found.
+     * Return the inner TypeInterface class, or {@code TypeInterface.class} if
+     * not found.
      *
      * @param  iface the interface that contains an inner TypeInterface class
      * @param  <TI>  the returned class extends {@link TypeInterface}
-     * @return the TypeInterface class, or TypeInterface.class if not found
+     * @return the TypeInterface class, or {@code TypeInterface.class} if not
+     *         found
      */
     @SuppressWarnings("unchecked")
     public static <TI extends TypeInterface> Class<TI> getTypeInterface(Class<?> iface) {
@@ -714,6 +715,7 @@ public class Types {
                 return (Class<TI>) giface;
             }
         }
+        // If the type-struct is unavailable, fallback to TypeInterface.
         return (Class<TI>) TypeInterface.class;
     }
 
@@ -722,22 +724,20 @@ public class Types {
      * parent TypeClass
      *
      * @param  cls      the class to generate a memory layout for
-     * @param  typeName the name of the new memory layout
      * @return the requested memory layout
      */
-    public static MemoryLayout generateClassLayout(Class<?> cls, String typeName) {
+    public static MemoryLayout generateClassLayout(Class<?> cls) {
         // Get the type-struct. This is an inner class that extends TypeClass.
         // If the type-struct is unavailable, get it from the parent class.
         Class<?> typeClass = getTypeClass(cls);
-        requireNonNull(typeClass, "No TypeClass for class " + cls);
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeClass);
-        requireNonNull(parentLayout, "No memory layout for class " + typeClass);
+        requireNonNull(parentLayout, "No memory layout for type-class " + typeClass);
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
-        ).withName(typeName + "Class");
+        ).withName(getName(cls) + "Class");
     }
 
     /**
@@ -745,46 +745,20 @@ public class Types {
      * GTypeInterface
      *
      * @param  cls      the interface to generate a memory layout for
-     * @param  typeName the name of the new memory layout
      * @return the requested memory layout
      */
-    public static MemoryLayout generateIfaceLayout(Class<?> cls, String typeName) {
+    public static MemoryLayout generateIfaceLayout(Class<?> cls) {
         // Get the type-struct. This is an inner class that extends TypeInterface.
         // If the type-struct is unavailable, get it from the parent class.
         Class<? extends TypeInterface> typeIface = getTypeInterface(cls);
-        requireNonNull(typeIface, "No TypeInterface for interface " + cls);
 
         // Get memory layout of the type-struct
         MemoryLayout parentLayout = getLayout(typeIface);
-        requireNonNull(parentLayout, "No memory layout for interface " + typeIface);
+        requireNonNull(parentLayout, "No memory layout for type-interface " + typeIface);
 
         return MemoryLayout.structLayout(
                 parentLayout.withName("g_iface")
-        ).withName(typeName + "Interface");
-    }
-
-    // Find a static method that returns the GType of this class
-    private static @Nullable Method getGTypeMethod(Class<?> cls) {
-        Method gtypeMethod = null;
-
-        // Find a static method that is annotated with @GType and read its value
-        for (Method method : cls.getDeclaredMethods()) {
-            if (Modifier.isStatic(method.getModifiers())
-                    && method.isAnnotationPresent(GType.class)) {
-                gtypeMethod = method;
-            }
-        }
-
-        // Find a static "getType()" method that returns a org.gnome.glib.Type
-        for (Method method : cls.getDeclaredMethods()) {
-            if (Modifier.isStatic(method.getModifiers())
-                    && method.getName().equalsIgnoreCase("getType")
-                    && method.getReturnType().equals(Type.class)) {
-                gtypeMethod = method;
-            }
-        }
-
-        return gtypeMethod;
+        ).withName(getName(cls) + "Interface");
     }
 
     /**
@@ -1115,9 +1089,6 @@ public class Types {
 
         else if (!cls.isEnum()) {
             var typeClass = getTypeClass(cls);
-            if (typeClass == null)
-                throw new TypeRegistrationException("Unknown TypeClass");
-
             if (getLayout(typeClass) == null)
                 throw new TypeRegistrationException("Unknown memory layout");
         }
@@ -1180,8 +1151,8 @@ public class Types {
 
             // Generate memory layout
             MemoryLayout memoryLayout = cls.isInterface()
-                    ? generateIfaceLayout(cls, typeName)
-                    : generateClassLayout(cls, typeName);
+                    ? generateIfaceLayout(cls)
+                    : generateClassLayout(cls);
 
             // Create initialization function that registers method overrides
             var overridesInit = Overrides.overrideClassMethods(cls);
@@ -1206,7 +1177,7 @@ public class Types {
                 @SuppressWarnings("unchecked") // checked by isAssignableFrom()
                 var typeInstance = (Class<TypeInstance>) cls;
                 customClassInit = getClassInit(typeInstance);
-                instanceLayout = getInstanceLayout(typeInstance, typeName);
+                instanceLayout = getInstanceLayout(typeInstance);
                 instanceInit = getInstanceInit(typeInstance);
             } else {
                 customClassInit = null;
@@ -1285,7 +1256,7 @@ public class Types {
             return type;
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Cannot register " + cls, e);
+            throw new TypeRegistrationException(e);
         }
     }
 
