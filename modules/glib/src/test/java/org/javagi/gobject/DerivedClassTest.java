@@ -19,6 +19,8 @@
 
 package org.javagi.gobject;
 
+import org.gnome.gio.Application;
+import org.javagi.base.Proxy;
 import org.javagi.gobject.annotations.ClassInit;
 import org.javagi.gobject.annotations.InstanceInit;
 import org.javagi.gobject.annotations.Property;
@@ -138,6 +140,15 @@ public class DerivedClassTest {
         new GrandChild();
         Type type = TypeCache.getType(GrandChild.class);
         assertEquals("org_javagi_gobject_DerivedClassTest_GrandChild", type.toString());
+
+        var child = new GreatGrandChild();
+        type = child.readGClass().readGType();
+        assertEquals("org_javagi_gobject_DerivedClassTest_GreatGrandChild", type.toString());
+        assertTrue(GObjects.typeCheckInstanceIsA(child, TypeCache.getType(AnInterface.class)));
+
+        var app = new ApplicationSecondDerived();
+        assertTrue(GObjects.typeCheckInstanceIsA(app, TypeCache.getType(Application.class)));
+        assertTrue(GObjects.typeCheckInstanceIsA(app, TypeCache.getType(ApplicationFirstDerived.class)));
     }
 
     /**
@@ -189,9 +200,26 @@ public class DerivedClassTest {
         }
     }
 
+    // This class should be automatically registered
     public static class AutoRegistered extends GObject {
     }
 
-    public static class GrandChild extends TestObject {
+    // A simple interface that is implemented by the GrandChild class
+    public interface AnInterface extends Proxy {
+    }
+
+    // This class extends another Java class and implements a Java interface
+    public static class GrandChild extends TestObject implements AnInterface {
+    }
+
+    // Deepening the class hierarchy
+    public static class GreatGrandChild extends GrandChild {
+    }
+
+    // Subclasses deriving from another class then GObject:
+    public static class ApplicationFirstDerived extends Application {
+    }
+
+    public static class ApplicationSecondDerived extends ApplicationFirstDerived {
     }
 }
