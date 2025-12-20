@@ -133,6 +133,13 @@ public class DerivedClassTest {
         assertTrue(TypeCache.contains(AutoRegistered.class));
     }
 
+    @Test
+    public void deeplyDerivedClass() {
+        new GrandChild();
+        Type type = TypeCache.getType(GrandChild.class);
+        assertEquals("org_javagi_gobject_DerivedClassTest_GrandChild", type.toString());
+    }
+
     /**
      * Simple GObject-derived class used in the above tests
      */
@@ -183,8 +190,8 @@ public class DerivedClassTest {
     }
 
     public static class AutoRegistered extends GObject {
-        public AutoRegistered() {
-            super();
-        }
+    }
+
+    public static class GrandChild extends TestObject {
     }
 }

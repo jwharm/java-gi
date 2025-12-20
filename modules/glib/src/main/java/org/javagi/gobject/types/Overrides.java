@@ -101,9 +101,7 @@ public class Overrides {
         Class<TC> typeStruct;
         try {
             typeStruct = Types.getTypeClass(cls);
-            if (typeStruct == null)
-                return null;
-        } catch (IllegalStateException _) {
+        } catch (IllegalArgumentException _) {
             return null;
         }
         Class<?> parentClass = cls.getSuperclass();

@@ -35,6 +35,8 @@ import static org.javagi.util.Conversions.*;
 
 public class MemoryLayoutGenerator {
 
+    public final static String UNKNOWN_LAYOUT = "javagi$unknown";
+
     private int size = 0;
     private int alignment = 0;
 
@@ -51,8 +53,15 @@ public class MemoryLayoutGenerator {
     }
 
     MethodSpec generateMemoryLayout(FieldContainer fc) {
+        var method = MethodSpec.methodBuilder("getMemoryLayout")
+                .addJavadoc("The memory layout of the native struct.\n\n")
+                .addJavadoc("@return the memory layout\n")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(MemoryLayout.class);
+
         if (!canGenerate(fc))
-            return null;
+            return method.addStatement("return $T.ADDRESS.withName($S)",
+                                       ValueLayout.class, UNKNOWN_LAYOUT).build();
 
         // Ensure that size and alignment are reset
         size = 0;
@@ -60,12 +69,6 @@ public class MemoryLayoutGenerator {
 
         boolean hasLongFields = fc.deepMatch(
                 n -> n instanceof Type t && t.isLong(), Callback.class);
-
-        var method = MethodSpec.methodBuilder("getMemoryLayout")
-                .addJavadoc("The memory layout of the native struct.\n\n")
-                .addJavadoc("@return the memory layout\n")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(MemoryLayout.class);
 
         // When there are `long` fields, generate 32-bit and 64-bit layout
         if (hasLongFields) {

@@ -122,13 +122,11 @@ public class TemplateTypes {
      * Generate a memory layout for an instance struct.
      * @param  cls      the class from which the fields will be used to
      *                  generate the memory layout
-     * @param  typeName the name of the struct
      * @return the generated memory layout
      */
-    private static MemoryLayout getTemplateInstanceLayout(Class<?> cls, String typeName) {
+    private static MemoryLayout getTemplateInstanceLayout(Class<?> cls) {
         MemoryLayout parentLayout = getLayout(cls.getSuperclass());
-        requireNonNull(parentLayout,
-                "No memory layout for class " + cls.getSimpleName());
+        requireNonNull(parentLayout, "No memory layout for class " + cls);
 
         ArrayList<MemoryLayout> elements = new ArrayList<>();
         long size = add(parentLayout.withName("parent_instance"), elements, 0);
@@ -151,7 +149,7 @@ public class TemplateTypes {
         }
 
         MemoryLayout[] layouts = elements.toArray(new MemoryLayout[0]);
-        return MemoryLayout.structLayout(layouts).withName(typeName);
+        return MemoryLayout.structLayout(layouts).withName(getName(cls));
     }
 
     /**
@@ -298,10 +296,10 @@ public class TemplateTypes {
     private static <W extends Widget> Type registerTemplate(Class<W> cls) {
         try {
             String name = getName(cls);
-            MemoryLayout instanceLayout = getTemplateInstanceLayout(cls, name);
+            MemoryLayout instanceLayout = getTemplateInstanceLayout(cls);
             Class<?> parentClass = cls.getSuperclass();
             Type parentType = TypeCache.getType(parentClass);
-            MemoryLayout classLayout = generateClassLayout(cls, name);
+            MemoryLayout classLayout = generateClassLayout(cls);
             Function<MemorySegment, W> constructor = getAddressConstructor(cls);
             Function<MemorySegment, ? extends Proxy> typeClassCtor =
                     TypeCache.getTypeClassConstructor(parentType);
