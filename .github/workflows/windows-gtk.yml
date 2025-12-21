@@ -110,13 +110,13 @@ jobs:
         run: |
           cp pkgdist\bin\pkg-config.exe pkg-config.exe
       - name: Library artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: libraries
           path: |
             dist\bin\*.dll
       - name: Application artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: applications
           path: |
