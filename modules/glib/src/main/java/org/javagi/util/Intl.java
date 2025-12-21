@@ -79,19 +79,34 @@ public class Intl {
         }
     }
 
-    // The Flatpak runtimes have different versions of libgettextlib-0.xx.y.so,
-    // so we search for the file with a wildcard.
     private static void tryLoadLibraryVersions() {
+        // First, try to load the library the usual way.
+        try {
+            Interop.loadLibrary("libgettextlib.so");
+            return;
+        } catch (InteropException _) {}
+
+        // Linux distributions have different locations where libraries are stored.
         var libnames = new ArrayList<String>();
-        try (var stream = Files.find(Path.of("/usr/lib/x86_64-linux-gnu"), 1,
-                        (path, _) -> path.getFileName().toString().matches("libgettextlib.*.so"))) {
-            stream.forEach(a -> libnames.add(a.toString()));
-        } catch (IOException ignored) {}
+        for (var dir : List.of(
+                "/usr/lib/x86_64-linux-gnu",
+                "/lib64",
+                "/usr/lib64",
+                "/lib",
+                "/usr/lib")) {
+            // The Flatpak runtimes have different versions of libgettextlib-0.xx.y.so,
+            // so we search for the file with a wildcard.
+            try (var stream = Files.find(Path.of(dir), 1,
+                    (path, _) -> path.getFileName().toString().matches("libgettextlib.*.so"))) {
+                stream.forEach(a -> libnames.add(a.toString()));
+            } catch (IOException _) {}
+        }
+
         for (String libname : libnames) {
             try {
                 Interop.loadLibrary(libname);
                 return;
-            } catch (InteropException ignored) {}
+            } catch (InteropException _) {}
         }
         throw new InteropException("Cannot find libgettextlib.so");
     }
