@@ -20,6 +20,8 @@
 package org.javagi.util;
 
 import org.gnome.glib.GLib;
+import org.gnome.glib.LogLevelFlags;
+import org.javagi.base.Constants;
 import org.javagi.interop.Interop;
 import org.javagi.interop.InteropException;
 import org.javagi.interop.Platform;
@@ -108,7 +110,8 @@ public class Intl {
                 return;
             } catch (InteropException _) {}
         }
-        throw new InteropException("Cannot find libgettextlib.so");
+
+        GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Cannot load libgettextlib.so\n");
     }
 
     // #include <libintl.h>
