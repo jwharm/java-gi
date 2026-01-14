@@ -525,6 +525,25 @@ public class Properties {
     }
 
     /**
+     * Check whether this class is a subclass of {@code clojure.lang.Proxy}.
+     * A Clojure proxy class overrides methods of parent types, and that can
+     * be interpreted by java-gi as user-defined getter/setter methods. So we
+     * explicitly exclude Clojure proxy classes.
+     *
+     * @param cls the class to check
+     * @return whether {@code cls} is a proxy
+     */
+    private static boolean isClojureProxy(Class<?> cls) {
+        Class<?> c = cls;
+        while (c != null) {
+            if ("clojure.lang.Proxy".equals(c.getName()))
+                return true;
+            c = c.getSuperclass();
+        }
+        return false;
+    }
+
+    /**
      * If the provided class defines {@code @Property}-annotated getter and/or
      * setter methods, this function will return a class initializer that
      * registers these properties as GObject properties and overrides the
@@ -535,6 +554,9 @@ public class Properties {
      * @return a class initializer that registers the properties
      */
     public @Nullable Consumer<TypeClass> installProperties(Class<?> cls) {
+        if (isClojureProxy(cls))
+            return null;
+
         inferProperties(cls);
         if (index == 0)
             return null;
