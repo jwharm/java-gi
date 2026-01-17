@@ -43,7 +43,7 @@ public class LibLoad {
             .toAbsolutePath();
 
     static {
-        String javagiPath = System.getProperty("javagi.path");
+        String javagiPath = System.getProperty("javagi.path", "javagi.library.path");
         String javaPath = System.getProperty("java.library.path");
         pathOverride = javagiPath != null;
         if (javaPath != null) {
@@ -66,6 +66,15 @@ public class LibLoad {
                         .reduce(LibLoad::merge)
                         .orElseGet(Map::of)
         );
+    }
+
+    /**
+     * Get the paths that will be used for native library lookups.
+     *
+     * @return the library source directories
+     */
+    public static List<Path> getSourceDirs() {
+        return sourceDirs;
     }
 
     private static Map<String, Set<String>> merge(Map<String, Set<String>> a, Map<String, Set<String>> b) {
