@@ -24,6 +24,7 @@ import org.gnome.glib.LogLevelFlags;
 import org.javagi.base.Constants;
 import org.javagi.interop.Interop;
 import org.javagi.interop.InteropException;
+import org.javagi.interop.LibLoad;
 import org.javagi.interop.Platform;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -35,10 +36,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Utility class to translate text to the current locale using GNU Gettext.
@@ -75,31 +74,27 @@ public class Intl {
 
     static {
         switch (Platform.getRuntimePlatform()) {
-            case LINUX -> tryLoadLibraryVersions();
-            case WINDOWS -> Interop.loadLibrary("libgettextlib.dll");
-            case MACOS -> Interop.loadLibrary("libgettextlib.dylib");
+            case LINUX -> tryLoadLibrary("so");
+            case WINDOWS -> tryLoadLibrary("dll");
+            case MACOS -> tryLoadLibrary("dylib");
         }
     }
 
-    private static void tryLoadLibraryVersions() {
+    private static void tryLoadLibrary(String extension) {
         // First, try to load the library the usual way.
         try {
-            Interop.loadLibrary("libgettextlib.so");
+            Interop.loadLibrary("libgettextlib." + extension);
             return;
         } catch (InteropException _) {}
 
         // Linux distributions have different locations where libraries are stored.
         var libnames = new ArrayList<String>();
-        for (var dir : List.of(
-                "/usr/lib/x86_64-linux-gnu",
-                "/lib64",
-                "/usr/lib64",
-                "/lib",
-                "/usr/lib")) {
-            // The Flatpak runtimes have different versions of libgettextlib-0.xx.y.so,
-            // so we search for the file with a wildcard.
-            try (var stream = Files.find(Path.of(dir), 1,
-                    (path, _) -> path.getFileName().toString().matches("libgettextlib.*.so"))) {
+        for (var dir : LibLoad.getSourceDirs()) {
+            // There can be different versions of libgettextlib-0.xx.y.so, so we
+            // search for a file that matches the pattern:
+            String filenamePattern = "(lib)?gettextlib.*\\." + extension;
+            try (var stream = Files.find(dir, 1,
+                    (path, _) -> path.getFileName().toString().matches(filenamePattern))) {
                 stream.forEach(a -> libnames.add(a.toString()));
             } catch (IOException _) {}
         }
@@ -111,7 +106,7 @@ public class Intl {
             } catch (InteropException _) {}
         }
 
-        GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Cannot load libgettextlib.so\n");
+        GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Cannot load libgettextlib\n");
     }
 
     // #include <libintl.h>
