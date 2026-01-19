@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,15 +20,12 @@
 package org.javagi.util;
 
 import com.squareup.javapoet.AnnotationSpec;
-
 import javax.annotation.processing.Generated;
 
 public class GeneratedAnnotationBuilder {
-
     public static AnnotationSpec generate() {
-        var generatedAnnotation = AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", "io.github.jwharm.JavaGI");
-
-        return generatedAnnotation.build();
+        return AnnotationSpec.builder(Generated.class)
+                .addMember("value", "$S", "org.javagi.JavaGI")
+                .build();
     }
 }
