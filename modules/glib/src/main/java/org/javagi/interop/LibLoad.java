@@ -43,7 +43,7 @@ public class LibLoad {
             .toAbsolutePath();
 
     static {
-        String javagiPath = System.getProperty("javagi.path", "javagi.library.path");
+        String javagiPath = System.getProperty("javagi.path", System.getProperty("javagi.library.path"));
         String javaPath = System.getProperty("java.library.path");
         pathOverride = javagiPath != null;
         if (javaPath != null) {
