@@ -148,7 +148,7 @@ Use `GErrorException.getCode()`, `getDomain()` and `getMessage()` to get the GEr
 
 ## Nullable/NotNull parameter annotations
 
-Nullability of parameters (as defined in the GObject-introspection attributes) is indicated with `@Nullable` and `@NotNull` attributes, and checked at runtime. The nullability annotations are imported from Jetbrains Annotations.
+Nullability of parameters (as defined in the GObject-introspection attributes) is indicated with JSpecify `@NullMarked` and `@Nullable` attributes, and checked at runtime.
 
 ## Arrays
 
