@@ -27,6 +27,7 @@ import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -120,33 +121,29 @@ public class InstanceCache {
         }
     }
 
-    private static final ConstructStack<GObject> constructStack
-            = new ConstructStack<>();
-
-    private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references
-            = new ConcurrentHashMap<>();
-
+    private static final ConstructStack<GObject> constructStack = new ConstructStack<>();
+    private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references = new ConcurrentHashMap<>();
+    private static final Set<MemorySegment> callbackReferences = ConcurrentHashMap.newKeySet();
     private static final Cleaner CLEANER = Cleaner.create();
+    private static final MemorySegment toggle_notify;
+    private static final VarHandle ADDRESS_FIELD;
 
     private static final MethodHandle g_object_new =
             Interop.downcallHandle(
                     "g_object_new",
-                    FunctionDescriptor.of(ValueLayout.ADDRESS,
-                            ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+                    FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
                     true);
 
     private static final MethodHandle g_object_add_toggle_ref =
             Interop.downcallHandle(
                     "g_object_add_toggle_ref",
-                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-                            ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
                     false);
 
     private static final MethodHandle g_object_remove_toggle_ref =
             Interop.downcallHandle(
                     "g_object_remove_toggle_ref",
-                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-                            ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
                     false);
 
     private static final MethodHandle g_object_unref =
@@ -154,10 +151,6 @@ public class InstanceCache {
                     "g_object_unref",
                     FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
                     false);
-
-    private static final MemorySegment toggle_notify;
-
-    private static final VarHandle ADDRESS_FIELD;
 
     static {
         GObjects.javagi$ensureInitialized();
@@ -401,6 +394,25 @@ public class InstanceCache {
         }
     }
 
+    /**
+     * Call {@code g_object_ref} if the reference is not cached.
+     * <p>
+     * The refcount is only increased once. On subsequent uses, the refcount
+     * is not increased anymore.
+     *
+     * @param address address of a GObject
+     */
+    public static void refOnce(@Nullable MemorySegment address) {
+        if (! (address == null
+                || MemorySegment.NULL.equals(address)
+                || callbackReferences.contains(address))) {
+            if (getForType(address, GObject::new) instanceof GObject object) {
+                object.ref();
+                callbackReferences.add(address);
+            }
+        }
+    }
+
     // Callback function, triggered by the toggle-notify signal
     private static void handleToggleNotify(MemorySegment ignored,
                                            MemorySegment object,
@@ -433,6 +445,7 @@ public class InstanceCache {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
         InstanceCache.references.remove(address);
+        callbackReferences.remove(address);
         return 0;
     }
 
