@@ -534,12 +534,9 @@ public class Properties {
      * @return whether {@code cls} is a proxy
      */
     private static boolean isClojureProxy(Class<?> cls) {
-        Class<?> c = cls;
-        while (c != null) {
+        for (Class<?> c = cls; c != null; c = c.getSuperclass())
             if ("clojure.lang.Proxy".equals(c.getName()))
                 return true;
-            c = c.getSuperclass();
-        }
         return false;
     }
 
