@@ -35,7 +35,7 @@ public final class ReturnValue extends GirElement implements TypedValue {
 
     @Override
     public boolean allocatesMemory() {
-        if (parent() instanceof Callback || parent() instanceof Signal
+        if ((parent() instanceof Callback || parent() instanceof Signal)
                 && TypedValue.super.allocatesMemory())
             return true;
 
