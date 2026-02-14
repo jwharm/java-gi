@@ -115,13 +115,16 @@ public final class Parameter extends GirElement implements TypedValue {
 
     @Override
     public boolean allocatesMemory() {
+        if (varargs())
+            return false;
+
         if (TypedValue.super.allocatesMemory() || isOutParameter())
             return true;
 
         Type type = (Type) anyType();
         RegisteredType target = type.lookup();
 
-        if (target instanceof Callback)
+        if (target instanceof Callback && Scope.CALL.equals(scope()))
             return true;
 
         return type.isPointer()
