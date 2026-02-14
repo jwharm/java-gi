@@ -58,22 +58,22 @@ public class InstanceCache {
      * Ref is toggled between strong and weak.
      */
     private sealed interface Ref<T> permits Ref.Strong, Ref.Weak {
-        record Strong<T>(T proxy) implements Ref<T> {
-            public T get() {
+        record Strong<T>(@Nullable T proxy) implements Ref<T> {
+            public @Nullable T get() {
                 return proxy;
             }
         }
 
         record Weak<T>(WeakReference<T> proxy) implements Ref<T> {
-            Weak(T proxy) {
+            Weak(@Nullable T proxy) {
                 this(new WeakReference<>(proxy));
             }
-            public T get() {
-                return requireNonNull(proxy.get());
+            public @Nullable T get() {
+                return proxy.get();
             }
         }
 
-        T get();
+        @Nullable T get();
 
         default Ref<T> asWeak() {
             return this instanceof Weak ? this : new Weak<>(get());
@@ -191,14 +191,20 @@ public class InstanceCache {
      * @return the instance (if found), or null (if not found)
      */
     private static @Nullable Proxy lookup(@Nullable MemorySegment address) {
-        
         // Null check on the memory address
         if (address == null || address.equals(MemorySegment.NULL))
             return null;
 
         // Get instance from cache
         var ref = references.get(address);
-        return ref == null ? null : ref.get();
+        if (ref == null)
+            return null;
+
+        // Remove dangling references (though this should never happen)
+        if (ref.get() == null)
+            references.remove(address);
+
+        return ref.get();
     }
 
     /**
@@ -298,8 +304,11 @@ public class InstanceCache {
     public static Proxy put(MemorySegment address, GObject object) {
         // If it was already cached, putIfAbsent() will return the existing one
         var existing = references.putIfAbsent(address, new Ref.Strong<>(object));
-        if (existing != null)
-            return existing.get();
+        if (existing != null) {
+            var value = existing.get();
+            if (value != null)
+                return value;
+        }
 
         // Sink floating references
         if (object instanceof Floating floatingReference)
