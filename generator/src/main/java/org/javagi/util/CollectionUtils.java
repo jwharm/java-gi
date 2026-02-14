@@ -19,6 +19,8 @@
 
 package org.javagi.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,7 +55,7 @@ public class CollectionUtils {
      * when not found.
      */
     @SuppressWarnings("unchecked") // cast is checked by cls::isInstance
-    public static <A, B extends A> B findAny(List<A> list, Class<B> cls) {
+    public static <A, B extends A> @Nullable B findAny(List<A> list, Class<B> cls) {
         return (B) list.stream()
                 .filter(cls::isInstance)
                 .findAny()
