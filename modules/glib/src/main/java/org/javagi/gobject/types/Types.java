@@ -32,7 +32,10 @@ import org.jspecify.annotations.Nullable;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -1128,12 +1131,10 @@ public class Types {
         checkClassDefinition(cls);
 
         if (Enum.class.isAssignableFrom(cls)) {
-            @SuppressWarnings("unchecked") // checked by isAssignableFrom()
-            var enumClass = (Class<? extends Enum<?>>) cls;
-            if (enumClass.isAnnotationPresent(Flags.class))
-                return registerFlags(enumClass);
+            if (cls.isAnnotationPresent(Flags.class))
+                return registerFlags(cls);
             else
-                return registerEnum(enumClass);
+                return registerEnum(cls);
         }
 
         // Assert that `cls` is a Proxy class
@@ -1310,9 +1311,11 @@ public class Types {
      * @param  cls the class (must extend java.lang.Enum)
      * @return the GType of the registered enumeration
      */
-    private static Type registerEnum(Class<? extends Enum<?>> cls) {
-        var name = getName(cls);
-        var constants = (Enum<?>[]) cls.getEnumConstants();
+    private static <T extends Enum<T>> Type registerEnum(Class<?> cls) {
+        @SuppressWarnings("unchecked") // it's okay to throw an exception if the cast fails
+        var enumClass = (Class<T>) cls;
+        var name = getName(enumClass);
+        var constants = enumClass.getEnumConstants();
         var enumValues = new EnumValue[constants.length];
         int i = 0;
         for (var constant : constants) {
@@ -1320,7 +1323,7 @@ public class Types {
                     constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = enumRegisterStatic(name, enumValues);
-        TypeCache.register(cls, type, null, TypeInterface::new);
+        TypeCache.registerEnum(enumClass, type, n -> constants[n]);
         return type;
     }
 
@@ -1330,9 +1333,11 @@ public class Types {
      * @param  cls the class (must extend java.lang.Enum)
      * @return the GType of the registered enumeration
      */
-    private static Type registerFlags(Class<? extends Enum<?>> cls) {
-        var name = getName(cls);
-        var constants = (Enum<?>[]) cls.getEnumConstants();
+    private static <T extends Enum<T>> Type registerFlags(Class<?> cls) {
+        @SuppressWarnings("unchecked") // it's okay to throw an exception if the cast fails
+        var enumClass = (Class<T>) cls;
+        var name = getName(enumClass);
+        var constants = enumClass.getEnumConstants();
         var flagsValues = new FlagsValue[constants.length];
         int i = 0;
         for (var constant : constants) {
@@ -1340,7 +1345,11 @@ public class Types {
                     1 << constant.ordinal(), constant.name(), constant.name(), Arena.global());
         }
         var type = flagsRegisterStatic(name, flagsValues);
-        TypeCache.register(cls, type, null, null);
+        Function<Integer, EnumSet<T>> make = j -> Interop.intToEnumSet(enumClass, n -> {
+            int idx = Integer.numberOfTrailingZeros(n);
+            return constants[idx];
+        }, j);
+        TypeCache.registerEnum(enumClass, type, make);
         return type;
     }
 

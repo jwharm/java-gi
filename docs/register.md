@@ -18,24 +18,35 @@ When you extend a Java class from an existing GObject-derived class, Java will t
     }
     ```
 
-To make sure that the GObject type system will also recognize it as its own class, Java-GI registers your class as a new GType. It will use reflection to determine the name, parent class, implemented interfaces and overridden methods.
+To make sure that the GObject type system will also recognize it as its own class, Java-GI will register your class as a new GType. It will use reflection to determine the name, parent class, implemented interfaces, properties and overridden methods.
 
 GType registration is supported for classes, interfaces and enums, when the following conditions are met:
 
-* Classes must extend {{ javadoc('GObject') }} or a descendant class.
-* Interfaces must extend the Java-GI {{ javadoc('Proxy') }} interface.
-* Enums are just enums. To register a flags (bitfield) type, add the `@Flags` annotation.
+### Classes
 
-!!! info
-    GObject interfaces don't inherit from other interfaces, but they do allow instead to specify *prerequisite* interfaces and classes. When registering a GType for a Java interface, all GTypeInterfaces that the interface extends from are automatically registered as prerequisites. GObject is automatically added as a prerequisite class, unless you specify another class with the `@Prerequisite` annotation.
+Classes must extend {{ javadoc('GObject') }} or a descendant class.
 
-!!! info
-    With a flags type, the values will represent individual bits in a bitfield, that are powers of two (1, 2, 4, 8, etc.), so they can be combined using bitwise operations to represent multiple flags simultaneously. Without the `@Flags` annotation, the values will have the ordinal enum values, and cannot be bitwise combined.
+A Java class is automatically registered as a GType the first time a new instance is constructed.
 
-When instantiating a new Java instance of the class, the call to `super()` will create the native object instance first.
+### Interfaces
 
-!!! info
-    In Java-GI version 0.11.* and below, the GType must be explicitly registered with a call to `Types.register(classname.class)`, and the constructor must be a static factory method. Since Java-GI 0.12.0, this is not necessary anymore.
+Interfaces must extend the Java-GI {{ javadoc('Proxy') }} interface. An interface is automatically registered as a GType when a class is registered that implements it.
+
+GObject interfaces don't inherit from other interfaces, but they do allow instead to specify *prerequisite* interfaces and classes. When registering a GType for a Java interface, all GTypeInterfaces that the interface extends from are automatically registered as prerequisites. GObject is automatically added as a prerequisite class, unless you specify another class with the `@Prerequisite` annotation.
+
+### Enums
+
+All Java enums can be registered as a GType. However, you may have to register the enum manually using `Types.register(MyEnumName.class)` (see {{ javadoc('Types.register') }}).
+
+### Flags
+
+To register a flags (bitfield) type, use a Java enum with the `@Flags` annotation.
+
+With a flags type, the values will represent individual bits in a bitfield, that are powers of two (1, 2, 4, 8, etc.), so they can be combined using bitwise operations to represent multiple flags simultaneously. Without the `@Flags` annotation, the values will have the ordinal enum values, and cannot be bitwise combined.
+
+Java-GI represents flags as a *set of enums*. So, to define a property of type "MyFlags", the getter and setter method in Java must get/set a `Set<MyFlags>` value.
+
+## Module configuration
 
 If your Java application is module-based, you must "open" your package to the `org.gnome.glib` module in your `module-info.java` file, to allow the reflection to work:
 
@@ -45,7 +56,7 @@ module my.module.name {
 }
 ```
 
-### Classes constructed from native code
+## Classes constructed from native code
 
 When your class is constructed by native code (for example, when your Java class is used in a GtkBuilder UI file), you need to add a few more things.
 
@@ -142,6 +153,15 @@ Example definition of an `int` property with name `n-items`:
     ```kotlin
     var nItems: Int = 0
     ```
+
+Not all data types are supported with properties. Supported types are:
+
+* All primitive types
+* String
+* GType (`org.gnome.glib.Type`)
+* GObject-derived classes and interfaces
+* Boxed types
+* All Enum and flags types
 
 ### Property annotation
 

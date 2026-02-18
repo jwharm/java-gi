@@ -62,7 +62,7 @@ public class ValueUtil {
             return null;
 
         Type type = src.readGType();
-        if (type == null || type.equals(NONE))
+        if (type.equals(NONE))
             return null;
 
         // Fundamental types
@@ -150,9 +150,6 @@ public class ValueUtil {
             return false;
 
         Type type = dest.readGType();
-        if (type == null)
-            return false;
-
         if      (type.equals(BOOLEAN))        dest.setBoolean((Boolean) src);
         else if (type.equals(CHAR))           dest.setSchar((byte) ((Character) src).charValue());
         else if (type.equals(UCHAR))          dest.setUchar((byte) ((Character) src).charValue());
@@ -174,12 +171,28 @@ public class ValueUtil {
         else if (type.equals(BYTE_ARRAY))     dest.setBoxed(ByteArray.take((byte[]) src).handle());
         else if (type.equals(VARIANT))        dest.setVariant((Variant) src);
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);
-        else if (typeIsA(type, ENUM))         dest.setEnum(((Enumeration) src).getValue());
+        else if (typeIsA(type, ENUM))         dest.setEnum(enumToInt(src));
         else if (typeIsA(type, FLAGS))        dest.setFlags(flagsToInt(src));
         else if (BoxedUtil.isBoxed(type))     dest.setBoxed(((Proxy) src).handle());
         else throw new UnsupportedOperationException("Unsupported type: " + type);
 
         return true;
+    }
+
+    /**
+     * Convert an enum parameter to an int. Preferrably the enum is an
+     * {@link Enumeration}, but otherwise uses the enum ordinal value.
+     *
+     * @param src  an enum
+     * @return     the enum int value
+     */
+    private static int enumToInt(Object src) {
+        return switch (src) {
+            case Enumeration e -> e.getValue();
+            case Enum<?> en -> en.ordinal();
+            // This should never happen, an ENUM gtype should always be a Java Enum class
+            default -> 0;
+        };
     }
 
     /**
@@ -189,7 +202,7 @@ public class ValueUtil {
      * @param <T>  the flags type
      * @return the bitfield (int) value
      */
-    private static <T extends Enum<T> & Enumeration> int flagsToInt(Object src) {
+    private static <T extends Enum<T>> int flagsToInt(Object src) {
         if (src instanceof Enumeration e)
             return e.getValue();
 

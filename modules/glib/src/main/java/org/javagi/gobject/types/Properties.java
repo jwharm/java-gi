@@ -21,6 +21,7 @@ package org.javagi.gobject.types;
 
 import org.javagi.base.FunctionPointer;
 import org.javagi.gobject.InstanceCache;
+import org.javagi.gobject.annotations.Flags;
 import org.javagi.gobject.annotations.Property;
 import org.javagi.base.Proxy;
 import org.javagi.base.ProxyInstance;
@@ -39,6 +40,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -75,9 +77,9 @@ public class Properties {
      *
      * @return the value type of the GParamSpecClass, or null if not found
      */
-    private static @Nullable Type getValueType(ParamSpec pspec) {
-        var pclass = (ParamSpec.ParamSpecClass) pspec.readGClass();
-        return pclass == null ? null : pclass.readValueType();
+    private static Type getValueType(ParamSpec pspec) {
+        var pclass = new ParamSpec.ParamSpecClass(pspec.readGClass().handle());
+        return pclass.readValueType();
     }
 
     /**
@@ -193,10 +195,25 @@ public class Properties {
     }
 
     private static Class<?> getJavaType(Method method) {
-        if (method.getReturnType().equals(void.class))
-            return method.getParameterTypes()[0];
-        else
-            return method.getReturnType();
+        var javaClass = method.getReturnType().equals(void.class)
+                ? method.getParameterTypes()[0]
+                : method.getReturnType();
+
+        // For a Set<> type, check if it is a Set of flags
+        if (javaClass.isAssignableFrom(Set.class)) {
+            var reflectType = method.getReturnType().equals(void.class)
+                    ? method.getGenericParameterTypes()[0]
+                    : method.getGenericReturnType();
+
+            if (reflectType instanceof ParameterizedType pt
+                    && pt.getActualTypeArguments().length == 1
+                    && pt.getActualTypeArguments()[0] instanceof Class<?> cls
+                    && Enum.class.isAssignableFrom(cls)
+                    && cls.isAnnotationPresent(Flags.class))
+                return cls;
+        }
+
+        return javaClass;
     }
 
     /*
@@ -242,6 +259,14 @@ public class Properties {
         // GObject interface
         else if (Proxy.class.isAssignableFrom(type))
             return ParamSpecObject.class;
+
+        // Flags
+        else if (Enum.class.isAssignableFrom(type) && type.isAnnotationPresent(Flags.class))
+            return ParamSpecFlags.class;
+
+        // Enum
+        else if (Enum.class.isAssignableFrom(type))
+            return ParamSpecEnum.class;
 
         throw new IllegalArgumentException("Invalid property type " + type.getSimpleName());
     }
@@ -389,6 +414,18 @@ public class Properties {
             paramSpec = GObjects.paramSpecUnichar(name, name, name, defVal, flags);
         }
 
+        else if (pClass.equals(ParamSpecFlags.class)) {
+            var flagsType = TypeCache.getType(javaType);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            paramSpec = GObjects.paramSpecFlags(name, name, name, flagsType, defVal, flags);
+        }
+
+        else if (pClass.equals(ParamSpecEnum.class)) {
+            var enumType = TypeCache.getType(javaType);
+            var defVal = notSet(def) ? 0 : Integer.parseInt(def);
+            paramSpec = GObjects.paramSpecEnum(name, name, name, enumType, defVal, flags);
+        }
+
         else {
             throw new IllegalArgumentException("Unsupported property type: " + pClass.getSimpleName());
         }
@@ -473,11 +510,16 @@ public class Properties {
                     else
                         getters.put(index, method);
 
-                    var flags = getFlags(p);
-                    var javaType = getJavaType(method);
-                    var paramSpecClass = getParamSpecClass(javaType);
-                    createParamSpec(javaType, paramSpecClass, name, flags,
-                            p.minimumValue(), p.maximumValue(), p.defaultValue());
+                    try {
+                        var flags = getFlags(p);
+                        var javaType = getJavaType(method);
+                        var paramSpecClass = getParamSpecClass(javaType);
+                        createParamSpec(javaType, paramSpecClass, name, flags,
+                                p.minimumValue(), p.maximumValue(), p.defaultValue());
+                    } catch (IllegalArgumentException _) {
+                        // ignore getter/setter with unsupported type
+                        index--;
+                    }
                 }
             }
         }
@@ -515,10 +557,15 @@ public class Properties {
                     getters.put(index, getter);
                     setters.put(index, method);
 
-                    var javaType = getJavaType(method);
-                    var paramSpecClass = getParamSpecClass(javaType);
-                    var flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
-                    createParamSpec(javaType, paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
+                    try {
+                        var javaType = getJavaType(method);
+                        var paramSpecClass = getParamSpecClass(javaType);
+                        var flags = EnumSet.of(ParamFlags.READABLE, ParamFlags.WRITABLE);
+                        createParamSpec(javaType, paramSpecClass, name, flags, NOT_SET, NOT_SET, NOT_SET);
+                    } catch (IllegalArgumentException e) {
+                        // ignore getter/setter with unsupported type
+                        index--;
+                    }
                 }
             }
         }
