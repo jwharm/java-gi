@@ -202,7 +202,7 @@ public class ValueUtil {
      * @param <T>  the flags type
      * @return the bitfield (int) value
      */
-    private static <T extends Enum<T> & Enumeration> int flagsToInt(Object src) {
+    private static <T extends Enum<T>> int flagsToInt(Object src) {
         if (src instanceof Enumeration e)
             return e.getValue();
 

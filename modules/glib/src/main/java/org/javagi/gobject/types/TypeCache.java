@@ -29,7 +29,6 @@ import org.gnome.gobject.GObjects;
 import org.gnome.gobject.TypeClass;
 import org.gnome.gobject.TypeInstance;
 
-import org.javagi.base.Enumeration;
 import org.javagi.base.Proxy;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -268,7 +267,7 @@ public class TypeCache {
      * @param type The registered GType
      * @param ctor Constructor function for this type
      */
-    public static <T extends Enum<T> & Enumeration> void registerEnum(
+    public static <T extends Enum<T>> void registerEnum(
             Class<T> cls,
             @Nullable Type type,
             @Nullable Function<Integer, ?> ctor) {

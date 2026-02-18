@@ -19,7 +19,6 @@
 
 package org.javagi.gobject.types;
 
-import org.javagi.base.Enumeration;
 import org.javagi.base.Proxy;
 import org.javagi.gobject.annotations.*;
 import org.javagi.interop.Interop;
@@ -1312,7 +1311,7 @@ public class Types {
      * @param  cls the class (must extend java.lang.Enum)
      * @return the GType of the registered enumeration
      */
-    private static <T extends Enum<T> & Enumeration> Type registerEnum(Class<?> cls) {
+    private static <T extends Enum<T>> Type registerEnum(Class<?> cls) {
         @SuppressWarnings("unchecked") // it's okay to throw an exception if the cast fails
         var enumClass = (Class<T>) cls;
         var name = getName(enumClass);
@@ -1334,7 +1333,7 @@ public class Types {
      * @param  cls the class (must extend java.lang.Enum)
      * @return the GType of the registered enumeration
      */
-    private static <T extends Enum<T> & Enumeration> Type registerFlags(Class<?> cls) {
+    private static <T extends Enum<T>> Type registerFlags(Class<?> cls) {
         @SuppressWarnings("unchecked") // it's okay to throw an exception if the cast fails
         var enumClass = (Class<T>) cls;
         var name = getName(enumClass);

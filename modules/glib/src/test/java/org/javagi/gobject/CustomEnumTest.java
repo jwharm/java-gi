@@ -1,7 +1,6 @@
 package org.javagi.gobject;
 
 import org.gnome.gobject.GObject;
-import org.javagi.base.Enumeration;
 import org.javagi.gobject.annotations.Flags;
 import org.javagi.gobject.types.Types;
 import org.gnome.glib.Type;
@@ -61,7 +60,7 @@ public class CustomEnumTest {
     }
 
     @Flags
-    public enum MyFlags implements Enumeration {
+    public enum MyFlags {
         FOO,
         BAR,
         BAZ;
@@ -70,15 +69,6 @@ public class CustomEnumTest {
 
         public static Type getType() {
             return gtype;
-        }
-
-        @Override
-        public int getValue() {
-            return switch(this) {
-                case FOO -> 1;
-                case BAR -> 2;
-                case BAZ -> 4;
-            };
         }
     }
 
@@ -118,9 +108,12 @@ public class CustomEnumTest {
         var obj = new GTestObject();
         obj.setProperty("test-enum", MyEnum.BAR);
         assertEquals(MyEnum.BAR, obj.getProperty("test-enum"));
+    }
 
+    @Test
+    public void testFlagProperty() {
+        var obj = new GTestObject();
         obj.setProperty("test-flags", EnumSet.of(MyFlags.FOO, MyFlags.BAZ));
-        var result = obj.getProperty("test-flags");
-        assertEquals(Set.of(MyFlags.FOO, MyFlags.BAZ), result);
+        assertEquals(Set.of(MyFlags.FOO, MyFlags.BAZ), obj.getProperty("test-flags"));
     }
 }

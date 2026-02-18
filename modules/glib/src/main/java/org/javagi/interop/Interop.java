@@ -33,6 +33,7 @@ import org.gnome.glib.*;
 import org.javagi.base.*;
 
 import org.javagi.base.Enumeration;
+import org.javagi.gobject.annotations.Flags;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -672,8 +673,8 @@ public class Interop {
             // flags (empty set)
             case Set<?> s when s.isEmpty() -> getAddress(0, alloc);
             // flags
-            case Set<?> s when s.iterator().next() instanceof Enumeration ->
-                                    getAddress(enumSetToInt((Set<Enumeration>) s), alloc);
+            case Set<?> s when s.iterator().next() instanceof Enum ->
+                                    getAddress(enumSetToInt((Set) s), alloc);
             default -> throw new IllegalArgumentException(
                     "Not a MemorySegment, String, primitive, enum/flags or Proxy type");
         };
@@ -1756,7 +1757,7 @@ public class Interop {
      * @param  bitfield the integer containing the bitfield
      * @return an EnumSet containing the enum values as set in the bitfield
      */
-    public static <T extends Enum<T> & Enumeration>
+    public static <T extends Enum<T>>
     EnumSet<T> intToEnumSet(Class<T> cls, Function<Integer, T> make, int bitfield) {
         int n = bitfield;
         EnumSet<T> enumSet = EnumSet.noneOf(cls);
@@ -1787,11 +1788,28 @@ public class Interop {
      * @param  set the set of enums
      * @return the resulting bitfield
      */
-    public static int enumSetToInt(@Nullable Set<? extends Enumeration> set) {
+    public static <T extends Enum<T>> int enumSetToInt(@Nullable Set<T> set) {
+        if (set == null || set.isEmpty())
+            return 0;
+
+        @SuppressWarnings("unchecked") // class of element of Set<T> is a Class<T>
+        var cls = (Class<T>) set.iterator().next().getClass();
+        T[] constants = cls.getEnumConstants();
+        boolean isFlags = cls.isAnnotationPresent(Flags.class);
         int bitfield = 0;
-        if (set != null)
-            for (Enumeration element : set)
-                bitfield |= element.getValue();
+
+        for (T element : set) {
+            if (element instanceof Enumeration e) {
+                bitfield |= e.getValue();
+            } else {
+                for (int n = 0; n < constants.length; n++) {
+                    if (constants[n].equals(element)) {
+                        bitfield |= (isFlags ? (1 << n) : n);
+                        break;
+                    }
+                }
+            }
+        }
         return bitfield;
     }
 
