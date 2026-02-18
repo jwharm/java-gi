@@ -1,10 +1,15 @@
 package org.javagi.gobject;
 
+import org.gnome.gobject.GObject;
+import org.javagi.base.Enumeration;
 import org.javagi.gobject.annotations.Flags;
 import org.javagi.gobject.types.Types;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
 import org.junit.jupiter.api.Test;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -56,7 +61,7 @@ public class CustomEnumTest {
     }
 
     @Flags
-    public enum MyFlags {
+    public enum MyFlags implements Enumeration {
         FOO,
         BAR,
         BAZ;
@@ -66,5 +71,56 @@ public class CustomEnumTest {
         public static Type getType() {
             return gtype;
         }
+
+        @Override
+        public int getValue() {
+            return switch(this) {
+                case FOO -> 1;
+                case BAR -> 2;
+                case BAZ -> 4;
+            };
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static class GTestObject extends GObject {
+        private MyEnum testEnum;
+        private Set<MyFlags> testFlags;
+        private Set<Integer> unsupportedType;
+
+        public MyEnum getTestEnum() {
+            return testEnum;
+        }
+
+        public void setTestEnum(MyEnum testEnum) {
+            this.testEnum = testEnum;
+        }
+
+        public Set<MyFlags> getTestFlags() {
+            return testFlags;
+        }
+
+        public void setTestFlags(Set<MyFlags> testFlags) {
+            this.testFlags = testFlags;
+        }
+
+        public void setUnsupportedType(Set<Integer> set) {
+            this.unsupportedType = set;
+        }
+
+        public Set<Integer> getUnsupportedType() {
+            return unsupportedType;
+        }
+    }
+
+    @Test
+    public void testEnumProperty() {
+        var obj = new GTestObject();
+        obj.setProperty("test-enum", MyEnum.BAR);
+        assertEquals(MyEnum.BAR, obj.getProperty("test-enum"));
+
+        obj.setProperty("test-flags", EnumSet.of(MyFlags.FOO, MyFlags.BAZ));
+        var result = obj.getProperty("test-flags");
+        assertEquals(Set.of(MyFlags.FOO, MyFlags.BAZ), result);
     }
 }
