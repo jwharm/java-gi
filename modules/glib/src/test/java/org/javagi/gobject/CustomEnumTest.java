@@ -2,7 +2,7 @@ package org.javagi.gobject;
 
 import org.gnome.gobject.GObject;
 import org.javagi.gobject.annotations.Flags;
-import org.javagi.gobject.types.Types;
+import org.javagi.gobject.types.TypeCache;
 import org.gnome.glib.Type;
 import org.gnome.gobject.GObjects;
 import org.junit.jupiter.api.Test;
@@ -28,9 +28,10 @@ public class CustomEnumTest {
         assertNotNull(bar);
         assertNotNull(baz);
 
-        assertEquals(foo.toString(), GObjects.enumToString(MyEnum.getType(), 0));
-        assertEquals(bar.toString(), GObjects.enumToString(MyEnum.getType(), 1));
-        assertEquals(baz.toString(), GObjects.enumToString(MyEnum.getType(), 2));
+        Type gtype = TypeCache.getType(MyEnum.class);
+        assertEquals(foo.toString(), GObjects.enumToString(gtype, 0));
+        assertEquals(bar.toString(), GObjects.enumToString(gtype, 1));
+        assertEquals(baz.toString(), GObjects.enumToString(gtype, 2));
     }
 
     @Test
@@ -43,20 +44,14 @@ public class CustomEnumTest {
         assertNotNull(bar);
         assertNotNull(baz);
 
-        assertEquals("FOO | BAR | BAZ",
-                     GObjects.flagsToString(MyFlags.getType(), 1|2|4));
+        Type gtype = TypeCache.getType(MyFlags.class);
+        assertEquals("FOO | BAR | BAZ", GObjects.flagsToString(gtype, 1|2|4));
     }
 
     public enum MyEnum {
         FOO,
         BAR,
         BAZ;
-
-        private static final Type gtype = Types.register(MyEnum.class);
-
-        public static Type getType() {
-            return gtype;
-        }
     }
 
     @Flags
@@ -64,12 +59,6 @@ public class CustomEnumTest {
         FOO,
         BAR,
         BAZ;
-
-        private static final Type gtype = Types.register(MyFlags.class);
-
-        public static Type getType() {
-            return gtype;
-        }
     }
 
     @SuppressWarnings("unused")
