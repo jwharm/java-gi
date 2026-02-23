@@ -221,7 +221,12 @@ public class InstanceCache {
      */
     public static @Nullable Proxy getForType(MemorySegment address,
                                              Function<MemorySegment, ? extends Proxy> fallback) {
-        
+        return getForType(address, fallback, true);
+    }
+
+    private static @Nullable Proxy getForType(MemorySegment address,
+                                             Function<MemorySegment, ? extends Proxy> fallback,
+                                             boolean cache) {
         // Get instance from the cache
         Proxy instance = lookup(address);
         if (instance != null)
@@ -235,6 +240,8 @@ public class InstanceCache {
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
+        if (!cache)
+            return newInstance;
 
         // If this instance is newly constructed
         if (!constructStack.isEmpty()
@@ -415,7 +422,7 @@ public class InstanceCache {
         if (! (address == null
                 || MemorySegment.NULL.equals(address)
                 || callbackReferences.contains(address))) {
-            if (getForType(address, GObject::new) instanceof GObject object) {
+            if (getForType(address, GObject::new, false) instanceof GObject object) {
                 object.ref();
                 callbackReferences.add(address);
             }
