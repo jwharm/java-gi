@@ -43,8 +43,6 @@ import org.javagi.base.Proxy;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Caches TypeInstances so the same instance is used for the same memory
  * address.
@@ -221,12 +219,6 @@ public class InstanceCache {
      */
     public static @Nullable Proxy getForType(MemorySegment address,
                                              Function<MemorySegment, ? extends Proxy> fallback) {
-        return getForType(address, fallback, true);
-    }
-
-    private static @Nullable Proxy getForType(MemorySegment address,
-                                             Function<MemorySegment, ? extends Proxy> fallback,
-                                             boolean cache) {
         // Get instance from the cache
         Proxy instance = lookup(address);
         if (instance != null)
@@ -240,8 +232,6 @@ public class InstanceCache {
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
-        if (!cache)
-            return newInstance;
 
         // If this instance is newly constructed
         if (!constructStack.isEmpty()
@@ -422,7 +412,8 @@ public class InstanceCache {
         if (! (address == null
                 || MemorySegment.NULL.equals(address)
                 || callbackReferences.contains(address))) {
-            if (getForType(address, GObject::new, false) instanceof GObject object) {
+            GObject object = new GObject(address);
+            if (GObjects.typeCheckInstanceIsA(object, GObject.getType())) {
                 object.ref();
                 callbackReferences.add(address);
             }
