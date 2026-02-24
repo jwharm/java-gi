@@ -2,7 +2,7 @@
 
 ## Required Java version
 
-To use Java-GI, download and install [JDK 22](https://jdk.java.net/22/) or newer. Java-GI uses the "Panama" Foreign Function & Memory API that is only available since JDK 22.
+To use Java-GI, download and install [OpenJDK](https://jdk.java.net/) version 22 or newer. (Java-GI uses the Foreign Function & Memory API introduced in JDK 22.)
 
 ## Dependencies
 
@@ -20,7 +20,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     <dependency>
       <groupId>org.java-gi</groupId>
       <artifactId>gtk</artifactId>
-      <version>0.14.0</version>
+      <version>0.14.1</version>
     </dependency>
     ```
 
@@ -32,7 +32,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation 'org.java-gi:gtk:0.14.0'
+        implementation 'org.java-gi:gtk:0.14.1'
     }
     ```
 
@@ -44,20 +44,20 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("org.java-gi:gtk:0.14.0")
+        implementation("org.java-gi:gtk:0.14.1")
     }
     ```
 
 === "Scala SBT"
 
     ```scala
-    libraryDependencies += "org.java-gi" % "gtk" % "0.14.0"
+    libraryDependencies += "org.java-gi" % "gtk" % "0.14.1"
     ```
 
 === "Leiningen"
 
     ```clojure
-    [org.java-gi/gtk "0.14.0"]
+    [org.java-gi/gtk "0.14.1"]
     ```
 
 === "bld"
@@ -67,7 +67,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     scope(main)
         .include(dependency("org.java-gi",
                             "gtk",
-                            version(0,14,0)));
+                            version(0,14,1)));
     ```
 
 This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gstreamer`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=org.java-gi).
@@ -238,7 +238,7 @@ On most Linux distributions, Gtk will already be installed. Java-GI will load sh
 
 ### MacOS
 
-On MacOS, you can install Gtk using Homebrew. Gtk needs to run on the main thread, therefore you need to set the parameter `-XstartOnFirstThread`. A complete Gradle `run` task will look like this:
+On MacOS, you can install Gtk using Homebrew. Gtk needs to run on the main thread, therefore you need to set the parameter `-XstartOnFirstThread`. A typical Gradle setup will look like this:
 
 === "Gradle (Groovy)"
 
@@ -268,7 +268,7 @@ On MacOS, you can install Gtk using Homebrew. Gtk needs to run on the main threa
 
 ### Windows
 
-On Windows, Gtk can be installed with MSYS2. A Gradle `run` task will look like this:
+On Windows, Gtk can be installed with MSYS2. A typical Gradle setup will look like this:
 
 === "Gradle (Groovy)"
 
