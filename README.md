@@ -26,12 +26,11 @@ import org.gnome.gtk.*;
 import org.gnome.gio.ApplicationFlags;
 
 public class HelloWorld {
+    private final Application app;
 
     public static void main(String[] args) {
         new HelloWorld(args);
     }
-
-    private final Application app;
 
     public HelloWorld(String[] args) {
         app = new Application("my.example.HelloApp", ApplicationFlags.DEFAULT_FLAGS);
@@ -45,10 +44,10 @@ public class HelloWorld {
         window.setDefaultSize(300, 200);
 
         var box = Box.builder()
-                .setOrientation(Orientation.VERTICAL)
-                .setHalign(Align.CENTER)
-                .setValign(Align.CENTER)
-                .build();
+                     .setOrientation(Orientation.VERTICAL)
+                     .setHalign(Align.CENTER)
+                     .setValign(Align.CENTER)
+                     .build();
 
         var button = Button.withLabel("Hello world!");
         button.onClicked(window::close);
@@ -68,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.java-gi:gtk:0.14.0'
+    implementation 'org.java-gi:gtk:0.14.1'
 }
 ```
 
@@ -83,6 +82,8 @@ You can find some examples [here](https://github.com/jwharm/java-gi-examples). E
 | ![Browser screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
 | [Web Browser](https://github.com/jwharm/java-gi-examples/tree/main/Browser)                     | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
+
+The [java-gi-app-template](https://github.com/jwharm/java-gi-app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
 
 ## Generate bindings for other libraries
 
@@ -116,7 +117,7 @@ Interfaces are mapped to Java interfaces, using `default` interface methods to c
 
 Type aliases (`typedef`s in C) for classes, records and interfaces are represented in Java with a subclass of the original type. Aliases for primitive types such as `int` or `float` are represented by simple wrapper classes.
 
-Enumerations are represented as Java `enum` types, and flag parameters are mapped to `EnumSet`.
+Enumerations are represented as Java `enum` types, and flag (bitfield) parameters are mapped to `EnumSet`.
 
 Most classes have one or more constructors. However, constructors in GTK are often overloaded, and the name contains valuable information for the user. Java-GI therefore maps constructors named "new" to regular Java constructors, and generates static factory methods for all other constructors:
 
@@ -131,7 +132,7 @@ var button2 = Button.withLabel("Open...");
 var button3 = Button.fromIconName("document-open");
 ```
 
-Some struct types (called "records" in GObject-Introspection) don't have constructors, because in C these are meant to be stack-allocated. An example is `Gdk.RGBA`. Java-GI adds constructors that will allocate a new struct in an [Arena](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/foreign/Arena.html) of your choice. You can either allocate an empty struct (`var color = new RGBA();`) and fill in the values later, or pass the values immediately: `var purple = new RGBA(0.9f, 0.1f, 0.9f, 1.0f);`
+Many struct types don't have constructors, because in C they are meant to be stack-allocated. Java-GI adds constructors that will allocate a new struct in an [Arena](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/foreign/Arena.html) of your choice. You can either allocate an empty struct (`var color = new RGBA();`) and fill in the values later, or pass the values immediately: `var purple = new RGBA(0.9f, 0.1f, 0.9f, 1.0f);`
 
 ### Signals, callbacks and closures
 
@@ -144,9 +145,9 @@ button.onClicked(window::close);
 
 For every signal, a method to connect (e.g. `onClicked`) and emit the signal (`emitClicked`) is included in the API. New signal connections return a `SignalConnection` object, that allows you to disconnect, block and unblock a signal, or check whether the signal is still connected.
 
-Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callback functions to ensure type safety.
+Functions with callback parameters are supported too. The generated Java bindings contain `@FunctionalInterface` definitions for all callbacks to ensure type safety.
 
-[Closures](https://docs.gtk.org/gobject/struct.Closure.html) are marshaled to Java methods using reflection.
+Java-GI can create [GClosures](https://docs.gtk.org/gobject/struct.Closure.html) (dynamically-typed callbacks) using the [JavaClosure](https://java-gi.org/javadoc/org/javagi/gobject/JavaClosure.html) class, which uses reflection to marshal and unmarshal method- or lambda parameters to and from `GValues	` as required for a GClosure.
 
 ### Registering new types
 
@@ -155,6 +156,7 @@ Java-GI registers GObject-derived Java classes as a GType. When overriding virtu
 ```java
 public class Player extends GObject {
     private String name;
+    private int lives;
 
     public int getLives() {
         return lives;
@@ -204,7 +206,7 @@ You can read more about template classes in [the documentation](https://jwharm.g
 
 Java-GI takes care of marshaling Java values from and to native values. When working with arrays, Java-GI will automatically copy native array contents from and to a Java array, marshaling the contents to the correct types along the way. A `null` terminator is added where applicable. You also don't need to specify the array length as a separate parameter.
 
-Nullability of parameters (as defined in the GObject-introspection attributes) is indicated with `@Nullable` and `@NotNull` attributes, and checked at runtime. The nullability attributes are imported from Jetbrains Annotations (as a compile-time-only dependency).
+Nullability of parameters (as defined in the GObject-introspection attributes) is indicated with JSpecify `@NullMarked` and `@Nullable` attributes, and checked at runtime.
 
 Variadic functions (varargs) are supported too:
 
@@ -227,8 +229,9 @@ Out-parameters are mapped to a simple `Out<T>` container-type in Java, that offe
 ```java
 File file = ...
 Out<byte[]> contents = new Out<byte[]>();
-file.loadContents(null, contents, null));
-System.out.printf("Read %d bytes%n", contents.get().length);
+if (file.loadContents(null, contents, null))) {
+    System.out.printf("Read %d bytes%n", contents.get().length);
+}
 ```
 
 ### Builder pattern
