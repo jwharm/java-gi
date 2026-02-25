@@ -22,7 +22,6 @@ package org.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
-import org.javagi.gir.Class;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
@@ -46,7 +45,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
     public void generate(MethodSpec.Builder builder) {
         readPointer(builder);
-        refGObject(builder);
         freeGBytes(builder);
         freeGString(builder);
         takeOwnership(builder);
@@ -196,26 +194,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                     && rv.transferOwnership() != TransferOwnership.NONE) {
                 builder.addStatement("$1T.freeGString($2L)",
                         ClassNames.INTEROP, "_result");
-            }
-        }
-    }
-
-    // Ref GObject when ownership is not transferred
-    private void refGObject(MethodSpec.Builder builder) {
-        if (v instanceof ReturnValue rv
-                && target != null
-                && target.checkIsGObject()
-                && rv.transferOwnership() == TransferOwnership.NONE
-                // don't call ref() from ref() itself
-                && (! "ref".equals(func.name()))
-                && (! "ref_sink".equals(func.name()))) {
-            if (target instanceof Class) {
-                builder.addStatement("if (_returnValue != null) _returnValue.ref()");
-            } else {
-                // For interfaces and aliases, check if it's actually a GObject instance
-                builder.beginControlFlow("if (_returnValue instanceof $T _gobject)", ClassNames.G_OBJECT)
-                       .addStatement("_gobject.ref()")
-                       .endControlFlow();
             }
         }
     }
@@ -402,8 +380,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() == TransferOwnership.FULL
                 && p.isOutParameter()) {
             String paramName = "_" + getName() + "Out";
-            builder.beginControlFlow("if ($L.get() instanceof $T _gobject)", paramName, ClassNames.G_OBJECT)
-                   .addStatement("_gobject.ref()")
+            builder.beginControlFlow("if ($L.get() instanceof $T _gobjectUpcall)", paramName, ClassNames.G_OBJECT)
+                   .addStatement("_gobjectUpcall.ref()")
                    .endControlFlow();
         }
     }
