@@ -27,7 +27,6 @@ import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -121,7 +120,6 @@ public class InstanceCache {
 
     private static final ConstructStack<GObject> constructStack = new ConstructStack<>();
     private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references = new ConcurrentHashMap<>();
-    private static final Set<MemorySegment> callbackReferences = ConcurrentHashMap.newKeySet();
     private static final Cleaner CLEANER = Cleaner.create();
     private static final MemorySegment toggle_notify;
     private static final VarHandle ADDRESS_FIELD;
@@ -411,11 +409,11 @@ public class InstanceCache {
     public static void refOnce(@Nullable MemorySegment address) {
         if (! (address == null
                 || MemorySegment.NULL.equals(address)
-                || callbackReferences.contains(address))) {
+                || references.containsKey(address))) {
             GObject object = new GObject(address);
-            if (GObjects.typeCheckInstanceIsA(object, GObject.getType())) {
+            Type objectType = GObject.getType();
+            if (objectType != null && GObjects.typeCheckInstanceIsA(object, objectType)) {
                 object.ref();
-                callbackReferences.add(address);
             }
         }
     }
@@ -452,7 +450,6 @@ public class InstanceCache {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
         InstanceCache.references.remove(address);
-        callbackReferences.remove(address);
         return 0;
     }
 

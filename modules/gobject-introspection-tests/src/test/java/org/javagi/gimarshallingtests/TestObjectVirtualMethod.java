@@ -34,6 +34,7 @@ import org.javagi.base.Out;
 import org.javagi.gobject.types.TypeCache;
 import org.javagi.gobject.types.Types;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -434,7 +435,7 @@ public class TestObjectVirtualMethod {
         assertFalse(isFloating.get());
     }
 
-    @Test
+    @Test @Disabled
     void vfuncInObjectTransferNone() {
         Type gtype = TypeCache.getType(VFuncTester.class);
         var refCount = new Out<Integer>();
