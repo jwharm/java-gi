@@ -46,9 +46,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
     public void generate(MethodSpec.Builder builder) {
         readPointer(builder);
-        refGObject(builder);
         freeGBytes(builder);
         freeGString(builder);
+        unrefGObject(builder);
         takeOwnership(builder);
         scope(builder);
         reinterpretReturnedSegment(builder);
@@ -200,23 +200,17 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         }
     }
 
-    // Ref GObject when ownership is not transferred
-    private void refGObject(MethodSpec.Builder builder) {
+    private void unrefGObject(MethodSpec.Builder builder) {
         if (v instanceof ReturnValue rv
+                && rv.transferOwnership() == TransferOwnership.FULL
                 && target != null
-                && target.checkIsGObject()
-                && rv.transferOwnership() == TransferOwnership.NONE
-                // don't call ref() from ref() itself
-                && (! "ref".equals(func.name()))
-                && (! "ref_sink".equals(func.name()))) {
-            if (target instanceof Class) {
-                builder.addStatement("if (_returnValue != null) _returnValue.ref()");
-            } else {
-                // For interfaces and aliases, check if it's actually a GObject instance
-                builder.beginControlFlow("if (_returnValue instanceof $T _gobject)", ClassNames.G_OBJECT)
-                       .addStatement("_gobject.ref()")
-                       .endControlFlow();
-            }
+                && target.checkIsGObject()) {
+            if (target instanceof Class)
+                builder.addStatement("$T.unrefUnownedUserDefinedInstance(_returnValue)", ClassNames.INSTANCE_CACHE);
+            else
+                builder.beginControlFlow("if (_returnValue instanceof $T _object)", ClassNames.G_OBJECT)
+                        .addStatement("$T.unrefUnownedUserDefinedInstance(_object)", ClassNames.INSTANCE_CACHE)
+                        .endControlFlow();
         }
     }
 
@@ -402,8 +396,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() == TransferOwnership.FULL
                 && p.isOutParameter()) {
             String paramName = "_" + getName() + "Out";
-            builder.beginControlFlow("if ($L.get() instanceof $T _gobject)", paramName, ClassNames.G_OBJECT)
-                   .addStatement("_gobject.ref()")
+            builder.beginControlFlow("if ($L.get() instanceof $T _gobjectUpcall)", paramName, ClassNames.G_OBJECT)
+                   .addStatement("_gobjectUpcall.ref()")
                    .endControlFlow();
         }
     }

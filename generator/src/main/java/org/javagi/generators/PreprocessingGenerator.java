@@ -60,6 +60,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         readPrimitiveAliasPointer(builder);
         readOutParameter(builder);
         refGObject(builder);
+        refGObjectUpcall(builder);
     }
 
     /*
@@ -633,4 +634,27 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             builder.addStatement("$T.refOnce($L)", ClassNames.INSTANCE_CACHE, getName());
         }
     }
+
+    // Unref user-defined GObject when ownership is transferred to a callback in-parameter
+    private void refGObjectUpcall(MethodSpec.Builder builder) {
+        if (v instanceof Parameter p
+                && target != null
+                && target.checkIsGObject()
+                && p.transferOwnership() == TransferOwnership.FULL
+                && !p.isOutParameter()) {
+            var stmt = marshalNativeToJava(getName(), true);
+            stmt = PartialStatement.of("var _" + getName() + " = ").add(stmt).add(";\n");
+            builder.addNamedCode(stmt.format(), stmt.arguments());
+            if (target instanceof org.javagi.gir.Class)
+                builder.addStatement("$T.unrefUnownedUserDefinedInstance(_$L)",
+                        ClassNames.INSTANCE_CACHE, getName());
+            else
+                builder.beginControlFlow("if (_$L instanceof $T _object)",
+                                getName(), ClassNames.G_OBJECT)
+                        .addStatement("$T.unrefUnownedUserDefinedInstance(_object)",
+                                ClassNames.INSTANCE_CACHE)
+                        .endControlFlow();
+        }
+    }
+
 }

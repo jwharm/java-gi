@@ -20,6 +20,7 @@
 package org.javagi.gobject.types;
 
 import org.javagi.base.Proxy;
+import org.javagi.gobject.InstanceCache;
 import org.javagi.gobject.annotations.*;
 import org.javagi.interop.Interop;
 import org.gnome.glib.GLib;
@@ -867,12 +868,13 @@ public class Types {
      *         found
      */
     public static <T extends TypeInstance> Consumer<T> getInstanceInit(Class<T> cls) {
+        Consumer<T> instanceInit = Types::defaultInstanceInit;
         // Find instance initializer function
         for (Method method : cls.getDeclaredMethods()) {
             if (method.isAnnotationPresent(InstanceInit.class)) {
                 // Create a wrapper function that calls the instance
                 // initializer and logs exceptions
-                return (inst) -> {
+                instanceInit = instanceInit.andThen((inst) -> {
                     try {
                         method.invoke(inst);
                     } catch (InvocationTargetException ite) {
@@ -894,10 +896,18 @@ public class Types {
                                 cls.getSimpleName(),
                                 e.toString());
                     }
-                };
+                });
             }
         }
-        return $ -> {};
+        return instanceInit;
+    }
+
+    // This is always executed for all new GObject instances defined in Java.
+    // The ref() prevents a double-free when the instance is owned by native
+    // code, because then both native code and Java-GI will unref it.
+    private static void defaultInstanceInit(TypeInstance inst) {
+        if (inst instanceof GObject object)
+            InstanceCache.refUnownedUserDefinedInstance(object);
     }
 
     /**

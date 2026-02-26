@@ -242,6 +242,8 @@ public class MethodGenerator {
                         .endControlFlow();
             }
 
+            refReturnedGObject();
+
             // Marshal "_result" to "_returnValue"
             marshalReturnValue();
 
@@ -257,6 +259,19 @@ public class MethodGenerator {
             builder.endControlFlow();
 
         return builder.build();
+    }
+
+    // Ref GObject when ownership is not transferred
+    private void refReturnedGObject() {
+        if (returnValue.anyType() instanceof Type type
+                && returnValue.transferOwnership() == TransferOwnership.NONE
+                // don't call ref() from ref() itself
+                && (! "ref".equals(func.name())) && (! "ref_sink".equals(func.name()))) {
+            var target = type.lookup();
+            if (target != null && target.checkIsGObject()) {
+                builder.addStatement("$T.refOnce(_result)", ClassNames.INSTANCE_CACHE);
+            }
+        }
     }
 
     // Prepare a statement that marshals the return value to Java

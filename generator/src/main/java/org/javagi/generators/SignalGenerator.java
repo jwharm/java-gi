@@ -102,6 +102,7 @@ public class SignalGenerator {
                                 + "$W0)",
                         ClassNames.SIGNALS,
                         ClassNames.ARENAS)
+                .addStatement("$1T.readyToClose(_callbackArena)", ClassNames.ARENAS)
                 .addStatement("return new SignalConnection<>(handle(), _result)")
                 .nextControlFlow("catch (Throwable _err)")
                 .addStatement("throw new AssertionError(_err)")
