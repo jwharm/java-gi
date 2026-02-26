@@ -22,6 +22,7 @@ package org.javagi.generators;
 import com.squareup.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.gir.Class;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
@@ -47,6 +48,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         readPointer(builder);
         freeGBytes(builder);
         freeGString(builder);
+        unrefGObject(builder);
         takeOwnership(builder);
         scope(builder);
         reinterpretReturnedSegment(builder);
@@ -195,6 +197,20 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 builder.addStatement("$1T.freeGString($2L)",
                         ClassNames.INTEROP, "_result");
             }
+        }
+    }
+
+    private void unrefGObject(MethodSpec.Builder builder) {
+        if (v instanceof ReturnValue rv
+                && rv.transferOwnership() == TransferOwnership.FULL
+                && target != null
+                && target.checkIsGObject()) {
+            if (target instanceof Class)
+                builder.addStatement("$T.unrefUnownedUserDefinedInstance(_returnValue)", ClassNames.INSTANCE_CACHE);
+            else
+                builder.beginControlFlow("if (_returnValue instanceof $T _object)", ClassNames.G_OBJECT)
+                        .addStatement("$T.unrefUnownedUserDefinedInstance(_object)", ClassNames.INSTANCE_CACHE)
+                        .endControlFlow();
         }
     }
 

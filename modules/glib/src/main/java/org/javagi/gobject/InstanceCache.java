@@ -27,6 +27,7 @@ import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -120,6 +121,7 @@ public class InstanceCache {
 
     private static final ConstructStack<GObject> constructStack = new ConstructStack<>();
     private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references = new ConcurrentHashMap<>();
+    private static final Set<MemorySegment> unownedUserDefinedInstances = ConcurrentHashMap.newKeySet();
     private static final Cleaner CLEANER = Cleaner.create();
     private static final MemorySegment toggle_notify;
     private static final VarHandle ADDRESS_FIELD;
@@ -323,6 +325,18 @@ public class InstanceCache {
     }
 
     /**
+     * Get the size of the instance cache, which is the number of cached
+     * object instances (both strong and weak references). This is intended
+     * for debugging purposes.
+     *
+     * @return the size of the instance cache
+     */
+    @SuppressWarnings("unused")
+    public static int getCacheSize() {
+        return references.size();
+    }
+
+    /**
      * Construct a new GObject instance and set the provided Java proxy to
      * its address.
      *
@@ -377,6 +391,10 @@ public class InstanceCache {
         } finally {
             constructStack.pop();
         }
+
+        // This object is created on the Java side, so we own it, so there is
+        // no need for the additional ref.
+        unrefUnownedUserDefinedInstance(proxy);
     }
 
     // Calls g_object_add_toggle_ref
@@ -418,6 +436,29 @@ public class InstanceCache {
         }
     }
 
+    /**
+     * Increase the refcount of a GObject instance that was defined in Java.
+     * This prevents a double free when the object is owned by native code.
+     *
+     * @param object the object to ref
+     */
+    public static void refUnownedUserDefinedInstance(GObject object) {
+        if (unownedUserDefinedInstances.add(object.handle()))
+            object.ref();
+    }
+
+    /**
+     * Decrease the refcount of a GObject instance that was defined in Java.
+     * This prevents a memory leak when native code doesn't have ownership
+     * and therefore will not free the instance.
+     *
+     * @param object the object to unref
+     */
+    public static void unrefUnownedUserDefinedInstance(GObject object) {
+        if (unownedUserDefinedInstances.remove(object.handle()))
+            unref(object);
+    }
+
     // Callback function, triggered by the toggle-notify signal
     private static void handleToggleNotify(MemorySegment ignored,
                                            MemorySegment object,
@@ -428,7 +469,7 @@ public class InstanceCache {
             references.computeIfPresent(object, (_, v) -> v.asStrong());
     }
 
-    public static final MemorySegment REMOVE_TOGGLE_REF;
+    private static final MemorySegment REMOVE_TOGGLE_REF;
 
     // Allocate the upcall stub for the removeToggleRef callback method
     static {
@@ -449,7 +490,8 @@ public class InstanceCache {
         } catch (Throwable _err) {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
-        InstanceCache.references.remove(address);
+        references.remove(address);
+        unownedUserDefinedInstances.remove(address);
         return 0;
     }
 
