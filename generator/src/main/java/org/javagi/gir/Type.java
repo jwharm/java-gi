@@ -192,7 +192,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         String typeTag;
         if ("MemorySegment".equals(javaBaseType)) {
             typeTag = "memorySegment";
-        } if ("String".equals(javaBaseType)) {
+        } else if ("String".equals(javaBaseType)) {
             typeTag = "string";
         } else {
             RegisteredType target = lookup();
