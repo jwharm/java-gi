@@ -42,6 +42,8 @@ JAR files with the Javadoc and source code, to use offline in your IDE, are avai
 
 You can find example applications in the [java-gi-examples repository](https://github.com/jwharm/java-gi-examples).
 
+The [java-gi-app-template](https://github.com/jwharm/java-gi-app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
+
 ## Contributing
 
 To build Java-GI for yourself, make changes, or use Java-GI to generate bindings for other (GObject-Introspection based) libraries, follow the instructions [here](https://jwharm.github.io/java-gi/generate/). Please log issues, questions and requests on [Github](https://github.com/jwharm/java-gi), or join the discussion on [Matrix](https://matrix.to/#/#java-gi:matrix.org).
