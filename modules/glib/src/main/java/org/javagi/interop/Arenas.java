@@ -84,11 +84,14 @@ public class Arenas {
 
         int hashCode = data.reinterpret(ValueLayout.JAVA_INT.byteSize())
                            .get(ValueLayout.JAVA_INT, 0);
-        ARENAS.get(hashCode).thenAccept(arena -> {
-            ARENAS.remove(hashCode);
-            if (arena != null)
-                arena.close();
-        });
+        var future = ARENAS.get(hashCode);
+        if (future != null) {
+            future.thenAccept(arena -> {
+                ARENAS.remove(hashCode);
+                if (arena != null)
+                    arena.close();
+            });
+        }
     }
 
     /**
