@@ -1,0 +1,46 @@
+name: Run Gradle build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: docker
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 22
+          distribution: 'temurin'
+
+      - name: Checkout java-gi repository
+        uses: actions/checkout@v6
+        with:
+          repository: 'java-gi/java-gi'
+          path: 'java-gi'
+          submodules: 'true'
+
+      - name: Install dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: >
+            meson
+            pkg-config
+            libglib2.0-dev
+            libgirepository1.0-dev
+            libcairo2-dev
+            libgtk-4-dev
+            xvfb
+          version: 1.0
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Run Gradle build
+        working-directory: java-gi/
+        run: |
+          Xvfb :100 -ac &
+          export DISPLAY=:100.0
+          ./gradlew build
