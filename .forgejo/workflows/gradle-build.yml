@@ -23,17 +23,9 @@ jobs:
           submodules: 'true'
 
       - name: Install dependencies
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: >
-            meson
-            pkg-config
-            libglib2.0-dev
-            libgirepository1.0-dev
-            libcairo2-dev
-            libgtk-4-dev
-            xvfb
-          version: 1.0
+        run: |
+          apt update
+          apt install -y meson pkg-config libglib2.0-dev libgirepository1.0-dev libcairo2-dev libgtk-4-dev xvfb
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
