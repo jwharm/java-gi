@@ -9,7 +9,7 @@ jobs:
   publish:
     runs-on: docker
     container:
-      image: node:latest
+      image: node:trixie
     steps:
       - name: Setup Java
         uses: actions/setup-java@v5
