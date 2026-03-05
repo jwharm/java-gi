@@ -1,6 +1,6 @@
 # Generating bindings from a GIR file
 
-Download the `java-gi` command-line utility from the [Releases section](https://github.com/jwharm/java-gi/releases) on GitHub. It is attached as an "asset" below the release notes. Extract the zip file. You will find the `java-gi` utility in the `bin` folder. Try running it:
+Download the `java-gi` command-line utility from the [Releases section](https://codeberg.org/java-gi/java-gi/releases) on Codeberg. It is attached as an "asset" below the release notes. Extract the zip file. You will find the `java-gi` utility in the `bin` folder. Try running it:
 
 ```
 > java-gi --help
@@ -26,7 +26,7 @@ Alternatively, in most Linux distributions, the gir files are usually installed 
 
 Once the gir file is available, run `java-gi <filename.gir>` to generate the Java bindings.
 
-If you encounter any problems or errors, in most cases it should be possible to manually fix the generated Java source code. If you think the problem is caused by a bug in Java-GI, please [log an issue in the GitHub repo](https://github.com/jwharm/java-gi/issues).
+If you encounter any problems or errors, in most cases it should be possible to manually fix the generated Java source code. If you think the problem is caused by a bug in Java-GI, please [log an issue in the Codeberg repo](https://codeberg.org/java-gi/java-gi/issues).
 
 The generated sources code can be included in your application, or you can build a separate library. Use the `-p` or `--project` switch to generate a Gradle build script and directory structure that will be ready to build and deploy.
 
@@ -38,13 +38,13 @@ It is possible to generate bindings for multiple gir files at once. The `java-gi
 
 Java-GI publishes pre-built bindings for a number of libraries, including GLib, Gtk4, LibAdwaita, GtkSourceview, WebkitGtk and GStreamer. The bindings should work on Linux, Windows and MacOS. To generate and build the bindings for these libraries, follow these steps:
 
-- Clone the Java-GI project (`jwharm/java-gi`) from GitHub. Use the `--recurse-submodules` flag to also clone the `gir-files` submodule
+- Clone the Java-GI project (`java-gi/java-gi`) from Codeberg. Use the `--recurse-submodules` flag to also clone the `gir-files` submodule
 - Run the Gradle build, either using an IDE, or navigate into the `java-gi` folder and run `./gradlew build` (on Windows: `gradlew build`).
 
 === "Linux & macOS"
 
     ```
-    git clone --recurse-submodules https://github.com/jwharm/java-gi.git
+    git clone https://codeberg.org/java-gi/java-gi.git --recurse-submodules
     cd java-gi
     ./gradlew build
     ```
@@ -52,7 +52,7 @@ Java-GI publishes pre-built bindings for a number of libraries, including GLib, 
 === "Windows"
 
     ```
-    git clone --recurse-submodules https://github.com/jwharm/java-gi.git
+    git clone https://codeberg.org/java-gi/java-gi.git --recurse-submodules
     cd java-gi
     gradlew build
     ```

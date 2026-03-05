@@ -1,9 +1,9 @@
 # Example applications
 
-A set of example applications is available on the [java-gi-examples GitHub repository](https://github.com/jwharm/java-gi-examples). To run an example, install Java (OpenJDK 22 or any later version) and Gradle (8.3 or newer), and clone the Git repository:
+A set of example applications is available on the [java-gi/examples repository](https://codeberg.org/java-gi/examples). To run an example, install Java (OpenJDK 22 or any later version) and Gradle (8.3 or newer), and clone the Git repository:
 
 ```
-git clone https://github.com/jwharm/java-gi-examples
+git clone https://codeberg.org/java-gi/examples
 ```
 
 Move into one of the example folders and run `gradle run`:

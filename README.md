@@ -11,11 +11,11 @@
 | GtkSourceview | 5.18    |
 | WebkitGtk     | 2.50    |
 
-You can generate Java bindings for other libraries with the `java-gi` [command-line tool](https://jwharm.github.io/java-gi/generate/) on the GIR (introspection data) file.
+You can generate Java bindings for other libraries with the `java-gi` [command-line tool](https://java-gi.org/generate/) on the GIR (introspection data) file.
 
 Please note that Java-GI is still under active development, and the API is subject to unannounced changes. Feedback is welcome!
 
-[For more information, visit the Java-GI website.](https://jwharm.github.io/java-gi/)
+[For more information, visit the Java-GI website.](https://java-gi.org/)
 
 ## Usage
 
@@ -77,17 +77,17 @@ The result:
 
 ## Examples
 
-You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`:
+You can find some examples [here](https://codeberg.org/java-gi/examples). Each example can be separately built and run with `gradle run`:
 
 | ![Browser screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Calculator/calculator.png) | ![Notepad screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
 | [Web Browser](https://codeberg.org/java-gi/examples/src/branch/main/Browser) | [Peg Solitaire](https://codeberg.org/java-gi/examples/src/branch/main/PegSolitaire) | [Calculator](https://codeberg.org/java-gi/examples/src/branch/main/Calculator) | [Notepad](https://codeberg.org/java-gi/examples/src/branch/main/Notepad) |
 
-The [java-gi-app-template](https://github.com/jwharm/java-gi-app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
+The [java-gi-app-template](https://codeberg.org/java-gi/app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
 
 ## Generate bindings for other libraries
 
-Java-GI offers a command-line utility to generate bindings for any library that supports GObject-Introspection. It is documented [here](https://jwharm.github.io/java-gi/generate/).
+Java-GI offers a command-line utility to generate bindings for any library that supports GObject-Introspection. It is documented [here](https://java-gi.org/generate/).
 
 ## Current features
 
@@ -107,7 +107,7 @@ As an example, the generated documentation of `gtk_button_get_icon_name` contain
 
 ![Javadoc screenshot](docs/img/javadoc.png)
 
-The Javadoc is published [online](https://jwharm.github.io/java-gi/javadoc).
+The Javadoc is published [online](https://javadoc.java-gi.org).
 
 ### GObject type system
 
@@ -175,7 +175,7 @@ public class Player extends GObject {
 }
 ```
 
-Read the [Java-GI documentation](https://jwharm.github.io/java-gi/register/) for an overview of all the possibilities.
+Read the [Java-GI documentation](https://java-gi.org/register/) for an overview of all the possibilities.
 
 ### Composite template classes
 
@@ -200,7 +200,7 @@ public class HelloWindow extends ApplicationWindow {
 
 In the above example, the `header_bar` and `label` elements and the `buttonClicked` callback function are all connected to the `hello-window.ui` file.
 
-You can read more about template classes in [the documentation](https://jwharm.github.io/java-gi/templates/).
+You can read more about template classes in [the documentation](https://java-gi.org/templates/).
 
 ### Parameters
 

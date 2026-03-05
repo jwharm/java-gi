@@ -17,7 +17,7 @@ Other files, such as GtkBuilder ui files, are best loaded from resources stored 
 
 GTK includes application support that is built on top of `GApplication`. In this tutorial we'll build a simple application by starting from scratch, adding more and more pieces over time. Along the way, we'll learn about {{ javadoc('Gtk.Application') }}, templates, resources, application menus, settings, {{ javadoc('Gtk.HeaderBar') }}, {{ javadoc('Gtk.Stack') }}, {{ javadoc('Gtk.SearchBar') }}, {{ javadoc('Gtk.ListBox') }}, and more.
 
-The full, buildable sources for these examples can be found [online](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted) on GitHub. You can build each example separately by using Gradle with the `build.gradle` file. For more information, see the `README.md` file included in the examples repository.
+The full, buildable sources for these examples can be found [online](https://codeberg.org/java-gi/examples/src/branch/main/GettingStarted) on Codeberg. You can build each example separately by using Gradle with the `build.gradle` file. For more information, see the `README.md` file included in the examples repository.
 
 ### A trivial application
 
@@ -112,7 +112,7 @@ Exec=@bindir@/exampleapp
 
 Note that `@bindir@` needs to be replaced with the actual path to the binary before this desktop file can be used.
 
-[Full source](https://github.com/jwharm/java-gi-examples/tree/main/GettingStarted/example-5-part1)
+[Full source](https://codeberg.org/java-gi/examples/src/branch/main/GettingStarted/example-5-part1)
 
 Here is what we've achieved so far:
 

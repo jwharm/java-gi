@@ -196,7 +196,7 @@ Build and run the application using your IDE or build tool of choice. The follow
 
 - If you encounter an error about a missing library, override the java library path with `"-Djava.library.path=/usr/lib/..."`.
 
-See [this `build.gradle` file](https://github.com/jwharm/java-gi-examples/blob/main/HelloWorld/build.gradle) for a complete example.
+See [this `build.gradle` file](https://codeberg.org/java-gi/examples/src/branch/main/HelloWorld/build.gradle) for a typical example.
 
 !!! tip "Use an IDE"
     An Integrated Development Environment (IDE) with support for Java is the most efficient way to develop software in Java. IDEs will help setup a project and build configuration, navigate and refactor source code, detect problems and suggest improvements. The most commonly used Java IDEs are:

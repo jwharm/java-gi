@@ -28,6 +28,6 @@ def define_env(env):
 
     @env.macro
     def javadoc(docstr):
-        url = 'https://jwharm.github.io/java-gi/javadoc/search.html'
+        url = 'https://javadoc.java-gi.org/search.html'
         return f'[{docstr}]({url}?q={docstr}&r=1)'
 

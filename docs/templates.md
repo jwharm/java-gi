@@ -52,7 +52,7 @@ module my.module.name {
 }
 ```
 
-A complete example template-application can be found [here](https://github.com/jwharm/java-gi-examples/tree/main/HelloTemplate).
+A complete example template-application can be found [here](https://codeberg.org/java-gi/examples/src/branch/main/HelloTemplate).
 
 ## Annotations
 
