@@ -35,6 +35,9 @@ tasks.withType<Javadoc>().configureEach {
         addStringOption("tag", "apiNote:a:API Note:")
         addStringOption("Xdoclint:none", "-quiet")
         addStringOption("-add-modules", "org.jspecify,org.freedesktop.cairo")
+        addBooleanOption("noindex", true)
+        addBooleanOption("notree", true)
+        addBooleanOption("use", false)
         encoding = "UTF-8"
     }
     exclude("**/module-info.java")

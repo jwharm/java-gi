@@ -79,9 +79,9 @@ The result:
 
 You can find some examples [here](https://github.com/jwharm/java-gi-examples). Each example can be separately built and run with `gradle run`:
 
-| ![Browser screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://github.com/jwharm/java-gi-examples/blob/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Calculator/calculator.png) | ![Notepad screenshot](https://github.com/jwharm/java-gi-examples/blob/main/Notepad/notepad.png) |
+| ![Browser screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Browser/browser.png) | ![Peg Solitaire screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/PegSolitaire/peg-solitaire.png) | ![Calculator screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Calculator/calculator.png) | ![Notepad screenshot](https://codeberg.org/java-gi/examples/raw/branch/main/Notepad/notepad.png) |
 | ---- | ---- | ---- | ---- |
-| [Web Browser](https://github.com/jwharm/java-gi-examples/tree/main/Browser)                     | [Peg Solitaire](https://github.com/jwharm/java-gi-examples/tree/main/PegSolitaire) | [Calculator](https://github.com/jwharm/java-gi-examples/tree/main/Calculator) | [Notepad](https://github.com/jwharm/java-gi-examples/tree/main/Notepad) |
+| [Web Browser](https://codeberg.org/java-gi/examples/src/branch/main/Browser) | [Peg Solitaire](https://codeberg.org/java-gi/examples/src/branch/main/PegSolitaire) | [Calculator](https://codeberg.org/java-gi/examples/src/branch/main/Calculator) | [Notepad](https://codeberg.org/java-gi/examples/src/branch/main/Notepad) |
 
 The [java-gi-app-template](https://github.com/jwharm/java-gi-app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
 
