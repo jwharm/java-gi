@@ -1,5 +1,5 @@
 site_name: Java-GI
-site_url: https://jwharm.github.io/java-gi/
+site_url: https://java-gi.org/
 nav:
     - Home: index.md
     - Basic usage: usage.md
