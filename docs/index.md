@@ -4,8 +4,6 @@ Java-GI generates Java bindings for native libraries including Gtk, LibAdwaita, 
 
 ![Screenshot of Java-GI code with the Browser example](img/browser-screenshot.png)
 
-Please note that Java-GI is still under active development. Feedback is welcome.
-
 ## How to use
 
 * [Basic usage](usage.md) and [example applications](examples.md)
@@ -40,9 +38,9 @@ JAR files with the Javadoc and source code, to use offline in your IDE, are avai
 
 ## Example apps
 
-You can find example applications in the [java-gi-examples repository](https://codeberg.org/java-gi/examples).
+You can find example applications in the [examples repository](https://codeberg.org/java-gi/examples).
 
-The [java-gi-app-template](https://codeberg.org/java-gi/app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
+The [app-template](https://codeberg.org/java-gi/app-template) repository offers a ready-to-run GNOME application template with translations, resources, settings, icons and much more. The template is setup to be built and installed as a Flatpak application.
 
 ## Contributing
 

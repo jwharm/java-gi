@@ -13,8 +13,6 @@
 
 You can generate Java bindings for other libraries with the `java-gi` [command-line tool](https://java-gi.org/generate/) on the GIR (introspection data) file.
 
-Please note that Java-GI is still under active development, and the API is subject to unannounced changes. Feedback is welcome!
-
 [For more information, visit the Java-GI website.](https://java-gi.org/)
 
 ## Usage
