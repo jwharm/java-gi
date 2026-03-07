@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.jspecify)
+    api(libs.jspecify)
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
