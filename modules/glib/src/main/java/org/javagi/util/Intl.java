@@ -54,9 +54,11 @@ import java.util.ArrayList;
  * <p>
  * Before marking strings as internationalizable, uses of the string
  * concatenation operator need to be converted to {@link MessageFormat}
- * applications. For example, {@code "file " + filename + " not found"} becomes
- * {@code MessageFormat.format("file {0} not found", filename)}. Only after
- * this is done, can the strings be marked and extracted.
+ * or {@link String#format} syntax. For example,
+ * {@code "file " + filename + " not found"} becomes
+ * {@code MessageFormat.format("file {0} not found", filename)} or
+ * {@code String.format("file %s not found", filename)}. Only after this is
+ * done, can the strings be marked and extracted.
  * <p>
  * This class requires GNU Gettext to be installed. Specifically, it will try
  * to load the {@code libgettextlib} shared library. If that did not work, all
