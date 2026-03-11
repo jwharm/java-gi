@@ -19,12 +19,12 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.AnnotationSpec;
+import org.javagi.javapoet.ParameterizedTypeName;
+import org.javagi.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
-import static com.squareup.javapoet.TypeName.*;
+import static org.javagi.javapoet.TypeName.*;
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.*;
 

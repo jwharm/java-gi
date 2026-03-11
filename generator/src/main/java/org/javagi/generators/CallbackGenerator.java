@@ -19,7 +19,7 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.TypeSpec;
+import org.javagi.javapoet.TypeSpec;
 import org.javagi.gir.Callback;
 
 public class CallbackGenerator extends RegisteredTypeGenerator {

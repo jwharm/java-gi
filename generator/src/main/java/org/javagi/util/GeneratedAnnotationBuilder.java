@@ -19,7 +19,7 @@
 
 package org.javagi.util;
 
-import com.squareup.javapoet.AnnotationSpec;
+import org.javagi.javapoet.AnnotationSpec;
 import javax.annotation.processing.Generated;
 
 public class GeneratedAnnotationBuilder {

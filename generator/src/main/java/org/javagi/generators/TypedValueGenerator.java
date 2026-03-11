@@ -19,7 +19,7 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.*;
+import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;

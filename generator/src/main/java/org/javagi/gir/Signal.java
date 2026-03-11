@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.TypeName;
 
 import java.util.List;
 import java.util.Map;

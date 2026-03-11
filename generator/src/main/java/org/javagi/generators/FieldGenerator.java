@@ -19,9 +19,9 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.AnnotationSpec;
+import org.javagi.javapoet.MethodSpec;
+import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
