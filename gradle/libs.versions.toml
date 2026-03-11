@@ -1,6 +1,6 @@
 [versions]
 javagi = "0.14.1"
-jdk = "22"
+jdk = "25"
 cairo = "1.18.4.2"
 picocli = "4.7.7"
 javapoet = "1.0.0"
