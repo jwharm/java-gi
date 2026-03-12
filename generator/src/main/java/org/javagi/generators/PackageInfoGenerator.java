@@ -48,13 +48,13 @@ public class PackageInfoGenerator {
             desc = "Java bindings for " + moduleName + ".";
 
         builder.append("""
-                /**
-                 * %s
-                 * <p>
+                ///
+                /// %s
+                ///
                 """.formatted(desc));
 
         if (ns.sharedLibrary() != null) {
-            builder.append(" * The following native libraries are required and will be loaded:");
+            builder.append("/// The following native libraries are required and will be loaded:");
 
             for (String libraryName : ns.sharedLibrary().split(",")) {
                 String fileName = libraryName;
@@ -66,21 +66,21 @@ public class PackageInfoGenerator {
                 // Strip extension from library name
                 fileName = fileName.substring(0, fileName.lastIndexOf("."));
 
-                builder.append(" {@code ").append(fileName).append("}");
+                builder.append("`").append(fileName).append("`");
             }
             builder.append("""
                     
-                     * <p>
+                    ///
                     """);
         }
-        builder.append(" * For namespace-global declarations, refer to the {@link ")
+        builder.append("/// For namespace-global declarations, refer to the {@link ")
                 .append(ns.typeName().simpleName())
                 .append("} class documentation.\n");
 
         if (ns.platforms() < Platform.ALL)
             builder.append("""
-                     * <p>
-                     * This package is only available on %s.
+                     ///
+                     /// This package is only available on %s.
                     """.formatted(Platform.toString(ns.platforms())));
 
         for (var docsection : ns.docsections()) {
@@ -88,15 +88,15 @@ public class PackageInfoGenerator {
                     .map(Conversions::capitalize)
                     .collect(Collectors.joining(" "));
             String javadoc = new DocGenerator(docsection.doc()).generate();
-            builder.append(" * \n")
-                    .append(" * <h2>").append(name).append("</h2>\n");
+            builder.append("/// \n")
+                    .append("/// ## ").append(name).append("\n");
 
             javadoc.lines().forEach(line ->
-                    builder.append(" * ").append(line).append("\n"));
+                    builder.append("/// ").append(line).append("\n"));
         }
 
         builder.append("""
-                 */
+                ///
                 package %s;
                 """.formatted(ModuleInfo.javaPackage(ns.name())));
 

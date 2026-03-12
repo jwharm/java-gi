@@ -36,68 +36,34 @@ public class Javadoc {
     // This regular expression matches a series of separate regex patterns, 
     // each with a named group, separated by an "or" ("|") operand.
     // Most of the individual patterns should be relatively self-explanatory.
-    private static final String REGEX_PASS_1 =
+    private static final String REGEX_MAIN =
               "(?<codeblock>```(?<content>(?s).+?)```)"
             + "|(?<codeblock2>\\|\\[(?<content2>(?s).+?)]\\|)"
             + "|(?<code>`[^`]+?`)"
+            + "|(?s)(?<hyperlink>\\[(?<desc>[^]]+)]\\((?<url>[^)]+)\\))"
             + "|(?<link>\\[(?<type>.+?)@(?<path>(?<part1>[^.\\]]+)?\\.?(?<part2>[^.\\]:]+)?[.:]?(?<part3>[^]]+?)?)])"
+            + "|(?<imglink>src(?:set)?=\"(?<imgurl>.+?)\")"
             + "|(?<constantref>%\\w+)"
             + "|(?<typeref>#[^#\\s]\\w*)"
             + "|(?<paramref>@{1,2}[^@\\s][^\\s`]*)" // "[^\s`]" matches until whitespace or `code`
-            + "|(?s)(?<hyperlink>\\[(?<desc>[^]]+)]\\((?<url>[^)]+)\\))"
-            + "|(?<img>!\\[(?<imgdesc>.*?)]\\((?<imgurl>.+?)\\))"
-            + "|(?s)(?<picture><picture.*?>.*?<img(?<imgattrs>[^>]+).+?</picture>)"
-            + "|(?m)^(?<header>(?<headerlevel>#{1,6})\\s.+?)\\n+"
-            + "|(?m)^(?<container>:::\\s.+)\\n*"
-            + "|(?m)^\\s*(?<bulletpoint>[-*])\\s"
-            + "|(?<strong>\\s(?<strongcontent>\\*\\*\\w+?\\*\\*)\\s)"
-            + "|(?<em>\\s(?<emcontent>\\*\\w+?\\*)\\s)"
-            + "|(?<entity>[<>&])"
-            + "|(?<p>\\n{2,})"
     ;
 
-    // A second regex to run on the results of the first one.
-    private static final String REGEX_PASS_2 =
-              "(?<emptyp><p>\\s*(?<tag><(pre|ul)>))"
-            + "|(?m)(?<blockquote>(^&gt;\\s+.*\\n?)+)"
-            + "|(?<code>`[^`]+?`)"
-            + "|(?<kbd>&lt;kbd&gt;(?<kbdcontent>.+?)&lt;/kbd&gt;)"
-    ;
-
-    // A regex to parse an XML attribute key and value
-    private static final String REGEX_ATTRS = "\\s*(?<key>[^=]+)=\"(?<val>[^\"]+)\"";
+    private static final String REGEX_LANGUAGE_STRING = "<!-- language=\"(?<tag>.+?)\" -->";
 
     /*
      * These are the named groups for which the conversions to Javadoc are
      * applied. Other named groups are not matched separately, but only used as
      * parameters for the conversion functions.
      */
-    private static final List<String> NAMED_GROUPS_PASS_1 = List.of(
-            "codeblock", "codeblock2", "code", "link", "constantref",
-            "typeref", "paramref", "hyperlink", "img", "picture", "header",
-            "container", "bulletpoint", "strong", "em", "entity", "p");
-    
-    private static final List<String> NAMED_GROUPS_PASS_2 = List.of(
-            "emptyp", "blockquote", "code", "kbd");
+    private static final List<String> NAMED_GROUPS = List.of(
+            "code", "codeblock", "codeblock2", "hyperlink", "link", "constantref", "typeref", "paramref", "imglink");
 
     // The compiled regex patterns
-    private static final Pattern PATTERN_PASS_1 = Pattern.compile(REGEX_PASS_1);
-    private static final Pattern PATTERN_PASS_2 = Pattern.compile(REGEX_PASS_2);
-    private static final Pattern PATTERN_ATTRS = Pattern.compile(REGEX_ATTRS);
+    private static final Pattern PATTERN_MAIN = Pattern.compile(REGEX_MAIN);
+    private static final Pattern PATTERN_LANGUAGE_STRING = Pattern.compile(REGEX_LANGUAGE_STRING);
 
     private Documentation doc;
     private InstanceParameter instanceParameter;
-    private boolean ul;
-
-    // Parse the value of an XML attribute from a string that contains zero or
-    // more attributes.
-    private String parseAttribute(String attrs, String key) {
-        Matcher matcher = PATTERN_ATTRS.matcher(attrs);
-        while (matcher.find())
-            if (key.equals(matcher.group("key")))
-                return matcher.group("val");
-        return null;
-    }
 
     // Lookup the instance parameter that this docstring might refer to, so
     // the reference to the parameter can be replaced with "this [type]".
@@ -122,30 +88,20 @@ public class Javadoc {
     public String convert(Documentation doc) {
         this.doc = doc;
         this.instanceParameter = findInstanceParameter(doc.parent());
-        this.ul = false;
         String input = doc.text();
 
         // Conversion pass 1
-        String output = process(PATTERN_PASS_1, NAMED_GROUPS_PASS_1, input);
-
-        // If the docstring ends with a list, append </ul>
-        if (ul) {
-            ul = false;
-            output += "\n</ul>";
-        }
-
-        // Conversion pass 2
-        output = process(PATTERN_PASS_2, NAMED_GROUPS_PASS_2, output);
+        String output = process(input);
 
         // Escape "$" to prevent errors from JavaPoet
         return output.replace("$", "$$");
     }
 
-    private String process(Pattern pattern, List<String> groups, String input) {
-        Matcher matcher = pattern.matcher(input);
+    private String process(String input) {
+        Matcher matcher = Javadoc.PATTERN_MAIN.matcher(input);
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
-            String group = getMatchedGroupName(matcher, groups);
+            String group = getMatchedGroupName(matcher);
             String result = convert(matcher, group);
             matcher.appendReplacement(output, Matcher.quoteReplacement(result));
         }
@@ -154,9 +110,8 @@ public class Javadoc {
     }
 
     // Helper function to find out which named group was matched
-    private String getMatchedGroupName(Matcher matcher,
-                                       List<String> groupNames) {
-        return groupNames.stream()
+    private String getMatchedGroupName(Matcher matcher) {
+        return Javadoc.NAMED_GROUPS.stream()
                 .filter((name) -> matcher.group(name) != null)
                 .findFirst()
                 .orElseThrow();
@@ -165,12 +120,7 @@ public class Javadoc {
     // Apply the relevant conversion for the provided named group
     private String convert(Matcher m, String group) {
         return switch(group) {
-            // Pass 1 group names
-            case "codeblock"   -> convertCodeblock(m.group(),
-                                                   m.group("content"));
-            case "codeblock2"  -> convertCodeblock(m.group(),
-                                                   m.group("content2"));
-            case "code"        -> convertCode(m.group());
+            case "codeblock2"  -> convertCodeblock(m.group("content2"));
             case "link"        -> convertLink(m.group(),
                                               m.group("type"),
                                               m.group("path"),
@@ -180,66 +130,28 @@ public class Javadoc {
             case "constantref" -> convertConstantref(m.group());
             case "typeref"     -> convertTyperef(m.group());
             case "paramref"    -> convertParamref(m.group());
-            case "hyperlink"   -> convertHyperlink(m.group(),
-                                                   m.group("desc"),
-                                                   m.group("url"));
-            case "img"         -> convertImg(m.group(),
-                                             m.group("imgdesc"),
-                                             m.group("imgurl"));
-            case "picture"     -> convertImg(m.group(),
-                                             parseAttribute(m.group("imgattrs"), "alt"),
-                                             parseAttribute(m.group("imgattrs"), "src"));
-            case "header"      -> convertHeader(m.group(),
-                                                m.group("headerlevel"));
-            case "container"   -> convertContainer(m.group());
-            case "bulletpoint" -> convertBulletpoint(m.group());
-            case "strong"      -> convertStrong(m.group(),
-                                                m.group("strongcontent"));
-            case "em"          -> convertEm(m.group(),
-                                            m.group("emcontent"));
-            case "entity"      -> convertEntity(m.group());
-            case "p"           -> convertP(m.group());
-
-            // Pass 2 group names
-            case "emptyp"      -> convertEmptyP(m.group(),
-                                                m.group("tag"));
-            case "blockquote"  -> convertBlockquote(m.group());
-            case "kbd"         -> convertKbd(m.group(), m.group("kbdcontent"));
-
-            // Ignored
+            case "imglink"     -> convertImg(m.group(), m.group("imgurl"));
+            // case "code", "codeblock", "hyperlink" -> preserve contents
             default            -> m.group();
         };
     }
 
-    // Replace ```multi-line code blocks``` with <pre>{@code ... }</pre> blocks.
-    // The (optional) language identifier is removed.
-    // For valid javadoc, we must balance all curly braces.
-    private String convertCodeblock(String codeblock, String content) {
-        // Remove language identifier
-        int newline = content.indexOf('\n');
-        if (newline > 0 && newline < (content.length() - 1))
-            content = content.substring(newline + 1);
+    private String convertCodeblock(String content) {
+        String format = "```%s```";
 
-        long count1 = content.chars().filter(ch -> ch == '{').count();
-        long count2 = content.chars().filter(ch -> ch == '}').count();
-        if (count1 < count2)
-            content = "{".repeat((int) (count2 - count1)) + content;
-        else if (count1 > count2)
-            content += "}".repeat((int) (count1 - count2));
-        return "<pre>{@code " + content + "}</pre>";
+        String output;
+        Matcher matcher = PATTERN_LANGUAGE_STRING.matcher(content);
+        if (matcher.find()) {
+            String tag = matcher.group("tag");
+            output = matcher.replaceFirst(tag);
+        } else {
+            output = content;
+        }
+
+        return format.formatted(output);
     }
 
-    // Replace `text` with {@code text}
-    private String convertCode(String code) {
-        String snippet = code.substring(1, code.length() - 1);
-        // Escape {, } and @
-        snippet = snippet.replace("{", "&#123;")
-                         .replace("}", "&#125;")
-                         .replace("@", "&#64;");
-        return "{@code " + snippet + "}";
-    }
-
-    // Replace [...] links with {@link ...} links
+    // Replace [...] links with Javadoc links
     private String convertLink(String link, String type, String path,
                                String part1, String part2, String part3) {
         String name;
@@ -247,109 +159,124 @@ public class Javadoc {
             case "ctor":
                 if (part3 == null) {
                     if ("new".equals(part2)) {
-                        String tag = checkLink(part1);
-                        return tag + part1 + "#" + part1 + "}";
+                        return checkLink(part1)
+                            ? "[%s#%s][%s#%s]".formatted(part1, part1, part1, part1)
+                            : "`%s#%s`".formatted(part1, part1);
                     } else {
-                        String tag = checkLink(part1, part2);
                         String method = formatMethod(stripNewPrefix(part2));
-                        return tag + part1 + method + "}";
+                        return checkLink(part1, part2)
+                            ? "[%s%s][%s%s]".formatted(part1, method, part1, method)
+                            : "`%s%s`".formatted(part1, method);
                     }
                 } else {
                     Namespace ns = getNamespace(part1);
+                    String pkg = formatNS(part1);
                     String cls = (ns == null)
                             ? part2
                             : replaceKnownType(part2, ns);
                     if ("new".equals(part3)) {
-                        String tag = checkLink(part1, part2);
-                        return tag + formatNS(part1) + cls + "#" + cls + "}";
+                        return checkLink(part1, part2)
+                                ? "[%s#%s][%s%s#%s]".formatted(cls, cls, pkg, cls, cls)
+                                : "`%s%s#%s`".formatted(pkg, cls, cls);
                     } else {
-                        String tag = checkLink(part1, part2, part3);
                         String method = formatMethod(stripNewPrefix(part3));
-                        return tag + formatNS(part1) + cls + method + "}";
+                        return checkLink(part1, part2, part3)
+                                ? "[%s%s][%s%s%s]".formatted(cls, method, pkg, cls, method)
+                                : "`%s%s%s`".formatted(pkg, cls, method);
                     }
                 }
             case "method":
             case "vfunc":
                 if (part3 == null) {
-                    String tag = checkLink(part1, part2);
                     String typeName = replaceKnownType(part1, doc.namespace());
                     String method = formatMethod(part2);
-                    return tag + typeName + method + "}";
+                    return checkLink(part1, part2)
+                            ? "[%s%s][%s%s]".formatted(typeName, method, typeName, method)
+                            : "`%s%s`".formatted(typeName, method);
                 } else {
-                    String tag = checkLink(part1, part2, part3);
                     Namespace ns = getNamespace(part1);
+                    String pkg = formatNS(part1);
                     String typeName = replaceKnownType(part2, ns);
                     String method = formatMethod(part3);
-                    return tag + formatNS(part1) + typeName + method + "}";
+                    return checkLink(part1, part2, part3)
+                            ? "[%s%s][%s%s%s]".formatted(typeName, method, pkg, typeName, method)
+                            : "`%s%s%s`".formatted(pkg, typeName, method);
                 }
             case "func":
                 if (part3 == null) {
                     if (part2 == null) {
-                        String tag = checkLink(part1);
                         String ns = doc.namespace().javaType();
                         String method = formatMethod(part1);
-                        return tag + ns + method + "}";
+                        return checkLink(part1)
+                                ? "[%s%s][%s%s]".formatted(ns, method, ns, method)
+                                : "`%s%s`".formatted(ns, method);
                     } else {
-                        String tag = checkLink(part1, part2);
                         Namespace ns = getNamespace(part1);
+                        String pkg = formatNS(part1);
                         String className = (ns == null)
                                 ? part1
                                 : ns.globalClassName();
                         String method = formatMethod(part2);
-                        return tag + formatNS(part1) + className + method + "}";
+                        return checkLink(part1, part2)
+                                ? "[%s%s][%s%s%s]".formatted(className, method, pkg, className, method)
+                                : "`%s%s%s`".formatted(pkg, className, method);
                     }
                 } else {
-                    String tag = checkLink(part1, part2, part3);
-                    String ns = formatNS(part1);
+                    String pkg = formatNS(part1);
                     String method = formatMethod(part3);
-                    return tag + ns + part2 + method + "}";
+                    return checkLink(part1, part2, part3)
+                            ? "[%s%s][%s%s%s]".formatted(part2, method, pkg, part2, method)
+                            : "`%s%s%s`".formatted(pkg, part2, method);
                 }
             case "iface":
             case "class":
                 if (part2 == null) {
-                    String tag = checkLink(part1);
                     String typeName = replaceKnownType(part1, doc.namespace());
-                    return tag + typeName + "}";
+                    return checkLink(part1)
+                            ? "[%s][%s]".formatted(link, typeName)
+                            : "`%s`".formatted(typeName);
                 } else {
-                    String tag = checkLink(part1, part2);
                     Namespace ns = getNamespace(part1);
+                    String pkg = formatNS(part1);
                     String typeName = replaceKnownType(part2, ns);
-                    return tag + formatNS(part1) + typeName + "}";
+                    return checkLink(part1, part2)
+                            ? "[%s][%s%s]".formatted(typeName, pkg, typeName)
+                            : "`%s%s`".formatted(pkg, typeName);
                 }
             case "id":
                 name = formatCIdentifier(part1);
                 return (name == null)
-                        ? "{@code " + path + "}"
-                        : "{@link " + name + "}";
+                        ? "`%s`".formatted(path)
+                        : "[%s][%s]".formatted(name, name);
             default:
-                return "{@code " + path + "}";
+                return "`%s`".formatted(path);
         }
     }
 
     /*
-     * Replace %NULL, %TRUE and %FALSE with {@code true} etc, or %text with
-     * {@link text}
+     * Replace %NULL, %TRUE and %FALSE with `true` etc, or %text with
+     * [text][text] if it's a valid link
      */
     private String convertConstantref(String ref) {
         switch (ref) {
-            case "%NULL":   return "{@code null}";
-            case "%TRUE":   return "{@code true}";
-            case "%FALSE":  return "{@code false}";
+            case "%NULL":   return "`null`";
+            case "%TRUE":   return "`true`";
+            case "%FALSE":  return "`false`";
         }
         String name = formatCIdentifier(ref.substring(1));
         if (name == null) {
-            return "{@code " + ref.substring(1) + "}";
+            return "`%s`".formatted(ref.substring(1));
         } else {
-            return "{@link " + name + "}";
+            return "[%s][%s]".formatted(name, name);
         }
     }
 
-    // Replace #text with {@link text}
+    // Replace #text with a link
     private String convertTyperef(String ref) {
         String type = ref.substring(1);
         RegisteredType rt = TypeReference.lookup(doc.namespace(), type);
         if (rt == null || rt.skipJava()) {
-            return "{@code " + ref.substring(1) + "}";
+            return "`%s`".formatted(ref.substring(1));
         } else {
             String typeName = rt.javaType();
             // If the link refers to the typestruct for a class, find the
@@ -361,124 +288,31 @@ public class Javadoc {
                 }
             }
             String ns = formatNS(rt.namespace().name());
-            return "{@link " + ns + "." + typeName + "}";
+            return "[%s][%s.%s]".formatted(typeName, ns, typeName);
         }
     }
 
     // Replace reference to instance parameter with "this [type]" and other
-    // parameters with {@code parameterName}
+    // parameters with `parameterName`
     private String convertParamref(String ref) {
         String paramName = ref.substring(ref.lastIndexOf('@') + 1);
         if (instanceParameter != null
                 && instanceParameter.name().equals(paramName))
             return "this " + instanceParameter.type().name();
-        return "{@code " + toJavaIdentifier(paramName) + "}";
+        return "`%s`".formatted(toJavaIdentifier(paramName));
     }
 
-    // Replace "[...](...)" with <a href="...">...</a>
-    private String convertHyperlink(String link, String desc, String url) {
-        String fullUrl = url;
-
-        // Remove any newline characters from the url string
-        fullUrl = fullUrl.replace("\n", "").replace("\r", "");
-
-        if (! fullUrl.startsWith("http"))
-            fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + fullUrl;
-
-        return "<a href=\"" + fullUrl + "\">" + desc + "</a>";
-    }
-
-    // Replace "! [...](...)" image links with <img src="..." alt="...">
-    private String convertImg(String img, String desc, String url) {
+    // Prefix image sources with a full URL
+    private String convertImg(String img, String url) {
         if (url == null)
             return img;
 
-        String fullUrl = url;
-        if (! url.startsWith("http"))
-            fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
-
-        if (desc == null)
-            return "<img src=\"" + fullUrl + "\">";
-
-        String alt = desc.replace("\"", "\\\"");
-        return "<img src=\"" + fullUrl + "\" alt=\"" + alt + "\">";
-    }
-
-    // Replace "# Header" with <strong>Header</strong><br/>
-    private String convertHeader(String header, String headerlevel) {
-        int h = headerlevel.length();
-        return "<strong>" + header.substring(h).trim() + "</strong><br/>\n";
-    }
-
-    // Replace "::: note" with <em>Note</em><br/>
-    private String convertContainer(String name) {
-        String title = capitalize(name.substring(3).trim());
-        return "<em>" + title + "</em><br/>\n";
-    }
-
-    // Replace a bullet point "- " with <li>
-    private String convertBulletpoint(String bulletpoint) {
-        if (ul) {
-            return "<li>";
-        } else {
-            ul = true;
-            return "<ul>\n<li>";
+        if (! url.startsWith("http")) {
+            String fullUrl = ModuleInfo.docUrlPrefix(doc.namespace().name()) + url;
+            return img.replace(url, fullUrl);
         }
-    }
 
-    // Replace **text** with <strong>text</strong>
-    private String convertStrong(String match, String text) {
-        return " <strong>" + text.substring(2, text.length() - 2) + "</strong> ";
-    }
-
-    // Replace *text* with <em>text</em>
-    private String convertEm(String match, String text) {
-        return " <em>" + text.substring(1, text.length() - 1) + "</em> ";
-    }
-
-    // Replace <, > and & with &lt;, &gt; and &amp;
-    private String convertEntity(String entity) {
-        return switch (entity) {
-            case "<" -> "&lt;";
-            case ">" -> "&gt;";
-            case "&" -> "&amp;";
-            default -> entity;
-        };
-    }
-
-    // Replace multiple newlines with <p>
-    private String convertP(String p) {
-        if (ul) {
-            ul = false;
-            return "\n</ul>\n<p>\n";
-        } else {
-            return "\n<p>\n";
-        }
-    }
-
-    // Replace <kbd>...</kbd> with {@code ...}
-    private String convertKbd(String kbd, String kbdContent) {
-        return "{@code " + kbdContent + "}";
-    }
-
-    /*
-     * Replace <p><pre> or <p><ul> (and any whitespace in between) with just the
-     * second tag
-     */
-    private String convertEmptyP(String ph, String tag) {
-        return tag;
-    }
-    
-    // Convert quote lines (starting with "> ") to html <blockquote>s
-    private String convertBlockquote(String blockquoteLines) {
-        String result = blockquoteLines.replace("\n&gt;", "\n");
-        if (result.startsWith("&gt;")) {
-            result = result.substring(4);
-        }
-        if (! result.endsWith("\n")) {
-            result += "\n";
-        }
-        return "<blockquote>\n" + result + "</blockquote>";
+        return img;
     }
 
     /*
@@ -538,18 +372,16 @@ public class Javadoc {
     }
 
     /*
-     * Check if this type exists in the GIR file. If it does, generate a
-     * "{@link" tag, otherwise, generate a "{@code" tag.
+     * Check if this type exists in the GIR file
      */
-    private String checkLink(String identifier) {
+    private boolean checkLink(String identifier) {
         return checkLink(doc.namespace().name(), identifier);
     }
 
     /*
-     * Check if this type exists in the GIR file. If it does, generate a
-     * "{@link" tag, otherwise, generate a "{@code" tag.
+     * Check if this type exists in the GIR file
      */
-    private String checkLink(String ns, String identifier) {
+    private boolean checkLink(String ns, String identifier) {
         // Try [namespace.type]
         var namespace = getNamespace(ns);
 
@@ -560,45 +392,42 @@ public class Javadoc {
         // Valid [namespace.type] ?
         if (namespace.registeredTypes().values().stream().anyMatch(rt ->
                 identifier.equals(rt.name()) && !rt.skipJava()))
-            return "{@link ";
+            return true;
 
         // Valid [namespace.func] ?
         return namespace.functions().stream().anyMatch(f ->
-                identifier.equals(f.name()) && !f.skipJava())
-                    ? "{@link "
-                    : "{@code ";
+                identifier.equals(f.name()) && !f.skipJava());
     }
 
     /*
-     * Check if this type exists in the GIR file. If it does, generate a
-     * "{@link" tag, otherwise, generate a "{@code" tag.
+     * Check if this type exists in the GIR file
      */
-    private String checkLink(String ns, String type, String identifier) {
+    private boolean checkLink(String ns, String type, String identifier) {
         RegisteredType rt = TypeReference.lookup(getNamespace(ns), type);
 
         if (rt == null || rt.skipJava())
-            return "{@code ";
+            return false;
 
         // Generating a link to an inner class is not implemented
         if (rt instanceof Record rec && rec.isGTypeStructFor() != null)
-            return "{@code ";
+            return false;
 
         for (VirtualMethod vm : filter(rt.children(), VirtualMethod.class))
                 if (identifier.equals(vm.name()) && (! vm.skip()))
-                    return "{@link ";
+                    return true;
 
         for (Method m : filter(rt.children(), Method.class))
             if (identifier.equals(m.name()) && (! m.skip()))
-                return "{@link ";
+                return true;
 
         for (Constructor c : filter(rt.children(), Constructor.class))
             if (identifier.equals(c.name()) && (! c.skip()))
-                return "{@link ";
+                return true;
 
         for (Function f : filter(rt.children(), Function.class))
             if (identifier.equals(f.name()) && (! f.skip()))
-                return "{@link ";
+                return true;
 
-        return "{@code ";
+        return false;
     }
 }

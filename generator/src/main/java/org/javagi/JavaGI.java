@@ -330,6 +330,7 @@ public class JavaGI implements Callable<Integer> {
         JavaFile.builder(packageName, typeSpec)
                 .addFileComment(licenseNotice)
                 .indent("    ")
+                .markdownJavadoc(true)
                 .build()
                 .writeTo(outputDirectory);
     }
