@@ -48,15 +48,15 @@ public class Javadoc {
             + "|(?<paramref>@{1,2}[^@\\s][^\\s`]*)" // "[^\s`]" matches until whitespace or `code`
     ;
 
-    private static final String REGEX_LANGUAGE_STRING = "<!-- language=\"(?<tag>.+?)\" -->";
+    // Regular expression that will match a language tag specified in an XML comment
+    private static final String REGEX_LANGUAGE_STRING = "<!--\\s*language=\"(?<tag>.+?)\"\\s*-->";
 
-    /*
-     * These are the named groups for which the conversions to Javadoc are
-     * applied. Other named groups are not matched separately, but only used as
-     * parameters for the conversion functions.
-     */
+    // These are the named groups for which the conversions to Javadoc are
+    // applied. Other named groups are not matched separately, but only used as
+    // parameters for the conversion functions.
     private static final List<String> NAMED_GROUPS = List.of(
-            "code", "codeblock", "codeblock2", "hyperlink", "link", "constantref", "typeref", "paramref", "imglink");
+            "code", "codeblock", "codeblock2", "hyperlink", "link",
+            "constantref", "typeref", "paramref", "imglink");
 
     // The compiled regex patterns
     private static final Pattern PATTERN_MAIN = Pattern.compile(REGEX_MAIN);
@@ -69,35 +69,23 @@ public class Javadoc {
     // the reference to the parameter can be replaced with "this [type]".
     private InstanceParameter findInstanceParameter(Node node) {
         return switch (node) {
-            case InstanceParameter p ->
-                    p;
-            case Parameter p ->
-                    p.parent().instanceParameter();
-            case ReturnValue rv when rv.parent() instanceof Callable c ->
-                    findInstanceParameter(c);
-            case Callable c when c.parameters() != null ->
-                    c.parameters().instanceParameter();
-            default ->
-                    null;
+            case InstanceParameter p -> p;
+            case Parameter p -> p.parent().instanceParameter();
+            case ReturnValue rv when rv.parent() instanceof Callable c -> findInstanceParameter(c);
+            case Callable c when c.parameters() != null -> c.parameters().instanceParameter();
+            default -> null;
         };
     }
 
     /**
-     * Convert comments into Javadoc.
+     * Convert comments into Javadoc. Assumes Markdown-format (JEP 467) Javadoc
+     * output.
      */
     public String convert(Documentation doc) {
         this.doc = doc;
         this.instanceParameter = findInstanceParameter(doc.parent());
         String input = doc.text();
 
-        // Conversion pass 1
-        String output = process(input);
-
-        // Escape "$" to prevent errors from JavaPoet
-        return output.replace("$", "$$");
-    }
-
-    private String process(String input) {
         Matcher matcher = Javadoc.PATTERN_MAIN.matcher(input);
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
@@ -106,7 +94,9 @@ public class Javadoc {
             matcher.appendReplacement(output, Matcher.quoteReplacement(result));
         }
         matcher.appendTail(output);
-        return output.toString();
+
+        // Escape "$" to prevent errors from JavaPoet
+        return output.toString().replace("$", "$$");
     }
 
     // Helper function to find out which named group was matched
@@ -121,52 +111,38 @@ public class Javadoc {
     private String convert(Matcher m, String group) {
         return switch(group) {
             case "codeblock2"  -> convertCodeblock(m.group("content2"));
-            case "link"        -> convertLink(m.group(),
-                                              m.group("type"),
-                                              m.group("path"),
-                                              m.group("part1"),
-                                              m.group("part2"),
-                                              m.group("part3"));
+            case "link"        -> convertLink(m.group("type"), m.group("path"), m.group("part1"),
+                                              m.group("part2"), m.group("part3"));
             case "constantref" -> convertConstantref(m.group());
             case "typeref"     -> convertTyperef(m.group());
             case "paramref"    -> convertParamref(m.group());
             case "imglink"     -> convertImg(m.group(), m.group("imgurl"));
-            // case "code", "codeblock", "hyperlink" -> preserve contents
+            // Return the contents of "code", "codeblock" and "hyperlink" unchanged
             default            -> m.group();
         };
     }
 
     private String convertCodeblock(String content) {
-        String format = "```%s```";
-
-        String output;
         Matcher matcher = PATTERN_LANGUAGE_STRING.matcher(content);
-        if (matcher.find()) {
-            String tag = matcher.group("tag");
-            output = matcher.replaceFirst(tag);
-        } else {
-            output = content;
-        }
-
-        return format.formatted(output);
+        String output = matcher.find() ? matcher.replaceFirst(matcher.group("tag")) : content;
+        return "```%s```".formatted(output);
     }
 
-    // Replace [...] links with Javadoc links
-    private String convertLink(String link, String type, String path,
-                               String part1, String part2, String part3) {
-        String name;
+    // Replace [...] links with Javadoc links, or with `...` if the link seems
+    // to be invalid.
+    private String convertLink(String type, String path, String part1, String part2, String part3) {
         switch (type) {
             case "ctor":
                 if (part3 == null) {
                     if ("new".equals(part2)) {
                         return checkLink(part1)
-                            ? "[%s#%s][%s#%s]".formatted(part1, part1, part1, part1)
-                            : "`%s#%s`".formatted(part1, part1);
+                                ? "[%s#%s]".formatted(part1, part1)
+                                : "`%s#%s`".formatted(part1, part1);
                     } else {
-                        String method = formatMethod(stripNewPrefix(part2));
+                        String method = toJavaIdentifier(stripNewPrefix(part2));
                         return checkLink(part1, part2)
-                            ? "[%s%s][%s%s]".formatted(part1, method, part1, method)
-                            : "`%s%s`".formatted(part1, method);
+                                ? "[%s#%s][%s#%s]".formatted(part1, method, part1, method)
+                                : "`%s%s`".formatted(part1, method);
                     }
                 } else {
                     Namespace ns = getNamespace(part1);
@@ -176,75 +152,75 @@ public class Javadoc {
                             : replaceKnownType(part2, ns);
                     if ("new".equals(part3)) {
                         return checkLink(part1, part2)
-                                ? "[%s#%s][%s%s#%s]".formatted(cls, cls, pkg, cls, cls)
+                                ? "[%s%s#%s]".formatted(pkg, cls, cls)
                                 : "`%s%s#%s`".formatted(pkg, cls, cls);
                     } else {
-                        String method = formatMethod(stripNewPrefix(part3));
+                        String method = toJavaIdentifier(stripNewPrefix(part3));
                         return checkLink(part1, part2, part3)
-                                ? "[%s%s][%s%s%s]".formatted(cls, method, pkg, cls, method)
-                                : "`%s%s%s`".formatted(pkg, cls, method);
+                                ? "[%s#%s][%s%s#%s]".formatted(cls, method, pkg, cls, method)
+                                : "`%s%s.%s`".formatted(pkg, cls, method);
                     }
                 }
             case "method":
             case "vfunc":
                 if (part3 == null) {
-                    String typeName = replaceKnownType(part1, doc.namespace());
-                    String method = formatMethod(part2);
+                    String cls = replaceKnownType(part1, doc.namespace());
+                    String method = toJavaIdentifier(part2);
                     return checkLink(part1, part2)
-                            ? "[%s%s][%s%s]".formatted(typeName, method, typeName, method)
-                            : "`%s%s`".formatted(typeName, method);
+                            ? "[%s#%s][%s#%s]".formatted(cls, method, cls, method)
+                            : "`%s.%s`".formatted(cls, method);
                 } else {
                     Namespace ns = getNamespace(part1);
                     String pkg = formatNS(part1);
-                    String typeName = replaceKnownType(part2, ns);
-                    String method = formatMethod(part3);
+                    String cls = replaceKnownType(part2, ns);
+                    String method = toJavaIdentifier(part3);
                     return checkLink(part1, part2, part3)
-                            ? "[%s%s][%s%s%s]".formatted(typeName, method, pkg, typeName, method)
-                            : "`%s%s%s`".formatted(pkg, typeName, method);
+                            ? "[%s#%s][%s%s#%s]".formatted(cls, method, pkg, cls, method)
+                            : "`%s%s.%s`".formatted(pkg, cls, method);
                 }
             case "func":
                 if (part3 == null) {
                     if (part2 == null) {
                         String ns = doc.namespace().javaType();
-                        String method = formatMethod(part1);
+                        String method = toJavaIdentifier(part1);
                         return checkLink(part1)
-                                ? "[%s%s][%s%s]".formatted(ns, method, ns, method)
-                                : "`%s%s`".formatted(ns, method);
+                                ? "[%s#%s][%s#%s]".formatted(ns, method, ns, method)
+                                : "`%s.%s`".formatted(ns, method);
                     } else {
                         Namespace ns = getNamespace(part1);
                         String pkg = formatNS(part1);
-                        String className = (ns == null)
+                        String cls = (ns == null)
                                 ? part1
                                 : ns.globalClassName();
-                        String method = formatMethod(part2);
+                        String method = toJavaIdentifier(part2);
                         return checkLink(part1, part2)
-                                ? "[%s%s][%s%s%s]".formatted(className, method, pkg, className, method)
-                                : "`%s%s%s`".formatted(pkg, className, method);
+                                ? "[%s#%s][%s%s#%s]".formatted(cls, method, pkg, cls, method)
+                                : "`%s%s.%s`".formatted(pkg, cls, method);
                     }
                 } else {
                     String pkg = formatNS(part1);
-                    String method = formatMethod(part3);
+                    String method = toJavaIdentifier(part3);
                     return checkLink(part1, part2, part3)
-                            ? "[%s%s][%s%s%s]".formatted(part2, method, pkg, part2, method)
-                            : "`%s%s%s`".formatted(pkg, part2, method);
+                            ? "[%s#%s][%s%s#%s]".formatted(part2, method, pkg, part2, method)
+                            : "`%s%s.%s`".formatted(pkg, part2, method);
                 }
             case "iface":
             case "class":
                 if (part2 == null) {
                     String typeName = replaceKnownType(part1, doc.namespace());
                     return checkLink(part1)
-                            ? "[%s][%s]".formatted(link, typeName)
+                            ? "[%s]".formatted(typeName)
                             : "`%s`".formatted(typeName);
                 } else {
                     Namespace ns = getNamespace(part1);
                     String pkg = formatNS(part1);
-                    String typeName = replaceKnownType(part2, ns);
+                    String cls = replaceKnownType(part2, ns);
                     return checkLink(part1, part2)
-                            ? "[%s][%s%s]".formatted(typeName, pkg, typeName)
-                            : "`%s%s`".formatted(pkg, typeName);
+                            ? "[%s%s]".formatted(pkg, cls)
+                            : "`%s%s`".formatted(pkg, cls);
                 }
             case "id":
-                name = formatCIdentifier(part1);
+                String name = formatCIdentifier(part1);
                 return (name == null)
                         ? "`%s`".formatted(path)
                         : "[%s][%s]".formatted(name, name);
@@ -254,8 +230,8 @@ public class Javadoc {
     }
 
     /*
-     * Replace %NULL, %TRUE and %FALSE with `true` etc, or %text with
-     * [text][text] if it's a valid link
+     * Replace %NULL, %TRUE and %FALSE with `null` etc, or %text with
+     * [text] if it's a valid link
      */
     private String convertConstantref(String ref) {
         switch (ref) {
@@ -264,11 +240,9 @@ public class Javadoc {
             case "%FALSE":  return "`false`";
         }
         String name = formatCIdentifier(ref.substring(1));
-        if (name == null) {
-            return "`%s`".formatted(ref.substring(1));
-        } else {
-            return "[%s][%s]".formatted(name, name);
-        }
+        return name != null
+                ? "[%s]".formatted(name)
+                : "`%s`".formatted(ref.substring(1));
     }
 
     // Replace #text with a link
@@ -315,10 +289,8 @@ public class Javadoc {
         return img;
     }
 
-    /*
-     * Return the Java package name followed by "." for another (not our own)
-     * namespace
-     */
+    // Return the Java package name followed by "." for another (not our own)
+    // namespace.
     private String formatNS(String ns) {
         Namespace namespace = doc.namespace();
         if (namespace.name().equals(ns)) return "";
@@ -329,33 +301,25 @@ public class Javadoc {
         }
     }
 
-    // Change method name to camel case Java style and prepend a "#"
-    private String formatMethod(String name) {
-        return "#" + toJavaIdentifier(name);
-    }
-
     // Strip "new_" prefix from named constructors
     private String stripNewPrefix(String name) {
         return name.startsWith("new_") ? name.substring(4) : name;
     }
 
-    /*
-     * Format the C identifier as a Java type (with org.package.Class#memberName
-     * syntax)
-     */
+    // Format a C identifier with Javadoc "package.Class#member" syntax
     private String formatCIdentifier(String cIdentifier) {
         Node node = doc.namespace().parent().lookupCIdentifier(cIdentifier);
-        if (node == null || node.skipJava()) return null;
+        if (node == null || node.skipJava())
+            return null;
 
         String type = switch(node.parent()) {
-            case Namespace ns -> formatNS(node.namespace().name())
-                                    + ns.globalClassName();
+            case Namespace ns -> formatNS(node.namespace().name()) + ns.globalClassName();
             case RegisteredType rt -> rt.javaType();
             default -> "";
         };
 
         return type + switch(node) {
-            case Callable c -> formatMethod(c.callableAttrs().name());
+            case Callable c -> toJavaIdentifier(c.callableAttrs().name());
             case Member m -> "#" + toJavaConstantUpperCase(m.name());
             case Constant c -> "#" + toJavaConstant(c.name());
             default -> "";
@@ -371,16 +335,12 @@ public class Javadoc {
         }
     }
 
-    /*
-     * Check if this type exists in the GIR file
-     */
+    // Check if this type exists in the GIR file
     private boolean checkLink(String identifier) {
         return checkLink(doc.namespace().name(), identifier);
     }
 
-    /*
-     * Check if this type exists in the GIR file
-     */
+    // Check if this type exists in the GIR file
     private boolean checkLink(String ns, String identifier) {
         // Try [namespace.type]
         var namespace = getNamespace(ns);
@@ -399,9 +359,7 @@ public class Javadoc {
                 identifier.equals(f.name()) && !f.skipJava());
     }
 
-    /*
-     * Check if this type exists in the GIR file
-     */
+    // Check if this type exists in the GIR file
     private boolean checkLink(String ns, String type, String identifier) {
         RegisteredType rt = TypeReference.lookup(getNamespace(ns), type);
 
@@ -413,8 +371,8 @@ public class Javadoc {
             return false;
 
         for (VirtualMethod vm : filter(rt.children(), VirtualMethod.class))
-                if (identifier.equals(vm.name()) && (! vm.skip()))
-                    return true;
+            if (identifier.equals(vm.name()) && (! vm.skip()))
+                return true;
 
         for (Method m : filter(rt.children(), Method.class))
             if (identifier.equals(m.name()) && (! m.skip()))

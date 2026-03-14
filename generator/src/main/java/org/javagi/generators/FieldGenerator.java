@@ -78,10 +78,10 @@ public class FieldGenerator extends TypedValueGenerator {
         var spec = MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(typeName)
-                .addJavadoc("Read the value of the field {@code $L}.\n\n", f.name());
+                .addJavadoc("Read the value of the field `$L`.\n\n", f.name());
         if (isArray)
-            spec.addJavadoc("@param length the number of {@code $L} to read", f.name());
-        spec.addJavadoc("@return The value of the field {@code $L}", f.name());
+            spec.addJavadoc("@param length the number of `$L` to read", f.name());
+        spec.addJavadoc("@return The value of the field `$L`", f.name());
         if (isArray)
             spec.addParameter(int.class, "length");
 
@@ -125,9 +125,9 @@ public class FieldGenerator extends TypedValueGenerator {
                         methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                        Write a value in the field {@code $1L}.
+                        Write a value in the field `$1L`.
                         
-                        @param $2L The new value for the field {@code $1L}
+                        @param $2L The new value for the field `$1L`
                         """, f.name(), getName());
 
         // Override the type of long values
@@ -178,9 +178,9 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(getAnnotatedType(true))
                 .addJavadoc("""
-                        Read the value of the field {@code $1L}.
+                        Read the value of the field `$1L`.
                         
-                        @return The value of the field {@code $1L}
+                        @return The value of the field `$1L`
                         """, f.name())
                 .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
                         MemoryLayout.class, f.name())
@@ -196,9 +196,9 @@ public class FieldGenerator extends TypedValueGenerator {
                         methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                        Write a value in the field {@code $1L}.
+                        Write a value in the field `$1L`.
                         
-                        @param $2L The new value for the field {@code $1L}
+                        @param $2L The new value for the field `$1L`
                         """, f.name(), getName())
                 .addParameter(getAnnotatedType(true), getName())
                 .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
@@ -229,9 +229,9 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(getAnnotatedType(true))
                 .addJavadoc("""
-                        Read the value of the field {@code $1L}.
+                        Read the value of the field `$1L`.
                         
-                        @return The value of the field {@code $1L}
+                        @return The value of the field `$1L`
                         """, f.name())
                 .beginControlFlow("try ($1T _arena = $1T.ofConfined())", Arena.class)
                 .addStatement(calcOffset, MemoryLayout.class, f.name())
@@ -250,9 +250,9 @@ public class FieldGenerator extends TypedValueGenerator {
                         methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                        Write a value in the field {@code $1L}.
+                        Write a value in the field `$1L`.
                         
-                        @param $2L The new value for the field {@code $1L}
+                        @param $2L The new value for the field `$1L`
                         """, f.name(), getName())
                 .addParameter(getAnnotatedType(true), getName())
                 .addParameter(Arena.class, "_arena")
@@ -279,7 +279,7 @@ public class FieldGenerator extends TypedValueGenerator {
     public MethodSpec generateOverrideMethod() {
         return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
-                        Override virtual method {@code $L}.
+                        Override virtual method `$L`.
                         
                         @param method the method to invoke
                         """, f.name())
