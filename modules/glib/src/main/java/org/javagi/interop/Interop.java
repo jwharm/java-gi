@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,9 @@
 
 package org.javagi.interop;
 
+import java.lang.classfile.ClassFile;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.MethodTypeDesc;
 import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.lang.ref.Cleaner;
@@ -27,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import org.gnome.glib.*;
@@ -37,6 +41,8 @@ import org.javagi.gobject.annotations.Flags;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import static java.lang.classfile.ClassFile.ACC_PUBLIC;
+import static java.lang.classfile.ClassFile.ACC_STATIC;
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.*;
 import static java.util.Objects.requireNonNull;
@@ -60,22 +66,9 @@ public class Interop {
     private final static Linker LINKER = Linker.nativeLinker();
     private final static Cleaner CLEANER = Cleaner.create();
     private final static FunctionDescriptor GET_TYPE_FDESC = FunctionDescriptor.of(JAVA_LONG);
+    private final static AtomicInteger DUMMY_MH_COUNT = new AtomicInteger();
 
     private static SymbolLookup symbolLookup = LINKER.defaultLookup();
-
-    private final static MethodHandle FUNCTION_NOT_FOUND_MH;
-
-    static {
-        try {
-            FUNCTION_NOT_FOUND_MH = MethodHandles.lookup().findStatic(
-                    Interop.class,
-                    "functionNotFound",
-                    MethodType.methodType(Object.class, Object[].class)
-            );
-        } catch (ReflectiveOperationException e) {
-            throw new InteropException(e);
-        }
-    }
 
     public static boolean longAsInt() {
         return LONG_AS_INT;
@@ -90,6 +83,39 @@ public class Interop {
     public static synchronized void loadLibrary(String name) {
         symbolLookup = LibLoad.loadLibrary(name, Arena.global())
                 .or(Interop.symbolLookup);
+    }
+
+    // Create a method handle for a runtime-generated dummy method that will throw an
+    // UnsupportedOperationException. This method handle is returned when a native function
+    // is not found.
+    private static MethodHandle generateFallbackMH(String fname, FunctionDescriptor fdesc) {
+        String cname = "org.javagi.runtime.FallbackMH$" + DUMMY_MH_COUNT.incrementAndGet();
+        ClassDesc uoe = ClassDesc.of("java.lang.UnsupportedOperationException");
+
+        // Generate the class
+        byte[] buf = ClassFile.of().build(ClassDesc.of(cname), clb -> clb.withMethodBody(
+                fname,
+                fdesc.toMethodType().describeConstable().orElseThrow(),
+                ACC_PUBLIC | ACC_STATIC,
+                cb -> cb.new_(uoe)
+                        .dup()
+                        .ldc("Cannot find function '" + fname + "'")
+                        .invokespecial(uoe, "<init>", MethodTypeDesc.ofDescriptor("(Ljava/lang/String;)V"))
+                        .athrow()));
+
+        // Load the generated class
+        var cls = new ClassLoader() {
+            public Class<?> load(String name, byte[] bytes) {
+                return defineClass(name, bytes, 0, bytes.length);
+            }
+        }.load(cname, buf);
+
+        // Return a MethodHandle to the generated method
+        try {
+            return MethodHandles.lookup().findStatic(cls, fname, fdesc.toMethodType());
+        } catch (Exception err) {
+            throw new AssertionError(err);
+        }
     }
 
     /**
@@ -117,19 +143,7 @@ public class Interop {
     public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, boolean variadic) {
         return symbolLookup.find(name).map(addr -> variadic
                 ? VarargsInvoker.create(addr, fdesc)
-                : LINKER.downcallHandle(addr, fdesc)).orElse(FUNCTION_NOT_FOUND_MH);
-    }
-
-    /**
-     * A MethodHandle to this function is returned when a downcall handle was
-     * requested for a foreign function that was not found by the linker.
-     *
-     * @param args ignored
-     * @return     ignored
-     * @throws InteropException always thrown
-     */
-    public static Object functionNotFound(Object[] args) {
-        throw new InteropException("Cannot call foreign function: symbol was not found");
+                : LINKER.downcallHandle(addr, fdesc)).orElse(generateFallbackMH(name, fdesc));
     }
 
     /**
@@ -291,9 +305,9 @@ public class Interop {
 
         try {
             MethodHandle handle = downcallHandle(getTypeFunction, GET_TYPE_FDESC, false);
-            if (handle == FUNCTION_NOT_FOUND_MH)
-                return null;
             return new Type((long) handle.invokeExact());
+        } catch (UnsupportedOperationException _) {
+            return null; // the get_type function is not found
         } catch (Throwable err) {
             throw new AssertionError("Unexpected exception occurred: ", err);
         }
