@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -25,7 +25,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,44 +81,7 @@ public class InstanceCache {
         }
     }
 
-    /*
-     * Stack of GObjects currently under construction. For these objects a
-     * Java proxy was created, but `g_object_new` has not yet completed so
-     * they don't have a memory address yet.
-     *
-     * This is a stack, not a plain reference, because one object can trigger
-     * the creation of another object during initialization.
-     *
-     * The stack uses a ThreadLocal variable, so concurrently created objects
-     * will not interfere with each other.
-     */
-    private static final class ConstructStack<T> {
-        private final ThreadLocal<ArrayList<T>> CONSTRUCT_STACK;
-
-        ConstructStack() {
-            CONSTRUCT_STACK = ThreadLocal.withInitial(ArrayList::new);
-        }
-
-        boolean isEmpty() {
-            return CONSTRUCT_STACK.get().isEmpty();
-        }
-
-        void push(T object) {
-            CONSTRUCT_STACK.get().add(object);
-        }
-
-        T peek() {
-            return CONSTRUCT_STACK.get().getLast();
-        }
-
-        T pop() {
-            T object = peek();
-            CONSTRUCT_STACK.get().removeLast();
-            return object;
-        }
-    }
-
-    private static final ConstructStack<GObject> constructStack = new ConstructStack<>();
+    private static final ScopedValue<GObject> CONSTRUCTING = ScopedValue.newInstance();
     private static final ConcurrentHashMap<MemorySegment, Ref<Proxy>> references = new ConcurrentHashMap<>();
     private static final Set<MemorySegment> unownedUserDefinedInstances = ConcurrentHashMap.newKeySet();
     private static final Cleaner CLEANER = Cleaner.create();
@@ -234,9 +196,8 @@ public class InstanceCache {
         Proxy newInstance = ctor.apply(address);
 
         // If this instance is newly constructed
-        if (!constructStack.isEmpty()
-                && newInstance instanceof TypeInstance ti) {
-            var proxy = constructStack.peek();
+        if (CONSTRUCTING.isBound() && newInstance instanceof TypeInstance ti) {
+            var proxy = CONSTRUCTING.get();
             var actualType = ti.readGClass().readGType();
             var creatingType = TypeCache.getType(proxy.getClass());
             if (actualType.equals(creatingType)) {
@@ -340,16 +301,16 @@ public class InstanceCache {
      * Construct a new GObject instance and set the provided Java proxy to
      * its address.
      *
-     * @param proxy      the Java Proxy for the newly constructed GObject
+     * @param object     the Java proxy for the newly constructed GObject
      *                   instance
-     * @param objectType the GType, if {@code null} it will be queried from
+     * @param type the GType, if {@code null} it will be queried from
      *                   the TypeCache
      * @param size       the size of the native instance
      * @param properties pairs of property names and values (optional).
      *                   A trailing {@code null} will be added automatically.
      */
-    public static void newGObject(GObject proxy,
-                                  @Nullable Type objectType,
+    public static void newGObject(GObject object,
+                                  @Nullable Type type,
                                   long size,
                                   @Nullable Object @Nullable ... properties) {
         // Split varargs into first property name and the rest
@@ -369,32 +330,28 @@ public class InstanceCache {
             }
         }
 
-        // Invoke g_object_new() and let the proxy point to its address
-        try (var _arena = Arena.ofConfined()) {
-            constructStack.push(proxy);
-            if (objectType == null)
-                objectType = TypeCache.getType(proxy.getClass());
-            try {
-                var address = (MemorySegment) g_object_new.invokeExact(
-                        objectType.getValue().longValue(),
-                        (MemorySegment) (first == null ? MemorySegment.NULL
-                                : Interop.allocateNativeString(first, _arena)),
-                        rest);
-                if (MemorySegment.NULL.equals(proxy.handle()))
-                    ADDRESS_FIELD.set(proxy, address.reinterpret(size));
+        // Use a Scoped Value to make the object available during initialization
+        ScopedValue.where(CONSTRUCTING, object).run(() -> {
+            try (var _arena = Arena.ofConfined()) {
+                // Invoke g_object_new()
+                long t = (type == null ? TypeCache.getType(object.getClass()) : type).getValue().longValue();
+                MemorySegment f = first == null ? MemorySegment.NULL : Interop.allocateNativeString(first, _arena);
+                var address = (MemorySegment) g_object_new.invokeExact(t, f, rest);
+
+                // The object should have an address assigned by now, but let's check again
+                if (MemorySegment.NULL.equals(object.handle()))
+                    ADDRESS_FIELD.set(object, address.reinterpret(size));
 
                 // Ensure the new object is cached
-                put(address, proxy);
+                put(address, object);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
-        } finally {
-            constructStack.pop();
-        }
+        });
 
         // This object is created on the Java side, so we own it, so there is
         // no need for the additional ref.
-        unrefUnownedUserDefinedInstance(proxy);
+        unrefUnownedUserDefinedInstance(object);
     }
 
     // Calls g_object_add_toggle_ref
