@@ -19,7 +19,7 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.*;
+import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.Class;
 import org.javagi.gir.Interface;
@@ -176,14 +176,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         return MethodSpec.methodBuilder("asParent")
                 .addJavadoc("""
-                    Returns this instance as if it were its parent type. This is mostly
-                    synonymous to the Java {@code super} keyword, but will set the native
-                    typeclass function pointers to the parent type. When overriding a native
-                    virtual method in Java, "chaining up" with {@code super.methodName()}
-                    doesn't work, because it invokes the overridden function pointer again.
-                    To chain up, call {@code asParent().methodName()}. This will call the
-                    native function pointer of this virtual method in the typeclass of the
-                    parent type.
+                    Return this instance as if it were its parent type. Comparable to the
+                    Java `super` keyword, but ensures the parent typeclass is also used in
+                    native code.
+                    
+                    @return the instance as if it were its parent type
                     """)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(cls.typeName())
@@ -198,7 +195,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         var spec = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
-                    Create a $L proxy instance for the provided memory address.
+                    Create a $L instance for the provided memory address.
                     
                     @param address the memory address of the native object
                     """, name())
@@ -237,7 +234,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectFactory() {
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                    Creates a new GObject instance of the provided GType and with the
+                    Create a new GObject instance of the provided GType and with the
                     provided property values.
                     
                     @param  objectType the GType of the new GObject
@@ -267,10 +264,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         return MethodSpec.methodBuilder("newInstance")
                 .addJavadoc("""
-                    Creates a new instance of a GObject-derived class with the provided
-                    property values. For your own GObject-derived Java classes, a GType
-                    must have been registered using
-                    {@link org.javagi.gobject.types.Types#register(Class<?>)}
+                    Create a new instance of a GObject-derived class with the provided
+                    property values.
                     
                     @param  objectClass the Java class of the new GObject
                     @param  propertyNamesAndValues pairs of property names and values
@@ -291,7 +286,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
     private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
-                .addJavadoc("Creates a new $1L.", name())
+                .addJavadoc("Create a new $1L.", name())
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("super($T.NULL)", MemorySegment.class)
                 .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), (Object[]) null)",
@@ -338,45 +333,47 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         var T = TypeVariableName.get("T");
         return MethodSpec.methodBuilder("bindProperty")
                 .addJavadoc("""
-                    Creates a binding between {@code sourceProperty} on this Object and
-                    {@code targetProperty} on {@code target}.
-                    <p>
-                    Whenever the {@code sourceProperty} is changed the {@code targetProperty}
+                    Create a binding between `sourceProperty` on this object and
+                    `targetProperty` on `target`.
+                    
+                    Whenever the `sourceProperty` is changed the `targetProperty`
                     is updated using the same value. For instance:
-                    <pre>{@code   action.bindProperty ("active", widget, "sensitive").build();
-                    }</pre>
-                    <p>
-                    Will result in the "sensitive" property of the widget {@code GObject}
+                    
+                    ```java
+                    action.bindProperty("active", widget, "sensitive").build();
+                    ```
+                    
+                    Will result in the "sensitive" property of the widget `GObject`
                     instance to be updated with the same value of the "active" property of
-                    the action {@code GObject} instance.
-                    <p>
-                    If {@link BindingBuilder#bidirectional()} is set then the binding will
-                    be mutual: if {@code targetProperty} on {@code target} changes then the
-                    {@code sourceProperty} on this Object will be updated as well.
-                    <p>
+                    the action `GObject` instance.
+                    
+                    If [BindingBuilder#bidirectional] is set then the binding will be
+                    mutual: if `targetProperty` on `target` changes then the
+                    `sourceProperty` on this Object will be updated as well.
+                    
                     The binding will automatically be removed when either the this Object
-                    or the {@code target} instances are finalized. To remove the binding
-                    without affecting the this Object and the {@code target} you can just
-                    call {@code unref()} on the returned {@code Binding} instance.
-                    <p>
-                    Removing the binding by calling {@code unref()} on it must only be done
-                    if the binding, this GObject and {@code target} are only used from a
-                    single thread and it is clear that both this GObject and {@code target}
+                    or the `target` instances are finalized. To remove the binding
+                    without affecting the this object and the `target`, just call `unref()`
+                    on the returned `Binding` instance.
+                    
+                    Removing the binding by calling `unref()` on it must only be done
+                    if the binding, this GObject and `target` are only used from a
+                    single thread and it is clear that both this GObject and `target`
                     outlive the binding. Especially it is not safe to rely on this if the
-                    binding, this GObject or {@code target} can be finalized from different
+                    binding, this GObject or `target` can be finalized from different
                     threads. Keep another reference to the binding and use
-                    {@link Binding#unbind()} instead to be on the safe side.
-                    <p>
-                    A {@code GObject} can have multiple bindings.
+                    [Binding#unbind] instead to be on the safe side.
+                    
+                    A `GObject` can have multiple bindings.
                     
                     @param  <S> type of the source property
                     @param  <T> type of the target property
                     @param  sourceProperty the property on this Object to bind
-                    @param  target         the target {@code GObject}
-                    @param  targetProperty the property on {@code target} to bind
-                    @return the {@code GBinding} instance representing the binding between
-                            the two {@code GObject} instances. The binding is released
-                            whenever the {@code GBinding} reference count reaches zero.
+                    @param  target         the target `GObject`
+                    @param  targetProperty the property on `target` to bind
+                    @return the `GBinding` instance representing the binding between
+                            the two `GObject` instances. The binding is released
+                            whenever the `GBinding` reference count reaches zero.
                     """)
                 .addModifiers(Modifier.PUBLIC)
                 .addTypeVariable(S)
@@ -444,11 +441,11 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gobjectEmit() {
         return MethodSpec.methodBuilder("emit")
                 .addJavadoc("""
-                    Emits a signal from this object.
+                    Emit a signal from this object.
                     
                     @param  detailedSignal a string of the form "signal-name::detail"
                     @param  params         the parameters to emit for this signal
-                    @return the return value of the signal, or {@code null} if the signal
+                    @return the return value of the signal, or `null` if the signal
                             has no return value
                     @throws IllegalArgumentException if a signal with this name is not found
                             for the object
@@ -466,10 +463,10 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec gListStoreRemoveItem() {
         return MethodSpec.methodBuilder("removeItem")
                 .addJavadoc("""
-                    Removes the item from this ListStore that is at {@code position}.
-                    {@code position} must be smaller than the current length of the list.
-                    <p>
-                    Use g_list_store_splice() to remove multiple items at the same time
+                    Remove the item from this ListStore that is at `position`.
+                    `position` must be smaller than the current length of the list.
+                    
+                    Use [#splice] to remove multiple items at the same time
                     efficiently.
                     
                     @param position the position of the item that is to be removed
@@ -485,8 +482,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec spliceCollectionWrapper(TypeName actualGeneric) {
         return MethodSpec.methodBuilder("splice")
                 .addJavadoc("""
-                        Modifies this list by removing {@code nRemovals} elements starting at
-                        {@code index} and replacing them with the elements in {@code additions}.
+                        Modify this list by removing `nRemovals` elements starting at
+                        `index` and replacing them with the elements in `additions`.
                         
                         @param index the index at which to splice the list
                         @param nRemovals the number of elements to remove
@@ -508,8 +505,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec spliceStringObjectUnwrapper() {
         return MethodSpec.methodBuilder("splice")
                 .addJavadoc("""
-                        Modifies this list by removing {@code nRemovals} elements starting at
-                        {@code index} and replacing them with the elements in {@code additions}.
+                        Modify this list by removing `nRemovals` elements starting at
+                        `index` and replacing them with the elements in `additions`.
                         
                         @param index the index at which to splice the list
                         @param nRemovals the number of elements to remove
@@ -529,9 +526,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
     private MethodSpec appendStringObjectUnwrapper() {
             return MethodSpec.methodBuilder("append")
                 .addJavadoc("""
-                        Adds the specified element to the end of this list.
+                        Add the specified element to the end of the list.
                         
-                        @param e element to be appended to this list
+                        @param e element to be appended to the list
                         """)
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)

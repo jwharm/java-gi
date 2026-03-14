@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.ClassName;
+import org.javagi.javapoet.ClassName;
 import org.javagi.util.Platform;
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toJavaQualifiedType;

@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.TypeName;
 
 public sealed interface AnyType extends Node permits Type, Array {
 

@@ -19,7 +19,7 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.*;
+import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.Conversions;
@@ -62,7 +62,7 @@ public class RegisteredTypeGenerator {
     protected MethodSpec getTypeMethod() {
         return MethodSpec.methodBuilder("getType")
                 .addJavadoc("""
-                    Get the GType of the $L class
+                    Get the GType of the $L class.
                     
                     @return the GType
                     """, name())
@@ -186,9 +186,9 @@ public class RegisteredTypeGenerator {
 
         return spec.addMethod(MethodSpec.constructorBuilder()
                         .addJavadoc("""
-                            Creates a new instance of $T for the provided memory address.
+                            Create a $T instance for the provided memory address.
 
-                            @param address the memory address of the instance
+                            @param address the memory address of the native object
                             """, rt.typeName())
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(MemorySegment.class, "address")

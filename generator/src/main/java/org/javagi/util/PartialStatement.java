@@ -19,8 +19,8 @@
 
 package org.javagi.util;
 
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.CodeBlock;
+import org.javagi.javapoet.TypeName;
 
 import java.util.HashMap;
 import java.util.Map;

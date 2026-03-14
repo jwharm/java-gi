@@ -19,10 +19,10 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import org.javagi.javapoet.ClassName;
+import org.javagi.javapoet.CodeBlock;
+import org.javagi.javapoet.MethodSpec;
+import org.javagi.javapoet.TypeSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.gir.Record;

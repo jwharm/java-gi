@@ -22,7 +22,7 @@ package org.javagi.generators;
 import java.lang.foreign.Arena;
 import java.util.stream.Stream;
 
-import com.squareup.javapoet.*;
+import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;

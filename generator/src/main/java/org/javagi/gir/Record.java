@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.ClassName;
+import org.javagi.javapoet.ClassName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 

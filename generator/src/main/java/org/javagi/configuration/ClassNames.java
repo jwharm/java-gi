@@ -19,10 +19,10 @@
 
 package org.javagi.configuration;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeVariableName;
+import org.javagi.javapoet.ClassName;
+import org.javagi.javapoet.TypeVariableName;
 
-import static com.squareup.javapoet.ClassName.get;
+import static org.javagi.javapoet.ClassName.get;
 
 public final class ClassNames {
     private static final String PKG_BASE            = "org.javagi.base";

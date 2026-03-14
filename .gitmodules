@@ -4,3 +4,6 @@
 [submodule "ext/gobject-introspection-tests"]
 	path = ext/gobject-introspection-tests
 	url = https://gitlab.gnome.org/gnome/gobject-introspection-tests
+[submodule "ext/javapoet"]
+	path = ext/javapoet
+	url = https://codeberg.org/java-gi/javapoet

@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 import org.javagi.util.PartialStatement;
 
-import com.squareup.javapoet.ClassName;
+import org.javagi.javapoet.ClassName;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toJavaIdentifier;

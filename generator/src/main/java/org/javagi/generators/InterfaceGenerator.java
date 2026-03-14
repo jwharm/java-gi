@@ -19,8 +19,8 @@
 
 package org.javagi.generators;
 
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
+import org.javagi.javapoet.ParameterizedTypeName;
+import org.javagi.javapoet.TypeSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.Interface;
 import org.javagi.gir.Record;

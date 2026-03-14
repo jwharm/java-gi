@@ -19,8 +19,8 @@
 
 package org.javagi.gir;
 
-import com.squareup.javapoet.ArrayTypeName;
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.ArrayTypeName;
+import org.javagi.javapoet.TypeName;
 
 import java.lang.foreign.MemorySegment;
 

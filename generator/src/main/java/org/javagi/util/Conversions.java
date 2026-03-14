@@ -19,8 +19,8 @@
 
 package org.javagi.util;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
+import org.javagi.javapoet.ClassName;
+import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.generators.MemoryLayoutGenerator;
 import org.javagi.gir.*;
