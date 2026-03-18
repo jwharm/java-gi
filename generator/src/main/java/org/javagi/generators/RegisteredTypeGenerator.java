@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -89,7 +89,7 @@ public class RegisteredTypeGenerator {
     protected void addConstructors(TypeSpec.Builder builder) {
         for (Constructor c : filter(rt.children(), Constructor.class)) {
             if (!c.skip()) {
-                builder.addMethods(new ConstructorGenerator(c).generate());
+                builder.addMethod(new MethodGenerator(c).generate());
                 if (c.hasBitfieldParameters())
                     builder.addMethod(new CallableGenerator(c)
                                                 .generateBitfieldOverload());
