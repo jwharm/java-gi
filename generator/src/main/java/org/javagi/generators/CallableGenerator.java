@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package org.javagi.generators;
 
+import org.javagi.gir.Class;
 import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
@@ -251,21 +252,43 @@ public class CallableGenerator {
         return params != null
                 && params.parameters().stream().anyMatch(Parameter::varargs);
     }
-    
+
+    public void generateModifiers(MethodSpec.Builder builder, boolean isConstructor) {
+        switch (callable) {
+            case Constructor _ -> {
+                builder.addModifiers(Modifier.PUBLIC);
+                if (!isConstructor)
+                    builder.addModifiers(Modifier.STATIC);
+            }
+            case Function _ ->
+                    builder.addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+            case Method m -> {
+                builder.addModifiers(Modifier.PUBLIC);
+                if (m.parent() instanceof Interface)
+                    builder.addModifiers(Modifier.DEFAULT);
+            }
+            case VirtualMethod v -> {
+                if (v.overrideVisibility() != null)
+                    builder.addModifiers(Modifier.valueOf(v.overrideVisibility()));
+                else if (v.parent() instanceof Class)
+                    builder.addModifiers(Modifier.PROTECTED);
+                else
+                    builder.addModifiers(Modifier.PUBLIC);
+                if (v.parent() instanceof Interface)
+                    builder.addModifiers(Modifier.DEFAULT);
+            }
+            case Callback _, Signal _ ->
+                    builder.addModifiers(Modifier.PUBLIC);
+        }
+    }
+
     public MethodSpec generateBitfieldOverload() {
-        // Check if this is a (named) constructor
-        boolean ctor = callable instanceof Constructor;
-        boolean namedCtor = ctor && (!callable.name().equals("new"));
-
+        boolean isConstructor = callable instanceof Constructor c && !c.isNamed();
         boolean generic = MethodGenerator.isGeneric(callable);
-
-        // Method name
-        String name = ctor
-                ? ConstructorGenerator.getName((Constructor) callable, false)
-                : MethodGenerator.getName(callable);
+        String name = MethodGenerator.getName(callable);
 
         MethodSpec.Builder builder;
-        if (ctor && (!namedCtor))
+        if (isConstructor)
             builder = MethodSpec.constructorBuilder();
         else
             builder = MethodSpec.methodBuilder(name);
@@ -281,17 +304,13 @@ public class CallableGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Modifiers
-        builder.addModifiers(Modifier.PUBLIC);
-        if (callable instanceof Function || namedCtor)
-            builder.addModifiers(Modifier.STATIC);
-        else if (callable.parent() instanceof Interface)
-            builder.addModifiers(Modifier.DEFAULT);
+        generateModifiers(builder, isConstructor);
 
         // Return type
         var returnValue = callable.returnValue();
         if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
             builder.returns(ClassNames.GENERIC_T);
-        else if ((!ctor) || namedCtor) {
+        else if (!isConstructor) {
             var generator = new TypedValueGenerator(returnValue);
             builder.returns(generator.getAnnotatedType(true));
         }
@@ -305,7 +324,7 @@ public class CallableGenerator {
 
         // Call the overloaded method
         PartialStatement stmt = PartialStatement.of("");
-        if (ctor && (!namedCtor))
+        if (isConstructor)
             stmt.add("this");
         else
             stmt.add((returnValue.anyType().isVoid() ? "" : "return ") + name);

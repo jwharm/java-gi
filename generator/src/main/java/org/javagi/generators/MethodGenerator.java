@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package org.javagi.generators;
 
+import org.javagi.gir.Record;
 import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
@@ -31,6 +32,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static org.javagi.util.Conversions.*;
@@ -41,7 +43,8 @@ public class MethodGenerator {
     private final Callable func;
     private final VirtualMethod vm;
     private final ReturnValue returnValue;
-    private final boolean generic;
+    private final boolean isGeneric;
+    private final boolean isConstructor;
     private final MethodSpec.Builder builder;
     private final CallableGenerator generator;
 
@@ -50,7 +53,10 @@ public class MethodGenerator {
     }
 
     public static String getName(Callable func) {
-        return toJavaIdentifier(func.name());
+        String name = func.name();
+        if (name.startsWith("new_") && func instanceof Constructor c && c.isNamed())
+            name = name.substring(4);
+        return toJavaIdentifier(name);
     }
 
     public static boolean isGeneric(Callable func) {
@@ -60,46 +66,49 @@ public class MethodGenerator {
 
     public MethodGenerator(Callable func, String name) {
         this.func = func;
-        this.builder = MethodSpec.methodBuilder(name);
         this.generator = new CallableGenerator(func);
-        this.generic = isGeneric(func);
+        this.isGeneric = isGeneric(func);
+        this.isConstructor = func instanceof Constructor c && !c.isNamed();
 
-        if (func instanceof Method method) {
-            vm = method.invokerFor();
-            // When the return value of the invoker is not the same, we choose
-            // the one that isn't void.
-            if (vm != null && func.returnValue().anyType().isVoid())
-                returnValue = vm.returnValue();
-            else
+        if (isConstructor)
+            this.builder = MethodSpec.constructorBuilder();
+        else
+            this.builder = MethodSpec.methodBuilder(name);
+
+        switch (func) {
+            case Method method -> {
+                vm = method.invokerFor();
+                // When the return value of the invoker is not the same,
+                // we choose the one that isn't void.
+                if (vm != null && func.returnValue().anyType().isVoid())
+                    returnValue = vm.returnValue();
+                else
+                    returnValue = func.returnValue();
+            }
+            case VirtualMethod virtualMethod -> {
+                vm = virtualMethod;
+                returnValue = virtualMethod.returnValue();
+            }
+            default -> {
+                vm = null;
                 returnValue = func.returnValue();
-        } else if (func instanceof VirtualMethod virtualMethod) {
-            vm = virtualMethod;
-            returnValue = virtualMethod.returnValue();
-        } else {
-            vm = null;
-            returnValue = func.returnValue();
+            }
         }
     }
 
     public FieldSpec generateNamedDowncallHandle(Modifier... modifiers) {
-        return FieldSpec.builder(
-                        MethodHandle.class,
-                        func.callableAttrs().cIdentifier(),
-                        modifiers)
+        return FieldSpec.builder(MethodHandle.class, func.callableAttrs().cIdentifier(), modifiers)
                 .initializer(CodeBlock.builder()
-                        .add("$T.downcallHandle($Z$S,$W",
-                                ClassNames.INTEROP,
-                                func.callableAttrs().cIdentifier())
-                        .add(generator.generateFunctionDescriptor())
-                        .add(",$W$L)", generator.varargs())
-                        .build())
+                    .add("$T.downcallHandle($Z$S,$W", ClassNames.INTEROP, func.callableAttrs().cIdentifier())
+                    .add(generator.generateFunctionDescriptor())
+                    .add(",$W$L)", generator.varargs())
+                    .build())
                 .build();
     }
 
     public MethodSpec generate() {
         // Javadoc
-        if ((! (func instanceof Constructor)) // not for private constructor helper methods
-                && (func.infoElements().doc() != null)) {
+        if (func.infoElements().doc() != null) {
             String javadoc = new DocGenerator(func.infoElements().doc()).generate();
             builder.addJavadoc(javadoc);
         }
@@ -109,42 +118,31 @@ public class MethodGenerator {
             builder.addAnnotation(Deprecated.class);
 
         // Modifiers
-        switch (func) {
-            case VirtualMethod v when v.overrideVisibility() != null ->
-                    builder.addModifiers(Modifier.valueOf(v.overrideVisibility()));
-            case VirtualMethod _ when func.parent() instanceof Class ->
-                    builder.addModifiers(Modifier.PROTECTED);
-            case Constructor _ ->
-                    builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
-            default ->
-                    builder.addModifiers(Modifier.PUBLIC);
-        }
-
-        if (func instanceof Function)
-            builder.addModifiers(Modifier.STATIC);
-        else if (func.parent() instanceof Interface)
-            builder.addModifiers(Modifier.DEFAULT);
+        generator.generateModifiers(builder, isConstructor);
 
         // Return type
-        if (generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
-            builder.returns(ClassNames.GENERIC_T);
-        else if (func instanceof Constructor)
-            builder.returns(MemorySegment.class);
-        else {
-            builder.returns(new TypedValueGenerator(returnValue).getAnnotatedType(true));
+        if (!isConstructor) {
+            if (isGeneric && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
+                builder.returns(ClassNames.GENERIC_T);
+            else
+                builder.returns(new TypedValueGenerator(returnValue).getAnnotatedType(true));
         }
 
         // Parameters
-        generator.generateMethodParameters(builder, generic, true);
+        generator.generateMethodParameters(builder, isGeneric, true);
 
         // Exception
         if (func.callableAttrs().throws_())
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
+        // Declare return value
+        if (!returnValue.anyType().isVoid())
+            builder.addStatement("$T _result",
+                    Conversions.getCarrierTypeName(returnValue.anyType(), true));
+
         // try-block for arena
         if (func.allocatesMemory())
-            builder.beginControlFlow("try (var _arena = $T.ofConfined())",
-                    Arena.class);
+            builder.beginControlFlow("try (var _arena = $T.ofConfined())", Arena.class);
 
         // When ownership of the instance parameter is transferred away, the
         // instance is consumed. Add a ref() call to prevent this.
@@ -171,11 +169,6 @@ public class MethodGenerator {
             builder.addStatement("$T _gerror = _arena.allocate($T.ADDRESS)",
                     MemorySegment.class,
                     ValueLayout.class);
-
-        // Declare return value
-        if (!returnValue.anyType().isVoid())
-            builder.addStatement("$T _result",
-                    Conversions.getCarrierTypeName(returnValue.anyType(), true));
 
         // Try-catch for function invocation
         builder.beginControlFlow("try");
@@ -218,9 +211,32 @@ public class MethodGenerator {
                     .map(PostprocessingGenerator::new)
                     .forEach(p -> p.generate(builder));
 
-        // Private static helper method for constructors return the result as-is
-        if (func instanceof Constructor) {
-            builder.addStatement("return _result");
+        // Constructors: initialize the instance
+        if (isConstructor) {
+            var parent = (RegisteredType) func.parent();
+
+            // End try-block for arena
+            if (func.allocatesMemory())
+                builder.endControlFlow();
+
+            builder.addStatement("this(_result)");
+
+            // Cache new GObject instance
+            if (parent.checkIsGObject())
+                builder.addStatement("$T.put(handle(), this)", ClassNames.INSTANCE_CACHE);
+
+                // These constructors return floating references
+            else if (parent instanceof Record rec && List.of("GVariant", "GClosure").contains(rec.cType())) {
+                builder.addStatement(rec.cType().equals("GVariant") ? "refSink()" : "ref().sink()")
+                       .addStatement("$T.takeOwnership(this)", ClassNames.MEMORY_CLEANER)
+                       .addStatement("$T.setFreeFunc(this, $S)", ClassNames.MEMORY_CLEANER, rec.attr("free-function"));
+            }
+
+            // Add cleaner to struct/union pointer
+            else {
+                builder.addStatement("$T.takeOwnership(this)", ClassNames.MEMORY_CLEANER);
+                new RegisteredTypeGenerator(parent).setFreeFunc(builder, "this", parent.typeName());
+            }
         }
 
         // Marshal return value and handle ownership transfer
@@ -255,7 +271,7 @@ public class MethodGenerator {
         }
 
         // End try-block for arena
-        if (func.allocatesMemory())
+        if (!isConstructor && func.allocatesMemory())
             builder.endControlFlow();
 
         return builder.build();
@@ -276,7 +292,7 @@ public class MethodGenerator {
 
     // Prepare a statement that marshals the return value to Java
     private void marshalReturnValue() {
-        var isGeneric = generic && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT);
+        var isGeneric = this.isGeneric && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT);
         var generator = new TypedValueGenerator(returnValue);
         var typeName = isGeneric ? ClassNames.GENERIC_T : generator.getType();
         PartialStatement stmt = PartialStatement.of("$returnType:T", "returnType", typeName);
