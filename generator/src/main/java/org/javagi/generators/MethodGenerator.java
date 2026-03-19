@@ -199,7 +199,7 @@ public class MethodGenerator {
         if (func.callableAttrs().throws_())
             builder.beginControlFlow("if ($T.isErrorSet(_gerror))",
                             ClassNames.GERROR_EXCEPTION)
-                    .addStatement("throw new $T(_gerror)",
+                    .addStatement("throw $T.take(_gerror)",
                             ClassNames.GERROR_EXCEPTION)
                     .endControlFlow();
 

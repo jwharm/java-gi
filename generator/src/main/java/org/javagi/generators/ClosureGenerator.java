@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -222,9 +222,7 @@ public class ClosureGenerator {
             } else {
                 upcall.nextControlFlow("catch ($T _ge)", ClassNames.GERROR_EXCEPTION);
             }
-            upcall.addStatement("$1T _gerror = $1T.literal(_ge.getDomain(), _ge.getCode(), _ge.getMessage())", ClassNames.G_ERROR)
-                  .addStatement("$T.yieldOwnership(_gerror)", ClassNames.MEMORY_CLEANER)
-                  .addStatement("_gerrorPointer.set($T.ADDRESS, 0, _gerror.handle())", ValueLayout.class);
+            upcall.addStatement("_gerrorPointer.set($T.ADDRESS, 0, _ge.toGErrorUnowned().handle())", ValueLayout.class);
             if (!returnsVoid)
                 returnNull(upcall);
             if (methodToInvoke.endsWith("invoke")) {

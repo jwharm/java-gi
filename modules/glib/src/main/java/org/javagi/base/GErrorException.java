@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -25,6 +25,7 @@ import java.lang.foreign.ValueLayout;
 import org.gnome.glib.GError;
 
 import org.gnome.glib.Quark;
+import org.javagi.interop.MemoryCleaner;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -35,10 +36,8 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public class GErrorException extends Exception {
-
     private final Quark domain;
     private final int code;
-    private final @Nullable String message;
 
     /**
      * Check if an error is set.
@@ -51,34 +50,41 @@ public class GErrorException extends Exception {
         return (! gerror.equals(MemorySegment.NULL));
     }
 
-    /*
-     * Dereference the GError instance from the pointer.
+    /**
+     * Create a GErrorException from a GError memory location that was returned
+     * by a native function. Consumes (frees) the GError.
+     *
+     * @param gerrorPtr pointer to a GError in native memory
+     * @return the newly created GErrorException
      */
-    private static GError dereference(MemorySegment pointer) {
-        return new GError(pointer.get(ValueLayout.ADDRESS, 0));
-    }
-    
-    /*
-     * Get the message from the GError instance (used by the GErrorException
-     * constructor).
-     */
-    private static String readMessage(MemorySegment pointer) {
-        return dereference(pointer).readMessage();
+    public static GErrorException take(MemorySegment gerrorPtr) {
+        GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
+        GErrorException exc = new GErrorException(err);
+        err.free();
+        return exc;
     }
 
     /**
-     * Create a GErrorException from a GError memory segment that was returned
-     * by a native function.
+     * Create a GErrorException from a GError memory location that was returned
+     * by a native function. Consumes (frees) the GError.
      *
      * @param gerrorPtr pointer to a GError in native memory
+     * @deprecated Use {@link #take} instead
      */
+    @Deprecated
     public GErrorException(MemorySegment gerrorPtr) {
-        super(readMessage(gerrorPtr));
-        GError gerror = dereference(gerrorPtr);
-        this.domain = gerror.readDomain();
-        this.code = gerror.readCode();
-        this.message = gerror.readMessage();
-        gerror.free();
+        GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
+        this(err);
+        err.free();
+    }
+
+    /**
+     * Create a GErrorException from a native GError.
+     *
+     * @param err a GError in native memory
+     */
+    public GErrorException(GError err) {
+        this(err.readDomain(), err.readCode(), err.readMessage());
     }
 
     /**
@@ -92,14 +98,10 @@ public class GErrorException extends Exception {
      * @param message the error message, printf-style formatted
      * @param args    varargs parameters for message format
      */
-    public GErrorException(Quark domain,
-                           int code,
-                           @Nullable String message,
-                           @Nullable Object... args) {
-        super(message);
+    public GErrorException(Quark domain, int code, @Nullable String message, @Nullable Object... args) {
+        super(message == null ? null : message.formatted(args));
         this.domain = domain;
         this.code = code;
-        this.message = message == null ? null : message.formatted(args);
     }
 
     /**
@@ -122,11 +124,23 @@ public class GErrorException extends Exception {
     
     /**
      * Create a new GError instance with the domain, code and message of this
-     * GErrorException.
+     * GErrorException. The instance will automatically be freed during GC.
      *
      * @return a newly created GError instance
      */
     public GError toGError() {
-        return new GError(domain, code, message);
+        return new GError(getDomain(), getCode(), getMessage());
+    }
+
+    /**
+     * Create a new GError instance with the domain, code and message of this
+     * GErrorException. The instance will <b>not</b> be automatically freed.
+     *
+     * @return a newly created GError instance
+     */
+    public GError toGErrorUnowned() {
+        GError err = toGError();
+        MemoryCleaner.yieldOwnership(err);
+        return err;
     }
 }
