@@ -63,6 +63,10 @@ public class ModuleInfoGenerator {
                     .map(Include::name)
                     .map(ModuleInfo::javaModule)
                     .forEach(requires::add);
+
+            // Always include org.gnome.glib
+            if (ns.parent().includes().isEmpty())
+                requires.add("org.gnome.glib");
         }
 
         if (name == null)

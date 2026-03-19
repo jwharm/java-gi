@@ -103,11 +103,23 @@ public final class Namespace extends GirElement implements RegisteredType {
         return attr("version");
     }
 
+    /**
+     * Return the {@code c:identifier-prefixes}.
+     * If there are multiple (comma-separated), return the first.
+     */
     public String cIdentifierPrefix() {
-        return attr("c:identifier-prefixes");
+        String prefixes = attr("c:identifier-prefixes");
+        if (prefixes == null)
+            return null;
+
+        int comma = prefixes.indexOf(',');
+        if (comma == -1)
+            return prefixes;
+        else
+            return prefixes.substring(0, comma);
     }
 
-    public String cSymbolPrefix() {
+    public String cSymbolPrefixes() {
         return attr("c:symbol-prefixes");
     }
 
