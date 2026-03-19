@@ -354,6 +354,12 @@ public class JavaGI implements Callable<Integer> {
             dependencies.add(dep);
         }
 
+        // Always include GLib
+        if (repository.includes().isEmpty()) {
+            String dep = generateDependencyLine("glib");
+            dependencies.add(dep);
+        }
+
         // Generate the build script
         String script = """
                 plugins {
