@@ -89,7 +89,7 @@ public class Interop {
     // UnsupportedOperationException. This method handle is returned when a native function
     // is not found.
     private static MethodHandle generateFallbackMH(String fname, FunctionDescriptor fdesc) {
-        String cname = "org.javagi.runtime.FallbackMH$" + DUMMY_MH_COUNT.incrementAndGet();
+        String cname = "org.javagi.interop.FallbackMH$" + DUMMY_MH_COUNT.incrementAndGet();
         ClassDesc uoe = ClassDesc.of("java.lang.UnsupportedOperationException");
 
         // Generate the class
@@ -103,16 +103,13 @@ public class Interop {
                         .invokespecial(uoe, "<init>", MethodTypeDesc.ofDescriptor("(Ljava/lang/String;)V"))
                         .athrow()));
 
-        // Load the generated class
-        var cls = new ClassLoader() {
-            public Class<?> load(String name, byte[] bytes) {
-                return defineClass(name, bytes, 0, bytes.length);
-            }
-        }.load(cname, buf);
-
-        // Return a MethodHandle to the generated method
         try {
-            return MethodHandles.lookup().findStatic(cls, fname, fdesc.toMethodType());
+            var lookup = MethodHandles.lookup();
+            // Load the generated class
+            var cls = lookup.defineClass(buf);
+
+            // Return a MethodHandle to the generated method
+            return lookup.findStatic(cls, fname, fdesc.toMethodType());
         } catch (Exception err) {
             throw new AssertionError(err);
         }
