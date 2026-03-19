@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -59,5 +59,16 @@ public interface Node {
         if (predicate.test(this))
             return true;
         return children().stream().anyMatch(c -> c.deepMatch(predicate, skip));
+    }
+
+    /**
+     * Generate a path string with the type and name of this node and all
+     * parent nodes. This can be useful for debug output.
+     *
+     * @return the path string
+     */
+    default String xpath() {
+        String desc = getClass().getSimpleName() + (attr("name") == null ? "" : ("[" + attr("name") + "]"));
+        return parent() == null ? desc : parent().xpath() + "/" + desc;
     }
 }
