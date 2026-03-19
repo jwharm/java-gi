@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -29,6 +29,7 @@ import org.javagi.interop.Platform;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -72,6 +73,7 @@ import java.util.ArrayList;
 @NullMarked
 public class Intl {
 
+    private static boolean disableTranslations = false;
     private static @Nullable String domain = null;
 
     static {
@@ -109,6 +111,7 @@ public class Intl {
         }
 
         GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Cannot load libgettextlib\n");
+        disableTranslations = true;
     }
 
     // #include <libintl.h>
@@ -135,6 +138,15 @@ public class Intl {
      *         {@code null} if an error occured.
      */
     public static @Nullable String bindtextdomain(String domainname, String dirname) {
+        if (disableTranslations)
+            return null;
+
+        if (!new File(dirname).exists()) {
+            GLib.log(Constants.LOG_DOMAIN, LogLevelFlags.LEVEL_WARNING, "Locale directory not found: %s\n", dirname);
+            disableTranslations = true;
+            return null;
+        }
+
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) bindtextdomain.invokeExact(
                     Interop.allocateNativeString(domainname, arena),
@@ -152,6 +164,9 @@ public class Intl {
      * @return the message domain, or {@code null} if an error occured.
      */
     public static @Nullable String textdomain(String domainname) {
+        if (disableTranslations)
+            return null;
+
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) textdomain.invokeExact(
                     Interop.allocateNativeString(domainname, arena));
@@ -170,7 +185,10 @@ public class Intl {
      * @see    GLib#dgettext
      */
     public static String i18n(String msgid) {
-        return GLib.dgettext(domain, msgid);
+        if (disableTranslations)
+            return msgid;
+        else
+            return GLib.dgettext(domain, msgid);
     }
 
     /**
@@ -183,7 +201,10 @@ public class Intl {
      * @see    GLib#dngettext
      */
     public static String i18n(String msgid, String plural, int n) {
-        return GLib.dngettext(domain, msgid, plural, n);
+        if (disableTranslations)
+            return msgid;
+        else
+            return GLib.dngettext(domain, msgid, plural, n);
     }
 
     /**
@@ -195,6 +216,9 @@ public class Intl {
      * @see    GLib#dpgettext2
      */
     public static String i18n(String context, String msgid) {
-        return GLib.dpgettext2(domain, context, msgid);
+        if (disableTranslations)
+            return msgid;
+        else
+            return GLib.dpgettext2(domain, context, msgid);
     }
 }
