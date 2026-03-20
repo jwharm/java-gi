@@ -1,2 +1,3 @@
-// Add missing invoker attribute
+// Add missing invoker attributes
 Index.delete_#virtual-method invoker=delete
+Folder.delete_#virtual-method invoker=delete
