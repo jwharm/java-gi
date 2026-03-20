@@ -1,0 +1,2 @@
+// Add missing invoker attribute
+Index.delete_#virtual-method invoker=delete
