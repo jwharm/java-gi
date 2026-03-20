@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,6 +23,8 @@ import org.javagi.javapoet.JavaFile;
 import org.javagi.javapoet.TypeSpec;
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.gir.*;
+import org.javagi.metadata.Matcher;
+import org.javagi.metadata.Parser;
 import org.javagi.util.Platform;
 import org.javagi.generators.*;
 import org.javagi.gir.Class;
@@ -67,7 +69,7 @@ public class JavaGI implements Callable<Integer> {
             names = {"-d", "--domain"},
             paramLabel = "domain",
             description = "reverse domain name prefixed to the Java package " +
-                    "and module name, for example \"org.gnome\"")
+                          "and module name, for example \"org.gnome\"")
     private String domain;
 
     @CommandLine.Option(
@@ -93,7 +95,7 @@ public class JavaGI implements Callable<Integer> {
             names = {"-s", "--summary"},
             paramLabel = "text",
             description = "short summary of the library to include in the " +
-                    "javadoc of the generated Java package")
+                          "javadoc of the generated Java package")
     private String summary;
 
     @CommandLine.Option(
@@ -101,7 +103,7 @@ public class JavaGI implements Callable<Integer> {
             paramLabel = "url",
             defaultValue = "",
             description = "url of the online API documentation to prefix before " +
-                    "hyperlinks in the generated javadoc")
+                          "hyperlinks in the generated javadoc")
     private String docUrl;
 
     @CommandLine.Parameters(
@@ -123,7 +125,7 @@ public class JavaGI implements Callable<Integer> {
      *
      * @param args processed by picocli
      */
-    public static void main(String[] args) {
+    static void main(String[] args) {
         var javaGi = new JavaGI();
         int exitCode = new CommandLine(javaGi)
                 .setExecutionExceptionHandler(javaGi::writeErrorMessages)
@@ -136,17 +138,12 @@ public class JavaGI implements Callable<Integer> {
      * rethrown. Otherwise, this will print the exception message on the
      * command line, without the stack trace.
      */
-    private int writeErrorMessages(Exception ex,
-                                   CommandLine cmd,
-                                   CommandLine.ParseResult result) throws Exception {
+    private int writeErrorMessages(Exception ex, CommandLine cmd, CommandLine.ParseResult result) throws Exception {
         if (stacktrace)
             throw ex;
 
-        String message = Objects.requireNonNullElse(
-                ex.getMessage(),
-                ex.getClass().getSimpleName());
-
         // bold red error message
+        String message = Objects.requireNonNullElse(ex.getMessage(), ex.getClass().getSimpleName());
         cmd.getErr().println(cmd.getColorScheme().errorText(message));
 
         return cmd.getExitCodeExceptionMapper() != null
@@ -177,11 +174,14 @@ public class JavaGI implements Callable<Integer> {
 
             // Check if parsing succeeded (the gir file contains a namespace)
             if (repository == null || repository.namespace() == null)
-                throw new IllegalArgumentException("gir file %s is invalid"
-                        .formatted(girFile.getName()));
+                throw new IllegalArgumentException("gir file %s is invalid".formatted(girFile.getName()));
+
+            // Apply metadata (if it exists)
+            var name = repository.namespace().name();
+            var version = repository.namespace().version();
+            new Matcher().match(new Parser(name, version).parse(), repository);
 
             // Prepare module and package information
-            var name = repository.namespace().name();
             var packageName = generatePackageName(name);
             ModuleInfo.add(name, packageName, packageName, docUrl, summary);
             library.put(name, repository);
@@ -194,10 +194,8 @@ public class JavaGI implements Callable<Integer> {
             var packages = new HashSet<String>();
 
             // Create standard source directories for maven/gradle projects
-            var srcDirectory = generateProject
-                    ? new File(libDirectory, "src/main/java")
-                    : libDirectory;
-            var ignored = srcDirectory.mkdirs();
+            var srcDirectory = generateProject ? new File(libDirectory, "src/main/java") : libDirectory;
+            var _ = srcDirectory.mkdirs();
 
             // Generate the language bindings
             generate(name, library, srcDirectory);
@@ -219,8 +217,7 @@ public class JavaGI implements Callable<Integer> {
         return 0;
     }
 
-    private Library loadIncludedGirFiles()
-            throws XMLStreamException, IOException {
+    private Library loadIncludedGirFiles() throws XMLStreamException, IOException {
         var library = new Library();
         ZipEntry entry;
 
@@ -230,16 +227,24 @@ public class JavaGI implements Callable<Integer> {
 
             var zipIn = new ZipInputStream(resource);
             while ((entry = zipIn.getNextEntry()) != null) {
-                var name = entry.getName();
-                if (!entry.isDirectory() && name.endsWith(".gir")) {
-                    var platform = name.startsWith("windows/") ? WINDOWS
-                            : name.startsWith("macos/") ? MACOS
+                var path = entry.getName();
+                if (!entry.isDirectory() && path.endsWith(".gir")) {
+                    var platform = path.startsWith("windows/") ? WINDOWS
+                            : path.startsWith("macos/") ? MACOS
                             : LINUX;
-                    var file = name.substring(name.lastIndexOf("/") + 1);
+                    var file = path.substring(path.lastIndexOf("/") + 1);
                     var repo = parser.parse(zipIn, platform, library.get(file));
                     library.put(file, repo);
                 }
             }
+        }
+
+        // Apply metadata (if it exists)
+        for (var file : library.entries()) {
+            var repo = library.get(file);
+            var name = repo.namespace().name();
+            var version = repo.namespace().version();
+            new Matcher().match(new Parser(name, version).parse(), repo);
         }
 
         return library;
@@ -256,10 +261,7 @@ public class JavaGI implements Callable<Integer> {
     }
 
     // Generate Java language bindings for a GIR repository
-    public static void generate(String name,
-                                Library library,
-                                File outputDirectory) throws IOException {
-
+    public static void generate(String name, Library library, File outputDirectory) throws IOException {
         Namespace ns = library.lookupNamespace(name);
         String packageName = ModuleInfo.javaPackage(name);
 
@@ -291,8 +293,7 @@ public class JavaGI implements Callable<Integer> {
                 case Class c -> new ClassGenerator(c).generate();
                 case EnumType e -> new EnumGenerator(e).generate();
                 case Interface i -> new InterfaceGenerator(i).generate();
-                case Record r when r.isGTypeStructFor() == null ->
-                        new RecordGenerator(r).generate();
+                case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
                 case Union u -> new UnionGenerator(u).generate();
                 default -> null;
             };
@@ -303,10 +304,7 @@ public class JavaGI implements Callable<Integer> {
             if (rt instanceof Interface i) {
                 var generator = new InterfaceGenerator(i);
                 if (generator.hasDowncallHandles())
-                    writeJavaFile(generator.downcallHandlesClass(),
-                            packageName,
-                            licenseNotice,
-                            outputDirectory);
+                    writeJavaFile(generator.downcallHandlesClass(), packageName, licenseNotice, outputDirectory);
             }
         }
     }
@@ -344,8 +342,7 @@ public class JavaGI implements Callable<Integer> {
         }
     }
 
-    private void writeBuildScript(Path basePath,
-                                  Repository repository) throws IOException {
+    private void writeBuildScript(Path basePath, Repository repository) throws IOException {
         // List the project dependencies
         var dependencies = new HashSet<String>();
         for (var incl : repository.includes()) {

@@ -58,6 +58,10 @@ public final class Library implements Serializable {
         return repositories.containsKey(name);
     }
 
+    public Set<String> entries() {
+        return repositories.keySet();
+    }
+
     public void setExported(String name) {
         exported.add(name);
     }
