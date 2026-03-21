@@ -141,7 +141,7 @@ public class Conversions {
                 "catch", "extends", "int", "short", "try", "char", "final",
                 "interface", "static", "void", "class", "finally", "long",
                 "strictfp", "volatile", "const", "float", "native", "super",
-                "while", "wait", "finalize", "null",
+                "while", "wait", "finalize", "getClass", "null",
                 "handle" // used by java-gi
         );
         return keywords.contains(name) ? name + "_" : name;
