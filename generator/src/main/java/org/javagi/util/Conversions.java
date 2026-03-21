@@ -375,7 +375,7 @@ public class Conversions {
             return Numbers.parseShort(value).toString();
 
         if (type.equals(TypeName.get(String.class)))
-            return '"' + value.replace("\\", "\\\\") + '"';
+            return '"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
 
         return value;
     }
