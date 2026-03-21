@@ -1,3 +1,9 @@
 // Add missing invoker attributes
 Index.delete_#virtual-method invoker=delete
 Folder.delete_#virtual-method invoker=delete
+
+/*
+ * NetworkService.connectSync() overrides Service.connectSync() with a
+ * different return type. Rename to connectSyncNetworkService()
+ */
+NetworkService.connect_sync name=connect_sync_network_service
