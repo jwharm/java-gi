@@ -665,7 +665,7 @@ class TypedValueGenerator {
 
             if (target instanceof Alias a && a.isValueWrapper())
                 return PartialStatement.of(
-                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", " + transfer() + ")",
+                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", length, " + transfer() + ")",
                         targetTypeTag, target.typeName(),
                         "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 

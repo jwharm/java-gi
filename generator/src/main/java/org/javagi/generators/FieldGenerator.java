@@ -65,8 +65,10 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateReadMethod() {
-        // To read from ...** fields, you must provide the length of the array.
-        boolean isArray = type != null && type.isActuallyAnArray();
+        // To read from arrays with unknown size, or ...** fields, you must
+        // provide the length of the array.
+        boolean isArray = (array != null && array.unknownSize())
+                || (type != null && type.isActuallyAnArray());
 
         // Override the type of long values
         boolean isLong = type != null && type.isLong();
@@ -77,7 +79,7 @@ public class FieldGenerator extends TypedValueGenerator {
                 .returns(typeName)
                 .addJavadoc("Read the value of the field `$L`.\n\n", f.name());
         if (isArray)
-            spec.addJavadoc("@param length the number of `$L` to read", f.name());
+            spec.addJavadoc("@param length the number of `$L` to read\n", f.name());
         spec.addJavadoc("@return The value of the field `$L`", f.name());
         if (isArray)
             spec.addParameter(int.class, "length");
