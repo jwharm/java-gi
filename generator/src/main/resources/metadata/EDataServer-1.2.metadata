@@ -1,0 +1,3 @@
+// These are out-parameters
+time_parse_date_ex.two_digit_year direction=out
+time_parse_date_and_time_ex.two_digit_year direction=out
