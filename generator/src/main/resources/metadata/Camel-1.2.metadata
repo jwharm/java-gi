@@ -7,3 +7,10 @@ Folder.delete_#virtual-method invoker=delete
  * different return type. Rename to connectSyncNetworkService()
  */
 NetworkService.connect_sync name=connect_sync_network_service
+
+/*
+ * camel_key_file_read writes to the `records` array and the `len` parameter.
+ * Flag them as out-parameters.
+ */
+KeyFile.read.len direction=out
+KeyFile.read.records direction=out
