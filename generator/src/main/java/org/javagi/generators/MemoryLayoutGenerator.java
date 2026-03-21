@@ -116,13 +116,13 @@ public class MemoryLayoutGenerator {
                 "valueLayout", ValueLayout.class
         );
         int bitfieldPosition = 0;
-        int initialSize = size;
+        boolean first = true;
 
         for (int i = 0; i < nodes.size(); i++) {
             Node node = nodes.get(i);
 
             if (node instanceof FieldContainer fc) {
-                if (size > initialSize) stmt.add(",\n");
+                if (! first) stmt.add(",\n"); else first = false;
                 stmt.add(generateGroupLayout(fc, longAsInt));
                 continue;
             }
@@ -152,7 +152,7 @@ public class MemoryLayoutGenerator {
                                 && f.bits() == -1);
 
                 if (last || bitfieldPosition > (s * 8)) {
-                    if (size > initialSize) stmt.add(",\n");
+                    if (! first) stmt.add(",\n"); else first = false;
                     size += s;
                     stmt.add("$memoryLayout:T.sequenceLayout(" + s + ", $valueLayout:T.JAVA_BYTE)")
                         .add(" /* bitfield */");
@@ -161,7 +161,7 @@ public class MemoryLayoutGenerator {
                 continue;
             }
 
-            if (size > initialSize) stmt.add(",\n");
+            if (! first) stmt.add(",\n"); else first = false;
 
             // Calculate padding
             if (insertPadding) {
@@ -202,8 +202,7 @@ public class MemoryLayoutGenerator {
             case Array array -> {
                 if (array.fixedSize() > 0) {
                     var type = (Type) array.anyType();
-                    yield PartialStatement.of("$memoryLayout:T.sequenceLayout("
-                                    + array.fixedSize() + ", ")
+                    yield PartialStatement.of("$memoryLayout:T.sequenceLayout(" + array.fixedSize() + ", ")
                             .add(layoutForType(type, longAsInt))
                             .add(")");
                 } else {
