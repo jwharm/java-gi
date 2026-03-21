@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -206,9 +206,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     && target instanceof Alias a
                     && a.isValueWrapper())) {
 
-            // Special case for length, user_data, and GBytes parameters
+            // Special case for length, user_data, GBytes and GString parameters
             if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
-                    || (target != null && target.checkIsGBytes())) {
+                    || (target != null && (target.checkIsGBytes() || target.checkIsGString()))) {
 
                 // Allocate an empty memory segment with the correct layout
                 var stmt = PartialStatement.of(
@@ -461,6 +461,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && !(target instanceof Alias a && a.isValueWrapper())
                 && !(target instanceof EnumType)
                 && !target.checkIsGBytes()
+                && !target.checkIsGString()
                 && p.transferOwnership() != TransferOwnership.NONE
                 && (p.direction() != Direction.OUT)
                 && !(target instanceof Record r && r.foreign())) {
@@ -490,6 +491,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     && !(elemTarget instanceof Alias a && a.isValueWrapper())
                     && !(elemTarget instanceof EnumType)
                     && !elemTarget.checkIsGBytes()
+                    && !elemTarget.checkIsGString()
                     && !(elemTarget instanceof Record r && r.foreign())) {
 
                 // Check null
@@ -637,8 +639,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
     // Unref user-defined GObject when ownership is transferred to a callback in-parameter
     private void refGObjectUpcall(MethodSpec.Builder builder) {
-        if (v instanceof Parameter p
-                && target != null
+        if (target != null
                 && target.checkIsGObject()
                 && p.transferOwnership() == TransferOwnership.FULL
                 && !p.isOutParameter()) {
@@ -646,13 +647,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             stmt = PartialStatement.of("var _" + getName() + " = ").add(stmt).add(";\n");
             builder.addNamedCode(stmt.format(), stmt.arguments());
             if (target instanceof org.javagi.gir.Class)
-                builder.addStatement("$T.unrefUnownedUserDefinedInstance(_$L)",
-                        ClassNames.INSTANCE_CACHE, getName());
+                builder.addStatement("$T.unrefUnownedUserDefinedInstance(_$L)", ClassNames.INSTANCE_CACHE, getName());
             else
-                builder.beginControlFlow("if (_$L instanceof $T _object)",
-                                getName(), ClassNames.G_OBJECT)
-                        .addStatement("$T.unrefUnownedUserDefinedInstance(_object)",
-                                ClassNames.INSTANCE_CACHE)
+                builder.beginControlFlow("if (_$L instanceof $T _object)", getName(), ClassNames.G_OBJECT)
+                        .addStatement("$T.unrefUnownedUserDefinedInstance(_object)", ClassNames.INSTANCE_CACHE)
                         .endControlFlow();
         }
     }

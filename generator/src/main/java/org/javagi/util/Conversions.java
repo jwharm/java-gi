@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -155,7 +155,7 @@ public class Conversions {
         if (ns == null)
             return name;
 
-        return Stream.of("Object", "Error", "Builder")
+        return Stream.of("Object", "Error", "String", "Builder")
                 .anyMatch(kw -> kw.equalsIgnoreCase(name))
                         ? ns.cIdentifierPrefix() + name
                         : name;

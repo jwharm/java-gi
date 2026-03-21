@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -30,10 +30,7 @@ import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -138,6 +135,16 @@ public class FieldGenerator extends TypedValueGenerator {
         if (f.allocatesMemory())
             spec.addJavadoc("@param _arena to control the memory allocation scope\n")
                 .addParameter(Arena.class, "_arena");
+
+        // Create a GBytes for fields op type GBytes
+        if (target != null && target.checkIsGBytes())
+            spec.addStatement("$1T _$3LGBytes = $2T.toGBytes($3L)",
+                    MemorySegment.class, ClassNames.INTEROP, getName());
+
+        // Create a GString for fields of type GString
+        if (target != null && target.checkIsGString())
+            spec.addStatement("$1T _$3LGString = $2T.toGString($3L)",
+                    MemorySegment.class, ClassNames.INTEROP, getName());
 
         var stmt = PartialStatement.of(
                 "$varHandle:T _varHandle = getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S));\n",

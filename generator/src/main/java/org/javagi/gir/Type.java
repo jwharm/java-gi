@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -137,12 +137,12 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     public boolean isProxy() {
-        // A pointer to a proxy is not a proxy
-        if (cType() != null && cType().endsWith("**"))
+        if (cType() != null && cType().endsWith("**")) // A pointer to a proxy is not a proxy
             return false;
 
         return switch(lookup()) {
             case Alias a -> a.isProxy();
+            case Record r when r.checkIsGString() -> false; // GString (Java String) is not a proxy
             case Class _, Interface _, Record _, Union _ -> true;
             case null, default -> false;
         };

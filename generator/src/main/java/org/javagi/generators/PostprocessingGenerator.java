@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -164,8 +164,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             if (v instanceof Parameter p
                     && !p.isOutParameter()
                     && p.transferOwnership() == TransferOwnership.NONE) {
-                builder.addStatement("$1T.freeGBytes(_$2LGBytes)",
-                        ClassNames.INTEROP, getName());
+                builder.addStatement("$1T.freeGBytes(_$2LGBytes)", ClassNames.INTEROP, getName());
             } else if (v instanceof Parameter p
                     && p.isOutParameter()
                     && p.transferOwnership() != TransferOwnership.NONE) {
@@ -173,8 +172,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                         ClassNames.INTEROP, getName());
             } else if (v instanceof ReturnValue rv
                     && rv.transferOwnership() != TransferOwnership.NONE) {
-                builder.addStatement("$1T.freeGBytes($2L)",
-                        ClassNames.INTEROP, "_result");
+                builder.addStatement("$1T.freeGBytes(_result)", ClassNames.INTEROP);
             }
         }
     }
@@ -185,17 +183,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             if (v instanceof Parameter p
                     && !p.isOutParameter()
                     && p.transferOwnership() == TransferOwnership.NONE) {
-                builder.addStatement("$1T.freeGString(_$2LGString)",
-                        ClassNames.INTEROP, getName());
-            } else if (v instanceof Parameter p
-                    && p.isOutParameter()
-                    && p.transferOwnership() != TransferOwnership.NONE) {
-                builder.addStatement("$1T.freeGString(_$2LPointer.get(ValueLayout.ADDRESS, 0))",
-                        ClassNames.INTEROP, getName());
+                builder.addStatement("$1T.freeGString(_$2LGString)", ClassNames.INTEROP, getName());
             } else if (v instanceof ReturnValue rv
                     && rv.transferOwnership() != TransferOwnership.NONE) {
-                builder.addStatement("$1T.freeGString($2L)",
-                        ClassNames.INTEROP, "_result");
+                builder.addStatement("$1T.freeGString(_result)", ClassNames.INTEROP);
             }
         }
     }
