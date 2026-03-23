@@ -429,7 +429,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                 && p.transferOwnership() != TransferOwnership.NONE
                 && p.direction() != Direction.OUT) {
             String identifier = getName();
-            if (p.direction() == Direction.INOUT)
+            if (p.direction() == Direction.INOUT && !type.isProxy())
                 identifier = identifier + " != null && " + identifier + ".get()";
 
             builder.beginControlFlow("if ($L instanceof $T _gobject)", identifier, ClassNames.G_OBJECT)
