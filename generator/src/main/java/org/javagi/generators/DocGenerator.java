@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -76,6 +76,11 @@ public class DocGenerator {
                 if (rv != null && rv.infoElements().doc() != null)
                     writeDoc(builder,
                             new Javadoc().convert(rv.infoElements().doc()),
+                            "@return");
+
+                if (func.returnsSelf())
+                    writeDoc(builder,
+                            "this instance",
                             "@return");
             }
 
