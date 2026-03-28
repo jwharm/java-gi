@@ -38,9 +38,7 @@ public final class Parameter extends GirElement implements TypedValue {
     /*
      * Check if the parameter has direction "out" or "inout", and also check:
      * - It's not an array of unknown size
-     * - It's not a raw pointer
      * - It's not a proxy type
-     * - It's not an alias wrapping a primitive value
      * This is used for all parameters that will be wrapped in an Out<> class in Java.
      */
     public boolean isOutParameter() {
@@ -53,10 +51,7 @@ public final class Parameter extends GirElement implements TypedValue {
         if (anyType() instanceof Array)
             return true;
 
-        return (anyType() instanceof Type type
-                && (type.isPointer() || (type.cType()) != null && type.cType().endsWith("gsize")))
-                && (!type.isProxy())
-                && (!(type.lookup() instanceof Alias a && a.isValueWrapper()));
+        return (anyType() instanceof Type type && !type.isProxy());
     }
 
     public boolean isUserDataParameter() {
@@ -122,8 +117,10 @@ public final class Parameter extends GirElement implements TypedValue {
             return true;
 
         Type type = (Type) anyType();
-        RegisteredType target = type.lookup();
+        if (type.isString())
+            return true;
 
+        RegisteredType target = type.lookup();
         if (target instanceof Callback && Scope.CALL.equals(scope()))
             return true;
 

@@ -200,11 +200,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         }
 
         // Handle all other out-parameters & pointers to primitive values
-        else if ((p.isOutParameter() && !p.isDestroyNotifyParameter())
-                || (type != null
-                    && type.isPointer()
-                    && target instanceof Alias a
-                    && a.isValueWrapper())) {
+        else if (p.isOutParameter() && !p.isDestroyNotifyParameter()) {
 
             // Special case for length, user_data, GBytes and GString parameters
             if (p.isArrayLengthParameter() || p.isUserDataParameterForDestroyNotify()
@@ -555,7 +551,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     // Read the value from a pointer to a primitive value and store it
     // in a Java Alias object
     private void readPrimitiveAliasPointer(MethodSpec.Builder builder) {
-        if (target instanceof Alias a && a.isValueWrapper() && type.isPointer()) {
+        if (target instanceof Alias a && a.isValueWrapper()
+                && type.isPointer()
+                && !type.isUnannotatedReference()) {
             var stmt = PartialStatement.of(
                             "$memorySegment:T $name:LParam = $name:L.reinterpret(",
                             "memorySegment", MemorySegment.class,
@@ -591,7 +589,11 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             return;
         }
 
-        if (type == null)
+        if (type == null || type.isUnannotatedReference())
+            return;
+
+        // This is already handled in readPrimitiveAliasPointer()
+        if (target instanceof Alias a && a.isValueWrapper() && type.isPointer())
             return;
 
         // Pointer to a single value

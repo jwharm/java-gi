@@ -65,11 +65,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     private void readPointer(MethodSpec.Builder builder) {
         if (v instanceof Parameter p
                 && !p.isDestroyNotifyParameter()
-                && (p.isOutParameter()
-                    || (type != null
-                        && type.isPointer()
-                        && target instanceof Alias a
-                        && a.isValueWrapper()))) {
+                && (p.isOutParameter())) {
 
             // Pointer to single value
             if (array == null) {
@@ -356,7 +352,9 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     }
 
     private void writePrimitiveAliasPointer(MethodSpec.Builder builder) {
-        if (target instanceof Alias a && a.isValueWrapper() && type.isPointer()) {
+        if (target instanceof Alias a && a.isValueWrapper()
+                && type.isPointer()
+                && !type.isUnannotatedReference()) {
             var stmt = PartialStatement.of("$name:LParam.set(")
                     .add(getValueLayout(type))
                     .add(", 0, _$name:LAlias.getValue());\n", "name", getName());
@@ -369,14 +367,19 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (!p.isOutParameter())
             return;
 
-        if (type != null) {
-            var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
-                    .add(getValueLayout(type))
-                    .add(", 0, ")
-                    .add(marshalJavaToNative("_" + getName() + "Out.get()"))
-                    .add(");\n");
-            builder.addNamedCode(stmt.format(), stmt.arguments());
-        }
+        // This is already handled in writePrimitiveAliasPointer()
+        if (target instanceof Alias a && a.isValueWrapper() && type.isPointer())
+            return;
+
+        if (type == null || type.isUnannotatedReference())
+            return;
+
+        var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
+                .add(getValueLayout(type))
+                .add(", 0, ")
+                .add(marshalJavaToNative("_" + getName() + "Out.get()"))
+                .add(");\n");
+        builder.addNamedCode(stmt.format(), stmt.arguments());
     }
 
     // Ref GObject when ownership is transferred to a callback out-parameter

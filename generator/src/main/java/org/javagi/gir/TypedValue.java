@@ -42,8 +42,7 @@ public sealed interface TypedValue
         return switch(anyType()) {
             case null -> true; // callback
             case Array _ -> true;
-            case Type type -> type.isActuallyAnArray()
-                    || TypeName.get(String.class).equals(type.typeName());
+            case Type type -> type.isActuallyAnArray();
         };
     }
 
@@ -59,5 +58,11 @@ public sealed interface TypedValue
             return target instanceof Bitfield;
         }
         return false;
+    }
+
+    default boolean isValueWrapper() {
+        return anyType() instanceof Type type
+                && type.lookup() instanceof Alias alias
+                && alias.isValueWrapper();
     }
 }

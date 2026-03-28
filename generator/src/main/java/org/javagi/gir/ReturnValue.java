@@ -35,12 +35,12 @@ public final class ReturnValue extends GirElement implements TypedValue {
 
     @Override
     public boolean allocatesMemory() {
-        if ((parent() instanceof Callback || parent() instanceof Signal)
-                && TypedValue.super.allocatesMemory())
+        if (TypedValue.super.allocatesMemory())
             return true;
 
         return switch(anyType()) {
             case Array _ -> true;
+            case Type type when type.isString() -> (parent() instanceof Callback || parent() instanceof Signal);
             case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope())
                     && type.lookup() instanceof Callback;
         };

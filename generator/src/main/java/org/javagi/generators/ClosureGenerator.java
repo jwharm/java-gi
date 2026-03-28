@@ -291,6 +291,11 @@ public class ClosureGenerator {
                 stmt.add(", ");
             first = false;
 
+            if (p.anyType() instanceof Type t && t.isUnannotatedReference()) {
+                stmt.add(toJavaIdentifier(p.name()));
+                continue;
+            }
+
             if (p.anyType() instanceof Type t
                     && t.isPointer()
                     && t.lookup() instanceof Alias a

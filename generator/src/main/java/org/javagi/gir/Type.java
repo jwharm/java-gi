@@ -169,8 +169,32 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     /**
+     * Sometimes a type is not annotated as out-parameter or array, but the
+     * `c:type` attribute is a reference, like `int*'. In that case we
+     * shouldn't try to guess what it is, but fallback to a raw MemorySegment
+     * parameter so the user can decide what to do with it.
+     *
+     * @return true iff this is NOT annotated as an out parameter or array, but
+     *         it is a reference (pointer), and it is a primitive type, a
+     *         typedef (alias) for a primitive type, or an enum (i.e. an int).
+     */
+    public boolean isUnannotatedReference() {
+        boolean isOutParameter = parent() instanceof Parameter p && p.isOutParameter();
+        if (isPointer() && !isOutParameter && !isActuallyAnArray()) {
+            if (isPrimitive())
+                return true;
+
+            var target = lookup();
+            return target instanceof EnumType || (target instanceof Alias a && a.isValueWrapper());
+        }
+
+        return false;
+    }
+
+    /**
      * Generate a string that uniquely identifies this type, and can be used as
      * the name of a named argument in a JavaPoet code block.
+     *
      * @return a name for this type that can be used as a named argument in a
      *         code block, or {@code null} if the unique identifier could not
      *         be generated.
