@@ -48,7 +48,7 @@ If you use Java modules (with a `module-info.java`), add the following `opens` s
 
 ```
 module my.module.name {
-    opens my.package.name to org.gnome.glib,org.gnome.gtk;
+    opens my.package.name to org.javagi.glib,org.javagi.gtk;
 }
 ```
 
