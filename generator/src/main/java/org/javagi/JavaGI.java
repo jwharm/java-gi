@@ -369,12 +369,11 @@ public class JavaGI implements Callable<Integer> {
                 
                 java {
                     toolchain {
-                        languageVersion = JavaLanguageVersion.of(22)
+                        languageVersion = JavaLanguageVersion.of(25)
                     }
                 }
                 
                 dependencies {
-                    implementation("org.jspecify:jspecify:1.0.0")
                 %s
                 }
                 """.formatted(String.join("\n", dependencies));
