@@ -13,6 +13,9 @@ CustomAllocateFunc    java-gi-skip
 CustomLayoutClass     java-gi-skip
 CustomLayout          java-gi-skip
 
+// Missing out-parameter annotation
+EntryBuffer.get_text.n_bytes direction=out
+
 /*
  * The functions StyleContext::addProviderForDisplay and
  * StyleContext::removeProviderForDisplay are moved to the Gtk
