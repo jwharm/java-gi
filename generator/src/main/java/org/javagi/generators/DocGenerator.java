@@ -51,8 +51,7 @@ public class DocGenerator {
         writeDoc(builder, javadoc, null);
 
         // Methods and functions
-        if (doc.parent() instanceof Callable func
-                && (! (doc.parent() instanceof Callback || doc.parent() instanceof Signal))) {
+        if (doc.parent() instanceof Callable func && (! (doc.parent() instanceof Signal))) {
 
             // Param
             Parameters parameters = func.parameters();
