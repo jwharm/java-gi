@@ -222,12 +222,8 @@ public class CallableGenerator {
             else if (p.varargs())
                 stmt.add("varargs");
 
-            // Preprocessing statement
-            else if (p.isOutParameter()
-                    || (p.anyType() instanceof Type type
-                        && type.lookup() instanceof Alias a
-                        && a.isValueWrapper()
-                        && type.isPointer())) {
+            // Pointer allocation for out-parameter
+            else if (p.isOutParameter()) {
                 stmt.add("_" + name + "Pointer");
             }
 

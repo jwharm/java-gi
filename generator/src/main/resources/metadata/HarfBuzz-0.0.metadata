@@ -1,0 +1,12 @@
+/*
+ * This callback function is called with a pre-allocated char[] `name` with
+ * size `size`. The implementing function must write the glyph's name in the
+ * `name` buffer (at most `size` bytes). This is probably why both arguments
+ * were annotated as out-parameters.
+ * Java-GI shouldn't treat `size` as an out-parameter so we remove that flag.
+ * And `name` has a gir type of array with `utf8` elements, but that gets
+ * interpreted as a String[]. so we change it to an array of `char`s.
+ */
+font_get_glyph_name_func
+    .name.*#array.utf8#type name=gchar
+    .size direction=()

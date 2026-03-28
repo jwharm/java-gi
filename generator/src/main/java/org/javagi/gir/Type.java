@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -137,12 +137,12 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     public boolean isProxy() {
-        // A pointer to a proxy is not a proxy
-        if (cType() != null && cType().endsWith("**"))
+        if (cType() != null && cType().endsWith("**")) // A pointer to a proxy is not a proxy
             return false;
 
         return switch(lookup()) {
             case Alias a -> a.isProxy();
+            case Record r when r.checkIsGString() -> false; // GString (Java String) is not a proxy
             case Class _, Interface _, Record _, Union _ -> true;
             case null, default -> false;
         };
@@ -169,8 +169,32 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     /**
+     * Sometimes a type is not annotated as out-parameter or array, but the
+     * `c:type` attribute is a reference, like `int*'. In that case we
+     * shouldn't try to guess what it is, but fallback to a raw MemorySegment
+     * parameter so the user can decide what to do with it.
+     *
+     * @return true iff this is NOT annotated as an out parameter or array, but
+     *         it is a reference (pointer), and it is a primitive type, a
+     *         typedef (alias) for a primitive type, or an enum (i.e. an int).
+     */
+    public boolean isUnannotatedReference() {
+        boolean isOutParameter = parent() instanceof Parameter p && p.isOutParameter();
+        if (isPointer() && !isOutParameter && !isActuallyAnArray()) {
+            if (isPrimitive())
+                return true;
+
+            var target = lookup();
+            return target instanceof EnumType || (target instanceof Alias a && a.isValueWrapper());
+        }
+
+        return false;
+    }
+
+    /**
      * Generate a string that uniquely identifies this type, and can be used as
      * the name of a named argument in a JavaPoet code block.
+     *
      * @return a name for this type that can be used as a named argument in a
      *         code block, or {@code null} if the unique identifier could not
      *         be generated.

@@ -42,7 +42,7 @@ public final class Field extends GirElement implements TypedValue {
         return TypedValue.super.allocatesMemory()
                 || (callback() != null)
                 || (anyType() instanceof Type type
-                        && type.lookup() instanceof Callback);
+                        && (type.isString() || type.lookup() instanceof Callback));
     }
 
     /**

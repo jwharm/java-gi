@@ -1,0 +1,7 @@
+// Attach.ref() returns void, but GObject.ref() returns the object.
+// The difference in return type is not allowed in Java method overrides. The
+// rule "java-gi-returns-self" will make the method "return this".
+Attach.ref java-gi-returns-self
+
+// This method returns a ParameterCutype, an enum, which is never null.
+Parameter.get_cutype.*#return-value nullable=()

@@ -183,7 +183,10 @@ class TypedValueGenerator {
     }
 
     private TypeName getType(AnyType anyType, boolean setOfBitfield, boolean annotate) {
-        if (v instanceof Parameter p && p.isOutParameter()) {
+        // Wrap out parameters in an Out<>, except for primitive aliases, they
+        // are already "wrapped" in an Alias<>
+        if (v instanceof Parameter p && p.isOutParameter()
+                && (! (p.direction() != Direction.IN && v.isValueWrapper()))) {
             TypeName typeName = anyType.typeName();
 
             if (setOfBitfield && v.isBitfield())
@@ -199,9 +202,7 @@ class TypedValueGenerator {
         if (setOfBitfield && v.isBitfield())
                 typeName = ParameterizedTypeName.get(ClassName.get(Set.class), anyType.typeName().box());
 
-        if (type != null
-                && type.isPointer()
-                && (type.isPrimitive() || target instanceof EnumType))
+        if (type != null && type.isUnannotatedReference())
             return annotated(TypeName.get(MemorySegment.class));
 
         return typeName;
@@ -261,6 +262,9 @@ class TypedValueGenerator {
 
         if (type.isBoolean())
             return PartialStatement.of(identifier + " ? 1 : 0");
+
+        if (type.isUnannotatedReference())
+            return PartialStatement.of(identifier + " /* missing annotation */");
 
         return marshalJavaToNative(target, identifier);
     }
@@ -420,11 +424,13 @@ class TypedValueGenerator {
             if ("gfloat**".equals(type.cType()))
                 return PartialStatement.of("null /* unsupported */");
 
-            if (type.isActuallyAnArray())
-                return marshalNativeToJavaArray(type, null, identifier);
+            if (type.isActuallyAnArray()) {
+                String size = v instanceof Field ? "length" : null;
+                return marshalNativeToJavaArray(type, size, identifier);
+            }
 
-            if (type.isPointer() && (type.isPrimitive() || target instanceof EnumType))
-                return PartialStatement.of(identifier);
+            if (type.isUnannotatedReference())
+                return PartialStatement.of(identifier + " /* missing annotation */");
 
             return marshalNativeToJava(type, identifier);
         }
@@ -509,7 +515,7 @@ class TypedValueGenerator {
 
         // Generate constructor call for HashTable with generic types for keys and values
         if (target != null && type.checkIsGHashTable()) {
-            if (type.anyTypes() == null || type.anyTypes().size() != 2)
+            if (type.anyTypes().size() != 2)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
             PartialStatement keyConstructor = getElementConstructor(type, 0);
@@ -644,13 +650,13 @@ class TypedValueGenerator {
 
         // Null-terminated array
         if (size == null) {
-            if ("java.lang.String".equals(type.javaType()))
+            if (type.isString())
                 return PartialStatement.of(
                         "$interop:T.getStringArrayFrom(" + identifier + ", " + transfer() + ")",
                         "interop", ClassNames.INTEROP,
                         "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
-            if ("java.lang.foreign.MemorySegment".equals(type.javaType()))
+            if (type.isMemorySegment())
                 return PartialStatement.of(
                         "$interop:T.getAddressArrayFrom(" + identifier + ", " + transfer() + ")",
                         "interop", ClassNames.INTEROP,
@@ -665,7 +671,7 @@ class TypedValueGenerator {
 
             if (target instanceof Alias a && a.isValueWrapper())
                 return PartialStatement.of(
-                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", " + transfer() + ")",
+                        "$" + targetTypeTag + ":T.fromNativeArray(" + identifier + ", length, " + transfer() + ")",
                         targetTypeTag, target.typeName(),
                         "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
@@ -696,14 +702,14 @@ class TypedValueGenerator {
         }
 
         // Array with known size
-        if ("java.lang.String".equals(type.javaType()))
+        if (type.isString())
             return PartialStatement.of(
                     "$interop:T.getStringArrayFrom(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
                     "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "arrayType", array == null ? null : toJavaQualifiedType(array.name(), array.namespace()));
 
-        if ("java.lang.foreign.MemorySegment".equals(type.javaType()))
+        if (type.isMemorySegment())
             return PartialStatement.of(
                     "$interop:T.getAddressArrayFrom(" + identifier + ", " + size + ", " + transfer() + ")",
                     "interop", ClassNames.INTEROP,
@@ -732,6 +738,12 @@ class TypedValueGenerator {
                     "interop", ClassNames.INTEROP,
                     "transferOwnership", ClassNames.TRANSFER_OWNERSHIP,
                     "arrayType", toJavaQualifiedType(array.name(), array.namespace()));
+
+        if (type.isPrimitive())
+            return PartialStatement.of(
+                    "$interop:T.get" + primitive + "ArrayFrom(" + identifier + ", " + size + ", _arena, " + transfer() + ")",
+                    "interop", ClassNames.INTEROP,
+                    "transferOwnership", ClassNames.TRANSFER_OWNERSHIP);
 
         if (target instanceof Record && (! type.isPointer()) &&
                 (! (array != null && "GLib.PtrArray".equals(array.name()))))

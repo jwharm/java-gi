@@ -657,7 +657,7 @@ public class Interop {
     public static MemorySegment getAddress(@Nullable Object o, SegmentAllocator alloc) {
         return switch (o) {
             // null pointer
-            case null        -> MemorySegment.NULL;
+            case null        -> NULL;
             // existing MemorySegment
             case MemorySegment m -> m;
             // string
@@ -1226,7 +1226,7 @@ public class Interop {
         if (NULL.equals(address))
             return null;
 
-        long size = AddressLayout.ADDRESS.byteSize();
+        long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
         requireNonNull(array);
 
@@ -1324,7 +1324,7 @@ public class Interop {
         if (NULL.equals(address))
             return null;
 
-        long size = AddressLayout.ADDRESS.byteSize();
+        long size = ADDRESS.byteSize();
         MemorySegment array = reinterpret(address, size * length);
         requireNonNull(array);
 
@@ -1333,6 +1333,94 @@ public class Interop {
             result[i] = make.apply(array.getAtIndex(JAVA_INT, i));
         }
         return result;
+    }
+
+    /**
+     * Allocate and initialize an (optionally {@code NULL}-terminated) array
+     * with the values taken from {@link Alias} values, i.e. typedefs of
+     * primitive values, Strings or memory segments.
+     *
+     * @param  aliases        array of aliased values
+     * @param  zeroTerminated whether to add a {@code NULL} to the array
+     * @param  alloc          the segment allocator for the array
+     * @return the memory segment of the native array
+     */
+    public static <T> MemorySegment allocateNativeArray(@Nullable Alias<T> @Nullable [] aliases,
+                                                        boolean zeroTerminated,
+                                                        SegmentAllocator alloc) {
+        if (aliases == null || aliases.length == 0)
+            return NULL;
+
+        int length = zeroTerminated ? aliases.length + 1 : aliases.length;
+
+        T firstValue = null;
+        for (Alias<T> a : aliases) {
+            if (a != null) {
+                firstValue = a.getValue();
+                break;
+            }
+        }
+        if (firstValue == null)
+            return NULL;
+
+        var memorySegment = switch (firstValue) {
+            case Boolean b -> alloc.allocate(JAVA_INT, length);
+            case Byte b -> alloc.allocate(JAVA_BYTE, length);
+            case Character c -> alloc.allocate(JAVA_CHAR, length);
+            case Double d -> alloc.allocate(JAVA_DOUBLE, length);
+            case Enumeration e -> alloc.allocate(JAVA_INT, length);
+            case Float f -> alloc.allocate(JAVA_FLOAT, length);
+            case Integer i_ -> alloc.allocate(JAVA_INT, length);
+            case Long l when longAsInt() -> alloc.allocate(JAVA_INT, length);
+            case Long l -> alloc.allocate(JAVA_LONG, length);
+            case Short s_ -> alloc.allocate(JAVA_SHORT, length);
+            case String str -> alloc.allocate(ADDRESS, length);
+            case MemorySegment seg -> alloc.allocate(ADDRESS, length);
+            default -> throw new IllegalStateException("Unexpected value: " + firstValue);
+        };
+
+        for (int i = 0; i < aliases.length; i++) {
+            Alias<T> alias = aliases[i];
+            if (alias != null) {
+                T value = alias.getValue();
+                switch (value) {
+                    case Boolean b -> memorySegment.setAtIndex(JAVA_INT, i, b ? 1 : 0);
+                    case Byte b -> memorySegment.setAtIndex(JAVA_BYTE, i, b);
+                    case Character c -> memorySegment.setAtIndex(JAVA_CHAR, i, c);
+                    case Double d -> memorySegment.setAtIndex(JAVA_DOUBLE, i, d);
+                    case Enumeration e -> memorySegment.setAtIndex(JAVA_INT, i, e.getValue());
+                    case Float f -> memorySegment.setAtIndex(JAVA_FLOAT, i, f);
+                    case Integer i_ -> memorySegment.setAtIndex(JAVA_INT, i, i_);
+                    case Long l when longAsInt() -> memorySegment.setAtIndex(JAVA_INT, i, l.intValue());
+                    case Long l -> memorySegment.setAtIndex(JAVA_LONG, i, l);
+                    case Short s_ -> memorySegment.setAtIndex(JAVA_SHORT, i, s_);
+                    case String str -> memorySegment.setAtIndex(ADDRESS, i, alloc.allocateFrom(str));
+                    case MemorySegment seg -> memorySegment.setAtIndex(ADDRESS, i, seg);
+                    default -> throw new IllegalStateException("Unexpected value: " + aliases[i]);
+                }
+            }
+        }
+
+        if (zeroTerminated) {
+            int i = aliases.length;
+            switch (firstValue) {
+                case Boolean b -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Byte b -> memorySegment.setAtIndex(JAVA_BYTE, i, (byte) 0);
+                case Character c -> memorySegment.setAtIndex(JAVA_CHAR, i, (char) 0);
+                case Double d -> memorySegment.setAtIndex(JAVA_DOUBLE, i, 0d);
+                case Enumeration e -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Float f -> memorySegment.setAtIndex(JAVA_FLOAT, i, 0f);
+                case Integer i_ -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Long l when longAsInt() -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Long l -> memorySegment.setAtIndex(JAVA_LONG, i, 0L);
+                case Short s_ -> memorySegment.setAtIndex(JAVA_SHORT, i, (short) 0);
+                case String str -> memorySegment.setAtIndex(ADDRESS, i, NULL);
+                case MemorySegment seg -> memorySegment.setAtIndex(ADDRESS, i, NULL);
+                default -> throw new IllegalStateException("Unexpected value: " + aliases[i]);
+            }
+        }
+
+        return memorySegment;
     }
 
     /**
@@ -2083,41 +2171,41 @@ public class Interop {
 
         private static final MethodHandle g_array_new = Interop.downcallHandle(
                 "g_array_new",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
-                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT),
+                FunctionDescriptor.of(ADDRESS, JAVA_INT,
+                        JAVA_INT, JAVA_INT),
                 false);
 
         private static final MethodHandle g_array_new_take = Interop.downcallHandle(
                 "g_array_new_take",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG),
+                FunctionDescriptor.of(ADDRESS, ADDRESS,
+                        JAVA_LONG, JAVA_INT, JAVA_LONG),
                 false);
 
         private static final MethodHandle g_byte_array_new = Interop.downcallHandle(
                 "g_byte_array_new",
-                FunctionDescriptor.of(ValueLayout.ADDRESS),
+                FunctionDescriptor.of(ADDRESS),
                 false);
 
         private static final MethodHandle g_ptr_array_new = Interop.downcallHandle(
                 "g_ptr_array_new",
-                FunctionDescriptor.of(ValueLayout.ADDRESS),
+                FunctionDescriptor.of(ADDRESS),
                 false);
 
         private static final MethodHandle g_ptr_array_new_take = Interop.downcallHandle(
                 "g_ptr_array_new_take",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.JAVA_LONG, ValueLayout.ADDRESS),
+                FunctionDescriptor.of(ADDRESS, ADDRESS,
+                        JAVA_LONG, ADDRESS),
                 false);
 
         private static final MethodHandle g_string_new_take = Interop.downcallHandle(
                 "g_string_new_take",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                FunctionDescriptor.of(ADDRESS, ADDRESS),
                 false);
 
         private static final MethodHandle g_string_free = Interop.downcallHandle(
                 "g_string_free",
-                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.JAVA_INT),
+                FunctionDescriptor.of(ADDRESS, ADDRESS,
+                        JAVA_INT),
                 false);
     }
 }

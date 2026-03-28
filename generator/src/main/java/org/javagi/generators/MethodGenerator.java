@@ -122,7 +122,9 @@ public class MethodGenerator {
 
         // Return type
         if (!isConstructor) {
-            if (isGeneric && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
+            if (func.returnsSelf() && func.parent() instanceof RegisteredType rt)
+                builder.returns(rt.typeName());
+            else if (isGeneric && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT))
                 builder.returns(ClassNames.GENERIC_T);
             else
                 builder.returns(new TypedValueGenerator(returnValue).getAnnotatedType(true));
@@ -268,6 +270,10 @@ public class MethodGenerator {
 
             // Return "_returnValue"
             builder.addStatement("return _returnValue");
+        }
+
+        else if (func.returnsSelf()) {
+            builder.addStatement("return this");
         }
 
         // End try-block for arena
