@@ -18,9 +18,3 @@ AudioSink.stop java-gi-skip
  * Change the name of these methods to "withCaps".
  */
 {Audio,Dsd}Info.from_caps name=with_caps
-
-/*
- * Constructor AudioChannelMixer.new has two out-parameters, but they
- * aren't annotated as such.
- */
-AudioChannelMixer.new.{in,out}_position direction=inout
