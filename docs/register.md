@@ -48,11 +48,11 @@ Java-GI represents flags as a *set of enums*. So, to define a property of type "
 
 ## Module configuration
 
-If your Java application is module-based, you must "open" your package to the `org.gnome.glib` module in your `module-info.java` file, to allow the reflection to work:
+If your Java application is module-based, you must "open" your package to the `org.javagi.glib` module in your `module-info.java` file, to allow the reflection to work:
 
 ```
 module my.module.name {
-    opens my.package.name to org.gnome.glib;
+    opens my.package.name to org.javagi.glib;
 }
 ```
 

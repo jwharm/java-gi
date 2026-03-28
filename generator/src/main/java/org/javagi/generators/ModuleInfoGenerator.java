@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -64,9 +64,9 @@ public class ModuleInfoGenerator {
                     .map(ModuleInfo::javaModule)
                     .forEach(requires::add);
 
-            // Always include org.gnome.glib
+            // Always include org.javagi.glib
             if (ns.parent().includes().isEmpty())
-                requires.add("org.gnome.glib");
+                requires.add("org.javagi.glib");
         }
 
         if (name == null)
@@ -87,9 +87,9 @@ public class ModuleInfoGenerator {
                 .sorted()
                 .forEach(this::appendRequires);
 
-        if (! "org.gnome.glib".equalsIgnoreCase(name))
+        if (! "org.javagi.glib".equalsIgnoreCase(name))
             for (String pkg : packageNames)
-                builder.append("    opens ").append(pkg).append(" to org.gnome.glib;\n");
+                builder.append("    opens ").append(pkg).append(" to org.javagi.glib;\n");
 
         builder.append("}\n");
         return builder.toString();
