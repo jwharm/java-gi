@@ -73,8 +73,8 @@ public class TestInterface {
                 new Variant("b", true),
                 new Variant("s", "hello"),
                 new Variant("i", 42),
-                new Variant("t", 43),
-                new Variant("x", 44),
+                new Variant("t", (long) 43),
+                new Variant("x", (long) 44),
         });
         assertIterableEquals(
                 List.of("true", "'hello'", "42", "uint64 43", "int64 44"),
