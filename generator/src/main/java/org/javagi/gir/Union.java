@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -28,8 +28,8 @@ import java.util.Objects;
 public final class Union extends GirElement implements StandardLayoutType {
 
     @Override
-    public Namespace parent() {
-        return (Namespace) super.parent();
+    public RegisteredType parent() {
+        return (RegisteredType) super.parent();
     }
 
     public Union(Map<String, String> attributes, List<Node> children) {
