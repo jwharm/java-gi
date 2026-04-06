@@ -384,8 +384,7 @@ public class JavaGI implements Callable<Integer> {
     private String generateDependencyLine(String name) {
         if (name.equals("cairo")) {
             return "    api(\"io.github.jwharm.cairobindings:cairo:1.18.4.1\")";
-        }
-        else if (ModuleInfo.INCLUDED_MODULES.containsKey(name)) {
+        } else if (ModuleInfo.isIncludedModule(name)) {
             String mavenName = ModuleInfo.mavenName(name);
             String version = System.getProperty("app.version");
             return "    api(\"" + mavenName + ":" + version + "\")";
