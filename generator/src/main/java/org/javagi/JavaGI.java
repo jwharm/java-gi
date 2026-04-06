@@ -335,9 +335,9 @@ public class JavaGI implements Callable<Integer> {
 
     // Read the license notice (from src/main/resources)
     private static String licenseNotice() throws IOException {
-        try (InputStream is = JavaGI.class.getResourceAsStream("/LicenseNotice.txt")) {
+        try (InputStream is = JavaGI.class.getResourceAsStream("/LicenseNoticeTemplate.txt")) {
             if (is == null)
-                throw new IOException("Cannot open resource LicenseNotice.txt");
+                throw new IOException("Cannot open resource LicenseNoticeTemplate.txt");
             return new String(is.readAllBytes());
         }
     }
