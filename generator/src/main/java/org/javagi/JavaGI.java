@@ -288,13 +288,13 @@ public class JavaGI implements Callable<Integer> {
 
             typeSpec = switch(rt) {
                 case Alias a -> new AliasGenerator(a).generate();
-                case Boxed b -> new BoxedGenerator(b).generate();
+                case Boxed b -> new RecordGenerator(b).generate();
                 case Callback c -> new CallbackGenerator(c).generate();
                 case Class c -> new ClassGenerator(c).generate();
                 case EnumType e -> new EnumGenerator(e).generate();
                 case Interface i -> new InterfaceGenerator(i).generate();
                 case Record r when r.isGTypeStructFor() == null -> new RecordGenerator(r).generate();
-                case Union u -> new UnionGenerator(u).generate();
+                case Union u -> new RecordGenerator(u).generate();
                 default -> null;
             };
             writeJavaFile(typeSpec, packageName, licenseNotice, outputDirectory);

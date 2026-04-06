@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -20,6 +20,7 @@
 package org.javagi.generators;
 
 import java.lang.foreign.Arena;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.javagi.javapoet.*;
@@ -32,19 +33,23 @@ import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
+import static java.util.Collections.emptyList;
 import static org.javagi.util.Conversions.*;
 import static java.util.function.Predicate.not;
 
+/**
+ * Generates a Java class for a "record", "union" or "glib:boxed" GIR element.
+ */
 public class RecordGenerator extends RegisteredTypeGenerator {
 
-    private final Record rec;
+    private final StandardLayoutType rec;
     private final RegisteredType outerClass;
     private final TypeSpec.Builder builder;
 
-    public RecordGenerator(Record rec) {
+    public RecordGenerator(StandardLayoutType rec) {
         super(rec);
         this.rec = rec;
-        this.outerClass = rec.isGTypeStructFor();
+        this.outerClass = rec instanceof Record r ? r.isGTypeStructFor() : null;
         this.builder = TypeSpec.classBuilder(rec.typeName());
 
         if (outerClass == null)
@@ -102,7 +107,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
 
-        if (rec.cType().equals("GVariant"))
+        if ("GVariant".equals(rec.cType()))
             builder.addMethod(gvariantGetType());
 
         builder.addMethod(memoryAddressConstructor());
@@ -123,8 +128,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             for (Field f : rec.fields())
                 generateField(f);
 
-            if (!rec.unions().isEmpty())
-                for (Field f : rec.unions().getFirst().fields())
+            if (rec instanceof Record r && !r.unions().isEmpty())
+                for (Field f : r.unions().getFirst().fields())
                     generateField(f);
         }
 
@@ -294,8 +299,12 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     }
 
     private boolean noNewConstructor() {
-        return rec.constructors().stream()
-                .noneMatch(c -> c.name().equals("new"));
+        List<Constructor> constructors = switch(rec) {
+            case Record r -> r.constructors();
+            case Union u -> u.constructors();
+            case Boxed _ -> emptyList();
+        };
+        return constructors.stream().noneMatch(c -> c.name().equals("new"));
     }
 
     private boolean hasFieldSetters() {
