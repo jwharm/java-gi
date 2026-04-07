@@ -23,13 +23,13 @@ mavenPublishing {
                 id = "jwharm"
                 name = "Jan-Willem Harmannij"
                 email = "jwharmannij@gmail.com"
-                url = "https://github.com/jwharm"
+                url = "https://codeberg.org/jwharm"
             }
         }
         scm {
-            connection = "scm:git:git://github.com/jwharm/java-gi.git"
-            developerConnection = "scm:git:ssh://github.com:jwharm/java-gi.git"
-            url = "https://github.com/jwharm/java-gi/tree/main"
+            connection = "scm:git:git://codeberg.org/java-gi/java-gi.git"
+            developerConnection = "scm:git:ssh://codeberg.org:java-gi/java-gi.git"
+            url = "https://codeberg.org/java-gi/java-gi"
         }
     }
 }
