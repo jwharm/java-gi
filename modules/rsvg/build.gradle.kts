@@ -7,7 +7,3 @@ dependencies {
     api(project(":gdkpixbuf"))
     api(libs.cairo)
 }
-
-tasks.withType<GenerateSources> {
-    girFiles.set(listOf("Rsvg-2.0"))
-}

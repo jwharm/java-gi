@@ -21,9 +21,7 @@ package org.javagi.configuration;
 
 import org.javagi.util.ModuleDataParser;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -37,8 +35,9 @@ public final class ModuleInfo {
     /**
      * Information about one specific GIR namespace
      */
-    public record Module(String moduleName, String javaPackage, String javaModule,
-                         String mavenName, String docUrlPrefix, String description) {}
+    public record Module(String moduleName, String repositoryName, String repositoryVersion,
+                         String javaPackage, String javaModule, String mavenName,
+                         String docUrlPrefix, String description) {}
 
     private static final Map<String, Module> INCLUDED_MODULES = new ModuleDataParser().parse();
     private static final Map<String, Module> ALL_MODULES = new HashMap<>(INCLUDED_MODULES);
@@ -58,7 +57,9 @@ public final class ModuleInfo {
                            String docUrlPrefix,
                            String description) {
         ALL_MODULES.put(namespace.toLowerCase(), new Module(
+                namespace.toLowerCase(),
                 requireNonNullElse(moduleName, ""),
+                "",
                 requireNonNullElse(packageName, ""),
                 requireNonNullElse(moduleName, ""),
                 "",
@@ -83,10 +84,17 @@ public final class ModuleInfo {
     }
 
     /**
-     * Get the official name for the specified GIR namespace
+     * Get the module name for the specified GIR namespace
      */
     public static String moduleName(String namespace) {
         return get(namespace).moduleName();
+    }
+
+    /**
+     * Get the official name for the specified GIR namespace
+     */
+    public static String repositoryName(String namespace) {
+        return get(namespace).repositoryName();
     }
 
     /**
@@ -124,5 +132,25 @@ public final class ModuleInfo {
      */
     public static String description(String namespace) {
         return get(namespace).description();
+    }
+
+    /**
+     * Get the repository version for the specified GIR namespace
+     */
+    public static String repositoryVersion(String namespace) {
+        return get(namespace).repositoryVersion();
+    }
+
+    /**
+     * Get a list of all gir files (Name-Version) for the specified module
+     */
+    public static List<String> getGirFilesForModule(String moduleName) {
+        List<String> repositories = new ArrayList<>();
+        for (String name : ALL_MODULES.keySet()) {
+            Module module = ALL_MODULES.get(name);
+            if (module.moduleName().equals(moduleName))
+                repositories.add(module.repositoryName() + "-" + module.repositoryVersion());
+        }
+        return repositories;
     }
 }

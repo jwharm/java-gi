@@ -6,7 +6,3 @@ dependencies {
     api(project(":glib"))
     api(project(":gtk"))
 }
-
-tasks.withType<GenerateSources> {
-    girFiles.set(listOf("Adw-1"))
-}

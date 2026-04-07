@@ -60,8 +60,9 @@ public class ModuleDataParser {
 
     private Map<String, ModuleInfo.Module> parse(XMLEventReader eventReader) throws XMLStreamException {
         Map<String, ModuleInfo.Module> entries = new HashMap<>();
-        String name = "";
         String moduleName = "";
+        String repositoryName = "";
+        String repositoryVersion = "";
         String javaPackage = "";
         String javaModule = "";
         String mavenName = "";
@@ -72,19 +73,21 @@ public class ModuleDataParser {
             XMLEvent event = eventReader.nextEvent();
 
             if (event.isStartElement()) {
-                var startElement = event.asStartElement();
+                var start = event.asStartElement();
                 text = new StringBuilder();
 
-                switch (startElement.getName().getLocalPart()) {
+                switch (start.getName().getLocalPart()) {
                     case "module" -> {
-                        javaModule = getAttr(startElement, "name");
-                        mavenName = getAttr(startElement, "maven-module");
+                        moduleName = getAttr(start, "name");
+                        String group = getAttr(start, "group");
+                        javaModule = group.replace("-", "") + "." + moduleName.replace("-", "");
+                        mavenName = group + ":" + moduleName;
                     }
                     case "repository" -> {
-                        name = getAttr(startElement, "name");
-                        moduleName = getAttr(startElement, "repository-name");
-                        javaPackage = getAttr(startElement, "java-package");
-                        docUrlPrefix = getAttr(startElement, "doc-url-prefix");
+                        repositoryName = getAttr(start, "name");
+                        repositoryVersion = getAttr(start, "version");
+                        javaPackage = getAttr(start, "java-package");
+                        docUrlPrefix = getAttr(start, "doc-url-prefix");
                     }
                 }
             }
@@ -94,12 +97,12 @@ public class ModuleDataParser {
             }
 
             else if (event.isEndElement()) {
-                var endElement = event.asEndElement();
-                if (endElement.getName().getLocalPart().equals("repository")) {
+                if (event.asEndElement().getName().getLocalPart().equals("repository")) {
                     var description = text.toString();
                     ModuleInfo.Module module = new ModuleInfo.Module(
-                            moduleName, javaPackage, javaModule, mavenName, docUrlPrefix, description);
-                    entries.put(name, module);
+                            moduleName, repositoryName, repositoryVersion, javaPackage, javaModule,
+                            mavenName, docUrlPrefix, description);
+                    entries.put(repositoryName.toLowerCase(), module);
                 }
             }
         }
