@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -26,6 +26,7 @@ import org.javagi.util.Platform;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
+import org.jspecify.annotations.NullMarked;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -40,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * depends on. The build service caches all repositories so every GIR file is
  * only parsed once during a build.
  */
+@NullMarked
 public abstract class GirParserService implements BuildService<GirParserService.Params> {
 
     public interface Params extends BuildServiceParameters {
@@ -93,7 +95,7 @@ public abstract class GirParserService implements BuildService<GirParserService.
     }
 
     /*
-     * Call parse(directory, moduleName) for all input directories, and
+     * Call parse(directory, name, version) for all input directories, and
      * wrap exceptions in runtime exceptions.
      */
     private Repository parse(String name, String version) {

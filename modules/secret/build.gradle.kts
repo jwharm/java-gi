@@ -5,7 +5,3 @@ plugins {
 dependencies {
     api(project(":glib"))
 }
-
-tasks.withType<GenerateSources> {
-    girFiles.set(listOf("Secret-1"))
-}

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,11 +19,12 @@
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.javagi.JavaGI;
+import org.javagi.configuration.ModuleInfo;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.*;
 import java.nio.file.*;
@@ -37,13 +38,14 @@ import static org.javagi.JavaGI.generate;
  * the types defined in a GIR Library. (The Library is provided by the
  * GirParserService.)
  */
+@NullMarked
 public abstract class GenerateSources extends DefaultTask {
 
     @ServiceReference("gir")
     public abstract Property<GirParserService> getGirParserService();
 
     @Input
-    public abstract ListProperty<String> getGirFiles();
+    public abstract Property<String> getProjectName();
 
     @InputFiles
     public abstract DirectoryProperty getMainJavaSourcesDirectory();
@@ -55,7 +57,7 @@ public abstract class GenerateSources extends DefaultTask {
     void execute() {
         try {
             var buildService = getGirParserService().get();
-            var girFiles = getGirFiles().get();
+            var girFiles = ModuleInfo.getGirFilesForModule(getProjectName().get());
             var library = buildService.getLibrary(girFiles);
             var outputDirectory = getOutputDirectory().get().getAsFile();
             for (String repo : girFiles) {
@@ -88,8 +90,7 @@ public abstract class GenerateSources extends DefaultTask {
             Integer.MAX_VALUE,
             new SimpleFileVisitor<>() {
                 @Override
-                public FileVisitResult visitFile(Path file,
-                                                 BasicFileAttributes attrs) {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                     if (file.toString().endsWith(".java")) {
                         String pkg = srcDir
                                 .relativize(file.getParent())

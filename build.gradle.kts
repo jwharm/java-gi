@@ -8,7 +8,11 @@ tasks.named("build") {
 }
 
 tasks.named("clean") {
-    dependsOn(gradle.includedBuild("generator").task(":clean"))
+    gradle.includedBuilds.forEach { dependsOn(it.task(":clean")) }
+}
+
+tasks.register("installDist") {
+    dependsOn(gradle.includedBuild("generator").task(":installDist"))
 }
 
 tasks.register("assembleDist") {
