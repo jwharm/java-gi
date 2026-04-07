@@ -4,6 +4,7 @@ plugins {
 
 rootProject.name = "java-gi"
 
+includeBuild("build-logic")
 includeBuild("ext/javapoet")
 includeBuild("generator")
 
