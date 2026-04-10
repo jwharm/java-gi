@@ -56,7 +56,7 @@ import static java.util.stream.Collectors.joining;
  * project structure is generated.
  * <p>
  * The {@link #generate} method is used by the Gradle build scripts as well (see
- * the {@code GenerateSources} class in the {@code buildSrc} folder).
+ * the {@code GenerateSources} task in {@code build-logic}).
  */
 @CommandLine.Command(
         name = "java-gi",
