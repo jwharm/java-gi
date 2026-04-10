@@ -138,9 +138,10 @@ public class Interop {
      * @return the newly created MethodHandle
      */
     public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, boolean variadic) {
-        return symbolLookup.find(name).map(addr -> variadic
-                ? VarargsInvoker.create(addr, fdesc)
-                : LINKER.downcallHandle(addr, fdesc)).orElse(generateFallbackMH(name, fdesc));
+        return symbolLookup.find(name)
+                .map(addr -> variadic ? VarargsInvoker.create(addr, fdesc)
+                                      : LINKER.downcallHandle(addr, fdesc))
+                .orElseGet(() -> generateFallbackMH(name, fdesc));
     }
 
     /**
