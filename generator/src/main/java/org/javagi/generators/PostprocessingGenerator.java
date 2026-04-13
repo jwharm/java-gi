@@ -244,7 +244,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         else {
             // Lookup the copy/ref function and the memory layout
             var copyFunc = slt.copyFunction();
-            var hasMemoryLayout = new MemoryLayoutGenerator().canGenerate(slt);
+            var hasMemoryLayout = slt instanceof FieldContainer fc
+                    && new MemoryLayoutGenerator().canGenerate(fc);
 
             // Don't automatically copy the return values of GLib functions
             boolean skipNamespace = !target.namespace().parent().isInScope("GObject");

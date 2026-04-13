@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,7 +23,6 @@ import org.javagi.configuration.ClassNames;
 import org.javagi.util.PartialStatement;
 
 import static org.javagi.util.CollectionUtils.*;
-import static java.util.Collections.emptyList;
 
 import java.lang.foreign.MemorySegment;
 import java.util.List;
@@ -60,16 +59,6 @@ public final class Boxed extends GirElement implements StandardLayoutType {
                 tag, typeName(),
                 "gobjects", ClassNames.G_OBJECTS,
                 "memorySegment", MemorySegment.class);
-    }
-
-    @Override
-    public List<Field> fields() {
-        return emptyList();
-    }
-
-    @Override
-    public boolean opaque() {
-        return true;
     }
 
     public List<Function> functions() {

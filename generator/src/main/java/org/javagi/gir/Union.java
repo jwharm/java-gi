@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Union extends GirElement implements StandardLayoutType {
+public final class Union extends GirElement implements StandardLayoutType, FieldContainer {
 
     @Override
     public RegisteredType parent() {

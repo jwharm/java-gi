@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,9 +19,7 @@
 
 package org.javagi.gir;
 
-public sealed interface StandardLayoutType
-        extends FieldContainer
-        permits Boxed, Record, Union {
+public sealed interface StandardLayoutType extends RegisteredType permits Boxed, Record, Union {
 
     default String cSymbolPrefix() {
         return attr("c:symbol-prefix");

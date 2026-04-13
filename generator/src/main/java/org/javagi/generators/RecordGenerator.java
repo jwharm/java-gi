@@ -45,12 +45,14 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     private final StandardLayoutType rec;
     private final RegisteredType outerClass;
     private final TypeSpec.Builder builder;
+    private final List<Field> fields;
 
     public RecordGenerator(StandardLayoutType rec) {
         super(rec);
         this.rec = rec;
         this.outerClass = rec instanceof Record r ? r.isGTypeStructFor() : null;
         this.builder = TypeSpec.classBuilder(rec.typeName());
+        this.fields = rec instanceof FieldContainer fc ? fc.fields() : emptyList();
 
         if (outerClass == null)
             this.builder.addAnnotation(GeneratedAnnotationBuilder.generate());
@@ -76,7 +78,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
          */
         if (outerClass != null) {
             builder.addModifiers(Modifier.STATIC);
-            if (rec.fields().isEmpty()) {
+            if (fields.isEmpty()) {
                 builder.superclass(outerClass instanceof Interface
                         ? ClassNames.G_TYPE_INTERFACE : ClassNames.G_TYPE_CLASS);
             } else {
@@ -84,7 +86,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                  * parent_class is always the first field, unless the struct is
                  * disguised.
                  */
-                Type type = (Type) rec.fields().getFirst().anyType();
+                Type type = (Type) fields.getFirst().anyType();
                 Record parentRec = (Record) type.lookup();
                 RegisteredType parentClass = parentRec.isGTypeStructFor();
                 if (parentClass != null) {
@@ -112,25 +114,27 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         builder.addMethod(memoryAddressConstructor());
 
-        MemoryLayoutGenerator memoryLayoutGenerator = new MemoryLayoutGenerator();
-        builder.addMethod(memoryLayoutGenerator.generateMemoryLayout(rec));
+        if (rec instanceof FieldContainer fc) {
+            MemoryLayoutGenerator memoryLayoutGenerator = new MemoryLayoutGenerator();
+            builder.addMethod(memoryLayoutGenerator.generateMemoryLayout(fc));
 
-        if (memoryLayoutGenerator.canGenerate(rec)) {
-            if (outerClass == null && noNewConstructor()) {
-                builder.addMethod(constructor(true))
-                       .addMethod(constructor(false));
+            if (memoryLayoutGenerator.canGenerate(fc)) {
+                if (outerClass == null && noNewConstructor()) {
+                    builder.addMethod(constructor(true))
+                           .addMethod(constructor(false));
 
-                if (hasFieldSetters())
-                    builder.addMethod(constructorWithParameters(true))
-                           .addMethod(constructorWithParameters(false));
-            }
+                    if (hasFieldSetters())
+                        builder.addMethod(constructorWithParameters(true))
+                               .addMethod(constructorWithParameters(false));
+                }
 
-            for (Field f : rec.fields())
-                generateField(f);
-
-            if (rec instanceof Record r && !r.unions().isEmpty())
-                for (Field f : r.unions().getFirst().fields())
+                for (Field f : fields)
                     generateField(f);
+
+                if (rec instanceof Record r && !r.unions().isEmpty())
+                    for (Field f : r.unions().getFirst().fields())
+                        generateField(f);
+            }
         }
 
         addConstructors(builder);
@@ -237,7 +241,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
     }
 
     private Stream<Field> streamAccessibleFields() {
-        return rec.fields().stream()
+        return fields.stream()
                 .filter(not(Field::isDisguised))
                 .filter(f -> f.bits() == -1);
     }

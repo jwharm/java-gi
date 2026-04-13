@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Record extends GirElement implements StandardLayoutType {
+public final class Record extends GirElement implements StandardLayoutType, FieldContainer {
 
     public Record(Map<String, String> attributes, List<Node> children) {
         super(attributes, children);

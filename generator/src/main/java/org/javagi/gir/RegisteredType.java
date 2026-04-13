@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -28,10 +28,9 @@ import java.util.List;
 import static org.javagi.util.Conversions.toJavaQualifiedType;
 import static org.javagi.util.Conversions.uncapitalize;
 
-public sealed interface RegisteredType
-        extends Node
-        permits Alias, Callback, Class, EnumType,
-                Interface, Namespace, FieldContainer {
+public sealed interface RegisteredType extends Node
+        permits Alias, Callback, Class, EnumType, Interface,
+                Namespace, StandardLayoutType, FieldContainer {
 
     RegisteredType mergeWith(RegisteredType rt);
     InfoAttrs infoAttrs();

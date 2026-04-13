@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -986,8 +986,8 @@ class TypedValueGenerator {
         PartialStatement valueLayout = getValueLayout(anyType);
         if (anyType instanceof Type t && (!t.isPrimitive())) {
             var target = t.lookup();
-            if (target instanceof StandardLayoutType slt) {
-                if (new MemoryLayoutGenerator().canGenerate(slt)) {
+            if (target instanceof StandardLayoutType && target instanceof FieldContainer fc) {
+                if (new MemoryLayoutGenerator().canGenerate(fc)) {
                     valueLayout = PartialStatement.of(
                             "$" + target.typeTag() + ":T.getMemoryLayout()",
                             target.typeTag(), target.typeName());
