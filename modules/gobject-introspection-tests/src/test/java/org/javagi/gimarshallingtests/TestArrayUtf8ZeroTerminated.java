@@ -46,17 +46,17 @@ public class TestArrayUtf8ZeroTerminated {
 
     @Test
     void noneIn() {
-        zeroTerminatedArrayUtf8NoneIn(IN_VALUES);
+        zeroTerminatedArrayUtf8NoneIn(IN_VALUES, null);
     }
 
     @Test
     void containerIn() {
-        zeroTerminatedArrayUtf8ContainerIn(IN_VALUES);
+        zeroTerminatedArrayUtf8ContainerIn(IN_VALUES, null);
     }
 
     @Test
     void fullIn() {
-        zeroTerminatedArrayUtf8FullIn(IN_VALUES);
+        zeroTerminatedArrayUtf8FullIn(IN_VALUES, null);
     }
 
     @Test
