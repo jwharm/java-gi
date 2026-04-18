@@ -149,7 +149,8 @@ public class TemplateTypes {
         }
 
         MemoryLayout[] layouts = elements.toArray(new MemoryLayout[0]);
-        return MemoryLayout.structLayout(layouts).withName(getName(cls));
+        MemoryLayout structLayout = MemoryLayout.structLayout(layouts).withName(getName(cls));
+        return cacheLayout(cls, structLayout);
     }
 
     /**
