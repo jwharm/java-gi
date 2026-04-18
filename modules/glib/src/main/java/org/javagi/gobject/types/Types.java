@@ -33,10 +33,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -59,6 +56,9 @@ public class Types {
 
     // The name of an unknown memory layout in generated classes
     private final static String UNKNOWN_LAYOUT = "javagi$unknown";
+
+    // Keep track of the generated memory layouts: needed for derived classes
+    private static final HashMap<Class<?>, MemoryLayout> GENERATED_LAYOUTS = new HashMap<>();
 
     // GLib fundamental types, adapted from <gobject/gtype.h>
 
@@ -660,21 +660,23 @@ public class Types {
      *         superclass.
      */
     public static MemoryLayout getInstanceLayout(Class<?> cls) {
-            // Get instance-memorylayout of this class
-            MemoryLayout instanceLayout = getLayout(cls);
-            if (instanceLayout != null)
-                return instanceLayout;
+        // Get instance-memorylayout of this class
+        MemoryLayout instanceLayout = getLayout(cls);
+        if (instanceLayout != null)
+            return instanceLayout;
 
-            // If no memory layout was defined, create a default memory layout
-            // that only has a pointer to the parent class' memory layout.
-            MemoryLayout parentLayout = getInstanceLayout(cls.getSuperclass());
+        // If no memory layout was defined, create a default memory layout
+        // that only has a pointer to the parent class' memory layout.
+        MemoryLayout parentLayout = getInstanceLayout(cls.getSuperclass());
 
-            if (UNKNOWN_LAYOUT.equals(parentLayout.name().orElse("")))
-                throw new TypeRegistrationException("Parent class " + cls.getSuperclass() + " has unknown memory layout");
+        if (UNKNOWN_LAYOUT.equals(parentLayout.name().orElse("")))
+            throw new TypeRegistrationException("Parent class " + cls.getSuperclass() + " has unknown memory layout");
 
-            return MemoryLayout.structLayout(
-                    parentLayout.withName("parent_instance")
-            ).withName(getName(cls));
+        MemoryLayout newLayout = MemoryLayout.structLayout(
+                parentLayout.withName("parent_instance")
+        ).withName(getName(cls));
+
+        return cacheLayout(cls, newLayout);
     }
 
     /**
@@ -739,9 +741,11 @@ public class Types {
         MemoryLayout parentLayout = getLayout(typeClass);
         requireNonNull(parentLayout, "No memory layout for type-class " + typeClass);
 
-        return MemoryLayout.structLayout(
+        MemoryLayout newLayout = MemoryLayout.structLayout(
                 parentLayout.withName("parent_class")
         ).withName(getName(cls) + "Class");
+
+        return cacheLayout(typeClass, newLayout);
     }
 
     /**
@@ -760,9 +764,23 @@ public class Types {
         MemoryLayout parentLayout = getLayout(typeIface);
         requireNonNull(parentLayout, "No memory layout for type-interface " + typeIface);
 
-        return MemoryLayout.structLayout(
+        MemoryLayout newLayout = MemoryLayout.structLayout(
                 parentLayout.withName("g_iface")
         ).withName(getName(cls) + "Interface");
+
+        return cacheLayout(cls, newLayout);
+    }
+
+    /**
+     * Cache a generated MemoryLayout.
+     *
+     * @param cls    the class for which the layout was generated
+     * @param layout the generated memory layout
+     * @return       always returns {@code layout}
+     */
+    public static MemoryLayout cacheLayout(Class<?> cls, MemoryLayout layout) {
+        GENERATED_LAYOUTS.put(cls, layout);
+        return layout;
     }
 
     /**
@@ -814,7 +832,7 @@ public class Types {
             return (MemoryLayout) method.invoke(null);
 
         } catch (Exception notfound) {
-            return null;
+            return GENERATED_LAYOUTS.get(cls);
         }
     }
 
