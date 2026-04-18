@@ -2,7 +2,7 @@
 
 ## Required Java version
 
-To use Java-GI, download and install [OpenJDK](https://jdk.java.net/) version 22 or newer. (Java-GI uses the Foreign Function & Memory API introduced in JDK 22.)
+To use Java-GI, download and install [OpenJDK](https://jdk.java.net/) version 25 or newer.
 
 ## Dependencies
 
@@ -20,7 +20,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     <dependency>
       <groupId>org.java-gi</groupId>
       <artifactId>gtk</artifactId>
-      <version>0.14.1</version>
+      <version>0.15.0</version>
     </dependency>
     ```
 
@@ -32,7 +32,7 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation 'org.java-gi:gtk:0.14.1'
+        implementation 'org.java-gi:gtk:0.15.0'
     }
     ```
 
@@ -44,20 +44,20 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     }
 
     dependencies {
-        implementation("org.java-gi:gtk:0.14.1")
+        implementation("org.java-gi:gtk:0.15.0")
     }
     ```
 
 === "Scala SBT"
 
     ```scala
-    libraryDependencies += "org.java-gi" % "gtk" % "0.14.1"
+    libraryDependencies += "org.java-gi" % "gtk" % "0.15.0"
     ```
 
 === "Leiningen"
 
     ```clojure
-    [org.java-gi/gtk "0.14.1"]
+    [org.java-gi/gtk "0.15.0"]
     ```
 
 === "bld"
@@ -67,10 +67,10 @@ Next, add the dependencies. For example, to add Gtk as a dependency:
     scope(main)
         .include(dependency("org.java-gi",
                             "gtk",
-                            version(0,14,1)));
+                            version(0,15,0)));
     ```
 
-This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gstreamer`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?q=org.java-gi).
+This will add the Gtk bindings to the application's compile and runtime classpath. Other libraries, like `webkit`, `gstreamer`, `adw` and `gtksourceview` can be included likewise. The complete list of available libraries is available [here](https://search.maven.org/search?namespace=org.java-gi&sort=name).
 
 ## Application code
 

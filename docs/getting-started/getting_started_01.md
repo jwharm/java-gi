@@ -33,7 +33,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(22)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -83,7 +83,7 @@ gradle run
     
     * Gradle version 8.7 or higher (check with `gradle --version`)
     
-    * Java version 22 or higher (check with `java --version`)
+    * Java version 25 or higher (check with `java --version`)
     
     * Gtk version 4 or higher (check with `pkg-config --modversion gtk4`)
     
@@ -103,7 +103,7 @@ Within `Application.run()` the activate signal is sent and we then proceed to ha
 
 A window title is set using {{ javadoc('Window.setTitle') }}. This method takes a String as input. Finally the window size is set using {{ javadoc('Window.setDefaultSize') }} and the window is then shown by GTK via {{ javadoc('Window.present') }}.
 
-When you close the window, by (for example) pressing the X button, the `Application.run()` call returns and the application exits. In a C app, a call to `g_object_unref` would be required here to free the `Application` object. In Java, a [Cleaner](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/ref/Cleaner.html) will do this after the garbage collector has freed the `Application` object.
+When you close the window, by (for example) pressing the X button, the `Application.run()` call returns and the application exits. In a C app, a call to `g_object_unref` would be required here to free the `Application` object. In Java, a [Cleaner](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ref/Cleaner.html) will do this after the garbage collector has freed the `Application` object.
 
 While the program is running, GTK is receiving _events_. These are typically input events caused by the user interacting with your program, but also things like messages from the window manager or other applications. GTK processes these and as a result, _signals_ may be emitted on your widgets. Connecting handlers for these signals is how you normally make your program do something in response to user input.
 
