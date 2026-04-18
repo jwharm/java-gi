@@ -19,16 +19,14 @@
 
 package org.javagi.patches;
 
+import org.javagi.gir.*;
 import org.javagi.util.Patch;
-import org.javagi.gir.Bitfield;
-import org.javagi.gir.Doc;
-import org.javagi.gir.GirElement;
-import org.javagi.gir.Member;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.function.Predicate.not;
 
@@ -61,6 +59,22 @@ public class GdkPatch implements Patch {
                             Map.of("name", "INTERNAL_" + bit, "value", value),
                             List.of(doc)));
             }
+            return element.withChildren(children);
+        }
+
+        if (element instanceof Bitfield bf && "PaintableFlags".equals(bf.name())) {
+            var children = new ArrayList<>(bf.children());
+            children.add(new Member(
+                    Map.of("name", "SIZE", "value", "1", "deprecated", "1"),
+                    List.of(new Doc(emptyMap(), "Use STATIC_SIZE instead."),
+                            new DocDeprecated("Replaced by STATIC_SIZE"))
+            ));
+            children.add(new Member(
+                    Map.of("name", "CONTENTS", "value", "2", "deprecated", "1"),
+                    List.of(new Doc(emptyMap(), "Use STATIC_CONTENTS instead."),
+                            new DocDeprecated("Replaced by STATIC_SIZE"))
+            ));
+
             return element.withChildren(children);
         }
 
