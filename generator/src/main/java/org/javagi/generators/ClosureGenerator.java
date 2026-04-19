@@ -309,6 +309,13 @@ public class ClosureGenerator {
                 continue;
             }
 
+            // For GInstanceInitFunc, retrieve the instance that is currently under construction
+            if (closure instanceof Callback cb && "GInstanceInitFunc".equals(cb.cType()) && "instance".equals(p.name())) {
+                stmt.add("$instanceCache:T.getForInstanceInit(instance, gClass)",
+                        "instanceCache", ClassNames.INSTANCE_CACHE);
+                continue;
+            }
+
             // Invoking a method using reflection calls Method.invoke() which is
             // variadic. If the last parameter is an array, that will trigger a
             // compiler warning, because it is unsure if the array should be
