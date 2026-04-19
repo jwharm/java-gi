@@ -1,5 +1,5 @@
 [versions]
-javagi = "0.15.0"
+javagi = "0.15.1"
 jdk = "25"
 cairo = "1.18.4.3"
 picocli = "4.7.7"
