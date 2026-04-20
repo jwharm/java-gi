@@ -191,13 +191,16 @@ public class InstanceCache {
         if (CONSTRUCTING.isBound()) {
             var proxy = CONSTRUCTING.get();
             if (MemorySegment.NULL.equals(proxy.handle())) {
-                TypeQuery query = new TypeQuery();
-                GObjects.typeQuery(newType, query);
                 var creatingType = TypeCache.getType(proxy.getClass());
                 if (newType.equals(creatingType)) {
-                    ADDRESS_FIELD.set(proxy, address.reinterpret(query.readInstanceSize()));
-                    put(address, proxy);
-                    return proxy;
+                    // Get instance size
+                    TypeQuery query = new TypeQuery();
+                    GObjects.typeQuery(newType, query);
+                    int size = query.readInstanceSize();
+
+                    // Set field, cache and return instance
+                    ADDRESS_FIELD.set(proxy, address.reinterpret(size));
+                    return (TypeInstance) put(address, proxy);
                 }
             }
         }
