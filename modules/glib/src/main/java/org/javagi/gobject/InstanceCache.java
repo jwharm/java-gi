@@ -42,6 +42,8 @@ import org.javagi.base.Proxy;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Caches TypeInstances so the same instance is used for the same memory
  * address.
@@ -168,6 +170,57 @@ public class InstanceCache {
     }
 
     /**
+     * For a GObject-derived class that is declared in Java, a new instance is
+     * already available in the "CONSTRUCTING" scoped value. We set its address
+     * and return it.
+     * <p>
+     * This function is only called from `GInstanceInitFunc` because that's the
+     * first time the Java side is informed about the new instance.
+     * <p>
+     * To determine the GType of the new instance, we use the {@code gClass}
+     * parameter, because the typeclass of {@code address} will be set to the
+     * parent typeclass initially.
+     *
+     * @param address the native address of the new instance
+     * @param gClass  the target typeclass of the instance
+     * @return the Java instance, with the correct native memory address
+     */
+    public static @Nullable TypeInstance getForInstanceInit(MemorySegment address, MemorySegment gClass) {
+        var newType = new TypeClass(gClass).readGType();
+
+        if (CONSTRUCTING.isBound()) {
+            var proxy = CONSTRUCTING.get();
+            if (MemorySegment.NULL.equals(proxy.handle())) {
+                var creatingType = TypeCache.getType(proxy.getClass());
+                if (newType.equals(creatingType)) {
+                    // Get instance size
+                    TypeQuery query = new TypeQuery();
+                    GObjects.typeQuery(newType, query);
+                    int size = query.readInstanceSize();
+
+                    // Set field, cache and return instance
+                    ADDRESS_FIELD.set(proxy, address.reinterpret(size));
+                    return (TypeInstance) put(address, proxy);
+                }
+            }
+        }
+
+        // In other cases, get the existing instance from the cache
+        if (lookup(address) instanceof TypeInstance instance)
+            return instance;
+
+        // Create a new instance
+        var ctor = requireNonNull(TypeCache.getConstructor(newType, TypeInstance::new));
+        var newInstance = (TypeInstance) ctor.apply(address);
+
+        // Cache GObject
+        if (newInstance instanceof GObject gobject)
+            return (TypeInstance) put(address, gobject);
+
+        return newInstance;
+    }
+
+    /**
      * Get a {@link Proxy} object for the provided native memory address. If a
      * Proxy object does not yet exist for this address, a new Proxy object is
      * instantiated and added to the cache. The type of the Proxy object is
@@ -194,18 +247,6 @@ public class InstanceCache {
 
         // No instance in cache: Create a new instance
         Proxy newInstance = ctor.apply(address);
-
-        // If this instance is newly constructed
-        if (CONSTRUCTING.isBound() && newInstance instanceof TypeInstance ti) {
-            var proxy = CONSTRUCTING.get();
-            var actualType = ti.readGClass().readGType();
-            var creatingType = TypeCache.getType(proxy.getClass());
-            if (actualType.equals(creatingType)) {
-                ADDRESS_FIELD.set(proxy, newInstance.handle());
-                put(address, proxy);
-                return proxy;
-            }
-        }
 
         // Cache GObject
         if (newInstance instanceof GObject gobject)
