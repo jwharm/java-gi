@@ -136,12 +136,10 @@ public class RegisteredTypeGenerator {
                     """, name())
                 .addParameter(MemorySegment.class, "address");
 
-        if (rt instanceof FieldContainer fc
-                && (fc.opaque() || fc.hasOpaqueStructFields()))
+        if (rt instanceof Boxed || (rt instanceof FieldContainer fc && (fc.opaque() || fc.hasOpaqueStructFields())))
             builder.addStatement("super(address)");
         else
-            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
-                    ClassNames.INTEROP);
+            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))", ClassNames.INTEROP);
         return builder.build();
     }
 
