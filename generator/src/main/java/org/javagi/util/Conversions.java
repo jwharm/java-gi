@@ -72,7 +72,7 @@ public class Conversions {
      * Prefix the name with an underscore if it starts with a digit
      */
     public static String toJavaConstant(String name) {
-        return prefixDigits(name);
+        return replaceKeywords(prefixDigits(name));
     }
 
     /**
@@ -80,7 +80,7 @@ public class Conversions {
      * returns the result upper-cased
      */
     public static String toJavaConstantUpperCase(String name) {
-        return prefixDigits(name.toUpperCase());
+        return replaceKeywords(prefixDigits(name.toUpperCase()));
     }
 
     /**
