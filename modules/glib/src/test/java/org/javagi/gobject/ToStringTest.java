@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package org.javagi.gobject;
 
+import org.gnome.gobject.GObject;
 import org.javagi.gobject.types.Types;
 import org.gnome.glib.Variant;
 import org.gnome.gobject.Value;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.foreign.Arena;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * GValue, GType and GVariant have an extra {@code toString()} method.
@@ -60,6 +62,8 @@ public class ToStringTest {
 
     @Test
     public void testTypeToString() {
-        // todo
+        var gobjectType = GObject.getType();
+        assertNotNull(gobjectType);
+        assertEquals("GObject", gobjectType.toString());
     }
 }
