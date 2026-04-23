@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -61,7 +61,7 @@ public final class PartialStatement {
             // is almost certainly a bug
             Object previous = arguments.put(args[i].toString(), value);
             if (previous != null && (!previous.equals(value)))
-                throw new IllegalArgumentException("Argument %s overrules %s with %s"
+                throw new IllegalArgumentException("Argument '%s' changed from '%s' to '%s'"
                         .formatted(key, previous, value));
         }
 
