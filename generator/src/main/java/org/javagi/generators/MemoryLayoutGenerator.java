@@ -22,6 +22,7 @@ package org.javagi.generators;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.util.Conversions;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.function.Predicate.not;
-import static org.javagi.util.Conversions.getValueLayout;
 
 public class MemoryLayoutGenerator {
 
@@ -57,6 +57,7 @@ public class MemoryLayoutGenerator {
      * union or member. It's a bit easier to work with then the raw gir data.
      */
     private sealed interface Layout permits LStruct, LUnion, LMember {
+        String name();
         int alignment();
         int size();
         PartialStatement generateMemoryLayout();
@@ -80,7 +81,7 @@ public class MemoryLayoutGenerator {
         }
     }
 
-    record LStruct(boolean longAsInt, String name, List<Layout> members) implements Layout {
+    private record LStruct(boolean longAsInt, String name, List<Layout> members) implements Layout {
         public int alignment() {
             return members.stream().mapToInt(Layout::alignment).max().orElse(0);
         }
@@ -139,7 +140,7 @@ public class MemoryLayoutGenerator {
         }
     }
 
-    record LUnion(boolean longAsInt, String name, List<Layout> members) implements Layout {
+    private record LUnion(boolean longAsInt, String name, List<Layout> members) implements Layout {
         public int alignment() {
             return members.stream().mapToInt(Layout::alignment).max().orElse(0);
         }
@@ -165,7 +166,7 @@ public class MemoryLayoutGenerator {
         }
     }
 
-    record LMember(boolean longAsInt, Field field) implements Layout {
+    private record LMember(boolean longAsInt, Field field) implements Layout {
         public String name() {
             return field.name();
         }
@@ -195,7 +196,8 @@ public class MemoryLayoutGenerator {
                 stmt = createStatement("$valueLayout:T.ADDRESS");
 
             if (bits() > 0)
-                return createStatement("$memoryLayout:T.sequenceLayout(" + size() + ", $valueLayout:T.JAVA_BYTE) /* bitfield */");
+                return createStatement("$memoryLayout:T.sequenceLayout(" + size()
+                                        + ", $valueLayout:T.JAVA_BYTE) /* bitfield */");
 
             if (name() != null)
                 stmt.add(".withName(\"" + name() + "\")");
@@ -219,11 +221,11 @@ public class MemoryLayoutGenerator {
             }
 
             // Plain value layout
-            return getValueLayout(type, longAsInt);
+            return Conversions.getValueLayout(type, longAsInt);
         }
     }
 
-    MethodSpec generateMemoryLayout(FieldContainer fc) {
+    public MethodSpec generateMemoryLayout(FieldContainer fc) {
         var method = MethodSpec.methodBuilder("getMemoryLayout")
                 .addJavadoc("The memory layout of the native struct.\n\n")
                 .addJavadoc("@return the memory layout\n")
@@ -238,22 +240,15 @@ public class MemoryLayoutGenerator {
         // When there are `long` fields, generate 32-bit and 64-bit layout
         if (hasLongFields) {
             method.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
-            var layout = generateGroupLayout(fc, true);
-            addReturn(method, layout);
+            addReturn(method, Layout.of(true, fc).generateMemoryLayout());
             method.nextControlFlow("else");
-            layout = generateGroupLayout(fc, false);
-            addReturn(method, layout);
+            addReturn(method, Layout.of(false, fc).generateMemoryLayout());
             method.endControlFlow();
         } else {
-            var layout = generateGroupLayout(fc, false);
-            addReturn(method, layout);
+            addReturn(method, Layout.of(false, fc).generateMemoryLayout());
         }
 
         return method.build();
-    }
-
-    private PartialStatement generateGroupLayout(FieldContainer fc, boolean longAsInt) {
-        return Layout.of(longAsInt, fc).generateMemoryLayout();
     }
 
     private void addReturn(MethodSpec.Builder method, PartialStatement layout) {
