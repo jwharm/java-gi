@@ -19,7 +19,9 @@
 
 package org.javagi.generators;
 
+import org.javagi.gir.Record;
 import org.javagi.javapoet.AnnotationSpec;
+import org.javagi.javapoet.FieldSpec;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
@@ -64,6 +66,43 @@ public class FieldGenerator extends TypedValueGenerator {
         return methodName;
     }
 
+    private String fieldName() {
+        return toJavaConstant(f.name());
+    }
+
+    public boolean canGenerateVarHandle() {
+        if (f.isDisguised())
+            return false;
+
+        if (f.bits() != -1)
+            return false;
+
+        if (f.anyType() instanceof Type t && (!t.isPointer()) && t.lookup() instanceof Record)
+            return false;
+
+        return !(f.anyType() instanceof Array a) || a.fixedSize() <= 0;
+    }
+
+    public FieldSpec generateVarHandle(Modifier... modifiers) {
+        var stmt = PartialStatement.of("getMemoryLayout().varHandle($Z");
+
+        // Path to nested struct/union
+        if (f.parent() instanceof FieldContainer parent
+                && parent.parent() instanceof FieldContainer) {
+            stmt.add("$memoryLayout:T.PathElement.groupElement($parentName:S),$W",
+                     "parentName", parent.name());
+        }
+
+        // Path to the field
+        stmt.add("$memoryLayout:T.PathElement.groupElement($fieldName:S))\n",
+                 "memoryLayout", MemoryLayout.class,
+                 "fieldName", f.name());
+
+        return FieldSpec.builder(VarHandle.class, fieldName(), modifiers)
+                .initializer(stmt.toCodeBlock())
+                .build();
+    }
+
     public MethodSpec generateReadMethod() {
         // To read from arrays with unknown size, or ...** fields, you must
         // provide the length of the array.
@@ -103,14 +142,16 @@ public class FieldGenerator extends TypedValueGenerator {
 
         // Read a pointer or primitive value from the struct
         TypeName carrierType = getCarrierTypeName(f.anyType(), true);
-        spec.addStatement("$T _varHandle = getMemoryLayout().varHandle($T.PathElement.groupElement($S))",
-                VarHandle.class, MemoryLayout.class, f.name());
-        var getResult = PartialStatement.of("$carrierType:T _result = ", "carrierType", carrierType);
+        var getResult = PartialStatement.of("$carrierType:T _result = ",
+                "carrierType", carrierType,
+                "helperClass", f.parent().helperClass(),
+                "fieldName", fieldName(),
+                "interop", ClassNames.INTEROP);
         if (isLong)
-            getResult.add("$interop:T.longAsInt() ? (int) _varHandle.get(handle(), 0) : (int) (long) _varHandle.get(handle(), 0);\n",
-                    "interop", ClassNames.INTEROP);
+            getResult.add("$interop:T.longAsInt() ? (int) $helperClass:T.$fieldName:L.get(handle(), 0)"
+                            + " : (int) (long) $helperClass:T.$fieldName:L.get(handle(), 0);\n");
         else
-            getResult.add("($carrierType:T) _varHandle.get(handle(), 0);\n");
+            getResult.add("($carrierType:T) $helperClass:T.$fieldName:L.get(handle(), 0);\n");
         var returnResult = PartialStatement.of("return ")
                 .add(marshalNativeToJava("_result", false))
                 .add(";\n");
@@ -148,23 +189,21 @@ public class FieldGenerator extends TypedValueGenerator {
             spec.addStatement("$1T _$3LGString = $2T.toGString($3L)",
                     MemorySegment.class, ClassNames.INTEROP, getName());
 
-        var stmt = PartialStatement.of(
-                "$varHandle:T _varHandle = getMemoryLayout().varHandle($memoryLayout:T.PathElement.groupElement($fieldName:S));\n",
-                "varHandle", VarHandle.class,
-                "memoryLayout", MemoryLayout.class,
-                "fieldName", f.name());
-        spec.addNamedCode(stmt.format(), stmt.arguments());
-
         if (isLong) {
             spec.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
-            spec.addStatement("_varHandle.set(handle(), 0, $L)", getName());
+            spec.addStatement("$T.$L.set(handle(), 0, $L)", f.parent().helperClass(), fieldName(), getName());
             spec.nextControlFlow("else");
-            spec.addStatement("_varHandle.set(handle(), 0, (long) $L)", getName());
+            spec.addStatement("$T.$L.set(handle(), 0, (long) $L)", f.parent().helperClass(), fieldName(), getName());
             spec.endControlFlow();
         }
 
         else {
-            stmt = PartialStatement.of(null, "memorySegment", MemorySegment.class);
+            var stmt = PartialStatement.of(null,
+                    "memorySegment", MemorySegment.class,
+                    "varHandle", VarHandle.class,
+                    "helperClass", f.parent().helperClass(),
+                    "fieldName", fieldName());
+
             if (type != null && type.isPointer() && (type.isPrimitive() || (target instanceof EnumType))) {
                 // Pointer to a primitive value is an opaque MemorySegment
                 stmt.add(getName());
@@ -173,10 +212,12 @@ public class FieldGenerator extends TypedValueGenerator {
             }
 
             if (checkNull())
-                spec.addNamedCode("_varHandle.set(handle(), 0, (" + getName() + " == null ? $memorySegment:T.NULL : "
-                                + stmt.format() + "));\n", stmt.arguments());
+                spec.addNamedCode("$helperClass:T.$fieldName:L.set(handle(), 0, ("
+                        + getName() + " == null ? $memorySegment:T.NULL : " + stmt.format() + "));\n",
+                        stmt.arguments());
             else
-                spec.addNamedCode("_varHandle.set(handle(), 0, " + stmt.format() + ");\n", stmt.arguments());
+                spec.addNamedCode("$helperClass:T.$fieldName:L.set(handle(), 0, " + stmt.format() + ");\n",
+                        stmt.arguments());
         }
 
         return spec.build();
@@ -295,10 +336,9 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
                 .addParameter(TypeName.get(java.lang.reflect.Method.class)
-                        .annotated(AnnotationSpec.builder(Nullable.class).build()), "method")
+                                      .annotated(AnnotationSpec.builder(Nullable.class).build()), "method")
                 .addStatement("this._$LMethod = method", getName())
-                .addCode(new CallableGenerator(cb)
-                                .generateFunctionDescriptorDeclaration())
+                .addCode(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
                 .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
                         MethodHandle.class,
                         ClassNames.INTEROP,
@@ -307,11 +347,8 @@ public class FieldGenerator extends TypedValueGenerator {
                         getName() + "Upcall")
                 .addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         MemorySegment.class, Linker.class)
-                .addStatement("getMemoryLayout().varHandle($T.PathElement.groupElement($S))$Z"
-                                + ".set(handle(), 0, (method == null ? $T.NULL : _address))",
-                        MemoryLayout.class,
-                        f.name(),
-                        MemorySegment.class)
+                .addStatement("$T.$L$Z.set(handle(), 0, (method == null ? $T.NULL : _address))",
+                        f.parent().helperClass(), fieldName(), MemorySegment.class)
                 .build();
     }
 }
