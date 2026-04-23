@@ -141,8 +141,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         addFunctions(builder);
         addMethods(builder);
 
-        if (hasDowncallHandles())
-            builder.addType(downcallHandlesClass());
+        if (hasNativeHandles())
+            builder.addType(nativeHandlesClass());
 
         if (rec.toStringTarget() != null)
             builder.addMethod(toStringRedirect());

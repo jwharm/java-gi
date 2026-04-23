@@ -205,11 +205,11 @@ public class RegisteredTypeGenerator {
                 : c.typeName();
     }
 
-    public boolean hasDowncallHandles() {
+    public boolean hasNativeHandles() {
         return ! (listNamedFunctions().isEmpty() && listFields().isEmpty());
     }
 
-    public TypeSpec downcallHandlesClass() {
+    public TypeSpec nativeHandlesClass() {
         TypeSpec.Builder builder = TypeSpec.classBuilder(rt.helperClass())
                 .addModifiers(Modifier.FINAL);
 
