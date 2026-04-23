@@ -144,7 +144,11 @@ public sealed interface RegisteredType extends Node
     }
 
     default ClassName helperClass() {
-        return typeName().nestedClass("MethodHandles");
+        // Inner struct/union?
+        if (this instanceof StandardLayoutType && parent() instanceof StandardLayoutType parent)
+            return parent.helperClass();
+        else
+            return typeName().nestedClass("NativeHandles");
     }
 
     default String name() {
