@@ -31,9 +31,12 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.element.Modifier;
 
 import java.lang.foreign.MemorySegment;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Collections.emptyList;
 import static org.javagi.util.CollectionUtils.filter;
 import static java.util.function.Predicate.not;
 
@@ -136,12 +139,10 @@ public class RegisteredTypeGenerator {
                     """, name())
                 .addParameter(MemorySegment.class, "address");
 
-        if (rt instanceof FieldContainer fc
-                && (fc.opaque() || fc.hasOpaqueStructFields()))
+        if (rt instanceof Boxed || (rt instanceof FieldContainer fc && (fc.opaque() || fc.hasOpaqueStructFields())))
             builder.addStatement("super(address)");
         else
-            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))",
-                    ClassNames.INTEROP);
+            builder.addStatement("super($T.reinterpret(address, getMemoryLayout().byteSize()))", ClassNames.INTEROP);
         return builder.build();
     }
 
@@ -204,11 +205,11 @@ public class RegisteredTypeGenerator {
                 : c.typeName();
     }
 
-    public boolean hasDowncallHandles() {
-        return (! listNamedFunctions().isEmpty());
+    public boolean hasNativeHandles() {
+        return ! (listNamedFunctions().isEmpty() && listFields().isEmpty());
     }
 
-    public TypeSpec downcallHandlesClass() {
+    public TypeSpec nativeHandlesClass() {
         TypeSpec.Builder builder = TypeSpec.classBuilder(rt.helperClass())
                 .addModifiers(Modifier.FINAL);
 
@@ -218,11 +219,18 @@ public class RegisteredTypeGenerator {
             builder.addModifiers(Modifier.PRIVATE, Modifier.STATIC);
 
         for (Callable c : listNamedFunctions()) {
-            if (!c.skip()) {
-                var gen = new MethodGenerator(c);
-                var spec = gen.generateNamedDowncallHandle(
-                        Modifier.STATIC, Modifier.FINAL);
-                builder.addField(spec);
+            var gen = new MethodGenerator(c);
+            var spec = gen.generateNamedDowncallHandle(Modifier.STATIC, Modifier.FINAL);
+            builder.addField(spec);
+        }
+
+        if (rt instanceof StandardLayoutType) {
+            for (Field f : listFields()) {
+                var gen = new FieldGenerator(f);
+                if (gen.canGenerateVarHandle()) {
+                    var spec = gen.generateVarHandle(Modifier.STATIC, Modifier.FINAL);
+                    builder.addField(spec);
+                }
             }
         }
 
@@ -237,6 +245,25 @@ public class RegisteredTypeGenerator {
                 .map(Callable.class::cast)
                 .filter(not(Callable::skip))
                 .toList();
+    }
+
+    private List<Field> listFields() {
+        List<Field> fields = new ArrayList<>();
+        if (rt instanceof Record r) {
+            fields.addAll(r.unions().stream()
+                    .map(u -> new RegisteredTypeGenerator(u).listFields())
+                    .flatMap(Collection::stream)
+                    .toList());
+        }
+
+        fields.addAll(switch (rt) {
+            case Class c -> c.fields();
+            case Interface i -> i.fields();
+            case FieldContainer fc -> fc.fields();
+            default -> emptyList();
+        });
+
+        return fields;
     }
 
     public void setFreeFunc(MethodSpec.Builder builder,

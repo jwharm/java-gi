@@ -303,8 +303,8 @@ public class JavaGI implements Callable<Integer> {
             // static downcall handles
             if (rt instanceof Interface i) {
                 var generator = new InterfaceGenerator(i);
-                if (generator.hasDowncallHandles())
-                    writeJavaFile(generator.downcallHandlesClass(), packageName, licenseNotice, outputDirectory);
+                if (generator.hasNativeHandles())
+                    writeJavaFile(generator.nativeHandlesClass(), packageName, licenseNotice, outputDirectory);
             }
         }
     }

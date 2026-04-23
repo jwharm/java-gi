@@ -100,8 +100,8 @@ public class CallableGenerator {
         if (callable instanceof Signal
                 && anyType instanceof Type t
                 && !t.isPointer()
-                && t.lookup() instanceof StandardLayoutType slt
-                && new MemoryLayoutGenerator().canGenerate(slt)) {
+                && t.lookup() instanceof FieldContainer fc
+                && new MemoryLayoutGenerator().canGenerate(fc)) {
             return PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
         }
         return generateValueLayout(anyType);

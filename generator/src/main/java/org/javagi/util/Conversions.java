@@ -72,7 +72,7 @@ public class Conversions {
      * Prefix the name with an underscore if it starts with a digit
      */
     public static String toJavaConstant(String name) {
-        return prefixDigits(name);
+        return replaceKeywords(prefixDigits(name));
     }
 
     /**
@@ -80,7 +80,7 @@ public class Conversions {
      * returns the result upper-cased
      */
     public static String toJavaConstantUpperCase(String name) {
-        return prefixDigits(name.toUpperCase());
+        return replaceKeywords(prefixDigits(name.toUpperCase()));
     }
 
     /**
@@ -332,8 +332,9 @@ public class Conversions {
 
         // Flat struct/union (not a pointer) with a known memory layout
         if (!t.isPointer()
-                && target instanceof StandardLayoutType slt
-                && new MemoryLayoutGenerator().canGenerate(slt)) {
+                && target instanceof StandardLayoutType
+                && target instanceof FieldContainer fc
+                && new MemoryLayoutGenerator().canGenerate(fc)) {
             // use the struct/union layout
             return PartialStatement.of("$" + target.typeTag() + ":T.getMemoryLayout()",
                     target.typeTag(), target.typeName());
