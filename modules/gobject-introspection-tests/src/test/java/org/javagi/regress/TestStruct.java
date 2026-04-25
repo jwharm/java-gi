@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.foreign.Arena;
 import java.util.Arrays;
 
+import static java.lang.foreign.MemorySegment.NULL;
 import static java.util.Objects.requireNonNull;
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,9 +63,10 @@ public class TestStruct {
     @Test
     void nestedStruct() {
         var struct = new TestStructB((byte) 43, new TestStructA());
-        struct.readNestedA().writeSomeInt8((byte) 66);
+        var nestedA = requireNonNull(struct.readNestedA());
+        nestedA.writeSomeInt8((byte) 66);
         assertEquals(43, struct.readSomeInt8());
-        assertEquals(66, struct.readNestedA().readSomeInt8());
+        assertEquals(66, nestedA.readSomeInt8());
     }
 
     @Test
@@ -83,11 +85,11 @@ public class TestStruct {
             objList.add(new TestObj());
         var struct = new TestStructD(structArray, objArray, objArray[0], objList, objArray);
 
-        assertEquals(2, struct.readArray1().length);
-        assertEquals(3, struct.readArray2().length);
+        assertEquals(2, requireNonNull(struct.readArray1()).length);
+        assertEquals(3, requireNonNull(struct.readArray2()).length);
         assertInstanceOf(TestObj.class, struct.readField());
         assertEquals(4, struct.readList().size());
-        assertEquals(3, struct.readGarray().length);
+        assertEquals(3, requireNonNull(struct.readGarray()).length);
     }
 
     @Test
@@ -102,7 +104,7 @@ public class TestStruct {
 
     @Test
     void structWithConstAndVolatileMembers() {
-        var struct = new TestStructF(1, null, 0, 0, null, 0, 0, (byte) 42);
+        var struct = new TestStructF(1, NULL, 0, 0, NULL, 0, 0, (byte) 42);
         assertEquals(1, struct.readRefCount());
         assertEquals(42, struct.readData7());
     }

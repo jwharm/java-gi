@@ -29,7 +29,6 @@ import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -191,9 +190,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
          */
         else if (outerClass != null && cb.parameters() != null) {
             builder.addField(FieldSpec.builder(
-                            TypeName.get(java.lang.reflect.Method.class)
-                                    .annotated(AnnotationSpec.builder(Nullable.class).build()),
-                            "_" + generator.getName() + "Method",
+                            nullable(java.lang.reflect.Method.class), "_" + generator.getName() + "Method",
                             Modifier.PRIVATE)
                     .build());
             builder.addMethod(generator.generateOverrideMethod());
@@ -265,7 +262,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         // Override the type of long values
                         f.anyType() instanceof Type t && t.isLong()
                                 ? TypeName.INT
-                                : new TypedValueGenerator(f).getType(),
+                                : new TypedValueGenerator(f).getAnnotatedType(true),
                         toJavaIdentifier(f.name()))
         );
 

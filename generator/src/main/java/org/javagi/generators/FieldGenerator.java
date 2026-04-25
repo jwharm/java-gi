@@ -20,7 +20,6 @@
 package org.javagi.generators;
 
 import org.javagi.gir.Record;
-import org.javagi.javapoet.AnnotationSpec;
 import org.javagi.javapoet.FieldSpec;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.javapoet.TypeName;
@@ -28,7 +27,6 @@ import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -335,8 +333,7 @@ public class FieldGenerator extends TypedValueGenerator {
                         """, f.name())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(Arena.class, "arena")
-                .addParameter(TypeName.get(java.lang.reflect.Method.class)
-                                      .annotated(AnnotationSpec.builder(Nullable.class).build()), "method")
+                .addParameter(nullable(java.lang.reflect.Method.class), "method")
                 .addStatement("this._$LMethod = method", getName())
                 .addCode(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
                 .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",

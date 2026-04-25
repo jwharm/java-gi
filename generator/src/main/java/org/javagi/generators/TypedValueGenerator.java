@@ -25,7 +25,6 @@ import org.javagi.gir.*;
 import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.lang.foreign.Arena;
@@ -149,10 +148,7 @@ class TypedValueGenerator {
     }
 
     TypeName annotated(TypeName typeName) {
-        if (annotateNull())
-            return typeName.annotated(AnnotationSpec.builder(Nullable.class).build());
-        else
-            return typeName;
+        return annotateNull() ? nullable(typeName) : typeName;
     }
 
     TypeName getType() {

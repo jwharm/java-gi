@@ -22,6 +22,7 @@ package org.javagi.regress;
 import org.gnome.gi.regress.*;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBoxedStruct {
@@ -48,21 +49,21 @@ public class TestBoxedStruct {
         var structA = new TestSimpleBoxedA(42, (byte) 43, 42.5, TestEnum.VALUE3);
         var structB = new TestSimpleBoxedB((byte) 42, structA);
         assertEquals(42, structB.readSomeInt8());
-        assertEquals(43, structB.readNestedA().readSomeInt8());
+        assertEquals(43, requireNonNull(structB.readNestedA()).readSomeInt8());
     }
 
     @Test
     void updateNested() {
         var structA = new TestSimpleBoxedA(42, (byte) 43, 42.5, TestEnum.VALUE3);
         var structB = new TestSimpleBoxedB((byte) 42, structA);
-        assertEquals(42, structB.readNestedA().readSomeInt());
+        assertEquals(42, requireNonNull(structB.readNestedA()).readSomeInt());
 
         var structA2 = new TestSimpleBoxedA(52, (byte) 43, 42.5, TestEnum.VALUE3);
         structB.writeNestedA(structA2);
-        assertEquals(52, structB.readNestedA().readSomeInt());
+        assertEquals(52, requireNonNull(structB.readNestedA()).readSomeInt());
 
-        structB.readNestedA().writeSomeInt(53);
-        assertEquals(53, structB.readNestedA().readSomeInt());
+        requireNonNull(structB.readNestedA()).writeSomeInt(53);
+        assertEquals(53, requireNonNull(structB.readNestedA()).readSomeInt());
 
         // The nested struct was copied, so the originals are unchanged:
         assertEquals(52, structA2.readSomeInt());

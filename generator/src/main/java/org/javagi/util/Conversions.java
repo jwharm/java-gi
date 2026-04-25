@@ -19,11 +19,13 @@
 
 package org.javagi.util;
 
+import org.javagi.javapoet.AnnotationSpec;
 import org.javagi.javapoet.ClassName;
 import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.generators.MemoryLayoutGenerator;
 import org.javagi.gir.*;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -379,5 +381,19 @@ public class Conversions {
             return '"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
 
         return value;
+    }
+
+    /**
+     * Return the typename, annotated as "@Nullable"
+     */
+    public static TypeName nullable(TypeName typeName) {
+        return typeName.annotated(AnnotationSpec.builder(Nullable.class).build());
+    }
+
+    /**
+     * Return the typename, annotated as "@Nullable"
+     */
+    public static TypeName nullable(java.lang.reflect.Type type) {
+        return nullable(TypeName.get(type));
     }
 }

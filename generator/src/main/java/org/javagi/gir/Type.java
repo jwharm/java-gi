@@ -19,10 +19,8 @@
 
 package org.javagi.gir;
 
-import org.javagi.javapoet.AnnotationSpec;
 import org.javagi.javapoet.ParameterizedTypeName;
 import org.javagi.javapoet.TypeName;
-import org.jspecify.annotations.Nullable;
 
 import static org.javagi.javapoet.TypeName.*;
 import static org.javagi.util.CollectionUtils.*;
@@ -98,7 +96,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
 
     @Override
     public TypeName nullableAnnotatedTypeName() {
-        return typeName().annotated(AnnotationSpec.builder(Nullable.class).build());
+        return nullable(typeName());
     }
 
     public boolean isPrimitive() {

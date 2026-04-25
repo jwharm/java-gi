@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,14 +19,11 @@
 
 package org.javagi.gir;
 
-import org.javagi.javapoet.AnnotationSpec;
 import org.javagi.javapoet.ArrayTypeName;
 import org.javagi.javapoet.TypeName;
-import org.jspecify.annotations.Nullable;
 
 import static org.javagi.util.CollectionUtils.*;
-import static org.javagi.util.Conversions.toCamelCase;
-import static org.javagi.util.Conversions.toJavaIdentifier;
+import static org.javagi.util.Conversions.*;
 
 import java.util.List;
 import java.util.Map;
@@ -45,8 +42,7 @@ public final class Array extends GirElement implements AnyType {
 
     @Override
     public TypeName nullableAnnotatedTypeName() {
-        return ArrayTypeName.of(anyType().nullableAnnotatedTypeName())
-                .annotated(AnnotationSpec.builder(Nullable.class).build());
+        return nullable(ArrayTypeName.of(anyType().nullableAnnotatedTypeName()));
     }
 
     public String toTypeTag() {
