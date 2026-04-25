@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -24,12 +24,12 @@ import org.gnome.glib.List;
 import org.gnome.gobject.GObject;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
 import java.util.Arrays;
 
+import static java.util.Objects.requireNonNull;
 import static org.gnome.gi.regress.Regress.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,9 +91,8 @@ public class TestStruct {
     }
 
     @Test
-    @Disabled("Field with flat array of structs/unions is not supported by java-gi")
     void structWithUnions() {
-        var type = GObject.getType();
+        var type = requireNonNull(GObject.getType());
         var unions = new TestStructESomeUnionUnion[] {
             new TestStructESomeUnionUnion(Arena.ofAuto()),
             new TestStructESomeUnionUnion(Arena.ofAuto())
