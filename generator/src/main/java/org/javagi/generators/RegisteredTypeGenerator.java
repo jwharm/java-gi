@@ -39,6 +39,7 @@ import java.util.Objects;
 import static java.util.Collections.emptyList;
 import static org.javagi.util.CollectionUtils.filter;
 import static java.util.function.Predicate.not;
+import static org.javagi.util.Conversions.nullable;
 
 public class RegisteredTypeGenerator {
 
@@ -70,11 +71,8 @@ public class RegisteredTypeGenerator {
                     @return the GType
                     """, name())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_TYPE
-                        .annotated(AnnotationSpec.builder(Nullable.class).build()))
-                .addStatement("return $T.getType($S)",
-                        ClassNames.INTEROP,
-                        rt.getTypeFunc())
+                .returns(nullable(ClassNames.G_TYPE))
+                .addStatement("return $T.getType($S)", ClassNames.INTEROP, rt.getTypeFunc())
                 .build();
     }
 
@@ -83,8 +81,7 @@ public class RegisteredTypeGenerator {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
                 if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f)
-                                                .generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
             }
         }
     }
@@ -94,8 +91,7 @@ public class RegisteredTypeGenerator {
             if (!c.skip()) {
                 builder.addMethod(new MethodGenerator(c).generate());
                 if (c.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(c)
-                                                .generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(c).generateBitfieldOverload());
             }
         }
     }
@@ -105,8 +101,7 @@ public class RegisteredTypeGenerator {
             if (!m.skip()) {
                 builder.addMethod(new MethodGenerator(m).generate());
                 if (m.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(m)
-                                                .generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(m).generateBitfieldOverload());
             }
         }
     }

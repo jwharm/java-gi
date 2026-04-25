@@ -32,6 +32,8 @@ import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.javagi.util.Conversions.nullable;
+
 public class ClassGenerator extends RegisteredTypeGenerator {
 
     private final Class cls;
@@ -304,10 +306,9 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     @throws IllegalArgumentException invalid property name
                     """)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(Object.class)
+                .returns(nullable(Object.class))
                 .addParameter(String.class, "propertyName")
-                .addStatement("return $T.getProperty(this, propertyName)",
-                        ClassNames.PROPERTIES)
+                .addStatement("return $T.getProperty(this, propertyName)", ClassNames.PROPERTIES)
                 .build();
     }
 
@@ -322,9 +323,8 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                     """)
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "propertyName")
-                .addParameter(Object.class, "value")
-                .addStatement("$T.setProperty(this, propertyName, value)",
-                        ClassNames.PROPERTIES)
+                .addParameter(nullable(Object.class), "value")
+                .addStatement("$T.setProperty(this, propertyName, value)", ClassNames.PROPERTIES)
                 .build();
     }
 
