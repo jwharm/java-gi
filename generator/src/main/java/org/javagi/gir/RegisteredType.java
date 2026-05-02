@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 import org.javagi.javapoet.ClassName;
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import java.util.List;
 
@@ -66,13 +66,12 @@ public sealed interface RegisteredType extends Node
         return uncapitalize(namespace().name() + name());
     }
 
-    default PartialStatement constructorName() {
-        return PartialStatement.of("$" + typeTag() + ":T::new",
-                typeTag(), typeName());
+    default CodeBlock constructorName() {
+        return CodeBlock.of("$T::new", typeName());
     }
 
-    default PartialStatement destructorName() {
-        return PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
+    default CodeBlock destructorName() {
+        return CodeBlock.of("$T::free", ClassNames.G_LIB);
     }
 
     /** Return true if this class is GObject or is derived from GObject */

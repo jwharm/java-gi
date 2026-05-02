@@ -19,12 +19,12 @@
 
 package org.javagi.generators;
 
+import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.javapoet.TypeName;
 import org.javagi.javapoet.TypeSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.util.GeneratedAnnotationBuilder;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.*;
 
 import javax.lang.model.element.Modifier;
@@ -174,19 +174,17 @@ public class ClosureGenerator {
             upcall.beginControlFlow("try");
 
         // Callback invocation
-        PartialStatement invoke = new PartialStatement();
+        CodeBlock.Builder invoke = CodeBlock.builder();
         if (!returnsVoid) {
             invoke.add("var _result = ");
             if (methodToInvoke.endsWith("invoke"))
-                invoke.add("(")
-                      .add("$ret:T", "ret", new TypedValueGenerator(returnValue).getType())
-                      .add(") ");
+                invoke.add("($T) ", new TypedValueGenerator(returnValue).getType());
         }
         invoke.add(methodToInvoke)
               .add("(")
               .add(marshalParameters(methodToInvoke))
-              .add(");\n");
-        upcall.addNamedCode(invoke.format(), invoke.arguments());
+              .add(")");
+        upcall.addStatement(invoke.build());
 
         // Parameter postprocessing
         if (closure.parameters() != null)
@@ -197,22 +195,17 @@ public class ClosureGenerator {
         if ((!returnsVoid)
                 && getCarrierTypeName(returnValue.anyType(), false).equals(TypeName.get(MemorySegment.class))
                 && (!returnValue.notNull()))
-            upcall.addStatement("if (_result == null) return $T.NULL",
-                    MemorySegment.class);
+            upcall.addStatement("if (_result == null) return $T.NULL", MemorySegment.class);
 
         // Ref returned GObjects when ownership is transferred to the caller
         if (returnValue.anyType() instanceof Type t && t.checkIsGObject()
                 && returnValue.transferOwnership() != TransferOwnership.NONE)
-            upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()",
-                    ClassNames.G_OBJECT);
+            upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()", ClassNames.G_OBJECT);
 
         // Marshal return value
-        if (!returnsVoid) {
-            var stmt = new TypedValueGenerator(returnValue)
-                    .marshalJavaToNative("_result");
-            upcall.addNamedCode("return " + stmt.format() + ";\n",
-                    stmt.arguments());
-        }
+        if (!returnsVoid)
+            upcall.addStatement("return $L",
+                    new TypedValueGenerator(returnValue).marshalJavaToNative(CodeBlock.of("_result")));
 
         // Catch exceptions and set the GError** value
         if (closure.throws_()) {
@@ -266,11 +259,11 @@ public class ClosureGenerator {
                 || p.isArrayLengthParameter();
     }
 
-    private PartialStatement marshalParameters(String methodToInvoke) {
-        PartialStatement stmt = new PartialStatement();
+    private CodeBlock marshalParameters(String methodToInvoke) {
+        CodeBlock.Builder stmt = CodeBlock.builder();
 
         if (closure.parameters() == null)
-            return stmt;
+            return stmt.build();
 
         List<Parameter> parameters = closure.parameters().parameters();
         boolean first = true;
@@ -287,9 +280,10 @@ public class ClosureGenerator {
             if (isHiddenParameter(p))
                 continue;
 
-            if (!first)
-                stmt.add(", ");
-            first = false;
+            if (first)
+                first = false;
+            else
+                stmt.add(",$W");
 
             if (p.anyType() instanceof Type t && t.isUnannotatedReference()) {
                 stmt.add(toJavaIdentifier(p.name()));
@@ -300,19 +294,18 @@ public class ClosureGenerator {
                     && t.isPointer()
                     && t.lookup() instanceof Alias a
                     && a.isValueWrapper()) {
-                stmt.add("_" + toJavaIdentifier(p.name()) + "Alias");
+                stmt.add("_$LAlias", toJavaIdentifier(p.name()));
                 continue;
             }
 
             if (p.isOutParameter()) {
-                stmt.add("_" + toJavaIdentifier(p.name()) + "Out");
+                stmt.add("_$LOut", toJavaIdentifier(p.name()));
                 continue;
             }
 
             // For GInstanceInitFunc, retrieve the instance that is currently under construction
             if (closure instanceof Callback cb && "GInstanceInitFunc".equals(cb.cType()) && "instance".equals(p.name())) {
-                stmt.add("$instanceCache:T.getForInstanceInit(instance, gClass)",
-                        "instanceCache", ClassNames.INSTANCE_CACHE);
+                stmt.add("$T.getForInstanceInit(instance, gClass)", ClassNames.INSTANCE_CACHE);
                 continue;
             }
 
@@ -321,19 +314,18 @@ public class ClosureGenerator {
             // compiler warning, because it is unsure if the array should be
             // treated as varargs or not.
             if (i == last && methodToInvoke.endsWith("invoke"))
-                if (p.anyType() instanceof Array
-                        || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
-                    stmt.add("($object:T) ", "object", Object.class);
+                if (p.anyType() instanceof Array || (p.anyType() instanceof Type t && t.isActuallyAnArray()))
+                    stmt.add("($T) ", Object.class);
 
             // This is unsupported; it generates a "null". Suppress the warning
             // when it's the trailing parameter.
             if (i == last && p.varargs())
-                stmt.add("($object:T) ", "object", Object.class);
+                stmt.add("($T) ", Object.class);
 
             stmt.add(new TypedValueGenerator(p)
-                .marshalNativeToJava(toJavaIdentifier(p.name()), true));
+                    .marshalNativeToJava(CodeBlock.of(toJavaIdentifier(p.name())), true));
         }
-        return stmt;
+        return stmt.build();
     }
 
     private void returnNull(MethodSpec.Builder upcall) {
@@ -361,7 +353,7 @@ public class ClosureGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .addParameter(Arena.class, "arena")
                 .returns(MemorySegment.class)
-                .addCode(generator.generateFunctionDescriptorDeclaration())
+                .addStatement(generator.generateFunctionDescriptorDeclaration())
                 .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
                         MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className)
                 .addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",

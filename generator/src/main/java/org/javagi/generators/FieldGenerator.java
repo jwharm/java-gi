@@ -20,12 +20,12 @@
 package org.javagi.generators;
 
 import org.javagi.gir.Record;
+import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.FieldSpec;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 
 import javax.lang.model.element.Modifier;
@@ -82,22 +82,17 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public FieldSpec generateVarHandle(Modifier... modifiers) {
-        var stmt = PartialStatement.of("getMemoryLayout().varHandle($Z");
+        var stmt = CodeBlock.builder().add("getMemoryLayout().varHandle($Z");
 
         // Path to nested struct/union
-        if (f.parent() instanceof FieldContainer parent
-                && parent.parent() instanceof FieldContainer) {
-            stmt.add("$memoryLayout:T.PathElement.groupElement($parentName:S),$W",
-                     "parentName", parent.name());
-        }
+        if (f.parent() instanceof FieldContainer parent && parent.parent() instanceof FieldContainer)
+            stmt.add("$T.PathElement.groupElement($S),$W", MemoryLayout.class, parent.name());
 
         // Path to the field
-        stmt.add("$memoryLayout:T.PathElement.groupElement($fieldName:S))\n",
-                 "memoryLayout", MemoryLayout.class,
-                 "fieldName", f.name());
+        stmt.add("$T.PathElement.groupElement($S))\n", MemoryLayout.class, f.name());
 
         return FieldSpec.builder(VarHandle.class, fieldName(), modifiers)
-                .initializer(stmt.toCodeBlock())
+                .initializer(stmt.build())
                 .build();
     }
 
@@ -129,33 +124,26 @@ public class FieldGenerator extends TypedValueGenerator {
         if ((type != null)
                 && (!type.isPointer())
                 && (target instanceof Class || target instanceof Interface)) {
-            var calcOffset = "long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))";
-            var returnSlice = PartialStatement.of("return ")
-                    .add(marshalNativeToJava("handle().asSlice(_offset)", false))
-                    .add(";\n");
-            return spec.addStatement(calcOffset, MemoryLayout.class, f.name())
-                    .addNamedCode(returnSlice.format(), returnSlice.arguments())
+            return spec.addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
+                            MemoryLayout.class, f.name())
+                    .addStatement("return $L",
+                            marshalNativeToJava(CodeBlock.of("handle().asSlice(_offset)"), false))
                     .build();
         }
 
         // Read a pointer or primitive value from the struct
         TypeName carrierType = getCarrierTypeName(f.anyType(), true);
-        var getResult = PartialStatement.of("$carrierType:T _result = ",
-                "carrierType", carrierType,
-                "helperClass", f.parent().helperClass(),
-                "fieldName", fieldName(),
-                "interop", ClassNames.INTEROP);
         if (isLong)
-            getResult.add("$interop:T.longAsInt() ? (int) $helperClass:T.$fieldName:L.get(handle(), 0)"
-                            + " : (int) (long) $helperClass:T.$fieldName:L.get(handle(), 0);\n");
+            return spec.addStatement("$1T _result = $2T.longAsInt() ? (int) $3T.$4L.get(handle(), 0)"
+                    + " : (int) (long) $3T.$4L.get(handle(), 0)"
+                    , carrierType, ClassNames.INTEROP, f.parent().helperClass(), fieldName())
+                    .addStatement("return $L", marshalNativeToJava(CodeBlock.of("_result"), false))
+                    .build();
         else
-            getResult.add("($carrierType:T) $helperClass:T.$fieldName:L.get(handle(), 0);\n");
-        var returnResult = PartialStatement.of("return ")
-                .add(marshalNativeToJava("_result", false))
-                .add(";\n");
-        return spec.addNamedCode(getResult.format(), getResult.arguments())
-                .addNamedCode(returnResult.format(), returnResult.arguments())
-                .build();
+            return spec.addStatement("$1T _result = ($1T) $2T.$3L.get(handle(), 0)"
+                            , carrierType, f.parent().helperClass(), fieldName())
+                    .addStatement("return $L", marshalNativeToJava(CodeBlock.of("_result"), false))
+                    .build();
     }
 
     public MethodSpec generateWriteMethod() {
@@ -196,26 +184,20 @@ public class FieldGenerator extends TypedValueGenerator {
         }
 
         else {
-            var stmt = PartialStatement.of(null,
-                    "memorySegment", MemorySegment.class,
-                    "varHandle", VarHandle.class,
-                    "helperClass", f.parent().helperClass(),
-                    "fieldName", fieldName());
-
+            CodeBlock identifier;
             if (type != null && type.isPointer() && (type.isPrimitive() || (target instanceof EnumType))) {
                 // Pointer to a primitive value is an opaque MemorySegment
-                stmt.add(getName());
+                identifier = CodeBlock.of(getName());
             } else {
-                stmt.add(marshalJavaToNative(getName()));
+                identifier = marshalJavaToNative(CodeBlock.of(getName()));
             }
 
             if (checkNull())
-                spec.addNamedCode("$helperClass:T.$fieldName:L.set(handle(), 0, ("
-                        + getName() + " == null ? $memorySegment:T.NULL : " + stmt.format() + "));\n",
-                        stmt.arguments());
+                spec.addStatement("$T.$L.set(handle(), 0, ($L == null ? $T.NULL : $L))",
+                        f.parent().helperClass(), fieldName(), getName(), MemorySegment.class, identifier);
             else
-                spec.addNamedCode("$helperClass:T.$fieldName:L.set(handle(), 0, " + stmt.format() + ");\n",
-                        stmt.arguments());
+                spec.addStatement("$T.$L.set(handle(), 0, $L)",
+                        f.parent().helperClass(), fieldName(), identifier);
         }
 
         return spec.build();
@@ -268,11 +250,6 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateReadArrayMethod() {
-        var calcOffset = "long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))";
-        var returnSlice = PartialStatement.of("return ")
-                .add(marshalNativeToJava("handle().asSlice(_offset)", false))
-                .add(";\n");
-
         return MethodSpec.methodBuilder(methodName(READ_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(getAnnotatedType(true))
@@ -281,21 +258,18 @@ public class FieldGenerator extends TypedValueGenerator {
                         
                         @return The value of the field `$1L`
                         """, f.name())
-                .beginControlFlow("try ($1T _arena = $1T.ofConfined())", Arena.class)
-                .addStatement(calcOffset, MemoryLayout.class, f.name())
-                .addNamedCode(returnSlice.format(), returnSlice.arguments())
+                .beginControlFlow("try ($1T _arena = $1T.ofConfined())",
+                        Arena.class)
+                .addStatement("long _offset = getMemoryLayout().byteOffset($T.PathElement.groupElement($S))",
+                        MemoryLayout.class, f.name())
+                .addStatement(CodeBlock.of("return $L",
+                        marshalNativeToJava(CodeBlock.of("handle().asSlice(_offset)"), false)))
                 .endControlFlow()
                 .build();
     }
 
     public MethodSpec generateWriteArrayMethod() {
-        var stmt = PartialStatement.of("$memorySegment:T _" + getName() + "Array = ",
-                "memorySegment", MemorySegment.class)
-                .add(marshalJavaToNative(getName()))
-                .add(";\n");
-
-        var spec = MethodSpec.methodBuilder(
-                        methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
+        var spec = MethodSpec.methodBuilder(methodName(cb != null ? OVERRIDE_PREFIX : WRITE_PREFIX))
                 .addModifiers(Modifier.PUBLIC)
                 .addJavadoc("""
                         Write a value in the field `$1L`.
@@ -307,7 +281,8 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addStatement("$T _path = $T.PathElement.groupElement($S)",
                         MemoryLayout.PathElement.class, MemoryLayout.class, f.name())
                 .addStatement("long _offset = getMemoryLayout().byteOffset(_path)")
-                .addNamedCode(stmt.format(), stmt.arguments())
+                .addStatement("$T _$LArray = $L",
+                        MemorySegment.class, getName(), marshalJavaToNative(CodeBlock.of(getName())))
                 .addStatement("$T _slice = handle().asSlice(_offset, getMemoryLayout().select(_path))",
                         MemorySegment.class);
 
@@ -335,7 +310,7 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addParameter(Arena.class, "arena")
                 .addParameter(nullable(java.lang.reflect.Method.class), "method")
                 .addStatement("this._$LMethod = method", getName())
-                .addCode(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
+                .addStatement(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
                 .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
                         MethodHandle.class,
                         ClassNames.INTEROP,

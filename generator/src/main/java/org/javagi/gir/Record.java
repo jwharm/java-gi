@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 import org.javagi.javapoet.ClassName;
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.*;
@@ -43,26 +43,20 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
     }
 
     @Override
-    public PartialStatement destructorName() {
+    public CodeBlock destructorName() {
         Callable freeFunc = freeFunction();
 
         // Use free-function
         if (freeFunc != null) {
-            String tag = ((RegisteredType) freeFunc.parent()).typeTag();
-            return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
-                    tag, typeName(),
-                    "freeFunc", toJavaIdentifier(freeFunc.name()));
+            return CodeBlock.of("$T::$L", typeName(), toJavaIdentifier(freeFunc.name()));
         }
 
         // No free-function, but (possibly) boxed type
-        if (getTypeFunc() != null) {
-            return PartialStatement.of("_b -> $boxedUtil:T.free($" + typeTag() + ":T.getType(), _b, (_ -> {}))",
-                    "boxedUtil", ClassNames.BOXED_UTIL,
-                    typeTag(), typeName());
-        }
+        if (getTypeFunc() != null)
+            return CodeBlock.of("_b -> $T.free($T.getType(), _b, (_ -> {}))", ClassNames.BOXED_UTIL, typeName());
 
         // No free-function
-        return PartialStatement.of("(_ -> {})");
+        return CodeBlock.of("(_ -> {})");
     }
 
     @Override

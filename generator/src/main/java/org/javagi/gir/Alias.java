@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 
@@ -69,7 +69,7 @@ public final class Alias extends GirElement implements RegisteredType {
      * to refer to the target type.
      */
     @Override
-    public PartialStatement destructorName() {
+    public CodeBlock destructorName() {
         RegisteredType target = lookup();
         return target == null ? null : target.destructorName();
     }

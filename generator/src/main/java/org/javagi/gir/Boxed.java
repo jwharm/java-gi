@@ -20,7 +20,7 @@
 package org.javagi.gir;
 
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 
@@ -53,12 +53,9 @@ public final class Boxed extends GirElement implements StandardLayoutType {
     }
 
     @Override
-    public PartialStatement destructorName() {
-        var tag = typeTag();
-        return PartialStatement.of("(_b -> $gobjects:T.boxedFree($" + tag + ":T.getType(), _b == null ? $memorySegment:T.NULL : _b.handle()))",
-                tag, typeName(),
-                "gobjects", ClassNames.G_OBJECTS,
-                "memorySegment", MemorySegment.class);
+    public CodeBlock destructorName() {
+        return CodeBlock.of("(_b -> $T.boxedFree($T.getType(), _b == null ? $T.NULL : _b.handle()))",
+                ClassNames.G_OBJECTS, typeName(), MemorySegment.class);
     }
 
     public List<Function> functions() {

@@ -229,10 +229,8 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                 .addParameter(Arena.class, "arena")
                 .addStatement("super(arena.allocate(getMemoryLayout()))");
         else
-            spec.addJavadoc("The memory is allocated with {@link $T#ofAuto}.\n",
-                            Arena.class)
-                .addStatement("super($T.ofAuto().allocate(getMemoryLayout()))",
-                    Arena.class);
+            spec.addJavadoc("The memory is allocated with {@link $T#ofAuto}.\n", Arena.class)
+                .addStatement("super($T.ofAuto().allocate(getMemoryLayout()))", Arena.class);
 
         return spec.build();
     }
@@ -245,13 +243,11 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     private MethodSpec constructorWithParameters(boolean arenaParameter) {
         var spec = MethodSpec.constructorBuilder()
-                .addJavadoc("Allocate a new $T with the fields set to the provided values.\n",
-                        rec.typeName())
+                .addJavadoc("Allocate a new $T with the fields set to the provided values.\n", rec.typeName())
                 .addModifiers(Modifier.PUBLIC);
 
         if (!arenaParameter)
-            spec.addJavadoc("The memory is allocated with {@link $T#ofAuto}.\n",
-                    Arena.class);
+            spec.addJavadoc("The memory is allocated with {@link $T#ofAuto}.\n", Arena.class);
         spec.addJavadoc("\n");
 
         streamAccessibleFields().forEach(f ->

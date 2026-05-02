@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -25,7 +25,6 @@ import org.javagi.gir.*;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
-import org.javagi.util.PartialStatement;
 
 import javax.lang.model.element.Modifier;
 
@@ -141,7 +140,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
     }
 
     private MethodSpec arrayConstructor(AnyType anyType) {
-        PartialStatement layout = getValueLayoutPlain(anyType, false);
+        CodeBlock layout = getValueLayoutPlain(anyType, false);
 
         var spec = MethodSpec.methodBuilder("fromNativeArray")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -156,44 +155,40 @@ public class AliasGenerator extends RegisteredTypeGenerator {
             spec.addStatement("long byteSize = $1T.longAsInt() ? $2T.JAVA_INT.byteSize() : $2T.JAVA_LONG.byteSize()",
                     ClassNames.INTEROP, ValueLayout.class);
         } else {
-            var stmt = PartialStatement.of("long byteSize = ").add(layout).add(".byteSize();\n");
-            spec.addNamedCode(stmt.format(), stmt.arguments());
+            spec.addStatement(CodeBlock.builder()
+                    .add("long byteSize = ").add(layout).add(".byteSize()")
+                    .build());
         }
 
-        spec.addStatement("$T segment = address.reinterpret(byteSize * length)",
-                        MemorySegment.class)
+        spec.addStatement("$T segment = address.reinterpret(byteSize * length)", MemorySegment.class)
                 .beginControlFlow("for (int i = 0; i < length; i++)");
 
         // String[]
         if (anyType instanceof Array a
                 && a.anyType() instanceof Type t
-                && t.typeName().equals(TypeName.get(String.class))) {
-            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T($interop:T.getStringArrayFrom(segment.get(",
-                            alias.typeTag(), alias.typeName(),
-                            "interop", ClassNames.INTEROP)
+                && t.typeName().equals(TypeName.get(String.class)))
+            spec.addStatement(CodeBlock.builder()
+                    .add("array[i] = new $T($T.getStringArrayFrom(segment.get(", alias.typeName(), ClassNames.INTEROP)
                     .add(layout)
-                    .add(", i * byteSize), transfer));\n");
-            spec.addNamedCode(stmt.format(), stmt.arguments());
-        }
+                    .add(", i * byteSize), transfer))")
+                    .build());
+
         // String
         else if (anyType instanceof Type t
-                && t.typeName().equals(TypeName.get(String.class))) {
-            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T($interop:T.getStringFrom(segment.get(",
-                            alias.typeTag(), alias.typeName(),
-                            "interop", ClassNames.INTEROP)
+                && t.typeName().equals(TypeName.get(String.class)))
+            spec.addStatement(CodeBlock.builder()
+                    .add("array[i] = new $T($T.getStringFrom(segment.get(", alias.typeName(), ClassNames.INTEROP)
                     .add(layout)
-                    .add(", i * byteSize), transfer));\n");
-            spec.addNamedCode(stmt.format(), stmt.arguments());
-        }
+                    .add(", i * byteSize), transfer))")
+                    .build());
+
         // Primitive value
-        else {
-            var stmt = PartialStatement.of("array[i] = new $" + alias.typeTag() + ":T(segment.get(",
-                            alias.typeTag(), alias.typeName(),
-                            "interop", ClassNames.INTEROP)
+        else
+            spec.addStatement(CodeBlock.builder()
+                    .add("array[i] = new $T(segment.get(", alias.typeName())
                     .add(layout)
-                    .add(", i * byteSize));\n");
-            spec.addNamedCode(stmt.format(), stmt.arguments());
-        }
+                    .add(", i * byteSize))")
+                    .build());
 
         return spec.endControlFlow()
                 .addStatement("if (transfer != $T.NONE) $T.free(address)",

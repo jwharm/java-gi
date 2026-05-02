@@ -21,6 +21,7 @@ package org.javagi.util;
 
 import org.javagi.javapoet.AnnotationSpec;
 import org.javagi.javapoet.ClassName;
+import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.TypeName;
 import org.javagi.configuration.ModuleInfo;
 import org.javagi.generators.MemoryLayoutGenerator;
@@ -288,12 +289,13 @@ public class Conversions {
      * Get the memory layout of this type. Pointer types are returned as
      * "ADDRESS".
      */
-    public static PartialStatement getValueLayout(AnyType anyType, boolean longAsInt) {
-        var addressLayout = PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
+    public static CodeBlock getValueLayout(AnyType anyType, boolean longAsInt) {
+        var addressLayout = CodeBlock.of("$T.ADDRESS", ValueLayout.class);
         return switch (anyType) {
             case null -> addressLayout;
             case Array _ -> addressLayout;
-            case Type t -> t.isPointer() ? addressLayout : getValueLayoutPlain(t, longAsInt);
+            case Type t when t.isPointer() -> addressLayout;
+            case Type t -> getValueLayoutPlain(t, longAsInt);
         };
     }
 
@@ -301,57 +303,45 @@ public class Conversions {
      * Get the memory layout of this type. Pointers to primitive types are
      * treated as the actual type.
      */
-    public static PartialStatement getValueLayoutPlain(AnyType anyType, boolean longAsInt) {
-        var valueLayout = PartialStatement.of("$valueLayout:T.", "valueLayout", ValueLayout.class);
-
+    public static CodeBlock getValueLayoutPlain(AnyType anyType, boolean longAsInt) {
         // Array
-        if (! (anyType instanceof Type t)) {
-            return valueLayout.add("ADDRESS");
-        }
+        if (! (anyType instanceof Type t))
+            return CodeBlock.of("$T.ADDRESS", ValueLayout.class);
 
         RegisteredType target = t.lookup();
 
         // Enumeration, flags and boolean are int32
-        if (target instanceof EnumType || t.isBoolean()) {
-            return valueLayout.add("JAVA_INT");
-        }
+        if (target instanceof EnumType || t.isBoolean())
+            return CodeBlock.of("$T.JAVA_INT", ValueLayout.class);
 
         // Windows long is an int32
-        if (t.isLong() && longAsInt) {
-            return valueLayout.add("JAVA_INT");
-        }
+        if (t.isLong() && longAsInt)
+            return CodeBlock.of("$T.JAVA_INT", ValueLayout.class);
 
         // Other primitive values
-        if (t.isPrimitive()) {
-            return valueLayout.add("JAVA_" + t.javaType().toUpperCase());
-        }
+        if (t.isPrimitive())
+            return CodeBlock.of("$T.JAVA_$L", ValueLayout.class, t.javaType().toUpperCase());
 
         // Recursive lookup for aliases
-        if (target instanceof Alias a && a.isValueWrapper()
-                && a.anyType() instanceof Type typedef) {
+        if (target instanceof Alias a && a.isValueWrapper() && a.anyType() instanceof Type typedef)
             return getValueLayoutPlain(typedef, longAsInt);
-        }
 
-        // Flat struct/union (not a pointer) with a known memory layout
+        // Flat struct/union (not a pointer) with a known memory layout: use the struct/union layout
         if (!t.isPointer()
                 && target instanceof StandardLayoutType
                 && target instanceof FieldContainer fc
-                && new MemoryLayoutGenerator().canGenerate(fc)) {
-            // use the struct/union layout
-            return PartialStatement.of("$" + target.typeTag() + ":T.getMemoryLayout()",
-                    target.typeTag(), target.typeName());
-        }
+                && new MemoryLayoutGenerator().canGenerate(fc))
+            return CodeBlock.of("$T.getMemoryLayout()", target.typeName());
 
         // Anything else is assumed to be a pointer
-        return valueLayout.add("ADDRESS");
+        return CodeBlock.of("$T.ADDRESS", ValueLayout.class);
     }
 
     /**
      * Generate the literal representation of the provided value, according
      * to the provided type.
      */
-    public static String literal(TypeName type, String value)
-            throws NumberFormatException {
+    public static String literal(TypeName type, String value) throws NumberFormatException {
 
         if (type.equals(TypeName.BOOLEAN))
             return Boolean.valueOf(value).toString();
