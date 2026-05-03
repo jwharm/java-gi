@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,18 +21,19 @@ package org.javagi.gir;
 
 import org.javagi.javapoet.ClassName;
 import org.javagi.util.Platform;
+
+import static java.util.stream.Collectors.toMap;
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toJavaQualifiedType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public final class Namespace extends GirElement implements RegisteredType {
 
     private final Map<Integer, String> sharedLibraries;
-    private int platforms;
+    private final int platforms;
 
     public Namespace(Map<String, String> attributes,
                      List<Node> children,
@@ -41,10 +42,6 @@ public final class Namespace extends GirElement implements RegisteredType {
         super(attributes, children);
         this.sharedLibraries = sharedLibraries;
         this.sharedLibraries.put(platforms, sharedLibrary());
-        this.platforms = platforms;
-    }
-
-    public void setPlatforms(int platforms) {
         this.platforms = platforms;
     }
 
@@ -68,10 +65,7 @@ public final class Namespace extends GirElement implements RegisteredType {
      * indexed by name.
      */
     public Map<String, RegisteredType> registeredTypes() {
-        return filter(children(), RegisteredType.class).stream().collect(
-                Collectors.toMap(
-                        RegisteredType::name,
-                        java.util.function.Function.identity()));
+        return filter(children(), RegisteredType.class).stream().collect(toMap(RegisteredType::name, n -> n));
     }
 
     public Namespace mergeWith(Namespace other) {
@@ -220,10 +214,6 @@ public final class Namespace extends GirElement implements RegisteredType {
 
     @Override
     public String toString() {
-        return "%s %s %s".formatted(
-                getClass().getSimpleName(),
-                attributes(),
-                Platform.toString(platforms())
-        );
+        return "%s %s %s".formatted(getClass().getSimpleName(), attributes(), Platform.toString(platforms()));
     }
 }

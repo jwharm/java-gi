@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,8 +21,6 @@ package org.javagi.patches;
 
 import org.javagi.gir.*;
 import org.javagi.util.Patch;
-import org.javagi.util.Platform;
-import org.javagi.gir.Record;
 
 import java.util.List;
 import java.util.Map;
@@ -55,13 +53,11 @@ public class GLibPatch implements Patch {
          * a new memory segment from a Java String[] parameter. So we patch
          * it to expect a pointer (a MemorySegment parameter in Java).
          */
-        if (element instanceof Function f
-                && "g_strfreev".equals(f.callableAttrs().cIdentifier())) {
+        if (element instanceof Function f && "g_strfreev".equals(f.callableAttrs().cIdentifier())) {
             Parameter current = f.parameters().parameters().getFirst();
             Parameter replacement = current.withChildren(
                     current.infoElements().doc(),
-                    new Type(Map.of("name", "gpointer", "c:type", "gpointer"),
-                             emptyList()));
+                    new Type(Map.of("name", "gpointer", "c:type", "gpointer"), emptyList()));
             return f.withChildren(
                     f.infoElements().doc(),
                     f.infoElements().sourcePosition(),

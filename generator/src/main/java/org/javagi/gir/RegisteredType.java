@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 import org.javagi.javapoet.ClassName;
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import java.util.List;
 
@@ -29,8 +29,7 @@ import static org.javagi.util.Conversions.toJavaQualifiedType;
 import static org.javagi.util.Conversions.uncapitalize;
 
 public sealed interface RegisteredType extends Node
-        permits Alias, Callback, Class, EnumType, Interface,
-                Namespace, StandardLayoutType, FieldContainer {
+        permits Alias, Callback, Class, EnumType, Interface, Namespace, StandardLayoutType, FieldContainer {
 
     RegisteredType mergeWith(RegisteredType rt);
     InfoAttrs infoAttrs();
@@ -66,13 +65,12 @@ public sealed interface RegisteredType extends Node
         return uncapitalize(namespace().name() + name());
     }
 
-    default PartialStatement constructorName() {
-        return PartialStatement.of("$" + typeTag() + ":T::new",
-                typeTag(), typeName());
+    default CodeBlock constructorName() {
+        return CodeBlock.of("$T::new", typeName());
     }
 
-    default PartialStatement destructorName() {
-        return PartialStatement.of("$glib:T::free", "glib", ClassNames.G_LIB);
+    default CodeBlock destructorName() {
+        return CodeBlock.of("$T::free", ClassNames.G_LIB);
     }
 
     /** Return true if this class is GObject or is derived from GObject */
@@ -131,8 +129,7 @@ public sealed interface RegisteredType extends Node
 
         // Subclasses of GInitiallyUnowned don't need to implement the
         // `Floating` interface, because GInitiallyUnowned already does.
-        if (this instanceof Class cls
-                && cls.isInstanceOf("GObject", "InitiallyUnowned"))
+        if (this instanceof Class cls && cls.isInstanceOf("GObject", "InitiallyUnowned"))
             return false;
 
         // Any other classes that have a ref_sink method, will be treated as

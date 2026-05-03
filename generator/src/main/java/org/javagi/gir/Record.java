@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 import org.javagi.javapoet.ClassName;
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.*;
@@ -43,26 +43,20 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
     }
 
     @Override
-    public PartialStatement destructorName() {
+    public CodeBlock destructorName() {
         Callable freeFunc = freeFunction();
 
         // Use free-function
         if (freeFunc != null) {
-            String tag = ((RegisteredType) freeFunc.parent()).typeTag();
-            return PartialStatement.of("$" + tag + ":T::$freeFunc:L",
-                    tag, typeName(),
-                    "freeFunc", toJavaIdentifier(freeFunc.name()));
+            return CodeBlock.of("$T::$L", typeName(), toJavaIdentifier(freeFunc.name()));
         }
 
         // No free-function, but (possibly) boxed type
-        if (getTypeFunc() != null) {
-            return PartialStatement.of("_b -> $boxedUtil:T.free($" + typeTag() + ":T.getType(), _b, (_ -> {}))",
-                    "boxedUtil", ClassNames.BOXED_UTIL,
-                    typeTag(), typeName());
-        }
+        if (getTypeFunc() != null)
+            return CodeBlock.of("_b -> $T.free($T.getType(), _b, (_ -> {}))", ClassNames.BOXED_UTIL, typeName());
 
         // No free-function
-        return PartialStatement.of("(_ -> {})");
+        return CodeBlock.of("(_ -> {})");
     }
 
     @Override
@@ -90,8 +84,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
     public ClassName typeName() {
         var outerClass = isGTypeStructFor();
         if (outerClass != null)
-            return outerClass.typeName()
-                    .nestedClass(toJavaSimpleType(name(), namespace()));
+            return outerClass.typeName().nestedClass(toJavaSimpleType(name(), namespace()));
         else
             return toJavaQualifiedType(name(), namespace());
     }
@@ -132,8 +125,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
 
         // use heuristics: find instance method `copy()` or `ref()`
         for (var m : methods())
-            if ("ref".equals(m.name()) || "copy".equals(m.name())
-                    && m.parameters().parameters().isEmpty())
+            if ("ref".equals(m.name()) || "copy".equals(m.name()) && m.parameters().parameters().isEmpty())
                 return m;
 
         return null;
@@ -148,8 +140,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
         // use heuristics: find function or method `free()` or `unref()`
         for (var n : children())
             if (n instanceof Callable c)
-                if ("unref".equals(c.name()) || "free".equals(c.name())
-                        && c.parameters().parameters().isEmpty())
+                if ("unref".equals(c.name()) || "free".equals(c.name()) && c.parameters().parameters().isEmpty())
                     return c;
 
         return null;

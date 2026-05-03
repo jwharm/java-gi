@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,25 +19,22 @@
 
 package org.javagi.gir;
 
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 
-public sealed interface EnumType
-        extends RegisteredType
-        permits Bitfield, Enumeration {
+public sealed interface EnumType extends RegisteredType permits Bitfield, Enumeration {
 
     @Override
-    default PartialStatement constructorName() {
-        return PartialStatement.of("$" + typeTag() + ":T::of",
-                typeTag(), typeName());
+    default CodeBlock constructorName() {
+        return CodeBlock.of("$T::of", typeName());
     }
 
     @Override
-    default PartialStatement destructorName() {
-        return PartialStatement.of("(_ -> {})");
+    default CodeBlock destructorName() {
+        return CodeBlock.of("(_ -> {})");
     }
 
     default List<Member> members() {

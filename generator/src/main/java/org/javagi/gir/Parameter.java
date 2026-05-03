@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -56,17 +56,16 @@ public final class Parameter extends GirElement implements TypedValue {
 
     public boolean isUserDataParameter() {
         // Callback params: the user_data parameter has attribute "closure" set
-        if (parent().parent() instanceof Callback
-                || parent().parent() instanceof Signal)
+        if (parent().parent() instanceof Callback || parent().parent() instanceof Signal)
             return (attr("closure") != null);
 
         // Method parameters that pass a user_data pointer to a closure
-        if (anyType() instanceof Type t) {
+        if (anyType() instanceof Type)
             return parent().parameters().stream().anyMatch(p ->
                     p.anyType() instanceof Type type
                             && type.lookup() instanceof Callback
                             && p.closure() == this);
-        }
+
         return false;
     }
 
@@ -86,13 +85,11 @@ public final class Parameter extends GirElement implements TypedValue {
 
     public boolean isDestroyNotifyParameter() {
         return (anyType() instanceof Type type)
-                && ("GDestroyNotify".equals(type.cType())
-                    || "GDestroyNotify*".equals(type.cType()));
+                && ("GDestroyNotify".equals(type.cType()) || "GDestroyNotify*".equals(type.cType()));
     }
 
     public boolean isErrorParameter() {
-        return (anyType() instanceof Type type)
-                && "GError**".equals(type.cType());
+        return (anyType() instanceof Type type) && "GError**".equals(type.cType());
     }
 
     public boolean isArrayLengthParameter() {
@@ -124,8 +121,7 @@ public final class Parameter extends GirElement implements TypedValue {
         if (target instanceof Callback && Scope.CALL.equals(scope()))
             return true;
 
-        return type.isPointer()
-                && target instanceof Alias a && a.isValueWrapper();
+        return type.isPointer() && target instanceof Alias a && a.isValueWrapper();
     }
 
     public boolean isLastParameter() {
@@ -158,9 +154,7 @@ public final class Parameter extends GirElement implements TypedValue {
 
     public Scope scope() {
         Scope scope = Scope.from(attr("scope"));
-        return (scope == Scope.NOTIFIED && destroy() == null)
-                ? Scope.FOREVER
-                : scope;
+        return (scope == Scope.NOTIFIED && destroy() == null) ? Scope.FOREVER : scope;
     }
 
     public Direction direction() {

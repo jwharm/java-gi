@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.function.Predicate.not;
 
 public class GdkPatch implements Patch {
@@ -50,8 +48,7 @@ public class GdkPatch implements Patch {
             var children = new ArrayList<>(bf.children());
             var firstMemberIdx = 1 + (int) children.stream().takeWhile(not(Member.class::isInstance)).count();
 
-            Doc doc = new Doc(emptyMap(),
-                    "Internal flag. Your code should preserve and ignore this flag.");
+            Doc doc = new Doc("Internal flag. Your code should preserve and ignore this flag.");
             for (int bit = 0; bit < 31; bit++) {
                 var value = Integer.toString(1 << bit);
                 if (bf.members().stream().noneMatch(m -> m.value().equals(value)))
@@ -66,12 +63,12 @@ public class GdkPatch implements Patch {
             var children = new ArrayList<>(bf.children());
             children.add(new Member(
                     Map.of("name", "SIZE", "value", "1", "deprecated", "1"),
-                    List.of(new Doc(emptyMap(), "Use STATIC_SIZE instead."),
+                    List.of(new Doc("Use STATIC_SIZE instead."),
                             new DocDeprecated("Replaced by STATIC_SIZE"))
             ));
             children.add(new Member(
                     Map.of("name", "CONTENTS", "value", "2", "deprecated", "1"),
-                    List.of(new Doc(emptyMap(), "Use STATIC_CONTENTS instead."),
+                    List.of(new Doc("Use STATIC_CONTENTS instead."),
                             new DocDeprecated("Replaced by STATIC_SIZE"))
             ));
 

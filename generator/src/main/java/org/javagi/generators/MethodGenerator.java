@@ -24,7 +24,6 @@ import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.Conversions;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 
 import javax.lang.model.element.Modifier;
@@ -301,13 +300,11 @@ public class MethodGenerator {
         var isGeneric = this.isGeneric && returnValue.anyType().typeName().equals(ClassNames.G_OBJECT);
         var generator = new TypedValueGenerator(returnValue);
         var typeName = isGeneric ? ClassNames.GENERIC_T : generator.getType();
-        PartialStatement stmt = PartialStatement.of("$returnType:T", "returnType", typeName);
-        stmt.add(" _returnValue = ");
+        var stmt = CodeBlock.builder().add("$T _returnValue = ", typeName);
         if (isGeneric)
-            stmt.add("($generic:T) ", "generic", ClassNames.GENERIC_T);
-        stmt.add(generator.marshalNativeToJava("_result", false));
-        stmt.add(";\n");
-        builder.addNamedCode(stmt.format(), stmt.arguments());
+            stmt.add("($T) ", ClassNames.GENERIC_T);
+        stmt.add(generator.marshalNativeToJava(CodeBlock.of("_result"), false));
+        builder.addStatement(stmt.build());
     }
 
     // Check if this is an instance method that returns an instance of the
@@ -336,7 +333,7 @@ public class MethodGenerator {
 
     private void functionNameInvocation(boolean longAsInt) {
         // Result assignment
-        PartialStatement invoke = new PartialStatement();
+        var invoke = CodeBlock.builder();
         var returnType = func.returnValue().anyType();
         if (!returnType.isVoid()) {
             if (longAsInt && returnType instanceof Type t && t.isLong()) {
@@ -345,20 +342,17 @@ public class MethodGenerator {
                 // returned to the caller.
                 invoke.add("_result = (int) (long) ");
             } else {
-                String typeTag = getCarrierTypeTag(func.returnValue().anyType());
-                TypeName typeName = getCarrierTypeName(func.returnValue().anyType(), false);
-                invoke.add("_result = ($" + typeTag + ":T) ", typeTag, typeName);
+                invoke.add("_result = ($T) ", getCarrierTypeName(func.returnValue().anyType(), false));
             }
         }
 
         // Function invocation
-        invoke.add("$helperClass:T.$cIdentifier:L.invokeExact($Z",
-                        "helperClass", ((RegisteredType) func.parent()).helperClass(),
-                        "cIdentifier", func.callableAttrs().cIdentifier())
-                .add(generator.marshalParameters(longAsInt))
-                .add(");\n");
+        invoke.add("$T.$L.invokeExact($Z$L)",
+                ((RegisteredType) func.parent()).helperClass(),
+                func.callableAttrs().cIdentifier(),
+                generator.marshalParameters(longAsInt));
 
-        builder.addNamedCode(invoke.format(), invoke.arguments());
+        builder.addStatement(invoke.build());
 
         // Override result with a default value
         if (!returnValue.equals(func.returnValue())) {
@@ -388,28 +382,21 @@ public class MethodGenerator {
         var generator = new CallableGenerator(func);
 
         // Generate function descriptor
-        builder.addCode(generator.generateFunctionDescriptorDeclaration());
+        builder.addStatement(generator.generateFunctionDescriptorDeclaration());
 
         // Function pointer lookup
         switch (vm.parent()) {
             case Class c ->
-                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S)",
-                            MemorySegment.class,
-                            ClassNames.OVERRIDES,
-                            c.typeStruct().typeName(),
-                            vm.name());
+                builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S)",
+                        MemorySegment.class, ClassNames.OVERRIDES, c.typeStruct().typeName(), vm.name());
             case Interface i ->
-                    builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S,$W$T.getType())",
-                            MemorySegment.class,
-                            ClassNames.OVERRIDES,
-                            i.typeStruct().typeName(),
-                            vm.name(),
-                            i.typeName());
+                builder.addStatement("$T _func = $T.lookupVirtualMethodParent(handle(),$W$T.getMemoryLayout(),$W$S,$W$T.getType())",
+                        MemorySegment.class, ClassNames.OVERRIDES, i.typeStruct().typeName(), vm.name(), i.typeName());
             default -> throw new IllegalStateException("Virtual Method parent must be a class or an interface");
         }
 
         // Result assignment
-        PartialStatement invoke = new PartialStatement();
+        var invoke = CodeBlock.builder();
         var returnType = returnValue.anyType();
         if (!returnType.isVoid()) {
             if (longAsInt && returnType instanceof Type t && t.isLong()) {
@@ -418,20 +405,14 @@ public class MethodGenerator {
                 // returned to the caller.
                 invoke.add("_result = (int) (long) ");
             } else {
-                String typeTag = getCarrierTypeTag(returnValue.anyType());
-                TypeName typeName = getCarrierTypeName(returnValue.anyType(),
-                        false);
-                invoke.add("_result = ($" + typeTag + ":T) ", typeTag,
-                        typeName);
+                invoke.add("_result = ($T) ", getCarrierTypeName(returnValue.anyType(), false));
             }
         }
 
         // Function pointer invocation
-        invoke.add("$interop:T.downcallHandle(_func, _fdesc)$Z.invokeExact($Z", "interop",
-                        ClassNames.INTEROP)
-                .add(generator.marshalParameters(longAsInt))
-                .add(");\n");
+        invoke.add("$T.downcallHandle(_func, _fdesc)$Z.invokeExact($Z$L)",
+                        ClassNames.INTEROP, generator.marshalParameters(longAsInt));
 
-        builder.addNamedCode(invoke.format(), invoke.arguments());
+        builder.addStatement(invoke.build());
     }
 }

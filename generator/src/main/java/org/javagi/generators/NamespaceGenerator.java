@@ -27,7 +27,6 @@ import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.gir.Record;
 import org.javagi.util.GeneratedAnnotationBuilder;
-import org.javagi.util.PartialStatement;
 import org.javagi.util.Platform;
 import org.javagi.gir.Class;
 
@@ -46,16 +45,14 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
     }
 
     public TypeSpec generateGlobalsClass() {
-        builder.addJavadoc("Constants and functions that are declared in the global $L namespace.",
-                        ns.name())
+        builder.addJavadoc("Constants and functions that are declared in the global $L namespace.", ns.name())
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addStaticBlock(staticInitializer())
                 .addMethod(ensureInitialized())
                 .addMethod(registerTypes());
 
         for (var constant : ns.constants()) {
-            var fieldSpec = new TypedValueGenerator(constant)
-                                        .generateConstantDeclaration();
+            var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
             if (fieldSpec != null)
                 builder.addField(fieldSpec);
         }
@@ -64,8 +61,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
                 if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f)
-                                                .generateBitfieldOverload());
+                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
             }
         }
 
@@ -82,9 +78,7 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
 
     private CodeBlock staticInitializer() {
         // Load libraries
-        CodeBlock.Builder block = CodeBlock.builder()
-                .beginControlFlow("switch ($T.getRuntimePlatform())",
-                        ClassNames.PLATFORM);
+        var block = CodeBlock.builder().beginControlFlow("switch ($T.getRuntimePlatform())", ClassNames.PLATFORM);
 
         // Add case for each platform
         for (Integer platform : Platform.toList(Platform.ALL)) {
@@ -102,21 +96,16 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
 
             // Multiple library names (comma-separated)
             if (lib.contains(",")) {
-                block.beginControlFlow("case $L -> ",
-                        Platform.toString(platform).toUpperCase());
+                block.beginControlFlow("case $L -> ", Platform.toString(platform).toUpperCase());
                 for (String libName : lib.split(","))
-                    block.addStatement("$T.loadLibrary($S)",
-                            ClassNames.INTEROP,
-                            libName);
+                    block.addStatement("$T.loadLibrary($S)", ClassNames.INTEROP, libName);
                 block.endControlFlow();
             }
 
             // Single library name
             else {
                 block.addStatement("case $L -> $T.loadLibrary($S)",
-                        Platform.toString(platform).toUpperCase(),
-                        ClassNames.INTEROP,
-                        lib);
+                        Platform.toString(platform).toUpperCase(), ClassNames.INTEROP, lib);
             }
         }
 
@@ -148,78 +137,64 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
 
         for (Class c : ns.classes())
             if (!c.skipJava())
-                spec.addCode(register(c.constructorName(), c.typeName(), c.typeClassName()));
+                spec.addStatement(register(c.constructorName(), c.typeName(), c.typeClassName()));
 
         for (Interface i : ns.interfaces())
             if (!i.skipJava())
-                spec.addCode(register(i.constructorName(), i.typeName(), i.typeClassName()));
+                spec.addStatement(register(i.constructorName(), i.typeName(), i.typeClassName()));
 
         for (Enumeration e : ns.enumerations())
             if (!e.skipJava() && e.getTypeFunc() != null)
-                spec.addCode(registerEnum(e.constructorName(), e.typeName()));
+                spec.addStatement(registerEnum(e.constructorName(), e.typeName()));
 
         for (Bitfield b : ns.bitfields())
             if (!b.skipJava() && b.getTypeFunc() != null)
-                spec.addCode(registerEnum(b.constructorName(), b.typeName()));
+                spec.addStatement(registerEnum(b.constructorName(), b.typeName()));
 
         // Boxed types
         for (Record r : ns.records())
             if (!r.skipJava() && r.getTypeFunc() != null)
-                spec.addCode(register(r.constructorName(), r.typeName(), null));
+                spec.addStatement(register(r.constructorName(), r.typeName(), null));
 
         // Opaque boxed types
         for (Boxed b : ns.boxeds())
             if (!b.skipJava())
-                spec.addCode(register(b.constructorName(), b.typeName(), null));
+                spec.addStatement(register(b.constructorName(), b.typeName(), null));
 
         for (Alias a : ns.aliases()) {
             if (!a.skipJava()) {
                 RegisteredType target = a.lookup();
                 if (target instanceof Class c)
-                    spec.addCode(register(c.constructorName(), a.typeName(), c.typeClassName()));
+                    spec.addStatement(register(c.constructorName(), a.typeName(), c.typeClassName()));
                 else if (target instanceof Interface i)
-                    spec.addCode(register(i.constructorName(), a.typeName(), i.typeClassName()));
+                    spec.addStatement(register(i.constructorName(), a.typeName(), i.typeClassName()));
                 else if (target instanceof Enumeration e && e.getTypeFunc() != null)
-                    spec.addCode(registerEnum(e.constructorName(), a.typeName()));
+                    spec.addStatement(registerEnum(e.constructorName(), a.typeName()));
                 else if (target instanceof Bitfield b && b.getTypeFunc() != null)
-                    spec.addCode(registerEnum(b.constructorName(), a.typeName()));
+                    spec.addStatement(registerEnum(b.constructorName(), a.typeName()));
                 else if (target instanceof Record r && r.getTypeFunc() != null)
-                    spec.addCode(register(r.constructorName(), a.typeName(), null));
+                    spec.addStatement(register(r.constructorName(), a.typeName(), null));
                 else if (target instanceof Boxed b)
-                    spec.addCode(register(b.constructorName(), a.typeName(), null));
+                    spec.addStatement(register(b.constructorName(), a.typeName(), null));
             }
         }
 
         return spec.build();
     }
 
-    private CodeBlock register(PartialStatement constructor,
-                               ClassName typeName,
-                               ClassName typeClassName) {
-        var stmt = PartialStatement.of(
-                    "$typeCache:T.register($typeName:T.class, $typeName:T.getType(), ",
-                        "typeCache", ClassNames.TYPE_CACHE,
-                        "typeName", typeName)
-                .add(constructor)
-                .add(typeClassName == null ? ", null" : ", $typeClassName:T::new",
-                        "typeClassName", typeClassName)
-                .add(");\n");
-        return CodeBlock.builder()
-                .addNamed(stmt.format(), stmt.arguments())
-                .build();
+    private CodeBlock register(CodeBlock constructor, ClassName typeName, ClassName typeClassName) {
+        var stmt = CodeBlock.builder().add("$1T.register($2T.class, $2T.getType(), $3L, ",
+                ClassNames.TYPE_CACHE, typeName, constructor);
+        if (typeClassName == null)
+            stmt.add("null)");
+        else
+            stmt.add("$T::new)", typeClassName);
+        return stmt.build();
     }
 
-    private CodeBlock registerEnum(PartialStatement constructor,
-                                   ClassName typeName) {
-        var stmt = PartialStatement.of(
-                        "$typeCache:T.registerEnum($typeName:T.class, $typeName:T.getType(), ",
-                        "typeCache", ClassNames.TYPE_CACHE,
-                        "typeName", typeName)
-                .add(constructor)
-                .add(");\n");
-        return CodeBlock.builder()
-                .addNamed(stmt.format(), stmt.arguments())
-                .build();
+    private CodeBlock registerEnum(CodeBlock constructor, ClassName typeName) {
+        return CodeBlock.of("$1T.registerEnum($2T.class, $2T.getType(), $3L)",
+                ClassNames.TYPE_CACHE, typeName, constructor);
     }
 
     /*

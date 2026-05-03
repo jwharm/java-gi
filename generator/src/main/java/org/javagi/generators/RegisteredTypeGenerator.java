@@ -26,7 +26,6 @@ import org.javagi.util.Conversions;
 import org.javagi.util.GeneratedAnnotationBuilder;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 
@@ -167,8 +166,7 @@ public class RegisteredTypeGenerator {
 
         if (rt instanceof Interface i) {
             spec.addJavadoc("The $T type represents a native instance of the $T interface.",
-                            nested,
-                            rt.typeName())
+                            nested, rt.typeName())
                     .superclass(getInterfaceSuperclass(i))
                     .addSuperinterface(base)
                     .addStaticBlock(staticBlock());
@@ -176,8 +174,7 @@ public class RegisteredTypeGenerator {
 
         if (rt instanceof Class)
             spec.addJavadoc("The $T type represents a native instance of the abstract $T class.",
-                            nested,
-                            rt.typeName())
+                            nested, rt.typeName())
                     .superclass(base);
 
         return spec.addMethod(MethodSpec.constructorBuilder()
@@ -234,9 +231,7 @@ public class RegisteredTypeGenerator {
 
     private List<Callable> listNamedFunctions() {
         return rt.children().stream()
-                .filter(c -> c instanceof Constructor
-                                || c instanceof Function
-                                || c instanceof Method)
+                .filter(c -> c instanceof Constructor || c instanceof Function || c instanceof Method)
                 .map(Callable.class::cast)
                 .filter(not(Callable::skip))
                 .toList();
@@ -265,8 +260,7 @@ public class RegisteredTypeGenerator {
                             String identifier,
                             TypeName className) {
 
-        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
-                .contains(rt.cType()))
+        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(rt.cType()))
             return;
 
         if (rt instanceof Record rec && rec.foreign())
@@ -289,17 +283,13 @@ public class RegisteredTypeGenerator {
             // (Possibly) boxed types, no free-func
             if (slt.getTypeFunc() != null && slt.freeFunction() == null) {
                 if (className == null)
-                    builder.addStatement("$T _type = getType()",
-                            ClassNames.G_TYPE);
+                    builder.addStatement("$T _type = getType()", ClassNames.G_TYPE);
                 else
-                    builder.addStatement("$T _type = $T.getType()",
-                            ClassNames.G_TYPE, className);
+                    builder.addStatement("$T _type = $T.getType()", ClassNames.G_TYPE, className);
 
-                builder.beginControlFlow("if ($T.isBoxed(_type))",
-                                ClassNames.BOXED_UTIL)
-                        .addStatement("$T.setBoxedType($L, _type)",
-                                ClassNames.MEMORY_CLEANER, identifier)
-                        .endControlFlow();
+                builder.beginControlFlow("if ($T.isBoxed(_type))", ClassNames.BOXED_UTIL)
+                       .addStatement("$T.setBoxedType($L, _type)", ClassNames.MEMORY_CLEANER, identifier)
+                       .endControlFlow();
             }
 
             // Record or union with free-function

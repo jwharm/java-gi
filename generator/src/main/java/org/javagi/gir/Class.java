@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import static org.javagi.util.CollectionUtils.*;
 import static org.javagi.util.Conversions.toJavaIdentifier;
@@ -40,24 +40,18 @@ public final class Class extends GirElement implements RegisteredType, FieldCont
     }
 
     @Override
-    public PartialStatement constructorName() {
+    public CodeBlock constructorName() {
         return abstract_()
-                ? PartialStatement.of("$" + typeTag() + "_Impl:T::new",
-                        typeTag() + "_Impl",
-                        typeName().nestedClass(name() + "$Impl"))
+                ? CodeBlock.of("$T::new", typeName().nestedClass(name() + "$Impl"))
                 : FieldContainer.super.constructorName();
     }
 
     @Override
-    public PartialStatement destructorName() {
-        String tag = typeTag();
+    public CodeBlock destructorName() {
         Method unrefFunc = unrefFunc();
         if (unrefFunc == null)
-            return PartialStatement.of("(_ -> {})");
-
-        return PartialStatement.of("$" + tag + ":T::$unrefFunc:L",
-                tag, typeName(),
-                "unrefFunc", toJavaIdentifier(unrefFunc.name()));
+            return CodeBlock.of("(_ -> {})");
+        return CodeBlock.of("$T::$L", typeName(), toJavaIdentifier(unrefFunc.name()));
     }
 
     @Override

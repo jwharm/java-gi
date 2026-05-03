@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -50,28 +50,23 @@ public interface Patch {
      * @param  <T> the element must be a GirElement
      * @return the element with the child element removed
      */
-    default <T extends GirElement> T remove(T elem,
-                                            Class<? extends GirElement> type,
-                                            String key,
-                                            String value) {
+    default <T extends GirElement> T remove(T elem, Class<? extends GirElement> type, String key, String value) {
         List<Node> children = elem.children().stream()
-                .filter(node -> !(type.isInstance(node)
-                        && value.equals(node.attributes().get(key))))
+                .filter(node -> !(type.isInstance(node) && value.equals(node.attributes().get(key))))
                 .toList();
         return elem.withChildren(children);
     }
 
     /**
-     * Return a copy of the parent element in which the child has been added.
+     * Return the parent element with the added child.
      *
      * @param  parent the parent element
      * @param  child  the element to add to the parent
      * @param  <T> parent must be a GirElement
      * @param  <U> child must be a GirElement
-     * @return a copy of parent in which the child has been added
+     * @return the parent element with the added child
      */
-    default <T extends GirElement, U extends GirElement> T add(T parent,
-                                                               U child) {
+    default <T extends GirElement, U extends GirElement> T add(T parent, U child) {
         var mutableList = new ArrayList<>(parent.children());
         mutableList.add(child);
         return parent.withChildren(mutableList);

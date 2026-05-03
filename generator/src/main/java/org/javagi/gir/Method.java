@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -57,8 +57,7 @@ public final class Method extends GirElement implements Callable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Method other = (Method) o;
-        return Objects.equals(callableAttrs().cIdentifier(),
-                              other.callableAttrs().cIdentifier());
+        return Objects.equals(callableAttrs().cIdentifier(), other.callableAttrs().cIdentifier());
     }
 
     @Override

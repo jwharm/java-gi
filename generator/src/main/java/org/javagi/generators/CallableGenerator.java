@@ -22,7 +22,6 @@ package org.javagi.generators;
 import org.javagi.gir.Class;
 import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.*;
 
 import javax.lang.model.element.Modifier;
@@ -33,7 +32,6 @@ import java.util.*;
 
 import static org.javagi.util.Conversions.getValueLayout;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.joining;
 
 public class CallableGenerator {
 
@@ -44,24 +42,18 @@ public class CallableGenerator {
     }
 
     CodeBlock generateFunctionDescriptorDeclaration() {
-        return CodeBlock.builder()
-                .add("$[$T _fdesc = ", FunctionDescriptor.class)
-                .add(generateFunctionDescriptor())
-                .add(";\n$]")
-                .build();
+        return CodeBlock.of("$T _fdesc = $L", FunctionDescriptor.class, generateFunctionDescriptor());
     }
 
     CodeBlock generateFunctionDescriptor() {
-        List<PartialStatement> layouts = new ArrayList<>();
-        var addressLayout = PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
-
+        List<CodeBlock> layouts = new ArrayList<>();
         var returnType = callable.returnValue().anyType();
         boolean isVoid = returnType instanceof Type t && t.isVoid();
         if (!isVoid)
             layouts.add(generateValueLayoutWithFixForSignals(returnType));
 
         if (callable instanceof Signal)
-            layouts.add(addressLayout);
+            layouts.add(CodeBlock.of("$T.ADDRESS", ValueLayout.class));
 
         if (callable.parameters() != null) {
             var iParam = callable.parameters().instanceParameter();
@@ -76,17 +68,14 @@ public class CallableGenerator {
         }
 
         if (callable.throws_())
-            layouts.add(addressLayout);
+            layouts.add(CodeBlock.of("$T.ADDRESS", ValueLayout.class));
 
         if (layouts.isEmpty())
             return CodeBlock.of("$T.ofVoid()", FunctionDescriptor.class);
 
-        var stmt = PartialStatement.of("$functionDescriptor:T." + (isVoid ? "ofVoid" : "of"),
-                        "functionDescriptor", FunctionDescriptor.class)
-                .add(layouts.stream().map(PartialStatement::format).collect(joining(",$W", "(", ")")));
-        for (var layout : layouts)
-            stmt.arguments().putAll(layout.arguments());
-        return stmt.toCodeBlock();
+        return CodeBlock.builder().add("$T.$L", FunctionDescriptor.class, isVoid ? "ofVoid" : "of")
+                .add(layouts.stream().collect(CodeBlock.joining(",$W", "(", ")")))
+                .build();
     }
 
     /**
@@ -96,28 +85,24 @@ public class CallableGenerator {
      * it must be ValueLayout.ADDRESS. I'm not sure why, but the JVM segfaults
      * otherwise.
      */
-    PartialStatement generateValueLayoutWithFixForSignals(AnyType anyType) {
+    CodeBlock generateValueLayoutWithFixForSignals(AnyType anyType) {
         if (callable instanceof Signal
                 && anyType instanceof Type t
                 && !t.isPointer()
                 && t.lookup() instanceof FieldContainer fc
                 && new MemoryLayoutGenerator().canGenerate(fc)) {
-            return PartialStatement.of("$valueLayout:T.ADDRESS", "valueLayout", ValueLayout.class);
+            return CodeBlock.of("$T.ADDRESS", ValueLayout.class);
         }
         return generateValueLayout(anyType);
     }
 
-    PartialStatement generateValueLayout(AnyType anyType) {
+    CodeBlock generateValueLayout(AnyType anyType) {
         return anyType instanceof Type type && type.isLong()
-                ? PartialStatement.of("$interop:T.longAsInt() ? $valueLayout:T.JAVA_INT : $valueLayout:T.JAVA_LONG",
-                        "valueLayout", ValueLayout.class,
-                        "interop", ClassNames.INTEROP)
+                ? CodeBlock.of("$1T.longAsInt() ? $2T.JAVA_INT : $2T.JAVA_LONG", ClassNames.INTEROP, ValueLayout.class)
                 : getValueLayout(anyType, false);
     }
 
-    void generateMethodParameters(MethodSpec.Builder builder,
-                                  boolean generic,
-                                  boolean setOfBitfield) {
+    void generateMethodParameters(MethodSpec.Builder builder, boolean generic, boolean setOfBitfield) {
         if (callable.parameters() == null)
             return;
 
@@ -152,15 +137,15 @@ public class CallableGenerator {
         }
     }
 
-    PartialStatement marshalParameters(boolean intAsLong) {
+    CodeBlock marshalParameters(boolean intAsLong) {
         var parameters = callable.parameters();
         if (parameters == null)
             return callable.throws_()
-                    ? PartialStatement.of("_gerror")
-                    : new PartialStatement();
+                    ? CodeBlock.of("_gerror")
+                    : CodeBlock.of("");
 
-        PartialStatement stmt = PartialStatement.of(null,
-                "memorySegment", MemorySegment.class);
+        CodeBlock.Builder stmt = CodeBlock.builder();
+        boolean first = true;
 
         // Marshal instance parameter
         InstanceParameter iParam = parameters.instanceParameter();
@@ -169,12 +154,16 @@ public class CallableGenerator {
                 stmt.add("getValue()"); // method in Enumeration class
             else
                 stmt.add("handle()");   // method in regular TypeInstance class
+            first = false;
         }
 
         // Marshal other parameters
         for (Parameter p : parameters.parameters()) {
-            if (!stmt.format().isEmpty()) stmt.add(", ");
-            stmt.add("$Z"); // emit newline
+            if (first)
+                first = false;
+            else
+                stmt.add(",$W");
+
             var generator = new TypedValueGenerator(p);
             var name = generator.getName();
 
@@ -187,7 +176,7 @@ public class CallableGenerator {
                 nullCheck = true;
 
             if (nullCheck)
-                stmt.add("($memorySegment:T) (" + name + " == null ? $memorySegment:T.NULL : ");
+                stmt.add("($1T) ($2L == null ? $1T.NULL : ", MemorySegment.class, name);
 
             // cast int parameter to a long
             if (intAsLong && p.anyType() instanceof Type t && t.isLong())
@@ -199,10 +188,9 @@ public class CallableGenerator {
                         .filter(q -> q.destroy() == p)
                         .findAny();
                 if (notify.isPresent()) {
-                    stmt.add("$arenas:T.CLOSE_CB_SYM",
-                            "arenas", ClassNames.ARENAS);
+                    stmt.add("$T.CLOSE_CB_SYM", ClassNames.ARENAS);
                 } else {
-                    stmt.add("$memorySegment:T.NULL");
+                    stmt.add("$T.NULL", MemorySegment.class);
                 }
             }
 
@@ -210,13 +198,12 @@ public class CallableGenerator {
             else if (p.isUserDataParameterForDestroyNotify()) {
                 var cbParam = p.getRelatedCallbackParameter();
                 var cbName = new TypedValueGenerator(cbParam).getName();
-                stmt.add("$arenas:T.cacheArena(_" + cbName + "Scope)",
-                        "arenas", ClassNames.ARENAS);
+                stmt.add("$T.cacheArena(_$LScope)", ClassNames.ARENAS, cbName);
             }
 
             // User_data
             else if (p.isUserDataParameter())
-                stmt.add("$memorySegment:T.NULL");
+                stmt.add("$T.NULL", MemorySegment.class);
 
             // Varargs
             else if (p.varargs())
@@ -224,12 +211,12 @@ public class CallableGenerator {
 
             // Pointer allocation for out-parameter
             else if (p.isOutParameter()) {
-                stmt.add("_" + name + "Pointer");
+                stmt.add("_$LPointer", name);
             }
 
             // Custom interop
             else
-                stmt.add(generator.marshalJavaToNative(name));
+                stmt.add(generator.marshalJavaToNative(CodeBlock.of(name)));
 
             // Closing parentheses for null-check
             if (nullCheck)
@@ -240,13 +227,12 @@ public class CallableGenerator {
         if (callable.throws_())
             stmt.add(", _gerror");
 
-        return stmt;
+        return stmt.build();
     }
 
     boolean varargs() {
         var params = callable.parameters();
-        return params != null
-                && params.parameters().stream().anyMatch(Parameter::varargs);
+        return params != null && params.parameters().stream().anyMatch(Parameter::varargs);
     }
 
     public void generateModifiers(MethodSpec.Builder builder, boolean isConstructor) {
@@ -282,6 +268,7 @@ public class CallableGenerator {
         boolean isConstructor = callable instanceof Constructor c && !c.isNamed();
         boolean generic = MethodGenerator.isGeneric(callable);
         String name = MethodGenerator.getName(callable);
+        boolean first = true;
 
         MethodSpec.Builder builder;
         if (isConstructor)
@@ -319,14 +306,13 @@ public class CallableGenerator {
             builder.addException(ClassNames.GERROR_EXCEPTION);
 
         // Call the overloaded method
-        PartialStatement stmt = PartialStatement.of("");
+        CodeBlock.Builder stmt = CodeBlock.builder();
         if (isConstructor)
-            stmt.add("this");
+            stmt.add("this(");
         else
-            stmt.add((returnValue.anyType().isVoid() ? "" : "return ") + name);
+            stmt.add(returnValue.anyType().isVoid() ? "$L(" : "return $L(", name);
 
         // Set parameters
-        StringJoiner params = new StringJoiner(",$W", "(", ");\n");
         for (Parameter p : callable.parameters().parameters()) {
             if (p.isUserDataParameter()
                     || p.isDestroyNotifyParameter()
@@ -336,23 +322,25 @@ public class CallableGenerator {
             TypedValueGenerator gen = new TypedValueGenerator(p);
             String paramName = gen.getName();
 
+            if (first)
+                first = false;
+            else
+                stmt.add(",$W");
+
             if (p.isBitfield()) {
-                if (p.isOutParameter()) {
-                    params.add(paramName + " == null ? null : new $out:T($enumSet:T.of(" + paramName + ".get()))");
-                } else if (p.isLastParameter()) {
-                    params.add("(" + paramName + " == null ? null : (" + paramName + ".length == 0) ? $enumSet:T.noneOf($typeName:T.class) : $enumSet:T.of(" + paramName + "[0], " + paramName + "))");
-                    stmt.add(null, "typeName", gen.getType(false));
-                } else {
-                    params.add("$enumSet:T.of(" + paramName + ")");
-                }
-            } else {
-                params.add(paramName);
-            }
+                if (p.isOutParameter())
+                    stmt.add("$1L == null ? null : new $2T($3T.of($1L.get()))",
+                            paramName, ClassNames.OUT, EnumSet.class);
+                else if (p.isLastParameter())
+                    stmt.add("($1L == null ? null : ($1L.length == 0) ? $2T.noneOf($3T.class) : $2T.of($1L[0], $1L))",
+                            paramName, EnumSet.class, gen.getType(false));
+                else
+                    stmt.add("$T.of($L)", EnumSet.class, paramName);
+            } else stmt.add(paramName);
         }
-        stmt.add(params.toString(),
-                "out", ClassNames.OUT,
-                "enumSet", EnumSet.class);
-        builder.addNamedCode(stmt.format(), stmt.arguments());
-        return builder.build();
+        stmt.add(")");
+
+        return builder.addStatement(stmt.build())
+                .build();
     }
 }

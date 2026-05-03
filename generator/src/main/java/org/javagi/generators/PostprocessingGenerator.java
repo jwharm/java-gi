@@ -19,11 +19,11 @@
 
 package org.javagi.generators;
 
+import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.gir.Class;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.Record;
 
 import java.lang.foreign.ValueLayout;
@@ -69,14 +69,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
             // Pointer to single value
             if (array == null) {
-                var stmt = PartialStatement.of(null, "valueLayout", ValueLayout.class);
+                var stmt = CodeBlock.builder().add("$L.$L",
+                        getName(), (target instanceof Alias a && a.isValueWrapper()) ? "setValue(" : "set(");
 
-                stmt.add(getName())
-                    .add((target instanceof Alias a && a.isValueWrapper()) ? ".setValue(" : ".set(");
-
-                var layout = getValueLayout(type);
-                String identifier = "_%sPointer.get(%s, 0)".formatted(getName(), layout.format());
-
+                CodeBlock identifier = CodeBlock.of("_$LPointer.get($L, 0)", getName(), getValueLayout(type));
                 if ((target instanceof Alias a && a.isValueWrapper())
                         || (type.isPrimitive() && type.isPointer())) {
                     stmt.add(identifier);
@@ -85,11 +81,11 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 } else {
                     stmt.add(marshalNativeToJava(type, identifier));
                 }
-                stmt.add(");\n");
+                stmt.add(")");
 
                 // Always do a null-check
                 builder.beginControlFlow("if ($1L != null)", getName())
-                       .addNamedCode(stmt.format(), stmt.arguments())
+                       .addStatement(stmt.build())
                        .endControlFlow();
 
                 return;
@@ -99,55 +95,40 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             builder.beginControlFlow("if ($1L != null)", getName());
 
             // Pointer to array
+            var stmt = CodeBlock.builder().add("$L.set(", getName());
             String len = array.sizeExpression(false);
-            PartialStatement payload;
 
             // Caller-allocated out-parameter array with known length
             if (p.isOutParameter() && len != null && p.callerAllocates()) {
-                payload = array.anyType() instanceof Type t && t.isPrimitive()
-                        ? PartialStatement.of("_$name:LPointer.toArray(", "name", getName())
-                            .add(getValueLayout(t))
-                            .add(")")
-                        : marshalNativeToJava("_%sPointer".formatted(getName()), false);
+                if (array.anyType() instanceof Type t && t.isPrimitive())
+                    stmt.add("_$LPointer.toArray($L)", getName(), getValueLayout(t));
+                else
+                    stmt.add(marshalNativeToJava(CodeBlock.of("_$LPointer", getName()), false));
             }
 
             // Arrays with primitive values and known length: there's an extra
             // level of indirection
-            else if (len != null
-                        && array.anyType() instanceof Type t
-                        && t.isPrimitive()
-                        && !t.isBoolean()) {
-                String varName = "_$name:LPointer";
+            else if (len != null && array.anyType() instanceof Type t && t.isPrimitive() && !t.isBoolean()) {
+                CodeBlock varName = CodeBlock.of("_$LPointer", getName());
                 if (array.cType() != null && array.cType().endsWith("**"))
-                    varName = "$interop:T.dereference(" + varName + ")";
-                payload = PartialStatement.of(varName + "$Z.reinterpret(" + len + " * ",
-                                "interop", ClassNames.INTEROP,
-                                "name", getName(),
-                                "valueLayout", ValueLayout.class)
-                        .add(getValueLayout(t))
-                        .add(".byteSize(), _arena, null)$Z.toArray(")
-                        .add(getValueLayout(t))
-                        .add(")");
+                    varName = CodeBlock.of("$T.dereference(_$LPointer)", ClassNames.INTEROP, getName());
+                stmt.add("$1L$Z.reinterpret($2L * $3L.byteSize(), _arena, null)$Z.toArray($3L)",
+                        varName, len, getValueLayout(t));
             }
 
             // GArray & GPtrArray
-            else if (listOfNonNull("GLib.Array", "GLib.PtrArray").contains(array.name())
-                    && p.callerAllocates()) {
-                payload = marshalNativeToJava("_$name:LPointer", false)
-                        .add(null, "name", getName(), "valueLayout", ValueLayout.class);
+            else if (listOfNonNull("GLib.Array", "GLib.PtrArray").contains(array.name()) && p.callerAllocates()) {
+                stmt.add(marshalNativeToJava(CodeBlock.of("_$LPointer", getName()), false));
             }
 
             // Other arrays
             else {
-                payload = marshalNativeToJava("_$name:LPointer.get($valueLayout:T.ADDRESS, 0)", false)
-                        .add(null, "name", getName(), "valueLayout", ValueLayout.class);
+                var identifier = CodeBlock.of("_$LPointer.get($T.ADDRESS, 0)", getName(), ValueLayout.class);
+                stmt.add(marshalNativeToJava(identifier, false));
             }
 
-            var stmt = PartialStatement.of(getName())
-                    .add(".set(")
-                    .add(payload)
-                    .add(");\n");
-            builder.addNamedCode(stmt.format(), stmt.arguments());
+            stmt.add(")");
+            builder.addStatement(stmt.build());
 
             // End null-check if-block
             builder.endControlFlow();
@@ -214,15 +195,11 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (! (target instanceof StandardLayoutType slt)) // Record, Union or Boxed
             return;
 
-        if (target instanceof Record r)
-            if (r.foreign()
-                    || r.checkIsGBytes()
-                    || r.checkIsGString()
-                    || r.checkIsGList())
-                return;
+        if (target instanceof Record r
+                && (r.foreign() || r.checkIsGBytes() || r.checkIsGString() || r.checkIsGList()))
+            return;
 
-        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface")
-                .contains(target.cType()))
+        if (List.of("GTypeInstance", "GTypeClass", "GTypeInterface").contains(target.cType()))
             return;
 
         var paramName = switch (v) {
@@ -233,11 +210,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
 
         // With ownership transfer: Don't copy/ref the struct
         if (v.transferOwnership() != TransferOwnership.NONE) {
-            if (v instanceof Parameter) {
+            if (v instanceof Parameter)
                 builder.beginControlFlow("if ($L != null && $L != null)", getName(), paramName);
-            } else {
+            else
                 builder.beginControlFlow("if ($L != null)", paramName);
-            }
         }
 
         // No ownership transfer: Copy/ref the struct
@@ -251,9 +227,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             boolean skipNamespace = !target.namespace().parent().isInScope("GObject");
 
             // No copy function, and unknown size: copying is impossible
-            if (skipNamespace || (!hasMemoryLayout && copyFunc == null)) {
+            if (skipNamespace || (!hasMemoryLayout && copyFunc == null))
                 return;
-            }
 
             builder.beginControlFlow("if ($1L != null)", paramName);
 
@@ -314,10 +289,8 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         }
 
         // Register the returned instance with the memory cleaner
-        builder.addStatement("$T.takeOwnership($L)",
-                ClassNames.MEMORY_CLEANER, paramName);
-        new RegisteredTypeGenerator(target)
-                .setFreeFunc(builder, paramName, target.typeName());
+        builder.addStatement("$T.takeOwnership($L)", ClassNames.MEMORY_CLEANER, paramName);
+        new RegisteredTypeGenerator(target).setFreeFunc(builder, paramName, target.typeName());
 
         // End null-check
         builder.endControlFlow();
@@ -329,8 +302,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             boolean notified = p.scope() == Scope.NOTIFIED && p.destroy() != null;
             boolean async = p.scope() == Scope.ASYNC && !p.isDestroyNotifyParameter();
             if (notified || async)
-                builder.addStatement("$1T.readyToClose(_$2LScope)",
-                        ClassNames.ARENAS, getName());
+                builder.addStatement("$1T.readyToClose(_$2LScope)", ClassNames.ARENAS, getName());
         }
     }
 
@@ -356,10 +328,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (target instanceof Alias a && a.isValueWrapper()
                 && type.isPointer()
                 && !type.isUnannotatedReference()) {
-            var stmt = PartialStatement.of("$name:LParam.set(")
-                    .add(getValueLayout(type))
-                    .add(", 0, _$name:LAlias.getValue());\n", "name", getName());
-            builder.addNamedCode(stmt.format(), stmt.arguments());
+            builder.addStatement("$1LParam.set($2L, 0, _$1LAlias.getValue())", getName(), getValueLayout(type));
         }
     }
 
@@ -375,12 +344,10 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         if (type == null || type.isUnannotatedReference())
             return;
 
-        var stmt = PartialStatement.of("$name:LParam.set(", "name", getName())
-                .add(getValueLayout(type))
-                .add(", 0, ")
-                .add(marshalJavaToNative("_" + getName() + "Out.get()"))
-                .add(");\n");
-        builder.addNamedCode(stmt.format(), stmt.arguments());
+        builder.addStatement("$LParam.set($L, 0, $L)",
+                getName(),
+                getValueLayout(type),
+                marshalJavaToNative(CodeBlock.of("_$LOut.get()", getName())));
     }
 
     // Ref GObject when ownership is transferred to a callback out-parameter

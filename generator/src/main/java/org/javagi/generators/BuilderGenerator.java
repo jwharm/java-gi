@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -22,7 +22,6 @@ package org.javagi.generators;
 import org.javagi.javapoet.*;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.jspecify.annotations.Nullable;
 
@@ -139,8 +138,7 @@ public class BuilderGenerator {
                 .returns(BUILDER_B);
 
         TypedValueGenerator generator = new TypedValueGenerator(prp);
-        PartialStatement gtype = generator.getGTypeDeclaration();
-        gtype.add(null, "type", ClassNames.G_TYPE, "objects", Objects.class);
+        CodeBlock gtype = generator.getGTypeDeclaration();
 
         // Javadoc
         if (prp.infoElements().doc() != null)
@@ -159,13 +157,11 @@ public class BuilderGenerator {
         builder.addParameter(generator.getType(), generator.getName());
 
         // Method body
-        PartialStatement valueSetter = generator.getValueSetter(gtype, generator.getName())
-                .add(";\n");
         return builder.addStatement("$T _arena = getArena()", Arena.class)
-                .addNamedCode("$type:T _gtype = $objects:T.requireNonNull(" + gtype.format() + ");\n", gtype.arguments())
+                .addStatement("$T _gtype = $T.requireNonNull($L)", ClassNames.G_TYPE, Objects.class, gtype)
                 .addStatement("$1T _value = new $1T(_arena)", ClassNames.G_VALUE)
                 .addStatement("_value.init(_gtype)")
-                .addNamedCode(valueSetter.format(), valueSetter.arguments())
+                .addStatement(generator.getValueSetter(CodeBlock.of(generator.getName())))
                 .addStatement("addBuilderProperty($S, _value)", prp.name())
                 .addStatement("return (B) this")
                 .build();
@@ -202,12 +198,10 @@ public class BuilderGenerator {
         builder.varargs(true);
 
         // Method body
-        var setter = "set" + toCamelCase(prp.name(), true);
-        var param = "(" + name + " == null ? null : (" + name + ".length == 0) ? $enumSet:T.noneOf($typeName:T.class) : $enumSet:T.of(" + name + "[0], " + name + "))";
-        var stmt = PartialStatement.of("return " + setter + "(" + param + ");",
-                "typeName", type,
-                "enumSet", EnumSet.class);
-        return builder.addNamedCode(stmt.format(), stmt.arguments()).build();
+        var param = CodeBlock.of("($1L == null ? null : ($1L.length == 0) ? $2T.noneOf($3T.class) : $2T.of($1L[0], $1L))",
+                name, EnumSet.class, type);
+        builder.addStatement("return set$L($L)", toCamelCase(prp.name(), true), param);
+        return builder.build();
     }
 
     private MethodSpec connector(Signal signal) {

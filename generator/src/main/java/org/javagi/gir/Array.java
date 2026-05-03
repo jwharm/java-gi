@@ -45,10 +45,6 @@ public final class Array extends GirElement implements AnyType {
         return nullable(ArrayTypeName.of(anyType().nullableAnnotatedTypeName()));
     }
 
-    public String toTypeTag() {
-        return anyType().toTypeTag() + "Array";
-    }
-
     public boolean zeroTerminated() {
         // If zero-terminated is missing, there's no length, there's no fixed
         // size, and the name attribute is unset, then zero-terminated is true.

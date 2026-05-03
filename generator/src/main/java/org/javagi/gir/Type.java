@@ -189,44 +189,6 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return false;
     }
 
-    /**
-     * Generate a string that uniquely identifies this type, and can be used as
-     * the name of a named argument in a JavaPoet code block.
-     *
-     * @return a name for this type that can be used as a named argument in a
-     *         code block, or {@code null} if the unique identifier could not
-     *         be generated.
-     */
-    public String toTypeTag() {
-        String cType = cType();
-        if (cType != null) {
-            int start = cType.lastIndexOf(" ");
-            int end = cType.indexOf("*");
-            if (start == -1) start = 0; else start++;
-            if (end == -1) end = cType.length();
-            String typeTag = cType.substring(start, end);
-            if (typeTag.startsWith("_"))
-                typeTag = typeTag.substring(1);
-            return uncapitalize(typeTag);
-        }
-
-        String javaBaseType = toJavaBaseType(name());
-        String typeTag;
-        if ("MemorySegment".equals(javaBaseType)) {
-            typeTag = "memorySegment";
-        } else if ("String".equals(javaBaseType)) {
-            typeTag = "string";
-        } else {
-            RegisteredType target = lookup();
-            typeTag = target == null ? null : target.typeTag();
-        }
-
-        if (isActuallyAnArray())
-            typeTag += "Array";
-
-        return typeTag;
-    }
-
     public int allocatedSize(boolean longAsInt) {
         if (lookup() instanceof Alias alias)
             return alias.anyType().allocatedSize(longAsInt);

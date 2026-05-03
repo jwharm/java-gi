@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,7 +19,7 @@
 
 package org.javagi.gir;
 
-import org.javagi.util.PartialStatement;
+import org.javagi.javapoet.CodeBlock;
 
 import org.javagi.javapoet.ClassName;
 
@@ -42,23 +42,17 @@ public final class Interface extends GirElement implements RegisteredType, Field
     }
 
     @Override
-    public PartialStatement constructorName() {
-        return PartialStatement.of("$" + typeTag() + "_Impl:T::new",
-                typeTag() + "_Impl",
-                typeName().nestedClass(name() + "$Impl"));
+    public CodeBlock constructorName() {
+        return CodeBlock.of("$T::new", typeName().nestedClass(name() + "$Impl"));
     }
 
     @Override
-    public PartialStatement destructorName() {
+    public CodeBlock destructorName() {
         Class base = prerequisiteBaseClass();
-        String tag = base.typeTag();
         Method unrefFunc = base.unrefFunc();
         if (unrefFunc == null)
-            return PartialStatement.of("(_ -> {})");
-        
-        return PartialStatement.of("(_p -> (($" + tag + ":T) _p).$unrefFunc:L())",
-                tag, base.typeName(),
-                "unrefFunc", toJavaIdentifier(unrefFunc.name()));
+            return CodeBlock.of("(_ -> {})");
+        return CodeBlock.of("(_p -> (($T) _p).$L())", base.typeName(), toJavaIdentifier(unrefFunc.name()));
     }
 
     @Override

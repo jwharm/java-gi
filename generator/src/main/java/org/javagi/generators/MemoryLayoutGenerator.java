@@ -19,11 +19,11 @@
 
 package org.javagi.generators;
 
+import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.MethodSpec;
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
 import org.javagi.util.Conversions;
-import org.javagi.util.PartialStatement;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
 
@@ -60,7 +60,7 @@ public class MemoryLayoutGenerator {
         String name();
         int alignment();
         int size();
-        PartialStatement generateMemoryLayout();
+        CodeBlock generateMemoryLayout();
 
         static Layout of(boolean longAsInt, FieldContainer fc) {
             String name = fc.cType() != null ? fc.cType() : fc.name();
@@ -90,8 +90,8 @@ public class MemoryLayoutGenerator {
             return members.stream().mapToInt(Layout::size).sum();
         }
 
-        public PartialStatement generateMemoryLayout() {
-            var stmt = createStatement("$memoryLayout:T.structLayout($>\n");
+        public CodeBlock generateMemoryLayout() {
+            var stmt = CodeBlock.builder().add("$T.structLayout($>\n", MemoryLayout.class);
             int pos = 0;
             int bits = 0;
             boolean first = true;
@@ -117,7 +117,7 @@ public class MemoryLayoutGenerator {
                 int unaligned = pos % member.alignment();
                 if (unaligned != 0) {
                     int padding = member.alignment() - unaligned;
-                    stmt.add("$memoryLayout:T.paddingLayout(%s),\n".formatted(padding));
+                    stmt.add("$T.paddingLayout($L),\n", MemoryLayout.class, padding);
                     pos += padding;
                 }
 
@@ -129,14 +129,14 @@ public class MemoryLayoutGenerator {
             int unaligned = pos % alignment();
             if (unaligned != 0) {
                 int padding = alignment() - unaligned;
-                stmt.add(",\n$memoryLayout:T.paddingLayout(%s)".formatted(padding));
+                stmt.add(",\n$T.paddingLayout($L)", MemoryLayout.class, padding);
             }
 
             stmt.add("$<\n)");
             if (name != null)
-                stmt.add(".withName(\"" + name + "\")");
+                stmt.add(".withName($S)", name);
 
-            return stmt;
+            return stmt.build();
         }
     }
 
@@ -149,8 +149,8 @@ public class MemoryLayoutGenerator {
             return members.stream().mapToInt(Layout::size).max().orElse(0);
         }
 
-        public PartialStatement generateMemoryLayout() {
-            var stmt = createStatement("$memoryLayout:T.unionLayout($>\n");
+        public CodeBlock generateMemoryLayout() {
+            var stmt = CodeBlock.builder().add("$T.unionLayout($>\n", MemoryLayout.class);
             boolean first = true;
 
             for (var member : members()) {
@@ -160,9 +160,9 @@ public class MemoryLayoutGenerator {
 
             stmt.add("$<\n)");
             if (name != null)
-                stmt.add(".withName(\"" + name + "\")");
+                stmt.add(".withName($S)", name);
 
-            return stmt;
+            return stmt.build();
         }
     }
 
@@ -183,29 +183,28 @@ public class MemoryLayoutGenerator {
             return field.bits();
         }
 
-        public PartialStatement generateMemoryLayout() {
-            PartialStatement stmt;
-
-            if (field.anyType() instanceof Type t)
-                stmt = layoutForType(t);
-            else if (field.anyType() instanceof Array a && a.fixedSize() > 0)
-                stmt = createStatement("$memoryLayout:T.sequenceLayout(" + a.fixedSize() + ", ")
-                        .add(layoutForType((Type) a.anyType()))
-                        .add(")");
-            else // Array (no fixed size) or callback
-                stmt = createStatement("$valueLayout:T.ADDRESS");
+        public CodeBlock generateMemoryLayout() {
+            var stmt = CodeBlock.builder();
 
             if (bits() > 0)
-                return createStatement("$memoryLayout:T.sequenceLayout(" + size()
-                                        + ", $valueLayout:T.JAVA_BYTE) /* bitfield */");
+                return stmt.add("$T.sequenceLayout($L, $T.JAVA_BYTE) /* bitfield */",
+                        MemoryLayout.class, size(), ValueLayout.class).build();
+
+            if (field.anyType() instanceof Type t)
+                stmt.add(layoutForType(t));
+            else if (field.anyType() instanceof Array a && a.fixedSize() > 0)
+                stmt.add("$T.sequenceLayout($L, $L)",
+                        MemoryLayout.class, a.fixedSize(), layoutForType((Type) a.anyType()));
+            else // Array (no fixed size) or callback
+                stmt.add("$T.ADDRESS", ValueLayout.class);
 
             if (name() != null)
-                stmt.add(".withName(\"" + name() + "\")");
+                stmt.add(".withName($S)", name());
 
-            return stmt;
+            return stmt.build();
         }
 
-        private PartialStatement layoutForType(Type type) {
+        private CodeBlock layoutForType(Type type) {
             RegisteredType target = type.lookup();
 
             // Recursive lookup for aliases
@@ -215,10 +214,8 @@ public class MemoryLayoutGenerator {
             // Proxy objects with a known memory layout
             if (!type.isPointer()
                     && target instanceof FieldContainer fc
-                    && new MemoryLayoutGenerator().canGenerate(fc)) {
-                String tag = type.toTypeTag();
-                return PartialStatement.of("$" + tag + ":T.getMemoryLayout()", tag, type.typeName());
-            }
+                    && new MemoryLayoutGenerator().canGenerate(fc))
+                return CodeBlock.of("$T.getMemoryLayout()", type.typeName());
 
             // Plain value layout
             return Conversions.getValueLayout(type, longAsInt);
@@ -233,32 +230,20 @@ public class MemoryLayoutGenerator {
                 .returns(MemoryLayout.class);
 
         if (!canGenerate(fc))
-            return method.addStatement("return $T.ADDRESS.withName($S)", ValueLayout.class, UNKNOWN_LAYOUT).build();
-
-        boolean hasLongFields = fc.deepMatch(n -> n instanceof Type t && t.isLong(), Callback.class);
+            return method.addStatement("return $T.ADDRESS.withName($S)",
+                    ValueLayout.class, UNKNOWN_LAYOUT).build();
 
         // When there are `long` fields, generate 32-bit and 64-bit layout
-        if (hasLongFields) {
-            method.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
-            addReturn(method, Layout.of(true, fc).generateMemoryLayout());
-            method.nextControlFlow("else");
-            addReturn(method, Layout.of(false, fc).generateMemoryLayout());
-            method.endControlFlow();
-        } else {
-            addReturn(method, Layout.of(false, fc).generateMemoryLayout());
-        }
+        boolean hasLongFields = fc.deepMatch(n -> n instanceof Type t && t.isLong(), Callback.class);
+        if (hasLongFields)
+            method.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP)
+                    .addStatement("return $L", Layout.of(true, fc).generateMemoryLayout())
+                    .nextControlFlow("else")
+                    .addStatement("return $L", Layout.of(false, fc).generateMemoryLayout())
+                    .endControlFlow();
+        else
+            method.addStatement("return $L", Layout.of(false, fc).generateMemoryLayout());
 
         return method.build();
-    }
-
-    private void addReturn(MethodSpec.Builder method, PartialStatement layout) {
-        String code = "return " + layout.format() + ";\n";
-        method.addNamedCode(code, layout.arguments());
-    }
-
-    private static PartialStatement createStatement(String format) {
-        return PartialStatement.of(format,
-                "memoryLayout", MemoryLayout.class,
-                "valueLayout", ValueLayout.class);
     }
 }

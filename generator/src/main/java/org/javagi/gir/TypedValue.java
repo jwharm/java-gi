@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,14 +19,10 @@
 
 package org.javagi.gir;
 
-import org.javagi.javapoet.TypeName;
-
 import static org.javagi.util.CollectionUtils.*;
 
-public sealed interface TypedValue
-        extends Node
-        permits Constant, Field, InstanceParameter, Parameter, Property,
-                ReturnValue {
+public sealed interface TypedValue extends Node
+        permits Constant, Field, InstanceParameter, Parameter, Property, ReturnValue {
 
     InfoElements infoElements();
 
@@ -61,8 +57,6 @@ public sealed interface TypedValue
     }
 
     default boolean isValueWrapper() {
-        return anyType() instanceof Type type
-                && type.lookup() instanceof Alias alias
-                && alias.isValueWrapper();
+        return anyType() instanceof Type t && t.lookup() instanceof Alias a && a.isValueWrapper();
     }
 }

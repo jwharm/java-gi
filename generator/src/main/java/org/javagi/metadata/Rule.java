@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -31,6 +31,5 @@ import java.util.Map;
  * @param args     argument names and values
  * @param children nested (relative) rules
  */
-public record Rule(String glob, String selector, Map<String, String> args,
-                   List<Rule> children) {
+public record Rule(String glob, String selector, Map<String, String> args, List<Rule> children) {
 }
