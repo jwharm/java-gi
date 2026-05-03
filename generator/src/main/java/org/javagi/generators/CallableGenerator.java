@@ -162,8 +162,7 @@ public class CallableGenerator {
             if (first)
                 first = false;
             else
-                stmt.add(", "); // ",$W"
-            stmt.add("$Z");
+                stmt.add(",$W");
 
             var generator = new TypedValueGenerator(p);
             var name = generator.getName();

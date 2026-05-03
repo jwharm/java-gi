@@ -269,7 +269,7 @@ class TypedValueGenerator {
                 if (t.isString() || t.isMemorySegment() || t.isVoid())
                     yield CodeBlock.of("$L.getValue()", identifier);
 
-                yield CodeBlock.of("$L.getValue().$LValue", identifier, t.javaType());
+                yield CodeBlock.of("$L.getValue().$LValue()", identifier, t.javaType());
             }
             case Bitfield _ -> CodeBlock.of("$T.enumSetToInt($L)", ClassNames.INTEROP, identifier);
             case Callback _ -> {
@@ -345,10 +345,11 @@ class TypedValueGenerator {
         else if (target instanceof Record
                         && (!elemType.isPointer())
                         && (!"GLib.PtrArray".equals(array.name())))
-            stmt = CodeBlock.of("$T.allocateNativeArray($L, $T.getMemoryLayout(), $L)",
+            stmt = CodeBlock.of("$T.allocateNativeArray($L, $T.getMemoryLayout(), $L, $L)",
                             ClassNames.INTEROP,
                             identifier,
                             target.typeName(),
+                            array.zeroTerminated(),
                             allocator);
 
         else if ("GLib.ByteArray".equals(array.name())) {
@@ -472,7 +473,7 @@ class TypedValueGenerator {
             CodeBlock keyConstructor = getElementConstructor(type, 0);
             CodeBlock valueConstructor = getElementConstructor(type, 1);
 
-            return CodeBlock.of("new $L($L, $L, $L)", type.typeName(), identifier, keyConstructor, valueConstructor);
+            return CodeBlock.of("new $T($L, $L, $L)", type.typeName(), identifier, keyConstructor, valueConstructor);
         }
 
         if (target != null && target.checkIsGBytes())
@@ -728,10 +729,10 @@ class TypedValueGenerator {
             // GStrv is just an alias for an array of strings, but GByteArray
             // needs to be allocated
             if ("GLib.ByteArray".equals(array.name()))
-                return CodeBlock.of("$T.takeUnowned($L).handle()",
+                return CodeBlock.of("_value.setBoxed($T.takeUnowned($L).handle())",
                         ClassNames.G_BYTE_ARRAY, payloadIdentifier);
             else
-                return CodeBlock.of("$T.allocateNativeArray($L, true, _arena)",
+                return CodeBlock.of("_value.setBoxed($T.allocateNativeArray($L, true, _arena))",
                         ClassNames.INTEROP, payloadIdentifier);
         }
 
@@ -763,23 +764,35 @@ class TypedValueGenerator {
         }
 
         // Other, known types
-        String setValue = switch (type == null ? null : type.name()) {
-            case "gboolean" -> "setBoolean";
-            case "gchar", "gint8" -> "setSchar";
-            case "guchar", "guint8" -> "setUchar";
-            case "gint", "gint32" -> "setInt";
-            case "guint", "guint32", "gunichar" -> "setUint";
-            case "glong" -> "setLong";
-            case "gulong" -> "setUlong";
-            case "gint64" -> "setInt64";
-            case "guint64" -> "setUint64";
-            case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "setPointer";
-            case "gdouble" -> "setDouble";
-            case "gfloat" -> "setFloat";
-            case "none" -> "NONE";
-            case "utf8", "filename" -> "setString";
-            case null, default -> null;
-        };
+        String setValue = null;
+        if (type != null) {
+            setValue = switch (type.cType()) {
+                case "gboolean" -> "setBoolean";
+                case "gchar", "gint8" -> "setSchar";
+                case "guchar", "guint8" -> "setUchar";
+                case "gint", "gint32" -> "setInt";
+                case "guint", "guint32", "gunichar" -> "setUint";
+                case "glong" -> "setLong";
+                case "gulong" -> "setUlong";
+                case "gint64" -> "setInt64";
+                case "guint64" -> "setUint64";
+                case "gpointer", "gconstpointer", "gssize", "gsize", "goffset", "gintptr", "guintptr" -> "setPointer";
+                case "gdouble" -> "setDouble";
+                case "gfloat" -> "setFloat";
+                case "none" -> "NONE";
+                case "utf8", "filename" -> "setString";
+                case null, default -> null;
+            };
+
+            if (type.isString())
+                setValue = "setString";
+            else if (type.isMemorySegment() || (type.name() == null && type.cType() == null))
+                setValue = "setPointer";
+            else if (type.typeName().equals(ClassNames.G_OBJECT))
+                setValue = "setObject";
+            else if (type.checkIsGList())
+                setValue = "setPointer";
+        }
 
         if (setValue == null) {
             RegisteredType rt = target instanceof Alias a ? a.lookup() : target;

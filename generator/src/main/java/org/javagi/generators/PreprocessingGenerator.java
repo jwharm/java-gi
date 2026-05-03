@@ -204,8 +204,6 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         identifier += ".get()";
                         nullCheck += " && " + identifier + " != null";
                     }
-                    builder.beginControlFlow("if (" + nullCheck + ")");
-
                     CodeBlock valueLayout = getMemoryLayout(type);
 
                     builder.addStatement("$T _$LPointer = _arena.allocate($Z$L)",
@@ -214,6 +212,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                     // For inout parameters, when the value is not null, write it into the
                     // allocated memory segment.
                     if (p.direction() == Direction.INOUT) {
+                        builder.beginControlFlow("if (" + nullCheck + ")");
                         Callable copyFunc = target instanceof StandardLayoutType slt ? slt.copyFunction() : null;
 
                         // Marshal GList, GHashTable, GValue and GClosure
@@ -229,11 +228,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
                         else if (target != null
                                 && copyFunc == null
                                 && valueLayout.toString().endsWith(".getMemoryLayout()")) {
-
-                            builder.addStatement("long _$LSize = $T.getMemoryLayout().byteSize()",
-                                    getName(), v.anyType().typeName());
-
-                            builder.addStatement("$1LPointer.set($2T.ADDRESS, 0, $3T.copy($4T.getType(), $1L.get(), "
+                            builder.addStatement("_$1LPointer.set($2T.ADDRESS, 0, $3T.copy($4T.getType(), $1L.get(), "
                                             + "$5T.getMemoryLayout().byteSize()))",
                                     getName(),
                                     ValueLayout.class,
@@ -272,16 +267,15 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         if (p.isOutParameter()) {
             // Set the initial value of the allocated pointer to the length
             // of the input array
-            if (p.isArrayLengthParameter() && p.isOutParameter()) {
-                builder.addStatement("_$LPointer.set($L, 0L,$W,$L)",
+            if (p.isArrayLengthParameter() && p.isOutParameter())
+                builder.addStatement("_$LPointer.set($L, 0L,$W$L)",
                         getName(), getValueLayout(type), arrayLengthStatement());
-            }
             // Declare an Out<> instance
             builder.addStatement("$1T $2L = new $3T<>()",
                     getType(), getName(), ClassNames.OUT);
         } else {
             // Declare a primitive value
-            builder.addStatement("$T $L =$W$L)",
+            builder.addStatement("$T $L =$W$L",
                     getType(), getName(), arrayLengthStatement());
         }
     }

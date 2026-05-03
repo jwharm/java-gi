@@ -186,6 +186,10 @@ public class MemoryLayoutGenerator {
         public CodeBlock generateMemoryLayout() {
             var stmt = CodeBlock.builder();
 
+            if (bits() > 0)
+                return stmt.add("$T.sequenceLayout($L, $T.JAVA_BYTE) /* bitfield */",
+                        MemoryLayout.class, size(), ValueLayout.class).build();
+
             if (field.anyType() instanceof Type t)
                 stmt.add(layoutForType(t));
             else if (field.anyType() instanceof Array a && a.fixedSize() > 0)
@@ -193,10 +197,6 @@ public class MemoryLayoutGenerator {
                         MemoryLayout.class, a.fixedSize(), layoutForType((Type) a.anyType()));
             else // Array (no fixed size) or callback
                 stmt.add("$T.ADDRESS", ValueLayout.class);
-
-            if (bits() > 0)
-                return stmt.add("$T.sequenceLayout($L, $T.JAVA_BYTE) /* bitfield */",
-                        MemoryLayout.class, size(), ValueLayout.class).build();
 
             if (name() != null)
                 stmt.add(".withName($S)", name());
