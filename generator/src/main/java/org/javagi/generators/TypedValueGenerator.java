@@ -207,7 +207,7 @@ class TypedValueGenerator {
         return "...".equals(v.name()) ? "varargs" : toJavaIdentifier(v.name());
     }
 
-    private CodeBlock transfer() {
+    CodeBlock transfer() {
         TransferOwnership transfer = switch(v) {
             case Parameter    p ->  p.transferOwnership();
             case ReturnValue rv -> rv.transferOwnership();
