@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,13 +19,11 @@
 
 package org.javagi.gir;
 
-import java.util.Map;
-
 public final class Doc extends GirElement implements Documentation {
 
     private final String text;
 
-    public Doc(Map<String, String> attributes, String text) {
+    public Doc(String text) {
         this.text = text;
     }
 

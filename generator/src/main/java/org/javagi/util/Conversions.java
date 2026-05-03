@@ -207,8 +207,7 @@ public class Conversions {
             case "int" -> TypeName.INT;
             case "long" -> TypeName.LONG;
             case "short" -> TypeName.SHORT;
-            default -> throw new IllegalStateException("Unexpected value: %s"
-                    .formatted(primitive));
+            default -> throw new IllegalStateException("Unexpected value: " + primitive);
         };
     }
 
@@ -254,35 +253,6 @@ public class Conversions {
             return a.anyType().typeName();
 
         return TypeName.get(MemorySegment.class);
-    }
-
-    /**
-     * Return a type tag that can be used for the carrier type.
-     */
-    public static String getCarrierTypeTag(AnyType t) {
-        if (t == null || t instanceof Array)
-            return "memorySegment";
-
-        Type type = (Type) t;
-
-        if (type.isPointer())
-            return "memorySegment";
-
-        if (type.isBoolean())
-            return "int";
-
-        if (type.isPrimitive() || "none".equals(t.cType()))
-            return toJavaBaseType(type.name());
-
-        RegisteredType target = type.lookup();
-
-        if (target instanceof EnumType)
-            return "int";
-
-        if (target instanceof Alias a && a.isValueWrapper())
-            return getCarrierTypeTag(a.anyType());
-
-        return "memorySegment";
     }
 
     /**
@@ -342,7 +312,6 @@ public class Conversions {
      * to the provided type.
      */
     public static String literal(TypeName type, String value) throws NumberFormatException {
-
         if (type.equals(TypeName.BOOLEAN))
             return Boolean.valueOf(value).toString();
 

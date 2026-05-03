@@ -52,8 +52,7 @@ public interface Node {
      * @return whether the predicate matched for this node or one of its
      *         children (recursively)
      */
-    default boolean deepMatch(Predicate<? super Node> predicate,
-                              java.lang.Class<? extends Node> skip) {
+    default boolean deepMatch(Predicate<? super Node> predicate, java.lang.Class<? extends Node> skip) {
         if (skip.isAssignableFrom(this.getClass()))
             return false;
         if (predicate.test(this))

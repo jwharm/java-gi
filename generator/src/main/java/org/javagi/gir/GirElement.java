@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -180,10 +180,8 @@ public abstract class GirElement implements Serializable, Node {
             return false;
 
         GirElement that = (GirElement) o;
-        return Objects.equals(withoutDocs(children),
-                              withoutDocs(that.children))
-                && Objects.equals(identifyingAttrs(attributes),
-                                  identifyingAttrs(that.attributes));
+        return Objects.equals(withoutDocs(children), withoutDocs(that.children))
+                && Objects.equals(identifyingAttrs(attributes), identifyingAttrs(that.attributes));
     }
 
     @Override
@@ -211,10 +209,6 @@ public abstract class GirElement implements Serializable, Node {
 
     @Override
     public String toString() {
-        return "%s %s %s".formatted(
-                getClass().getSimpleName(),
-                attributes(),
-                children()
-        );
+        return "%s %s %s".formatted(getClass().getSimpleName(), attributes(), children());
     }
 }

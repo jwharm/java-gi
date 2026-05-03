@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -41,12 +41,9 @@ import static org.javagi.configuration.Patches.PATCHES;
 public final class GirParser {
 
     private static final List<String> SKIP_LIST = List.of(
-            "c:include", "function-inline", "function-macro",
-            "method-inline", "package"
-    );
+            "c:include", "function-inline", "function-macro", "method-inline", "package");
     private static final GirParser INSTANCE = new GirParser();
-    private static final XMLInputFactory XML_INPUT_FACTORY =
-            XMLInputFactory.newInstance();
+    private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
     // Prevent instantiation
     private GirParser() {
@@ -90,38 +87,29 @@ public final class GirParser {
      */
     public Repository parse(File file, int platform, Repository repository)
             throws XMLStreamException, FileNotFoundException {
-
         if (!file.exists())
             return repository;
-
         return parse(new FileInputStream(file), platform, repository);
     }
 
     /**
      * Parse GIR XML and build the GIR model.
      *
-     * @param  inputStream Input stream for a GIR file
-     * @param  platform   the platform of the GIR XML file
-     * @param  repository an existing GIR model to merge with the new repository
+     * @param  inputStream input stream for a GIR file
+     * @param  platform    the platform of the GIR XML file
+     * @param  repository  an existing GIR model to merge with the new repository
      * @return the GIR model
-     * @throws XMLStreamException    if the XML cannot be parsed
+     * @throws XMLStreamException if the XML cannot be parsed
      */
     public Repository parse(InputStream inputStream,
                             int platform,
                             Repository repository) throws XMLStreamException {
-        XMLEventReader eventReader =
-                XML_INPUT_FACTORY.createXMLEventReader(inputStream);
-
+        XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(inputStream);
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
             if (event.isStartElement())
-                return (Repository) parseElement(eventReader,
-                                                 event.asStartElement(),
-                                                 platform,
-                                                 repository,
-                                                 null);
+                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, null);
         }
-
         throw new IllegalStateException("Invalid XML");
     }
 
@@ -139,8 +127,7 @@ public final class GirParser {
         // Move from repository to namespace: return the namespace node with
         // the same name attribute.
         String name = attributes(elem).get("name");
-        if (existingNode instanceof Repository repo
-                && elemName.equals("namespace")) {
+        if (existingNode instanceof Repository repo && elemName.equals("namespace")) {
             for (Namespace ns : repo.namespaces())
                 if (ns.name().equals(name))
                     return ns;
@@ -173,9 +160,7 @@ public final class GirParser {
                                     StartElement elem,
                                     int platform,
                                     Node existingNode,
-                                    String nsName)
-            throws XMLStreamException {
-
+                                    String nsName) throws XMLStreamException {
         var elemName = qname(elem.getName());
         var children = new ArrayList<Node>();
         var attributes = attributes(elem);
@@ -191,30 +176,29 @@ public final class GirParser {
 
                 // Remember namespace name
                 if (qname(startElement.getName()).equals("namespace"))
-                    nsName = startElement.getAttributeByName(
-                            new QName("name")).getValue();
+                    nsName = startElement.getAttributeByName(new QName("name")).getValue();
 
                 // Create new child node
-                Node newNode = parseElement(eventReader, startElement, platform,
-                        existingChildNode, nsName);
+                Node newNode = parseElement(eventReader, startElement, platform, existingChildNode, nsName);
 
                 // Apply patches
                 for (Patch patch : PATCHES)
                     newNode = patch.patch((GirElement) newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
-                if (existingChildNode instanceof Namespace existing
-                        && newNode instanceof Namespace created)
-                    newNode = created.mergeWith(existing);
-                else if (existingChildNode instanceof RegisteredType existing
-                        && newNode instanceof RegisteredType created)
-                    newNode = created.mergeWith(existing);
+                if (existingChildNode instanceof Namespace ns1 && newNode instanceof Namespace ns2)
+                    newNode = ns2.mergeWith(ns1);
+                else if (existingChildNode instanceof RegisteredType rt1 && newNode instanceof RegisteredType rt2)
+                    newNode = rt2.mergeWith(rt1);
 
                 children.add(newNode);
-            } else if (event.isCharacters()) {
+            }
+
+            else if (event.isCharacters()) {
                 contents.append(event.asCharacters().getData());
-            } else if (event.isEndElement()
-                    && qname(event.asEndElement().getName()).equals(elemName)) {
+            }
+
+            else if (event.isEndElement() && qname(event.asEndElement().getName()).equals(elemName)) {
                 break;
             }
         }
@@ -231,7 +215,7 @@ public final class GirParser {
             case "class"              -> new Class(attributes, children);
             case "constant"           -> new Constant(attributes, children);
             case "constructor"        -> new Constructor(attributes, children);
-            case "doc"                -> new Doc(attributes, contents.toString().trim());
+            case "doc"                -> new Doc(contents.toString().trim());
             case "doc:format"         -> new DocFormat(attributes);
             case "docsection"         -> new Docsection(attributes, children);
             case "doc-deprecated"     -> new DocDeprecated(contents.toString().trim());
@@ -268,20 +252,19 @@ public final class GirParser {
         };
     }
 
-    // Skip past <c:include>, <package> and <function-macro> elements
-    private void fastForward(XMLEventReader eventReader)
-            throws XMLStreamException {
-
+    // Skip past all elements that are ignored
+    private void fastForward(XMLEventReader eventReader) throws XMLStreamException {
         var event = eventReader.peek();
-        if (!event.isStartElement()) return;
+        if (!event.isStartElement())
+            return;
+
         String elemName = qname(event.asStartElement().getName());
-        if (!SKIP_LIST.contains(elemName)) return;
+        if (!SKIP_LIST.contains(elemName))
+            return;
 
         while (eventReader.hasNext()) {
             XMLEvent nextEvent = eventReader.nextEvent();
-            if (nextEvent.isEndElement()
-                    && qname(nextEvent.asEndElement().getName())
-                                .equals(elemName)) {
+            if (nextEvent.isEndElement() && qname(nextEvent.asEndElement().getName()).equals(elemName)) {
                 fastForward(eventReader);
                 return;
             }

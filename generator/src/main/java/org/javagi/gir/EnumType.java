@@ -25,9 +25,7 @@ import static org.javagi.util.CollectionUtils.*;
 
 import java.util.List;
 
-public sealed interface EnumType
-        extends RegisteredType
-        permits Bitfield, Enumeration {
+public sealed interface EnumType extends RegisteredType permits Bitfield, Enumeration {
 
     @Override
     default CodeBlock constructorName() {

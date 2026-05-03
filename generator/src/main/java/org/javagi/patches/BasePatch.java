@@ -1,3 +1,22 @@
+/* Java-GI - Java language bindings for GObject-Introspection-based libraries
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.javagi.patches;
 
 import org.javagi.gir.*;
@@ -38,8 +57,7 @@ public class BasePatch implements Patch {
             && e.children().stream().anyMatch(
                 child -> child instanceof Function func
                     && func.parameters() != null
-                    && isInstanceParameter(func.parameters().parameters().getFirst(),
-                                           e, namespace))) {
+                    && isInstanceParameter(func.parameters().parameters().getFirst(), e, namespace))) {
 
             // Create a new list of nodes for the type,
             // replacing functions by methods when possible.
@@ -47,8 +65,7 @@ public class BasePatch implements Patch {
             for (Node child : e.children()) {
                 if (child instanceof Function func
                         && func.parameters() != null
-                        && isInstanceParameter(func.parameters().parameters().getFirst(),
-                                               e, namespace)) {
+                        && isInstanceParameter(func.parameters().parameters().getFirst(), e, namespace)) {
 
                     // Create new <parameters> element for method
                     var pList = func.parameters().parameters();
@@ -117,7 +134,6 @@ public class BasePatch implements Patch {
                                         String namespace) {
         return (param.direction() != OUT && param.direction() != INOUT)
                 && param.anyType() instanceof Type t
-                && (rt.name().equals(t.name())
-                    || (namespace + "." + rt.name()).equals(t.name()));
+                && (rt.name().equals(t.name()) || (namespace + "." + rt.name()).equals(t.name()));
     }
 }

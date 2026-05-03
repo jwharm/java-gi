@@ -568,7 +568,6 @@ class TypedValueGenerator {
 
     private CodeBlock marshalNativeToJavaArray(Type type, String arraySize, CodeBlock identifier) {
         RegisteredType target = type.lookup();
-        String targetTypeTag = target != null ? type.toTypeTag() : null;
         String primitive = type.isPrimitive() ? primitiveClassName(type.javaType()) : null;
         CodeBlock size = arraySize == null ? null : CodeBlock.of(arraySize);
 

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2024 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -76,10 +76,7 @@ public enum Scope {
      * @return the scope as described above
      */
     public static Scope ofTypedValue(TypedValue value) {
-        var scope = value instanceof Parameter p ? p.scope()
-                : value instanceof Field ? Scope.CALL
-                : null;
-
+        var scope = value instanceof Parameter p ? p.scope() : value instanceof Field ? Scope.CALL : null;
         if (scope == Scope.BOUND) {
             var method = value.parent().parent();
             if (method instanceof Constructor || method instanceof Function)

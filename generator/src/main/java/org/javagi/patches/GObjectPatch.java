@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -45,17 +45,9 @@ public class GObjectPatch implements Patch {
          * GObject.InitiallyUnownedClass is not a fundamental type class, but
          * extends GObject.ObjectClass.
          */
-        if (element instanceof Record r
-                && "InitiallyUnownedClass".equals(r.name())) {
-            Type type = new Type(
-                    Map.of("name", "GObject.ObjectClass",
-                           "c:type", "GObjectClass"),
-                    emptyList()
-            );
-            Field field = new Field(
-                    Map.of("name", "parent_class"),
-                    List.of(type)
-            );
+        if (element instanceof Record r && "InitiallyUnownedClass".equals(r.name())) {
+            Type type = new Type(Map.of("name", "GObject.ObjectClass", "c:type", "GObjectClass"), emptyList());
+            Field field = new Field(Map.of("name", "parent_class"), List.of(type));
             return r.withChildren(r.infoElements().doc(), field);
         }
 

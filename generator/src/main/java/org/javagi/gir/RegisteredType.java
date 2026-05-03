@@ -29,8 +29,7 @@ import static org.javagi.util.Conversions.toJavaQualifiedType;
 import static org.javagi.util.Conversions.uncapitalize;
 
 public sealed interface RegisteredType extends Node
-        permits Alias, Callback, Class, EnumType, Interface,
-                Namespace, StandardLayoutType, FieldContainer {
+        permits Alias, Callback, Class, EnumType, Interface, Namespace, StandardLayoutType, FieldContainer {
 
     RegisteredType mergeWith(RegisteredType rt);
     InfoAttrs infoAttrs();
@@ -130,8 +129,7 @@ public sealed interface RegisteredType extends Node
 
         // Subclasses of GInitiallyUnowned don't need to implement the
         // `Floating` interface, because GInitiallyUnowned already does.
-        if (this instanceof Class cls
-                && cls.isInstanceOf("GObject", "InitiallyUnowned"))
+        if (this instanceof Class cls && cls.isInstanceOf("GObject", "InitiallyUnowned"))
             return false;
 
         // Any other classes that have a ref_sink method, will be treated as

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -56,8 +56,7 @@ public final class VirtualMethod extends GirElement implements Callable {
      */
     boolean equalTypeSignature(Method m) {
         // Compare instance parameter type
-        if (different(parameters().instanceParameter(),
-                      m.parameters().instanceParameter()))
+        if (different(parameters().instanceParameter(), m.parameters().instanceParameter()))
             return false;
 
         // Compare exceptions

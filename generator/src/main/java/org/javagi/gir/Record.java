@@ -84,8 +84,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
     public ClassName typeName() {
         var outerClass = isGTypeStructFor();
         if (outerClass != null)
-            return outerClass.typeName()
-                    .nestedClass(toJavaSimpleType(name(), namespace()));
+            return outerClass.typeName().nestedClass(toJavaSimpleType(name(), namespace()));
         else
             return toJavaQualifiedType(name(), namespace());
     }
@@ -126,8 +125,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
 
         // use heuristics: find instance method `copy()` or `ref()`
         for (var m : methods())
-            if ("ref".equals(m.name()) || "copy".equals(m.name())
-                    && m.parameters().parameters().isEmpty())
+            if ("ref".equals(m.name()) || "copy".equals(m.name()) && m.parameters().parameters().isEmpty())
                 return m;
 
         return null;
@@ -142,8 +140,7 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
         // use heuristics: find function or method `free()` or `unref()`
         for (var n : children())
             if (n instanceof Callable c)
-                if ("unref".equals(c.name()) || "free".equals(c.name())
-                        && c.parameters().parameters().isEmpty())
+                if ("unref".equals(c.name()) || "free".equals(c.name()) && c.parameters().parameters().isEmpty())
                     return c;
 
         return null;

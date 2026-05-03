@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -41,8 +41,7 @@ public final class ReturnValue extends GirElement implements TypedValue {
         return switch(anyType()) {
             case Array _ -> true;
             case Type type when type.isString() -> (parent() instanceof Callback || parent() instanceof Signal);
-            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope())
-                    && type.lookup() instanceof Callback;
+            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope()) && type.lookup() instanceof Callback;
         };
     }
 

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 the Java-GI developers
+ * Copyright (C) 2022-2026 the Java-GI developers
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -188,13 +188,11 @@ public class Parser {
         for (TokenType type : expected) {
             if (token.type() == type) return;
         }
-        error("Invalid token " + token.type() +
-                ", expected one of: " + Arrays.toString(expected));
+        error("Invalid token " + token.type() + ", expected one of: " + Arrays.toString(expected));
     }
 
     // Log an error message. The source location is included in the error.
     private void error(String message) {
-        logger.severe("%s: %d: %s%n".formatted(
-                scanner.filename, scanner.getLine(scanner.start), message));
+        logger.severe("%s: %d: %s%n".formatted(scanner.filename, scanner.getLine(scanner.start), message));
     }
 }
