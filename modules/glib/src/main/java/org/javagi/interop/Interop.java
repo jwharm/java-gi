@@ -663,6 +663,8 @@ public class Interop {
             case MemorySegment m -> m;
             // string
             case String s    -> alloc.allocateFrom(s);
+            // filename
+            case Filename f  -> f.toMemorySegment(alloc);
             // primitive value
             case Boolean b   -> alloc.allocateFrom(JAVA_INT, b ? 1 : 0);
             case Byte b      -> alloc.allocateFrom(JAVA_BYTE, b);
@@ -685,10 +687,9 @@ public class Interop {
             // flags (empty set)
             case Set<?> s when s.isEmpty() -> getAddress(0, alloc);
             // flags
-            case Set<?> s when s.iterator().next() instanceof Enum ->
-                                    getAddress(enumSetToInt((Set) s), alloc);
+            case Set<?> s when s.iterator().next() instanceof Enum -> getAddress(enumSetToInt((Set) s), alloc);
             default -> throw new IllegalArgumentException(
-                    "Not a MemorySegment, String, primitive, enum/flags or Proxy type");
+                    "Not a MemorySegment, String, Filename, primitive, enum/flags or Proxy type");
         };
     }
 
@@ -754,6 +755,66 @@ public class Interop {
             GLib.free(array);
 
         return result.toArray(new String[0]);
+    }
+
+    /**
+     * Read an array of Filenames with the requested length from native memory.
+     *
+     * @param  address  address of the memory segment
+     * @param  length   length of the array
+     * @param  transfer ownership transfer
+     * @return array of Filenames
+     */
+    public static Filename @Nullable [] getFilenameArrayFrom(
+            MemorySegment address, int length, TransferOwnership transfer) {
+        if (NULL.equals(address))
+            return null;
+
+        long size = ADDRESS.byteSize();
+        MemorySegment array = reinterpret(address, size * length);
+        requireNonNull(array);
+
+        var result = new Filename[length];
+        for (int i = 0; i < length; i++) {
+            MemorySegment ptr = array.getAtIndex(ADDRESS, i);
+            result[i] = new Filename(ptr, transfer == CONTAINER ? FULL : transfer);
+        }
+
+        if (transfer != NONE)
+            GLib.free(array);
+        return result;
+    }
+
+    /**
+     * Read an array of Filenames from a {@code NULL}-terminated array in native
+     * memory.
+     *
+     * @param  address  address of the memory segment
+     * @param  transfer ownership transfer
+     * @return array of Filenames
+     */
+    public static Filename @Nullable [] getFilenameArrayFrom(
+            MemorySegment address, TransferOwnership transfer) {
+        if (NULL.equals(address))
+            return null;
+
+        MemorySegment array = reinterpret(address, LONG_UNBOUNDED);
+        requireNonNull(array);
+
+        ArrayList<Filename> result = new ArrayList<>();
+        long offset = 0;
+        while (true) {
+            MemorySegment ptr = array.get(ADDRESS, offset);
+            if (NULL.equals(ptr))
+                break;
+            result.add(new Filename(ptr, transfer == CONTAINER ? FULL : transfer));
+            offset += ADDRESS.byteSize();
+        }
+
+        if (transfer != NONE)
+            GLib.free(array);
+
+        return result.toArray(new Filename[0]);
     }
 
     /**
@@ -1417,7 +1478,7 @@ public class Interop {
                 case Short s_ -> memorySegment.setAtIndex(JAVA_SHORT, i, (short) 0);
                 case String str -> memorySegment.setAtIndex(ADDRESS, i, NULL);
                 case MemorySegment seg -> memorySegment.setAtIndex(ADDRESS, i, NULL);
-                default -> throw new IllegalStateException("Unexpected value: " + aliases[i]);
+                default -> throw new IllegalStateException("Unexpected value: " + firstValue);
             }
         }
 
@@ -1449,6 +1510,36 @@ public class Interop {
 
         if (zeroTerminated)
             memorySegment.setAtIndex(ADDRESS, strings.length, NULL);
+
+        return memorySegment;
+    }
+
+    /**
+     * Allocate and initialize an (optionally {@code NULL}-terminated) array of
+     * filenames ({@code NULL}-terminated {@code char*}).
+     *
+     * @param  filenames      array of Filenames
+     * @param  zeroTerminated whether to add a {@code NULL} to the array
+     * @param  alloc          the segment allocator for the array
+     * @return the memory segment of the native array
+     */
+    public static MemorySegment allocateNativeArray(@Nullable Filename @Nullable [] filenames,
+                                                    boolean zeroTerminated,
+                                                    SegmentAllocator alloc) {
+        if (filenames == null)
+            return NULL;
+
+        int length = zeroTerminated ? filenames.length + 1 : filenames.length;
+        var memorySegment = alloc.allocate(ADDRESS, length);
+
+        for (int i = 0; i < filenames.length; i++) {
+            var filename = filenames[i];
+            var segment = filename == null ? NULL : filename.toMemorySegment(alloc);
+            memorySegment.setAtIndex(ADDRESS, i, segment);
+        }
+
+        if (zeroTerminated)
+            memorySegment.setAtIndex(ADDRESS, filenames.length, NULL);
 
         return memorySegment;
     }
@@ -1659,14 +1750,11 @@ public class Interop {
      * @return the newly create GByteArray
      */
     public static MemorySegment newGByteArray() {
-        try (var _arena = Arena.ofConfined()) {
-            MemorySegment _result;
-            try {
-                MemorySegment g_byte_array = (MemorySegment) DowncallHandles.g_byte_array_new.invokeExact();
-                return g_byte_array.reinterpret(ByteArray.getMemoryLayout().byteSize());
-            } catch (Throwable _err) {
-                throw new AssertionError(_err);
-            }
+        try {
+            MemorySegment g_byte_array = (MemorySegment) DowncallHandles.g_byte_array_new.invokeExact();
+            return g_byte_array.reinterpret(ByteArray.getMemoryLayout().byteSize());
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
         }
     }
 
@@ -1676,14 +1764,11 @@ public class Interop {
      * @return the newly create GPtrArray
      */
     public static MemorySegment newGPtrArray() {
-        try (var _arena = Arena.ofConfined()) {
-            MemorySegment _result;
-            try {
-                MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new.invokeExact();
-                return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
-            } catch (Throwable _err) {
-                throw new AssertionError(_err);
-            }
+        try {
+            MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new.invokeExact();
+            return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
         }
     }
 
@@ -1693,15 +1778,12 @@ public class Interop {
      * @return the newly create GPtrArray
      */
     public static MemorySegment newGPtrArray(MemorySegment data, long length) {
-        try (var _arena = Arena.ofConfined()) {
-            MemorySegment _result;
-            try {
-                MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new_take.invokeExact(
-                        data, length, NULL);
-                return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
-            } catch (Throwable _err) {
-                throw new AssertionError(_err);
-            }
+        try {
+            MemorySegment g_ptr_array = (MemorySegment) DowncallHandles.g_ptr_array_new_take.invokeExact(
+                    data, length, NULL);
+            return g_ptr_array.reinterpret(PtrArray.getMemoryLayout().byteSize());
+        } catch (Throwable _err) {
+            throw new AssertionError(_err);
         }
     }
 
@@ -1936,17 +2018,17 @@ public class Interop {
      * @return the GBytes
      */
     public static MemorySegment toGBytes(byte @Nullable [] data) {
-        try (var _arena = Arena.ofConfined()) {
+        try (var arena = Arena.ofConfined()) {
             long size = data == null ? 0L : data.length;
-            MemorySegment _result;
+            MemorySegment result;
             try {
-                _result = (MemorySegment) DowncallHandles.g_bytes_new.invokeExact(
-                        (MemorySegment) (data == null ? NULL : allocateNativeArray(data, false, _arena)),
+                result = (MemorySegment) DowncallHandles.g_bytes_new.invokeExact(
+                        (MemorySegment) (data == null ? NULL : allocateNativeArray(data, false, arena)),
                         size);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
-            return _result;
+            return result;
         }
     }
 
@@ -1957,18 +2039,17 @@ public class Interop {
      * @return the Java byte array
      */
     public static byte @Nullable [] fromGBytes(MemorySegment address) {
-        try (var _arena = Arena.ofConfined()) {
-            MemorySegment _sizePointer = _arena.allocate(JAVA_LONG);
-            _sizePointer.set(JAVA_LONG, 0L, 0L);
-            Out<Long> size = new Out<>();
-            MemorySegment _result;
+        try (var arena = Arena.ofConfined()) {
+            MemorySegment sizePointer = arena.allocate(JAVA_LONG);
+            sizePointer.set(JAVA_LONG, 0L, 0L);
+            MemorySegment result;
             try {
-                _result = (MemorySegment) DowncallHandles.g_bytes_get_data.invokeExact(address, _sizePointer);
+                result = (MemorySegment) DowncallHandles.g_bytes_get_data.invokeExact(address, sizePointer);
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
-            size.set(_sizePointer.get(JAVA_LONG, 0));
-            return getByteArrayFrom(_result, size.get().intValue(), _arena, NONE);
+            long size = sizePointer.get(JAVA_LONG, 0);
+            return getByteArrayFrom(result, size, arena, NONE);
         }
     }
 

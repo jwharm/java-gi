@@ -102,7 +102,7 @@ public class CallableGenerator {
                 : getValueLayout(anyType, false);
     }
 
-    void generateMethodParameters(MethodSpec.Builder builder, boolean generic, boolean setOfBitfield) {
+    void generateMethodParameters(MethodSpec.Builder builder, boolean generic, boolean useActualType) {
         if (callable.parameters() == null)
             return;
 
@@ -117,10 +117,10 @@ public class CallableGenerator {
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
-                var type = generator.getAnnotatedType(setOfBitfield);
+                var type = generator.getAnnotatedType(useActualType);
 
                 // Trailing flags parameter can be variadic
-                if ((!setOfBitfield)
+                if ((!useActualType)
                         && p.isBitfield()
                         && p.isLastParameter()
                         && (!p.isOutParameter())) {
@@ -264,7 +264,7 @@ public class CallableGenerator {
         }
     }
 
-    public MethodSpec generateBitfieldOverload() {
+    public MethodSpec generateOverload() {
         boolean isConstructor = callable instanceof Constructor c && !c.isNamed();
         boolean generic = MethodGenerator.isGeneric(callable);
         String name = MethodGenerator.getName(callable);
@@ -327,6 +327,7 @@ public class CallableGenerator {
             else
                 stmt.add(",$W");
 
+            // Create an EnumSet<> object for bitfield parameters
             if (p.isBitfield()) {
                 if (p.isOutParameter())
                     stmt.add("$1L == null ? null : new $2T($3T.of($1L.get()))",
@@ -336,11 +337,19 @@ public class CallableGenerator {
                             paramName, EnumSet.class, gen.getType(false));
                 else
                     stmt.add("$T.of($L)", EnumSet.class, paramName);
-            } else stmt.add(paramName);
+            }
+
+            // Create a Filename object for filename parameters
+            else if (p.anyType() instanceof Type t && t.isFilename() && !(p.isOutParameter()))
+                stmt.add("new $T($L)", ClassNames.FILENAME, paramName);
+
+            // All other parameters are forwarded as-is
+            else
+                stmt.add(paramName);
         }
         stmt.add(")");
 
         return builder.addStatement(stmt.build())
-                .build();
+                      .build();
     }
 }

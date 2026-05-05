@@ -79,8 +79,8 @@ public class RegisteredTypeGenerator {
         for (Function f : filter(rt.children(), Function.class)) {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
-                if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+                if (f.hasBitfieldParameters() || f.hasFilenameParameters())
+                    builder.addMethod(new CallableGenerator(f).generateOverload());
             }
         }
     }
@@ -89,8 +89,8 @@ public class RegisteredTypeGenerator {
         for (Constructor c : filter(rt.children(), Constructor.class)) {
             if (!c.skip()) {
                 builder.addMethod(new MethodGenerator(c).generate());
-                if (c.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(c).generateBitfieldOverload());
+                if (c.hasBitfieldParameters() || c.hasFilenameParameters())
+                    builder.addMethod(new CallableGenerator(c).generateOverload());
             }
         }
     }
@@ -99,8 +99,8 @@ public class RegisteredTypeGenerator {
         for (Method m : filter(rt.children(), Method.class)) {
             if (!m.skip()) {
                 builder.addMethod(new MethodGenerator(m).generate());
-                if (m.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(m).generateBitfieldOverload());
+                if (m.hasBitfieldParameters() || m.hasFilenameParameters())
+                    builder.addMethod(new CallableGenerator(m).generateOverload());
             }
         }
     }

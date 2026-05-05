@@ -44,8 +44,8 @@ import static java.lang.foreign.MemorySegment.NULL;
 /**
  * The {@code GHashTable} struct is an opaque data structure to represent a
  * hash table. The keys and values of the Java class can be pointers
- * ({@link MemorySegment} objects), strings, primitive values or native objects
- * (implementing the {@link Proxy} interface).
+ * ({@link MemorySegment} objects), strings, filenames, primitive values,
+ * native objects (implementing the {@link Proxy} interface), enums or flags.
  * <p>
  * This class is intended to help Java developers deal with native functions
  * that require or return a GHashTable. It is not meant to be used as a

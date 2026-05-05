@@ -154,37 +154,37 @@ class TypedValueGenerator {
         return getType(true, false);
     }
 
-    TypeName getType(boolean setOfBitfield) {
-        return getType(setOfBitfield, false);
+    TypeName getType(boolean useActualType) {
+        return getType(useActualType, false);
     }
 
-    TypeName getAnnotatedType(boolean setOfBitfield) {
-        return getType(setOfBitfield, annotateNull());
+    TypeName getAnnotatedType(boolean useActualType) {
+        return getType(useActualType, annotateNull());
     }
 
-    private TypeName getType(boolean setOfBitfield, boolean annotate) {
+    private TypeName getType(boolean useActualType, boolean annotate) {
         if (type != null && type.isActuallyAnArray())
-            return ArrayTypeName.of(getType(type, setOfBitfield, annotate));
+            return ArrayTypeName.of(getType(type, useActualType, annotate));
 
         if (v instanceof Field f && f.callback() != null)
             return f.parent().typeName().nestedClass(
                     toJavaSimpleType(f.name() + "_callback", f.namespace()));
 
         try {
-            return getType(v.anyType(), setOfBitfield, annotate);
+            return getType(v.anyType(), useActualType, annotate);
         } catch (NullPointerException npe) {
             throw new NoSuchElementException("Cannot find " + type);
         }
     }
 
-    private TypeName getType(AnyType anyType, boolean setOfBitfield, boolean annotate) {
+    private TypeName getType(AnyType anyType, boolean useActualType, boolean annotate) {
         // Wrap out parameters in an Out<>, except for primitive aliases, they
         // are already "wrapped" in an Alias<>
         if (v instanceof Parameter p && p.isOutParameter()
                 && (! (p.direction() != Direction.IN && v.isValueWrapper()))) {
             TypeName typeName = anyType.typeName();
 
-            if (setOfBitfield && v.isBitfield())
+            if (useActualType && v.isBitfield())
                 typeName = ParameterizedTypeName.get(ClassName.get(Set.class), typeName.box());
 
             return annotated(ParameterizedTypeName.get(ClassNames.OUT, typeName.box()));
@@ -194,8 +194,11 @@ class TypedValueGenerator {
                 ? anyType.nullableAnnotatedTypeName()
                 : anyType.typeName();
 
-        if (setOfBitfield && v.isBitfield())
+        if (useActualType && v.isBitfield())
                 typeName = ParameterizedTypeName.get(ClassName.get(Set.class), anyType.typeName().box());
+
+        if (!useActualType && type != null && type.isFilename() && !(v instanceof Parameter p && p.isOutParameter()))
+            typeName = TypeName.get(String.class);
 
         if (type != null && type.isUnannotatedReference())
             return annotated(TypeName.get(MemorySegment.class));
@@ -239,6 +242,9 @@ class TypedValueGenerator {
             else
                 return CodeBlock.of("$T.allocateNativeString($L, _arena)", ClassNames.INTEROP, identifier);
         }
+
+        if (type.isFilename())
+            return CodeBlock.of("$L.toMemorySegment(_arena)", identifier);
 
         if (! (v instanceof Parameter p && p.isOutParameter()))
             if (type.cType() != null && type.cType().endsWith("**"))
@@ -444,6 +450,9 @@ class TypedValueGenerator {
         if (type.isString())
             return CodeBlock.of("$T.getStringFrom($L, $L)", ClassNames.INTEROP, identifier, transfer());
 
+        if (type.isFilename())
+            return CodeBlock.of("new $T($L, $L)", ClassNames.FILENAME, identifier, transfer());
+
         if (target instanceof EnumType)
             return CodeBlock.of("$T.of($L)", target.typeName(), identifier);
 
@@ -522,6 +531,9 @@ class TypedValueGenerator {
         return switch (type.anyTypes().get(child)) {
             case Type t when t.isString() ->
                 CodeBlock.of("$T::getStringFrom", ClassNames.INTEROP);
+            case Type t when t.isFilename() ->
+                CodeBlock.of("pointer -> new $T(pointer, $T.NONE)",
+                        ClassNames.FILENAME, ClassNames.TRANSFER_OWNERSHIP);
             // GPOINTER_TO_INT()
             case Type t when t.isInt32() && !t.isPointer() ->
                 CodeBlock.of("pointer -> (int) pointer.address()");
@@ -555,6 +567,8 @@ class TypedValueGenerator {
                 CodeBlock.of("(_ -> {}) /* unsupported */");
             case Type t when t.isString() ->
                 null;
+            case Type t when t.isFilename() ->
+                null;
             case Type t when t.isPrimitive() ->
                 null;
             case Type t when t.isMemorySegment() ->
@@ -585,6 +599,10 @@ class TypedValueGenerator {
         if (size == null) {
             if (type.isString())
                 return CodeBlock.of("$T.getStringArrayFrom($L, $L)",
+                        ClassNames.INTEROP, identifier, transfer());
+
+            if (type.isFilename())
+                return CodeBlock.of("$T.getFilenameArrayFrom($L, $L)",
                         ClassNames.INTEROP, identifier, transfer());
 
             if (type.isMemorySegment())
@@ -618,6 +636,10 @@ class TypedValueGenerator {
         // Array with known size
         if (type.isString())
             return CodeBlock.of("$T.getStringArrayFrom($L, $L, $L)",
+                    ClassNames.INTEROP, identifier, size, transfer());
+
+        if (type.isFilename())
+            return CodeBlock.of("$T.getFilenameArrayFrom($L, $L, $L)",
                     ClassNames.INTEROP, identifier, size, transfer());
 
         if (type.isMemorySegment())

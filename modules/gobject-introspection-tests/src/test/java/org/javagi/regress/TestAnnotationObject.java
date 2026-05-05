@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,6 +21,7 @@ package org.javagi.regress;
 
 import org.gnome.gi.regress.*;
 import org.gnome.gobject.GObject;
+import org.javagi.base.Filename;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
 import org.javagi.interop.Interop;
@@ -366,7 +367,7 @@ public class TestAnnotationObject {
 
     @Test
     void returnFilename() {
-        assertEquals("a utf-8 filename", Regress.annotationReturnFilename());
+        assertEquals(new Filename("a utf-8 filename"), Regress.annotationReturnFilename());
     }
 
     @Test

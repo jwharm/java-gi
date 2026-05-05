@@ -185,10 +185,11 @@ public class Conversions {
             case "gdouble", "long double" -> "double";
             case "gfloat" -> "float";
             case "none" -> "void";
-            case "utf8", "filename" -> "String";
+            case "utf8" -> "String";
+            case "filename" -> "org.javagi.base.Filename";
             case "gpointer", "gconstpointer",
                  // treat va_list as an opaque pointer
-                 "valist", "va_list" -> "MemorySegment";
+                 "valist", "va_list" -> "java.lang.foreign.MemorySegment";
             case "gtype" -> "org.gnome.glib.GType";
             default -> "void /* unsupported type: " + name + " */";
         };
