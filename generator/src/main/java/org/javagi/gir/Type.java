@@ -19,6 +19,7 @@
 
 package org.javagi.gir;
 
+import org.javagi.configuration.ClassNames;
 import org.javagi.javapoet.ParameterizedTypeName;
 import org.javagi.javapoet.TypeName;
 
@@ -72,7 +73,8 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             case "boolean", "byte", "char", "double", "float",
                     "int", "long", "short" -> primitiveTypeName(javaBaseType);
             case "String" -> TypeName.get(String.class);
-            case "MemorySegment" -> TypeName.get(MemorySegment.class);
+            case "org.javagi.base.Filename" -> ClassNames.FILENAME;
+            case "java.lang.foreign.MemorySegment" -> TypeName.get(MemorySegment.class);
             default -> TypeReference.super.typeName();
         };
     }
@@ -110,9 +112,14 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "String".equals(type);
     }
 
+    public boolean isFilename() {
+        String type = toJavaBaseType(name());
+        return "org.javagi.base.Filename".equals(type);
+    }
+
     public boolean isMemorySegment() {
         String type = toJavaBaseType(name());
-        return "MemorySegment".equals(type);
+        return "java.lang.foreign.MemorySegment".equals(type);
     }
 
     public boolean isBoolean() {

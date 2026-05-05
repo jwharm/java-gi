@@ -60,8 +60,8 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
         for (Function f : ns.functions()) {
             if (!f.skip()) {
                 builder.addMethod(new MethodGenerator(f).generate());
-                if (f.hasBitfieldParameters())
-                    builder.addMethod(new CallableGenerator(f).generateBitfieldOverload());
+                if (f.hasBitfieldParameters() || f.hasFilenameParameters())
+                    builder.addMethod(new CallableGenerator(f).generateOverload());
             }
         }
 

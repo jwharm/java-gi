@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,6 +19,7 @@
 
 package org.javagi.regress;
 
+import org.javagi.base.Filename;
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,10 @@ public class TestUtf8 {
 
     @Test
     void filenameReturn() {
-        assertEquals(List.of("åäö", "/etc/fstab"), testFilenameReturn());
+        // Compare filenames (raw byte[] data)
+        assertEquals(List.of(new Filename("åäö"), new Filename("/etc/fstab")), testFilenameReturn());
+
+        // Compare the toString representations
+        assertEquals(List.of("åäö", "/etc/fstab"), testFilenameReturn().stream().map(String::valueOf).toList());
     }
 }

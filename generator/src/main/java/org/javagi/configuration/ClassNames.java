@@ -35,6 +35,7 @@ public final class ClassNames {
     public static final ClassName ALIAS = get(PKG_BASE, "Alias");
     public static final ClassName CONSTANTS = get(PKG_BASE, "Constants");
     public static final ClassName ENUMERATION = get(PKG_BASE, "Enumeration");
+    public static final ClassName FILENAME = get(PKG_BASE, "Filename");
     public static final ClassName FLOATING = get(PKG_BASE, "Floating");
     public static final ClassName FUNCTION_POINTER = get(PKG_BASE, "FunctionPointer");
     public static final ClassName GERROR_EXCEPTION = get(PKG_BASE, "GErrorException");

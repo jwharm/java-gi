@@ -40,13 +40,9 @@ public final class ReturnValue extends GirElement implements TypedValue {
 
         return switch(anyType()) {
             case Array _ -> true;
-            case Type type when type.isString() -> (parent() instanceof Callback || parent() instanceof Signal);
-            case Type type -> List.of(Scope.CALL, Scope.ASYNC).contains(scope()) && type.lookup() instanceof Callback;
+            case Type t when t.isString() || t.isFilename() -> parent() instanceof Callback || parent() instanceof Signal;
+            case Type t -> List.of(Scope.CALL, Scope.ASYNC).contains(scope()) && t.lookup() instanceof Callback;
         };
-    }
-
-    public String overrideValue() {
-        return attr("java-gi-override-value");
     }
 
     public boolean introspectable() {

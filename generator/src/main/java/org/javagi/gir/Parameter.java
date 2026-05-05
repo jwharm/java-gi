@@ -114,7 +114,7 @@ public final class Parameter extends GirElement implements TypedValue {
             return true;
 
         Type type = (Type) anyType();
-        if (type.isString())
+        if (type.isString() || type.isFilename())
             return true;
 
         RegisteredType target = type.lookup();

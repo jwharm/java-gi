@@ -116,6 +116,16 @@ public sealed interface Callable
         return false;
     }
 
+    /**
+     * Return true when there are one or more filename parameters.
+     * Out-parameters are not counted as filename parameters.
+     */
+    default boolean hasFilenameParameters() {
+        return parameters() instanceof Parameters params
+            && params.parameters().stream().anyMatch(p ->
+                p.anyType() instanceof Type t && t.isFilename() && !p.isOutParameter());
+    }
+
     default Parameters parameters() {
         return findAny(children(), Parameters.class);
     }

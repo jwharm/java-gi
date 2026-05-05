@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,6 +21,7 @@ package org.javagi.interop;
 
 import org.javagi.base.Alias;
 import org.javagi.base.Enumeration;
+import org.javagi.base.Filename;
 import org.javagi.base.Proxy;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -41,12 +42,9 @@ import static org.javagi.interop.Interop.*;
 record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
 
     private static final MethodHandle METHOD_HANDLE;
-
     static {
         try {
-            METHOD_HANDLE = MethodHandles.lookup().findVirtual(
-                    VarargsInvoker.class,
-                    "invoke",
+            METHOD_HANDLE = MethodHandles.lookup().findVirtual(VarargsInvoker.class, "invoke",
                     MethodType.methodType(Object.class, Object[].class)
             );
         } catch (ReflectiveOperationException e) {
@@ -58,11 +56,9 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
      * Create a MethodHandle with the base parameters and a placeholder for the
      * varargs.
      */
-    static MethodHandle create(MemorySegment symbol,
-                               FunctionDescriptor baseDesc) {
+    static MethodHandle create(MemorySegment symbol, FunctionDescriptor baseDesc) {
         VarargsInvoker invoker = new VarargsInvoker(symbol, baseDesc);
-        MethodHandle handle = METHOD_HANDLE.bindTo(invoker)
-                .asVarargsCollector(Object[].class);
+        MethodHandle handle = METHOD_HANDLE.bindTo(invoker).asVarargsCollector(Object[].class);
 
         MethodType mtype = MethodType.methodType(
                 baseDesc.returnLayout().isPresent()
@@ -171,8 +167,7 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
         if (MemorySegment.class.isAssignableFrom(c))
             return ValueLayout.ADDRESS;
 
-        throw new InteropException("Unsupported variadic argument type: "
-                + c.getTypeName());
+        throw new InteropException("Unsupported variadic argument type: " + c.getTypeName());
     }
 
     /*
@@ -206,12 +201,16 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
                     allocateNativeArray(arr, false, arena).address();
             case String[] arr ->
                     allocateNativeArray(arr, false, arena).address();
+            case Filename[] arr ->
+                    allocateNativeArray(arr, false, arena).address();
             case MemorySegment segment ->
                     segment;
             case Boolean bool ->
                     bool ? 1 : 0;
             case String string ->
                     allocateNativeString(string, arena).address();
+            case Filename filename ->
+                    filename.toMemorySegment(arena).address();
             case Alias<?> alias ->
                     alias.getValue();
             case Set<?> flags ->
@@ -225,8 +224,7 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
             case Byte _, Character _, Double _, Float _, Integer _, Short _, Long _ ->
                     o;
             default ->
-                    throw new InteropException("Unsupported variadic argument type: "
-                            + o.getClass().getTypeName());
+                    throw new InteropException("Unsupported variadic argument type: " + o.getClass().getTypeName());
         };
     }
 
