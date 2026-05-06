@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -1396,8 +1396,8 @@ public class Types {
     private static Type enumRegisterStatic(String name, EnumValue[] constStaticValues) {
         long _result;
         try {
-            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
-            MemorySegment pValues = Interop.allocateNativeArray(
+            MemorySegment pName = Interop.allocate(name, Arena.global());
+            MemorySegment pValues = Interop.allocate(
                     constStaticValues, EnumValue.getMemoryLayout(), true, Arena.global());
             _result = (long) g_enum_register_static.invokeExact(pName, pValues);
         } catch (Throwable _err) {
@@ -1425,8 +1425,8 @@ public class Types {
     private static Type flagsRegisterStatic(String name, FlagsValue[] constStaticValues) {
         long _result;
         try {
-            MemorySegment pName = Interop.allocateNativeString(name, Arena.global());
-            MemorySegment pValues = Interop.allocateNativeArray(
+            MemorySegment pName = Interop.allocate(name, Arena.global());
+            MemorySegment pValues = Interop.allocate(
                     constStaticValues, FlagsValue.getMemoryLayout(), true, Arena.global());
             _result = (long) g_flags_register_static.invokeExact(pName, pValues);
         } catch (Throwable _err) {

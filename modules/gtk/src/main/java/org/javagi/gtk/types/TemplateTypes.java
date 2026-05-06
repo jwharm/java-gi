@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -384,7 +384,7 @@ public class TemplateTypes {
 
         @SuppressWarnings("unused") // called from foreign function
         default void upcall(MemorySegment object) {
-            run((GObject) requireNonNull(InstanceCache.getForType(object, GObject::new)));
+            run((GObject) requireNonNull(InstanceCache.get(object, GObject::new)));
         }
 
         default MemorySegment toCallback(Arena arena) {

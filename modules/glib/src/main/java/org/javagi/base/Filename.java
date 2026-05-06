@@ -53,7 +53,7 @@ public final class Filename {
      * @param transfer to free the native memory when ownership is transferred
      */
     public Filename(MemorySegment data, TransferOwnership transfer) {
-        this.data = requireNonNull(Interop.getByteArrayFrom(data, transfer));
+        this.data = requireNonNull(Interop.getByteArray(data, transfer));
     }
 
     /**
@@ -64,7 +64,7 @@ public final class Filename {
      * @param transfer to free the native memory when ownership is transferred
      */
     public Filename(MemorySegment data, long size, TransferOwnership transfer) {
-        this.data = requireNonNull(Interop.getByteArrayFrom(data, size, transfer));
+        this.data = requireNonNull(Interop.getByteArray(data, size, transfer));
     }
 
     /**
@@ -74,7 +74,7 @@ public final class Filename {
      * @return the newly allocated memory segment with the filename
      */
     public MemorySegment toMemorySegment(SegmentAllocator alloc) {
-        return Interop.allocateNativeArray(data, true, alloc);
+        return Interop.allocate(data, true, alloc);
     }
 
     /**

@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -274,7 +274,7 @@ public class TestCallback {
         HashTable<String, Integer> hashtable = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
+                Interop::getString,
                 segment -> (int) segment.address()
         );
         hashtable.put("a", 1);

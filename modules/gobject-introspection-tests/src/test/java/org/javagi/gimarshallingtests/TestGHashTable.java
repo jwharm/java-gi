@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -87,7 +87,7 @@ public class TestGHashTable {
 
     @Test
     void utf8NoneIn() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");
@@ -97,7 +97,7 @@ public class TestGHashTable {
 
     @Test
     void utf8ContainerIn() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");
@@ -107,7 +107,7 @@ public class TestGHashTable {
 
     @Test
     void utf8FullIn() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");
@@ -117,7 +117,7 @@ public class TestGHashTable {
 
     @Test
     void doubleIn() {
-        HashTable<String, Double> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getDoubleFrom);
+        HashTable<String, Double> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getDouble);
         hashTable.put("-1", -0.1);
         hashTable.put("0", 0.0);
         hashTable.put("1", 0.1);
@@ -127,7 +127,7 @@ public class TestGHashTable {
 
     @Test
     void floatIn() {
-        HashTable<String, Float> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getFloatFrom);
+        HashTable<String, Float> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getFloat);
         hashTable.put("-1", -0.1f);
         hashTable.put("0", 0.0f);
         hashTable.put("1", 0.1f);
@@ -137,7 +137,7 @@ public class TestGHashTable {
 
     @Test
     void int64In() {
-        HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getLongFrom);
+        HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getLong);
         hashTable.put("-1", -1L);
         hashTable.put("0", 0L);
         hashTable.put("1", 1L);
@@ -147,7 +147,7 @@ public class TestGHashTable {
 
     @Test
     void uint64In() {
-        HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getLongFrom);
+        HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getLong);
         hashTable.put("-1", 0x100000000L);
         hashTable.put("0", 0L);
         hashTable.put("1", 1L);
@@ -214,7 +214,7 @@ public class TestGHashTable {
 
     @Test
     void utf8NoneInout() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");
@@ -230,7 +230,7 @@ public class TestGHashTable {
 
     @Test
     void utf8ContainerInout() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");
@@ -246,7 +246,7 @@ public class TestGHashTable {
 
     @Test
     void utf8FullInout() {
-        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getStringFrom, Interop::getStringFrom);
+        HashTable<String, String> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getString);
         hashTable.put("-1", "1");
         hashTable.put("0", "0");
         hashTable.put("1", "-1");

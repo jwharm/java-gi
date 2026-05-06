@@ -103,7 +103,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
             // Caller-allocated out-parameter array with known length
             if (p.isOutParameter() && len != null && p.callerAllocates()) {
                 if (array.anyType() instanceof Type t && t.isPrimitive())
-                    stmt.add("$T.get$LArrayFrom(_$LPointer, $L, $L)",
+                    stmt.add("$T.get$LArray(_$LPointer, $L, $L)",
                             ClassNames.INTEROP, primitiveClassName(toJavaBaseType(t.name())), getName(), len, transfer());
                 else
                     stmt.add(marshalNativeToJava(CodeBlock.of("_$LPointer", getName()), false));
@@ -115,7 +115,7 @@ public class PostprocessingGenerator extends TypedValueGenerator {
                 CodeBlock varName = CodeBlock.of("_$LPointer", getName());
                 if (array.cType() != null && array.cType().endsWith("**"))
                     varName = CodeBlock.of("$T.dereference(_$LPointer)", ClassNames.INTEROP, getName());
-                stmt.add("$T.get$LArrayFrom($L, $L, $L)",
+                stmt.add("$T.get$LArray($L, $L, $L)",
                         ClassNames.INTEROP, primitiveClassName(toJavaBaseType(t.name())), varName, len, transfer());
             }
 

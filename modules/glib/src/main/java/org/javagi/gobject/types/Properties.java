@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -764,12 +764,12 @@ public class Properties {
         void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            Proxy o = InstanceCache.getForType(object, GObject::new);
+            Proxy o = InstanceCache.get(object, GObject::new);
             if (! (o instanceof GObject gobject)) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "get_property for invalid GObject\n");
                 return;
             }
-            Proxy p = InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new);
+            Proxy p = InstanceCache.get(pspec, ParamSpec.ParamSpec$Impl::new);
             if (! (p instanceof ParamSpec gparamspec)) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "get_property for invalid GParamSpec\n");
                 return;
@@ -794,12 +794,12 @@ public class Properties {
         void run(GObject object, int propertyId, @Nullable Value value, ParamSpec pspec);
 
         default void upcall(MemorySegment object, int propertyId, MemorySegment value, MemorySegment pspec) {
-            Proxy o = InstanceCache.getForType(object, GObject::new);
+            Proxy o = InstanceCache.get(object, GObject::new);
             if (! (o instanceof GObject gobject)) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "set_property for invalid GObject\n");
                 return;
             }
-            Proxy p = InstanceCache.getForType(pspec, ParamSpec.ParamSpec$Impl::new);
+            Proxy p = InstanceCache.get(pspec, ParamSpec.ParamSpec$Impl::new);
             if (! (p instanceof ParamSpec gparamspec)) {
                 GLib.log(LOG_DOMAIN, LogLevelFlags.LEVEL_CRITICAL, "set_property for invalid GParamSpec\n");
                 return;

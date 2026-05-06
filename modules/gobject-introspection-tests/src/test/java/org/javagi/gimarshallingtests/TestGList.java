@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -80,21 +80,21 @@ public class TestGList {
 
     @Test
     void utf8NoneIn() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8NoneIn(list);
     }
 
     @Test
     void utf8ContainerIn() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8ContainerIn(list);
     }
 
     @Test
     void utf8FullIn() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8FullIn(list);
     }
@@ -143,7 +143,7 @@ public class TestGList {
 
     @Test
     void utf8NoneInout() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8NoneInout(v);
@@ -152,7 +152,7 @@ public class TestGList {
 
     @Test
     void utf8ContainerInout() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8ContainerInout(v);
@@ -161,7 +161,7 @@ public class TestGList {
 
     @Test
     void utf8FullInout() {
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8FullInout(v);

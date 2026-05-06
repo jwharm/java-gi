@@ -149,9 +149,9 @@ public class Intl {
 
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) bindtextdomain.invokeExact(
-                    Interop.allocateNativeString(domainname, arena),
-                    Interop.allocateNativeString(dirname, arena));
-            return Interop.getStringFrom(result);
+                    Interop.allocate(domainname, arena),
+                    Interop.allocate(dirname, arena));
+            return Interop.getString(result);
         } catch (Throwable t) {
             return null;
         }
@@ -169,9 +169,9 @@ public class Intl {
 
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment result = (MemorySegment) textdomain.invokeExact(
-                    Interop.allocateNativeString(domainname, arena));
+                    Interop.allocate(domainname, arena));
             domain = domainname;
-            return Interop.getStringFrom(result);
+            return Interop.getString(result);
         } catch (Throwable t) {
             return null;
         }

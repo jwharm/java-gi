@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -128,7 +128,7 @@ public abstract class Builder<S extends Builder> implements BuilderInterface {
                 var _callbackArena = Arena.ofShared();
                 var result = (long) Signals.g_signal_connect_data.invokeExact(
                         handle,
-                        Interop.allocateNativeString(s.name, arena),
+                        Interop.allocate(s.name, arena),
                         s.callback.toCallback(_callbackArena),
                         Arenas.cacheArena(_callbackArena),
                         Arenas.CLOSE_CB_SYM,

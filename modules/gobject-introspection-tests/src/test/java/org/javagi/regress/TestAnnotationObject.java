@@ -92,7 +92,7 @@ public class TestAnnotationObject {
             hasBeenCalled.set(true);
             assertIterableEquals(input, list);
         });
-        var list = new org.gnome.glib.List<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
         list.addAll(input);
         o.emitListSignal(list);
         assertTrue(hasBeenCalled.get());

@@ -44,8 +44,8 @@ public class MarshalTest {
     void testString() {
         try (Arena arena = Arena.ofConfined()) {
             String input = "123 abc";
-            MemorySegment allocation = Interop.allocateNativeString(input, arena);
-            String output = Interop.getStringFrom(allocation);
+            MemorySegment allocation = Interop.allocate(input, arena);
+            String output = Interop.getString(allocation);
             assertEquals(input, output);
         }
     }
@@ -54,12 +54,12 @@ public class MarshalTest {
     void testStringArray() {
         try (Arena arena = Arena.ofConfined()) {
             String[] input = {"123 abc", "456 def", "789 ghi"};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            String[] output = Interop.getStringArrayFrom(allocation, 3, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            String[] output = Interop.getStringArray(allocation, 3, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
 
-            allocation = Interop.allocateNativeArray(input, true, arena);
-            output = Interop.getStringArrayFrom(allocation, NONE);
+            allocation = Interop.allocate(input, true, arena);
+            output = Interop.getStringArray(allocation, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -72,13 +72,13 @@ public class MarshalTest {
                     arena.allocate(10),
                     arena.allocate(10)
             };
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            MemorySegment[] output = Interop.getAddressArrayFrom(allocation, 3, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            MemorySegment[] output = Interop.getAddressArray(allocation, 3, NONE);
             for (int i = 0; i < input.length; i++)
                 assertEquals(input[i].address(), output[i].address());
 
-            allocation = Interop.allocateNativeArray(input, true, arena);
-            output = Interop.getAddressArrayFrom(allocation, NONE);
+            allocation = Interop.allocate(input, true, arena);
+            output = Interop.getAddressArray(allocation, NONE);
             for (int i = 0; i < input.length; i++)
                 assertEquals(input[i].address(), output[i].address());
         }
@@ -88,8 +88,8 @@ public class MarshalTest {
     void testBooleanArray() {
         try (Arena arena = Arena.ofConfined()) {
             boolean[] input = {true, false, true, true, false};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            boolean[] output = Interop.getBooleanArrayFrom(allocation, 5, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            boolean[] output = Interop.getBooleanArray(allocation, 5, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -98,12 +98,12 @@ public class MarshalTest {
     void testByteArray() {
         try (Arena arena = Arena.ofConfined()) {
             byte[] input = "1234567890".getBytes();
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            byte[] output = Interop.getByteArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            byte[] output = Interop.getByteArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
 
-            allocation = Interop.allocateNativeArray(input, true, arena);
-            output = Interop.getByteArrayFrom(allocation, NONE);
+            allocation = Interop.allocate(input, true, arena);
+            output = Interop.getByteArray(allocation, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -112,8 +112,8 @@ public class MarshalTest {
     void testCharArray() {
         try (Arena arena = Arena.ofConfined()) {
             char[] input = "1234567890".toCharArray();
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            char[] output = Interop.getCharacterArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            char[] output = Interop.getCharacterArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -122,8 +122,8 @@ public class MarshalTest {
     void testDoubleArray() {
         try (Arena arena = Arena.ofConfined()) {
             double[] input = {1d, 2d, 3d, Math.PI, Double.MIN_VALUE, Double.MAX_VALUE};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            double[] output = Interop.getDoubleArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            double[] output = Interop.getDoubleArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -132,8 +132,8 @@ public class MarshalTest {
     void testFloatArray() {
         try (Arena arena = Arena.ofConfined()) {
             float[] input = {1.2f, 2.3f, 3.35f, Float.MIN_VALUE, Float.MAX_VALUE};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            float[] output = Interop.getFloatArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            float[] output = Interop.getFloatArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -142,11 +142,11 @@ public class MarshalTest {
     void testIntArray() {
         try (Arena arena = Arena.ofConfined()) {
             int[] input = {1, 2, 3, 0, Integer.MIN_VALUE, Integer.MAX_VALUE};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            int[] output = Interop.getIntegerArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            int[] output = Interop.getIntegerArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
 
-            output = Interop.getIntegerArrayFrom(allocation, NONE);
+            output = Interop.getIntegerArray(allocation, NONE);
             assertEquals(3, output.length);
         }
     }
@@ -155,8 +155,8 @@ public class MarshalTest {
     void testLongArray() {
         try (Arena arena = Arena.ofConfined()) {
             long[] input = {1L, 2L, 3L, Long.MIN_VALUE, Long.MAX_VALUE};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            long[] output = Interop.getLongArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            long[] output = Interop.getLongArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -166,8 +166,8 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             short[] input = {(short) 1, (short) 2, (short) 3,
                     Short.MIN_VALUE, Short.MAX_VALUE};
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            short[] output = Interop.getShortArrayFrom(allocation, input.length, NONE);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            short[] output = Interop.getShortArray(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -180,13 +180,13 @@ public class MarshalTest {
                     Variant.int32(2),
                     Variant.int32(3)
             };
-            MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            Proxy[] output = Interop.getProxyArrayFrom(allocation, 3, Variant.class, Variant::new);
+            MemorySegment allocation = Interop.allocate(input, false, arena);
+            Proxy[] output = Interop.getProxyArray(allocation, 3, Variant.class, Variant::new);
             for (int i = 0; i < input.length; i++)
                 assertEquals(input[i], output[i]);
 
-            allocation = Interop.allocateNativeArray(input, true, arena);
-            output = Interop.getProxyArrayFrom(allocation, Variant.class, Variant::new);
+            allocation = Interop.allocate(input, true, arena);
+            output = Interop.getProxyArray(allocation, Variant.class, Variant::new);
             for (int i = 0; i < input.length; i++)
                 assertEquals(input[i], output[i]);
         }
@@ -203,8 +203,8 @@ public class MarshalTest {
             input[0].setParse("01/01/2000");
             input[1].setParse("01/01/2001");
             input[2].setParse("01/01/2002");
-            MemorySegment allocation = Interop.allocateNativeArray(input, Date.getMemoryLayout(), false, arena);
-            Date[] output = Interop.getStructArrayFrom(allocation, 3, Date.class, Date::new, Date.getMemoryLayout());
+            MemorySegment allocation = Interop.allocate(input, Date.getMemoryLayout(), false, arena);
+            Date[] output = Interop.getStructArray(allocation, 3, Date.class, Date::new, Date.getMemoryLayout());
             for (int i = 0; i < input.length; i++)
                 assertEquals(input[i].getYear(), output[i].getYear());
         }
@@ -219,7 +219,7 @@ public class MarshalTest {
                     OptionFlags.NOALIAS
             };
             int[] values = Interop.getValues(input);
-            MemorySegment allocation = Interop.allocateNativeArray(values, false, arena);
+            MemorySegment allocation = Interop.allocate(values, false, arena);
             Set<?>[] output = Interop.getArrayFromIntPointer(allocation, 3, Set.class, OptionFlags::of);
             assertEquals(3, output.length);
             assertTrue(output[0].size() == 1 && output[0].contains(OptionFlags.IN_MAIN));

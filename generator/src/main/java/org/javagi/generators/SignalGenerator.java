@@ -79,10 +79,10 @@ public class SignalGenerator {
                 .beginControlFlow("try");
 
         if (signal.detailed())
-            builder.addStatement("var _name = $T.allocateNativeString($S + ((detail == null || detail.isBlank()) ? $S : ($S + detail)), _arena)",
+            builder.addStatement("var _name = $T.allocate($S + ((detail == null || detail.isBlank()) ? $S : ($S + detail)), _arena)",
                     ClassNames.INTEROP, signal.name(), "", "::");
         else
-            builder.addStatement("var _name = $T.allocateNativeString($S, _arena)",
+            builder.addStatement("var _name = $T.allocate($S, _arena)",
                     ClassNames.INTEROP, signal.name());
 
         return builder.addStatement("var _callbackArena = $T.ofShared()", Arena.class)
@@ -157,10 +157,10 @@ public class SignalGenerator {
 
         // Allocate memory for signal name
         if (signal.detailed())
-            builder.addStatement("$T _name = $T.allocateNativeString($S + ((detail == null || detail.isBlank()) ? $S : ($S + detail)), _arena)",
+            builder.addStatement("$T _name = $T.allocate($S + ((detail == null || detail.isBlank()) ? $S : ($S + detail)), _arena)",
                     MemorySegment.class, ClassNames.INTEROP, signal.name(), "", "::");
         else
-            builder.addStatement("$T _name = $T.allocateNativeString($S, _arena)",
+            builder.addStatement("$T _name = $T.allocate($S, _arena)",
                     MemorySegment.class, ClassNames.INTEROP, signal.name());
 
         // Create an array with the signal arguments
