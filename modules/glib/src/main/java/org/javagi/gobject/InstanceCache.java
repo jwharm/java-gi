@@ -89,6 +89,7 @@ public class InstanceCache {
     private static final Cleaner CLEANER = Cleaner.create();
     private static final MemorySegment toggle_notify;
     private static final VarHandle ADDRESS_FIELD;
+    private static final MemorySegment REMOVE_TOGGLE_REF;
 
     private static final MethodHandle g_object_new =
             Interop.downcallHandle(
@@ -114,22 +115,22 @@ public class InstanceCache {
                     FunctionDescriptor.ofVoid(ValueLayout.ADDRESS),
                     false);
 
+    private static final MethodHandle g_main_context_invoke =
+            Interop.downcallHandle(
+                    "g_main_context_invoke", FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
+                    false);
+
     static {
         GObjects.javagi$ensureInitialized();
 
         // Create an upcall stub for the "handleToggleNotify" function
         try {
             FunctionDescriptor fdesc = FunctionDescriptor.ofVoid(
-                    ValueLayout.ADDRESS,
-                    ValueLayout.ADDRESS,
-                    ValueLayout.JAVA_INT);
+                    ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT);
             var handle = MethodHandles.lookup().findStatic(
-                    InstanceCache.class,
-                    "handleToggleNotify",
-                    fdesc.toMethodType()
-            );
-            toggle_notify = Linker.nativeLinker()
-                    .upcallStub(handle, fdesc, Arena.global());
+                    InstanceCache.class, "handleToggleNotify", fdesc.toMethodType());
+            toggle_notify = Linker.nativeLinker().upcallStub(handle, fdesc, Arena.global());
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -141,6 +142,16 @@ public class InstanceCache {
                     .privateLookupIn(ProxyInstance.class, MethodHandles.lookup())
                     .findVarHandle(ProxyInstance.class, "address", MemorySegment.class);
         } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Allocate the upcall stub for the removeToggleRef callback method
+        try {
+            FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
+            MethodHandle _handle = MethodHandles.lookup().findStatic(
+                    InstanceCache.class, "removeToggleRef", _fdesc.toMethodType());
+            REMOVE_TOGGLE_REF = Linker.nativeLinker().upcallStub(_handle, _fdesc, Arena.global());
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -220,6 +231,11 @@ public class InstanceCache {
         return newInstance;
     }
 
+    @Deprecated
+    public static @Nullable Proxy getForType(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
+        return get(address, fallback);
+    }
+
     /**
      * Get a {@link Proxy} object for the provided native memory address. If a
      * Proxy object does not yet exist for this address, a new Proxy object is
@@ -239,8 +255,7 @@ public class InstanceCache {
             return instance;
 
         // Read gclass->gtype and get constructor from the type registry
-        Function<MemorySegment, ? extends Proxy> ctor =
-                TypeCache.getConstructor(address, fallback);
+        Function<MemorySegment, ? extends Proxy> ctor = TypeCache.getConstructor(address, fallback);
         if (ctor == null)
             return null;
 
@@ -258,6 +273,12 @@ public class InstanceCache {
         return newInstance;
     }
 
+    @Deprecated
+    public static @Nullable Proxy getForTypeClass(@Nullable MemorySegment address,
+                                                  Function<MemorySegment, ? extends Proxy> fallback) {
+        return getTypeClass(address, fallback);
+    }
+
     /**
      * Get a {@link Proxy} object for the provided native memory address of a
      * TypeClass. The type of the Proxy object is read from the gtype field of
@@ -269,7 +290,7 @@ public class InstanceCache {
      * @return a Proxy instance for the provided memory address
      */
     public static @Nullable Proxy getTypeClass(@Nullable MemorySegment address,
-                                                  Function<MemorySegment, ? extends Proxy> fallback) {
+                                               Function<MemorySegment, ? extends Proxy> fallback) {
         // Don't try to dereference a null pointer
         if (address == null || MemorySegment.NULL.equals(address))
             return null;
@@ -278,8 +299,7 @@ public class InstanceCache {
         Type type = new TypeClass(address).readGType();
         while (type.getValue() != 0) {
             // Get the Java GTypeClass constructor for this type
-            Function<MemorySegment, ? extends Proxy> constructor =
-                    TypeCache.getTypeClassConstructor(type);
+            Function<MemorySegment, ? extends Proxy> constructor = TypeCache.getTypeClassConstructor(type);
 
             if (constructor != null)
                 return constructor.apply(address);
@@ -349,10 +369,8 @@ public class InstanceCache {
      * @param properties pairs of property names and values (optional).
      *                   A trailing {@code null} will be added automatically.
      */
-    public static void newGObject(GObject object,
-                                  @Nullable Type type,
-                                  long size,
-                                  @Nullable Object @Nullable ... properties) {
+    public static void newGObject(
+            GObject object, @Nullable Type type, long size, @Nullable Object @Nullable ... properties) {
         // Split varargs into first property name and the rest
         String first;
         @Nullable Object[] rest;
@@ -397,8 +415,7 @@ public class InstanceCache {
     // Calls g_object_add_toggle_ref
     private static void addToggleRef(Proxy object) {
         try {
-            g_object_add_toggle_ref.invokeExact(
-                    object.handle(), toggle_notify, MemorySegment.NULL);
+            g_object_add_toggle_ref.invokeExact(object.handle(), toggle_notify, MemorySegment.NULL);
         } catch (Throwable _err) {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
@@ -422,14 +439,11 @@ public class InstanceCache {
      * @param address address of a GObject
      */
     public static void refOnce(@Nullable MemorySegment address) {
-        if (! (address == null
-                || MemorySegment.NULL.equals(address)
-                || references.containsKey(address))) {
+        if (! (address == null || MemorySegment.NULL.equals(address) || references.containsKey(address))) {
             GObject object = new GObject(address);
             Type objectType = GObject.getType();
-            if (objectType != null && GObjects.typeCheckInstanceIsA(object, objectType)) {
+            if (objectType != null && GObjects.typeCheckInstanceIsA(object, objectType))
                 object.ref();
-            }
         }
     }
 
@@ -457,33 +471,23 @@ public class InstanceCache {
     }
 
     // Callback function, triggered by the toggle-notify signal
-    private static void handleToggleNotify(MemorySegment ignored,
-                                           MemorySegment object,
-                                           int isLastRef) {
+    private static void handleToggleNotify(MemorySegment ignored, MemorySegment object, int isLastRef) {
         if (isLastRef != 0)
             references.computeIfPresent(object, (_, v) -> v.asWeak());
         else
             references.computeIfPresent(object, (_, v) -> v.asStrong());
     }
 
-    private static final MemorySegment REMOVE_TOGGLE_REF;
-
-    // Allocate the upcall stub for the removeToggleRef callback method
-    static {
-        try {
-            FunctionDescriptor _fdesc = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
-            MethodHandle _handle = MethodHandles.lookup().findStatic(
-                    InstanceCache.class, "removeToggleRef", _fdesc.toMethodType());
-            REMOVE_TOGGLE_REF = Linker.nativeLinker().upcallStub(_handle, _fdesc, Arena.global());
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * Remove toggle ref from a GObject instance. Called directly or from the
+     * default GLib MainContext.
+     *
+     * @param address address of the object
+     * @return always 0
+     */
     public static int removeToggleRef(MemorySegment address) {
         try {
-            g_object_remove_toggle_ref.invokeExact(
-                    address, toggle_notify, MemorySegment.NULL);
+            g_object_remove_toggle_ref.invokeExact(address, toggle_notify, MemorySegment.NULL);
         } catch (Throwable _err) {
             throw new AssertionError("Unexpected exception occurred: ", _err);
         }
@@ -491,10 +495,6 @@ public class InstanceCache {
         unownedUserDefinedInstances.remove(address);
         return 0;
     }
-
-    private static final MethodHandle g_main_context_invoke = Interop.downcallHandle(
-            "g_main_context_invoke", FunctionDescriptor.ofVoid(ValueLayout.ADDRESS,
-            ValueLayout.ADDRESS, ValueLayout.ADDRESS), false);
 
     /**
      * This callback is run by the {@link Cleaner} when a {@link GObject}
@@ -509,8 +509,7 @@ public class InstanceCache {
             var defaultContext = MainContext.default_();
             if (defaultContext != null) {
                 try {
-                    g_main_context_invoke.invokeExact(defaultContext.handle(),
-                            REMOVE_TOGGLE_REF, address);
+                    g_main_context_invoke.invokeExact(defaultContext.handle(), REMOVE_TOGGLE_REF, address);
                 } catch (Throwable _err) {
                     throw new AssertionError(_err);
                 }
