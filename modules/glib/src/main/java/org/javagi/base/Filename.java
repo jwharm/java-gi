@@ -53,9 +53,7 @@ public final class Filename {
      * @param transfer to free the native memory when ownership is transferred
      */
     public Filename(MemorySegment data, TransferOwnership transfer) {
-        try (Arena arena = Arena.ofConfined()) {
-            this.data = requireNonNull(Interop.getByteArrayFrom(data, arena, transfer));
-        }
+        this.data = requireNonNull(Interop.getByteArrayFrom(data, transfer));
     }
 
     /**
@@ -66,9 +64,7 @@ public final class Filename {
      * @param transfer to free the native memory when ownership is transferred
      */
     public Filename(MemorySegment data, long size, TransferOwnership transfer) {
-        try (Arena arena = Arena.ofConfined()) {
-            this.data = requireNonNull(Interop.getByteArrayFrom(data, size, arena, transfer));
-        }
+        this.data = requireNonNull(Interop.getByteArrayFrom(data, size, transfer));
     }
 
     /**

@@ -1,3 +1,22 @@
+/* Java-GI - Java language bindings for GObject-Introspection-based libraries
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.javagi.glib;
 
 import org.javagi.base.Proxy;
@@ -70,7 +89,7 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             boolean[] input = {true, false, true, true, false};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            boolean[] output = Interop.getBooleanArrayFrom(allocation, 5, arena, NONE);
+            boolean[] output = Interop.getBooleanArrayFrom(allocation, 5, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -80,11 +99,11 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             byte[] input = "1234567890".getBytes();
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            byte[] output = Interop.getByteArrayFrom(allocation, input.length, arena, NONE);
+            byte[] output = Interop.getByteArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
 
             allocation = Interop.allocateNativeArray(input, true, arena);
-            output = Interop.getByteArrayFrom(allocation, arena, NONE);
+            output = Interop.getByteArrayFrom(allocation, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -94,7 +113,7 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             char[] input = "1234567890".toCharArray();
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            char[] output = Interop.getCharacterArrayFrom(allocation, input.length, arena, NONE);
+            char[] output = Interop.getCharacterArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -104,7 +123,7 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             double[] input = {1d, 2d, 3d, Math.PI, Double.MIN_VALUE, Double.MAX_VALUE};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            double[] output = Interop.getDoubleArrayFrom(allocation, input.length, arena, NONE);
+            double[] output = Interop.getDoubleArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -114,7 +133,7 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             float[] input = {1.2f, 2.3f, 3.35f, Float.MIN_VALUE, Float.MAX_VALUE};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            float[] output = Interop.getFloatArrayFrom(allocation, input.length, arena, NONE);
+            float[] output = Interop.getFloatArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -124,10 +143,10 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             int[] input = {1, 2, 3, 0, Integer.MIN_VALUE, Integer.MAX_VALUE};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            int[] output = Interop.getIntegerArrayFrom(allocation, input.length, arena, NONE);
+            int[] output = Interop.getIntegerArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
 
-            output = Interop.getIntegerArrayFrom(allocation, arena, NONE);
+            output = Interop.getIntegerArrayFrom(allocation, NONE);
             assertEquals(3, output.length);
         }
     }
@@ -137,7 +156,7 @@ public class MarshalTest {
         try (Arena arena = Arena.ofConfined()) {
             long[] input = {1L, 2L, 3L, Long.MIN_VALUE, Long.MAX_VALUE};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            long[] output = Interop.getLongArrayFrom(allocation, input.length, arena, NONE);
+            long[] output = Interop.getLongArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }
@@ -148,7 +167,7 @@ public class MarshalTest {
             short[] input = {(short) 1, (short) 2, (short) 3,
                     Short.MIN_VALUE, Short.MAX_VALUE};
             MemorySegment allocation = Interop.allocateNativeArray(input, false, arena);
-            short[] output = Interop.getShortArrayFrom(allocation, input.length, arena, NONE);
+            short[] output = Interop.getShortArrayFrom(allocation, input.length, NONE);
             assertEquals(Arrays.toString(input), Arrays.toString(output));
         }
     }

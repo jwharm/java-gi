@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,7 +19,6 @@
 
 package org.javagi.gobject;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.Set;
 
@@ -99,9 +98,7 @@ public class ValueUtil {
             ByteArray arr = new ByteArray(requireNonNullElse(address, MemorySegment.NULL));
             MemorySegment data = Interop.dereference(address);
             int length = arr.readLen();
-            try (var arena = Arena.ofConfined()) {
-                return Interop.getByteArrayFrom(data, length, arena, TransferOwnership.NONE);
-            }
+            return Interop.getByteArrayFrom(data, length, TransferOwnership.NONE);
         }
 
         // Boxed type

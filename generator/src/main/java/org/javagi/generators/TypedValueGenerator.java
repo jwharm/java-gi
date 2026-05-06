@@ -618,7 +618,7 @@ class TypedValueGenerator {
                         target.typeName(), identifier, transfer());
 
             if (type.isPrimitive())
-                return CodeBlock.of("$T.get$LArrayFrom($L, _arena, $L)",
+                return CodeBlock.of("$T.get$LArrayFrom($L, $L)",
                         ClassNames.INTEROP, primitive, identifier, transfer());
 
             if (target instanceof Record && (! type.isPointer()) &&
@@ -655,11 +655,11 @@ class TypedValueGenerator {
                     target.typeName(), identifier, size, transfer());
 
         if (type.isPrimitive() && array != null && array.anyType() instanceof Type)
-            return CodeBlock.of("$T.get$LArrayFrom($L, $L, _arena, $L)",
+            return CodeBlock.of("$T.get$LArrayFrom($L, $L, $L)",
                     ClassNames.INTEROP, primitive, identifier, size, transfer());
 
         if (type.isPrimitive())
-            return CodeBlock.of("$T.get$LArrayFrom($L, $L, _arena, $L)",
+            return CodeBlock.of("$T.get$LArrayFrom($L, $L, $L)",
                     ClassNames.INTEROP, primitive, identifier, size, transfer());
 
         if (target instanceof Record && (! type.isPointer()) &&
