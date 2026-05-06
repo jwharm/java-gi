@@ -232,8 +232,7 @@ public class InstanceCache {
      *                  in the TypeCache
      * @return a Proxy instance for the provided memory address
      */
-    public static @Nullable Proxy getForType(MemorySegment address,
-                                             Function<MemorySegment, ? extends Proxy> fallback) {
+    public static @Nullable Proxy get(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
         // Get instance from the cache
         Proxy instance = lookup(address);
         if (instance != null)
@@ -269,7 +268,7 @@ public class InstanceCache {
      *                  in the TypeCache
      * @return a Proxy instance for the provided memory address
      */
-    public static @Nullable Proxy getForTypeClass(@Nullable MemorySegment address,
+    public static @Nullable Proxy getTypeClass(@Nullable MemorySegment address,
                                                   Function<MemorySegment, ? extends Proxy> fallback) {
         // Don't try to dereference a null pointer
         if (address == null || MemorySegment.NULL.equals(address))

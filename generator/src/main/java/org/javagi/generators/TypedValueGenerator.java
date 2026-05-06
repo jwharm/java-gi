@@ -505,13 +505,7 @@ class TypedValueGenerator {
         if (target instanceof Callback)
             return CodeBlock.of("null /* Unsupported parameter type */");
 
-        boolean hasGType = isTypeInstance
-                || target instanceof Class
-                || target instanceof Interface
-                || (target instanceof Alias a
-                    && (a.lookup() instanceof Class || a.lookup() instanceof Interface));
-
-        String cacheFunction = hasGType ? "getForType" : isTypeClass ? "getForTypeClass" : "get";
+        String cacheFunction = isTypeClass ? "getTypeClass" : "get";
 
         if (target instanceof Class
                 || target instanceof Interface
@@ -550,7 +544,7 @@ class TypedValueGenerator {
                     yield CodeBlock.of("(_ptr -> $T.of($T.getInteger(_ptr)))",
                             enumType.typeName(), ClassNames.INTEROP);
                 } else if (elemTarget.checkIsGObject()) {
-                    yield CodeBlock.of("_ptr -> ($T) $T.getForType(_ptr, $L)",
+                    yield CodeBlock.of("_ptr -> ($T) $T.get(_ptr, $L)",
                             elemTarget.typeName(), ClassNames.INSTANCE_CACHE, elemTarget.constructorName());
                 } else {
                     yield elemTarget.constructorName();

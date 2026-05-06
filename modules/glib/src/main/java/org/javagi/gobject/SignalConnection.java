@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -59,7 +59,7 @@ public class SignalConnection<T> {
      * @param handlerId the handler ID of the signal
      */
     public SignalConnection(MemorySegment instance, int handlerId) {
-        this.instance = (GObject) requireNonNull(InstanceCache.getForType(instance, GObject::new));
+        this.instance = (GObject) requireNonNull(InstanceCache.get(instance, GObject::new));
         this.handlerId = handlerId;
         this.closure = null;
     }
@@ -73,7 +73,7 @@ public class SignalConnection<T> {
      * @param closure   closure for the signal callback
      */
     public SignalConnection(MemorySegment instance, int handlerId, @Nullable Closure closure) {
-        this.instance = (GObject) requireNonNull(InstanceCache.getForType(instance, GObject::new));
+        this.instance = (GObject) requireNonNull(InstanceCache.get(instance, GObject::new));
         this.handlerId = handlerId;
         this.closure = closure;
     }
