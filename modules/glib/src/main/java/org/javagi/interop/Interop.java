@@ -1081,7 +1081,7 @@ public class Interop {
 
     @Deprecated
     public static boolean @Nullable [] getBooleanArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getBooleanArray(address, length, transfer);
     }
 
@@ -1111,7 +1111,7 @@ public class Interop {
 
     @Deprecated
     public static byte @Nullable [] getByteArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getByteArray(address, length, transfer);
     }
 
@@ -1165,7 +1165,7 @@ public class Interop {
 
     @Deprecated
     public static char @Nullable [] getCharacterArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getCharacterArray(address, length, transfer);
     }
 
@@ -1193,7 +1193,7 @@ public class Interop {
 
     @Deprecated
     public static double @Nullable [] getDoubleArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getDoubleArray(address, length, transfer);
     }
 
@@ -1221,7 +1221,7 @@ public class Interop {
 
     @Deprecated
     public static float @Nullable [] getFloatArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getFloatArray(address, length, transfer);
     }
 
@@ -1249,7 +1249,7 @@ public class Interop {
 
     @Deprecated
     public static float @Nullable [] getFloatArrayFrom(
-            MemorySegment address, TransferOwnership transfer) {
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
         return getFloatArray(address, transfer);
     }
 
@@ -1276,7 +1276,7 @@ public class Interop {
 
     @Deprecated
     public static int @Nullable [] getIntegerArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getIntegerArray(address, length, transfer);
     }
 
@@ -1304,7 +1304,7 @@ public class Interop {
 
     @Deprecated
     public static int @Nullable [] getIntegerArrayFrom(
-            MemorySegment address, TransferOwnership transfer) {
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
         return getIntegerArray(address, transfer);
     }
 
@@ -1331,7 +1331,7 @@ public class Interop {
 
     @Deprecated
     public static long @Nullable [] getLongArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getLongArray(address, length, transfer);
     }
 
@@ -1359,7 +1359,7 @@ public class Interop {
 
     @Deprecated
     public static long @Nullable [] getLongArrayFrom(
-            MemorySegment address, TransferOwnership transfer) {
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
         return getLongArray(address, transfer);
     }
 
@@ -1386,7 +1386,7 @@ public class Interop {
 
     @Deprecated
     public static short @Nullable [] getShortArrayFrom(
-            MemorySegment address, long length, TransferOwnership transfer) {
+            MemorySegment address, long length, Arena arena, TransferOwnership transfer) {
         return getShortArray(address, length, transfer);
     }
 
@@ -1414,7 +1414,7 @@ public class Interop {
 
     @Deprecated
     public static short @Nullable [] getShortArrayFrom(
-            MemorySegment address, TransferOwnership transfer) {
+            MemorySegment address, Arena arena, TransferOwnership transfer) {
         return getShortArray(address, transfer);
     }
 
