@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -54,7 +54,7 @@ public class TestGHashTable {
         HashTable<String, Value> map = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
+                Interop::getString,
                 Value::new);
 
         Value v1 = new Value(arena);
@@ -68,7 +68,7 @@ public class TestGHashTable {
         v3.setString("some text");
         Value v4 = new Value(arena);
         v4.init(Types.STRV);
-        v4.setBoxed(Interop.allocateNativeArray(new String[] {"first", "second", "third"}, true, arena));
+        v4.setBoxed(Interop.allocate(new String[] {"first", "second", "third"}, true, arena));
         Value v5 = new Value(arena);
         v5.init(TestFlags.getType());
         v5.setFlags(TestFlags.FLAG1.getValue() | TestFlags.FLAG3.getValue());
@@ -141,8 +141,8 @@ public class TestGHashTable {
         HashTable<String, String> map = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
-                Interop::getStringFrom);
+                Interop::getString,
+                Interop::getString);
         map.putAll(EXPECTED_HASH);
 
         testGhashNothingIn(map);

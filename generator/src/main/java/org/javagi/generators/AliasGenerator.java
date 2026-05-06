@@ -168,7 +168,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
                 && a.anyType() instanceof Type t
                 && t.typeName().equals(TypeName.get(String.class)))
             spec.addStatement(CodeBlock.builder()
-                    .add("array[i] = new $T($T.getStringArrayFrom(segment.get(", alias.typeName(), ClassNames.INTEROP)
+                    .add("array[i] = new $T($T.getStringArray(segment.get(", alias.typeName(), ClassNames.INTEROP)
                     .add(layout)
                     .add(", i * byteSize), transfer))")
                     .build());
@@ -177,7 +177,7 @@ public class AliasGenerator extends RegisteredTypeGenerator {
         else if (anyType instanceof Type t
                 && t.typeName().equals(TypeName.get(String.class)))
             spec.addStatement(CodeBlock.builder()
-                    .add("array[i] = new $T($T.getStringFrom(segment.get(", alias.typeName(), ClassNames.INTEROP)
+                    .add("array[i] = new $T($T.getString(segment.get(", alias.typeName(), ClassNames.INTEROP)
                     .add(layout)
                     .add(", i * byteSize), transfer))")
                     .build());

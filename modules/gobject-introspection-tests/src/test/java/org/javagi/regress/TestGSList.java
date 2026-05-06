@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -51,7 +51,7 @@ public class TestGSList {
 
     @Test
     void noneIn() {
-        var list = new org.gnome.glib.SList<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.SList<>(Interop::getString, null, TransferOwnership.NONE);
         list.addAll(STR_LIST);
         testGslistNothingIn(list);
         testGslistNothingIn2(list);

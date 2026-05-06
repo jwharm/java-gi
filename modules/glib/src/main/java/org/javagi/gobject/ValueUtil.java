@@ -88,7 +88,7 @@ public class ValueUtil {
 
         // GStrv
         if (type.equals(STRV))
-            return Interop.getStringArrayFrom(
+            return Interop.getStringArray(
                     requireNonNullElse(src.getBoxed(), MemorySegment.NULL),
                     TransferOwnership.NONE);
 
@@ -98,7 +98,7 @@ public class ValueUtil {
             ByteArray arr = new ByteArray(requireNonNullElse(address, MemorySegment.NULL));
             MemorySegment data = Interop.dereference(address);
             int length = arr.readLen();
-            return Interop.getByteArrayFrom(data, length, TransferOwnership.NONE);
+            return Interop.getByteArray(data, length, TransferOwnership.NONE);
         }
 
         // Boxed type
@@ -164,7 +164,7 @@ public class ValueUtil {
         else if (type.equals(gtypeGetType())) dest.setGtype((Type) src);
         else if (type.equals(POINTER))        dest.setPointer((MemorySegment) src);
         else if (type.equals(PARAM))          dest.setParam((ParamSpec) src);
-        else if (type.equals(STRV))           dest.setBoxed(Interop.allocateNativeArray((String[]) src, true, Interop.mallocAllocator()));
+        else if (type.equals(STRV))           dest.setBoxed(Interop.allocate((String[]) src, true, Interop.mallocAllocator()));
         else if (type.equals(BYTE_ARRAY))     dest.setBoxed(ByteArray.take((byte[]) src).handle());
         else if (type.equals(VARIANT))        dest.setVariant((Variant) src);
         else if (typeIsA(type, OBJECT))       dest.setObject((GObject) src);

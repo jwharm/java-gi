@@ -376,7 +376,7 @@ public class InstanceCache {
             try (var _arena = Arena.ofConfined()) {
                 // Invoke g_object_new()
                 long t = (type == null ? TypeCache.getType(object.getClass()) : type).getValue().longValue();
-                MemorySegment f = first == null ? MemorySegment.NULL : Interop.allocateNativeString(first, _arena);
+                MemorySegment f = first == null ? MemorySegment.NULL : Interop.allocate(first, _arena);
                 var address = (MemorySegment) g_object_new.invokeExact(t, f, rest);
 
                 // The object should have an address assigned by now, but let's check again

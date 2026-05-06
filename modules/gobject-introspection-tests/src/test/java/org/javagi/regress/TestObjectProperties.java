@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2022026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -64,8 +64,8 @@ public class TestObjectProperties {
         HashTable<String, Byte> hashTable1 = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
-                Interop::getByteFrom);
+                Interop::getString,
+                Interop::getByte);
         hashTable1.putAll(Map.of("a", (byte) 1, "b", (byte) 2));
 
         var object = TestObj.builder()
@@ -84,7 +84,7 @@ public class TestObjectProperties {
 
     @Test
     void list() {
-        var list1 = new List<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list1 = new List<>(Interop::getString, null, TransferOwnership.NONE);
         list1.add("a");
 
         var object = TestObj.builder()
@@ -94,7 +94,7 @@ public class TestObjectProperties {
         // Java-GI doesn't know that GObject.getProperty() returned a GList
         // in this case, so we end up with the raw memory address.
         var list2Address = (MemorySegment) object.getProperty("list");
-        var list2 = new List<>(list2Address, Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list2 = new List<>(list2Address, Interop::getString, null, TransferOwnership.NONE);
         assertEquals("a", list2.getFirst());
     }
 
@@ -118,8 +118,8 @@ public class TestObjectProperties {
         HashTable<String, Byte> hashTable1 = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
-                Interop::getByteFrom);
+                Interop::getString,
+                Interop::getByte);
         hashTable1.putAll(Map.of("a", (byte) 1, "b", (byte) 2));
 
         var object = TestObj.builder()
@@ -133,7 +133,7 @@ public class TestObjectProperties {
 
     @Test
     void listOld() {
-        var list1 = new List<>(Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list1 = new List<>(Interop::getString, null, TransferOwnership.NONE);
         list1.add("a");
 
         var object = TestObj.builder()
@@ -141,7 +141,7 @@ public class TestObjectProperties {
                 .build();
 
         var list2Address = (MemorySegment) object.getProperty("list-old");
-        var list2 = new List<>(list2Address, Interop::getStringFrom, null, TransferOwnership.NONE);
+        var list2 = new List<>(list2Address, Interop::getString, null, TransferOwnership.NONE);
         assertEquals("a", list2.getFirst());
     }
 

@@ -180,35 +180,35 @@ record VarargsInvoker(MemorySegment symbol, FunctionDescriptor fdesc) {
             case null ->
                     MemorySegment.NULL;
             case MemorySegment[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case boolean[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case byte[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case char[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case double[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case float[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case int[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case long[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case short[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case Proxy[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case String[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case Filename[] arr ->
-                    allocateNativeArray(arr, false, arena).address();
+                    allocate(arr, false, arena).address();
             case MemorySegment segment ->
                     segment;
             case Boolean bool ->
                     bool ? 1 : 0;
             case String string ->
-                    allocateNativeString(string, arena).address();
+                    allocate(string, arena).address();
             case Filename filename ->
                     filename.toMemorySegment(arena).address();
             case Alias<?> alias ->

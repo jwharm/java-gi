@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -23,7 +23,6 @@ import org.javagi.base.Out;
 import org.javagi.base.Proxy;
 import org.javagi.interop.Interop;
 import org.javagi.interop.MemoryCleaner;
-import java.lang.Integer;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.util.AbstractMap;
@@ -458,11 +457,10 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
      * @return a
      *   {@code null}-terminated array containing each key from the table.
      */
-    public MemorySegment[] getKeysAsArray() {
+    public MemorySegment @Nullable [] getKeysAsArray() {
         try (var _arena = Arena.ofConfined()) {
             MemorySegment _lengthPointer = _arena.allocate(ValueLayout.JAVA_INT);
             _lengthPointer.set(ValueLayout.JAVA_INT, 0L, 0);
-            Out<Integer> length = new Out<>();
             MemorySegment _result;
             try {
                 _result = (MemorySegment) MethodHandles.g_hash_table_get_keys_as_array.invokeExact(
@@ -470,8 +468,8 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
             } catch (Throwable _err) {
                 throw new AssertionError(_err);
             }
-            length.set(_lengthPointer.get(ValueLayout.JAVA_INT, 0));
-            return Interop.getAddressArrayFrom(_result, length.get(), NONE);
+            int length = _lengthPointer.get(ValueLayout.JAVA_INT, 0);
+            return Interop.getAddressArray(_result, length, NONE);
         }
     }
 
@@ -488,7 +486,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
      * @return a {@code GPtrArray} containing each key from
      * the table. Unref with with g_ptr_array_unref() when done.
      */
-    public MemorySegment[] getKeysAsPtrArray() {
+    public MemorySegment @Nullable [] getKeysAsPtrArray() {
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_get_keys_as_ptr_array.invokeExact(
@@ -496,7 +494,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
+        return Interop.getAddressArray(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
     }
 
     /**
@@ -536,7 +534,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
      * @return a {@code GPtrArray} containing each value from
      * the table. Unref with with g_ptr_array_unref() when done.
      */
-    public MemorySegment[] getValuesAsPtrArray() {
+    public MemorySegment @Nullable [] getValuesAsPtrArray() {
         MemorySegment _result;
         try {
             _result = (MemorySegment) MethodHandles.g_hash_table_get_values_as_ptr_array.invokeExact(
@@ -544,7 +542,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return Interop.getAddressArrayFrom(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
+        return Interop.getAddressArray(Interop.dereference(_result), new PtrArray(_result).readLen(), NONE);
     }
 
     /**

@@ -234,13 +234,13 @@ class TypedValueGenerator {
 
     private CodeBlock marshalJavaToNative(Type type, CodeBlock identifier) {
         if (type.isActuallyAnArray())
-            return CodeBlock.of("$T.allocateNativeArray($L, false, _arena)", ClassNames.INTEROP, identifier);
+            return CodeBlock.of("$T.allocate($L, false, _arena)", ClassNames.INTEROP, identifier);
 
         if (type.isString()) {
             if (v.transferOwnership() == FULL)
-                return CodeBlock.of("$T.allocateUnownedString($L)", ClassNames.INTEROP, identifier);
+                return CodeBlock.of("$T.allocateUnowned($L)", ClassNames.INTEROP, identifier);
             else
-                return CodeBlock.of("$T.allocateNativeString($L, _arena)", ClassNames.INTEROP, identifier);
+                return CodeBlock.of("$T.allocate($L, _arena)", ClassNames.INTEROP, identifier);
         }
 
         if (type.isFilename())
@@ -266,7 +266,7 @@ class TypedValueGenerator {
         return switch (target) {
             case null -> identifier;
             case Alias alias when alias.anyType() instanceof Array ->
-                    CodeBlock.of("$T.allocateNativeArray($L, true, _arena)", ClassNames.INTEROP, identifier);
+                    CodeBlock.of("$T.allocate($L, true, _arena)", ClassNames.INTEROP, identifier);
             case Alias alias when alias.anyType() instanceof Type t -> {
                 RegisteredType typedef = t.lookup();
                 if (typedef != null)
@@ -321,7 +321,7 @@ class TypedValueGenerator {
         // String[][]
         if (array.anyType() instanceof Array inner
                 && inner.anyType() instanceof Type t && t.isString()) {
-            return CodeBlock.of("$T.allocateNativeArray($L, $L, $L, $L)",
+            return CodeBlock.of("$T.allocate($L, $L, $L, $L)",
                             ClassNames.INTEROP,
                             identifier,
                             array.zeroTerminated(),
@@ -340,7 +340,7 @@ class TypedValueGenerator {
         CodeBlock stmt;
 
         if (isEnum || isPrimitiveAlias)
-            stmt = CodeBlock.of("$T.allocateNativeArray($T.get$LValues($L), $L, $L)",
+            stmt = CodeBlock.of("$T.allocate($T.get$LValues($L), $L, $L)",
                     ClassNames.INTEROP,
                     isEnum ? ClassNames.INTEROP : elemType.typeName(),
                     primitiveClassName,
@@ -351,7 +351,7 @@ class TypedValueGenerator {
         else if (target instanceof Record
                         && (!elemType.isPointer())
                         && (!"GLib.PtrArray".equals(array.name())))
-            stmt = CodeBlock.of("$T.allocateNativeArray($L, $T.getMemoryLayout(), $L, $L)",
+            stmt = CodeBlock.of("$T.allocate($L, $T.getMemoryLayout(), $L, $L)",
                             ClassNames.INTEROP,
                             identifier,
                             target.typeName(),
@@ -366,7 +366,7 @@ class TypedValueGenerator {
         }
 
         else
-            stmt = CodeBlock.of("$T.allocateNativeArray($L, $L, $L)",
+            stmt = CodeBlock.of("$T.allocate($L, $L, $L)",
                             ClassNames.INTEROP,
                             identifier,
                             array.zeroTerminated(),
@@ -413,10 +413,10 @@ class TypedValueGenerator {
                 && inner.anyType() instanceof Type t && t.isString()) {
             String size = array.sizeExpression(upcall);
             if (size == null)
-                return CodeBlock.of("$T.getStrvArrayFrom($L, $L)",
+                return CodeBlock.of("$T.getStrvArray($L, $L)",
                         ClassNames.INTEROP, identifier, transfer());
             else
-                return CodeBlock.of("$T.getStrvArrayFrom($L, $L, $L)",
+                return CodeBlock.of("$T.getStrvArray($L, $L, $L)",
                         ClassNames.INTEROP, identifier, size, transfer());
         }
 
@@ -448,7 +448,7 @@ class TypedValueGenerator {
         };
 
         if (type.isString())
-            return CodeBlock.of("$T.getStringFrom($L, $L)", ClassNames.INTEROP, identifier, transfer());
+            return CodeBlock.of("$T.getString($L, $L)", ClassNames.INTEROP, identifier, transfer());
 
         if (type.isFilename())
             return CodeBlock.of("new $T($L, $L)", ClassNames.FILENAME, identifier, transfer());
@@ -530,7 +530,7 @@ class TypedValueGenerator {
     private static CodeBlock getElementConstructor(Type type, int child) {
         return switch (type.anyTypes().get(child)) {
             case Type t when t.isString() ->
-                CodeBlock.of("$T::getStringFrom", ClassNames.INTEROP);
+                CodeBlock.of("$T::getString", ClassNames.INTEROP);
             case Type t when t.isFilename() ->
                 CodeBlock.of("pointer -> new $T(pointer, $T.NONE)",
                         ClassNames.FILENAME, ClassNames.TRANSFER_OWNERSHIP);
@@ -538,7 +538,7 @@ class TypedValueGenerator {
             case Type t when t.isInt32() && !t.isPointer() ->
                 CodeBlock.of("pointer -> (int) pointer.address()");
             case Type t when t.isPrimitive() ->
-                CodeBlock.of("$T::get$LFrom", ClassNames.INTEROP, primitiveClassName(t.javaType()));
+                CodeBlock.of("$T::get$L", ClassNames.INTEROP, primitiveClassName(t.javaType()));
             case Type t when t.isMemorySegment() ->
                 CodeBlock.of("(_p -> _p)");
             case Array _ ->
@@ -547,7 +547,7 @@ class TypedValueGenerator {
                 var elemTarget = t.lookup();
                 // For enum types (bitfield/enumeration) read an integer and call <EnumType>.of()
                 if (elemTarget instanceof EnumType enumType) {
-                    yield CodeBlock.of("(_ptr -> $T.of($T.getIntegerFrom(_ptr)))",
+                    yield CodeBlock.of("(_ptr -> $T.of($T.getInteger(_ptr)))",
                             enumType.typeName(), ClassNames.INTEROP);
                 } else if (elemTarget.checkIsGObject()) {
                     yield CodeBlock.of("_ptr -> ($T) $T.getForType(_ptr, $L)",
@@ -598,15 +598,15 @@ class TypedValueGenerator {
         // Null-terminated array
         if (size == null) {
             if (type.isString())
-                return CodeBlock.of("$T.getStringArrayFrom($L, $L)",
+                return CodeBlock.of("$T.getStringArray($L, $L)",
                         ClassNames.INTEROP, identifier, transfer());
 
             if (type.isFilename())
-                return CodeBlock.of("$T.getFilenameArrayFrom($L, $L)",
+                return CodeBlock.of("$T.getFilenameArray($L, $L)",
                         ClassNames.INTEROP, identifier, transfer());
 
             if (type.isMemorySegment())
-                return CodeBlock.of("$T.getAddressArrayFrom($L, $L)",
+                return CodeBlock.of("$T.getAddressArray($L, $L)",
                         ClassNames.INTEROP, identifier, transfer());
 
             if (target instanceof EnumType)
@@ -618,32 +618,32 @@ class TypedValueGenerator {
                         target.typeName(), identifier, transfer());
 
             if (type.isPrimitive())
-                return CodeBlock.of("$T.get$LArrayFrom($L, $L)",
+                return CodeBlock.of("$T.get$LArray($L, $L)",
                         ClassNames.INTEROP, primitive, identifier, transfer());
 
             if (target instanceof Record && (! type.isPointer()) &&
                     (! (array != null && "GLib.PtrArray".equals(array.name()))))
-                return CodeBlock.of("$1T.getStructArrayFrom($2L, $3T.class, $4L, $3T.getMemoryLayout())",
+                return CodeBlock.of("$1T.getStructArray($2L, $3T.class, $4L, $3T.getMemoryLayout())",
                         ClassNames.INTEROP, identifier, target.typeName(), target.constructorName());
 
             if (target == null)
                 throw new IllegalStateException("Target is null for type " + type);
 
-            return CodeBlock.of("$T.getProxyArrayFrom($L, $T.class, $L)",
+            return CodeBlock.of("$T.getProxyArray($L, $T.class, $L)",
                             ClassNames.INTEROP, identifier, target.typeName(), target.constructorName());
         }
 
         // Array with known size
         if (type.isString())
-            return CodeBlock.of("$T.getStringArrayFrom($L, $L, $L)",
+            return CodeBlock.of("$T.getStringArray($L, $L, $L)",
                     ClassNames.INTEROP, identifier, size, transfer());
 
         if (type.isFilename())
-            return CodeBlock.of("$T.getFilenameArrayFrom($L, $L, $L)",
+            return CodeBlock.of("$T.getFilenameArray($L, $L, $L)",
                     ClassNames.INTEROP, identifier, size, transfer());
 
         if (type.isMemorySegment())
-            return CodeBlock.of("$T.getAddressArrayFrom($L, $L, $L)",
+            return CodeBlock.of("$T.getAddressArray($L, $L, $L)",
                     ClassNames.INTEROP, identifier, size, transfer());
 
         if (target instanceof EnumType)
@@ -655,22 +655,22 @@ class TypedValueGenerator {
                     target.typeName(), identifier, size, transfer());
 
         if (type.isPrimitive() && array != null && array.anyType() instanceof Type)
-            return CodeBlock.of("$T.get$LArrayFrom($L, $L, $L)",
+            return CodeBlock.of("$T.get$LArray($L, $L, $L)",
                     ClassNames.INTEROP, primitive, identifier, size, transfer());
 
         if (type.isPrimitive())
-            return CodeBlock.of("$T.get$LArrayFrom($L, $L, $L)",
+            return CodeBlock.of("$T.get$LArray($L, $L, $L)",
                     ClassNames.INTEROP, primitive, identifier, size, transfer());
 
         if (target instanceof Record && (! type.isPointer()) &&
                 (! (array != null && "GLib.PtrArray".equals(array.name()))))
-            return CodeBlock.of("$1T.getStructArrayFrom($2L, (int) $3L, $4T.class, $5L, $4T.getMemoryLayout())",
+            return CodeBlock.of("$1T.getStructArray($2L, (int) $3L, $4T.class, $5L, $4T.getMemoryLayout())",
                     ClassNames.INTEROP, identifier, size, target.typeName(), target.constructorName());
 
         if (target == null)
             throw new IllegalStateException("Target is null for type " + type);
 
-        return CodeBlock.of("$T.getProxyArrayFrom($L, (int) $L, $T.class, $L)",
+        return CodeBlock.of("$T.getProxyArray($L, (int) $L, $T.class, $L)",
                 ClassNames.INTEROP, identifier, size, target.typeName(), target.constructorName());
     }
 
@@ -753,7 +753,7 @@ class TypedValueGenerator {
                 return CodeBlock.of("_value.setBoxed($T.takeUnowned($L).handle())",
                         ClassNames.G_BYTE_ARRAY, payloadIdentifier);
             else
-                return CodeBlock.of("_value.setBoxed($T.allocateNativeArray($L, true, _arena))",
+                return CodeBlock.of("_value.setBoxed($T.allocate($L, true, _arena))",
                         ClassNames.INTEROP, payloadIdentifier);
         }
 

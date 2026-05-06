@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -165,8 +165,8 @@ public class TestObjectSignals {
         HashTable<String, Byte> hashTable1 = new HashTable<>(
                 GLib::strHash,
                 GLib::strEqual,
-                Interop::getStringFrom,
-                Interop::getByteFrom);
+                Interop::getString,
+                Interop::getByte);
         hashTable1.putAll(Map.of("a", (byte) 1, "b", (byte) 2));
 
         var o = new TestObj();
@@ -232,7 +232,7 @@ public class TestObjectSignals {
         });
         // FIXME: we still have to allocate the array manually
         try (var arena = Arena.ofConfined()) {
-            var data = Interop.allocateNativeArray(new int[] {0, 1, 2, 3, 4}, false, arena);
+            var data = Interop.allocate(new int[] {0, 1, 2, 3, 4}, false, arena);
             o.emit("sig-with-array-len-prop", data, 5);
         }
         assertEquals(1, counter.get());
