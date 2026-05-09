@@ -36,4 +36,4 @@ jobs:
         run: |
           Xvfb :100 -ac &
           export DISPLAY=:100.0
-          ./gradlew build
+          ./gradlew build --info
