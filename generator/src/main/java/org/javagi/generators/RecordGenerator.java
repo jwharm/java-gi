@@ -262,29 +262,22 @@ public class RecordGenerator extends RegisteredTypeGenerator {
                         toJavaIdentifier(f.name()))
         );
 
-        if (arenaParameter)
-            spec.addJavadoc("@param arena to control the memory allocation scope\n")
-                .addParameter(Arena.class, "arena");
-
         // Allocate the new instance
         if (arenaParameter)
-            spec.addStatement("this(arena)");
+            spec.addJavadoc("@param arena to control the memory allocation scope\n")
+                .addParameter(Arena.class, "arena")
+                .addStatement("this(arena)");
         else
-            spec.addStatement("this($T.ofAuto())", Arena.class);
+            spec.addStatement("$1T arena = $1T.ofAuto()", Arena.class)
+                .addStatement("this(arena)");
 
         // Copy the parameter values into the instance fields
         streamAccessibleFields().forEach(f -> {
-            if (f.allocatesMemory() && arenaParameter)
+            if (f.allocatesMemory())
                 spec.addStatement("$L$L($L, arena)",
                         f.callback() == null ? "write" : "override",
                         toCamelCase(f.name(), true),
                         toJavaIdentifier(f.name()));
-            else if (f.allocatesMemory())
-                spec.addStatement("$L$L($L, $T.ofAuto())",
-                        f.callback() == null ? "write" : "override",
-                        toCamelCase(f.name(), true),
-                        toJavaIdentifier(f.name()),
-                        Arena.class);
             else
                 spec.addStatement("$L$L($L)",
                         f.callback() == null ? "write" : "override",
