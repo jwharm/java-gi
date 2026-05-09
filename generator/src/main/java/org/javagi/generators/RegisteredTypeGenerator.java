@@ -123,6 +123,11 @@ public class RegisteredTypeGenerator {
         }
     }
 
+    protected void addFreeTextCodeblocks(TypeSpec.Builder builder) {
+        for (var block : rt.freeTextBlocks())
+            builder.addFreeTextBlock(block);
+    }
+
     protected MethodSpec memoryAddressConstructor() {
         MethodSpec.Builder builder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)

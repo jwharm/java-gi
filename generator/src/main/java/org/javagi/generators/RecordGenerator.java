@@ -108,9 +108,6 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
 
-        if ("GVariant".equals(rec.cType()))
-            builder.addMethod(gvariantGetType());
-
         builder.addMethod(memoryAddressConstructor());
 
         if (rec instanceof FieldContainer fc) {
@@ -139,22 +136,13 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         addConstructors(builder);
         addFunctions(builder);
         addMethods(builder);
+        addFreeTextCodeblocks(builder);
 
         if (hasNativeHandles())
             builder.addType(nativeHandlesClass());
 
         if (rec.toStringTarget() != null)
             builder.addMethod(toStringRedirect());
-
-        if ("GTypeInstance".equals(rec.cType())) {
-            addCallParentMethods();
-            builder.addMethod(cast());
-        }
-
-        if ("GVariant".equals(rec.cType()))
-            builder.addMethod(gvariantPack())
-                   .addMethod(gvariantUnpack())
-                   .addMethod(gvariantUnpackRecursive());
 
         return builder.build();
     }
@@ -299,125 +287,5 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
     private boolean hasFieldSetters() {
         return streamAccessibleFields().anyMatch(f -> f.callback() == null);
-    }
-
-    private MethodSpec gvariantGetType() {
-        return MethodSpec.methodBuilder("getType")
-                .addJavadoc("""
-                    Get the GType of the GVariant class
-                    
-                    @return the GType
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_TYPE)
-                // Types.VARIANT is declared in GObject. Hard-coded value as workaround
-                .addStatement("return new $T(21L << 2)", ClassNames.G_TYPE)
-                .build();
-    }
-
-    private void addCallParentMethods() {
-        builder.addField(FieldSpec.builder(boolean.class, "callParent")
-                .addModifiers(Modifier.PRIVATE)
-                .initializer("false")
-                .build());
-
-        builder.addMethod(MethodSpec.methodBuilder("callParent")
-                .addJavadoc("""
-                        Set the flag that determines if for virtual method calls,
-                        {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
-                        parent type instead of the instance class.
-                        
-                        @param callParent true to call the parent vfunc instead of an overridden vfunc
-                        """)
-                .addModifiers(Modifier.PROTECTED)
-                .addParameter(boolean.class, "callParent")
-                .addStatement("this.callParent = callParent")
-                .build());
-
-        builder.addMethod(MethodSpec.methodBuilder("callParent")
-                .addJavadoc("""
-                        Returns the flag that determines if for virtual method calls,
-                        {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
-                        parent type instead of the instance class.
-                        
-                        @return true when parent vfunc is called instead of an overridden vfunc, or
-                                false when the overridden vfunc of the instance is called.
-                        """)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(boolean.class)
-                .addStatement("return this.callParent")
-                .build());
-    }
-
-    private MethodSpec cast() {
-        TypeVariableName T = TypeVariableName.get("T", ClassNames.G_TYPE_INSTANCE);
-        return MethodSpec.methodBuilder("cast")
-                .addJavadoc("""
-                        Cast this instance to the requested type, if the GTypes are compatible.
-                        
-                        @param to the intended class
-                        @param <T> the type of the intended class (must be a GTypeInstance)
-                        @return a new instance of the requested class
-                        @throws $T when {@code to} is not a registered GType
-                        @throws $T when the GType of this instance does not derive from the GType of {@code to}
-                        """, IllegalArgumentException.class, ClassCastException.class)
-                .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(T)
-                .returns(T)
-                .addParameter(ParameterizedTypeName.get(ClassName.get(java.lang.Class.class), T), "to")
-                .addStatement("$T fromType = readGClass().readGType()", ClassNames.G_TYPE)
-                .addStatement("$T toType = $T.getType(to)", ClassNames.G_TYPE, ClassNames.TYPE_CACHE)
-                .beginControlFlow("if (toType == null)")
-                .addStatement("throw new $T(to.getName() + $S)", IllegalArgumentException.class, " is not a registered GType")
-                .endControlFlow()
-                .beginControlFlow("if (! $T.typeIsA(fromType, toType))", ClassNames.G_OBJECTS)
-                .addStatement("throw new $T(fromType + $S + toType)", ClassCastException.class, " is not a ")
-                .endControlFlow()
-                .addStatement("return (T) $T.getConstructor(toType, null).apply(handle())", ClassNames.TYPE_CACHE)
-                .build();
-    }
-
-    private MethodSpec gvariantPack() {
-        return MethodSpec.methodBuilder("pack")
-                .addJavadoc("""
-                        Create a GVariant from a Java Object.
-                        
-                        @param object the Java Object to pack into a GVariant
-                        @return the GVariant with the packed Object
-                        @see Variants#pack
-                        """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_VARIANT)
-                .addParameter(Object.class, "object")
-                .addStatement("return $T.pack(object)", ClassNames.VARIANTS)
-                .build();
-    }
-
-    private MethodSpec gvariantUnpack() {
-        return MethodSpec.methodBuilder("unpack")
-                .addJavadoc("""
-                        Unpack a GVariant into a Java Object.
-                        
-                        @return the unpacked Java Object
-                        @see Variants#unpack
-                        """)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(Object.class)
-                .addStatement("return $T.unpack(this, false)", ClassNames.VARIANTS)
-                .build();
-    }
-
-    private MethodSpec gvariantUnpackRecursive() {
-        return MethodSpec.methodBuilder("unpackRecursive")
-                .addJavadoc("""
-                        Unpack a GVariant into a Java Object. Nested GVariants are recursively unpacked.
-                        
-                        @return the unpacked Java Object
-                        @see Variants#unpack
-                        """)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(Object.class)
-                .addStatement("return $T.unpack(this, true)", ClassNames.VARIANTS)
-                .build();
     }
 }

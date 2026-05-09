@@ -76,6 +76,7 @@ public class InterfaceGenerator extends RegisteredTypeGenerator {
         addMethods(builder);
         addVirtualMethods(builder);
         addSignals(builder);
+        addFreeTextCodeblocks(builder);
 
         if (inf.toStringTarget() != null)
             builder.addMethod(toStringRedirect());
