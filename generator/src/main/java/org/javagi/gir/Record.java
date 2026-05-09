@@ -37,6 +37,10 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
         super(attributes, children);
     }
 
+    public Record(Map<String, String> attributes, List<Node> children, List<CodeBlock> freeTextBlocks) {
+        super(attributes, children, freeTextBlocks);
+    }
+
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
@@ -73,9 +77,13 @@ public final class Record extends GirElement implements StandardLayoutType, Fiel
                         union(children(), other.children())
                                 .stream()
                                 .filter(not(Field.class::isInstance))
-                                .toList());
+                                .toList(),
+                        union(freeTextBlocks(), other.freeTextBlocks()));
             else
-                return new Record(attributes(), union(children(), other.children()));
+                return new Record(
+                        attributes(),
+                        union(children(), other.children()),
+                        union(freeTextBlocks(), other.freeTextBlocks()));
         }
         return this;
     }

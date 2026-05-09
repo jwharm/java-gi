@@ -34,6 +34,10 @@ public final class Class extends GirElement implements RegisteredType, FieldCont
         super(attributes, children);
     }
 
+    public Class(Map<String, String> attributes, List<Node> children, List<CodeBlock> freeTextBlocks) {
+        super(attributes, children, freeTextBlocks);
+    }
+
     @Override
     public Namespace parent() {
         return (Namespace) super.parent();
@@ -57,7 +61,10 @@ public final class Class extends GirElement implements RegisteredType, FieldCont
     @Override
     public RegisteredType mergeWith(RegisteredType rt) {
         if (rt instanceof Class other)
-            return new Class(attributes(), union(children(), other.children()));
+            return new Class(
+                    attributes(),
+                    union(children(), other.children()),
+                    union(freeTextBlocks(), other.freeTextBlocks()));
         return this;
     }
 

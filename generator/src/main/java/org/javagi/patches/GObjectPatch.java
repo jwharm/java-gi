@@ -19,16 +19,19 @@
 
 package org.javagi.patches;
 
+import org.javagi.configuration.ClassNames;
 import org.javagi.gir.Field;
 import org.javagi.gir.GirElement;
 import org.javagi.gir.Record;
 import org.javagi.util.Patch;
 import org.javagi.gir.Type;
 
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
+import static org.javagi.util.Conversions.nullable;
 
 public class GObjectPatch implements Patch {
 
@@ -49,6 +52,238 @@ public class GObjectPatch implements Patch {
             Type type = new Type(Map.of("name", "GObject.ObjectClass", "c:type", "GObjectClass"), emptyList());
             Field field = new Field(Map.of("name", "parent_class"), List.of(type));
             return r.withChildren(r.infoElements().doc(), field);
+        }
+
+        // Inject methods in GObject class
+        if (element instanceof org.javagi.gir.Class cls && "GObject".equals(cls.cType())) {
+            inject(element, """
+                ///
+                /// Create a new GObject instance of the provided GType and with the
+                /// provided property values.
+                ///
+                /// @param  objectType the GType of the new GObject
+                /// @param  propertyNamesAndValues pairs of property names and values
+                ///         (Strings and Objects)
+                /// @return the newly created GObject instance
+                /// @throws IllegalArgumentException invalid property name
+                ///
+                public static <T extends $T> T newInstance($T objectType,
+                        Object... propertyNamesAndValues) {
+                    var constructor = $T.getConstructor(objectType, null);
+                    var proxy = (T) constructor.apply($T.NULL);
+                    $T.newGObject(proxy, objectType, getMemoryLayout().byteSize(), propertyNamesAndValues);
+                    return proxy;
+                }
+                """, ClassNames.G_OBJECT, ClassNames.G_TYPE, ClassNames.TYPE_CACHE,
+                                MemorySegment.class, ClassNames.INSTANCE_CACHE);
+
+            inject(element, """
+                ///
+                /// Create a new instance of a GObject-derived class with the provided
+                /// property values.
+                ///
+                /// @param  objectClass the Java class of the new GObject
+                /// @param  propertyNamesAndValues pairs of property names and values
+                ///         (Strings and Objects)
+                /// @return the newly created GObject instance
+                /// @throws IllegalArgumentException invalid property name
+                ///
+                public static <T extends $T> T newInstance(Class<T> objectClass,
+                        Object... propertyNamesAndValues) {
+                    return newInstance($T.getType(objectClass), propertyNamesAndValues);
+                }
+                """, ClassNames.G_OBJECT, ClassNames.TYPE_CACHE);
+
+            inject(element, """
+                ///
+                /// Get a property of an object.
+                ///
+                /// @param  propertyName the name of the property to get
+                /// @return the property value
+                /// @throws IllegalArgumentException invalid property name
+                ///
+                public $T getProperty(String propertyName) {
+                    return $T.getProperty(this, propertyName);
+                }
+                """, nullable(Object.class), ClassNames.PROPERTIES);
+
+            inject(element, """
+                ///
+                /// Set a property of an object.
+                ///
+                /// @param  propertyName the name of the property to set
+                /// @param  value the new property value
+                /// @throws IllegalArgumentException invalid property name
+                ///
+                public void setProperty(String propertyName, $T value) {
+                    $T.setProperty(this, propertyName, value);
+                }
+                """, nullable(Object.class), ClassNames.PROPERTIES);
+
+            inject(element, """
+                ///
+                /// Create a binding between `sourceProperty` on this object and
+                /// `targetProperty` on `target`.
+                ///
+                /// Whenever the `sourceProperty` is changed the `targetProperty`
+                /// is updated using the same value. For instance:
+                ///
+                /// ```java
+                /// action.bindProperty("active", widget, "sensitive").build();
+                /// ```
+                ///
+                /// Will result in the "sensitive" property of the widget `GObject`
+                /// instance to be updated with the same value of the "active" property of
+                /// the action `GObject` instance.
+                ///
+                /// If [BindingBuilder#bidirectional] is set then the binding will be
+                /// mutual: if `targetProperty` on `target` changes then the
+                /// `sourceProperty` on this Object will be updated as well.
+                ///
+                /// The binding will automatically be removed when either this Object
+                /// or the `target` instances are finalized.
+                ///
+                /// A `GObject` can have multiple bindings.
+                ///
+                /// @param  <S> type of the source property
+                /// @param  <T> type of the target property
+                /// @param  sourceProperty the property on this Object to bind
+                /// @param  target         the target `GObject`
+                /// @param  targetProperty the property on `target` to bind
+                /// @return the `GBinding` instance representing the binding between
+                ///         the two `GObject` instances. The binding is released
+                ///         whenever the `GBinding` reference count reaches zero.
+                ///
+                public <S, T> $1T<S, T> bindProperty(String sourceProperty, $2T target,
+                        String targetProperty) {
+                    return new $1T<S, T>(this, sourceProperty, target, targetProperty);
+                }
+                """, ClassNames.BINDING_BUILDER, ClassNames.G_OBJECT);
+
+            inject(element, """
+                ///
+                /// Connect a callback to a signal for this object. The handler will be
+                /// called before the default handler of the signal.
+                ///
+                /// @param  <C>            type of the signal callback
+                /// @param  detailedSignal a string of the form "signal-name::detail"
+                /// @param  callback       the callback to connect
+                /// @return a SignalConnection object to track, block and disconnect the
+                ///         signal connection
+                ///
+                public <C> $T<C> connect(String detailedSignal, C callback) {
+                    return connect(detailedSignal, callback, false);
+                }
+                """, ClassNames.SIGNAL_CONNECTION);
+
+            inject(element, """
+                ///
+                /// Connect a callback to a signal for this object.
+                ///
+                /// @param <C>            type of the signal callback
+                /// @param detailedSignal a string of the form "signal-name::detail"
+                /// @param callback       the callback to connect
+                /// @param after          whether the handler should be called before or
+                ///                       after the default handler of the signal
+                /// @return a SignalConnection object to track, block and disconnect the
+                ///         signal connection
+                ///
+                public <C> $1T<C> connect(String detailedSignal, C callback, boolean after) {
+                    $2T closure = new $2T(callback).ignoreFirstParameter();
+                    int handlerId = $3T.signalConnectClosure(this, detailedSignal, closure, after);
+                    return new $1T<C>(handle(), handlerId, closure);
+                }
+                """, ClassNames.SIGNAL_CONNECTION, ClassNames.JAVA_CLOSURE, ClassNames.G_OBJECTS);
+
+            inject(element, """
+                ///
+                /// Emit a signal from this object.
+                ///
+                /// @param  detailedSignal a string of the form "signal-name::detail"
+                /// @param  params         the parameters to emit for this signal
+                /// @return the return value of the signal, or `null` if the signal
+                ///         has no return value
+                /// @throws IllegalArgumentException if a signal with this name is not found
+                ///         for the object
+                ///
+                public Object emit(String detailedSignal, Object... params) {
+                    return $T.emit(this, detailedSignal, params);
+                }
+                """, ClassNames.SIGNALS);
+        }
+
+        // Inject method in GParamSpec class
+        if (element instanceof org.javagi.gir.Class cls
+                && cls.cType() != null && cls.cType().startsWith("GParamSpec")) {
+            inject(element, """
+                ///
+                /// Get the GType of the $3L class.
+                ///
+                /// @return always {@link $1T#PARAM}
+                ///
+                public static $2T getType() {
+                    return $1T.PARAM;
+                }
+                """, ClassNames.TYPES, ClassNames.G_TYPE, cls.cType());
+        }
+
+        // Inject methods in GTypeInstance class
+        if (element instanceof org.javagi.gir.Record rec && "GTypeInstance".equals(rec.cType())) {
+            inject(element, """
+                private boolean callParent = false;
+                """);
+
+            inject(element, """
+                ///
+                /// Set the flag that determines if for virtual method calls,
+                /// {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
+                /// parent type instead of the instance class.
+                ///
+                /// @param callParent true to call the parent vfunc instead of an overridden vfunc
+                ///
+                protected void callParent(boolean callParent) {
+                    this.callParent = callParent;
+                }
+                """);
+
+            inject(element, """
+                ///
+                /// Returns the flag that determines if for virtual method calls,
+                /// {@code g_type_class_peek_parent()} is used to obtain the function pointer of the
+                /// parent type instead of the instance class.
+                ///
+                /// @return true when parent vfunc is called instead of an overridden vfunc, or
+                ///         false when the overridden vfunc of the instance is called.
+                ///
+                public boolean callParent() {
+                    return this.callParent;
+                }
+                """);
+
+            inject(element, """
+                ///
+                /// Cast this instance to the requested type, if the GTypes are compatible.
+                ///
+                /// @param to the intended class
+                /// @param <T> the type of the intended class (must be a GTypeInstance)
+                /// @return a new instance of the requested class
+                /// @throws $1T when {@code to} is not a registered GType
+                /// @throws $2T when the GType of this instance does not derive
+                ///                            from the GType of {@code to}
+                ///
+                public <T extends $3T> T cast(Class<T> to) {
+                    $6T fromType = readGClass().readGType();
+                    $6T toType = $4T.getType(to);
+                    if (toType == null) {
+                        throw new $1T(to.getName() + " is not a registered GType");
+                    }
+                    if (! $5T.typeIsA(fromType, toType)) {
+                        throw new $2T(fromType + " is not a " + toType);
+                    }
+                    return (T) $4T.getConstructor(toType, null).apply(handle());
+                }
+                """, IllegalArgumentException.class, ClassCastException.class, ClassNames.G_TYPE_INSTANCE,
+                    ClassNames.TYPE_CACHE, ClassNames.G_OBJECTS, ClassNames.G_TYPE);
         }
 
         return element;

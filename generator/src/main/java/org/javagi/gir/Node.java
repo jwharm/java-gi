@@ -19,6 +19,8 @@
 
 package org.javagi.gir;
 
+import org.javagi.javapoet.CodeBlock;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -38,6 +40,8 @@ public interface Node {
     <T extends Node> T withAttribute(String attrName, String newValue);
     <T extends Node> T withChildren(GirElement... newChildren);
     <T extends Node> T withChildren(List<Node> newChildren);
+
+    List<CodeBlock> freeTextBlocks();
 
     default boolean skipJava() {
         return attrBool("java-gi-skip", false);

@@ -32,8 +32,6 @@ import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.javagi.util.Conversions.nullable;
-
 public class ClassGenerator extends RegisteredTypeGenerator {
 
     private final Class cls;
@@ -112,8 +110,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
 
         if (hasTypeMethod())
             builder.addMethod(getTypeMethod());
-        else if (cls.isInstanceOf("GObject", "ParamSpec"))
-            builder.addMethod(paramSpecGetTypeMethod());
 
         builder.addMethod(new MemoryLayoutGenerator().generateMemoryLayout(cls));
         builder.addMethod(parentAccessor());
@@ -124,6 +120,7 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         addMethods(builder);
         addVirtualMethods(builder);
         addSignals(builder);
+        addFreeTextCodeblocks(builder);
 
         if (cls.toStringTarget() != null)
             builder.addMethod(toStringRedirect());
@@ -142,21 +139,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
             if (!cls.abstract_()) // no builder() for abstract classes
                 builder.addMethod(generator.generateBuilderMethod());
         }
-
-        // Extra methods in GObject class
-        if ("GObject".equals(cls.cType()))
-            builder.addMethod(gobjectFactory())
-                    .addMethod(gobjectClassFactory())
-                    .addMethod(gobjectGetProperty())
-                    .addMethod(gobjectSetProperty())
-                    .addMethod(gobjectBindProperty())
-                    .addMethod(gobjectConnect())
-                    .addMethod(gobjectConnectAfter())
-                    .addMethod(gobjectEmit());
-
-        // Extra method in GListStore class (deprecated, to be removed)
-        if ("GListStore".equals(cls.cType()))
-            builder.addMethod(gListStoreRemoveItem());
 
         if (hasNativeHandles())
             builder.addType(nativeHandlesClass());
@@ -220,72 +202,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
         return spec.build();
     }
 
-    protected MethodSpec paramSpecGetTypeMethod() {
-        return MethodSpec.methodBuilder("getType")
-                .addJavadoc("""
-                    Get the GType of the $L class.
-                    
-                    @return always {@link $T#PARAM}
-                    """, cls.cType(), ClassNames.TYPES)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassNames.G_TYPE)
-                .addStatement("return $T.PARAM", ClassNames.TYPES)
-                .build();
-    }
-
-    private MethodSpec gobjectFactory() {
-        return MethodSpec.methodBuilder("newInstance")
-                .addJavadoc("""
-                    Create a new GObject instance of the provided GType and with the
-                    provided property values.
-                    
-                    @param  objectType the GType of the new GObject
-                    @param  propertyNamesAndValues pairs of property names and values
-                            (Strings and Objects)
-                    @return the newly created GObject instance
-                    @throws IllegalArgumentException invalid property name
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(ClassNames.GENERIC_T)
-                .returns(TypeVariableName.get("T"))
-                .addParameter(ClassNames.G_TYPE, "objectType")
-                .addParameter(Object[].class, "propertyNamesAndValues")
-                .varargs(true)
-                .addStatement("var constructor = $T.getConstructor(objectType, null)",
-                        ClassNames.TYPE_CACHE)
-                .addStatement("var proxy = (T) constructor.apply($T.NULL)", MemorySegment.class)
-                .addStatement("$T.newGObject(proxy, objectType, getMemoryLayout().byteSize(), propertyNamesAndValues)",
-                        ClassNames.INSTANCE_CACHE)
-                .addStatement("return proxy")
-                .build();
-    }
-
-    private MethodSpec gobjectClassFactory() {
-        var paramType = ParameterizedTypeName.get(
-                ClassName.get(java.lang.Class.class), TypeVariableName.get("T"));
-
-        return MethodSpec.methodBuilder("newInstance")
-                .addJavadoc("""
-                    Create a new instance of a GObject-derived class with the provided
-                    property values.
-                    
-                    @param  objectClass the Java class of the new GObject
-                    @param  propertyNamesAndValues pairs of property names and values
-                            (Strings and Objects)
-                    @return the newly created GObject instance
-                    @throws IllegalArgumentException invalid property name
-                    """)
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addTypeVariable(ClassNames.GENERIC_T)
-                .returns(TypeVariableName.get("T"))
-                .addParameter(paramType, "objectClass")
-                .addParameter(Object[].class, "propertyNamesAndValues")
-                .varargs(true)
-                .addStatement("return newInstance($T.getType(objectClass), propertyNamesAndValues)",
-                        ClassNames.TYPE_CACHE)
-                .build();
-    }
-
     private MethodSpec gobjectConstructor() {
         return MethodSpec.constructorBuilder()
                 .addJavadoc("Create a new $1L.", name())
@@ -293,189 +209,6 @@ public class ClassGenerator extends RegisteredTypeGenerator {
                 .addStatement("super($T.NULL)", MemorySegment.class)
                 .addStatement("$1T.newGObject(this, $2T.getType(this.getClass()), getMemoryLayout().byteSize(), (Object[]) null)",
                         ClassNames.INSTANCE_CACHE, ClassNames.TYPE_CACHE)
-                .build();
-    }
-
-    private MethodSpec gobjectGetProperty() {
-        return MethodSpec.methodBuilder("getProperty")
-                .addJavadoc("""
-                    Get a property of an object.
-                    
-                    @param  propertyName the name of the property to get
-                    @return the property value
-                    @throws IllegalArgumentException invalid property name
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(nullable(Object.class))
-                .addParameter(String.class, "propertyName")
-                .addStatement("return $T.getProperty(this, propertyName)", ClassNames.PROPERTIES)
-                .build();
-    }
-
-    private MethodSpec gobjectSetProperty() {
-        return MethodSpec.methodBuilder("setProperty")
-                .addJavadoc("""
-                    Set a property of an object.
-                    
-                    @param  propertyName the name of the property to set
-                    @param  value the new property value
-                    @throws IllegalArgumentException invalid property name
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(String.class, "propertyName")
-                .addParameter(nullable(Object.class), "value")
-                .addStatement("$T.setProperty(this, propertyName, value)", ClassNames.PROPERTIES)
-                .build();
-    }
-
-    private MethodSpec gobjectBindProperty() {
-        var S = TypeVariableName.get("S");
-        var T = TypeVariableName.get("T");
-        return MethodSpec.methodBuilder("bindProperty")
-                .addJavadoc("""
-                    Create a binding between `sourceProperty` on this object and
-                    `targetProperty` on `target`.
-                    
-                    Whenever the `sourceProperty` is changed the `targetProperty`
-                    is updated using the same value. For instance:
-                    
-                    ```java
-                    action.bindProperty("active", widget, "sensitive").build();
-                    ```
-                    
-                    Will result in the "sensitive" property of the widget `GObject`
-                    instance to be updated with the same value of the "active" property of
-                    the action `GObject` instance.
-                    
-                    If [BindingBuilder#bidirectional] is set then the binding will be
-                    mutual: if `targetProperty` on `target` changes then the
-                    `sourceProperty` on this Object will be updated as well.
-                    
-                    The binding will automatically be removed when either the this Object
-                    or the `target` instances are finalized. To remove the binding
-                    without affecting the this object and the `target`, just call `unref()`
-                    on the returned `Binding` instance.
-                    
-                    Removing the binding by calling `unref()` on it must only be done
-                    if the binding, this GObject and `target` are only used from a
-                    single thread and it is clear that both this GObject and `target`
-                    outlive the binding. Especially it is not safe to rely on this if the
-                    binding, this GObject or `target` can be finalized from different
-                    threads. Keep another reference to the binding and use
-                    [Binding#unbind] instead to be on the safe side.
-                    
-                    A `GObject` can have multiple bindings.
-                    
-                    @param  <S> type of the source property
-                    @param  <T> type of the target property
-                    @param  sourceProperty the property on this Object to bind
-                    @param  target         the target `GObject`
-                    @param  targetProperty the property on `target` to bind
-                    @return the `GBinding` instance representing the binding between
-                            the two `GObject` instances. The binding is released
-                            whenever the `GBinding` reference count reaches zero.
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(S)
-                .addTypeVariable(T)
-                .returns(ParameterizedTypeName.get(ClassNames.BINDING_BUILDER, S, T))
-                .addParameter(String.class, "sourceProperty")
-                .addParameter(ClassNames.G_OBJECT, "target")
-                .addParameter(String.class, "targetProperty")
-                .addStatement("return new $T<S, T>(this, sourceProperty, target, targetProperty)",
-                        ClassNames.BINDING_BUILDER)
-                .build();
-    }
-
-    private MethodSpec gobjectConnect() {
-        var C = TypeVariableName.get("C");
-        return MethodSpec.methodBuilder("connect")
-                .addJavadoc("""
-                    Connect a callback to a signal for this object. The handler will be
-                    called before the default handler of the signal.
-                    
-                    @param  <C>            type of the signal callback
-                    @param  detailedSignal a string of the form "signal-name::detail"
-                    @param  callback       the callback to connect
-                    @return a SignalConnection object to track, block and disconnect the
-                            signal connection
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(C)
-                .returns(ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
-                .addParameter(String.class, "detailedSignal")
-                .addParameter(C, "callback")
-                .addStatement("return connect(detailedSignal, callback, false)")
-                .build();
-    }
-
-    private MethodSpec gobjectConnectAfter() {
-        var C = TypeVariableName.get("C");
-        return MethodSpec.methodBuilder("connect")
-                .addJavadoc("""
-                    Connect a callback to a signal for this object.
-                    
-                    @param <C>            type of the signal callback
-                    @param detailedSignal a string of the form "signal-name::detail"
-                    @param callback       the callback to connect
-                    @param after          whether the handler should be called before or
-                                          after the default handler of the signal
-                    @return a SignalConnection object to track, block and disconnect the
-                            signal connection
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .addTypeVariable(C)
-                .returns(ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
-                .addParameter(String.class, "detailedSignal")
-                .addParameter(C, "callback")
-                .addParameter(boolean.class, "after")
-                .addStatement("$1T closure = new $1T(callback).ignoreFirstParameter()",
-                        ClassNames.JAVA_CLOSURE)
-                .addStatement("int handlerId = $T.signalConnectClosure(this, detailedSignal, closure, after)",
-                        ClassNames.G_OBJECTS)
-                .addStatement("return new $T(handle(), handlerId, closure)",
-                        ParameterizedTypeName.get(ClassNames.SIGNAL_CONNECTION, C))
-                .build();
-    }
-
-    private MethodSpec gobjectEmit() {
-        return MethodSpec.methodBuilder("emit")
-                .addJavadoc("""
-                    Emit a signal from this object.
-                    
-                    @param  detailedSignal a string of the form "signal-name::detail"
-                    @param  params         the parameters to emit for this signal
-                    @return the return value of the signal, or `null` if the signal
-                            has no return value
-                    @throws IllegalArgumentException if a signal with this name is not found
-                            for the object
-                    """)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(Object.class)
-                .addParameter(String.class, "detailedSignal")
-                .addParameter(Object[].class, "params")
-                .varargs(true)
-                .addStatement("return $T.emit(this, detailedSignal, params)",
-                        ClassNames.SIGNALS)
-                .build();
-    }
-
-    private MethodSpec gListStoreRemoveItem() {
-        return MethodSpec.methodBuilder("removeItem")
-                .addJavadoc("""
-                    Remove the item from this ListStore that is at `position`.
-                    `position` must be smaller than the current length of the list.
-                    
-                    Use [#splice] to remove multiple items at the same time
-                    efficiently.
-                    
-                    @param position the position of the item that is to be removed
-                    @deprecated renamed to {@link #removeAt(int)}
-                    """)
-                .addAnnotation(Deprecated.class)
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(int.class, "position")
-                .addStatement("removeAt(position)")
                 .build();
     }
 

@@ -19,6 +19,8 @@
 
 package org.javagi.gir;
 
+import org.javagi.javapoet.CodeBlock;
+
 import static org.javagi.util.CollectionUtils.*;
 import static java.util.function.Predicate.not;
 
@@ -30,6 +32,7 @@ public abstract class GirElement implements Serializable, Node {
 
     private List<Node> children;
     private final Map<String, String> attributes;
+    private final List<CodeBlock> freeTextBlocks = new ArrayList<>();
     private Node parent;
 
     GirElement() {
@@ -47,6 +50,11 @@ public abstract class GirElement implements Serializable, Node {
     GirElement(Map<String, String> attributes, List<Node> children) {
         this.attributes = new HashMap<>(attributes); // HashMap ensures mutability
         setChildren(children);
+    }
+
+    GirElement(Map<String, String> attributes, List<Node> children, List<CodeBlock> freeTextBlocks) {
+        this(attributes, children);
+        this.freeTextBlocks.addAll(freeTextBlocks);
     }
 
     private void setChildren(List<Node> children) {
@@ -169,6 +177,14 @@ public abstract class GirElement implements Serializable, Node {
     public <T extends Node> T withChildren(List<Node> children) {
         setChildren(children);
         return (T) this;
+    }
+
+    public void addFreeTextBlock(CodeBlock codeBlock) {
+        this.freeTextBlocks.add(codeBlock);
+    }
+
+    public List<CodeBlock> freeTextBlocks() {
+        return freeTextBlocks;
     }
 
     @Override

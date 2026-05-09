@@ -41,6 +41,10 @@ public final class Interface extends GirElement implements RegisteredType, Field
         super(attributes, children);
     }
 
+    public Interface(Map<String, String> attributes, List<Node> children, List<CodeBlock> freeTextBlocks) {
+        super(attributes, children, freeTextBlocks);
+    }
+
     @Override
     public CodeBlock constructorName() {
         return CodeBlock.of("$T::new", typeName().nestedClass(name() + "$Impl"));
@@ -58,7 +62,10 @@ public final class Interface extends GirElement implements RegisteredType, Field
     @Override
     public Interface mergeWith(RegisteredType rt) {
         if (rt instanceof Interface other)
-            return new Interface(attributes(), union(children(), other.children()));
+            return new Interface(
+                    attributes(),
+                    union(children(), other.children()),
+                    union(freeTextBlocks(), other.freeTextBlocks()));
         return this;
     }
 

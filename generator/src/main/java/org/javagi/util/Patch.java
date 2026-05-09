@@ -21,6 +21,7 @@ package org.javagi.util;
 
 import org.javagi.gir.GirElement;
 import org.javagi.gir.Node;
+import org.javagi.javapoet.CodeBlock;
 
 import java.lang.Class;
 import java.util.ArrayList;
@@ -70,5 +71,16 @@ public interface Patch {
         var mutableList = new ArrayList<>(parent.children());
         mutableList.add(child);
         return parent.withChildren(mutableList);
+    }
+
+    /**
+     * Add a "free text" code block to a gir element.
+     *
+     * @param elem the gir element for which the code should be generated
+     * @param code CodeBlock format
+     * @param args CodeBlock arguments
+     */
+    default void inject(GirElement elem, String code, Object... args) {
+        elem.addFreeTextBlock(CodeBlock.of(code, args));
     }
 }
