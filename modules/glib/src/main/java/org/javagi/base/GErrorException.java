@@ -39,11 +39,19 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public class GErrorException extends Exception {
+    // GError domain and code. The error message is stored in the Exception base class.
     private final Quark domain;
     private final int code;
 
+    // Map error domains to exception constructors
     private static final HashMap<String, Function<GError, ? extends GErrorException>> ERROR_DOMAINS = new HashMap<>();
 
+    /**
+     * Register an exception constructor for an error domain.
+     *
+     * @param domain the error domain
+     * @param constructor the exception constructor (takes a GError parameter)
+     */
     public static void registerErrorDomain(String domain, Function<GError, ? extends GErrorException> constructor) {
         ERROR_DOMAINS.put(domain, constructor);
     }
@@ -116,8 +124,10 @@ public class GErrorException extends Exception {
 
     /**
      * Get the error code.
-     *
      * @return the code of the GError
+     * @apiNote Most GErrorException-derived exception classes have a
+     *          {@code getEnum()} method that translates this error code into
+     *          an enum constant.
      */
     public int getCode() {
         return code;
