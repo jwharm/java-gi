@@ -179,6 +179,14 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
             }
         }
 
+        for (Enumeration e : ns.enumerations()) {
+            if (!e.skipJava() && e.errorDomain() != null) {
+                String exceptionName = new ExceptionGenerator(e).generateName();
+                spec.addStatement("$T.registerErrorDomain($S, $L::new)",
+                        ClassNames.GERROR_EXCEPTION, e.errorDomain(), exceptionName);
+            }
+        }
+
         return spec.build();
     }
 

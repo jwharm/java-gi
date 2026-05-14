@@ -21,9 +21,12 @@ package org.javagi.base;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.HashMap;
+import java.util.function.Function;
 
 import org.gnome.glib.GError;
 
+import org.gnome.glib.GLib;
 import org.gnome.glib.Quark;
 import org.javagi.interop.MemoryCleaner;
 import org.jspecify.annotations.NullMarked;
@@ -38,6 +41,12 @@ import org.jspecify.annotations.Nullable;
 public class GErrorException extends Exception {
     private final Quark domain;
     private final int code;
+
+    private static final HashMap<String, Function<GError, ? extends GErrorException>> ERROR_DOMAINS = new HashMap<>();
+
+    public static void registerErrorDomain(String domain, Function<GError, ? extends GErrorException> constructor) {
+        ERROR_DOMAINS.put(domain, constructor);
+    }
 
     /**
      * Check if an error is set.
@@ -59,7 +68,8 @@ public class GErrorException extends Exception {
      */
     public static GErrorException take(MemorySegment gerrorPtr) {
         GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
-        GErrorException exc = new GErrorException(err);
+        var constructor = ERROR_DOMAINS.get(GLib.quarkToString(err.readDomain()));
+        GErrorException exc = constructor != null ? constructor.apply(err) : new GErrorException(err);
         err.free();
         return exc;
     }
@@ -73,7 +83,7 @@ public class GErrorException extends Exception {
      */
     @Deprecated
     public GErrorException(MemorySegment gerrorPtr) {
-        GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
+        GError err = new GError(gerrorPtr.reinterpret(ValueLayout.ADDRESS.byteSize()).get(ValueLayout.ADDRESS, 0));
         this(err);
         err.free();
     }

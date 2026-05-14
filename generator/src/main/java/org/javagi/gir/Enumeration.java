@@ -43,7 +43,7 @@ public final class Enumeration extends GirElement implements EnumType {
     }
 
     public String errorDomain() {
-        return attr("error-domain");
+        return attr("glib:error-domain");
     }
 
     @Override
