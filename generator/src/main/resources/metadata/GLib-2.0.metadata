@@ -64,3 +64,105 @@ Variant java-gi-to-string="print(true)"
 
 // Use g_variant_type_dup_string for VariantType.toString()
 VariantType java-gi-to-string="dupString()"
+
+// Not fully annotated (raw gpointer parameter)
+atomic_int_* java-gi-skip
+
+// DestroyNotify parameter is unusable
+atomic_rc_box_release_full java-gi-skip
+rc_box_release_full java-gi-skip
+
+// Unusable, and broken (Annotation "(full)" on _init seems wrong)
+atomic_ref_count_* java-gi-skip
+ref_count_* java-gi-skip
+
+// Useless: re-allocates the buffers on every call
+base64_decode_step java-gi-skip
+
+// Unusable and broken: the out-buffer is leaked and is not read
+base64_encode_{step,close} java-gi-skip
+
+// Raw MemorySegment element-type, and will cause a double-free
+clear_{list,slist} java-gi-skip
+
+/* Keyed data lists (GData**) and Datasets are very hard to use from language
+ * bindings; we remove all the related functions and keep the type definitions
+ * ("Data" and "DataForeachFunc") for API compatibility only
+ */
+datalist_* java-gi-skip
+dataset_* java-gi-skip
+
+// Java-GI hides the data argument everywhere, so this function is unusable
+idle_remove_by_data java-gi-skip
+
+// Broken: the argument must not be freed, but is allocated in a confined arena
+intern_static_string java-gi-skip
+
+// Error** parameter but not trailing; mark it as out parameter as a workaround
+markup_collect_attributes.error direction=out
+propagate_prefixed_error.dest direction=out
+
+/* This is an optimized alternative to g_quark_from_string that requires the
+ * string argument to be statically allocated (never released), which could
+ * probably be implemented in Java with Arena.global(), but that's rather
+ * far-fetched.
+ */
+quark_from_static_string java-gi-skip
+
+// Broken: The refcount* type
+ref_count_* java-gi-skip
+
+/* Broken: g_ref_string_*() methods cannot be called on char* arrays not
+ * allocated using g_ref_string_new().
+ */
+ref_string_* java-gi-skip
+
+// GLib-internal functions used to print messages from macros.
+return_if_fail_warning java-gi-skip
+warn_message java-gi-skip
+
+// Deprecated and mostly removed from GLib
+slice_* java-gi-skip
+
+// Broken: the output buffer is a regular String in Java
+snprintf java-gi-skip
+sprintf java-gi-skip
+stpcpy java-gi-skip
+strl{cat,cpy} java-gi-skip
+
+// Deprecated (wrong name)
+spawn_check_exit_status java-gi-skip
+
+/* A pointer to the (modified) input string is returned, which is already freed
+ * by Java-GI.
+ */
+str{canon,chomp,chug,delimit,reverse}.*#return-value transfer-ownership=none
+
+// Totally broken, according to the GLib documentation
+str{up,down,ncasecmp} java-gi-skip
+
+// Useless
+strdup java-gi-skip
+strdupv java-gi-skip
+strv_length java-gi-skip
+
+// Deprecated, and seems to be missing an annotation on result_len argument
+unicode_canonical_decomposition java-gi-skip
+
+/* Seems wrong to do UTF-8 processing when the input and output strings are
+ * continuously being converted from and to Java UTF-16 strings. Furthermore,
+ * there are probably better ways to do the same in Java directly.
+ * Skip for now.
+ */
+utf8_* java-gi-skip
+
+// Seems to be missing annotations on the `utb` argument
+utime java-gi-skip
+
+// Seems to be completely unannotated
+win32_get_system_data_dirs_for_module java-gi-skip
+
+// Broken. Skip for now
+test_* java-gi-skip
+Test* java-gi-skip
+TEST_* java-gi-skip
