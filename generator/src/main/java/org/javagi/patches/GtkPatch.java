@@ -19,11 +19,10 @@
 
 package org.javagi.patches;
 
+import org.javagi.configuration.ClassNames;
+import org.javagi.gir.*;
 import org.javagi.gir.Class;
 import org.javagi.util.Patch;
-import org.javagi.gir.Constructor;
-import org.javagi.gir.GirElement;
-import org.javagi.gir.Type;
 
 import static java.util.function.Predicate.not;
 
@@ -49,6 +48,51 @@ public class GtkPatch implements Patch {
                     }
                 }
             }
+        }
+
+        // Add javadoc to GtkTreeListModel constructor and getItem(int), with
+        // guidance to handle unexpected ClassCastExceptions.
+        if (element instanceof Constructor ctr &&
+                "gtk_tree_list_model_new".equals(ctr.callableAttrs().cIdentifier())) {
+            return ctr.withChildren(
+                    new Doc("""
+                            Creates a new empty `GtkTreeListModel` displaying @root
+                            with all rows collapsed.
+                            
+                            When @passtrough is set to `false`, the generic type of the
+                            `GtkTreeListModel` must be (a supertype of) `TreeListRow`, to
+                            avoid a ClassCastException in [method@Gio.ListModel.get_item]."""),
+                    ctr.infoElements().sourcePosition(),
+                    ctr.returnValue(),
+                    ctr.parameters()
+            );
+        } else if (element instanceof Class cls && "GtkTreeListModel".equals(cls.cType())) {
+            inject(cls, """
+                ///
+                /// Get the item at `position.`
+                ///
+                /// If `position` is greater than the number of items in `list,` `null` is
+                /// returned.
+                ///
+                /// `null` is never returned for an index that is smaller than the length
+                /// of the list.
+                ///
+                /// If this method throws a `ClassCastException`, check if the `passtrough`
+                /// property has been set correctly.
+                ///
+                /// @param position the position of the item to fetch
+                /// @return the object at `position.`
+                /// @throws ClassCastException when the generic type of the TreeListModel
+                ///   does not match the type of the returned item. This can occur when the
+                ///   `passthrough` property was set to `false`. To prevent the exception,
+                ///   set `passthrough` to `true` or change the generic type of the
+                ///   TreeListModel to `TreeListRow`, or a superclass such as `GObject`.
+                ///
+                @Override
+                public T getItem(int position) {
+                    return $T.super.getItem(position);
+                }
+                """, ClassNames.G_LIST_MODEL);
         }
 
         return element;

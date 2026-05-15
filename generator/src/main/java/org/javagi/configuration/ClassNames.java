@@ -83,6 +83,8 @@ public final class ClassNames {
     public final static ClassName G_TYPE = get("org.gnome.glib", "Type");
     public final static ClassName G_VARIANT = get("org.gnome.glib", "Variant");
 
+    public final static ClassName G_LIST_MODEL = get("org.gnome.gio", "ListModel");
+
     public final static ClassName G_OBJECT = get("org.gnome.gobject", "GObject");
     public final static ClassName G_OBJECTS = get("org.gnome.gobject", "GObjects");
     public final static ClassName G_VALUE = get("org.gnome.gobject", "Value");
