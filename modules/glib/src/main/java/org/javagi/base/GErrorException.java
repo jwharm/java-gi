@@ -21,9 +21,12 @@ package org.javagi.base;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.HashMap;
+import java.util.function.Function;
 
 import org.gnome.glib.GError;
 
+import org.gnome.glib.GLib;
 import org.gnome.glib.Quark;
 import org.javagi.interop.MemoryCleaner;
 import org.jspecify.annotations.NullMarked;
@@ -36,8 +39,22 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public class GErrorException extends Exception {
+    // GError domain and code. The error message is stored in the Exception base class.
     private final Quark domain;
     private final int code;
+
+    // Map error domains to exception constructors
+    private static final HashMap<String, Function<GError, ? extends GErrorException>> ERROR_DOMAINS = new HashMap<>();
+
+    /**
+     * Register an exception constructor for an error domain.
+     *
+     * @param domain the error domain
+     * @param constructor the exception constructor (takes a GError parameter)
+     */
+    public static void registerErrorDomain(String domain, Function<GError, ? extends GErrorException> constructor) {
+        ERROR_DOMAINS.put(domain, constructor);
+    }
 
     /**
      * Check if an error is set.
@@ -59,7 +76,8 @@ public class GErrorException extends Exception {
      */
     public static GErrorException take(MemorySegment gerrorPtr) {
         GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
-        GErrorException exc = new GErrorException(err);
+        var constructor = ERROR_DOMAINS.get(GLib.quarkToString(err.readDomain()));
+        GErrorException exc = constructor != null ? constructor.apply(err) : new GErrorException(err);
         err.free();
         return exc;
     }
@@ -73,7 +91,7 @@ public class GErrorException extends Exception {
      */
     @Deprecated
     public GErrorException(MemorySegment gerrorPtr) {
-        GError err = new GError(gerrorPtr.get(ValueLayout.ADDRESS, 0));
+        GError err = new GError(gerrorPtr.reinterpret(ValueLayout.ADDRESS.byteSize()).get(ValueLayout.ADDRESS, 0));
         this(err);
         err.free();
     }
@@ -106,8 +124,10 @@ public class GErrorException extends Exception {
 
     /**
      * Get the error code.
-     *
      * @return the code of the GError
+     * @apiNote Most GErrorException-derived exception classes have a
+     *          {@code getEnum()} method that translates this error code into
+     *          an enum constant.
      */
     public int getCode() {
         return code;

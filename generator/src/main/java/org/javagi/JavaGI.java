@@ -19,6 +19,7 @@
 
 package org.javagi;
 
+import org.javagi.gir.Enumeration;
 import org.javagi.javapoet.JavaFile;
 import org.javagi.javapoet.TypeSpec;
 import org.javagi.configuration.ModuleInfo;
@@ -305,6 +306,12 @@ public class JavaGI implements Callable<Integer> {
                 var generator = new InterfaceGenerator(i);
                 if (generator.hasNativeHandles())
                     writeJavaFile(generator.nativeHandlesClass(), packageName, licenseNotice, outputDirectory);
+            }
+
+            // Write Exception classes for GError domains
+            if (rt instanceof Enumeration e && e.errorDomain() != null) {
+                var generator = new ExceptionGenerator(e);
+                writeJavaFile(generator.generate(), packageName, licenseNotice, outputDirectory);
             }
         }
     }
