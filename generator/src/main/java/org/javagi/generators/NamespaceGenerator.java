@@ -52,9 +52,11 @@ public class NamespaceGenerator extends RegisteredTypeGenerator {
                 .addMethod(registerTypes());
 
         for (var constant : ns.constants()) {
-            var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
-            if (fieldSpec != null)
-                builder.addField(fieldSpec);
+            if (! constant.skipJava()) {
+                var fieldSpec = new TypedValueGenerator(constant).generateConstantDeclaration();
+                if (fieldSpec != null)
+                    builder.addField(fieldSpec);
+            }
         }
 
         for (Function f : ns.functions()) {
