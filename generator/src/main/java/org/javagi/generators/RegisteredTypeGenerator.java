@@ -203,7 +203,11 @@ public class RegisteredTypeGenerator {
     }
 
     public boolean hasNativeHandles() {
-        return ! (listNamedFunctions().isEmpty() && listFields().isEmpty());
+        if (! listNamedFunctions().isEmpty())
+            return true;
+
+        return listFields().stream()
+                .anyMatch(f -> new FieldGenerator(f).canGenerateVarHandle());
     }
 
     public TypeSpec nativeHandlesClass() {
