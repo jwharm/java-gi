@@ -322,9 +322,9 @@ public class MethodGenerator {
         Predicate<Node> predicate = n -> n instanceof Type t && t.isLong();
         if (func.deepMatch(predicate, Callback.class)) {
             builder.beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP);
-            functionNameInvocation(false);
-            builder.nextControlFlow("else");
             functionNameInvocation(true);
+            builder.nextControlFlow("else");
+            functionNameInvocation(false);
             builder.endControlFlow();
         } else {
             functionNameInvocation(false);
@@ -336,13 +336,13 @@ public class MethodGenerator {
         var invoke = CodeBlock.builder();
         var returnType = func.returnValue().anyType();
         if (!returnType.isVoid()) {
-            if (longAsInt && returnType instanceof Type t && t.isLong()) {
+            if (!longAsInt && returnType instanceof Type t && t.isLong()) {
                 // First cast to long, this is used by the MethodHandle to
                 // determine the return type. Then cast to int, because that is
                 // returned to the caller.
                 invoke.add("_result = (int) (long) ");
             } else {
-                invoke.add("_result = ($T) ", getCarrierTypeName(func.returnValue().anyType(), false));
+                invoke.add("_result = ($T) ", getCarrierTypeName(func.returnValue().anyType(), longAsInt));
             }
         }
 
@@ -350,7 +350,7 @@ public class MethodGenerator {
         invoke.add("$T.$L.invokeExact($Z$L)",
                 ((RegisteredType) func.parent()).helperClass(),
                 func.callableAttrs().cIdentifier(),
-                generator.marshalParameters(longAsInt));
+                generator.marshalParameters(!longAsInt));
 
         builder.addStatement(invoke.build());
 
@@ -399,19 +399,19 @@ public class MethodGenerator {
         var invoke = CodeBlock.builder();
         var returnType = returnValue.anyType();
         if (!returnType.isVoid()) {
-            if (longAsInt && returnType instanceof Type t && t.isLong()) {
+            if (!longAsInt && returnType instanceof Type t && t.isLong()) {
                 // First cast to long, this is used by the MethodHandle to
                 // determine the return type. Then cast to int, because that is
                 // returned to the caller.
                 invoke.add("_result = (int) (long) ");
             } else {
-                invoke.add("_result = ($T) ", getCarrierTypeName(returnValue.anyType(), false));
+                invoke.add("_result = ($T) ", getCarrierTypeName(returnValue.anyType(), longAsInt));
             }
         }
 
         // Function pointer invocation
         invoke.add("$T.downcallHandle(_func, _fdesc)$Z.invokeExact($Z$L)",
-                        ClassNames.INTEROP, generator.marshalParameters(longAsInt));
+                        ClassNames.INTEROP, generator.marshalParameters(!longAsInt));
 
         builder.addStatement(invoke.build());
     }

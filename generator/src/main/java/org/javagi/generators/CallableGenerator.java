@@ -97,7 +97,7 @@ public class CallableGenerator {
     }
 
     CodeBlock generateValueLayout(AnyType anyType) {
-        return anyType instanceof Type type && type.isLong()
+        return anyType instanceof Type type && type.isLong() && !type.isPointer()
                 ? CodeBlock.of("$1T.longAsInt() ? $2T.JAVA_INT : $2T.JAVA_LONG", ClassNames.INTEROP, ValueLayout.class)
                 : getValueLayout(anyType, false);
     }
@@ -179,7 +179,8 @@ public class CallableGenerator {
                 stmt.add("($1T) ($2L == null ? $1T.NULL : ", MemorySegment.class, name);
 
             // cast int parameter to a long
-            if (intAsLong && p.anyType() instanceof Type t && t.isLong())
+            if (intAsLong && p.anyType() instanceof Type t && t.isLong()
+                    && !p.isOutParameter() && !t.isUnannotatedReference())
                 stmt.add("(long) ");
 
             // Callback destroy

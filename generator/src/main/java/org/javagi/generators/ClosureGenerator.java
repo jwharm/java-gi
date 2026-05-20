@@ -66,8 +66,11 @@ public class ClosureGenerator {
                 .addAnnotation(FunctionalInterface.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addMethod(generateRunMethod())
-                .addMethod(generateUpcallMethod(name, "upcall", "run"))
-                .addMethod(generateToCallbackMethod(name));
+                .addMethod(generateToCallbackMethod(name))
+                .addMethod(generateUpcallMethod(name, "upcall", "run", false));
+
+        if (hasLong())
+            builder.addMethod(generateUpcallMethod(name, "upcall_w64", "run", true));
 
         if (closure.deprecated())
             builder.addAnnotation(Deprecated.class);
@@ -76,6 +79,16 @@ public class ClosureGenerator {
             builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         return builder.build();
+    }
+
+    private boolean hasLong() {
+        if (returnValue.anyType() instanceof Type t && t.isLong())
+            return true;
+        if (closure.parameters() != null)
+            for (var parameter : closure.parameters().parameters())
+                if (parameter.anyType() instanceof Type t && t.isLong())
+                    return true;
+        return false;
     }
 
     private String getName() {
@@ -102,15 +115,14 @@ public class ClosureGenerator {
         return run.build();
     }
 
-    MethodSpec generateUpcallMethod(String methodName, String name, String methodToInvoke) {
+    MethodSpec generateUpcallMethod(String methodName, String name, String methodToInvoke, boolean longAsInt) {
         boolean returnsVoid = returnValue.anyType().isVoid();
 
         // Method name and return type
         MethodSpec.Builder upcall = MethodSpec.methodBuilder(name)
                 .returns(returnsVoid
                         ? TypeName.VOID
-                        : returnValue.anyType() instanceof Type t && t.isLong() ? TypeName.LONG
-                        : getCarrierTypeName(returnValue.anyType(), false));
+                        : getCarrierTypeName(returnValue.anyType(), longAsInt));
 
         // Javadoc
         if (methodToInvoke.equals("run"))
@@ -135,8 +147,7 @@ public class ClosureGenerator {
         if (closure.parameters() != null) {
             for (Parameter p : closure.parameters().parameters()) {
                 var generator = new TypedValueGenerator(p);
-                upcall.addParameter(getCarrierTypeName(p.anyType(), false),
-                        generator.getName());
+                upcall.addParameter(getCarrierTypeName(p.anyType(), longAsInt), generator.getName());
             }
         }
 
@@ -167,7 +178,7 @@ public class ClosureGenerator {
                     // length, so they must be processed last.
                     .sorted(comparing(p -> p.anyType() instanceof Array))
                     .map(PreprocessingGenerator::new)
-                    .forEach(p -> p.generateUpcall(upcall));
+                    .forEach(p -> p.generateUpcall(upcall, longAsInt));
 
         // Try-block for GErrorExceptions
         if (closure.throws_())
@@ -182,25 +193,29 @@ public class ClosureGenerator {
         }
         invoke.add(methodToInvoke)
               .add("(")
-              .add(marshalParameters(methodToInvoke))
+              .add(marshalParameters(methodToInvoke, longAsInt))
               .add(")");
         upcall.addStatement(invoke.build());
 
         // Parameter postprocessing
         if (closure.parameters() != null)
             for (var p : closure.parameters().parameters())
-                new PostprocessingGenerator(p).generateUpcall(upcall);
+                new PostprocessingGenerator(p).generateUpcall(upcall, longAsInt);
 
         // Null-check the return value
         if ((!returnsVoid)
-                && getCarrierTypeName(returnValue.anyType(), false).equals(TypeName.get(MemorySegment.class))
+                && getCarrierTypeName(returnValue.anyType(), longAsInt).equals(TypeName.get(MemorySegment.class))
                 && (!returnValue.notNull()))
-            upcall.addStatement("if (_result == null) return $T.NULL", MemorySegment.class);
+            upcall.beginControlFlow("if (_result == null)")
+                  .addStatement("return $T.NULL", MemorySegment.class)
+                  .endControlFlow();
 
         // Ref returned GObjects when ownership is transferred to the caller
         if (returnValue.anyType() instanceof Type t && t.checkIsGObject()
                 && returnValue.transferOwnership() != TransferOwnership.NONE)
-            upcall.addStatement("if (_result instanceof $T _gobject) _gobject.ref()", ClassNames.G_OBJECT);
+            upcall.beginControlFlow("if (_result instanceof $T _gobject)", ClassNames.G_OBJECT)
+                  .addStatement("_gobject.ref()")
+                  .endControlFlow();
 
         // Marshal return value
         if (!returnsVoid)
@@ -259,7 +274,7 @@ public class ClosureGenerator {
                 || p.isArrayLengthParameter();
     }
 
-    private CodeBlock marshalParameters(String methodToInvoke) {
+    private CodeBlock marshalParameters(String methodToInvoke, boolean longAsInt) {
         CodeBlock.Builder stmt = CodeBlock.builder();
 
         if (closure.parameters() == null)
@@ -321,6 +336,10 @@ public class ClosureGenerator {
             // when it's the trailing parameter.
             if (i == last && p.varargs())
                 stmt.add("($T) ", Object.class);
+
+            // Cast long parameters on linux/macos to int in Java
+            if (p.anyType() instanceof Type t && t.isLong() && !longAsInt)
+                stmt.add("(int) ");
 
             stmt.add(new TypedValueGenerator(p)
                     .marshalNativeToJava(CodeBlock.of(toJavaIdentifier(p.name())), true));

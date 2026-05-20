@@ -56,9 +56,9 @@ public class PreprocessingGenerator extends TypedValueGenerator {
         createGString(builder);
     }
 
-    public void generateUpcall(MethodSpec.Builder builder) {
+    public void generateUpcall(MethodSpec.Builder builder, boolean longAsInt) {
         readPrimitiveAliasPointer(builder);
-        readOutParameter(builder);
+        readOutParameter(builder, longAsInt);
         refGObject(builder);
         refGObjectUpcall(builder);
     }
@@ -190,10 +190,23 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
                 // Handle an Out<> parameter with a primitive type
                 if (type != null && type.isPrimitive()) {
-                    var identifier = CodeBlock.of("$T.to$L($L)",
-                            ClassNames.INTEROP, primitiveClassName(toJavaBaseType(type.name())), getName());
-                    builder.addStatement("$T _$LPointer = _arena.allocateFrom($Z$L, $L)",
-                            MemorySegment.class, getName(), getMemoryLayout(type), marshalJavaToNative(identifier));
+                    if (type.isLong()) {
+                        // Long / unsigned long
+                        builder.addStatement("$T _$LPointer", MemorySegment.class, getName())
+                                .beginControlFlow("if ($T.longAsInt())", ClassNames.INTEROP)
+                                .addStatement("_$1LPointer = _arena.allocateFrom($2T.JAVA_INT, $3T.toInteger($1L))",
+                                        getName(), ValueLayout.class, ClassNames.INTEROP)
+                                .nextControlFlow("else")
+                                .addStatement("_$1LPointer = _arena.allocateFrom($2T.JAVA_LONG, (long) $3T.toInteger($1L))",
+                                        getName(), ValueLayout.class, ClassNames.INTEROP)
+                                .endControlFlow();
+                    } else {
+                        // All other primitive types
+                        var identifier = CodeBlock.of("$T.to$L($L)",
+                                ClassNames.INTEROP, primitiveClassName(toJavaBaseType(type.name())), getName());
+                        builder.addStatement("$T _$LPointer = _arena.allocateFrom($Z$L, $L)",
+                                MemorySegment.class, getName(), getMemoryLayout(type), marshalJavaToNative(identifier));
+                    }
                 }
 
                 // Other Out<> parameters
@@ -281,6 +294,10 @@ public class PreprocessingGenerator extends TypedValueGenerator {
     }
 
     private CodeBlock arrayLengthStatement() {
+        String literal = literal(p.anyType().typeName(), "0");
+        if (p.anyType() instanceof Type t && t.isLong())
+            literal = "0";
+
         // Find the name of the array-parameter
         Parameter arrayParam = p.parent().parameters().stream()
                 .filter(q -> q.anyType() instanceof Array a && a.length() == p)
@@ -289,17 +306,17 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
         // Fallback to default value 0 (usually when the array is in the return value)
         if (arrayParam == null)
-            return CodeBlock.of(literal(p.anyType().typeName(), "0"));
+            return CodeBlock.of(literal);
 
         if (arrayParam.isOutParameter())
             return CodeBlock.of("$1L == null ? $2L : $3L$1L.get() == null ? $2L : $3L$1L.get().length",
                     toJavaIdentifier(arrayParam.name()),
-                    literal(p.anyType().typeName(), "0"),
+                    literal,
                     List.of("byte", "short").contains(type.javaType()) ? "(" + type.javaType() + ") " : "");
         else
             return CodeBlock.of("$1L == null ? $2L : $3L$1L.length",
                     toJavaIdentifier(arrayParam.name()),
-                    literal(p.anyType().typeName(), "0"),
+                    literal,
                     List.of("byte", "short").contains(type.javaType()) ? "(" + type.javaType() + ") " : "");
     }
 
@@ -485,7 +502,7 @@ public class PreprocessingGenerator extends TypedValueGenerator {
 
     // Read the pre-existing value of an out-parameter and store it in
     // a Java Out<...> instance
-    private void readOutParameter(MethodSpec.Builder builder) {
+    private void readOutParameter(MethodSpec.Builder builder, boolean longAsInt) {
         if (!p.isOutParameter())
             return;
 
@@ -504,12 +521,23 @@ public class PreprocessingGenerator extends TypedValueGenerator {
             return;
 
         // Pointer to a single value
-        builder.addStatement("$1T $2LParam = $2L.reinterpret($3L.byteSize(), _arena, null)",
+        builder.addStatement("$1T $2LParam = $2L.reinterpret(($3L).byteSize(), _arena, null)",
                 MemorySegment.class, getName(), getValueLayout(type));
 
         if (type.isPrimitive() || target instanceof Alias a && a.isValueWrapper()) {
-            builder.addStatement("$1T _$2LOut = new $3T<>($2LParam.get($4L, 0)$5L)",
-                    getType(), getName(), ClassNames.OUT, getValueLayout(type), type.isBoolean() ? " != 0" : "");
+            if (type.isLong()) {
+                // long and unsigned long
+                if (longAsInt)
+                    builder.addStatement("$1T _$2LOut = new $3T<>($2LParam.get($4T.JAVA_INT, 0))",
+                            getType(), getName(), ClassNames.OUT, ValueLayout.class);
+                else
+                    builder.addStatement("$1T _$2LOut = new $3T<>((int) $2LParam.get($4T.JAVA_LONG, 0))",
+                            getType(), getName(), ClassNames.OUT, ValueLayout.class);
+            } else {
+                // all other primitive types
+                builder.addStatement("$1T _$2LOut = new $3T<>($2LParam.get($4L, 0)$5L)",
+                        getType(), getName(), ClassNames.OUT, getValueLayout(type), type.isBoolean() ? " != 0" : "");
+            }
         } else {
             var identifier = CodeBlock.builder().add("$LParam", getName());
             if (target instanceof EnumType)

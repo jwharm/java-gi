@@ -41,13 +41,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     @Override
     public String name() {
         String name = attr("name");
-        return switch(name) {
-            case null -> null;
-            case "GType" -> "GLib.Type";
-            case "gulong" -> overrideLongValue() ? "guint" : "gulong";
-            case "glong" -> overrideLongValue() ? "gint" : "glong";
-            default -> name;
-        };
+        return "GType".equals(name) ? "GLib.Type" : name;
     }
 
     public boolean introspectable() {
@@ -127,8 +121,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
     }
 
     public boolean isLong() {
-        String cType = cType();
-        return "glong".equals(cType) || "gulong".equals(cType);
+        return name() != null && List.of("glong", "gulong", "long", "unsigned long").contains(name());
     }
 
     public boolean isInt32() {
@@ -213,17 +206,6 @@ public final class Type extends GirElement implements AnyType, TypeReference {
             return 4;
         else
             return 8;
-    }
-
-    private boolean overrideLongValue() {
-        Node parent = parent();
-        if (parent instanceof Array)
-            parent = parent.parent();
-
-        return switch (parent) {
-            case Property _, Alias _, ReturnValue _, Parameter _ -> true;
-            case null, default -> false;
-        };
     }
 
     @Override
