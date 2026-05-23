@@ -284,7 +284,8 @@ class TypedValueGenerator {
                     case null -> arena.add("$T.global()", Arena.class);
                     case BOUND -> arena.add("$T.attachArena($T.ofConfined(), this)", ClassNames.INTEROP, Arena.class);
                     case CALL -> arena.add("_arena");
-                    case NOTIFIED, ASYNC -> arena.add("_$LScope", identifier);
+                    case NOTIFIED -> arena.add(getNotifiedCallbackScope(identifier));
+                    case ASYNC -> arena.add("_$LScope", identifier);
                     case FOREVER -> arena.add("$T.global()", Arena.class);
                 }
                 yield CodeBlock.of("$L.toCallback($L)", identifier, arena.build());
@@ -304,6 +305,26 @@ class TypedValueGenerator {
             }
             default -> CodeBlock.of("$L.handle()", identifier);
         };
+    }
+
+    /*
+     * Sometimes a method has multiple callback arguments (such as a "progress
+     * callback" and an AsyncReadyCallback) with a single shared DestroyNotify
+     * argument. In that case, we can use the arena of the other callback.
+     */
+    private CodeBlock getNotifiedCallbackScope(CodeBlock identifier) {
+        if (v instanceof Parameter p && p.destroy() == null)
+            return p.parent().parameters().stream()
+                    .filter(other -> p != other
+                            && ((other.scope() == Scope.NOTIFIED && other.destroy() != null)
+                              || other.scope() == Scope.ASYNC)
+                            && other.anyType() instanceof Type t
+                            && t.lookup() instanceof Callback)
+                    .findAny()
+                    .map(other -> CodeBlock.of("_$LScope", new TypedValueGenerator(other).getName()))
+                    .orElseGet(() -> CodeBlock.of("$T.global()", Arena.class)); // Fallback to global arena
+        else
+            return CodeBlock.of("_$LScope", identifier);
     }
 
     private CodeBlock marshalJavaArrayToNative(Array array, CodeBlock identifier) {

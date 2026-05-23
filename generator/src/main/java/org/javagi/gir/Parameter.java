@@ -84,8 +84,8 @@ public final class Parameter extends GirElement implements TypedValue {
     }
 
     public boolean isDestroyNotifyParameter() {
-        return (anyType() instanceof Type type)
-                && ("GDestroyNotify".equals(type.cType()) || "GDestroyNotify*".equals(type.cType()));
+        return parent().parameters().stream().anyMatch(p ->
+                p != this && p.scope() == Scope.NOTIFIED && p.destroy() == this);
     }
 
     public boolean isErrorParameter() {
@@ -153,8 +153,7 @@ public final class Parameter extends GirElement implements TypedValue {
     }
 
     public Scope scope() {
-        Scope scope = Scope.from(attr("scope"));
-        return (scope == Scope.NOTIFIED && destroy() == null) ? Scope.FOREVER : scope;
+        return Scope.from(attr("scope"));
     }
 
     public Direction direction() {

@@ -55,6 +55,13 @@ File{Input,Output,IO}Stream
     .can_truncate java-gi-skip
     .can_seek java-gi-skip
 
+/*
+ * g_file_move_async.progress_callback should have scope=notified, otherwise
+ * the callback arena is closed immediately after the async call returns, and
+ * upcalls to progress_callback will segfault.
+ */
+File.move_async.progress_callback scope=notified
+
 // Let GIO stream classes implement AutoCloseable in Java.
 IOStream java-gi-auto-closeable
 InputStream java-gi-auto-closeable
