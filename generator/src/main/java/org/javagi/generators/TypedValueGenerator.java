@@ -197,8 +197,17 @@ class TypedValueGenerator {
         if (useActualType && v.isBitfield())
                 typeName = ParameterizedTypeName.get(ClassName.get(Set.class), getTypeName(anyType).box());
 
-        if (!useActualType && type != null && type.isFilename() && !(v instanceof Parameter p && p.isOutParameter()))
-            typeName = TypeName.get(String.class);
+        if (!useActualType && !(v instanceof Parameter p && p.isOutParameter())) {
+            if (type != null && type.isFilename()) {
+                typeName = TypeName.get(String.class);
+                if (annotate && annotateNull())
+                    typeName = nullable(typeName);
+            } else if (array != null && array.isFilename()) {
+                typeName = ArrayTypeName.of(nullable(TypeName.get(String.class)));
+                if (annotate && annotateNull())
+                    typeName = nullable(typeName);
+            }
+        }
 
         if (type != null && type.isUnannotatedReference())
             return annotated(TypeName.get(MemorySegment.class));

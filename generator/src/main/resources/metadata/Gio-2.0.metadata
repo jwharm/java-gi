@@ -1,4 +1,16 @@
 /*
+ * The method "g_application_run" takes a Filename[] parameter for
+ * the command-line arguments. Java-GI generates an override that
+ * takes a String[] for convenience, but that means "app.run(null)",
+ * which is quite a common pattern, will fail to compile.
+ * Because command-line arguments in Java are UTF-16-encoded strings
+ * anyway, it's safe to change argv's type as a normal UTF8 string,
+ * so Java-GI will generate just a single "Application.run(String[])"
+ * method.
+ */
+Application.run.argv.*.filename name=utf8
+
+/*
  * The method "g_io_module_load" overrides "g_type_module_load", but
  * returns void instead of boolean. This is not allowed in Java.
  * Therefore, the method in IOModule is renamed fom "load" to

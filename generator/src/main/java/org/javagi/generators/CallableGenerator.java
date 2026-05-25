@@ -341,8 +341,12 @@ public class CallableGenerator {
             }
 
             // Create a Filename object for filename parameters
-            else if (p.anyType() instanceof Type t && t.isFilename() && !(p.isOutParameter()))
-                stmt.add("new $T($L)", ClassNames.FILENAME, paramName);
+            else if (p.anyType() instanceof AnyType at && at.isFilename() && !(p.isOutParameter())) {
+                switch (p.anyType()) {
+                    case Array _ -> stmt.add("$T.convertArray($L)", ClassNames.FILENAME, paramName);
+                    case Type _ -> stmt.add("new $T($L)", ClassNames.FILENAME, paramName);
+                }
+            }
 
             // All other parameters are forwarded as-is
             else
