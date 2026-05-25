@@ -91,7 +91,7 @@ dependencies {
 
 The result:
 
-![Screenshot of a simple Java-GI HelloWorld app](https://codeberg.org/java-gi/pages/src/branch/main/docs/img/simple-helloworld.png)
+![Screenshot of a simple Java-GI HelloWorld app](https://codeberg.org/java-gi/pages/raw/branch/main/docs/img/simple-helloworld.png)
 
 ## Examples & template
 
@@ -143,7 +143,7 @@ As an example, the generated documentation of `gtk_button_get_icon_name`
 contains links to other methods, and specifies the return value. This is all
 translated to valid Javadoc.
 
-![Javadoc screenshot](https://codeberg.org/java-gi/pages/src/branch/main/docs/img/javadoc.png)
+![Javadoc screenshot](https://codeberg.org/java-gi/pages/raw/branch/main/docs/img/javadoc.png)
 
 The Javadoc is published [online](https://javadoc.java-gi.org).
 
