@@ -69,7 +69,7 @@ public class ClosureGenerator {
                 .addMethod(generateToCallbackMethod(name))
                 .addMethod(generateUpcallMethod(name, "upcall", "run", false));
 
-        if (hasLong())
+        if (closure.hasLong())
             builder.addMethod(generateUpcallMethod(name, "upcall_w64", "run", true));
 
         if (closure.deprecated())
@@ -79,16 +79,6 @@ public class ClosureGenerator {
             builder.addAnnotation(GeneratedAnnotationBuilder.generate());
 
         return builder.build();
-    }
-
-    private boolean hasLong() {
-        if (returnValue.anyType() instanceof Type t && t.isLong())
-            return true;
-        if (closure.parameters() != null)
-            for (var parameter : closure.parameters().parameters())
-                if (parameter.anyType() instanceof Type t && t.isLong())
-                    return true;
-        return false;
     }
 
     private String getName() {
@@ -362,7 +352,7 @@ public class ClosureGenerator {
     }
 
     MethodSpec generateToCallbackMethod(String className) {
-        return MethodSpec.methodBuilder("toCallback")
+        var spec = MethodSpec.methodBuilder("toCallback")
                 .addJavadoc("""
                         Creates a native function pointer to the {@link #upcall} method.
                         
@@ -372,10 +362,14 @@ public class ClosureGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .addParameter(Arena.class, "arena")
                 .returns(MemorySegment.class)
-                .addStatement(generator.generateFunctionDescriptorDeclaration())
-                .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
-                        MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className)
-                .addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
+                .addStatement(generator.generateFunctionDescriptorDeclaration());
+        if (closure.hasLong())
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
+                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className);
+        else
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, $S, _fdesc)",
+                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className, "upcall");
+        return spec.addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         Linker.class)
                 .build();
     }
