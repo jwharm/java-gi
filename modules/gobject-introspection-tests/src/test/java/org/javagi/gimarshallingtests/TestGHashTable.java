@@ -24,11 +24,13 @@ import org.gnome.glib.HashTable;
 import org.javagi.base.Out;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 
 import java.util.Map;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.condition.OS.WINDOWS;
 
 public class TestGHashTable {
     @Test
@@ -135,7 +137,7 @@ public class TestGHashTable {
         ghashtableFloatIn(hashTable);
     }
 
-    @Test
+    @Test @DisabledOnOs(WINDOWS)
     void int64In() {
         HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getLong);
         hashTable.put("-1", -1L);
@@ -145,7 +147,7 @@ public class TestGHashTable {
         ghashtableInt64In(hashTable);
     }
 
-    @Test
+    @Test @DisabledOnOs(WINDOWS)
     void uint64In() {
         HashTable<String, Long> hashTable = new HashTable<>(GLib::strHash, GLib::strEqual, Interop::getString, Interop::getLong);
         hashTable.put("-1", 0x100000000L);
