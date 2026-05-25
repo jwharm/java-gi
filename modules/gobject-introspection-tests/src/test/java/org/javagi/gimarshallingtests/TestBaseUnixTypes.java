@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,10 +21,13 @@ package org.javagi.gimarshallingtests;
 
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.condition.OS.WINDOWS;
 
+@DisabledOnOs(WINDOWS)
 public class TestBaseUnixTypes {
 
     // time_t

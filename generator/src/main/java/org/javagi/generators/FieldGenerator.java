@@ -300,7 +300,7 @@ public class FieldGenerator extends TypedValueGenerator {
     }
 
     public MethodSpec generateOverrideMethod() {
-        return MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
+        var spec = MethodSpec.methodBuilder(methodName(OVERRIDE_PREFIX))
                 .addJavadoc("""
                         Override virtual method `$L`.
                         
@@ -310,14 +310,24 @@ public class FieldGenerator extends TypedValueGenerator {
                 .addParameter(Arena.class, "arena")
                 .addParameter(nullable(java.lang.reflect.Method.class), "method")
                 .addStatement("this._$LMethod = method", getName())
-                .addStatement(new CallableGenerator(cb).generateFunctionDescriptorDeclaration())
-                .addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
-                        MethodHandle.class,
-                        ClassNames.INTEROP,
-                        MethodHandles.class,
-                        f.parent().typeName(),
-                        getName() + "Upcall")
-                .addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
+                .addStatement(new CallableGenerator(cb).generateFunctionDescriptorDeclaration());
+        if (cb.hasLong())
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $T.longAsInt() ? $S : $S, _fdesc)",
+                    MethodHandle.class,
+                    ClassNames.INTEROP,
+                    MethodHandles.class,
+                    f.parent().typeName(),
+                    ClassNames.INTEROP,
+                    getName() + "Upcall_w64",
+                    getName() + "Upcall");
+        else
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $T.class, $S, _fdesc)",
+                    MethodHandle.class,
+                    ClassNames.INTEROP,
+                    MethodHandles.class,
+                    f.parent().typeName(),
+                    getName() + "Upcall");
+        return spec.addStatement("$T _address = $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         MemorySegment.class, Linker.class)
                 .addStatement("$T.$L$Z.set(handle(), 0, (method == null ? $T.NULL : _address))",
                         f.parent().helperClass(), fieldName(), MemorySegment.class)

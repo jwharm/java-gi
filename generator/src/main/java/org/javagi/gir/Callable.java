@@ -149,4 +149,19 @@ public sealed interface Callable
     default boolean returnsSelf() {
         return attrBool("java-gi-returns-self", false);
     }
+
+    /**
+     * Return true if the return value or one or more parameters have a long or
+     * unsigned long type. Depending on the platform, these are represented as
+     * a JAVA_INT or JAVA_LONG ValueLayout.
+     */
+    default boolean hasLong() {
+        if (returnValue().anyType() instanceof Type t && t.isLong())
+            return true;
+        if (parameters() != null)
+            for (var parameter : parameters().parameters())
+                if (parameter.anyType() instanceof Type t && t.isLong())
+                    return true;
+        return false;
+    }
 }

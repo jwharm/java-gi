@@ -182,7 +182,7 @@ class TypedValueGenerator {
         // are already "wrapped" in an Alias<>
         if (v instanceof Parameter p && p.isOutParameter()
                 && (! (p.direction() != Direction.IN && v.isValueWrapper()))) {
-            TypeName typeName = anyType.typeName();
+            TypeName typeName = getTypeName(anyType);
 
             if (useActualType && v.isBitfield())
                 typeName = ParameterizedTypeName.get(ClassName.get(Set.class), typeName.box());
@@ -192,10 +192,10 @@ class TypedValueGenerator {
 
         TypeName typeName = (annotate && annotateNull())
                 ? anyType.nullableAnnotatedTypeName()
-                : anyType.typeName();
+                : getTypeName(anyType);
 
         if (useActualType && v.isBitfield())
-                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), anyType.typeName().box());
+                typeName = ParameterizedTypeName.get(ClassName.get(Set.class), getTypeName(anyType).box());
 
         if (!useActualType && type != null && type.isFilename() && !(v instanceof Parameter p && p.isOutParameter()))
             typeName = TypeName.get(String.class);
@@ -204,6 +204,14 @@ class TypedValueGenerator {
             return annotated(TypeName.get(MemorySegment.class));
 
         return typeName;
+    }
+
+    private TypeName getTypeName(AnyType anyType) {
+        return switch (anyType) {
+            case Type t when t.isLong() -> TypeName.INT;
+            case Type t -> t.typeName();
+            case Array a -> ArrayTypeName.of(a.anyType().typeName());
+        };
     }
 
     String getName() {

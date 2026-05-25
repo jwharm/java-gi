@@ -185,7 +185,14 @@ public class RecordGenerator extends RegisteredTypeGenerator {
             builder.addMethod(new ClosureGenerator(cb).generateUpcallMethod(
                     "_" + generator.getName() + "Method",
                     generator.getName() + "Upcall",
-                    "this._" + generator.getName() + "Method.invoke"));
+                    "this._" + generator.getName() + "Method.invoke",
+                    false));
+            if (cb.hasLong())
+                builder.addMethod(new ClosureGenerator(cb).generateUpcallMethod(
+                        "_" + generator.getName() + "Method",
+                        generator.getName() + "Upcall_w64",
+                        "this._" + generator.getName() + "Method.invoke",
+                        true));
         }
 
         // For other callback fields, generate a functional interface.
