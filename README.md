@@ -11,16 +11,16 @@ Java-GI aims to be a great GNOME language binding for Java and other JVM
 languages (Kotlin, Scala, Clojure, ...). Generated bindings are published on
 Maven Central  to develop Java applications on **GNOME Platform 50**:
 
-| Library       | Version | Maven coordinates                  |
-|---------------|---------|------------------------------------|
-| GLib          | 2.88    | `org.java-gi:glib:0.15.0`          |
-| GTK           | 4.22    | `org.java-gi:gtk:0.15.0`           |
-| LibAdwaita    | 1.9     | `org.java-gi:adw:0.15.0`           |
-| LibSecret     | 0.21    | `org.java-gi:secret:0.15.0`        |
-| LibRSVG       | 2.62    | `org.java-gi:rsvg:0.15.0`          |
-| GStreamer     | 1.26    | `org.java-gi:gstreamer:0.15.0`     |
-| GtkSourceview | 5.20    | `org.java-gi:gtksourceview:0.15.0` |
-| WebkitGtk     | 2.52    | `org.java-gi:webkit:0.15.0`        |
+| Library       | Version | Maven coordinates                     |
+|---------------|---------|---------------------------------------|
+| GLib          | 2.88    | `org.java-gi:glib:1.0.0-RC1`          |
+| GTK           | 4.22    | `org.java-gi:gtk:1.0.0-RC1`           |
+| LibAdwaita    | 1.9     | `org.java-gi:adw:1.0.0-RC1`           |
+| LibSecret     | 0.21    | `org.java-gi:secret:1.0.0-RC1`        |
+| LibRSVG       | 2.62    | `org.java-gi:rsvg:1.0.0-RC1`          |
+| GStreamer     | 1.26    | `org.java-gi:gstreamer:1.0.0-RC1`     |
+| GtkSourceview | 5.20    | `org.java-gi:gtksourceview:1.0.0-RC1` |
+| WebkitGtk     | 2.52    | `org.java-gi:webkit:1.0.0-RC1`        |
 
 You can generate Java bindings for other libraries with the `java-gi`
 [command-line tool](https://java-gi.org/generate/) on the GIR (introspection
@@ -85,13 +85,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.java-gi:gtk:0.15.0'
+    implementation 'org.java-gi:gtk:1.0.0-RC1'
 }
 ```
 
 The result:
 
-![Screenshot of a simple Java-GI HelloWorld app](docs/img/simple-helloworld.png)
+![Screenshot of a simple Java-GI HelloWorld app](https://codeberg.org/java-gi/pages/src/branch/main/docs/img/simple-helloworld.png)
 
 ## Examples & template
 
@@ -143,7 +143,7 @@ As an example, the generated documentation of `gtk_button_get_icon_name`
 contains links to other methods, and specifies the return value. This is all
 translated to valid Javadoc.
 
-![Javadoc screenshot](docs/img/javadoc.png)
+![Javadoc screenshot](https://codeberg.org/java-gi/pages/src/branch/main/docs/img/javadoc.png)
 
 The Javadoc is published [online](https://javadoc.java-gi.org).
 
