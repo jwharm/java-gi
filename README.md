@@ -355,6 +355,21 @@ when a function returns, for example, an unsigned integer, use JDK methods such
 as `Integer.compareUnsigned` and `Integer.divideUnsigned` to handle it
 correctly.
 
+## Contributing to Java-GI
+
+[Log an issue on Codeberg](https://codeberg.org/java-gi/java-gi/issues/new)
+to report bugs or feature requests.
+
+Join the [Matrix chatgroup](https://matrix.to/#/#java-gi:matrix.org) when
+you have questions or suggestions, or just want to chat with other people about
+Java-GI.
+
+### AI-generated contributions
+
+One of the aims of developing Java-GI is to have fun and to learn by doing, so
+AI-generated contributions will be respectfully declined. Other pull requests
+are welcome, but please do not submit large changes without prior discussion.
+
 ## License
 
 Java-GI is available under the LGPL-2.1 license.
