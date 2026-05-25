@@ -364,11 +364,12 @@ public class ClosureGenerator {
                 .returns(MemorySegment.class)
                 .addStatement(generator.generateFunctionDescriptorDeclaration());
         if (closure.hasLong())
-            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, _fdesc)",
-                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className);
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, $T.longAsInt() ? $S : $S, _fdesc)",
+                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className,
+                    ClassNames.INTEROP, "upcall_w64", "upcall");
         else
-            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class, $S, _fdesc)",
-                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className, "upcall");
+            spec.addStatement("$T _handle = $T.upcallHandle($T.lookup(), $L.class,  _fdesc)",
+                    MethodHandle.class, ClassNames.INTEROP, MethodHandles.class, className);
         return spec.addStatement("return $T.nativeLinker().upcallStub(_handle.bindTo(this), _fdesc, arena)",
                         Linker.class)
                 .build();

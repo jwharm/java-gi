@@ -170,7 +170,7 @@ public class Interop {
      */
     public static MethodHandle upcallHandle(
             MethodHandles.Lookup lookup, Class<?> cls, FunctionDescriptor descriptor) {
-        return upcallHandle(lookup, cls, longAsInt() ? "upcall_w64" : "upcall", descriptor);
+        return upcallHandle(lookup, cls, "upcall", descriptor);
     }
 
     /**
