@@ -45,6 +45,11 @@ public final class Array extends GirElement implements AnyType {
         return nullable(ArrayTypeName.of(anyType().nullableAnnotatedTypeName()));
     }
 
+    @Override
+    public boolean isFilename(){
+        return anyType().isFilename();
+    }
+
     public boolean zeroTerminated() {
         // If zero-terminated is missing, there's no length, there's no fixed
         // size, and the name attribute is unset, then zero-terminated is true.

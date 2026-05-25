@@ -21,6 +21,7 @@ package org.javagi.base;
 
 import org.gnome.glib.GLib;
 import org.javagi.interop.Interop;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.nio.charset.Charset;
@@ -133,5 +134,43 @@ public final class Filename {
     @Override
     public int hashCode() {
         return Arrays.hashCode(data);
+    }
+
+    /**
+     * Convert an array of Filenames to an array of Strings.
+     *
+     * @param filenames array of filenames
+     * @return array of strings
+     */
+    public static @Nullable String @Nullable [] convertArray(@Nullable Filename @Nullable [] filenames) {
+        if (filenames == null)
+            return null;
+
+        @Nullable String [] strings = new String[filenames.length];
+        for (int i = 0; i < filenames.length; i++) {
+            Filename f = filenames[i];
+            strings[i] = f == null ? null : f.toString();
+        }
+
+        return strings;
+    }
+
+    /**
+     * Convert an array of Strings to an array of Filenames.
+     *
+     * @param strings array of strings
+     * @return array of filenames
+     */
+    public static @Nullable Filename @Nullable [] convertArray(@Nullable String @Nullable [] strings) {
+        if (strings == null)
+            return null;
+
+        @Nullable Filename [] filenames = new Filename[strings.length];
+        for (int i = 0; i < strings.length; i++) {
+            String s = strings[i];
+            filenames[i] = s == null ? null : new Filename(s);
+        }
+
+        return filenames;
     }
 }

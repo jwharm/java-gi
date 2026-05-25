@@ -106,6 +106,7 @@ public final class Type extends GirElement implements AnyType, TypeReference {
         return "String".equals(type);
     }
 
+    @Override
     public boolean isFilename() {
         String type = toJavaBaseType(name());
         return "org.javagi.base.Filename".equals(type);

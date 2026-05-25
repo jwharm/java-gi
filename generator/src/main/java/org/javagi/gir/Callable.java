@@ -123,7 +123,7 @@ public sealed interface Callable
     default boolean hasFilenameParameters() {
         return parameters() instanceof Parameters params
             && params.parameters().stream().anyMatch(p ->
-                p.anyType() instanceof Type t && t.isFilename() && !p.isOutParameter());
+                p.anyType() instanceof AnyType t && t.isFilename() && !p.isOutParameter());
     }
 
     default Parameters parameters() {

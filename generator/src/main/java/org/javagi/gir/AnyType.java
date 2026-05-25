@@ -26,6 +26,7 @@ public sealed interface AnyType extends Node permits Type, Array {
     TypeName typeName();
     TypeName nullableAnnotatedTypeName();
     int allocatedSize(boolean longAsInt);
+    boolean isFilename();
 
     default String name() {
         return attr("name");
