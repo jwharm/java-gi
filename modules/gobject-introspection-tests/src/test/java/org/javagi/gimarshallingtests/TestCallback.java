@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2025 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -21,6 +21,8 @@ package org.javagi.gimarshallingtests;
 
 import org.javagi.base.Out;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.gnome.gi.gimarshallingtests.GIMarshallingTests.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -79,5 +81,27 @@ public class TestCallback {
             assertEquals(1, box.readLong());
             box.writeLong(52);
         }));
+    }
+
+    @Test
+    void userDataAfterCallback() {
+        AtomicBoolean success = new AtomicBoolean(false);
+        callbackUserDataAfterCallback(42, 43, (a, b) -> {
+            assertEquals(42, a);
+            assertEquals(43, b);
+            success.set(true);
+        });
+        assertTrue(success.get());
+    }
+
+    @Test
+    void userDataBeforeCallback() {
+        AtomicBoolean success = new AtomicBoolean(false);
+        callbackUserDataBeforeCallback(42, 43, (a, b) -> {
+            assertEquals(42, a);
+            assertEquals(43, b);
+            success.set(true);
+        });
+        assertTrue(success.get());
     }
 }
