@@ -1641,18 +1641,15 @@ public class Interop {
             return NULL;
 
         var memorySegment = switch (firstValue) {
-            case Boolean b -> alloc.allocate(JAVA_INT, length);
-            case Byte b -> alloc.allocate(JAVA_BYTE, length);
-            case Character c -> alloc.allocate(JAVA_CHAR, length);
-            case Double d -> alloc.allocate(JAVA_DOUBLE, length);
-            case Enumeration e -> alloc.allocate(JAVA_INT, length);
-            case Float f -> alloc.allocate(JAVA_FLOAT, length);
-            case Integer i_ -> alloc.allocate(JAVA_INT, length);
-            case Long l when longAsInt() -> alloc.allocate(JAVA_INT, length);
-            case Long l -> alloc.allocate(JAVA_LONG, length);
-            case Short s_ -> alloc.allocate(JAVA_SHORT, length);
-            case String str -> alloc.allocate(ADDRESS, length);
-            case MemorySegment seg -> alloc.allocate(ADDRESS, length);
+            case Boolean _, Enumeration _, Integer _ -> alloc.allocate(JAVA_INT, length);
+            case Byte _ -> alloc.allocate(JAVA_BYTE, length);
+            case Character _ -> alloc.allocate(JAVA_CHAR, length);
+            case Double _ -> alloc.allocate(JAVA_DOUBLE, length);
+            case Float _ -> alloc.allocate(JAVA_FLOAT, length);
+            case Long _ when longAsInt() -> alloc.allocate(JAVA_INT, length);
+            case Long _ -> alloc.allocate(JAVA_LONG, length);
+            case Short _ -> alloc.allocate(JAVA_SHORT, length);
+            case String _, Filename _, MemorySegment _ -> alloc.allocate(ADDRESS, length);
             default -> throw new IllegalStateException("Unexpected value: " + firstValue);
         };
 
@@ -1672,6 +1669,7 @@ public class Interop {
                     case Long l -> memorySegment.setAtIndex(JAVA_LONG, i, l);
                     case Short s_ -> memorySegment.setAtIndex(JAVA_SHORT, i, s_);
                     case String str -> memorySegment.setAtIndex(ADDRESS, i, alloc.allocateFrom(str));
+                    case Filename f -> memorySegment.setAtIndex(ADDRESS, i, f.toMemorySegment(alloc));
                     case MemorySegment seg -> memorySegment.setAtIndex(ADDRESS, i, seg);
                     default -> throw new IllegalStateException("Unexpected value: " + aliases[i]);
                 }
@@ -1681,18 +1679,15 @@ public class Interop {
         if (zeroTerminated) {
             int i = aliases.length;
             switch (firstValue) {
-                case Boolean b -> memorySegment.setAtIndex(JAVA_INT, i, 0);
-                case Byte b -> memorySegment.setAtIndex(JAVA_BYTE, i, (byte) 0);
-                case Character c -> memorySegment.setAtIndex(JAVA_CHAR, i, (char) 0);
-                case Double d -> memorySegment.setAtIndex(JAVA_DOUBLE, i, 0d);
-                case Enumeration e -> memorySegment.setAtIndex(JAVA_INT, i, 0);
-                case Float f -> memorySegment.setAtIndex(JAVA_FLOAT, i, 0f);
-                case Integer i_ -> memorySegment.setAtIndex(JAVA_INT, i, 0);
-                case Long l when longAsInt() -> memorySegment.setAtIndex(JAVA_INT, i, 0);
-                case Long l -> memorySegment.setAtIndex(JAVA_LONG, i, 0L);
-                case Short s_ -> memorySegment.setAtIndex(JAVA_SHORT, i, (short) 0);
-                case String str -> memorySegment.setAtIndex(ADDRESS, i, NULL);
-                case MemorySegment seg -> memorySegment.setAtIndex(ADDRESS, i, NULL);
+                case Boolean _, Enumeration _, Integer _ -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Byte _ -> memorySegment.setAtIndex(JAVA_BYTE, i, (byte) 0);
+                case Character _ -> memorySegment.setAtIndex(JAVA_CHAR, i, (char) 0);
+                case Double _ -> memorySegment.setAtIndex(JAVA_DOUBLE, i, 0d);
+                case Float _ -> memorySegment.setAtIndex(JAVA_FLOAT, i, 0f);
+                case Long _ when longAsInt() -> memorySegment.setAtIndex(JAVA_INT, i, 0);
+                case Long _ -> memorySegment.setAtIndex(JAVA_LONG, i, 0L);
+                case Short _ -> memorySegment.setAtIndex(JAVA_SHORT, i, (short) 0);
+                case String _, Filename _, MemorySegment _ -> memorySegment.setAtIndex(ADDRESS, i, NULL);
                 default -> throw new IllegalStateException("Unexpected value: " + firstValue);
             }
         }
