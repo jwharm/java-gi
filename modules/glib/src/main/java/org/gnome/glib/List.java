@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -19,9 +19,12 @@
 
 package org.gnome.glib;
 
+import org.gnome.gobject.GObject;
+import org.gnome.gobject.GObjects;
 import org.javagi.base.TransferOwnership;
 import org.javagi.base.Proxy;
 import org.javagi.base.ProxyInstance;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -60,6 +63,9 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
     // This allocator is used to allocate memory for native Strings
     private final SegmentAllocator alloc = Interop.mallocAllocator();
 
+    // The GType of the elements
+    private final Type type;
+
     // Used to construct a Java instance for a native object
     private final Function<@Nullable MemorySegment, @Nullable E> make;
 
@@ -77,6 +83,7 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
      * Create a new {@code GLib.List} wrapper.
      *
      * @param address   the memory address of the head element of the List
+     * @param type      gtype of the list elements
      * @param make      a function to construct element instances
      * @param free      a function to free element instances. If
      *                  {@code ownership} is "none" or "container", this can
@@ -84,42 +91,75 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
      * @param ownership whether to free memory automatically
      */
     public List(@Nullable MemorySegment address,
+                Type type,
                 Function<@Nullable MemorySegment, E> make,
                 @Nullable Consumer<@Nullable E> free,
                 TransferOwnership ownership) {
-        this.head = MemorySegment.NULL.equals(address) ? null : new ListNode(address);
+        this.head = address == null || MemorySegment.NULL.equals(address) ? null : new ListNode(address);
+        this.type = type;
         this.make = make;
         this.free = free;
-        this.finalizer = new List.Finalizer<>(address, make, free, ownership);
+        this.finalizer = new List.Finalizer<>(address, type, make, free, ownership);
         CLEANER.register(this, finalizer);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #List(MemorySegment, Type, Function, Consumer, TransferOwnership)}
+     */
+    @Deprecated
+    public List(@Nullable MemorySegment address,
+                Function<@Nullable MemorySegment, E> make,
+                @Nullable Consumer<@Nullable E> free,
+                TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, free, ownership);
     }
 
     /**
      * Create a wrapper for a new, empty {@code GLib.List}.
      *
+     * @param type      gtype of the list elements
      * @param make      a function to construct element instances
      * @param free      a function to free element instances. If
      *                  {@code ownership} is "none" or "container", this can
      *                  safely be set to {@code null}.
      * @param ownership whether to free memory automatically
      */
-    public List(Function<@Nullable MemorySegment, E> make,
+    public List(Type type,
+                Function<@Nullable MemorySegment, E> make,
                 @Nullable Consumer<E> free,
                 TransferOwnership ownership) {
-        this(MemorySegment.NULL, make, free, ownership);
+        this(MemorySegment.NULL, type, make, free, ownership);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #List(MemorySegment, Type, Function, TransferOwnership)}
+     */
+    @Deprecated
+    public List(@Nullable MemorySegment address,
+                Function<@Nullable MemorySegment, E> make,
+                TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, ownership);
     }
 
     /**
      * Create a new {@code GLib.List} wrapper.
      *
      * @param address   the memory address of the head element of the List
+     * @param type      gtype of the list elements
      * @param make      a function to construct element instances
      * @param ownership whether to free memory automatically
      */
     public List(@Nullable MemorySegment address,
+                Type type,
                 Function<@Nullable MemorySegment, E> make,
                 TransferOwnership ownership) {
-        this(address, make, null, ownership);
+        this(address, type, make, null, ownership);
     }
 
     /**
@@ -213,14 +253,8 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
                 }
                 head = ListNode.deleteLink(head, node);
 
-                var data = node.readData();
-                if ((finalizer.ownership == FULL || finalizer.ownership == VALUES)
-                        && data != null) {
-                    if (free == null)
-                        GLib.free(data);
-                    else
-                        free.accept(make.apply(data));
-                }
+                if (finalizer.ownership == FULL || finalizer.ownership == VALUES)
+                    freeElement(type, node.readData(), make, free);
             }
 
             @Override
@@ -228,14 +262,8 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
                 if (last == null)
                     throw new IllegalStateException();
 
-                var data = last.readData();
-                if ((finalizer.ownership == FULL || finalizer.ownership == VALUES)
-                        && data != null) {
-                    if (free == null)
-                        GLib.free(data);
-                    else
-                        free.accept(make.apply(data));
-                }
+                if (finalizer.ownership == FULL || finalizer.ownership == VALUES)
+                    freeElement(type, last.readData(), make, free);
 
                 last.writeData(getAddress(e, alloc));
             }
@@ -484,15 +512,18 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
     private static final class Finalizer<E> implements Runnable {
 
         private final @Nullable MemorySegment address;
+        private final Type type;
         private final Function<@Nullable MemorySegment, E> make;
         private final @Nullable Consumer<@Nullable E> free;
         private TransferOwnership ownership;
 
         public Finalizer(@Nullable MemorySegment address,
+                         Type type,
                          Function<@Nullable MemorySegment, E> make,
                          @Nullable Consumer<@Nullable E> free,
                          TransferOwnership ownership) {
             this.address = address;
+            this.type = type;
             this.make = make;
             this.free = free;
             this.ownership = ownership;
@@ -508,10 +539,7 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
                 if (ownership == FULL || ownership == VALUES) {
                     var node = new ListNode(address);
                     do {
-                        if (free == null)
-                            GLib.free(node.readData());
-                        else
-                            free.accept(make.apply(node.readData()));
+                        freeElement(type, node.readData(), make, free);
                         node = node.readNext();
                     } while (node != null);
                 }
@@ -527,5 +555,28 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
             else
                 action.run();
         }
+    }
+
+    /**
+     * Free a GList or GSList element.
+     *
+     * @param type    the GType of the element
+     * @param address the memory address of the element
+     * @param make    a function to create a Java instance from the memory address
+     * @param free    a function to free the Java instance
+     * @param <E>     the Java type of the element
+     */
+    static <E> void freeElement(Type type,
+                                @Nullable MemorySegment address,
+                                Function<@Nullable MemorySegment, @Nullable E> make,
+                                @Nullable Consumer<@Nullable E> free) {
+        if (address == null || address.equals(MemorySegment.NULL))
+            return;
+        if (GObjects.typeIsA(type, Types.OBJECT))
+            return;
+        if (free != null)
+            free.accept(make.apply(address));
+        else
+            GLib.free(address);
     }
 }

@@ -24,6 +24,7 @@ import org.gnome.gi.regress.TestSubObj;
 import org.gnome.glib.Type;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
 
@@ -55,7 +56,7 @@ public class TestGList {
 
     @Test
     void noneIn() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list.addAll(STR_LIST);
         testGlistNothingIn(list);
         testGlistNothingIn2(list);
@@ -77,7 +78,7 @@ public class TestGList {
     @Test
     void containerIn() {
         Function<MemorySegment, Type> make = addr -> new Type(addr.address());
-        var list = new org.gnome.glib.List<>(make, null, TransferOwnership.CONTAINER);
+        var list = new org.gnome.glib.List<>(Types.INT64, make, null, TransferOwnership.CONTAINER);
         list.add(TestObj.getType());
         list.add(TestSubObj.getType());
         testGlistGtypeContainerIn(list);

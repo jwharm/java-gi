@@ -499,11 +499,19 @@ class TypedValueGenerator {
             if (type.anyTypes().size() != 1)
                 throw new UnsupportedOperationException("Unsupported element type: " + type);
 
+            // GType of the list elements
+            CodeBlock gtypeDeclaration;
+            if (type.anyTypes().getFirst() instanceof Type elementType)
+                gtypeDeclaration = getGTypeDeclaration(elementType);
+            else
+                gtypeDeclaration = CodeBlock.of("$T.POINTER", ClassNames.TYPES);
+
             // Generate lambdas or method references to create and destruct elements
             CodeBlock elementConstructor = getElementConstructor(type, 0);
             CodeBlock elementDestructor = getElementDestructor(type, 0);
 
-            var stmt = CodeBlock.builder().add("new $T($L, $L", type.typeName(), identifier, elementConstructor);
+            var stmt = CodeBlock.builder().add("new $T($L, $L, $L",
+                    type.typeName(), identifier, gtypeDeclaration, elementConstructor);
 
             if (elementDestructor != null)
                 stmt.add(", $L", elementDestructor);
@@ -718,11 +726,15 @@ class TypedValueGenerator {
             return CodeBlock.of("$T.POINTER /* unsupported */", ClassNames.TYPES);
         }
 
+        return getGTypeDeclaration(type);
+    }
+
+    CodeBlock getGTypeDeclaration(Type type) {
         if (type == null)
-            throw new IllegalStateException("Expected type or array");
+            throw new IllegalStateException("Expected type != null");
 
         if (type.isPrimitive())
-            return CodeBlock.of("$T.$L", ClassNames.TYPES, switch(type.cType()) {
+            return CodeBlock.of("$T.$L", ClassNames.TYPES, switch(type.name()) {
                 case "gboolean" -> "BOOLEAN";
                 case "gchar", "gint8" -> "CHAR";
                 case "guchar", "guint8" -> "UCHAR";
@@ -737,7 +749,7 @@ class TypedValueGenerator {
                 case "gfloat" -> "FLOAT";
                 case "none" -> "NONE";
                 case "utf8", "filename" -> "STRING";
-                default -> throw new IllegalStateException("Unexpected type: " + type.cType());
+                default -> throw new IllegalStateException("Unexpected type: " + type.name());
             });
 
         if (type.isString())
@@ -749,7 +761,9 @@ class TypedValueGenerator {
         if (type.typeName().equals(ClassNames.G_OBJECT))
             return CodeBlock.of("$T.OBJECT", ClassNames.TYPES);
 
-        RegisteredType rt = target instanceof Alias a ? a.lookup() : target;
+        RegisteredType rt = type.lookup();
+        while (rt instanceof Alias a)
+            rt = a.lookup();
 
         if (rt != null) {
             if (rt instanceof Class cls && cls.isInstanceOf("GObject", "ParamSpec"))

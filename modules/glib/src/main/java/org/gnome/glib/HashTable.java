@@ -21,6 +21,7 @@ package org.gnome.glib;
 
 import org.javagi.base.Out;
 import org.javagi.base.Proxy;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.javagi.interop.MemoryCleaner;
 import java.lang.foreign.*;
@@ -432,7 +433,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeKey, null, CONTAINER);
+        return new List<>(_result, Types.POINTER, makeKey, null, CONTAINER);
     }
 
     /**
@@ -518,7 +519,7 @@ public class HashTable<K, V> extends AbstractMap<@Nullable K, @Nullable V> imple
         } catch (Throwable _err) {
             throw new AssertionError(_err);
         }
-        return new List<>(_result, makeValue, null, CONTAINER);
+        return new List<>(_result, Types.POINTER, makeValue, null, CONTAINER);
     }
 
     /**

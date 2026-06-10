@@ -80,7 +80,7 @@ public class TestStruct {
     void structWithArrays() {
         var structArray = new TestStructA[] {new TestStructA(), new TestStructA()};
         var objArray = new TestObj[] {new TestObj(), new TestObj(), new TestObj()};
-        var objList = new List<>(TestObj::new, null, TransferOwnership.NONE);
+        var objList = new List<>(TestObj.getType(), TestObj::new, null, TransferOwnership.NONE);
         for (int i = 0; i < 4; i++)
             objList.add(new TestObj());
         var struct = new TestStructD(structArray, objArray, objArray[0], objList, objArray);
