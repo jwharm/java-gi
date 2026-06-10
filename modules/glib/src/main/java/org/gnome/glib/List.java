@@ -19,6 +19,7 @@
 
 package org.gnome.glib;
 
+import org.gnome.gobject.GObject;
 import org.gnome.gobject.GObjects;
 import org.javagi.base.TransferOwnership;
 import org.javagi.base.Proxy;
@@ -103,6 +104,20 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
     }
 
     /**
+     * @deprecated Replaced by {@link #List(MemorySegment, Type, Function, Consumer, TransferOwnership)}
+     */
+    @Deprecated
+    public List(@Nullable MemorySegment address,
+                Function<@Nullable MemorySegment, E> make,
+                @Nullable Consumer<@Nullable E> free,
+                TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, free, ownership);
+    }
+
+    /**
      * Create a wrapper for a new, empty {@code GLib.List}.
      *
      * @param type      gtype of the list elements
@@ -117,6 +132,19 @@ public class List<E> extends AbstractSequentialList<@Nullable E> implements Prox
                 @Nullable Consumer<E> free,
                 TransferOwnership ownership) {
         this(MemorySegment.NULL, type, make, free, ownership);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #List(MemorySegment, Type, Function, TransferOwnership)}
+     */
+    @Deprecated
+    public List(@Nullable MemorySegment address,
+                Function<@Nullable MemorySegment, E> make,
+                TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, ownership);
     }
 
     /**

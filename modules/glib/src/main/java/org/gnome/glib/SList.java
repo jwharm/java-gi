@@ -19,9 +19,11 @@
 
 package org.gnome.glib;
 
+import org.gnome.gobject.GObject;
 import org.javagi.base.TransferOwnership;
 import org.javagi.base.Proxy;
 import org.javagi.base.ProxyInstance;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -80,6 +82,20 @@ public class SList<E> extends AbstractSequentialList<@Nullable E> implements Pro
     private final Finalizer<E> finalizer;
 
     /**
+     * @deprecated Replaced by {@link #SList(MemorySegment, Type, Function, Consumer, TransferOwnership)}
+     */
+    @Deprecated
+    public SList(@Nullable MemorySegment address,
+                 Function<@Nullable MemorySegment, E> make,
+                 @Nullable Consumer<E> free,
+                 TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, free, ownership);
+    }
+
+    /**
      * Create a new {@code GLib.SList} wrapper.
      *
      * @param address   the memory address of the head element of the SList
@@ -101,6 +117,19 @@ public class SList<E> extends AbstractSequentialList<@Nullable E> implements Pro
         this.free = free;
         this.finalizer = new Finalizer<>(address, type, make, free, ownership);
         CLEANER.register(this, finalizer);
+    }
+
+    /**
+     * @deprecated Replaced by {@link #SList(MemorySegment, Type, Function, TransferOwnership)}
+     */
+    @Deprecated
+    public SList(@Nullable MemorySegment address,
+                 Function<@Nullable MemorySegment, E> make,
+                 TransferOwnership ownership) {
+        Type type = Types.POINTER;
+        if (make.apply(null) instanceof GObject)
+            type = Types.OBJECT;
+        this(address, type, make, ownership);
     }
 
     /**
