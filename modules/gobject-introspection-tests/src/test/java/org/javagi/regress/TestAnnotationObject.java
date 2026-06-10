@@ -24,6 +24,7 @@ import org.gnome.gobject.GObject;
 import org.javagi.base.Filename;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -92,7 +93,7 @@ public class TestAnnotationObject {
             hasBeenCalled.set(true);
             assertIterableEquals(input, list);
         });
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list.addAll(input);
         o.emitListSignal(list);
         assertTrue(hasBeenCalled.get());

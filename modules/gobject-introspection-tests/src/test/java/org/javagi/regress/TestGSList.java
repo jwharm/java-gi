@@ -22,6 +22,7 @@ package org.javagi.regress;
 import org.gnome.glib.SList;
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +52,7 @@ public class TestGSList {
 
     @Test
     void noneIn() {
-        var list = new org.gnome.glib.SList<>(Interop::getString, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.SList<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list.addAll(STR_LIST);
         testGslistNothingIn(list);
         testGslistNothingIn2(list);

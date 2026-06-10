@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022026 Jan-Willem Harmannij
+ * Copyright (C) 2025-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -29,6 +29,7 @@ import org.gnome.gobject.GObject;
 import org.gnome.gobject.InitiallyUnowned;
 import org.javagi.base.Proxy;
 import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -84,7 +85,7 @@ public class TestObjectProperties {
 
     @Test
     void list() {
-        var list1 = new List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list1 = new List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list1.add("a");
 
         var object = TestObj.builder()
@@ -94,7 +95,7 @@ public class TestObjectProperties {
         // Java-GI doesn't know that GObject.getProperty() returned a GList
         // in this case, so we end up with the raw memory address.
         var list2Address = (MemorySegment) object.getProperty("list");
-        var list2 = new List<>(list2Address, Interop::getString, null, TransferOwnership.NONE);
+        var list2 = new List<>(list2Address, Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         assertEquals("a", list2.getFirst());
     }
 
@@ -133,7 +134,7 @@ public class TestObjectProperties {
 
     @Test
     void listOld() {
-        var list1 = new List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list1 = new List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list1.add("a");
 
         var object = TestObj.builder()
@@ -141,7 +142,7 @@ public class TestObjectProperties {
                 .build();
 
         var list2Address = (MemorySegment) object.getProperty("list-old");
-        var list2 = new List<>(list2Address, Interop::getString, null, TransferOwnership.NONE);
+        var list2 = new List<>(list2Address, Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         assertEquals("a", list2.getFirst());
     }
 

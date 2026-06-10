@@ -21,6 +21,7 @@ package org.javagi.gimarshallingtests;
 
 import org.javagi.base.Out;
 import org.javagi.base.TransferOwnership;
+import org.javagi.gobject.types.Types;
 import org.javagi.interop.Interop;
 import org.junit.jupiter.api.Test;
 
@@ -66,35 +67,35 @@ public class TestGList {
 
     @Test
     void intNoneIn() {
-        var list = new org.gnome.glib.List<>(pointer -> (int) pointer.address(), null, TransferOwnership.CONTAINER);
+        var list = new org.gnome.glib.List<>(Types.INT, pointer -> (int) pointer.address(), null, TransferOwnership.CONTAINER);
         list.addAll(List.of(-1, 0, 1, 2));
         glistIntNoneIn(list);
     }
 
     @Test
     void uint32NoneIn() {
-        var list = new org.gnome.glib.List<>(pointer -> (int) pointer.address(), null, TransferOwnership.CONTAINER);
+        var list = new org.gnome.glib.List<>(Types.INT, pointer -> (int) pointer.address(), null, TransferOwnership.CONTAINER);
         list.addAll(List.of(0, -1));
         glistUint32NoneIn(list);
     }
 
     @Test
     void utf8NoneIn() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8NoneIn(list);
     }
 
     @Test
     void utf8ContainerIn() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8ContainerIn(list);
     }
 
     @Test
     void utf8FullIn() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.NONE);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.NONE);
         list.addAll(TEST_UTF8_LIST);
         glistUtf8FullIn(list);
     }
@@ -143,7 +144,7 @@ public class TestGList {
 
     @Test
     void utf8NoneInout() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8NoneInout(v);
@@ -152,7 +153,7 @@ public class TestGList {
 
     @Test
     void utf8ContainerInout() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8ContainerInout(v);
@@ -161,7 +162,7 @@ public class TestGList {
 
     @Test
     void utf8FullInout() {
-        var list = new org.gnome.glib.List<>(Interop::getString, null, TransferOwnership.FULL);
+        var list = new org.gnome.glib.List<>(Types.STRING, Interop::getString, null, TransferOwnership.FULL);
         list.addAll(TEST_UTF8_LIST);
         var v = new Out<>(list);
         glistUtf8FullInout(v);
