@@ -27,6 +27,8 @@ import org.javagi.util.GeneratedAnnotationBuilder;
 
 import javax.lang.model.element.Modifier;
 
+import static org.javagi.util.Conversions.replaceKnownType;
+
 /**
  * Generate a "FooException" class for a "FooError" enumeration.
  * The exception class will extend GErrorException.
@@ -57,7 +59,11 @@ public class ExceptionGenerator {
         if (typeName.endsWith("Error"))
             typeName = typeName.substring(0, typeName.length() - 5);
 
-        return typeName + "Exception";
+        // Append "...Exception"
+        typeName = typeName + "Exception";
+
+        // Replace "IOException" with "GIOException" to prevent confusion
+        return replaceKnownType(typeName, e.namespace());
     }
 
     public TypeSpec generate() {
