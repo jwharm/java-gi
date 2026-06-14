@@ -49,7 +49,7 @@ public class FileTest {
         Gio.javagi$ensureInitialized();
 
         // create file
-        File file = File.newForPath(tempDir.resolve(name).toString());
+        File file = File.forPath(tempDir.resolve(name).toString());
 
         // write to file
         try (var stream = file.create(FileCreateFlags.REPLACE_DESTINATION, null)) {
@@ -80,7 +80,7 @@ public class FileTest {
     @Test
     public void moveAsync() throws GErrorException, IOException {
         File orig = createFile("move.txt", "test string");
-        File dest = File.newForPath(tempDir.resolve("moved.txt").toString());
+        File dest = File.forPath(tempDir.resolve("moved.txt").toString());
 
         MainLoop loop = new MainLoop(MainContext.getThreadDefault(), true);
         GLib.idleAddOnce(() -> {
@@ -103,7 +103,7 @@ public class FileTest {
     @Test
     public void copyAsync() throws GErrorException, IOException {
         File orig = createFile("copy.txt", "test string");
-        File dest = File.newForPath(tempDir.resolve("copied.txt").toString());
+        File dest = File.forPath(tempDir.resolve("copied.txt").toString());
 
         MainLoop loop = new MainLoop(MainContext.getThreadDefault(), true);
         GLib.idleAddOnce(() -> {

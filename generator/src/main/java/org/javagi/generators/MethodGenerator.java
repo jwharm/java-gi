@@ -53,14 +53,42 @@ public class MethodGenerator {
 
     public static String getName(Callable func) {
         String name = func.name();
+        // Strip "new_" from named constructors
         if (name.startsWith("new_") && func instanceof Constructor c && c.isNamed())
             name = name.substring(4);
+
+        // Strip "new_" from functions that start with "new_for_" etc
+        else if ((name.startsWith("new_for_")
+                    || name.startsWith("new_with_")
+                    || name.startsWith("new_build_")
+                    || name.startsWith("new_take")
+                    || name.startsWith("new_from_"))
+                && func instanceof Function && returnsEnclosingType(func))
+            name = name.substring(4);
+
         return toJavaIdentifier(name);
     }
 
+    private static boolean returnsEnclosingType(Callable func) {
+        if (func instanceof Constructor)
+            return true;
+
+        if (func.returnValue() instanceof ReturnValue rv
+                && rv.anyType() instanceof Type t
+                && func.parent().equals(t.lookup()))
+            return true;
+
+        if (func.callableAttrs().finishFunc() != null) {
+            String cIdentifier = func.callableAttrs().finishFunc();
+            if (func.namespace().parent().lookupCIdentifier(cIdentifier) instanceof Callable finishFunc)
+                return returnsEnclosingType(finishFunc);
+        }
+
+        return false;
+    }
+
     public static boolean isGeneric(Callable func) {
-        return func.parent() instanceof RegisteredType rt
-                && rt.generic();
+        return func.parent() instanceof RegisteredType rt && rt.generic();
     }
 
     public MethodGenerator(Callable func, String name) {
