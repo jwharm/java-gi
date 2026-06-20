@@ -19,8 +19,13 @@
 
 package org.javagi.gtk.types;
 
+import org.gnome.gio.Gio;
+import org.gnome.gio.ResourceError;
+import org.gnome.gio.ResourceException;
+import org.gnome.gio.ResourceLookupFlags;
 import org.javagi.base.Constants;
 import org.javagi.base.FunctionPointer;
+import org.javagi.base.GErrorException;
 import org.javagi.base.Proxy;
 import org.javagi.gobject.InstanceCache;
 import org.javagi.gobject.annotations.Namespace;
@@ -41,10 +46,13 @@ import org.gnome.gtk.Widget;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.io.*;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -192,9 +200,47 @@ public class TemplateTypes {
 
         return (typeClass) -> {
             var widgetClass = new Widget.WidgetClass(typeClass.handle());
+            boolean templateLoadSuccess = false;
 
-            // The ui parameter must refer to a registered GResource
-            widgetClass.setTemplateFromResource(ui);
+            // Try to load the ui file from a registered GResource
+            try {
+                if (Gio.resourcesGetInfo(ui, ResourceLookupFlags.NONE, null, null)) {
+                    widgetClass.setTemplateFromResource(ui);
+                    templateLoadSuccess = true;
+                }
+            } catch (ResourceException re) {
+                if (re.getEnum() != ResourceError.NOT_FOUND)
+                    throw new TypeRegistrationException("Cannot load from GResource", re);
+            } catch (GErrorException e) {
+                throw new TypeRegistrationException("Cannot load from GResource", e);
+            }
+
+            // Try to load the ui file from a Java classpath resource
+            if (!templateLoadSuccess) {
+                try (InputStream is = TemplateTypes.class.getClassLoader().getResourceAsStream(ui)) {
+                    if (is != null) {
+                        widgetClass.setTemplate(is.readAllBytes());
+                        templateLoadSuccess = true;
+                    }
+                } catch (IOException e) {
+                    throw new TypeRegistrationException("Cannot read " + ui, e);
+                }
+            }
+
+            // Try to load the ui file from a filesystem path
+            if (!templateLoadSuccess) {
+                Path path = Path.of(ui);
+                if (path.toFile().exists()) try {
+                    widgetClass.setTemplate(Files.readAllBytes(path));
+                    templateLoadSuccess = true;
+                } catch (IOException e) {
+                    throw new TypeRegistrationException("Cannot read " + ui, e);
+                }
+            }
+
+            // Not a GResource, not on the classpath, not a filesystem path
+            if (!templateLoadSuccess)
+                throw new TypeRegistrationException("Cannot find " + ui);
 
             // Override GObject.dispose() to dispose the template
             overrideDispose(widgetClass, (object) -> {
