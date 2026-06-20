@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -22,6 +22,10 @@ package org.javagi.gobject.types;
 import org.jspecify.annotations.Nullable;
 
 public class TypeRegistrationException extends RuntimeException {
+    public TypeRegistrationException(@Nullable String message, @Nullable Throwable cause) {
+        super(message, cause);
+    }
+
     public TypeRegistrationException(@Nullable String message) {
         super(message);
     }
