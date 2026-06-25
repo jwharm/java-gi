@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
 /// exceptions.
 ///
 /// By default, the exception is stored in a `ThreadLocal` field and will
-/// later be thrown (wrapped in an [CallbackInvocationException]), immediately
+/// later be thrown (wrapped in a [CallbackInvocationException]), immediately
 /// after a native method call in the same thread has completed. This can
 /// optionally be disabled by setting the environment variable
 /// `java-gi.discard-callback-exceptions` to `"true"` (ignoring case).
@@ -83,7 +83,7 @@ public class ExceptionHandler {
     ///
     /// When propagation of exceptions is not disabled with the envrionment
     /// variable `java-gi.discard-callback-exceptions`, and an exception was
-    /// stored with [#handleException], the exception is wrapped in an
+    /// stored with [#handleException], the exception is wrapped in a
     /// [CallbackInvocationException] and thrown.
     ///
     /// **Note:** The **cause** of the exception points to the actual location
