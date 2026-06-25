@@ -21,7 +21,6 @@ package org.javagi.base;
 
 import org.gnome.glib.GLib;
 import org.gnome.glib.LogLevelFlags;
-import org.javagi.interop.InteropException;
 import org.jspecify.annotations.Nullable;
 
 ///
@@ -32,9 +31,9 @@ import org.jspecify.annotations.Nullable;
 /// exceptions.
 ///
 /// By default, the exception is stored in a `ThreadLocal` field and will
-/// later be thrown (wrapped in an [InteropException]), immediately after a
-/// native method call in the same thread has completed. This can optionally
-/// be disabled by setting the environment variable
+/// later be thrown (wrapped in an [CallbackInvocationException]), immediately
+/// after a native method call in the same thread has completed. This can
+/// optionally be disabled by setting the environment variable
 /// `java-gi.discard-callback-exceptions` to `"true"` (ignoring case).
 ///
 /// When the environment variable `java-gi.log-callback-exceptions` is set to
@@ -85,20 +84,20 @@ public class ExceptionHandler {
     /// When propagation of exceptions is not disabled with the envrionment
     /// variable `java-gi.discard-callback-exceptions`, and an exception was
     /// stored with [#handleException], the exception is wrapped in an
-    /// [InteropException] and thrown.
+    /// [CallbackInvocationException] and thrown.
     ///
     /// **Note:** The **cause** of the exception points to the actual location
-    /// where the exception occured, while the outer InteropException is thrown
-    /// by the first method that completed in the same thread where the original
-    /// exception occured. For example, when a GLib
-    /// [idle callback][GLib#idleAdd] throws an exception, it will be rethrown
-    /// from a completely unrelated callsite that just happened to be scheduled
-    /// after the idle callback on the GLib main loop.
+    /// where the exception occured, while the outer
+    /// CallbackInvocationException is thrown by the first method that
+    /// completed in the same thread where the original exception occured. For
+    /// example, when a GLib [idle callback][GLib#idleAdd] throws an exception,
+    /// it will be rethrown from a completely unrelated callsite that just
+    /// happened to be scheduled after the idle callback on the GLib main loop.
     ///
-    /// @throws InteropException wraps the exception that occured in
+    /// @throws CallbackInvocationException wraps the exception that occured in
     ///         a Java callback method.
     ///
-    public static void propagateExceptions() throws InteropException {
+    public static void propagateExceptions() throws CallbackInvocationException {
         if (DISCARD_EXCEPTIONS)
             return;
 
@@ -108,6 +107,6 @@ public class ExceptionHandler {
 
         PENDING_EXCEPTION.remove();
 
-        throw new InteropException(throwable);
+        throw new CallbackInvocationException(throwable);
     }
 }

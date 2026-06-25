@@ -1,7 +1,7 @@
 package org.javagi.glib;
 
 import org.gnome.glib.GLib;
-import org.javagi.interop.InteropException;
+import org.javagi.base.CallbackInvocationException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.MemorySegment;
@@ -22,7 +22,7 @@ public class ExceptionHandlerTest {
                 throw new RuntimeException("Exception from callback");
             });
             fail();
-        } catch (InteropException e) {
+        } catch (CallbackInvocationException e) {
             assertEquals("Exception from callback", e.getCause().getMessage());
         }
     }
