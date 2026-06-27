@@ -20,10 +20,17 @@
 package org.javagi.gir;
 
 import org.javagi.javapoet.CodeBlock;
+import org.javagi.util.Glob;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import static org.javagi.util.CollectionUtils.tail;
+import static org.javagi.util.Conversions.getTagName;
 
 public interface Node {
     Namespace namespace();
@@ -62,6 +69,60 @@ public interface Node {
         if (predicate.test(this))
             return true;
         return children().stream().anyMatch(c -> c.deepMatch(predicate, skip));
+    }
+
+    /**
+     * Return a list of child nodes that match the provided glob and selector.
+     *
+     * @param glob     a pattern (POSIX Shell format) that the child node name must match
+     * @param selector the required XML tag name
+     * @return         a mutable list of all matching child nodes
+     * @throws PatternSyntaxException when the glob cannot be compiled into a valid regex
+     */
+    default List<Node> matchRule(String glob, String selector) throws PatternSyntaxException {
+        var result = new ArrayList<Node>();
+        String regex = Glob.convertGlobToRegex(glob);
+        Pattern pattern = Pattern.compile(regex);
+
+        for (var child : children()) {
+            // Recursively descent into the <parameters> node
+            if (child instanceof Parameters)
+                result.addAll(child.matchRule(glob, selector));
+
+            // node name matches pattern?
+            var name = child instanceof Boxed
+                    ? child.attr("glib:name")
+                    : child.attr("name");
+            if (name == null) name = "";
+            if (pattern.matcher(name).matches()) {
+                // node type matches selector?
+                if (selector == null || selector.equals(getTagName(child.getClass())))
+                    result.add(child);
+            }
+        }
+
+        return result;
+    }
+
+    default List<Node> select(String... patterns) {
+        return select(List.of(patterns));
+    }
+
+    private List<Node> select(List<String> patterns) {
+        // Leaf node: stop recursing
+        if (patterns.isEmpty())
+            return List.of(this);
+
+        // Split "glob#selector" pattern
+        String[] parts = patterns.getFirst().split("#", 2);
+        String glob = parts[0];
+        String selector = parts.length < 2 ? null : parts[1];
+
+        // Recursively match the other patterns against the child nodes
+        List<Node> results = new ArrayList<>();
+        for (var child : matchRule(glob, selector))
+            results.addAll(child.select(tail(patterns)));
+        return results;
     }
 
     /**

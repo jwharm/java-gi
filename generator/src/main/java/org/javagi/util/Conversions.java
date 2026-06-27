@@ -28,6 +28,7 @@ import org.javagi.generators.MemoryLayoutGenerator;
 import org.javagi.gir.*;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.Class;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.List;
@@ -341,6 +342,42 @@ public class Conversions {
             return '"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
 
         return value;
+    }
+
+    /**
+     * Convert a Gir class name to "element-name" format.
+     *
+     * @param cls the Gir class for which to convert the name
+     * @return the Gir tag name
+     */
+    public static String getTagName(Class<? extends Node> cls) {
+        String name = cls.getSimpleName();
+        return switch (name) {
+            case "CInclude" -> "c:include";
+            case "DocFormat" -> "doc:format";
+            case "Boxed" -> "glib:boxed";
+            case "Signal" -> "glib:signal";
+            default -> formatTag(name);
+        };
+    }
+
+    /**
+     * Convert a string formatted like "FooBar" to "foo-bar" format.
+     *
+     * @param className the class name to convert
+     * @return the Gir tag name
+     */
+    public static String formatTag(String className) {
+        var sb = new StringBuilder();
+        for (int i = 0; i < className.length(); i++) {
+            char c = className.charAt(i);
+            if (i > 0 && Character.isUpperCase(c))
+                sb.append('-');
+
+            sb.append(Character.toLowerCase(c));
+        }
+
+        return sb.toString();
     }
 
     /**

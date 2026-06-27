@@ -107,8 +107,10 @@ public final class GirParser {
         XMLEventReader eventReader = XML_INPUT_FACTORY.createXMLEventReader(inputStream);
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
-            if (event.isStartElement())
-                return (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, null);
+            if (event.isStartElement()) {
+                var result = (Repository) parseElement(eventReader, event.asStartElement(), platform, repository, null);
+                return result;
+            }
         }
         throw new IllegalStateException("Invalid XML");
     }

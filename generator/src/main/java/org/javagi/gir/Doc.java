@@ -21,7 +21,7 @@ package org.javagi.gir;
 
 public final class Doc extends GirElement implements Documentation {
 
-    private final String text;
+    public String text;
 
     public Doc(String text) {
         this.text = text;

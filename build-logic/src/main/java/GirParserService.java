@@ -22,6 +22,7 @@ import org.javagi.gir.Library;
 import org.javagi.gir.Repository;
 import org.javagi.metadata.Matcher;
 import org.javagi.metadata.Parser;
+import org.javagi.patches.GtkPatch;
 import org.javagi.util.Platform;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.services.BuildService;
@@ -139,6 +140,9 @@ public abstract class GirParserService implements BuildService<GirParserService.
 
         // Apply metadata (if it exists)
         new Matcher().match(new Parser(name, version).parse(), repository);
+
+        // Apply patches
+        new GtkPatch().apply(repository);
 
         return repository;
     }
