@@ -32,7 +32,7 @@ public sealed interface Callable
 
     default String name() {
         return callableAttrs().movedTo() != null ? callableAttrs().movedTo()
-                : callableAttrs().shadows() != null ? callableAttrs().shadows()
+                : callableAttrs().shadows() != null && checkShadows() ? callableAttrs().shadows()
                 : callableAttrs().name();
     }
 
@@ -74,7 +74,7 @@ public sealed interface Callable
 
         // Shadowed by another method
         if (this.callableAttrs().shadowedBy() != null)
-            return true;
+            return checkShadowedBy();
 
         // Replaced by another method
         if (this.callableAttrs().movedTo() != null
@@ -163,5 +163,55 @@ public sealed interface Callable
                 if (parameter.anyType() instanceof Type t && t.isLong())
                     return true;
         return false;
+    }
+
+    /**
+     * When this method "a" shadows another method "b", check if "b" is
+     * variadic. In that case, don't apply the shadowing.
+     *
+     * @return whether this method shadows a method that is not variadic.
+     */
+    private boolean checkShadows() {
+        String shadows = callableAttrs().shadows();
+        if (shadows == null)
+            return false;
+
+        var target = parent().children().stream()
+                .filter(Callable.class::isInstance)
+                .filter(callable -> shadows.equals(callable.attr("name")))
+                .findAny()
+                .map(Callable.class::cast);
+
+        if (target.isPresent()) {
+            var method = target.get();
+            if (method.parameters() != null) {
+                for (var param : method.parameters().parameters()) {
+                    if (param.varargs())
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if this method is shadowed by another method, and if it is
+     * variadic.
+     *
+     * @return only true when it is shadowed and NOT variadic.
+     */
+    private boolean checkShadowedBy() {
+        if (callableAttrs().shadowedBy() == null)
+            return false;
+
+        if (parameters() != null) {
+            for (var param : parameters().parameters()) {
+                if (param.varargs())
+                    return false;
+            }
+        }
+
+        return true;
     }
 }
