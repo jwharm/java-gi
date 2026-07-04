@@ -13,14 +13,14 @@ Maven Central  to develop Java applications on **GNOME Platform 50**:
 
 | Library       | Version | Maven coordinates                     |
 |---------------|---------|---------------------------------------|
-| GLib          | 2.88    | `org.java-gi:glib:1.0.0-RC1`          |
-| GTK           | 4.22    | `org.java-gi:gtk:1.0.0-RC1`           |
-| LibAdwaita    | 1.9     | `org.java-gi:adw:1.0.0-RC1`           |
-| LibSecret     | 0.21    | `org.java-gi:secret:1.0.0-RC1`        |
-| LibRSVG       | 2.62    | `org.java-gi:rsvg:1.0.0-RC1`          |
-| GStreamer     | 1.26    | `org.java-gi:gstreamer:1.0.0-RC1`     |
-| GtkSourceview | 5.20    | `org.java-gi:gtksourceview:1.0.0-RC1` |
-| WebkitGtk     | 2.52    | `org.java-gi:webkit:1.0.0-RC1`        |
+| GLib          | 2.88    | `org.java-gi:glib:1.0.0-RC2`          |
+| GTK           | 4.22    | `org.java-gi:gtk:1.0.0-RC2`           |
+| LibAdwaita    | 1.9     | `org.java-gi:adw:1.0.0-RC2`           |
+| LibSecret     | 0.21    | `org.java-gi:secret:1.0.0-RC2`        |
+| LibRSVG       | 2.62    | `org.java-gi:rsvg:1.0.0-RC2`          |
+| GStreamer     | 1.26    | `org.java-gi:gstreamer:1.0.0-RC2`     |
+| GtkSourceview | 5.20    | `org.java-gi:gtksourceview:1.0.0-RC2` |
+| WebkitGtk     | 2.52    | `org.java-gi:webkit:1.0.0-RC2`        |
 
 You can generate Java bindings for other libraries with the `java-gi`
 [command-line tool](https://java-gi.org/generate/) on the GIR (introspection
@@ -85,7 +85,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.java-gi:gtk:1.0.0-RC1'
+    implementation 'org.java-gi:gtk:1.0.0-RC2'
 }
 ```
 
