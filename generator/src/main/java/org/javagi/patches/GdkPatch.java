@@ -30,8 +30,7 @@ import static java.util.function.Predicate.not;
 
 public class GdkPatch implements Patch {
     @Override
-    public GirElement patch(GirElement element, String namespace) {
-
+    public GirElement patchElement(GirElement element, String namespace) {
         if (!"Gdk".equals(namespace))
             return element;
 

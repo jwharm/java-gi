@@ -25,7 +25,8 @@ import org.javagi.gir.Class;
 import org.javagi.util.Patch;
 
 public class GtkPatch implements Patch {
-    public void apply(Repository repository) {
+    @Override
+    public void patchRepository(Repository repository) {
         Namespace ns = repository.namespace();
 
         /*
@@ -89,10 +90,5 @@ public class GtkPatch implements Patch {
                When @passtrough is set to `false`, the generic type of the
                `GtkTreeListModel` must be (a supertype of) `TreeListRow`, to
                avoid a ClassCastException in [method@Gio.ListModel.get_item].""";
-    }
-
-    @Override
-    public GirElement patch(GirElement element, String namespace) {
-        return element;
     }
 }

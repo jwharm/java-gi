@@ -34,10 +34,8 @@ import static org.javagi.util.CollectionUtils.listOfNonNull;
  * This patch will apply to all GIR files
  */
 public class BasePatch implements Patch {
-
     @Override
-    public GirElement patch(GirElement element, String namespace) {
-
+    public GirElement patchElement(GirElement element, String namespace) {
         /*
          * Do not generate record types named "...Private", except for GPrivate
          */
