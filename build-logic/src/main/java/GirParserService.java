@@ -17,6 +17,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.javagi.configuration.Patches;
 import org.javagi.gir.GirParser;
 import org.javagi.gir.Library;
 import org.javagi.gir.Repository;
@@ -34,6 +35,8 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.javagi.configuration.Patches.PATCHES;
 
 /**
  * A Gradle build service that provides Library objects containing a GIR
@@ -136,6 +139,10 @@ public abstract class GirParserService implements BuildService<GirParserService.
         if (repository == null)
             throw new FileNotFoundException("No GIR files found for %s-%s in %s"
                     .formatted(name, version, baseFolder.getName()));
+
+        // Apply patches
+        for (var patch : PATCHES)
+            patch.patchRepository(repository);
 
         // Apply metadata (if it exists)
         new Matcher().match(new Parser(name, version).parse(), repository);

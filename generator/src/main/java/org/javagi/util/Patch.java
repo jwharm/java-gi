@@ -21,25 +21,38 @@ package org.javagi.util;
 
 import org.javagi.gir.GirElement;
 import org.javagi.gir.Node;
+import org.javagi.gir.Repository;
 import org.javagi.javapoet.CodeBlock;
 
 import java.lang.Class;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Interface for patches to apply to the GIR model.
- */
+///
+/// Interface for patches to apply to the GIR model. There are two methods:
+/// 1. Patch a GIR repository: lookup a specific path in the tree, and update it
+/// 2. Patch a GIR element: intercept a newly parsed element and update it
+///
 public interface Patch {
 
     /**
-     * Apply a patch to the GIR model.
+     * Apply a patch to update a GIR repository in-place.
+     *
+     * @param repository the GIR repository
+     */
+    default void patchRepository(Repository repository) {
+    }
+
+    /**
+     * Apply a patch to a GIR element.
      *
      * @param  element   a newly generated GIR element
      * @param  namespace the name of the namespace of the GIR element
      * @return the patched GIR element
      */
-    GirElement patch(GirElement element, String namespace);
+    default GirElement patchElement(GirElement element, String namespace) {
+        return element;
+    }
 
     /**
      * Remove the child elements with the provided attribute.

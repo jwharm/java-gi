@@ -183,7 +183,7 @@ public final class GirParser {
 
                 // Apply patches
                 for (Patch patch : PATCHES)
-                    newNode = patch.patch((GirElement) newNode, nsName);
+                    newNode = patch.patchElement((GirElement) newNode, nsName);
 
                 // Merge child nodes from other platforms into the new node
                 if (existingChildNode instanceof Namespace ns1 && newNode instanceof Namespace ns2)

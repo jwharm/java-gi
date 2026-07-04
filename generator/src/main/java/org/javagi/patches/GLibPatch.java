@@ -21,6 +21,7 @@ package org.javagi.patches;
 
 import org.javagi.configuration.ClassNames;
 import org.javagi.gir.*;
+import org.javagi.gir.Record;
 import org.javagi.util.Patch;
 
 import java.util.List;
@@ -30,23 +31,77 @@ import static org.javagi.util.CollectionUtils.listOfNonNull;
 import static java.util.Collections.emptyList;
 
 public class GLibPatch implements Patch {
+    @Override
+    public void patchRepository(Repository repository) {
+        Namespace ns = repository.namespace();
+        if (!"GLib".equals(ns.name()))
+            return;
+
+        /*
+         * GType was removed from GLib, but is still used
+         * by `g_strv_get_type`
+         */
+        var gtype = new Alias(
+                Map.of("name", "Type", "c:type", "GType"),
+                List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"), emptyList())));
+        add(ns, gtype);
+
+        // Inject methods in GVariant class
+        var variant = (Record) ns.select("Variant#record").getFirst();
+        inject(variant, """
+            ///
+            /// Get the GType of the GVariant class
+            ///
+            /// @return the GType
+            ///
+            public static $T getType() {
+                return $T.VARIANT;
+            }
+            """, ClassNames.G_TYPE, ClassNames.TYPES);
+
+        inject(variant, """
+            ///
+            /// Create a GVariant from a Java Object.
+            ///
+            /// @param object the Java Object to pack into a GVariant
+            /// @return the GVariant with the packed Object
+            /// @see $1T#pack
+            ///
+            public static $2T pack(Object object) {
+                return $1T.pack(object);
+            }
+            """, ClassNames.VARIANTS, ClassNames.G_VARIANT);
+
+        inject(variant, """
+            ///
+            /// Unpack a GVariant into a Java Object.
+            ///
+            /// @return the unpacked Java Object
+            /// @see $1T#unpack
+            ///
+            public Object unpack() {
+                return $1T.unpack(this, false);
+            }
+            """, ClassNames.VARIANTS);
+
+        inject(variant, """
+            ///
+            /// Unpack a GVariant into a Java Object. Nested GVariants are
+            /// recursively unpacked.
+            ///
+            /// @return the unpacked Java Object
+            /// @see $1T#unpack
+            ///
+            public Object unpackRecursive() {
+                return $1T.unpack(this, true);
+            }
+            """, ClassNames.VARIANTS);
+    }
 
     @Override
-    public GirElement patch(GirElement element, String namespace) {
-
+    public GirElement patchElement(GirElement element, String namespace) {
         if (!"GLib".equals(namespace))
             return element;
-
-        if (element instanceof Namespace ns) {
-            /*
-             * GType was removed from GLib, but is still used
-             * by `g_strv_get_type`
-             */
-            var gtype = new Alias(
-                    Map.of("name", "Type", "c:type", "GType"),
-                    List.of(new Type(Map.of("name", "gsize", "c:type", "gsize"), emptyList())));
-            return add(ns, gtype);
-        }
 
         /*
          * g_strfreev is nicely specified in the Gir file to take an array
@@ -77,58 +132,6 @@ public class GLibPatch implements Patch {
                     a.infoElements().sourcePosition(),
                     new Array(Map.of("zero-terminated", "1"),
                               List.of(new Type(Map.of("name", "utf8"), emptyList())))));
-        }
-
-        // Inject methods in GVariant class
-        if (element instanceof org.javagi.gir.Record cls && "GVariant".equals(cls.cType())) {
-            inject(element, """
-                ///
-                /// Get the GType of the GVariant class
-                ///
-                /// @return the GType
-                ///
-                public static $T getType() {
-                    return $T.VARIANT;
-                }
-                """, ClassNames.G_TYPE, ClassNames.TYPES);
-
-            inject(element, """
-                ///
-                /// Create a GVariant from a Java Object.
-                ///
-                /// @param object the Java Object to pack into a GVariant
-                /// @return the GVariant with the packed Object
-                /// @see $1T#pack
-                ///
-                public static $2T pack(Object object) {
-                    return $1T.pack(object);
-                }
-                """, ClassNames.VARIANTS, ClassNames.G_VARIANT);
-
-            inject(element, """
-                ///
-                /// Unpack a GVariant into a Java Object.
-                ///
-                /// @return the unpacked Java Object
-                /// @see $1T#unpack
-                ///
-                public Object unpack() {
-                    return $1T.unpack(this, false);
-                }
-                """, ClassNames.VARIANTS);
-
-            inject(element, """
-                ///
-                /// Unpack a GVariant into a Java Object. Nested GVariants are
-                /// recursively unpacked.
-                ///
-                /// @return the unpacked Java Object
-                /// @see $1T#unpack
-                ///
-                public Object unpackRecursive() {
-                    return $1T.unpack(this, true);
-                }
-                """, ClassNames.VARIANTS);
         }
 
         return element;

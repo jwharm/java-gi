@@ -25,9 +25,32 @@ import org.javagi.gir.*;
 import java.util.List;
 
 public class HarfBuzzPatch implements Patch {
+    @Override
+    public void patchRepository(Repository repository) {
+        Namespace ns = repository.namespace();
+        if ("HarfBuzz".equals(ns.name())) {
+            /*
+             * This function has different parameter attributes on macOS.
+             */
+            remove(ns, Function.class, "name", "ot_tags_from_script_and_language");
+
+            /*
+             * This constant has type "language_t" which cannot be instantiated.
+             */
+            remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
+
+            /*
+             * This function returns an array of "ot_name_entry_t" entries. The
+             * size of "ot_name_entry_t" is unknown because one of its fields
+             * has a disguised type ("language_t"), therefore the array contents
+             * cannot be read. Remove the function.
+             */
+            remove(ns, Function.class, "name", "ot_name_list_names");
+        }
+    }
 
     @Override
-    public GirElement patch(GirElement element, String namespace) {
+    public GirElement patchElement(GirElement element, String namespace) {
 
         /*
          * The "_t" postfix from HarfBuzz types is removed from all <type>
@@ -61,26 +84,6 @@ public class HarfBuzzPatch implements Patch {
         if (element instanceof RegisteredType rt && rt.name().endsWith("_t")) {
             String newName = rt.name().substring(0, rt.name().length() - 2);
             element = rt.withAttribute("name", newName);
-        }
-
-        if (element instanceof Namespace ns) {
-            /*
-             * This function has different parameter attributes on macOS.
-             */
-            ns = remove(ns, Function.class, "name", "ot_tags_from_script_and_language");
-
-            /*
-             * This constant has type "language_t" which cannot be instantiated.
-             */
-            ns = remove(ns, Constant.class, "name", "LANGUAGE_INVALID");
-
-            /*
-             * This function returns an array of "ot_name_entry_t" entries. The
-             * size of "ot_name_entry_t" is unknown because one of its fields
-             * has a disguised type ("language_t"), therefore the array contents
-             * cannot be read. Remove the function.
-             */
-            return remove(ns, Function.class, "name", "ot_name_list_names");
         }
 
         /*

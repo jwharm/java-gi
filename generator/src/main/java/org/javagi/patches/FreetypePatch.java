@@ -24,8 +24,7 @@ import org.javagi.util.Patch;
 
 public class FreetypePatch implements Patch {
     @Override
-    public GirElement patch(GirElement element, String namespace) {
-
+    public GirElement patchElement(GirElement element, String namespace) {
         if (!"freetype2".equals(namespace))
             return element;
 

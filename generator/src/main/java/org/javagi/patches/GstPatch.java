@@ -27,45 +27,43 @@ import java.util.Map;
 
 import static java.util.Collections.emptyList;
 
+/**
+ * GstMapFlags is an "extendable" bitfield type. Flags values are added
+ * in other namespaces. Java doesn't allow extending an enum, so we
+ * generate integer constants instead.
+ */
 public class GstPatch implements Patch {
-
-    // Utility function to quickly create a <type name="gint" c:type="gint"/>
-    private static Type gintType() {
-        return new Type(Map.of("name", "gint", "c:type", "gint"), emptyList());
-    }
-
     @Override
-    public GirElement patch(GirElement element, String namespace) {
-
-        /*
-         * GstMapFlags is an "extendable" bitfield type. Flags values are added
-         * in other namespaces. Java doesn't allow extending an enum, so we
-         * generate integer constants instead.
-         */
-
-        // Replace all references to GstMapFlags with integers
-        if (element instanceof Type t && "GstMapFlags".equals(t.cType()))
-            return gintType();
-
-        if (!"Gst".equals(namespace))
-            return element;
-
-        if (element instanceof Namespace ns) {
+    public void patchRepository(Repository repository) {
+        Namespace ns = repository.namespace();
+        if ("Gst".equals(ns.name())) {
             // Add integer constants for all GstMapFlags members
-            ns = add(ns, new Constant(
+            add(ns, new Constant(
                     Map.of("name", "MAP_READ", "value", "1"),
                     List.of(new Doc("map for read access"), gintType())));
-            ns = add(ns, new Constant(
+            add(ns, new Constant(
                     Map.of("name", "MAP_WRITE", "value", "2"),
                     List.of(new Doc("map for write access"), gintType())));
-            ns = add(ns, new Constant(
+            add(ns, new Constant(
                     Map.of("name", "MAP_FLAG_LAST", "value", "65536"),
                     List.of(new Doc("first flag that can be used for custom purposes"), gintType())));
 
             // Remove GstMapFlags
-            return remove(ns, Bitfield.class, "name", "MapFlags");
+            remove(ns, Bitfield.class, "name", "MapFlags");
         }
+    }
 
-        return element;
+    @Override
+    public GirElement patchElement(GirElement element, String namespace) {
+        // Replace all references to GstMapFlags with integers
+        if (element instanceof Type t && "GstMapFlags".equals(t.cType()))
+            return gintType();
+        else
+            return element;
+    }
+
+    // Utility function to quickly create a <type name="gint" c:type="gint"/>
+    private static Type gintType() {
+        return new Type(Map.of("name", "gint", "c:type", "gint"), emptyList());
     }
 }

@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Collections.emptyList;
+
 /**
  * Utility functions for working with collections.
  */
@@ -63,6 +65,17 @@ public class CollectionUtils {
     }
 
     /**
+     * Return a view of the list with all elements except the first. When the
+     * size of the list is 0 or 1, an empty list is returned.
+     */
+    public static <A> List<A> tail(List<A> list) {
+        if (list == null || list.isEmpty())
+            return emptyList();
+
+        return list.subList(1, list.size());
+    }
+
+    /**
      * Return the union of two maps by creating a new map using
      * {@code new HashMap(map1).putAll(map2)}
      */
@@ -78,7 +91,7 @@ public class CollectionUtils {
     @SafeVarargs
     public static <T> List<T> listOfNonNull(T... elements) {
         if (elements == null)
-            return Collections.emptyList();
+            return emptyList();
 
         return Stream.of(elements)
                 .filter(Objects::nonNull)
