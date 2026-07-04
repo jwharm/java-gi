@@ -82,8 +82,8 @@ public class GtkPatch implements Patch {
             }
             """, ClassNames.G_LIST_MODEL);
 
-        var newDoc = (Doc) treeListModel.select("new", "*#doc").getFirst();
-        newDoc.text = """
+        for (var doc : treeListModel.select("new", "*#doc"))
+            ((Doc) doc).text = """
                Creates a new empty `GtkTreeListModel` displaying @root
                with all rows collapsed.
                
