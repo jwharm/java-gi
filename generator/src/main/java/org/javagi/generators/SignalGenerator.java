@@ -191,6 +191,9 @@ public class SignalGenerator {
         // Emit the signal
         builder.addStatement("$T.g_signal_emit_by_name.invokeExact(handle(), _name, _args)", ClassNames.SIGNALS);
 
+        // Propagate exceptions from callbacks
+        builder.addStatement("$T.propagateExceptions()", ClassNames.EXCEPTION_HANDLER);
+
         // Parameter postprocessing
         if (signal.parameters() != null)
             for (var p : signal.parameters().parameters())
