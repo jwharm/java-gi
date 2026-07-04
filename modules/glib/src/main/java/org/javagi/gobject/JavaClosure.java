@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -41,7 +41,7 @@ import static org.javagi.base.Constants.LOG_DOMAIN;
 
 /**
  * An implementation of {@link Closure} that can be used with Java callbacks.
- * In most cases, the callback will be invoked using reflection. For two common 
+ * In most cases, the callback will be invoked using reflection. For two common
  * cases (Runnable and BooleanSupplier), the callback will be invoked directly.
  */
 @NullMarked
@@ -76,7 +76,7 @@ public class JavaClosure extends Closure {
         this(allocateAndInitClosure());
         setMarshal((_, _, _, _, _) -> callback.run());
     }
-    
+
     /**
      * Construct a {@link Closure} for a method or lambda that takes no
      * parameters and returns boolean.
@@ -115,7 +115,7 @@ public class JavaClosure extends Closure {
      * @throws IllegalArgumentException if {@code cls} is not a functional
      *                                  interface
      */
-    public static Method getSingleMethod(Class<?> cls) throws IllegalArgumentException {
+    private static Method getSingleMethod(Class<?> cls) throws IllegalArgumentException {
         if (cls.isEnum() || cls.isArray())
             throw new IllegalArgumentException(cls + " is an enum or array");
 
@@ -156,7 +156,7 @@ public class JavaClosure extends Closure {
         setMarshal((_, returnValue, paramValues, _, _) -> {
             try {
                 // Convert the parameter Values into Java Objects
-                Object[] parameterObjects;
+                @Nullable Object[] parameterObjects;
                 if (paramValues == null || paramValues.length == 0) {
                     parameterObjects = new Object[0];
                 } else if (ignoreFirstParameter) {
