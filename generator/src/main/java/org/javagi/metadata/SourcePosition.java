@@ -19,18 +19,15 @@
 
 package org.javagi.metadata;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- * Represents a metadata rule: a pattern, selector, zero or more arguments, and
- * zero or more nested (relative) rules.
+ * Metadata filename and line number for logging purposes.
  *
- * @param glob     a glob pattern to match against Gir node names
- * @param selector an optional selector of the Gir element type
- * @param args     argument names and values
- * @param children nested (relative) rules
- * @param position the source position of the rule
+ * @param filename the metadata file name
+ * @param line     the line number of a metadata rule
  */
-public record Rule(String glob, String selector, Map<String, String> args, List<Rule> children, SourcePosition position) {
+public record SourcePosition(String filename, int line) {
+    @Override
+    public String toString() {
+        return "%s:%d".formatted(filename, line);
+    }
 }

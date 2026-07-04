@@ -193,7 +193,7 @@ class Scanner {
 
     // Log an error message. The source location is included in the error.
     private void error(String message) {
-        logger.severe("%s: %d: %s%n".formatted(filename, getLine(start), message));
+        logger.severe("%s: %s%n".formatted(sourcePosition(), message));
     }
 
     // Get the line number for the given position
@@ -204,5 +204,10 @@ class Scanner {
                 line++;
 
         return line;
+    }
+
+    // Get the source position (for logging purposes)
+    SourcePosition sourcePosition() {
+        return new SourcePosition(filename, getLine(start));
     }
 }

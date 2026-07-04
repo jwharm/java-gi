@@ -39,11 +39,11 @@ public class Matcher {
 
     private void processRule(List<Node> nodes, Rule rule) {
         // Create a list of all matching gir nodes for this rule
-        var matchingNodes = matchRule(nodes, rule.glob(), rule.selector());
+        var matchingNodes = matchRule(nodes, rule);
 
         // Log unused entries
         if (matchingNodes.isEmpty()) {
-            logger.severe("Rule '" + rule.glob() + "' does not match anything");
+            logger.severe(rule.position() + ": Rule '" + rule.glob() + "' does not match anything");
         }
 
         // Update gir attributes from the metadata arguments.
@@ -60,13 +60,14 @@ public class Matcher {
         }
     }
 
-    private List<Node> matchRule(List<Node> nodes, String glob, String selector) {
+    private List<Node> matchRule(List<Node> nodes, Rule rule) {
         var result = new ArrayList<Node>();
         try {
             for (var node : nodes)
-                result.addAll(node.matchRule(glob, selector));
+                result.addAll(node.matchRule(rule.glob(), rule.selector()));
         } catch (PatternSyntaxException e) {
-            logger.warning("Cannot compile regex from rule '" + glob + "': " + e.getMessage());
+            logger.severe("%s: Cannot compile regex from rule '%s': %s%n"
+                    .formatted(rule.position(), rule.glob(), e.getMessage()));
         }
         return result;
     }

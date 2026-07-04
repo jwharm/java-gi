@@ -111,6 +111,7 @@ public class Parser {
         String selector = null;
         List<Rule> children = new ArrayList<>();
         Map<String, String> args = new HashMap<>();
+        SourcePosition pos = scanner.sourcePosition();
 
         // Skip empty lines
         while (token.type() == NEW_LINE)
@@ -140,7 +141,7 @@ public class Parser {
         // Recursively parse rules on the same line
         if (token.type() == DOT) {
             children.add(parseRule(relation));
-            return new Rule(glob, selector, args, children);
+            return new Rule(glob, selector, args, children, pos);
         }
 
         // Read argument names and values
@@ -175,7 +176,7 @@ public class Parser {
             }
         }
 
-        return new Rule(glob, selector, args, children);
+        return new Rule(glob, selector, args, children, pos);
     }
 
     // Scan the next token and store it in a global variable
@@ -193,6 +194,6 @@ public class Parser {
 
     // Log an error message. The source location is included in the error.
     private void error(String message) {
-        logger.severe("%s: %d: %s%n".formatted(scanner.filename, scanner.getLine(scanner.start), message));
+        logger.severe("%s: %s%n".formatted(scanner.sourcePosition(), message));
     }
 }
