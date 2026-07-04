@@ -47,7 +47,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
     }
 
     public void generate(MethodSpec.Builder builder) {
-        propagateExceptions(builder);
         readPointer(builder);
         freeGBytes(builder);
         freeGString(builder);
@@ -63,10 +62,6 @@ public class PostprocessingGenerator extends TypedValueGenerator {
         refGObjectUpcall(builder);
         freeGBytesUpcall(builder);
         freeGStringUpcall(builder);
-    }
-
-    private void propagateExceptions(MethodSpec.Builder builder) {
-        builder.addStatement("$T.propagateExceptions()", ClassNames.EXCEPTION_HANDLER);
     }
 
     private void readPointer(MethodSpec.Builder builder) {

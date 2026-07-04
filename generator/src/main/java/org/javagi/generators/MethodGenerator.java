@@ -232,6 +232,9 @@ public class MethodGenerator {
                             ClassNames.GERROR_EXCEPTION)
                     .endControlFlow();
 
+        // Propagate exceptions from callbacks
+        builder.addStatement("$T.propagateExceptions()", ClassNames.EXCEPTION_HANDLER);
+
         // Postprocessing
         if (func.parameters() != null)
             func.parameters().parameters().stream()
