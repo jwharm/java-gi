@@ -44,6 +44,7 @@ import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.javagi.configuration.Patches.PATCHES;
 import static org.javagi.util.Platform.*;
 import static java.nio.file.StandardOpenOption.*;
 import static java.util.stream.Collectors.joining;
@@ -177,6 +178,10 @@ public class JavaGI implements Callable<Integer> {
             if (repository == null || repository.namespace() == null)
                 throw new IllegalArgumentException("gir file %s is invalid".formatted(girFile.getName()));
 
+            // Apply patches
+            for (var patch : PATCHES)
+                patch.patchRepository(repository);
+
             // Apply metadata (if it exists)
             var name = repository.namespace().name();
             var version = repository.namespace().version();
@@ -234,18 +239,23 @@ public class JavaGI implements Callable<Integer> {
                             : path.startsWith("macos/") ? MACOS
                             : LINUX;
                     var file = path.substring(path.lastIndexOf("/") + 1);
-                    var repo = parser.parse(zipIn, platform, library.get(file));
-                    library.put(file, repo);
+                    var repository = parser.parse(zipIn, platform, library.get(file));
+                    library.put(file, repository);
                 }
             }
         }
 
-        // Apply metadata (if it exists)
         for (var file : library.entries()) {
-            var repo = library.get(file);
-            var name = repo.namespace().name();
-            var version = repo.namespace().version();
-            new Matcher().match(new Parser(name, version).parse(), repo);
+            var repository = library.get(file);
+            var name = repository.namespace().name();
+            var version = repository.namespace().version();
+
+            // Apply patches
+            for (var patch : PATCHES)
+                patch.patchRepository(repository);
+
+            // Apply metadata (if it exists)
+            new Matcher().match(new Parser(name, version).parse(), repository);
         }
 
         return library;
