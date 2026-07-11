@@ -157,7 +157,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
         if (cb == null) {
             if (f.anyType() instanceof Type t
                     && (!t.isPointer())
-                    && t.lookup() instanceof Record)
+                    && t.lookup() instanceof StandardLayoutType)
                 // Copy contents from nested struct
                 builder.addMethod(generator.generateReadCopyMethod());
             else if (f.anyType() instanceof Array a && a.fixedSize() > 0)
@@ -203,7 +203,7 @@ public class RecordGenerator extends RegisteredTypeGenerator {
 
         if (f.anyType() instanceof Type t
                 && (!t.isPointer())
-                && t.lookup() instanceof Record)
+                && t.lookup() instanceof StandardLayoutType)
             // Generate write-method to copy contents to nested struct
             builder.addMethod(generator.generateWriteCopyMethod());
         else if (f.anyType() instanceof Array a && a.fixedSize() > 0)

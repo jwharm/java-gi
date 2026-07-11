@@ -19,7 +19,6 @@
 
 package org.javagi.generators;
 
-import org.javagi.gir.Record;
 import org.javagi.javapoet.CodeBlock;
 import org.javagi.javapoet.FieldSpec;
 import org.javagi.javapoet.MethodSpec;
@@ -75,7 +74,7 @@ public class FieldGenerator extends TypedValueGenerator {
         if (f.bits() != -1)
             return false;
 
-        if (f.anyType() instanceof Type t && (!t.isPointer()) && t.lookup() instanceof Record)
+        if (f.anyType() instanceof Type t && (!t.isPointer()) && t.lookup() instanceof StandardLayoutType)
             return false;
 
         return !(f.anyType() instanceof Array a) || a.fixedSize() <= 0;
