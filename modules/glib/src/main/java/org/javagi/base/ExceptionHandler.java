@@ -30,17 +30,24 @@ import org.jspecify.annotations.Nullable;
 /// exception, the JVM will immediately crash. Java-GI therefore catches these
 /// exceptions.
 ///
-/// By default, the exception is stored in a `ThreadLocal` field and will
-/// later be thrown (wrapped in a [CallbackInvocationException]), immediately
-/// after a native method call in the same thread has completed. This can
-/// optionally be disabled by setting the environment variable
-/// `java-gi.discard-callback-exceptions` to `"true"` (ignoring case).
+/// A global handler that will be invoked for these exceptions can be set with
+/// [#setUncaughtExceptionHandler]. The handler is not bound to a specific
+/// thread; it will be run for all exceptions from Java callbacks invoked from
+/// native code.
+///
+/// When no handler was set, the exception is instead stored in a `ThreadLocal`
+/// field and will later be thrown (wrapped in a
+/// [CallbackInvocationException]), immediately after a native method call in
+/// the same thread has completed.
+///
+/// Exception handling can optionally be disabled by setting the environment
+/// variable `java-gi.discard-callback-exceptions` to `"true"` (ignoring case).
 ///
 /// When the environment variable `java-gi.log-callback-exceptions` is set to
 /// `"true"` (ignoring case), Java-GI will log the exception on `stderr` (using
 /// `g_log()` with level `WARNING`).
 ///
-/// For performance reasons, the values of the two environment variables is
+/// For performance reasons, the values of the two environment variables are
 /// cached, so the log/rethrow behavior cannot be changed during runtime.
 ///
 public class ExceptionHandler {
@@ -51,6 +58,48 @@ public class ExceptionHandler {
             Boolean.getBoolean("java-gi.log-callback-exceptions");
 
     private static final ThreadLocal<@Nullable Throwable> PENDING_EXCEPTION = new ThreadLocal<>();
+    private static @Nullable UncaughtExceptionHandler HANDLER = null;
+
+    ///
+    /// Interface for handlers invoked when a runtime exception is thrown from
+    /// a Java callback called from native code.
+    ///
+    @FunctionalInterface
+    public interface UncaughtExceptionHandler {
+        ///
+        /// Method invoked for runtime exceptions thrown from Java callbacks.
+        /// Any exceptions thrown by this handler will be ignored.
+        ///
+        /// @param throwable the exception
+        /// @param source the name of the callback where the exception occurred
+        ///
+        void uncaughtException(Throwable throwable, String source);
+    }
+
+    ///
+    /// Get the handler that was previously set with
+    /// [#setUncaughtExceptionHandler]. When no handler was set, this will
+    /// return `null`.
+    ///
+    /// @return the handler, or `null`
+    ///
+    public static ExceptionHandler.@Nullable UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        return HANDLER;
+    }
+
+    ///
+    /// Set a handler to be invoked when a runtime exception occurs from Java
+    /// callbacks called from native code. This will replace the normal
+    /// handling by Java-GI, where the exception is temporarily stored and
+    /// later rethrown after a native function call has completed. Pass a
+    /// `null` to remove a previously set handler.
+    ///
+    /// @param handler the exception handler. If `null`, any previously set
+    ///                handler will be unset.
+    ///
+    public static void setUncaughtExceptionHandler(ExceptionHandler.@Nullable UncaughtExceptionHandler handler) {
+        HANDLER = handler;
+    }
 
     ///
     /// Handles exceptions that were thrown in a Java callback method that was
@@ -59,9 +108,12 @@ public class ExceptionHandler {
     /// When the environment variable `java-gi.log-callback-exceptions` is
     /// `"true"` (ignoring casse), the exception will be logged to `stderr`.
     ///
-    /// Unless the environment variable `java-gi.discard-callback-exceptions`
-    /// is `"true"` (ignoring case), the exception is stored to be thrown
-    /// later.
+    /// When the environment variable `java-gi.discard-callback-exceptions`
+    /// is `"true"` (ignoring case), the exception is discarded.
+    ///
+    /// If a handler has been set with [#setUncaughtExceptionHandler] the
+    /// handler is invoked to handle the exception. Otherwise, the exception
+    /// is stored in a ThreadLocal field to be handled later.
     ///
     /// @param throwable the exception to handle
     /// @param source    the location where the exception occured
@@ -74,10 +126,22 @@ public class ExceptionHandler {
             return;
 
         Throwable suppressed = PENDING_EXCEPTION.get();
-        if (suppressed != null)
+        if (suppressed != null) {
             throwable.addSuppressed(suppressed);
+            PENDING_EXCEPTION.remove();
+        }
 
-        PENDING_EXCEPTION.set(throwable);
+        if (HANDLER != null) {
+            // Run user-installed exception handler.
+            try {
+                HANDLER.uncaughtException(throwable, source);
+            } catch (Throwable _) {
+                // Any exception thrown by the handler will be ignored.
+            }
+        } else {
+            // Store the exception so it can be rethrown later.
+            PENDING_EXCEPTION.set(throwable);
+        }
     }
 
     ///
