@@ -32,6 +32,7 @@ import java.util.*;
 
 import static org.javagi.util.Conversions.getValueLayout;
 import static java.util.function.Predicate.not;
+import static org.javagi.util.Conversions.nullable;
 
 public class CallableGenerator {
 
@@ -113,7 +114,7 @@ public class CallableGenerator {
                 continue;
 
             if (p.varargs()) {
-                builder.addParameter(Object[].class, "varargs");
+                builder.addParameter(nullable(ArrayTypeName.of(nullable(Object.class))), "varargs");
                 builder.varargs(true);
             } else {
                 var generator = new TypedValueGenerator(p);
