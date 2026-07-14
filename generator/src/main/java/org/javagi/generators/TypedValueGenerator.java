@@ -59,7 +59,10 @@ class TypedValueGenerator {
 
         if (v instanceof Parameter p) {
             if (p.notNull()
+                    // Varargs are nullable, but we don't generate a null check.
+                    // The VarargsInvoker will emit MemorySegment.NULL when applicable.
                     || p.varargs()
+                    // Don't null-check hidden parameters.
                     || p.isErrorParameter()
                     || p.isUserDataParameter()
                     || p.isDestroyNotifyParameter()
@@ -101,7 +104,6 @@ class TypedValueGenerator {
 
         if (v instanceof Parameter p) {
             if (p.notNull()
-                    || p.varargs()
                     || p.isErrorParameter()
                     || p.isUserDataParameter()
                     || p.isDestroyNotifyParameter()
