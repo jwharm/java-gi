@@ -58,22 +58,6 @@ public class GdkPatch implements Patch {
             return element.withChildren(children);
         }
 
-        if (element instanceof Bitfield bf && "PaintableFlags".equals(bf.name())) {
-            var children = new ArrayList<>(bf.children());
-            children.add(new Member(
-                    Map.of("name", "SIZE", "value", "1", "deprecated", "1"),
-                    List.of(new Doc("Use STATIC_SIZE instead."),
-                            new DocDeprecated("Replaced by STATIC_SIZE"))
-            ));
-            children.add(new Member(
-                    Map.of("name", "CONTENTS", "value", "2", "deprecated", "1"),
-                    List.of(new Doc("Use STATIC_CONTENTS instead."),
-                            new DocDeprecated("Replaced by STATIC_SIZE"))
-            ));
-
-            return element.withChildren(children);
-        }
-
         return element;
     }
 }

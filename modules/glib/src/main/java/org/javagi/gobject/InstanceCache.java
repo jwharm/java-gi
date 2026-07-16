@@ -231,11 +231,6 @@ public class InstanceCache {
         return newInstance;
     }
 
-    @Deprecated
-    public static @Nullable Proxy getForType(MemorySegment address, Function<MemorySegment, ? extends Proxy> fallback) {
-        return get(address, fallback);
-    }
-
     /**
      * Get a {@link Proxy} object for the provided native memory address. If a
      * Proxy object does not yet exist for this address, a new Proxy object is
@@ -271,12 +266,6 @@ public class InstanceCache {
             paramSpec.refSink();
 
         return newInstance;
-    }
-
-    @Deprecated
-    public static @Nullable Proxy getForTypeClass(@Nullable MemorySegment address,
-                                                  Function<MemorySegment, ? extends Proxy> fallback) {
-        return getTypeClass(address, fallback);
     }
 
     /**
