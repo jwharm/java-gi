@@ -1,5 +1,5 @@
 /* Java-GI - Java language bindings for GObject-Introspection-based libraries
- * Copyright (C) 2022-2025 Jan-Willem Harmannij
+ * Copyright (C) 2022-2026 Jan-Willem Harmannij
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
@@ -56,17 +56,6 @@ public class ListIndexModel extends GObject implements ListModel<ListIndexModel.
     public ListIndexModel(int size) {
         super();
         setSize(size);
-    }
-
-    /**
-     * Construct a new ListIndexModel with the provided size.
-     *
-     * @param size the initial size of the list model
-     * @deprecated Replaced with {@link #ListIndexModel(int)}
-     */
-    @Deprecated
-    public static ListIndexModel newInstance(int size) {
-        return new ListIndexModel(size);
     }
 
     /**

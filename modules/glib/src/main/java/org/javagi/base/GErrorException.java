@@ -83,20 +83,6 @@ public class GErrorException extends Exception {
     }
 
     /**
-     * Create a GErrorException from a GError memory location that was returned
-     * by a native function. Consumes (frees) the GError.
-     *
-     * @param gerrorPtr pointer to a GError in native memory
-     * @deprecated Use {@link #take} instead
-     */
-    @Deprecated
-    public GErrorException(MemorySegment gerrorPtr) {
-        GError err = new GError(gerrorPtr.reinterpret(ValueLayout.ADDRESS.byteSize()).get(ValueLayout.ADDRESS, 0));
-        this(err);
-        err.free();
-    }
-
-    /**
      * Create a GErrorException from a native GError.
      *
      * @param err a GError in native memory
