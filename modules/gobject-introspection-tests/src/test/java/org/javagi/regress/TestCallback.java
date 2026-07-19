@@ -167,9 +167,8 @@ public class TestCallback {
     @Test
     void asyncReady() {
         var hasBeenCalled = new AtomicBoolean(false);
-        testAsyncReadyCallback((obj, res, _) -> {
+        testAsyncReadyCallback(res -> {
             hasBeenCalled.set(true);
-            assertNull(obj);
             assertInstanceOf(AsyncResult.class, res);
         });
         runMainLoopOnce();
@@ -195,8 +194,7 @@ public class TestCallback {
         assertTrue(o.functionSync(prio));
 
         var hasBeenCalled = new AtomicBoolean(false);
-        o.functionAsync(prio, cancel, (obj, res, _) -> {
-            assertSame(o, obj);
+        o.functionAsync(prio, cancel, res -> {
             try {
                 hasBeenCalled.set(true);
                 assertTrue(o.functionFinish(res));
@@ -226,8 +224,7 @@ public class TestCallback {
         assertTrue(testFunctionSync(prio));
 
         var hasBeenCalled = new AtomicBoolean(false);
-        testFunctionAsync(prio, cancel, (obj, res, _) -> {
-            assertNull(obj);
+        testFunctionAsync(prio, cancel, res -> {
             try {
                 hasBeenCalled.set(true);
                 assertTrue(testFunctionFinish(res));
@@ -253,9 +250,8 @@ public class TestCallback {
     void asyncConstructor() {
         var hasBeenCalled = new AtomicBoolean(false);
         var cancel = new Cancellable();
-        TestObj.newAsync("plop", cancel, (obj, res, _) -> {
+        TestObj.newAsync("plop", cancel, res -> {
             hasBeenCalled.set(true);
-            assertNull(obj);
             try {
                 TestObj result = TestObj.finish(res);
                 assertEquals(TestObj.getType(), result.readGClass().readGType());

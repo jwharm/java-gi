@@ -84,7 +84,7 @@ public class FileTest {
 
         MainLoop loop = new MainLoop(MainContext.getThreadDefault(), true);
         GLib.idleAddOnce(() -> {
-            orig.moveAsync(dest, FileCopyFlags.NONE, PRIORITY_DEFAULT, null, (_, _, _)-> {}, (_, res, _) -> {
+            orig.moveAsync(dest, FileCopyFlags.NONE, PRIORITY_DEFAULT, null, (_, _, _)-> {}, res -> {
                 try {
                     assertTrue(orig.moveFinish(res));
                 } catch (GErrorException e) {
@@ -107,7 +107,7 @@ public class FileTest {
 
         MainLoop loop = new MainLoop(MainContext.getThreadDefault(), true);
         GLib.idleAddOnce(() -> {
-            orig.copyAsync(dest, FileCopyFlags.NONE, PRIORITY_DEFAULT, null, (_, _, _)-> {}, (_, res, _) -> {
+            orig.copyAsync(dest, FileCopyFlags.NONE, PRIORITY_DEFAULT, null, (_, _, _)-> {}, res -> {
                 try {
                     assertTrue(orig.copyFinish(res));
                 } catch (GErrorException e) {
