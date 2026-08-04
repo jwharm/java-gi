@@ -1,11 +1,11 @@
 [versions]
-javagi = "1.0.0-RC2"
+javagi = "1.0.0-RC3"
 jdk = "25"
 cairo = "1.18.4.3"
 picocli = "4.7.7"
 javapoet = "1.0.0"
-jspecify = "1.0.0"
-junit = "6.1.1"
+jspecify = "1.0.1"
+junit = "6.1.2"
 mavenpublish = "0.37.0"
 
 [libraries]
