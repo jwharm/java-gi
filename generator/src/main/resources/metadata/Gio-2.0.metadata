@@ -53,6 +53,12 @@ SocketControlMessage.get_type java-gi-skip
 AsyncInitable.new_finish java-gi-skip
 
 /*
+ * GAsyncReadyCallback has been custom implemented in Java to remove
+ * two unused parameters.
+ */
+AsyncReadyCallback java-gi-custom
+
+/*
  * GIO File stream classes declare virtual methods that are also
  * declared in the "Seekable" interface that they implement. This
  * causes issues because the interface methods are public in Java,
