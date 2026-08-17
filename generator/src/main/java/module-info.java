@@ -3,7 +3,6 @@ module org.javagi.generator {
     requires java.logging;
     requires java.xml;
     requires org.javagi.javapoet;
-    requires info.picocli;
     requires org.jspecify;
     exports org.javagi;
     exports org.javagi.configuration;
@@ -11,5 +10,4 @@ module org.javagi.generator {
     exports org.javagi.gir;
     exports org.javagi.patches;
     exports org.javagi.util;
-    opens org.javagi to info.picocli;
 }

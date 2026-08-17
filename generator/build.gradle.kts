@@ -13,7 +13,6 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.picocli)
     implementation(libs.jspecify)
     implementation(libs.javapoet)
 }
