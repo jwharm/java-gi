@@ -66,39 +66,48 @@ public class JavaGI {
                 abbrev="h",
                 help="Show this help message and exit")
         Optional<Boolean> help,
+
         @ArgVester.Opt(
                 abbrev="V",
                 help="Print version information and exit")
         Optional<Boolean> version,
+
         @ArgVester.Opt(
                 abbrev="d",
                 help="reverse domain name prefixed to the Java package and module name, for example \"org.gnome\"",
                 valueHelp="domain")
         Optional<String> domain,
+
         @ArgVester.Opt(
                 abbrev="o",
                 help="output directory, default: current working directory",
                 valueHelp="dir")
         Optional<String> outputDirectory,
+
         @ArgVester.Opt(
                 abbrev="p",
                 help="generate Gradle project structure and build scripts")
         Optional<Boolean> generateProject,
+
         @ArgVester.Opt(
                 abbrev="S",
                 help="write a stacktrace to stderr for all exceptions")
         Optional<Boolean> stacktrace,
+
         @ArgVester.Opt(
                 abbrev="s",
                 help="short summary of the library to include in the javadoc of the generated Java package",
                 valueHelp="text")
         Optional<String> summary,
+
         @ArgVester.Opt(
                 abbrev="u",
                 help="url of the online API documentation to prefix before hyperlinks in the generated javadoc",
                 valueHelp="url")
         Optional<String> docUrl,
-        @ArgVester.Opt(help="one or more gir files to process")
+
+        @ArgVester.Opt(
+                help="one or more gir files to process")
         List<String> girFileNames
     ) {}
 
