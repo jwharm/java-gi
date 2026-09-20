@@ -45,7 +45,7 @@ public class Javadoc {
             + "|(?<imglink>src(?:set)?=\"(?<imgurl>.+?)\")"
             + "|(?<constantref>%\\w+)"
             + "|(?<typeref>#[^#\\s]\\w*)"
-            + "|(?<paramref>@{1,2}[^@\\s][^\\s`]*)" // "[^\s`]" matches until whitespace or `code`
+            + "|(?<paramref>@{1,2}[^@\\s]\\w*)"
     ;
 
     // Regular expression that will match a language tag specified in an XML comment
