@@ -2,7 +2,6 @@
 javagi = "1.0.0-RC3"
 jdk = "25"
 cairo = "1.18.4.3"
-picocli = "4.7.7"
 javapoet = "1.0.0"
 jspecify = "1.0.1"
 junit = "6.1.2"
@@ -11,7 +10,6 @@ mavenpublish = "0.37.0"
 [libraries]
 javagi-generator = { module = "org.java-gi:generator", version.ref = "javagi" }
 cairo = { module = "io.github.jwharm.cairobindings:cairo", version.ref = "cairo" }
-picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 javapoet = { module = "org.java-gi:javapoet", version.ref = "javapoet" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

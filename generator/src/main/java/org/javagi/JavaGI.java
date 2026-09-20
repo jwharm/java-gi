@@ -26,21 +26,21 @@ import org.javagi.configuration.ModuleInfo;
 import org.javagi.gir.*;
 import org.javagi.metadata.Matcher;
 import org.javagi.metadata.Parser;
+import org.javagi.util.ArgVester;
 import org.javagi.util.Platform;
 import org.javagi.generators.*;
 import org.javagi.gir.Class;
 import org.javagi.gir.Record;
-import picocli.CommandLine;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -52,7 +52,7 @@ import static java.util.stream.Collectors.joining;
 /**
  * Main class for the {@code java-gi} command-line utility.
  * <p>
- * The command-line arguments are processed with Picocli. The tool loads the
+ * The command-line arguments are processed with ArgVester. The tool loads the
  * included gir files into a {@link Library}, and then generates Java bindings
  * for one or more gir files. With an optional argument, a complete Gradle
  * project structure is generated.
@@ -60,107 +60,102 @@ import static java.util.stream.Collectors.joining;
  * The {@link #generate} method is used by the Gradle build scripts as well (see
  * the {@code GenerateSources} task in {@code build-logic}).
  */
-@CommandLine.Command(
-        name = "java-gi",
-        mixinStandardHelpOptions = true,
-        version = "${app.version}",
-        description = "Generate Java bindings from GObject-Introspection repository (gir) files.")
-public class JavaGI implements Callable<Integer> {
+public class JavaGI {
+    private record Options (
+        @ArgVester.Opt(
+                abbrev="h",
+                help="Show this help message and exit")
+        Optional<Boolean> help,
 
-    @CommandLine.Option(
-            names = {"-d", "--domain"},
-            paramLabel = "domain",
-            description = "reverse domain name prefixed to the Java package " +
-                          "and module name, for example \"org.gnome\"")
-    private String domain;
+        @ArgVester.Opt(
+                abbrev="V",
+                help="Print version information and exit")
+        Optional<Boolean> version,
 
-    @CommandLine.Option(
-            names = {"-o", "--output"},
-            paramLabel = "dir",
-            defaultValue = ".",
-            description = "output directory, default: current working directory")
-    private File outputDirectory;
+        @ArgVester.Opt(
+                abbrev="d",
+                help="reverse domain name prefixed to the Java package and module name, for example \"org.gnome\"",
+                valueHelp="domain")
+        Optional<String> domain,
 
-    @CommandLine.Option(
-            names = {"-p", "--project"},
-            description = "generate Gradle project structure and build scripts"
-    )
-    private boolean generateProject;
+        @ArgVester.Opt(
+                abbrev="o",
+                help="output directory, default: current working directory",
+                valueHelp="dir")
+        Optional<String> outputDirectory,
 
-    @CommandLine.Option(
-            names = {"-S", "--stacktrace"},
-            description = "write a stacktrace to stderr for all exceptions"
-    )
-    private boolean stacktrace;
+        @ArgVester.Opt(
+                abbrev="p",
+                help="generate Gradle project structure and build scripts")
+        Optional<Boolean> generateProject,
 
-    @CommandLine.Option(
-            names = {"-s", "--summary"},
-            paramLabel = "text",
-            description = "short summary of the library to include in the " +
-                          "javadoc of the generated Java package")
-    private String summary;
+        @ArgVester.Opt(
+                abbrev="S",
+                help="write a stacktrace to stderr for all exceptions")
+        Optional<Boolean> stacktrace,
 
-    @CommandLine.Option(
-            names = {"-u", "--doc-url"},
-            paramLabel = "url",
-            defaultValue = "",
-            description = "url of the online API documentation to prefix before " +
-                          "hyperlinks in the generated javadoc")
-    private String docUrl;
+        @ArgVester.Opt(
+                abbrev="s",
+                help="short summary of the library to include in the javadoc of the generated Java package",
+                valueHelp="text")
+        Optional<String> summary,
 
-    @CommandLine.Parameters(
-            arity = "1..*",
-            description = "one or more gir files to process")
-    private File[] girFiles;
+        @ArgVester.Opt(
+                abbrev="u",
+                help="url of the online API documentation to prefix before hyperlinks in the generated javadoc",
+                valueHelp="url")
+        Optional<String> docUrl,
 
-    // List of generated subprojects (one for each gir file)
-    private final List<String> subprojects = new ArrayList<>();
+        @ArgVester.Opt(
+                help="one or more gir files to process")
+        List<String> girFileNames
+    ) {}
 
-    // The gir parser
+    private final Options options;
     private final GirParser parser = GirParser.getInstance();
 
-    // The runtime platform is assumed to be the target platform
-    private final int platform = Platform.getRuntimePlatform();
-
     /**
-     * Overrides error output and redirects to {@link #call}
+     * Overrides error output and creates a {@link #JavaGI} instance
      *
-     * @param args processed by picocli
+     * @param args Command-line options for the generator
      */
     static void main(String[] args) {
-        var javaGi = new JavaGI();
-        int exitCode = new CommandLine(javaGi)
-                .setExecutionExceptionHandler(javaGi::writeErrorMessages)
-                .execute(args);
-        System.exit(exitCode);
-    }
+        var argVester = ArgVester.create(MethodHandles.lookup(), Options.class);
+        var options = argVester.parse(args);
 
-    /**
-     * When "--stacktrace" is passed on the command line, the exception is
-     * rethrown. Otherwise, this will print the exception message on the
-     * command line, without the stack trace.
-     */
-    private int writeErrorMessages(Exception ex, CommandLine cmd, CommandLine.ParseResult result) throws Exception {
-        if (stacktrace)
-            throw ex;
+        if (options.help.isPresent()) {
+            System.out.println(argVester.toHelp("java-gi"));
+            return;
+        }
 
-        // bold red error message
-        String message = Objects.requireNonNullElse(ex.getMessage(), ex.getClass().getSimpleName());
-        cmd.getErr().println(cmd.getColorScheme().errorText(message));
+        if (options.version.isPresent()) {
+            System.out.printf("java-gi %s\n", System.getProperty("app.version"));
+            return;
+        }
 
-        return cmd.getExitCodeExceptionMapper() != null
-                ? cmd.getExitCodeExceptionMapper().getExitCode(ex)
-                : cmd.getCommandSpec().exitCodeOnExecutionException();
+        if (options.girFileNames.isEmpty()) {
+            System.err.println("Usage: java-gi [girfiles]");
+            System.exit(1);
+        }
+
+        try {
+            new JavaGI(options);
+        } catch (Exception e) {
+            System.err.println(e.getLocalizedMessage());
+            if (options.stacktrace.orElse(false)) {
+                e.printStackTrace(System.err);
+            }
+        }
     }
 
     /**
      * Runs the bindings generator from the command-line arguments.
      *
-     * @return status code (0 = success)
-     * @throws Exception all exceptions are handled (reported) by picocli
+     * @throws Exception all exceptions are handled (reported) in main()
      */
-    @Override
-    public Integer call() throws Exception {
+    private JavaGI(Options options) throws Exception {
+        this.options = options;
+
         // Do not generate runtime platform checks
         Platform.GENERATE_PLATFORM_CHECKS = false;
 
@@ -170,13 +165,20 @@ public class JavaGI implements Callable<Integer> {
         // Ensure that at least GLib gir file is present
         library.lookupNamespace("GLib"); // throws exception when not found
 
+        // Whether to generate a Gradle project stucture
+        boolean generateProject = options.generateProject.orElse(false);
+
+        // List of generated subprojects (one for each gir file)
+        List<String> subprojects = new ArrayList<>();
+
         // Parse the gir files for which bindings will be generated
-        for (var girFile : girFiles) {
-            var repository = parser.parse(girFile, platform, null);
+        for (var girFileName : options.girFileNames) {
+            File girFile = new File(girFileName);
+            var repository = parser.parse(girFile, Platform.getRuntimePlatform(), null);
 
             // Check if parsing succeeded (the gir file contains a namespace)
             if (repository == null || repository.namespace() == null)
-                throw new IllegalArgumentException("gir file %s is invalid".formatted(girFile.getName()));
+                throw new IllegalArgumentException("gir file %s is invalid".formatted(girFileName));
 
             // Apply patches
             for (var patch : PATCHES)
@@ -189,12 +191,12 @@ public class JavaGI implements Callable<Integer> {
 
             // Prepare module and package information
             var packageName = generatePackageName(name);
-            ModuleInfo.add(name, packageName, packageName, docUrl, summary);
+            ModuleInfo.add(name, packageName, packageName, options.docUrl.orElse(""), options.summary.orElse(""));
             library.put(name, repository);
             library.setExported(name);
 
             // Create a directory for each module
-            var libDirectory = new File(outputDirectory, name.toLowerCase());
+            var libDirectory = new File(options.outputDirectory.orElse("."), name.toLowerCase());
 
             // No custom packages to export in module-info.java
             var packages = new HashSet<String>();
@@ -219,8 +221,6 @@ public class JavaGI implements Callable<Integer> {
             // Generate settings.gradle script
             writeSettingsScript(subprojects);
         }
-
-        return 0;
     }
 
     private Library loadIncludedGirFiles() throws XMLStreamException, IOException {
@@ -263,7 +263,10 @@ public class JavaGI implements Callable<Integer> {
 
     private String generatePackageName(String namespace) {
         var ns = namespace.toLowerCase();
-        if (domain == null || domain.isBlank())
+        if (options.domain.isEmpty())
+            return ns;
+        String domain = options.domain.get();
+        if (domain.isBlank())
             return ns;
         if (domain.endsWith("."))
             return domain + ns;
@@ -414,7 +417,7 @@ public class JavaGI implements Callable<Integer> {
         String script = subprojects.stream()
                 .map(s -> "include(\"" + s + "\")")
                 .collect(joining("\n", "", "\n"));
-        Path file = outputDirectory.toPath().resolve("settings.gradle");
+        Path file = Path.of(options.outputDirectory.orElse("."), "settings.gradle");
         Files.writeString(file, script, CREATE, WRITE, TRUNCATE_EXISTING);
     }
 }
